@@ -1,0 +1,22 @@
+Pick_ID,Team,Pick_Type,Line,Odds,Risk,To_Win,Result,P_L,Notes
+1,Bucks,Game Total,O216,-110,55000,50000,Loss,-55000,Total 209
+2,Bucks,Team Total,O110,-110,55000,50000,Loss,-55000,Scored 82
+3,Pelicans,Spread,+4.5,-118,59000,50000,Live,0,Pels +12 (3Q)
+4,Pelicans,Game Total,U246.5,-110,55000,50000,Live,0,112 total (3Q)
+5,Kings,Spread,+10.5,-110,55000,50000,Live,0,Kings -7 (3Q)
+6,Kings,Moneyline,ML,+340,50000,170000,Live,0,Down 7 (3Q)
+7,Kings,Team Total,U121.5,-110,55000,50000,Live,0,54 scored (3Q)
+8,Lakers,Team Total,U118.5,-112,56000,50000,Live,0,20 scored (1Q)
+9,Warriors,Game Total,U237,-115,57500,50000,Pending,0,8:00 PM
+10,Blazers,Spread,+5,-118,59000,50000,Pending,0,8:00 PM
+11,Wizards,Team Total,U120.5,-108,54000,50000,Win,50000,Scored 108
+12,Wizards,Moneyline,ML,+340,50000,170000,Win,170000,Won by 19
+13,Wizards,Spread 1H,+5.5,-110,55000,50000,Win,50000,1H: 58-47 (+11)
+14,Hornets,Moneyline,ML,+440,50000,220000,Win,220000,Won by 8 OT
+15,Hornets,Spread 1H,+6.5,-110,55000,50000,Win,50000,1H: 57-47 (+10)
+16,Hornets,Team Total,O113.5,-109,54500,50000,Win,50000,Scored 119
+17,Wizards,Spread,+9.5,-106,53000,50000,Win,50000,Won by 19
+18,Wizards,Game Total,U234,-110,55000,50000,Win,50000,Total 197
+19,Hornets,Spread,+12,-118,59000,50000,Win,50000,Won by 8 OT
+
+
