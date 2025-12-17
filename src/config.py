@@ -58,8 +58,15 @@ def _current_season_default() -> str:
 
 @dataclass(frozen=True)
 class Settings:
+    # Core API Keys (Required)
     the_odds_api_key: str = field(default_factory=lambda: _env_or_default("THE_ODDS_API_KEY", ""))
     api_basketball_key: str = field(default_factory=lambda: _env_or_default("API_BASKETBALL_KEY", ""))
+    
+    # Optional API Keys (for enhanced features)
+    betsapi_key: str = field(default_factory=lambda: _env_or_default("BETSAPI_KEY", ""))
+    action_network_username: str = field(default_factory=lambda: _env_or_default("ACTION_NETWORK_USERNAME", ""))
+    action_network_password: str = field(default_factory=lambda: _env_or_default("ACTION_NETWORK_PASSWORD", ""))
+    kaggle_api_token: str = field(default_factory=lambda: _env_or_default("KAGGLE_API_TOKEN", ""))
 
     # Optional: allow overriding API base URLs from environment
     the_odds_base_url: str = field(

@@ -20,6 +20,9 @@ import datetime as dt
 
 from src.config import settings
 from src.ingestion import the_odds
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -127,7 +130,7 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
     return splits
 
 
-def parse_action_network_splits(data: Dict[str, Any]) -> GameSplits:
+def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
     """
     Parse betting splits from Action Network format.
     
@@ -145,8 +148,12 @@ def parse_action_network_splits(data: Dict[str, Any]) -> GameSplits:
     home_team_raw = game.get("home_team", {}).get("name", "") if isinstance(game.get("home_team"), dict) else game.get("home_team", "")
     away_team_raw = game.get("away_team", {}).get("name", "") if isinstance(game.get("away_team"), dict) else game.get("away_team", "")
     
-    home_team = normalize_team_to_espn(str(home_team_raw), source="action_network") if home_team_raw else ""
-    away_team = normalize_team_to_espn(str(away_team_raw), source="action_network") if away_team_raw else ""
+    home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="action_network") if home_team_raw else ("", False)
+    away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="action_network") if away_team_raw else ("", False)
+    
+    if not home_valid or not away_valid:
+        logger.error(f"Invalid team names in betting splits: home='{home_team_raw}' (valid={home_valid}), away='{away_team_raw}' (valid={away_valid})")
+        return None  # Return None to indicate invalid data
     
     splits = GameSplits(
         event_id=str(game.get("id", "")),
@@ -196,8 +203,13 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
             away_team_raw = game.get("away_team", "")
             
             # Standardize team names
-            home_team = normalize_team_to_espn(str(home_team_raw), source="the_odds") if home_team_raw else ""
-            away_team = normalize_team_to_espn(str(away_team_raw), source="the_odds") if away_team_raw else ""
+            home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="the_odds") if home_team_raw else ("", False)
+            away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="the_odds") if away_team_raw else ("", False)
+            
+            # Skip games with invalid team names
+            if not home_valid or not away_valid:
+                logger.warning(f"Skipping betting splits with invalid team names: home='{home_team_raw}', away='{away_team_raw}'")
+                continue
             
             # The Odds API splits structure:
             # { "id": "...", "home_team": "...", "away_team": "...", "commence_time": "...",
@@ -358,8 +370,13 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
             home_team_raw = game.get("home", {}).get("name", "") if isinstance(game.get("home"), dict) else game.get("home", "")
             away_team_raw = game.get("away", {}).get("name", "") if isinstance(game.get("away"), dict) else game.get("away", "")
             
-            home_team = normalize_team_to_espn(str(home_team_raw), source="sbro") if home_team_raw else ""
-            away_team = normalize_team_to_espn(str(away_team_raw), source="sbro") if away_team_raw else ""
+            home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="sbro") if home_team_raw else ("", False)
+            away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="sbro") if away_team_raw else ("", False)
+            
+            # Skip games with invalid team names
+            if not home_valid or not away_valid:
+                logger.warning(f"Skipping SBRO game with invalid team names: home='{home_team_raw}', away='{away_team_raw}'")
+                continue
             
             splits = GameSplits(
                 event_id=str(game.get("id", "")),

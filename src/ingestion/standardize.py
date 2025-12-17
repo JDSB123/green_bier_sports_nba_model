@@ -18,6 +18,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+# Tuple type already imported
+
 import json
 
 from src.config import get_nba_season
@@ -162,7 +164,20 @@ ESPN_TO_ABBREV = {
 }
 
 
-def normalize_team_to_espn(team_name: str, source: str = "unknown") -> str:
+def is_valid_espn_team_name(team_name: str) -> bool:
+    """
+    Check if a team name is a valid ESPN team name.
+    
+    Args:
+        team_name: Team name to validate
+    
+    Returns:
+        True if team name is in ESPN_TEAM_NAMES set
+    """
+    return team_name in ESPN_TEAM_NAMES
+
+
+def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_failure: bool = False) -> Tuple[str, bool]:
     """
     Normalize team name from any source to ESPN format.
     
@@ -172,40 +187,47 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown") -> str:
     Args:
         team_name: Team name from any source
         source: Source identifier ("the_odds", "api_basketball", etc.)
+        raise_on_failure: If True, raise ValueError when normalization fails (default: False)
     
     Returns:
-        ESPN team name (canonical format), or original if no match found
+        Tuple of (normalized_name: str, is_valid: bool)
+        - normalized_name: ESPN team name if successful, empty string if failed
+        - is_valid: True if name is a valid ESPN team name, False otherwise
     
-    Note:
-        Never raises exceptions - always returns a string to ensure ingestion continues
+    Raises:
+        ValueError: If raise_on_failure=True and normalization fails
     """
     if not team_name:
-        logger.warning(f"Empty team name from source '{source}'")
-        return ""
+        logger.error(f"Empty team name from source '{source}' - CANNOT STANDARDIZE")
+        if raise_on_failure:
+            raise ValueError(f"Empty team name from source '{source}'")
+        return "", False
     
     original_name = team_name
     team_name = team_name.strip()
     
     if not team_name:
-        logger.warning(f"Team name is whitespace only from source '{source}'")
-        return original_name
+        logger.error(f"Team name is whitespace only from source '{source}' - CANNOT STANDARDIZE")
+        if raise_on_failure:
+            raise ValueError(f"Whitespace-only team name from source '{source}'")
+        return "", False
     
     # Check if already in ESPN format (exact match)
     if team_name in ESPN_TEAM_NAMES:
-        return team_name
+        return team_name, True
     
     # Check direct mapping (exact match)
     if team_name in TEAM_NAME_MAPPING:
         result = TEAM_NAME_MAPPING[team_name]
         logger.debug(f"Direct mapped '{original_name}' -> '{result}' (source: {source})")
-        return result
+        return result, True
     
     # Try case-insensitive match in mapping
     team_lower = team_name.lower().strip()
     for key, espn_name in TEAM_NAME_MAPPING.items():
         if key.lower().strip() == team_lower:
             logger.debug(f"Case-insensitive mapped '{original_name}' -> '{espn_name}' (source: {source})")
-            return espn_name
+            return espn_name, True
     
     # Try fuzzy matching (check if team name contains ESPN team name or vice versa)
     for espn_name, abbrevs in ESPN_TO_ABBREV.items():
@@ -213,26 +235,34 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown") -> str:
         # Check if team name contains ESPN name or vice versa
         if team_lower in espn_lower or espn_lower in team_lower:
             logger.info(f"Fuzzy matched '{original_name}' -> '{espn_name}' (source: {source})")
-            return espn_name
+            return espn_name, True
         # Check abbreviations
         for abbrev in abbrevs:
             abbrev_lower = abbrev.lower().strip()
             if abbrev_lower == team_lower or team_lower in abbrev_lower or abbrev_lower in team_lower:
                 logger.info(f"Abbrev matched '{original_name}' -> '{espn_name}' (source: {source})")
-                return espn_name
+                return espn_name, True
     
     # Try matching against ESPN team names directly (case-insensitive substring)
     for espn_name in ESPN_TEAM_NAMES:
         if team_lower in espn_name.lower() or espn_name.lower() in team_lower:
             logger.info(f"Substring matched '{original_name}' -> '{espn_name}' (source: {source})")
-            return espn_name
+            return espn_name, True
     
-    # If no match found, log warning but return original (fail-safe)
-    logger.warning(
-        f"⚠️  COULD NOT NORMALIZE team name '{original_name}' from source '{source}' to ESPN format. "
-        f"This may cause data merging issues. Returning original name."
+    # If no match found, log ERROR (not warning) - this is a data quality issue
+    logger.error(
+        f"❌ FAILED TO NORMALIZE team name '{original_name}' from source '{source}' to ESPN format. "
+        f"THIS WILL CAUSE DATA MERGING ISSUES. Returning empty string to prevent fake data."
     )
-    return team_name
+    
+    if raise_on_failure:
+        raise ValueError(
+            f"Could not normalize team name '{original_name}' from source '{source}' to ESPN format. "
+            f"This indicates a data quality issue."
+        )
+    
+    # Return empty string to indicate failure - DO NOT return original name (prevents fake data)
+    return "", False
 
 
 def standardize_game_data(
@@ -281,17 +311,40 @@ def standardize_game_data(
     )
     
     # ALWAYS normalize team names to ESPN format (mandatory)
+    # Track validation status to prevent using fake/unstandardized data
+    home_team_valid = False
+    away_team_valid = False
+    
     if home_team_raw:
-        standardized["home_team"] = normalize_team_to_espn(str(home_team_raw), source)
+        standardized["home_team"], home_team_valid = normalize_team_to_espn(str(home_team_raw), source)
+        if not home_team_valid:
+            logger.error(f"❌ INVALID DATA: Failed to standardize home_team '{home_team_raw}' from source '{source}'")
+            standardized["home_team"] = ""  # Set to empty to indicate invalid
     else:
-        logger.warning(f"Missing home_team in game data from source '{source}'")
+        logger.error(f"❌ MISSING DATA: Missing home_team in game data from source '{source}'")
         standardized["home_team"] = ""
     
     if away_team_raw:
-        standardized["away_team"] = normalize_team_to_espn(str(away_team_raw), source)
+        standardized["away_team"], away_team_valid = normalize_team_to_espn(str(away_team_raw), source)
+        if not away_team_valid:
+            logger.error(f"❌ INVALID DATA: Failed to standardize away_team '{away_team_raw}' from source '{source}'")
+            standardized["away_team"] = ""  # Set to empty to indicate invalid
     else:
-        logger.warning(f"Missing away_team in game data from source '{source}'")
+        logger.error(f"❌ MISSING DATA: Missing away_team in game data from source '{source}'")
         standardized["away_team"] = ""
+    
+    # Add validation flags to the standardized data
+    standardized["_home_team_valid"] = home_team_valid
+    standardized["_away_team_valid"] = away_team_valid
+    standardized["_data_valid"] = home_team_valid and away_team_valid
+    
+    # Log error if data is invalid
+    if not standardized["_data_valid"]:
+        logger.error(
+            f"❌ INVALID GAME DATA from source '{source}': "
+            f"home_team_valid={home_team_valid}, away_team_valid={away_team_valid}. "
+            f"This game data should NOT be used for merging/predictions."
+        )
     
     # Ensure standard format: "AWAY TEAM vs. HOME TEAM"
     # Remove any non-standard keys

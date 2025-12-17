@@ -149,6 +149,7 @@ class APIBasketballClient:
         # ALWAYS standardize team names to ESPN format (mandatory)
         from src.ingestion.standardize import standardize_game_data
         standardized_games = []
+        invalid_count = 0
         for game in games:
             try:
                 # Extract team names from API-Basketball format
@@ -165,21 +166,30 @@ class APIBasketballClient:
                 }
                 standardized = standardize_game_data(game_dict, source="api_basketball")
                 
-                # Update game with standardized team names
-                if "home_team" in standardized and standardized["home_team"]:
-                    teams["home"]["name"] = standardized["home_team"]
-                if "away_team" in standardized and standardized["away_team"]:
-                    teams["away"]["name"] = standardized["away_team"]
-                
-                standardized_games.append(game)
+                # Only include games with valid team names (prevent fake data)
+                if standardized.get("_data_valid", False):
+                    # Update game with standardized team names
+                    if standardized["home_team"]:
+                        teams["home"]["name"] = standardized["home_team"]
+                    if standardized["away_team"]:
+                        teams["away"]["name"] = standardized["away_team"]
+                    standardized_games.append(game)
+                else:
+                    invalid_count += 1
+                    logger.warning(
+                        f"Skipping game with invalid team names: "
+                        f"home='{home_team}', away='{away_team}'"
+                    )
             except Exception as e:
                 logger.error(f"Error standardizing game data: {e}. Game: {game.get('teams', {}).get('home', {}).get('name', 'N/A')} vs {game.get('teams', {}).get('away', {}).get('name', 'N/A')}")
-                # Still attempt to add the game (with original names if standardization failed)
-                standardized_games.append(game)
+                # Do NOT add invalid data - skip it entirely
+                invalid_count += 1
         
         games = standardized_games
         data["response"] = games
-        logger.info(f"Standardized {len(standardized_games)} games from API-Basketball")
+        logger.info(f"Standardized {len(standardized_games)} valid games from API-Basketball (skipped {invalid_count} invalid games)")
+        if invalid_count > 0:
+            logger.warning(f"⚠️  {invalid_count} games were skipped due to invalid/unstandardized team names")
         
         self._games = games
         path = self._save("games", data)
