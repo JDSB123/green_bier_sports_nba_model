@@ -135,46 +135,51 @@ class APIBasketballClient:
         """
         Fetch all games for the season with Q1-Q4 scores.
         
+        Team name standardization is MANDATORY and always performed to ensure
+        data consistency across sources.
+        
         Args:
-            standardize: If True, standardize team names to ESPN format
+            standardize: Always True - team names are always standardized (deprecated parameter)
         """
         data = await self._fetch(
             "games", {"league": self.league_id, "season": self.season}
         )
         games = data.get("response", [])
         
-        # Standardize team names to ESPN format
-        if standardize:
-            from src.ingestion.standardize import standardize_game_data
-            standardized_games = []
-            for game in games:
-                try:
-                    # Extract team names from API-Basketball format
-                    teams = game.get("teams", {})
-                    home_team = teams.get("home", {}).get("name", "")
-                    away_team = teams.get("away", {}).get("name", "")
-                    
-                    # Create game dict for standardization
-                    game_dict = {
-                        "home_team": home_team,
-                        "away_team": away_team,
-                        "date": game.get("date"),
-                    }
-                    standardized = standardize_game_data(game_dict, source="api_basketball")
-                    
-                    # Update game with standardized team names
-                    if "home_team" in standardized:
-                        teams["home"]["name"] = standardized["home_team"]
-                    if "away_team" in standardized:
-                        teams["away"]["name"] = standardized["away_team"]
-                    
-                    standardized_games.append(game)
-                except Exception as e:
-                    logger.warning(f"Error standardizing game data: {e}")
-                    standardized_games.append(game)  # Keep original if standardization fails
-            
-            games = standardized_games
-            data["response"] = games
+        # ALWAYS standardize team names to ESPN format (mandatory)
+        from src.ingestion.standardize import standardize_game_data
+        standardized_games = []
+        for game in games:
+            try:
+                # Extract team names from API-Basketball format
+                teams = game.get("teams", {})
+                home_team = teams.get("home", {}).get("name", "")
+                away_team = teams.get("away", {}).get("name", "")
+                
+                # Create game dict for standardization
+                game_dict = {
+                    "home_team": home_team,
+                    "away_team": away_team,
+                    "date": game.get("date"),
+                    "teams": teams,  # Include full teams structure for better extraction
+                }
+                standardized = standardize_game_data(game_dict, source="api_basketball")
+                
+                # Update game with standardized team names
+                if "home_team" in standardized and standardized["home_team"]:
+                    teams["home"]["name"] = standardized["home_team"]
+                if "away_team" in standardized and standardized["away_team"]:
+                    teams["away"]["name"] = standardized["away_team"]
+                
+                standardized_games.append(game)
+            except Exception as e:
+                logger.error(f"Error standardizing game data: {e}. Game: {game.get('teams', {}).get('home', {}).get('name', 'N/A')} vs {game.get('teams', {}).get('away', {}).get('name', 'N/A')}")
+                # Still attempt to add the game (with original names if standardization failed)
+                standardized_games.append(game)
+        
+        games = standardized_games
+        data["response"] = games
+        logger.info(f"Standardized {len(standardized_games)} games from API-Basketball")
         
         self._games = games
         path = self._save("games", data)

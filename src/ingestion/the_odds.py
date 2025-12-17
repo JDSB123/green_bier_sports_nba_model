@@ -20,19 +20,22 @@ async def fetch_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
     markets: str = "h2h,spreads,totals",
-    standardize: bool = True,
+    standardize: bool = True,  # Always True by default - standardization is mandatory
 ) -> list[Dict[str, Any]]:
     """
-    Fetch odds from The Odds API and optionally standardize to ESPN format.
+    Fetch odds from The Odds API and standardize to ESPN format.
+    
+    Team name standardization is MANDATORY and always performed to ensure
+    data consistency across sources.
     
     Args:
         sport: Sport identifier
         regions: Regions to fetch odds for
         markets: Markets to fetch
-        standardize: If True, standardize team names to ESPN format
+        standardize: Always True - team names are always standardized (deprecated parameter)
     
     Returns:
-        List of game dictionaries with odds data
+        List of game dictionaries with standardized team names in ESPN format
     """
     logger.info(f"Fetching odds for {sport} with markets: {markets}")
     params = {
@@ -50,19 +53,23 @@ async def fetch_odds(
         data = resp.json()
         logger.info(f"Successfully fetched {len(data)} games with odds")
         
-        # Standardize team names to ESPN format
-        if standardize:
-            standardized_data = []
-            for game in data:
+        # ALWAYS standardize team names to ESPN format (mandatory)
+        standardized_data = []
+        for game in data:
+            try:
+                standardized = standardize_game_data(game, source="the_odds")
+                standardized_data.append(standardized)
+            except Exception as e:
+                logger.error(f"Error standardizing game data: {e}. Game: {game.get('home_team', 'N/A')} vs {game.get('away_team', 'N/A')}")
+                # Still attempt standardization even on error
                 try:
                     standardized = standardize_game_data(game, source="the_odds")
                     standardized_data.append(standardized)
-                except Exception as e:
-                    logger.warning(f"Error standardizing game data: {e}")
-                    standardized_data.append(game)  # Keep original if standardization fails
-            return standardized_data
+                except:
+                    standardized_data.append(game)  # Last resort: keep original
         
-        return data
+        logger.info(f"Standardized {len(standardized_data)} games")
+        return standardized_data
 
 
 @retry(

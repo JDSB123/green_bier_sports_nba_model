@@ -140,10 +140,18 @@ def parse_action_network_splits(data: Dict[str, Any]) -> GameSplits:
     total_market = markets.get("total", {})
     ml_market = markets.get("moneyline", {})
     
+    # Standardize team names to ESPN format (mandatory)
+    from src.ingestion.standardize import normalize_team_to_espn
+    home_team_raw = game.get("home_team", {}).get("name", "") if isinstance(game.get("home_team"), dict) else game.get("home_team", "")
+    away_team_raw = game.get("away_team", {}).get("name", "") if isinstance(game.get("away_team"), dict) else game.get("away_team", "")
+    
+    home_team = normalize_team_to_espn(str(home_team_raw), source="action_network") if home_team_raw else ""
+    away_team = normalize_team_to_espn(str(away_team_raw), source="action_network") if away_team_raw else ""
+    
     splits = GameSplits(
         event_id=str(game.get("id", "")),
-        home_team=game.get("home_team", {}).get("name", ""),
-        away_team=game.get("away_team", {}).get("name", ""),
+        home_team=home_team,
+        away_team=away_team,
         game_time=dt.datetime.fromisoformat(
             game.get("start_time", dt.datetime.now().isoformat())
         ),
@@ -179,10 +187,17 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
     """Parse betting splits from The Odds API format."""
     splits_list = []
     
+    # Standardize team names to ESPN format (mandatory)
+    from src.ingestion.standardize import normalize_team_to_espn
+    
     for game in data:
         try:
-            home_team = game.get("home_team", "")
-            away_team = game.get("away_team", "")
+            home_team_raw = game.get("home_team", "")
+            away_team_raw = game.get("away_team", "")
+            
+            # Standardize team names
+            home_team = normalize_team_to_espn(str(home_team_raw), source="the_odds") if home_team_raw else ""
+            away_team = normalize_team_to_espn(str(away_team_raw), source="the_odds") if away_team_raw else ""
             
             # The Odds API splits structure:
             # { "id": "...", "home_team": "...", "away_team": "...", "commence_time": "...",
@@ -335,18 +350,27 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
     # Placeholder implementation
     games = data.get("events", []) or data.get("games", [])
 
+    # Standardize team names to ESPN format (mandatory)
+    from src.ingestion.standardize import normalize_team_to_espn
+    
     for game in games:
         try:
+            home_team_raw = game.get("home", {}).get("name", "") if isinstance(game.get("home"), dict) else game.get("home", "")
+            away_team_raw = game.get("away", {}).get("name", "") if isinstance(game.get("away"), dict) else game.get("away", "")
+            
+            home_team = normalize_team_to_espn(str(home_team_raw), source="sbro") if home_team_raw else ""
+            away_team = normalize_team_to_espn(str(away_team_raw), source="sbro") if away_team_raw else ""
+            
             splits = GameSplits(
                 event_id=str(game.get("id", "")),
-                home_team=game.get("home", {}).get("name", ""),
-                away_team=game.get("away", {}).get("name", ""),
-                game_time=datetime.fromisoformat(game.get("datetime", datetime.now().isoformat())),
+                home_team=home_team,
+                away_team=away_team,
+                game_time=dt.datetime.fromisoformat(game.get("datetime", dt.datetime.now().isoformat())),
                 # Extract betting percentages if available
                 spread_home_ticket_pct=game.get("consensus", {}).get("spread", {}).get("home_pct", 50),
                 spread_away_ticket_pct=game.get("consensus", {}).get("spread", {}).get("away_pct", 50),
                 source="sbro",
-                updated_at=datetime.now(),
+                updated_at=dt.datetime.now(),
             )
             splits_list.append(detect_reverse_line_movement(splits))
         except Exception as e:

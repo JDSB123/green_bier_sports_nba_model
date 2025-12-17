@@ -166,51 +166,71 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown") -> str:
     """
     Normalize team name from any source to ESPN format.
     
+    This function ALWAYS attempts to standardize team names. It uses multiple
+    strategies to match team names and logs warnings for unmatched names.
+    
     Args:
         team_name: Team name from any source
         source: Source identifier ("the_odds", "api_basketball", etc.)
     
     Returns:
-        ESPN team name (canonical format)
+        ESPN team name (canonical format), or original if no match found
     
-    Raises:
-        ValueError: If team name cannot be normalized
+    Note:
+        Never raises exceptions - always returns a string to ensure ingestion continues
     """
     if not team_name:
-        raise ValueError("Team name cannot be empty")
+        logger.warning(f"Empty team name from source '{source}'")
+        return ""
     
     original_name = team_name
     team_name = team_name.strip()
     
-    # Check if already in ESPN format
+    if not team_name:
+        logger.warning(f"Team name is whitespace only from source '{source}'")
+        return original_name
+    
+    # Check if already in ESPN format (exact match)
     if team_name in ESPN_TEAM_NAMES:
         return team_name
     
-    # Check direct mapping
+    # Check direct mapping (exact match)
     if team_name in TEAM_NAME_MAPPING:
         result = TEAM_NAME_MAPPING[team_name]
+        logger.debug(f"Direct mapped '{original_name}' -> '{result}' (source: {source})")
         return result
     
-    # Try case-insensitive match
-    team_lower = team_name.lower()
+    # Try case-insensitive match in mapping
+    team_lower = team_name.lower().strip()
     for key, espn_name in TEAM_NAME_MAPPING.items():
-        if key.lower() == team_lower:
+        if key.lower().strip() == team_lower:
+            logger.debug(f"Case-insensitive mapped '{original_name}' -> '{espn_name}' (source: {source})")
             return espn_name
     
     # Try fuzzy matching (check if team name contains ESPN team name or vice versa)
     for espn_name, abbrevs in ESPN_TO_ABBREV.items():
-        if team_lower in espn_name.lower() or espn_name.lower() in team_lower:
-            logger.debug(f"Fuzzy matched '{team_name}' -> '{espn_name}'")
+        espn_lower = espn_name.lower()
+        # Check if team name contains ESPN name or vice versa
+        if team_lower in espn_lower or espn_lower in team_lower:
+            logger.info(f"Fuzzy matched '{original_name}' -> '{espn_name}' (source: {source})")
             return espn_name
+        # Check abbreviations
         for abbrev in abbrevs:
-            if abbrev.lower() == team_lower or team_lower in abbrev.lower():
-                logger.debug(f"Abbrev matched '{team_name}' -> '{espn_name}'")
+            abbrev_lower = abbrev.lower().strip()
+            if abbrev_lower == team_lower or team_lower in abbrev_lower or abbrev_lower in team_lower:
+                logger.info(f"Abbrev matched '{original_name}' -> '{espn_name}' (source: {source})")
                 return espn_name
     
-    # If no match found, log warning and return original
+    # Try matching against ESPN team names directly (case-insensitive substring)
+    for espn_name in ESPN_TEAM_NAMES:
+        if team_lower in espn_name.lower() or espn_name.lower() in team_lower:
+            logger.info(f"Substring matched '{original_name}' -> '{espn_name}' (source: {source})")
+            return espn_name
+    
+    # If no match found, log warning but return original (fail-safe)
     logger.warning(
-        f"Could not normalize team name '{team_name}' from source '{source}' to ESPN format. "
-        f"Returning original name."
+        f"⚠️  COULD NOT NORMALIZE team name '{original_name}' from source '{source}' to ESPN format. "
+        f"This may cause data merging issues. Returning original name."
     )
     return team_name
 
@@ -223,6 +243,9 @@ def standardize_game_data(
     """
     Standardize game data from any source to ESPN format.
     
+    This function ALWAYS standardizes team names. It handles various input formats
+    and ensures team names are normalized to ESPN format.
+    
     Standard format: "AWAY TEAM vs. HOME TEAM"
     All game data will have 'away_team' and 'home_team' fields in that order.
     
@@ -233,18 +256,42 @@ def standardize_game_data(
     
     Returns:
         Standardized game data with ESPN team names in "AWAY vs. HOME" format
+    
+    Note:
+        This function never fails - it always returns standardized data even if
+        team name matching is incomplete.
     """
     standardized = game_data.copy()
     
     # Extract team names (handle different source formats)
-    home_team_raw = standardized.get("home_team") or standardized.get("homeTeam") or standardized.get("home")
-    away_team_raw = standardized.get("away_team") or standardized.get("awayTeam") or standardized.get("away")
+    # Try multiple possible keys for team names
+    home_team_raw = (
+        standardized.get("home_team") 
+        or standardized.get("homeTeam") 
+        or standardized.get("home")
+        or (standardized.get("teams", {}).get("home", {}) if isinstance(standardized.get("teams"), dict) else {}).get("name", "")
+        or ""
+    )
+    away_team_raw = (
+        standardized.get("away_team")
+        or standardized.get("awayTeam")
+        or standardized.get("away")
+        or (standardized.get("teams", {}).get("away", {}) if isinstance(standardized.get("teams"), dict) else {}).get("name", "")
+        or ""
+    )
     
-    # Normalize team names to ESPN format
+    # ALWAYS normalize team names to ESPN format (mandatory)
     if home_team_raw:
-        standardized["home_team"] = normalize_team_to_espn(home_team_raw, source)
+        standardized["home_team"] = normalize_team_to_espn(str(home_team_raw), source)
+    else:
+        logger.warning(f"Missing home_team in game data from source '{source}'")
+        standardized["home_team"] = ""
+    
     if away_team_raw:
-        standardized["away_team"] = normalize_team_to_espn(away_team_raw, source)
+        standardized["away_team"] = normalize_team_to_espn(str(away_team_raw), source)
+    else:
+        logger.warning(f"Missing away_team in game data from source '{source}'")
+        standardized["away_team"] = ""
     
     # Ensure standard format: "AWAY TEAM vs. HOME TEAM"
     # Remove any non-standard keys
