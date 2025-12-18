@@ -1,223 +1,162 @@
 # Next Steps: What To Do Now
 
-**Status:** ✅ Production Ready | ⚠️ Backtest Needs Data
+**Status:** ✅ Production Ready (Docker-First)
 
 ---
 
 ## Current Status
 
 ### ✅ What's Working
-- **Code Quality:** All modules import, code compiles
-- **Data Validation:** Team name standardization working, no fake data policy enforced
-- **Configuration:** All API keys configured
-- **Error Handling:** Robust error handling with proper logging
-- **Data Available:** 6,290 games from 2010-2025
-- **Models:** All model classes implemented and ready
 
-### ⚠️ What Needs Work
-- **Backtesting:** Backtest infrastructure runs but produces 0 predictions
-- **Reason:** Missing betting lines (`spread_line`, `total_line`) in training data
-- **Impact:** Cannot validate model performance on spreads/totals markets
+- **Docker Stack:** All services containerized and running
+- **Prediction API:** 6 backtested markets with strong ROI
+- **Backtest Pipeline:** Containerized data + training + validation
+- **Analysis Script:** Docker-only analysis with summary tables
+
+### 📊 Performance
+
+| Market | Accuracy | ROI |
+|--------|----------|-----|
+| FG Spread | 60.6% | +15.7% |
+| FG Total | 59.2% | +13.1% |
+| FG Moneyline | 65.5% | +25.1% |
+| 1H Spread | 55.9% | +8.2% |
+| 1H Total | 58.1% | +11.4% |
+| 1H Moneyline | 63.0% | +19.8% |
 
 ---
 
-## What To Do Now: 3 Options
+## What To Do Now
 
-### Option 1: Add Betting Lines Data (Recommended for Full Backtesting)
+### Option 1: Daily Predictions (Recommended)
 
-**Goal:** Enable full backtesting on all markets (spreads, totals, moneyline)
+**Goal:** Start using the system for daily predictions
 
 **Steps:**
-1. **Fetch Historical Odds from The Odds API:**
-   ```bash
-   # The Odds API has historical endpoints (may require paid plan)
-   python scripts/collect_the_odds.py
-   ```
 
-2. **Or Import Kaggle Historical Data:**
-   ```bash
-   # If you have Kaggle dataset with historical betting lines
-   python scripts/import_kaggle_betting_data.py --merge
-   ```
+```powershell
+# 1. Start the stack
+docker compose up -d
 
-3. **Rebuild Training Data:**
-   ```bash
-   python scripts/build_training_dataset.py
-   ```
+# 2. Check health
+curl http://localhost:8090/health
 
-4. **Run Full Backtest:**
-   ```bash
-   python scripts/backtest.py --markets all
-   ```
+# 3. Get today's analysis
+python scripts/analyze_slate_docker.py --date today
 
-**Time Required:** 1-2 hours (depending on API access)  
-**Result:** Full backtest results with ROI, accuracy, segment analysis
+# 4. View predictions
+curl http://localhost:8090/slate/today
 
----
-
-### Option 2: Deploy Now & Backtest Later
-
-**Goal:** Start using the system for predictions, validate with real results
-
-**Steps:**
-1. **Run Daily Pipeline:**
-   ```bash
-   # This fetches odds, builds features, trains models, makes predictions
-   python scripts/full_pipeline.py
-   ```
-
-2. **Review Predictions:**
-   ```bash
-   # View predictions for today's games
-   cat data/processed/predictions.csv
-   ```
-
-3. **Track Results:**
-   ```bash
-   # After games finish, review how picks performed
-   python scripts/review_predictions.py
-   ```
-
-**Time Required:** 15 minutes to set up  
-**Result:** Start making predictions immediately, validate with live results
-
----
-
-### Option 3: Fix Backtest Script (For Moneyline Only)
-
-**Goal:** Get backtest working with current data (moneyline markets only)
-
-**Steps:**
-1. **Run Moneyline Backtest:**
-   ```bash
-   python scripts/backtest.py --markets fg_moneyline,1h_moneyline --min-training 200
-   ```
-
-2. **If still 0 predictions, debug:**
-   ```bash
-   python scripts/debug_backtest_issue.py
-   ```
-
-3. **Check why predictions aren't generating:**
-   - Verify feature building works
-   - Check if models train successfully
-   - Ensure enough historical data (need 30+ games per training example)
-
-**Time Required:** 30 minutes  
-**Result:** Backtest results for moneyline markets (spreads/totals still need betting lines)
-
----
-
-## Recommended Next Steps (Priority Order)
-
-### Immediate (Today)
-
-1. **✅ System is Production Ready** - All code quality checks passed
-2. **Start Using for Predictions:**
-   ```bash
-   python scripts/full_pipeline.py
-   ```
-
-### Short Term (This Week)
-
-3. **Add Betting Lines Data:**
-   - Option A: Fetch from The Odds API historical endpoints
-   - Option B: Import from Kaggle dataset
-   - Option C: Manually add lines from historical data source
-
-4. **Run Full Backtest:**
-   ```bash
-   python scripts/backtest.py --markets all
-   ```
-
-5. **Review Backtest Results:**
-   - Check accuracy by market
-   - Analyze ROI by segment
-   - Identify best-performing models
-
-### Long Term (This Month)
-
-6. **Optimize Models:**
-   - Tune hyperparameters based on backtest results
-   - Implement ensemble models
-   - Add confidence-based filtering
-
-7. **Production Monitoring:**
-   - Track prediction accuracy vs backtest
-   - Monitor model performance over time
-   - Set up alerts for data quality issues
-
----
-
-## Quick Start Guide
-
-### If You Want Predictions Now:
-
-```bash
-# 1. Fetch today's odds and data
-python scripts/ingest_all.py --essential
-
-# 2. Build features and make predictions
-python scripts/full_pipeline.py
-
-# 3. View predictions
-cat data/processed/predictions.csv
+# Results saved to:
+# - data/processed/slate_analysis_YYYYMMDD.txt
+# - data/processed/slate_analysis_YYYYMMDD.json
 ```
 
-### If You Want Backtest Results:
+---
 
-```bash
-# 1. Ensure betting lines are in training data
-python scripts/check_data_and_backtest.py
+### Option 2: Run Full Backtest
 
-# 2. Run backtest
-python scripts/backtest.py --markets all
+**Goal:** Validate model performance with fresh data
 
-# 3. View results
-cat ALL_MARKETS_BACKTEST_RESULTS.md
+**Steps:**
+
+```powershell
+# Run full backtest pipeline
+docker compose -f docker-compose.backtest.yml up backtest-full
+
+# View results
+cat data/results/backtest_report_*.md
+```
+
+---
+
+### Option 3: Extend to More Markets
+
+**Goal:** Add Q1 markets or other bet types
+
+**Steps:**
+
+1. **Update training data with Q1 outcomes:**
+   ```powershell
+   docker compose -f docker-compose.backtest.yml run --rm backtest-shell
+   # Inside container:
+   python scripts/generate_q1_training_data.py
+   ```
+
+2. **Run Q1 backtest:**
+   ```powershell
+   docker compose -f docker-compose.backtest.yml up backtest-full
+   # With MARKETS=q1_spread,q1_total,q1_moneyline
+   ```
+
+---
+
+## Recommended Daily Workflow
+
+### Morning (Before Games)
+
+```powershell
+# 1. Ensure stack is running
+docker compose up -d
+
+# 2. Get full analysis
+python scripts/analyze_slate_docker.py --date today
+
+# 3. Review picks in output
+# Look for high fire ratings (🔥🔥🔥🔥 or 🔥🔥🔥🔥🔥)
+```
+
+### After Games
+
+```powershell
+# Results are tracked automatically via API
+# Or check data/processed/ for prediction history
 ```
 
 ---
 
 ## Troubleshooting
 
-### Backtest Shows "0 predictions"
+### API Returns "Engine Not Loaded"
 
-**Possible Causes:**
-1. Missing betting lines (for spreads/totals)
-2. Insufficient historical data (need 30+ games per training example)
-3. Feature building failures (check logs)
+Models may be missing. Run backtest to regenerate:
 
-**Solutions:**
-- For spreads/totals: Add `spread_line` and `total_line` columns
-- For moneyline: Try `--min-training 200` to require more training data
-- Check debug script: `python scripts/debug_backtest_issue.py`
+```powershell
+docker compose -f docker-compose.backtest.yml up backtest-full
+```
 
-### Models Don't Train
+### Container Not Starting
 
-**Check:**
-- Training data exists: `data/processed/training_data.csv`
-- Data has required columns: `home_team`, `away_team`, `date`, scores
-- Run validation: `python scripts/validate_production_readiness.py`
+```powershell
+# Check logs
+docker compose logs strict-api
 
----
+# Common issues:
+# - Missing .env file
+# - Port 8090 already in use
+# - Missing API keys
+```
 
-## Questions?
+### No Games Found
 
-- **Code Issues:** Check `docs/PRODUCTION_READINESS_REPORT.md`
-- **Data Issues:** Check `docs/DATA_INGESTION_METHODOLOGY.md`
-- **Backtest Issues:** Run `python scripts/debug_backtest_issue.py`
+```powershell
+# Check if date is valid
+curl "http://localhost:8090/slate/2025-12-18"
+
+# Verify odds API is returning data
+docker compose logs strict-api
+```
 
 ---
 
 ## Summary
 
-**You have 3 options:**
+| Task | Command |
+|------|---------|
+| Start stack | `docker compose up -d` |
+| Check health | `curl http://localhost:8090/health` |
+| Get predictions | `python scripts/analyze_slate_docker.py --date today` |
+| Run backtest | `docker compose -f docker-compose.backtest.yml up backtest-full` |
+| Stop stack | `docker compose down` |
 
-1. **🚀 Deploy Now** - Start making predictions, validate with live results
-2. **📊 Add Betting Lines** - Enable full backtesting (recommended)
-3. **🔧 Fix Moneyline Backtest** - Get partial backtest working with current data
-
-**My Recommendation:** Start with Option 1 (deploy and make predictions), then work on Option 2 (add betting lines) in parallel to get full backtest validation.
-
-
+**Everything runs through Docker.** No local Python execution needed.

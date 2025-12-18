@@ -119,10 +119,31 @@ services:
     networks:
       - backtest-network
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # DIAGNOSTIC
+  # Run diagnostics to troubleshoot issues
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-diagnose:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-diagnose
+    environment:
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - SEASONS=${SEASONS:-2024-2025,2025-2026}
+      - MARKETS=${MARKETS:-all}
+    volumes:
+      - ./data:/app/data
+    command: ["diagnose"]
+    networks:
+      - backtest-network
+
 volumes:
   backtest_cache:
 
 networks:
   backtest-network:
     name: nba-backtest-network
+
 

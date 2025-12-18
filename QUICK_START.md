@@ -1,109 +1,88 @@
 # NBA v5.0 BETA - Quick Start Guide
 
-## ✅ Setup Complete!
+## Prerequisites
 
-Your `.env` file has been created with all API keys configured.
+- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
+- Docker Compose v2.x
 
-## 🚀 Getting Started
+## Setup (5 minutes)
 
-### Option 1: Docker Compose (Recommended for Microservices)
-
-```powershell
-# Start all services
-docker-compose up -d
-
-# Check service health
-curl http://localhost:8080/health
-curl http://localhost:8082/health  # Prediction service
-curl http://localhost:8081/health  # Feature store
-
-# View logs
-docker-compose logs -f prediction-service
-docker-compose logs -f odds-ingestion
-
-# Stop services
-docker-compose down
-```
-
-### Option 2: Python Monolith (Original v4.0 approach)
-
-If you want to use the original Python scripts while developing the microservices:
+### 1. Configure Environment
 
 ```powershell
-# Create virtual environment
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+# Copy template
+copy .env.example .env
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Run predictions
-python scripts/predict.py
-
-# Run full pipeline
-python scripts/full_pipeline.py
+# Edit .env and add your API keys:
+# - THE_ODDS_API_KEY
+# - API_BASKETBALL_KEY
 ```
 
-## 📁 Project Structure
+### 2. Start the Stack
 
-```
-nba_v5.0_BETA/
-├── services/              # Microservices (Go, Rust, Python)
-│   ├── api-gateway-go/
-│   ├── feature-store-go/
-│   ├── line-movement-analyzer-go/
-│   ├── schedule-poller-go/
-│   ├── odds-ingestion-rust/
-│   └── prediction-service-python/
-├── src/                   # Original v4.0 Python code
-├── scripts/               # Original v4.0 scripts
-├── database/              # SQL migrations
-├── docker-compose.yml     # Microservices orchestration
-└── .env                   # API keys (configured ✅)
+```powershell
+docker compose up -d
 ```
 
-## 🔑 API Keys Configured
+### 3. Verify Health
 
-- ✅ The Odds API
-- ✅ API-Basketball
-- ✅ BETSAPI
-- ✅ Action Network
-- ✅ Kaggle
+```powershell
+curl http://localhost:8090/health
+```
 
-## 📝 Next Steps
+Expected response:
+```json
+{
+  "status": "ok",
+  "mode": "STRICT",
+  "markets": 6,
+  "engine_loaded": true
+}
+```
 
-1. **Test Microservices:**
-   ```powershell
-   docker-compose up -d
-   curl http://localhost:8080/health
-   ```
+## Daily Usage
 
-2. **Use Original Scripts:**
-   ```powershell
-   python scripts/predict.py --date today
-   ```
+### Get Today's Predictions
 
-3. **Develop Services:**
-   - Complete prediction service integration with NBA v4.0 models
-   - Implement feature store computation
-   - Complete odds ingestion database integration
+```powershell
+curl http://localhost:8090/slate/today
+```
 
-## 📚 Documentation
+### Full Analysis with Summary Table
 
-- `README.md` - Full documentation
-- `docs/` - Technical references
-- `setup.ps1` - Setup script (already run)
+```powershell
+python scripts/analyze_slate_docker.py --date today
+```
 
-## 🆘 Troubleshooting
+This generates:
+- Console output with picks and fire ratings
+- `data/processed/slate_analysis_YYYYMMDD.txt`
+- `data/processed/slate_analysis_YYYYMMDD.json`
 
-**Docker issues:**
-- Ensure Docker Desktop is running
-- Check ports 8080, 8081, 8082, 8084, 8085 are available
+### View Specific Game
 
-**Python issues:**
-- Ensure Python 3.11+ is installed
-- Activate virtual environment: `.\venv\Scripts\Activate.ps1`
+```powershell
+curl "http://localhost:8090/slate/2025-12-18"
+```
 
-**API issues:**
-- Verify API keys in `.env` file
-- Check API quotas/limits
+## Running Backtests
+
+```powershell
+# Full pipeline (fetch + train + backtest)
+docker compose -f docker-compose.backtest.yml up backtest-full
+
+# View results
+cat data/results/backtest_*.md
+```
+
+## Stopping Services
+
+```powershell
+docker compose down
+```
+
+## Next Steps
+
+- **Full documentation:** See `README.md`
+- **Architecture details:** See `docs/CURRENT_STACK_AND_FLOW.md`
+- **Troubleshooting:** See `docs/DOCKER_TROUBLESHOOTING.md`

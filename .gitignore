@@ -70,4 +70,6 @@ htmlcov/
 *.bak
 
 # Archived scripts
+scripts/archive/
 scripts/archived/
+docs/archive/

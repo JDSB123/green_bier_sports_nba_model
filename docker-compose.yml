@@ -154,6 +154,27 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  strict-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nba_v50_strict-api:latest
+    container_name: nba-api
+    environment:
+      - DATA_PROCESSED_DIR=/app/data/processed
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - ACTION_NETWORK_USERNAME=${ACTION_NETWORK_USERNAME}
+      - ACTION_NETWORK_PASSWORD=${ACTION_NETWORK_PASSWORD}
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8090:8080"
+    depends_on:
+      prediction-service:
+        condition: service_started
+    restart: unless-stopped
+
   # ─────────────────────────────────────────────────────────────────────────
   # BACKTEST SERVICE (on-demand)
   # ─────────────────────────────────────────────────────────────────────────

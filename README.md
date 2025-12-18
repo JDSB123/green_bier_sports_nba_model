@@ -1,54 +1,41 @@
 # NBA Basketball Prediction System v5.0 BETA
 
-Production-grade microservices architecture for NBA betting predictions, refactored from v4.0 monolith.
+Production-grade containerized system for NBA betting predictions.
 
 ## Architecture Overview
 
-This version uses a **microservices architecture** with Go, Rust, and Python services, matching the approach used in `ncaam_v5.0_BETA`.
+**All operations run through Docker containers.** No local Python execution.
 
-### Technology Stack
+### Services (Docker Compose)
 
-| Service | Language | Purpose |
-|---------|----------|---------|
-| Odds Ingestion | Rust | Real-time odds streaming (<10ms latency) |
-| Schedule Poller | Go | Game schedule aggregation |
-| Feature Store | Go | High-performance feature serving |
-| Prediction Service | Python | ML inference (NBA v4.0 models) |
-| Line Movement Analyzer | Go | RLM detection and line movement analysis |
-| API Gateway | Go | Unified REST API |
+| Service | Port | Purpose |
+|---------|------|---------|
+| `strict-api` | 8090 | **Main prediction API** - FastAPI with 6 backtested markets |
+| `prediction-service` | 8082 | ML inference service |
+| `api-gateway` | 8080 | Unified REST API gateway |
+| `feature-store` | 8081 | Feature serving (Go) |
+| `line-movement-analyzer` | 8084 | RLM detection (Go) |
+| `schedule-poller` | 8085 | Game schedule aggregation (Go) |
+| `postgres` | 5432 | TimescaleDB for time-series data |
+| `redis` | 6379 | Caching and pub/sub |
 
-### Infrastructure
+### Backtest Services (On-Demand)
 
-- **PostgreSQL 15 + TimescaleDB** (time-series data)
-- **Redis 7** (caching, pub/sub)
-- **Docker Compose** (dev) / **Kubernetes** (prod)
-
-## Project Structure
-
-```
-nba_v5.0_BETA/
-├── services/
-│   ├── odds-ingestion-rust/       # Rust: Real-time odds
-│   ├── schedule-poller-go/       # Go: Game schedules
-│   ├── feature-store-go/          # Go: Feature serving
-│   ├── prediction-service-python/ # Python: ML inference
-│   ├── line-movement-analyzer-go/ # Go: Line movement analysis
-│   └── api-gateway-go/            # Go: Unified API
-├── database/                      # SQL migrations
-├── docker-compose.yml            # Local development
-└── README.md                      # This file
-```
+| Service | Purpose |
+|---------|---------|
+| `backtest-full` | Full pipeline: fetch data + build training + run backtest |
+| `backtest-data` | Fetch and build training data only |
+| `backtest-only` | Run backtest on existing data |
+| `backtest-shell` | Interactive debugging shell |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Go 1.22+ (for local Go development)
-- Rust 1.75+ (for local Rust development)
-- Python 3.11+ (for local Python development)
+- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
+- Docker Compose v2.x
 
-### Environment Setup
+### Setup
 
 1. **Copy environment template:**
    ```powershell
@@ -62,122 +49,171 @@ nba_v5.0_BETA/
    DB_PASSWORD=nba_dev_password
    ```
 
-### Running Services
+### Running the Stack
 
 **Start all services:**
 ```powershell
-docker-compose up -d
+docker compose up -d
 ```
 
 **Check service health:**
 ```powershell
-curl http://localhost:8080/health
-curl http://localhost:8082/health  # Prediction service
-curl http://localhost:8081/health  # Feature store
+curl http://localhost:8090/health   # Main API
+curl http://localhost:8080/health   # Gateway
+curl http://localhost:8082/health   # Prediction service
 ```
 
 **View logs:**
 ```powershell
-docker-compose logs -f prediction-service
-docker-compose logs -f odds-ingestion
+docker compose logs -f strict-api
+docker compose logs -f prediction-service
 ```
 
 **Stop all services:**
 ```powershell
-docker-compose down
+docker compose down
 ```
 
 ## API Usage
 
-### Get Predictions
+### Get Today's Predictions
 
 ```bash
-POST http://localhost:8080/api/predict
-Content-Type: application/json
-
-{
-  "game_id": "123e4567-e89b-12d3-a456-426614174000",
-  "home_team": "Lakers",
-  "away_team": "Celtics",
-  "commence_time": "2025-12-18T19:30:00Z",
-  "features": {
-    "home_ppg": 112.5,
-    "home_papg": 108.2,
-    "away_ppg": 118.7,
-    "away_papg": 115.3,
-    "predicted_margin": -6.2,
-    "predicted_total": 223.5
-  },
-  "market_odds": {
-    "spread": -6.5,
-    "total": 223.5,
-    "home_ml": -280,
-    "away_ml": +230
-  }
-}
+curl http://localhost:8090/slate/today
 ```
 
-### Get Features
+### Get Comprehensive Analysis
 
 ```bash
-GET http://localhost:8080/api/features?team=Lakers&date=2025-12-18
+curl "http://localhost:8090/slate/today/comprehensive?use_splits=true"
 ```
 
-### Get Odds
+### Single Game Prediction
 
 ```bash
-GET http://localhost:8080/api/odds?date=2025-12-18
+curl -X POST http://localhost:8090/predict/game \
+  -H "Content-Type: application/json" \
+  -d '{
+    "home_team": "Cleveland Cavaliers",
+    "away_team": "Chicago Bulls",
+    "fg_spread_line": -7.5,
+    "fg_total_line": 223.5,
+    "fg_home_ml": -300,
+    "fg_away_ml": 240,
+    "fh_spread_line": -4.0,
+    "fh_total_line": 111.0,
+    "fh_home_ml": -180,
+    "fh_away_ml": 150
+  }'
 ```
 
-## Development
+## Running Backtests
 
-### Local Development (Without Docker)
+All backtests run in containers:
 
-**Go Services:**
 ```powershell
-cd services/api-gateway-go
-go run main.go
+# Full backtest pipeline (fetch data + train + backtest)
+docker compose -f docker-compose.backtest.yml up backtest-full
+
+# Just build training data (no backtest)
+docker compose -f docker-compose.backtest.yml up backtest-data
+
+# Run backtest on existing data
+docker compose -f docker-compose.backtest.yml up backtest-only
+
+# Interactive debugging shell
+docker compose -f docker-compose.backtest.yml run --rm backtest-shell
 ```
 
-**Rust Service:**
+### Backtest Configuration
+
+Set these in your `.env` file:
+```env
+SEASONS=2024-2025,2025-2026
+MARKETS=all          # Or: fg_spread,fg_total,fg_moneyline,1h_spread,1h_total
+MIN_TRAINING=80      # Minimum training games before predictions
+```
+
+## Analyzing Slates (Docker Only)
+
+Use the Docker-only analysis script:
+
 ```powershell
-cd services/odds-ingestion-rust
-cargo run
+python scripts/analyze_slate_docker.py --date today
+python scripts/analyze_slate_docker.py --date tomorrow
+python scripts/analyze_slate_docker.py --date 2025-12-18
 ```
 
-**Python Service:**
+This script connects to the running Docker container and generates comprehensive analysis.
+
+## Project Structure
+
+```
+nba_v5.0_BETA/
+├── services/                    # Microservices (Go, Rust, Python)
+│   ├── api-gateway-go/
+│   ├── feature-store-go/
+│   ├── line-movement-analyzer-go/
+│   ├── schedule-poller-go/
+│   ├── odds-ingestion-rust/
+│   └── prediction-service-python/
+├── src/                         # Core Python prediction code
+│   ├── ingestion/               # Data ingestion modules
+│   ├── modeling/                # ML models and features
+│   ├── prediction/              # Prediction engine
+│   └── serving/                 # FastAPI app (containerized)
+├── scripts/                     # Utility scripts (run via containers)
+├── database/                    # SQL migrations
+├── docker-compose.yml           # Main stack
+├── docker-compose.backtest.yml  # Backtest stack
+├── Dockerfile                   # Main API container
+└── Dockerfile.backtest          # Backtest container
+```
+
+## API Keys Required
+
+| Key | Source | Purpose |
+|-----|--------|---------|
+| `THE_ODDS_API_KEY` | [The Odds API](https://the-odds-api.com/) | Live betting odds |
+| `API_BASKETBALL_KEY` | [API-Sports](https://api-sports.io/) | Game outcomes, team stats |
+
+Optional:
+- `BETSAPI_KEY` - Alternative odds source
+- `ACTION_NETWORK_USERNAME/PASSWORD` - Betting splits
+- `KAGGLE_API_TOKEN` - Historical datasets
+
+## Performance (Backtested)
+
+| Market | Accuracy | ROI |
+|--------|----------|-----|
+| FG Spread | 60.6% | +15.7% |
+| FG Total | 59.2% | +13.1% |
+| FG Moneyline | 65.5% | +25.1% |
+| 1H Spread | 55.9% | +8.2% |
+| 1H Total | 58.1% | +11.4% |
+| 1H Moneyline | 63.0% | +19.8% |
+
+*Results from backtest: Oct 2 - Dec 16, 2025 (316+ predictions)*
+
+## Documentation
+
+- `docs/CURRENT_STACK_AND_FLOW.md` - Detailed architecture
+- `docs/BACKTEST_QUICKSTART.md` - Backtesting guide
+- `docs/DATA_INGESTION_METHODOLOGY.md` - Data sources and processing
+- `docs/ARCHITECTURE.md` - Technical architecture
+
+## Troubleshooting
+
+See `docs/DOCKER_TROUBLESHOOTING.md` for common issues.
+
+**Quick checks:**
 ```powershell
-cd services/prediction-service-python
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8082
+# Ensure containers are running
+docker ps --filter "name=nba"
+
+# Check API health
+curl http://localhost:8090/health
+
+# View container logs
+docker compose logs -f strict-api
 ```
-
-## Migration from v4.0
-
-This v5.0 BETA is a **refactored microservices version** of the v4.0 monolith. Key differences:
-
-- **Architecture**: Microservices vs monolith
-- **Languages**: Go + Rust + Python vs Python only
-- **Deployment**: Docker containers vs single process
-- **Scalability**: Independent service scaling vs single process
-
-The **prediction logic remains the same** - we're using the same ML models and algorithms from v4.0, just distributed across services.
-
-## Next Steps
-
-1. **Complete prediction service integration** - Connect to actual NBA v4.0 models
-2. **Implement feature store** - Real feature computation from NBA v4.0
-3. **Complete odds ingestion** - Full database/Redis integration
-4. **Add monitoring** - Prometheus + Grafana
-5. **Production deployment** - Kubernetes manifests
-
-## Status
-
-⚠️ **BETA** - This is a work in progress. Core services are scaffolded but need full implementation.
-
-## Reference
-
-- **NBA v4.0**: Original monolith (production-ready)
-- **ncaam_v5.0_BETA**: Reference microservices architecture

@@ -129,8 +129,10 @@ def generate_rationale(
                 f"   Significant line movement ({line_movement:+.1f} pts) suggests sharp action."
             )
     else:
+        line_str = f"{current_line:+.1f}" if current_line is not None else "N/A"
+        odds_str = f"{market_odds:+d}" if market_odds is not None else "N/A"
         market_context.append(
-            f"📈 Market Type: {market_type}. Current line: {current_line:+.1f} ({market_odds:+d})."
+            f"📈 Market Type: {market_type}. Current line: {line_str} ({odds_str})."
         )
     
     # ============================================================

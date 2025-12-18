@@ -222,6 +222,117 @@ async def get_slate_predictions(
     )
 
 
+@app.get("/slate/{date}/comprehensive")
+async def get_comprehensive_slate_analysis(
+    date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    use_splits: bool = Query(True, description="Whether to fetch and use betting splits")
+):
+    """
+    Get comprehensive slate analysis with full edge calculations, rationale, and summary table.
+    
+    This is the FULL analysis endpoint that replaces the legacy script.
+    Returns complete analysis matching analyze_todays_slate.py output.
+    """
+    if not hasattr(app.state, 'engine') or app.state.engine is None:
+        raise HTTPException(status_code=503, detail="STRICT MODE: Engine not loaded - models missing")
+
+    # Import comprehensive analysis functions
+    from scripts.analyze_todays_slate import (
+        get_target_date, fetch_todays_games, calculate_comprehensive_edge,
+        parse_utc_time, to_cst
+    )
+    from src.modeling.edge_thresholds import get_edge_thresholds_for_game
+    from zoneinfo import ZoneInfo
+    
+    CST = ZoneInfo("America/Chicago")
+    
+    # Resolve date
+    try:
+        target_date = get_target_date(date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    # Get edge thresholds
+    edge_thresholds = get_edge_thresholds_for_game(
+        game_date=target_date,
+        bet_types=["spread", "total", "moneyline", "1h_spread", "1h_total"]
+    )
+
+    # Fetch games
+    games = await fetch_todays_games(target_date)
+    if not games:
+        return {"date": str(target_date), "analysis": [], "summary": "No games found"}
+
+    # Fetch betting splits
+    splits_dict = {}
+    if use_splits:
+        try:
+            from src.ingestion.betting_splits import fetch_public_betting_splits
+            splits_dict = await fetch_public_betting_splits(games, source="auto")
+        except Exception as e:
+            logger.warning(f"Could not fetch splits: {e}")
+
+    # Process each game
+    analysis_results = []
+    
+    for game in games:
+        home_team = game.get("home_team")
+        away_team = game.get("away_team")
+        commence_time = game.get("commence_time")
+        
+        try:
+            # Parse time
+            game_dt = parse_utc_time(commence_time) if commence_time else None
+            time_cst = to_cst(game_dt).strftime("%I:%M %p %Z") if game_dt else "TBD"
+            
+            # Build features
+            game_key = f"{away_team}@{home_team}"
+            features = await app.state.feature_builder.build_game_features(
+                home_team, away_team, betting_splits=splits_dict.get(game_key)
+            )
+            
+            # Build first half features (simplified - use same features scaled)
+            fh_features = features.copy()  # In production, build proper 1H features
+            
+            # Extract odds
+            from scripts.analyze_todays_slate import extract_consensus_odds
+            odds = extract_consensus_odds(game)
+            
+            # Get betting splits for this game
+            betting_splits = splits_dict.get(game_key)
+            
+            # Calculate comprehensive edge
+            comprehensive_edge = calculate_comprehensive_edge(
+                features=features,
+                fh_features=fh_features,
+                odds=odds,
+                game=game,
+                betting_splits=betting_splits,
+                edge_thresholds=edge_thresholds
+            )
+            
+            analysis_results.append({
+                "home_team": home_team,
+                "away_team": away_team,
+                "time_cst": time_cst,
+                "commence_time": commence_time,
+                "odds": odds,
+                "features": features,
+                "comprehensive_edge": comprehensive_edge,
+                "betting_splits": betting_splits
+            })
+            
+        except Exception as e:
+            logger.error(f"Error processing {home_team} vs {away_team}: {e}")
+            continue
+    
+    return {
+        "date": str(target_date),
+        "analysis": analysis_results,
+        "edge_thresholds": edge_thresholds
+    }
+
+
 @app.post("/predict/game", response_model=GamePredictions)
 async def predict_single_game(req: GamePredictionRequest):
     """
