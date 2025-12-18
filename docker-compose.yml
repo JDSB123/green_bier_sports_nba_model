@@ -7,9 +7,6 @@
 #   docker compose down               # Stop all services
 #
 # Main entry point: http://localhost:8090 (strict-api)
-
-version: '3.8'
-
 services:
   # ─────────────────────────────────────────────────────────────────────────
   # INFRASTRUCTURE
@@ -26,7 +23,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+      # Mount SQL init scripts (repo uses database/*.sql)
+      - ./database:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nba"]
       interval: 10s

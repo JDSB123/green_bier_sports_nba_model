@@ -13,6 +13,8 @@ That's it. This command:
 4. ✅ Fetches predictions
 5. ✅ Displays picks with fire ratings
 
+**No extra Python deps:** `scripts/run_slate.py` uses only the Python standard library (no `httpx`, no `requests`).
+
 ---
 
 ## Examples

@@ -190,7 +190,7 @@ nba_v5.0_BETA/
 
 ## ⚠️ Important Rules
 
-1. **Docker Only** - No local Python execution
+1. **Docker for computation** - models/predictions run in containers (the local `scripts/run_slate.py` just orchestrates and calls the API)
 2. **STRICT MODE** - All inputs required, no fallbacks
 3. **6 Markets Only** - Only backtested markets (no Q1)
 4. **No Placeholders** - Real data only, no mocks

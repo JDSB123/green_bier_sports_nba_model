@@ -27,7 +27,8 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 ## Architecture Overview
 
-**All operations run through Docker containers.** No local Python execution.
+**All prediction/model computation runs through Docker containers.**
+`scripts/run_slate.py` is a local *orchestrator* (starts the stack and calls the API); it does not run models locally.
 
 ### Services (Docker Compose)
 

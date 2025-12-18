@@ -21,12 +21,15 @@ This script:
     4. Displays formatted results with fire ratings
 """
 import argparse
+import json
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 # Fix Windows console encoding
 import io
@@ -34,15 +37,27 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-try:
-    import httpx
-except ImportError:
-    print("ERROR: httpx not installed. Run: pip install httpx")
-    sys.exit(1)
-
 PROJECT_ROOT = Path(__file__).parent.parent
 API_URL = "http://localhost:8090"
-CST = ZoneInfo("America/Chicago")
+
+
+def http_get_json(url: str, params: dict | None = None, timeout: int = 30) -> dict:
+    """HTTP GET returning parsed JSON (stdlib only)."""
+    full_url = f"{url}?{urlencode(params)}" if params else url
+    try:
+        with urlopen(full_url, timeout=timeout) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+            return json.loads(body)
+    except HTTPError as e:
+        try:
+            body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        raise RuntimeError(f"HTTP {e.code} from {full_url}: {body}".strip()) from e
+    except URLError as e:
+        raise RuntimeError(f"Failed to reach {full_url}: {e}") from e
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Invalid JSON from {full_url}: {e}") from e
 
 
 def check_docker_running() -> bool:
@@ -94,15 +109,12 @@ def wait_for_api(max_wait: int = 60) -> bool:
     
     while time.time() - start < max_wait:
         try:
-            response = httpx.get(f"{API_URL}/health", timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("engine_loaded"):
-                    print(f"✅ API ready (engine loaded)")
-                    return True
-                else:
-                    print("⚠️  API up but engine not loaded - models may be missing")
-                    return True
+            data = http_get_json(f"{API_URL}/health", timeout=5)
+            if data.get("engine_loaded"):
+                print("✅ API ready (engine loaded)")
+                return True
+            print("⚠️  API up but engine not loaded - models may be missing")
+            return True
         except Exception:
             pass
         time.sleep(2)
@@ -137,6 +149,24 @@ def format_odds(odds: int) -> str:
     return f"+{odds}" if odds > 0 else str(odds)
 
 
+def _match_game(game: dict, matchup_filter: str) -> bool:
+    """Match on single team name or 'teamA vs teamB' style strings."""
+    home = (game.get("home_team") or "").lower()
+    away = (game.get("away_team") or "").lower()
+    raw = (matchup_filter or "").strip().lower()
+    if not raw:
+        return True
+
+    # "Lakers vs Celtics" / "Celtics @ Lakers" / "Celtics at Lakers"
+    parts = [p.strip() for p in re.split(r"\s*(?:vs\.?|@|at)\s*", raw) if p.strip()]
+    if len(parts) >= 2:
+        a, b = parts[0], parts[1]
+        return (a in home or a in away) and (b in home or b in away)
+
+    # Single-team filter
+    return raw in home or raw in away
+
+
 def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
     """Fetch slate and display results."""
     print(f"\n{'='*80}")
@@ -144,18 +174,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
     print(f"{'='*80}\n")
     
     try:
-        response = httpx.get(
+        data = http_get_json(
             f"{API_URL}/slate/{date_str}/comprehensive",
-            params={"use_splits": True},
-            timeout=120
+            params={"use_splits": "true"},
+            timeout=120,
         )
-        
-        if response.status_code != 200:
-            print(f"❌ API error: {response.status_code}")
-            print(f"   {response.text}")
-            return
-        
-        data = response.json()
         analysis = data.get("analysis", [])
         
         if not analysis:
@@ -164,14 +187,15 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         
         # Filter by matchup if specified
         if matchup_filter:
-            matchup_lower = matchup_filter.lower()
-            analysis = [
-                g for g in analysis
-                if matchup_lower in g.get("home_team", "").lower()
-                or matchup_lower in g.get("away_team", "").lower()
-            ]
+            analysis = [g for g in analysis if _match_game(g, matchup_filter)]
             if not analysis:
                 print(f"❌ No games matching '{matchup_filter}'")
+                print("\nAvailable games for this date:")
+                for g in data.get("analysis", []):
+                    home = g.get("home_team", "")
+                    away = g.get("away_team", "")
+                    time_cst = g.get("time_cst", "TBD")
+                    print(f"  - {away} @ {home} ({time_cst})")
                 return
         
         print(f"📊 Found {len(analysis)} game(s)\n")
@@ -255,7 +279,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         print("✅ Analysis complete")
         print(f"   More fires = stronger pick (🔥🔥🔥🔥🔥 = best)")
         
-    except httpx.TimeoutException:
+    except TimeoutError:
         print("❌ Request timed out - API may be processing")
     except Exception as e:
         print(f"❌ Error: {e}")

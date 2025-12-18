@@ -5,22 +5,19 @@
 #
 # Usage:
 #   # Full backtest (fetch data + build training + run backtest)
-#   docker-compose -f docker-compose.backtest.yml up backtest-full
+#   docker compose -f docker-compose.backtest.yml up backtest-full
 #
 #   # Just build training data
-#   docker-compose -f docker-compose.backtest.yml up backtest-data
+#   docker compose -f docker-compose.backtest.yml up backtest-data
 #
 #   # Run backtest on existing data
-#   docker-compose -f docker-compose.backtest.yml up backtest-only
+#   docker compose -f docker-compose.backtest.yml up backtest-only
 #
 #   # Interactive shell for debugging
-#   docker-compose -f docker-compose.backtest.yml run --rm backtest-shell
+#   docker compose -f docker-compose.backtest.yml run --rm backtest-shell
 #
 # Required Environment:
 #   Copy .env.example to .env and fill in your API keys
-
-version: '3.8'
-
 services:
   # ─────────────────────────────────────────────────────────────────────────
   # FULL BACKTEST PIPELINE
