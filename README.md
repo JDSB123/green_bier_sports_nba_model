@@ -2,6 +2,8 @@
 
 Production-grade containerized system for NBA betting predictions.
 
+> **📖 Single Source of Truth:** See [`docs/SINGLE_SOURCE_OF_TRUTH.md`](docs/SINGLE_SOURCE_OF_TRUTH.md) for the master reference.
+
 ## Architecture Overview
 
 **All operations run through Docker containers.** No local Python execution.

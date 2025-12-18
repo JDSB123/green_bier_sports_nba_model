@@ -1,5 +1,12 @@
 # NBA Basketball Prediction System v5.0 BETA
-# Local Development Environment
+# Production Docker Stack - SINGLE SOURCE OF TRUTH
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose logs -f strict-api # View main API logs
+#   docker compose down               # Stop all services
+#
+# Main entry point: http://localhost:8090 (strict-api)
 
 version: '3.8'
 
