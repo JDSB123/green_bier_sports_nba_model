@@ -31,6 +31,8 @@ from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits
 from scripts.build_rich_features import RichFeatureBuilder
 from src.utils.logging import get_logger
+from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key
+from src.utils.api_auth import get_api_key, APIKeyMiddleware
 
 logger = get_logger(__name__)
 
@@ -100,6 +102,11 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# API Authentication (optional - can be disabled via REQUIRE_API_AUTH=false)
+# Add middleware if authentication is required
+if os.getenv("REQUIRE_API_AUTH", "false").lower() == "true":
+    app.add_middleware(APIKeyMiddleware, require_auth=True)
+
 # CORS configuration - production safe
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8090").split(",")
 app.add_middleware(
@@ -107,7 +114,7 @@ app.add_middleware(
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["*", "X-API-Key"],  # Allow API key header
 )
 
 # Request metrics middleware
@@ -139,8 +146,16 @@ def startup_event():
     """
     Initialize the prediction engine on startup.
     
-    STRICT MODE: Fails LOUDLY if models are missing.
+    STRICT MODE: Fails LOUDLY if models are missing or API keys are invalid.
     """
+    # SECURITY: Validate API keys at startup - fail fast if missing
+    try:
+        fail_fast_on_missing_keys()
+        logger.info("✓ API keys validated")
+    except Exception as e:
+        logger.error(f"Security validation failed: {e}")
+        raise
+    
     models_dir = _models_dir()
     logger.info(f"STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
     
@@ -157,12 +172,15 @@ def startup_event():
 def health(request: Request):
     """Check API health - STRICT MODE."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
+    api_keys = get_api_key_status()
+    
     return {
         "status": "ok",
         "mode": "STRICT",
         "markets": 6,
         "engine_loaded": engine_loaded,
         "season": settings.current_season,
+        "api_keys": api_keys,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -178,7 +196,9 @@ def metrics():
 async def get_slate_predictions(
     request: Request,
     date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    use_splits: bool = Query(True, description="Whether to fetch and use betting splits")
+    use_splits: bool = Query(True, description="Whether to fetch and use betting splits"),
+    # Optional API key authentication (if REQUIRE_API_AUTH=true)
+    api_key: str = None,  # Will be set by dependency if auth enabled
 ):
     """Get all predictions for a full day's slate. Rate limited to 30 requests/minute."""
     """
@@ -306,10 +326,10 @@ async def get_comprehensive_slate_analysis(
         raise HTTPException(status_code=503, detail="STRICT MODE: Engine not loaded - models missing")
 
     # Import comprehensive analysis functions
-    from scripts.analyze_todays_slate import (
-        get_target_date, fetch_todays_games, calculate_comprehensive_edge,
-        parse_utc_time, to_cst
+    from src.utils.slate_analysis import (
+        get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
     )
+    from src.utils.comprehensive_edge import calculate_comprehensive_edge
     from src.modeling.edge_thresholds import get_edge_thresholds_for_game
     from zoneinfo import ZoneInfo
     
@@ -364,7 +384,6 @@ async def get_comprehensive_slate_analysis(
             fh_features = features.copy()  # In production, build proper 1H features
             
             # Extract odds
-            from scripts.analyze_todays_slate import extract_consensus_odds
             odds = extract_consensus_odds(game)
             
             # Get betting splits for this game

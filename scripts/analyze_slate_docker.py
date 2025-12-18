@@ -316,8 +316,8 @@ async def run_analysis_via_docker(date_str: str):
             summary_table = generate_summary_table(analysis, date_str)
             print(summary_table)
             
-            # Generate text report (import from analyze_todays_slate for formatting)
-            from scripts.analyze_todays_slate import generate_comprehensive_text_report
+            # Generate text report
+            from src.utils.comprehensive_edge import generate_comprehensive_text_report
             from datetime import datetime as dt
             target_date = dt.strptime(data.get("date", date_str), "%Y-%m-%d").date()
             text_report = generate_comprehensive_text_report(analysis, target_date)

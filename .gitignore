@@ -22,6 +22,12 @@ env/
 .env.*
 !.env.example
 
+# Docker secrets
+secrets/*
+!secrets/.gitignore
+!secrets/README.md
+!secrets/*.example
+
 # IDE
 .vscode/*
 !.vscode/settings.json

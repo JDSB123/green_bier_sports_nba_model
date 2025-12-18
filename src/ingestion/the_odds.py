@@ -7,6 +7,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.config import settings
 from src.utils.logging import get_logger
+from src.utils.circuit_breaker import get_odds_api_breaker
+from src.utils.security import mask_api_key
 from src.ingestion.standardize import standardize_game_data
 
 logger = get_logger(__name__)
@@ -20,7 +22,7 @@ async def fetch_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
     markets: str = "h2h,spreads,totals",
-    standardize: bool = True,  # Always True by default - standardization is mandatory
+    standardize: bool = True,  # Always True - standardization is mandatory
 ) -> list[Dict[str, Any]]:
     """
     Fetch odds from The Odds API and standardize to ESPN format.
@@ -32,12 +34,17 @@ async def fetch_odds(
         sport: Sport identifier
         regions: Regions to fetch odds for
         markets: Markets to fetch
-        standardize: Always True - team names are always standardized (deprecated parameter)
+        standardize: Always True - team names are always standardized (kept for API compatibility)
     
     Returns:
         List of game dictionaries with standardized team names in ESPN format
     """
     logger.info(f"Fetching odds for {sport} with markets: {markets}")
+    
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+    
     params = {
         "apiKey": settings.the_odds_api_key,
         "regions": regions,
@@ -45,13 +52,24 @@ async def fetch_odds(
         "oddsFormat": "american",
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(
-            f"{settings.the_odds_base_url}/sports/{sport}/odds", params=params
-        )
-        resp.raise_for_status()
-        data = resp.json()
+    
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+    
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/sports/{sport}/odds", params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+    
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         logger.info(f"Successfully fetched {len(data)} games with odds")
+    except Exception as e:
+        logger.error(f"Failed to fetch odds from The Odds API: {e}")
+        raise
         
         # ALWAYS standardize team names to ESPN format (mandatory)
         standardized_data = []

@@ -18,18 +18,40 @@ services:
     environment:
       POSTGRES_DB: nba
       POSTGRES_USER: nba
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
+      # Password read from secret file or env var (secrets take precedence)
+      # If using secrets, the password will be read from /run/secrets/DB_PASSWORD
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Mount SQL init scripts (repo uses database/*.sql)
       - ./database:/docker-entrypoint-initdb.d:ro
+      # Mount secrets directory (read-only) for password
+      - ./secrets:/run/secrets:ro
+    # Use entrypoint script to read password from secret file if available
+    entrypoint: |
+      sh -c '
+      if [ -f /run/secrets/DB_PASSWORD ]; then
+        export POSTGRES_PASSWORD=$$(cat /run/secrets/DB_PASSWORD)
+      fi
+      exec docker-entrypoint.sh postgres
+      '
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nba"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    # Security: Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   redis:
     image: redis:7-alpine
@@ -55,11 +77,13 @@ services:
       dockerfile: Dockerfile
     container_name: nba-odds-ingestion
     environment:
-      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
-      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY:-}
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD:-}@postgres:5432/nba
       - REDIS_URL=redis://redis:6379
       - POLL_INTERVAL_SECONDS=30
       - RUST_LOG=info
+    volumes:
+      - ./secrets:/run/secrets:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,8 +98,10 @@ services:
     container_name: nba-schedule-poller
     environment:
       - LISTEN_ADDR=:8085
-      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
-      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD:-}@postgres:5432/nba
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY:-}
+    volumes:
+      - ./secrets:/run/secrets:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,20 +119,21 @@ services:
       dockerfile: ./services/prediction-service-python/Dockerfile
     container_name: nba-prediction-service
     environment:
-      - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD}@postgres:5432/nba
+      - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD:-}@postgres:5432/nba
       - REDIS_URL=redis://redis:6379
       - MODELS_DIR=/app/models
-      # API keys for data sources (single source of truth functions will use these)
-      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
-      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
-      - ACTION_NETWORK_USERNAME=${ACTION_NETWORK_USERNAME}
-      - ACTION_NETWORK_PASSWORD=${ACTION_NETWORK_PASSWORD}
+      # API keys for data sources (secrets take precedence over env vars)
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY:-}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY:-}
+      - ACTION_NETWORK_USERNAME=${ACTION_NETWORK_USERNAME:-}
+      - ACTION_NETWORK_PASSWORD=${ACTION_NETWORK_PASSWORD:-}
       - DATA_PROCESSED_DIR=/app/data/processed
     ports:
       - "8082:8082"
     volumes:
       - ./data/processed/models:/app/models:ro
       - ./data/processed:/app/data/processed:ro  # For cached data (injuries.csv, etc.)
+      - ./secrets:/run/secrets:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -132,7 +159,9 @@ services:
     container_name: nba-line-analyzer
     environment:
       - LISTEN_ADDR=:8084
-      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD:-}@postgres:5432/nba
+    volumes:
+      - ./secrets:/run/secrets:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -168,18 +197,33 @@ services:
     container_name: nba-api
     environment:
       - DATA_PROCESSED_DIR=/app/data/processed
-      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
-      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
-      - ACTION_NETWORK_USERNAME=${ACTION_NETWORK_USERNAME}
-      - ACTION_NETWORK_PASSWORD=${ACTION_NETWORK_PASSWORD}
+      # Secrets are read from /run/secrets/ (mounted below) or fall back to env vars
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY:-}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY:-}
+      - ACTION_NETWORK_USERNAME=${ACTION_NETWORK_USERNAME:-}
+      - ACTION_NETWORK_PASSWORD=${ACTION_NETWORK_PASSWORD:-}
+      - SERVICE_API_KEY=${SERVICE_API_KEY:-}  # Optional: for API authentication
+      - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}  # Optional: enable API key auth
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8090}
     volumes:
       - ./data:/app/data
+      # Mount secrets directory (read-only) - secrets take precedence over env vars
+      - ./secrets:/run/secrets:ro
     ports:
       - "8090:8080"
     depends_on:
       prediction-service:
         condition: service_started
     restart: unless-stopped
+    # Security: Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   # ─────────────────────────────────────────────────────────────────────────
   # BACKTEST SERVICE (on-demand)

@@ -78,6 +78,11 @@ class APIBasketballClient:
         self.output_dir = output_dir or os.path.join(
             settings.data_raw_dir, "api_basketball"
         )
+        
+        # Validate API key
+        if not settings.api_basketball_key:
+            raise ValueError("API_BASKETBALL_KEY is not set")
+        
         self.headers = {"x-apisports-key": settings.api_basketball_key}
         self.base_url = settings.api_basketball_base_url
 
@@ -96,15 +101,27 @@ class APIBasketballClient:
     async def _fetch(
         self, endpoint: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Make HTTP request to API-Basketball."""
+        """Make HTTP request to API-Basketball with circuit breaker protection."""
+        from src.utils.circuit_breaker import get_api_basketball_breaker
+        
         url = f"{self.base_url}/{endpoint}"
-        logger.debug(f"Fetching endpoint: {url} with params: {params}")
-        async with httpx.AsyncClient(timeout=TIMEOUT, headers=self.headers) as client:
-            resp = await client.get(url, params=params or {})
-            resp.raise_for_status()
-            data = resp.json()
-            logger.info(f"Successfully fetched {endpoint}: {len(data.get('response', []))} records")
-            return data
+        logger.debug(f"Fetching endpoint: {url}")
+        
+        async def _fetch_with_client():
+            async with httpx.AsyncClient(timeout=TIMEOUT, headers=self.headers) as client:
+                resp = await client.get(url, params=params or {})
+                resp.raise_for_status()
+                data = resp.json()
+                logger.info(f"Successfully fetched {endpoint}: {len(data.get('response', []))} records")
+                return data
+        
+        # Use circuit breaker to prevent cascading failures
+        breaker = get_api_basketball_breaker()
+        try:
+            return await breaker.call_async(_fetch_with_client)
+        except Exception as e:
+            logger.error(f"Failed to fetch from API-Basketball ({endpoint}): {e}")
+            raise
 
     def _save(self, name: str, data: dict[str, Any]) -> str:
         """Save response to JSON file with timestamp."""
@@ -139,7 +156,7 @@ class APIBasketballClient:
         data consistency across sources.
         
         Args:
-            standardize: Always True - team names are always standardized (deprecated parameter)
+            standardize: Always True - team names are always standardized (kept for API compatibility)
         """
         data = await self._fetch(
             "games", {"league": self.league_id, "season": self.season}
@@ -721,7 +738,11 @@ class APIBasketballClient:
 # =============================================================================
 # BACKWARDS COMPATIBILITY - Legacy function wrappers
 # =============================================================================
-
+# 
+# ⚠️ DEPRECATED: These functions are maintained for backwards compatibility only.
+# New code should use APIBasketballClient class methods directly.
+# These may be removed in a future version.
+#
 # Keep these for any existing code that imports them directly
 
 async def fetch_games(

@@ -1,4 +1,25 @@
 {
   "ndjson.port": 9001,
-  "claudeCodeChat.permissions.yoloMode": true
+  "claudeCodeChat.permissions.yoloMode": true,
+  "docker.showStartPage": false,
+  "docker.defaultRegistryPath": "",
+  "docker.composeBuild": {
+    "detach": true,
+    "progress": "plain"
+  },
+  "docker.composeUp": {
+    "detach": true,
+    "files": [
+      "docker-compose.yml",
+      "docker-compose.backtest.yml"
+    ]
+  },
+  "docker.containers.label": "ContainerName",
+  "docker.images.label": "Tag",
+  "docker.volumes.label": "Name",
+  "docker.networks.label": "Name",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true
+  }
 }

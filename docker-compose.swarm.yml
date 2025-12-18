@@ -1,0 +1,236 @@
+# NBA Basketball Prediction System v5.0 BETA
+# Docker Swarm Stack with Native Docker Secrets
+#
+# Usage:
+#   docker swarm init                    # Initialize Swarm (if not already)
+#   python scripts/manage_secrets.py create-swarm  # Create secrets in Swarm
+#   docker stack deploy -c docker-compose.swarm.yml nba
+#   docker stack services nba            # List services
+#   docker stack rm nba                  # Remove stack
+#
+# Main entry point: http://localhost:8090 (strict-api)
+version: '3.8'
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # INFRASTRUCTURE
+  # ─────────────────────────────────────────────────────────────────────────
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      POSTGRES_DB: nba
+      POSTGRES_USER: nba
+      # Password read from Docker secret
+    secrets:
+      - DB_PASSWORD
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nba"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # DATA INGESTION SERVICES
+  # ─────────────────────────────────────────────────────────────────────────
+
+  odds-ingestion:
+    image: nba-odds-ingestion:latest
+    secrets:
+      - THE_ODDS_API_KEY
+      - DB_PASSWORD
+    environment:
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
+      - REDIS_URL=redis://redis:6379
+      - POLL_INTERVAL_SECONDS=30
+      - RUST_LOG=info
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+    depends_on:
+      - postgres
+      - redis
+
+  schedule-poller:
+    image: nba-schedule-poller:latest
+    secrets:
+      - API_BASKETBALL_KEY
+      - DB_PASSWORD
+    environment:
+      - LISTEN_ADDR=:8085
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+    depends_on:
+      - postgres
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # CORE SERVICES
+  # ─────────────────────────────────────────────────────────────────────────
+
+  prediction-service:
+    image: nba-prediction-service:latest
+    secrets:
+      - THE_ODDS_API_KEY
+      - API_BASKETBALL_KEY
+      - ACTION_NETWORK_USERNAME
+      - ACTION_NETWORK_PASSWORD
+      - DB_PASSWORD
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD}@postgres:5432/nba
+      - REDIS_URL=redis://redis:6379
+      - MODELS_DIR=/app/models
+      - DATA_PROCESSED_DIR=/app/data/processed
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+    depends_on:
+      - postgres
+      - redis
+
+  feature-store:
+    image: nba-feature-store:latest
+    environment:
+      - LISTEN_ADDR=:8081
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+
+  line-movement-analyzer:
+    image: nba-line-analyzer:latest
+    secrets:
+      - DB_PASSWORD
+    environment:
+      - LISTEN_ADDR=:8084
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+    depends_on:
+      - postgres
+
+  api-gateway:
+    image: nba-api-gateway:latest
+    environment:
+      - PREDICTION_URL=http://prediction-service:8082
+      - FEATURE_URL=http://feature-store:8081
+      - LISTEN_ADDR=:8080
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+    depends_on:
+      - prediction-service
+      - feature-store
+
+  strict-api:
+    image: nba_v50_strict-api:latest
+    secrets:
+      - THE_ODDS_API_KEY
+      - API_BASKETBALL_KEY
+      - ACTION_NETWORK_USERNAME
+      - ACTION_NETWORK_PASSWORD
+      - SERVICE_API_KEY
+    environment:
+      - DATA_PROCESSED_DIR=/app/data/processed
+      - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8090}
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+    networks:
+      - nba-network
+    depends_on:
+      - prediction-service
+    ports:
+      - "8090:8080"
+
+# ─────────────────────────────────────────────────────────────────────────
+# SECRETS (Docker Swarm)
+# ─────────────────────────────────────────────────────────────────────────
+secrets:
+  THE_ODDS_API_KEY:
+    external: true
+  API_BASKETBALL_KEY:
+    external: true
+  DB_PASSWORD:
+    external: true
+  ACTION_NETWORK_USERNAME:
+    external: true
+  ACTION_NETWORK_PASSWORD:
+    external: true
+  SERVICE_API_KEY:
+    external: true
+
+# ─────────────────────────────────────────────────────────────────────────
+# VOLUMES
+# ─────────────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+
+# ─────────────────────────────────────────────────────────────────────────
+# NETWORKS
+# ─────────────────────────────────────────────────────────────────────────
+networks:
+  nba-network:
+    driver: overlay

@@ -19,7 +19,7 @@ python scripts/run_slate.py --matchup Lakers       # Filter to Lakers
 python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ```
 
-> See [`RUN.md`](RUN.md) for full usage guide.
+> See [`QUICK_START.md`](QUICK_START.md) for full usage guide.
 
 ---
 
@@ -61,6 +61,25 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 ### Setup
 
+**Option 1: Docker Secrets (Recommended for Production)**
+
+1. **Create secrets from `.env` file:**
+   ```powershell
+   python scripts/manage_secrets.py create-from-env
+   ```
+
+2. **Or create secrets manually:**
+   ```powershell
+   mkdir secrets
+   echo "your_key_here" > secrets\THE_ODDS_API_KEY
+   echo "your_key_here" > secrets\API_BASKETBALL_KEY
+   echo "your_password" > secrets\DB_PASSWORD
+   ```
+
+   Secrets are automatically mounted and take precedence over environment variables.
+
+**Option 2: Environment Variables (Development)**
+
 1. **Copy environment template:**
    ```powershell
    copy .env.example .env
@@ -68,10 +87,17 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 2. **Fill in API keys in `.env`:**
    ```env
+   # REQUIRED - System will not start without these
    THE_ODDS_API_KEY=your_key_here
    API_BASKETBALL_KEY=your_key_here
-   DB_PASSWORD=nba_dev_password
+   DB_PASSWORD=your_secure_password_min_12_chars
+   
+   # OPTIONAL - For production API authentication
+   SERVICE_API_KEY=your_service_api_key
+   REQUIRE_API_AUTH=false  # Set to true for production
    ```
+   
+   **Note:** The system prefers Docker secrets over `.env` files. See [`docs/DOCKER_SECRETS.md`](docs/DOCKER_SECRETS.md) for full secrets guide.
 
 ### Running the Stack
 
@@ -226,6 +252,28 @@ Optional:
 - `docs/DATA_INGESTION_METHODOLOGY.md` - Data sources and processing
 - `docs/ARCHITECTURE.md` - Technical architecture
 
+## Security
+
+The system includes comprehensive security hardening:
+
+- ✅ **Docker Secrets** - Production-grade secret management (Swarm & Compose)
+- ✅ **API Key Validation** - Fails fast if keys missing at startup
+- ✅ **Optional API Authentication** - Protect endpoints with API keys
+- ✅ **Circuit Breakers** - Prevent cascading API failures
+- ✅ **Key Masking** - API keys never logged
+- ✅ **Docker Hardening** - Resource limits and validation
+
+**See:**
+- `docs/SECURITY_HARDENING.md` - Full security guide
+- `docs/DOCKER_SECRETS.md` - Docker secrets management
+
+**Quick Setup:**
+```env
+# Enable API authentication (optional, for production)
+SERVICE_API_KEY=your_strong_random_key
+REQUIRE_API_AUTH=true
+```
+
 ## Troubleshooting
 
 See `docs/DOCKER_TROUBLESHOOTING.md` for common issues.
@@ -235,7 +283,7 @@ See `docs/DOCKER_TROUBLESHOOTING.md` for common issues.
 # Ensure containers are running
 docker ps --filter "name=nba"
 
-# Check API health
+# Check API health (shows API key status)
 curl http://localhost:8090/health
 
 # View container logs
