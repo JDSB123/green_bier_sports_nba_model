@@ -4,7 +4,7 @@ FROM python:3.11-slim as builder
 WORKDIR /app
 
 # Install build dependencies
-COPY requirements.txt pyproject.toml setup.py ./
+COPY requirements.txt pyproject.toml ./
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Final stage

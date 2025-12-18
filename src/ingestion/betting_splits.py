@@ -418,10 +418,6 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
     username = settings.action_network_username
     password = settings.action_network_password
     
-    if not username or not password:
-        logger.warning("Action Network credentials not set - skipping")
-        return []
-    
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             # Action Network requires session-based auth
@@ -638,10 +634,7 @@ async def fetch_public_betting_splits(
         for src in sources:
             try:
                 if src == "action_network":
-                    # Only try if credentials are set
-                    if not settings.action_network_username or not settings.action_network_password:
-                        logger.debug("Action Network credentials not set, skipping")
-                        continue
+                    # Attempt to fetch from Action Network (credentials should be in .env)
                     splits_list = await fetch_splits_action_network()
                 elif src == "the_odds":
                     raw_splits = await the_odds.fetch_betting_splits()

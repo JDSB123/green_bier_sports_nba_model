@@ -160,9 +160,11 @@ class GitHubDataFetcher:
             pd.errors.EmptyDataError: If CSV is empty
         """
         try:
+            from io import StringIO
             content = await self._fetch_raw(url, use_cache=use_cache)
+            content_str = content.decode("utf-8") if isinstance(content, bytes) else content
             df = pd.read_csv(
-                content.decode("utf-8") if isinstance(content, bytes) else content,
+                StringIO(content_str),
                 **pandas_kwargs,
             )
             logger.info(f"Fetched CSV: {len(df)} rows from {url}")

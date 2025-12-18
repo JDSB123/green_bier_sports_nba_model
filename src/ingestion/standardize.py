@@ -1,11 +1,15 @@
 """
-Data Standardization Module - ESPN as Single Source of Truth.
+Data Standardization Module - Unified Team Name Matching.
 
 This module provides functions to standardize team names, dates, and game data
 from different sources (The Odds API, API-Basketball) to match ESPN's format.
 
-ESPN team names are the canonical format. All other sources must be mapped
-to ESPN team names before processing.
+Uses the MASTER team_mapping.json database via src.utils.team_names for:
+- Canonical team IDs (nba_lal, nba_bos, etc.)
+- Comprehensive variant matching (95+ variants)
+- Fuzzy matching for edge cases
+
+ESPN team names are the OUTPUT format. Internal processing uses canonical IDs.
 
 STANDARD FORMAT: "AWAY TEAM vs. HOME TEAM"
 - All game data uses 'away_team' and 'home_team' fields
@@ -18,12 +22,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-# Tuple type already imported
-
 import json
 
 from src.config import get_nba_season
 from src.utils.logging import get_logger
+
+# Import MASTER team name system
+from src.utils.team_names import (
+    normalize_team_name as master_normalize,
+    get_canonical_name,
+    VARIANT_TO_CANONICAL,
+    CANONICAL_NAMES,
+)
 
 logger = get_logger(__name__)
 
@@ -181,8 +191,10 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     """
     Normalize team name from any source to ESPN format.
     
-    This function ALWAYS attempts to standardize team names. It uses multiple
-    strategies to match team names and logs warnings for unmatched names.
+    USES MASTER DATABASE: team_mapping.json via src.utils.team_names
+    - Canonical IDs (nba_lal, nba_bos, etc.) for internal matching
+    - ESPN full names as OUTPUT format
+    - Fuzzy matching for edge cases (95+ variants supported)
     
     Args:
         team_name: Team name from any source
@@ -216,10 +228,27 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     if team_name in ESPN_TEAM_NAMES:
         return team_name, True
     
+    # ==========================================
+    # MASTER DATABASE LOOKUP (team_mapping.json)
+    # Uses canonical IDs for matching, ESPN names for output
+    # ==========================================
+    canonical_id = master_normalize(team_name)
+    
+    if canonical_id.startswith("nba_"):
+        # Found in MASTER database - get ESPN full name
+        espn_name = get_canonical_name(canonical_id)
+        logger.debug(f"MASTER matched '{original_name}' -> {canonical_id} -> '{espn_name}' (source: {source})")
+        return espn_name, True
+    
+    # ==========================================
+    # FALLBACK: Legacy hardcoded mappings
+    # (for any variants not yet in MASTER database)
+    # ==========================================
+    
     # Check direct mapping (exact match)
     if team_name in TEAM_NAME_MAPPING:
         result = TEAM_NAME_MAPPING[team_name]
-        logger.debug(f"Direct mapped '{original_name}' -> '{result}' (source: {source})")
+        logger.debug(f"Legacy mapped '{original_name}' -> '{result}' (source: {source})")
         return result, True
     
     # Try case-insensitive match in mapping
@@ -252,13 +281,14 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     # If no match found, log ERROR (not warning) - this is a data quality issue
     logger.error(
         f"❌ FAILED TO NORMALIZE team name '{original_name}' from source '{source}' to ESPN format. "
-        f"THIS WILL CAUSE DATA MERGING ISSUES. Returning empty string to prevent fake data."
+        f"Not found in MASTER database (team_mapping.json) or legacy mappings. "
+        f"Add variant to team_mapping.json to fix."
     )
     
     if raise_on_failure:
         raise ValueError(
             f"Could not normalize team name '{original_name}' from source '{source}' to ESPN format. "
-            f"This indicates a data quality issue."
+            f"Add variant to src/ingestion/team_mapping.json."
         )
     
     # Return empty string to indicate failure - DO NOT return original name (prevents fake data)

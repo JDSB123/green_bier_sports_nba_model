@@ -39,16 +39,14 @@ class TestTheOddsAPI:
         assert result[0]["id"] == "test123"
 
     @pytest.mark.asyncio
-    async def test_save_odds(self, tmp_path, monkeypatch):
+    async def test_save_odds(self, tmp_path):
         """Test saving odds data to file."""
         from src.ingestion.the_odds import save_odds
         
-        # Use temporary directory
-        monkeypatch.setattr("src.ingestion.the_odds.settings.data_raw_dir", str(tmp_path))
-        
         mock_data = [{"game_id": 1, "odds": 100}]
         
-        path = await save_odds(mock_data)
+        # Use out_dir parameter instead of monkeypatching frozen Settings
+        path = await save_odds(mock_data, out_dir=str(tmp_path))
         
         assert path is not None
         assert "odds_" in path
@@ -104,12 +102,33 @@ class TestAPIBasketball:
         """Test successful game fetching."""
         from src.ingestion.api_basketball import APIBasketballClient
         
-        # Mock response
+        # Mock response with valid team names (required by standardization)
         mock_response = {
             "response": [
-                {"id": 100, "status": {"long": "Finished"}},
-                {"id": 101, "status": {"long": "Finished"}},
-                {"id": 102, "status": {"long": "Scheduled"}},
+                {
+                    "id": 100,
+                    "status": {"long": "Finished"},
+                    "teams": {
+                        "home": {"name": "Los Angeles Lakers"},
+                        "away": {"name": "Boston Celtics"},
+                    },
+                },
+                {
+                    "id": 101,
+                    "status": {"long": "Finished"},
+                    "teams": {
+                        "home": {"name": "Golden State Warriors"},
+                        "away": {"name": "Miami Heat"},
+                    },
+                },
+                {
+                    "id": 102,
+                    "status": {"long": "Scheduled"},
+                    "teams": {
+                        "home": {"name": "New York Knicks"},
+                        "away": {"name": "Chicago Bulls"},
+                    },
+                },
             ]
         }
         
