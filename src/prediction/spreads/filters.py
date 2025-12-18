@@ -121,3 +121,45 @@ class FirstHalfSpreadFilter:
             return False, f"Insufficient edge ({model_edge_pct:.1%} < {self.min_edge_pct:.0%})"
 
         return True, None
+
+
+class FirstQuarterSpreadFilter:
+    """Smart filtering for first quarter spread predictions."""
+
+    def __init__(
+        self,
+        filter_small_spreads: bool = True,
+        small_spread_min: float = 0.5,
+        small_spread_max: float = 1.5,
+        min_edge_pct: float = 0.05,
+    ):
+        """
+        Initialize first quarter spread filter.
+
+        Args:
+            filter_small_spreads: Remove 0.5-1.5 point spreads (market efficient zone)
+            small_spread_min: Minimum spread to filter
+            small_spread_max: Maximum spread to filter
+            min_edge_pct: Minimum model edge required
+        """
+        self.filter_small_spreads = filter_small_spreads
+        self.small_spread_min = small_spread_min
+        self.small_spread_max = small_spread_max
+        self.min_edge_pct = min_edge_pct
+
+    def should_bet(
+        self,
+        spread_line: float,
+        confidence: float,
+    ) -> Tuple[bool, Optional[str]]:
+        spread_abs = abs(spread_line)
+        model_edge_pct = abs(confidence - 0.5)
+
+        if self.filter_small_spreads:
+            if self.small_spread_min <= spread_abs <= self.small_spread_max:
+                return False, f"Small Q1 spread ({spread_abs:.1f} pts) - low accuracy zone"
+
+        if model_edge_pct < self.min_edge_pct:
+            return False, f"Insufficient edge ({model_edge_pct:.1%} < {self.min_edge_pct:.0%})"
+
+        return True, None

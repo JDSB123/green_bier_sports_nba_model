@@ -5,6 +5,7 @@ from pathlib import Path
 
 card_path = Path("data/processed/betting_card_v3.csv")
 pred_path = Path("data/processed/predictions_v3.csv")
+training_path = Path("data/processed/training_data.csv")
 
 print("=" * 80)
 print("DATA QUALITY REPORT")
@@ -62,3 +63,31 @@ print("    2. Consider filtering negative edge plays (currently all totals pass)
 print("    3. Validate that predicted totals match Vegas lines (expected to differ slightly)")
 
 print("\n" + "=" * 80)
+
+print(f"\n[5] TRAINING DATA LINE COVERAGE:")
+print(f"    {training_path.absolute()}")
+print(f"    Exists: {training_path.exists()}")
+
+if training_path.exists():
+    df_train = pd.read_csv(training_path)
+    total_games = len(df_train)
+    print(f"    Games: {total_games}")
+    
+    def coverage(col: str) -> str:
+        if col not in df_train.columns:
+            return "missing"
+        return f"{df_train[col].notna().mean() * 100:.1f}%"
+    
+    coverage_report = [
+        ("FG Spread", coverage("spread_line")),
+        ("FG Total", coverage("total_line")),
+        ("FG Moneyline", "present" if {"moneyline_home", "moneyline_away"}.issubset(df_train.columns) else "missing"),
+        ("1H Spread", coverage("1h_spread_line")),
+        ("1H Total", coverage("1h_total_line")),
+        ("Q1 Spread", coverage("q1_spread_line")),
+        ("Q1 Total", coverage("q1_total_line")),
+    ]
+    for label, cov in coverage_report:
+        print(f"    - {label}: {cov}")
+else:
+    print("    [WARN] training_data.csv not found; run build_fresh_training_data.py first.")

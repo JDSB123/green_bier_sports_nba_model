@@ -147,3 +147,24 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
     feature_cols = joblib.load(features_path)
 
     return model, feature_cols
+
+
+def _load_quarter_model(path: Path) -> Tuple[Any, List[str]]:
+    if not path.exists():
+        raise FileNotFoundError(f"Model not found at {path}")
+    model_data = joblib.load(path)
+    model = model_data.get("pipeline") or model_data.get("model")
+    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+    return model, feature_cols
+
+
+def load_first_quarter_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
+    return _load_quarter_model(models_dir / "q1_spreads_model.joblib")
+
+
+def load_first_quarter_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
+    return _load_quarter_model(models_dir / "q1_totals_model.joblib")
+
+
+def load_first_quarter_moneyline_model(models_dir: Path) -> Tuple[Any, List[str]]:
+    return _load_quarter_model(models_dir / "q1_moneyline_model.joblib")

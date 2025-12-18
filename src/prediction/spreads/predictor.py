@@ -4,7 +4,11 @@ Spread prediction logic (Full Game + First Half).
 from typing import Dict, Any, Optional
 import pandas as pd
 
-from src.prediction.spreads.filters import FGSpreadFilter, FirstHalfSpreadFilter
+from src.prediction.spreads.filters import (
+    FGSpreadFilter,
+    FirstHalfSpreadFilter,
+    FirstQuarterSpreadFilter,
+)
 from src.prediction.confidence import calculate_confidence_from_probabilities
 
 
@@ -21,8 +25,11 @@ class SpreadPredictor:
         fg_feature_columns: list,
         fh_model=None,
         fh_feature_columns: Optional[list] = None,
+        fq_model=None,
+        fq_feature_columns: Optional[list] = None,
         fg_filter: Optional[FGSpreadFilter] = None,
         first_half_filter: Optional[FirstHalfSpreadFilter] = None,
+        first_quarter_filter: Optional[FirstQuarterSpreadFilter] = None,
     ):
         """
         Initialize spread predictor.
@@ -39,8 +46,11 @@ class SpreadPredictor:
         self.fg_feature_columns = fg_feature_columns
         self.fh_model = fh_model
         self.fh_feature_columns = fh_feature_columns or fg_feature_columns
+        self.fq_model = fq_model
+        self.fq_feature_columns = fq_feature_columns or self.fh_feature_columns or fg_feature_columns
         self.fg_filter = fg_filter or FGSpreadFilter()
         self.first_half_filter = first_half_filter or FirstHalfSpreadFilter()
+        self.first_quarter_filter = first_quarter_filter or FirstQuarterSpreadFilter()
 
     def predict_full_game(
         self,
@@ -92,6 +102,60 @@ class SpreadPredictor:
         filter_reason = None
         if spread_line is not None:
             passes_filter, filter_reason = self.fg_filter.should_bet(
+                spread_line=spread_line,
+                confidence=confidence,
+            )
+
+        return {
+            "home_cover_prob": home_cover_prob,
+            "away_cover_prob": away_cover_prob,
+            "predicted_margin": predicted_margin,
+            "confidence": confidence,
+            "bet_side": bet_side,
+            "edge": edge,
+            "model_edge_pct": abs(confidence - 0.5),
+            "passes_filter": passes_filter,
+            "filter_reason": filter_reason,
+        }
+
+    def predict_first_quarter(
+        self,
+        features: Dict[str, float],
+        spread_line: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate first quarter spread prediction.
+        """
+        model = self.fq_model or self.fh_model or self.fg_model
+        feature_columns = (
+            self.fq_feature_columns
+            if self.fq_model is not None
+            else self.fh_feature_columns
+            if self.fh_model is not None
+            else self.fg_feature_columns
+        )
+
+        feature_df = pd.DataFrame([features])
+        missing = set(feature_columns) - set(feature_df.columns)
+        for col in missing:
+            feature_df[col] = 0
+        X = feature_df[feature_columns]
+        spread_proba = model.predict_proba(X)[0]
+
+        home_cover_prob = float(spread_proba[1])
+        away_cover_prob = float(spread_proba[0])
+        confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
+        bet_side = "home" if home_cover_prob > 0.5 else "away"
+        predicted_margin = features.get("predicted_margin_q1", features.get("predicted_margin_1h", 0.0) * 0.5)
+
+        edge = None
+        if spread_line is not None:
+            edge = predicted_margin - spread_line
+
+        passes_filter = True
+        filter_reason = None
+        if spread_line is not None:
+            passes_filter, filter_reason = self.first_quarter_filter.should_bet(
                 spread_line=spread_line,
                 confidence=confidence,
             )

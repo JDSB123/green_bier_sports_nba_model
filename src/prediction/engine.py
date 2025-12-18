@@ -15,6 +15,9 @@ from src.prediction.models import (
     load_total_model,
     load_first_half_spread_model,
     load_first_half_total_model,
+    load_first_quarter_spread_model,
+    load_first_quarter_total_model,
+    load_first_quarter_moneyline_model,
 )
 
 
@@ -63,22 +66,46 @@ class UnifiedPredictionEngine:
         except FileNotFoundError:
             fh_total_model, fh_total_features = None, None
 
+        # Load Q1 models (optional)
+        try:
+            fq_spread_model, fq_spread_features = load_first_quarter_spread_model(models_dir)
+        except FileNotFoundError:
+            fq_spread_model, fq_spread_features = None, None
+
+        try:
+            fq_total_model, fq_total_features = load_first_quarter_total_model(models_dir)
+        except FileNotFoundError:
+            fq_total_model, fq_total_features = None, None
+
+        try:
+            fq_moneyline_model, fq_moneyline_features = load_first_quarter_moneyline_model(models_dir)
+        except FileNotFoundError:
+            fq_moneyline_model, fq_moneyline_features = None, None
+
         # Initialize market predictors
         self.spread_predictor = spread_predictor or SpreadPredictor(
             fg_model=fg_spread_model,
             fg_feature_columns=fg_spread_features,
             fh_model=fh_spread_model,
             fh_feature_columns=fh_spread_features,
+            fq_model=fq_spread_model,
+            fq_feature_columns=fq_spread_features,
         )
         self.total_predictor = total_predictor or TotalPredictor(
             fg_model=fg_total_model,
             fg_feature_columns=fg_total_features,
             fh_model=fh_total_model,
             fh_feature_columns=fh_total_features,
+            fq_model=fq_total_model,
+            fq_feature_columns=fq_total_features,
         )
         self.moneyline_predictor = moneyline_predictor or MoneylinePredictor(
             model=fg_spread_model,  # Moneyline uses FG spread model
             feature_columns=fg_spread_features,
+            fh_model=fh_spread_model or fg_spread_model,
+            fh_feature_columns=fh_spread_features or fg_spread_features,
+            fq_model=fq_moneyline_model or fh_spread_model or fg_spread_model,
+            fq_feature_columns=fq_moneyline_features or fh_spread_features or fg_spread_features,
         )
 
     def predict_full_game(
@@ -149,6 +176,25 @@ class UnifiedPredictionEngine:
             ),
         }
 
+    def predict_first_quarter(
+        self,
+        features: Dict[str, float],
+        spread_line: Optional[float] = None,
+        total_line: Optional[float] = None,
+        home_ml_odds: Optional[int] = None,
+        away_ml_odds: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate predictions for first quarter markets.
+        """
+        return {
+            "spread": self.spread_predictor.predict_first_quarter(features, spread_line),
+            "total": self.total_predictor.predict_first_quarter(features, total_line),
+            "moneyline": self.moneyline_predictor.predict_first_quarter(
+                features, home_ml_odds, away_ml_odds
+            ),
+        }
+
     def predict_all_markets(
         self,
         features: Dict[str, float],
@@ -162,6 +208,11 @@ class UnifiedPredictionEngine:
         fh_total_line: Optional[float] = None,
         fh_home_ml_odds: Optional[int] = None,
         fh_away_ml_odds: Optional[int] = None,
+        # First quarter lines
+        q1_spread_line: Optional[float] = None,
+        q1_total_line: Optional[float] = None,
+        q1_home_ml_odds: Optional[int] = None,
+        q1_away_ml_odds: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Generate predictions for ALL markets (FG + 1H, spreads + totals + moneyline).
@@ -189,6 +240,11 @@ class UnifiedPredictionEngine:
                         "spread": {...},
                         "total": {...},
                         "moneyline": {...}
+                    },
+                    "first_quarter": {
+                        "spread": {...},
+                        "total": {...},
+                        "moneyline": {...}
                     }
                 }
         """
@@ -206,5 +262,12 @@ class UnifiedPredictionEngine:
                 total_line=fh_total_line,
                 home_ml_odds=fh_home_ml_odds,
                 away_ml_odds=fh_away_ml_odds,
+            ),
+            "first_quarter": self.predict_first_quarter(
+                features,
+                spread_line=q1_spread_line,
+                total_line=q1_total_line,
+                home_ml_odds=q1_home_ml_odds,
+                away_ml_odds=q1_away_ml_odds,
             ),
         }

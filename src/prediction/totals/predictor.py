@@ -4,7 +4,11 @@ Totals prediction logic for full game and first half.
 from typing import Dict, Any, Optional
 import pandas as pd
 
-from src.prediction.totals.filters import FGTotalFilter, FirstHalfTotalFilter
+from src.prediction.totals.filters import (
+    FGTotalFilter,
+    FirstHalfTotalFilter,
+    FirstQuarterTotalFilter,
+)
 from src.prediction.confidence import calculate_confidence_from_probabilities
 
 
@@ -21,8 +25,11 @@ class TotalPredictor:
         fg_feature_columns: list,
         fh_model=None,
         fh_feature_columns: Optional[list] = None,
+        fq_model=None,
+        fq_feature_columns: Optional[list] = None,
         fg_filter: Optional[FGTotalFilter] = None,
         first_half_filter: Optional[FirstHalfTotalFilter] = None,
+        first_quarter_filter: Optional[FirstQuarterTotalFilter] = None,
     ):
         """
         Initialize totals predictor.
@@ -39,10 +46,13 @@ class TotalPredictor:
         self.fg_feature_columns = fg_feature_columns
         self.fh_model = fh_model
         self.fh_feature_columns = fh_feature_columns or fg_feature_columns
+        self.fq_model = fq_model
+        self.fq_feature_columns = fq_feature_columns or self.fh_feature_columns or fg_feature_columns
 
         # Initialize filters
         self.fg_filter = fg_filter or FGTotalFilter()
         self.first_half_filter = first_half_filter or FirstHalfTotalFilter()
+        self.first_quarter_filter = first_quarter_filter or FirstQuarterTotalFilter()
 
     def predict_full_game(
         self,
@@ -189,6 +199,54 @@ class TotalPredictor:
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total_1h,
+            "confidence": confidence,
+            "bet_side": bet_side,
+            "edge": edge,
+            "model_edge_pct": abs(confidence - 0.5),
+            "passes_filter": passes_filter,
+            "filter_reason": filter_reason,
+        }
+
+    def predict_first_quarter(
+        self,
+        features: Dict[str, float],
+        total_line: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        model = self.fq_model or self.fh_model or self.fg_model
+        feature_columns = (
+            self.fq_feature_columns
+            if self.fq_model is not None
+            else self.fh_feature_columns
+            if self.fh_model is not None
+            else self.fg_feature_columns
+        )
+        feature_df = pd.DataFrame([features])
+        missing = set(feature_columns) - set(feature_df.columns)
+        for col in missing:
+            feature_df[col] = 0
+        X = feature_df[feature_columns]
+        total_proba = model.predict_proba(X)[0]
+        over_prob = float(total_proba[1])
+        under_prob = float(total_proba[0])
+        confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
+        bet_side = "over" if over_prob > 0.5 else "under"
+        predicted_total_q1 = features.get("predicted_total_q1", features.get("predicted_total_1h", 0.0) / 2)
+
+        edge = None
+        if total_line is not None:
+            if bet_side == "over":
+                edge = predicted_total_q1 - total_line
+            else:
+                edge = total_line - predicted_total_q1
+
+        passes_filter, filter_reason = self.first_quarter_filter.should_bet(
+            confidence=confidence,
+        )
+
+        return {
+            "over_prob": over_prob,
+            "under_prob": under_prob,
+            "predicted_total": predicted_total_q1,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge,

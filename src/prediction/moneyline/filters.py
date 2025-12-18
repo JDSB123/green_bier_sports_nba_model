@@ -112,3 +112,29 @@ class FirstHalfMoneylineFilter:
             return False, f"Insufficient value edge ({edge:.1%} < {self.min_edge_pct:.0%})"
 
         return True, None
+
+
+class FirstQuarterMoneylineFilter:
+    """Smart filtering for first quarter moneyline predictions."""
+
+    def __init__(
+        self,
+        use_filter: bool = True,
+        min_edge_pct: float = 0.05,
+    ):
+        self.use_filter = use_filter
+        self.min_edge_pct = min_edge_pct
+
+    def should_bet(
+        self,
+        predicted_prob: float,
+        implied_prob: Optional[float] = None,
+    ) -> Tuple[bool, Optional[str]]:
+        if not self.use_filter:
+            return True, None
+        if implied_prob is None:
+            return True, None
+        edge = predicted_prob - implied_prob
+        if edge < self.min_edge_pct:
+            return False, f"Insufficient value edge ({edge:.1%} < {self.min_edge_pct:.0%})"
+        return True, None

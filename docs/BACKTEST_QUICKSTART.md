@@ -87,6 +87,28 @@ python scripts/backtest.py --markets all --strict
 
 ---
 
+### First-Quarter (Q1) Prep Workflow
+
+Run these commands once per data refresh to ensure Q1 markets use real lines:
+
+```bash
+# 1. Capture historical FG/1H/Q1 markets (requires Group 2+ plan)
+python scripts/collect_historical_lines.py --start-date 2025-10-01 --end-date 2025-12-17
+
+# 2. Aggregate consensus lines into data/processed/betting_lines.csv
+python scripts/extract_betting_lines.py
+
+# 3. Rebuild training data with the new line columns
+python scripts/build_fresh_training_data.py --seasons 2024-2025,2025-2026
+
+# 4. Generate dedicated Q1 feature/label datasets
+python scripts/generate_q1_training_data.py
+```
+
+These steps must complete successfully before enabling `q1_*` markets in the backtester.
+
+---
+
 ## Configuration
 
 ### Environment Variables
@@ -121,6 +143,8 @@ After a successful run, results are saved to:
 data/
 ├── processed/
 │   ├── training_data.csv          # Built training data
+│   ├── betting_lines.csv          # Consensus FG/1H/Q1 lines
+│   ├── q1_training_data.parquet   # Q1 feature dataset (also q1_training_data.csv)
 │   └── all_markets_backtest_results.csv
 ├── results/
 │   ├── backtest_results_YYYYMMDD_HHMMSS.csv
@@ -173,7 +197,8 @@ The Odds API historical endpoint requires a paid plan (Group 2+). Without it:
 Options:
 1. Upgrade to The Odds API Group 2+
 2. Collect odds going forward with regular data collection
-3. Use alternative historical data source
+3. Use `scripts/collect_historical_lines.py` + `scripts/extract_betting_lines.py` as soon as access is granted
+4. Use alternative historical data source
 
 ### "Training data not found"
 

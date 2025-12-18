@@ -4,6 +4,7 @@ Generate predictions for ALL markets using unified prediction engine.
 Production-ready predictor with smart filtering for all markets:
 - Full Game: Spreads, Totals, Moneyline
 - First Half: Spreads, Totals, Moneyline
+- First Quarter: Spreads, Totals, Moneyline
 """
 import asyncio
 import argparse
@@ -68,7 +69,7 @@ def generate_rationale(
     Returns bullet-point formatted string.
     """
     rationale_bullets = []
-    is_first_half = "1H" in play_type
+    is_partial_market = ("1H" in play_type) or ("Q1" in play_type)
     now_cst = datetime.now(CST)
     
     # Calculate expected value
@@ -149,7 +150,7 @@ def generate_rationale(
     # ============================================================
     team_fundamentals = []
     
-    if not is_first_half:
+    if not is_partial_market:
         home_ppg = features.get("home_ppg", 0)
         away_ppg = features.get("away_ppg", 0)
         
@@ -174,7 +175,7 @@ def generate_rationale(
     # ============================================================
     situational = []
     
-    if not is_first_half:
+    if not is_partial_market:
         rest_adj = features.get("rest_margin_adj", 0)
         if abs(rest_adj) >= 1.5:
             benefit_team = home_team if rest_adj > 0 else away_team
@@ -282,7 +283,10 @@ async def fetch_upcoming_games(target_date: datetime.date):
         if event_id:
             try:
                 # Fetch 1H odds specifically
-                event_odds = await the_odds.fetch_event_odds(event_id, markets="spreads_h1,totals_h1,h2h_h1")
+                event_odds = await the_odds.fetch_event_odds(
+                    event_id,
+                    markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1"
+                )
                 
                 # MERGE instead of overwrite
                 # Keep existing bookmakers (FG) and add new ones (1H)
@@ -325,6 +329,11 @@ def extract_lines(game: dict, home_team: str):
         "fh_total": None,
         "fh_home_ml": None,
         "fh_away_ml": None,
+        # First quarter
+        "q1_spread": None,
+        "q1_total": None,
+        "q1_home_ml": None,
+        "q1_away_ml": None,
     }
 
     for bm in game.get("bookmakers", []):
@@ -372,6 +381,24 @@ def extract_lines(game: dict, home_team: str):
                         lines["fh_home_ml"] = outcome.get("price")
                     else:
                         lines["fh_away_ml"] = outcome.get("price")
+
+            elif market_key == "spreads_q1":
+                for outcome in market.get("outcomes", []):
+                    if outcome.get("name") == home_team:
+                        lines["q1_spread"] = outcome.get("point")
+                        break
+
+            elif market_key == "totals_q1":
+                for outcome in market.get("outcomes", []):
+                    lines["q1_total"] = outcome.get("point")
+                    break
+
+            elif market_key == "h2h_q1":
+                for outcome in market.get("outcomes", []):
+                    if outcome.get("name") == home_team:
+                        lines["q1_home_ml"] = outcome.get("price")
+                    else:
+                        lines["q1_away_ml"] = outcome.get("price")
 
     return lines
 
@@ -462,10 +489,15 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
                 fh_total_line=lines["fh_total"],
                 fh_home_ml_odds=lines["fh_home_ml"],
                 fh_away_ml_odds=lines["fh_away_ml"],
+                q1_spread_line=lines["q1_spread"],
+                q1_total_line=lines["q1_total"],
+                q1_home_ml_odds=lines["q1_home_ml"],
+                q1_away_ml_odds=lines["q1_away_ml"],
             )
 
             fg_preds = all_preds["full_game"]
             fh_preds = all_preds["first_half"]
+            q1_preds = all_preds["first_quarter"]
 
             # Display FG predictions
             print("\nFULL GAME:")
@@ -474,6 +506,9 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             # Display 1H predictions
             print("\nFIRST HALF:")
             display_market_predictions(fh_preds, lines, market_type="fh", features=features, home_team=home_team, away_team=away_team, splits=splits)
+
+            print("\nFIRST QUARTER:")
+            display_market_predictions(q1_preds, lines, market_type="q1", features=features, home_team=home_team, away_team=away_team, splits=splits)
 
             # Store prediction
             if commence_time:
@@ -494,6 +529,9 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             # Add 1H predictions
             prediction_dict.update(format_predictions_for_csv(fh_preds, lines, prefix="fh"))
 
+            # Add Q1 predictions
+            prediction_dict.update(format_predictions_for_csv(q1_preds, lines, prefix="q1"))
+
             predictions.append(prediction_dict)
 
         except Exception as e:
@@ -510,8 +548,13 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 
 
 def display_market_predictions(preds: dict, lines: dict, market_type: str, features: dict, home_team: str, away_team: str, splits: Any = None):
-    """Display predictions for a market type (FG or 1H)."""
-    prefix = "fg" if market_type == "fg" else "fh"
+    """Display predictions for a market type (FG, 1H, Q1)."""
+    if market_type == "fg":
+        prefix = "fg"
+    elif market_type == "fh":
+        prefix = "fh"
+    else:
+        prefix = "q1"
 
     # Spread
     spread_pred = preds["spread"]
@@ -835,6 +878,84 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                     "market_prob": market_prob,
                     "odds": odds,
                 })
+
+        # Q1 Spread
+        if row.get("q1_spread_passes_filter") and pd.notna(row.get('q1_spread_line')):
+            edge = row.get('q1_spread_edge')
+            conf = row['q1_spread_confidence']
+            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
+            model_prob = conf
+            market_prob = 0.524
+            model_pred = row.get('q1_spread_pred_margin')
+            market_line = row.get('q1_spread_line')
+            all_plays_summary.append({
+                "matchup": matchup,
+                "market": "Q1 Spread",
+                "pick": f"{row['q1_spread_bet_side']} {row['q1_spread_line']:+.1f}",
+                "edge": edge,
+                "confidence": conf,
+                "edge_type": "pts",
+                "fire_rating": fire,
+                "model_prob": model_prob,
+                "market_prob": market_prob,
+                "model_pred": model_pred,
+                "market_line": market_line,
+                "pred_type": "margin",
+                "odds": -110,
+            })
+
+        # Q1 Total
+        if row.get("q1_total_passes_filter") and pd.notna(row.get('q1_total_line')):
+            edge = row.get('q1_total_edge')
+            conf = row['q1_total_confidence']
+            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
+            model_prob = conf
+            market_prob = 0.524
+            model_pred = row.get('q1_total_pred')
+            market_line = row.get('q1_total_line')
+            all_plays_summary.append({
+                "matchup": matchup,
+                "market": "Q1 Total",
+                "pick": f"{row['q1_total_bet_side']} {row['q1_total_line']:.1f}",
+                "edge": edge,
+                "confidence": conf,
+                "edge_type": "pts",
+                "fire_rating": fire,
+                "model_prob": model_prob,
+                "market_prob": market_prob,
+                "model_pred": model_pred,
+                "market_line": market_line,
+                "pred_type": "total",
+                "odds": -110,
+            })
+
+        # Q1 Moneyline
+        if row.get("q1_ml_passes_filter") and row.get("q1_ml_recommended_bet"):
+            bet = row['q1_ml_recommended_bet']
+            if bet == 'home':
+                odds = int(row['q1_ml_home_odds']) if pd.notna(row.get('q1_ml_home_odds')) else None
+            elif bet == 'away':
+                odds = int(row['q1_ml_away_odds']) if pd.notna(row.get('q1_ml_away_odds')) else None
+            else:
+                odds = None
+            if pd.notna(odds) and odds is not None:
+                edge = row['q1_ml_home_edge'] if bet == 'home' else row['q1_ml_away_edge']
+                conf = row['q1_ml_confidence']
+                fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pct")
+                model_prob = conf
+                market_prob = american_odds_to_implied_prob(odds)
+                all_plays_summary.append({
+                    "matchup": matchup,
+                    "market": "Q1 Moneyline",
+                    "pick": f"{bet.capitalize()}",
+                    "edge": edge,
+                    "confidence": conf,
+                    "edge_type": "pct",
+                    "fire_rating": fire,
+                    "model_prob": model_prob,
+                    "market_prob": market_prob,
+                    "odds": odds,
+                })
     
     # EXECUTIVE SUMMARY (Bottom Line Up Front)
     lines.append("=" * 100)
@@ -853,12 +974,13 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
         # Count by market
         fg_count = sum(1 for p in all_plays_summary if p['market'].startswith('FG'))
         fh_count = sum(1 for p in all_plays_summary if p['market'].startswith('1H'))
+        q1_count = sum(1 for p in all_plays_summary if p['market'].startswith('Q1'))
         spread_count = sum(1 for p in all_plays_summary if 'Spread' in p['market'])
         total_count = sum(1 for p in all_plays_summary if 'Total' in p['market'])
         ml_count = sum(1 for p in all_plays_summary if 'Moneyline' in p['market'])
         
         lines.append(f"BREAKDOWN:")
-        lines.append(f"  Full Game: {fg_count} | First Half: {fh_count}")
+        lines.append(f"  Full Game: {fg_count} | First Half: {fh_count} | First Quarter: {q1_count}")
         lines.append(f"  Spreads: {spread_count} | Totals: {total_count} | Moneyline: {ml_count}")
         lines.append("")
         lines.append("TOP RECOMMENDED PLAYS (sorted by fire rating, then confidence):")

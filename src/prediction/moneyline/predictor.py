@@ -4,7 +4,11 @@ Moneyline prediction logic for full game and first half.
 from typing import Dict, Any, Optional
 import pandas as pd
 
-from src.prediction.moneyline.filters import FGMoneylineFilter, FirstHalfMoneylineFilter
+from src.prediction.moneyline.filters import (
+    FGMoneylineFilter,
+    FirstHalfMoneylineFilter,
+    FirstQuarterMoneylineFilter,
+)
 from src.prediction.confidence import calculate_confidence_from_probabilities
 
 
@@ -28,17 +32,22 @@ def american_odds_to_implied_prob(odds: int) -> float:
 
 class MoneylinePredictor:
     """
-    Moneyline predictor for full game and first half markets.
-
-    Uses spread model win probabilities for moneyline predictions.
+    Moneyline predictor for full game, first half, and first quarter markets.
+    
+    Uses spread-based win probability models for each market when available.
     """
 
     def __init__(
         self,
         model,
         feature_columns: list,
+        fh_model=None,
+        fh_feature_columns: Optional[list] = None,
+        fq_model=None,
+        fq_feature_columns: Optional[list] = None,
         fg_filter: Optional[FGMoneylineFilter] = None,
         first_half_filter: Optional[FirstHalfMoneylineFilter] = None,
+        first_quarter_filter: Optional[FirstQuarterMoneylineFilter] = None,
     ):
         """
         Initialize moneyline predictor.
@@ -51,10 +60,15 @@ class MoneylinePredictor:
         """
         self.model = model
         self.feature_columns = feature_columns
+        self.fh_model = fh_model or model
+        self.fh_feature_columns = fh_feature_columns or feature_columns
+        self.fq_model = fq_model or self.fh_model
+        self.fq_feature_columns = fq_feature_columns or self.fh_feature_columns
 
         # Initialize filters
         self.fg_filter = fg_filter or FGMoneylineFilter()
         self.first_half_filter = first_half_filter or FirstHalfMoneylineFilter()
+        self.first_quarter_filter = first_quarter_filter or FirstQuarterMoneylineFilter()
 
     def predict_full_game(
         self,
@@ -186,26 +200,14 @@ class MoneylinePredictor:
     ) -> Dict[str, Any]:
         """
         Generate first half moneyline prediction.
-
-        Note: Uses FG spread model for 1H win probabilities.
-
-        Args:
-            features: Feature dictionary for the game
-            home_odds: Home team 1H American odds
-            away_odds: Away team 1H American odds
-
-        Returns:
-            Dictionary with 1H moneyline prediction
         """
-        # Use FG model for win probabilities
         feature_df = pd.DataFrame([features])
-        missing = set(self.feature_columns) - set(feature_df.columns)
+        missing = set(self.fh_feature_columns) - set(feature_df.columns)
         for col in missing:
             feature_df[col] = 0
-        X = feature_df[self.feature_columns]
+        X = feature_df[self.fh_feature_columns]
 
-        # Get win probabilities
-        spread_proba = self.model.predict_proba(X)[0]
+        spread_proba = self.fh_model.predict_proba(X)[0]
         home_win_prob = float(spread_proba[1])
         away_win_prob = float(spread_proba[0])
 
@@ -267,6 +269,65 @@ class MoneylinePredictor:
             )
         elif recommended_bet == "away":
             passes_filter, filter_reason = self.first_half_filter.should_bet(
+                predicted_prob=away_win_prob,
+                implied_prob=bet_implied_prob,
+            )
+
+        return {
+            "home_win_prob": home_win_prob,
+            "away_win_prob": away_win_prob,
+            "predicted_winner": predicted_winner,
+            "confidence": confidence,
+            "home_implied_prob": home_implied_prob,
+            "away_implied_prob": away_implied_prob,
+            "home_edge": home_edge,
+            "away_edge": away_edge,
+            "recommended_bet": recommended_bet if passes_filter else None,
+            "passes_filter": passes_filter,
+            "filter_reason": filter_reason,
+        }
+
+    def predict_first_quarter(
+        self,
+        features: Dict[str, float],
+        home_odds: Optional[int] = None,
+        away_odds: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        feature_df = pd.DataFrame([features])
+        missing = set(self.fq_feature_columns) - set(feature_df.columns)
+        for col in missing:
+            feature_df[col] = 0
+        X = feature_df[self.fq_feature_columns]
+
+        spread_proba = self.fq_model.predict_proba(X)[0]
+        home_win_prob = float(spread_proba[1])
+        away_win_prob = float(spread_proba[0])
+        confidence = calculate_confidence_from_probabilities(home_win_prob, away_win_prob)
+        predicted_winner = "home" if home_win_prob > 0.5 else "away"
+
+        home_implied_prob = american_odds_to_implied_prob(home_odds) if home_odds is not None else None
+        away_implied_prob = american_odds_to_implied_prob(away_odds) if away_odds is not None else None
+        home_edge = home_win_prob - home_implied_prob if home_implied_prob is not None else None
+        away_edge = away_win_prob - away_implied_prob if away_implied_prob is not None else None
+
+        recommended_bet = None
+        bet_implied_prob = None
+        if home_edge is not None and (away_edge is None or home_edge > away_edge) and home_edge > 0:
+            recommended_bet = "home"
+            bet_implied_prob = home_implied_prob
+        elif away_edge is not None and away_edge > 0:
+            recommended_bet = "away"
+            bet_implied_prob = away_implied_prob
+
+        passes_filter = True
+        filter_reason = None
+        if recommended_bet == "home":
+            passes_filter, filter_reason = self.first_quarter_filter.should_bet(
+                predicted_prob=home_win_prob,
+                implied_prob=bet_implied_prob,
+            )
+        elif recommended_bet == "away":
+            passes_filter, filter_reason = self.first_quarter_filter.should_bet(
                 predicted_prob=away_win_prob,
                 implied_prob=bet_implied_prob,
             )

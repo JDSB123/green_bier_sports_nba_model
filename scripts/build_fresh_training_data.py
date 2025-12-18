@@ -28,6 +28,7 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from statistics import median
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -55,6 +56,14 @@ QUARTER_COLUMNS = [
     "home_q1", "home_q2", "home_q3", "home_q4",
     "away_q1", "away_q2", "away_q3", "away_q4",
 ]
+
+
+def _median(values: List[float]) -> Optional[float]:
+    """Safe median helper that ignores None values."""
+    cleaned = [float(v) for v in values if v is not None]
+    if not cleaned:
+        return None
+    return float(median(cleaned))
 
 
 class DataPipelineError(Exception):
@@ -215,6 +224,15 @@ class FreshDataPipeline:
         """
         logger.info(f"Fetching betting lines for {len(game_dates)} unique dates...")
         
+        cache_path = Path(settings.data_processed_dir) / "betting_lines.csv"
+        if cache_path.exists():
+            logger.info(f"Using cached betting lines from {cache_path}")
+            try:
+                cached_df = pd.read_csv(cache_path)
+                return cached_df
+            except Exception as exc:
+                logger.warning(f"Failed to load cached betting lines ({cache_path}): {exc}")
+        
         # Import here to avoid circular imports
         from src.ingestion.the_odds import fetch_historical_odds, fetch_odds
         
@@ -288,6 +306,12 @@ class FreshDataPipeline:
             return pd.DataFrame()
         
         df = pd.DataFrame(all_lines)
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(cache_path, index=False)
+            logger.info(f"Cached betting lines to {cache_path}")
+        except Exception as exc:
+            logger.warning(f"Could not cache betting lines to {cache_path}: {exc}")
         logger.info(f"✓ Fetched {len(df)} betting line records")
         return df
     
@@ -313,14 +337,23 @@ class FreshDataPipeline:
                 continue
             
             bookmakers = event.get("bookmakers", [])
-            
-            spread_lines = []
-            total_lines = []
+            fg_spreads: List[float] = []
+            fg_totals: List[float] = []
+            fh_spreads: List[float] = []
+            fh_totals: List[float] = []
+            q1_spreads: List[float] = []
+            q1_totals: List[float] = []
+            fg_home_ml: List[float] = []
+            fg_away_ml: List[float] = []
+            fh_home_ml: List[float] = []
+            fh_away_ml: List[float] = []
+            q1_home_ml: List[float] = []
+            q1_away_ml: List[float] = []
             
             for bm in bookmakers:
                 markets = bm.get("markets", [])
                 for market in markets:
-                    key = market.get("key", "")
+                    key = (market.get("key") or "").lower()
                     outcomes = market.get("outcomes", [])
                     
                     if key == "spreads":
@@ -328,26 +361,82 @@ class FreshDataPipeline:
                             if outcome.get("name") == home_team:
                                 point = outcome.get("point")
                                 if point is not None:
-                                    spread_lines.append(float(point))
-                    
+                                    fg_spreads.append(float(point))
                     elif key == "totals":
                         for outcome in outcomes:
                             if outcome.get("name") == "Over":
                                 point = outcome.get("point")
                                 if point is not None:
-                                    total_lines.append(float(point))
+                                    fg_totals.append(float(point))
+                    elif key == "h2h":
+                        for outcome in outcomes:
+                            price = outcome.get("price")
+                            if outcome.get("name") == home_team and price is not None:
+                                fg_home_ml.append(float(price))
+                            elif outcome.get("name") == away_team and price is not None:
+                                fg_away_ml.append(float(price))
+                    elif key == "spreads_h1":
+                        for outcome in outcomes:
+                            if outcome.get("name") == home_team:
+                                point = outcome.get("point")
+                                if point is not None:
+                                    fh_spreads.append(float(point))
+                    elif key == "totals_h1":
+                        for outcome in outcomes:
+                            if outcome.get("name") == "Over":
+                                point = outcome.get("point")
+                                if point is not None:
+                                    fh_totals.append(float(point))
+                    elif key == "h2h_h1":
+                        for outcome in outcomes:
+                            price = outcome.get("price")
+                            if outcome.get("name") == home_team and price is not None:
+                                fh_home_ml.append(float(price))
+                            elif outcome.get("name") == away_team and price is not None:
+                                fh_away_ml.append(float(price))
+                    elif key == "spreads_q1":
+                        for outcome in outcomes:
+                            if outcome.get("name") == home_team:
+                                point = outcome.get("point")
+                                if point is not None:
+                                    q1_spreads.append(float(point))
+                    elif key == "totals_q1":
+                        for outcome in outcomes:
+                            if outcome.get("name") == "Over":
+                                point = outcome.get("point")
+                                if point is not None:
+                                    q1_totals.append(float(point))
+                    elif key == "h2h_q1":
+                        for outcome in outcomes:
+                            price = outcome.get("price")
+                            if outcome.get("name") == home_team and price is not None:
+                                q1_home_ml.append(float(price))
+                            elif outcome.get("name") == away_team and price is not None:
+                                q1_away_ml.append(float(price))
             
-            if spread_lines or total_lines:
+            if any([
+                fg_spreads, fg_totals, fh_spreads, fh_totals,
+                q1_spreads, q1_totals, fg_home_ml, fg_away_ml,
+                fh_home_ml, fh_away_ml, q1_home_ml, q1_away_ml
+            ]):
                 lines.append({
                     "query_date": query_date,
                     "event_id": event.get("id"),
                     "commence_time": event.get("commence_time"),
                     "home_team": home_team,
                     "away_team": away_team,
-                    "spread_line": sum(spread_lines) / len(spread_lines) if spread_lines else None,
-                    "total_line": sum(total_lines) / len(total_lines) if total_lines else None,
-                    "spread_sources": len(spread_lines),
-                    "total_sources": len(total_lines),
+                    "fg_spread_line": _median(fg_spreads),
+                    "fg_total_line": _median(fg_totals),
+                    "fg_home_ml": _median(fg_home_ml),
+                    "fg_away_ml": _median(fg_away_ml),
+                    "fh_spread_line": _median(fh_spreads),
+                    "fh_total_line": _median(fh_totals),
+                    "fh_home_ml": _median(fh_home_ml),
+                    "fh_away_ml": _median(fh_away_ml),
+                    "q1_spread_line": _median(q1_spreads),
+                    "q1_total_line": _median(q1_totals),
+                    "q1_home_ml": _median(q1_home_ml),
+                    "q1_away_ml": _median(q1_away_ml),
                 })
         
         return lines
@@ -380,6 +469,20 @@ class FreshDataPipeline:
         # Match on teams and date
         merged_rows = []
         matched = 0
+        column_map = {
+            "spread_line": "fg_spread_line",
+            "total_line": "fg_total_line",
+            "moneyline_home": "fg_home_ml",
+            "moneyline_away": "fg_away_ml",
+            "fh_spread_line": "fh_spread_line",
+            "fh_total_line": "fh_total_line",
+            "fh_home_ml": "fh_home_ml",
+            "fh_away_ml": "fh_away_ml",
+            "q1_spread_line": "q1_spread_line",
+            "q1_total_line": "q1_total_line",
+            "q1_home_ml": "q1_home_ml",
+            "q1_away_ml": "q1_away_ml",
+        }
         
         for _, game in outcomes_df.iterrows():
             game_date = game["date"].date()
@@ -397,12 +500,12 @@ class FreshDataPipeline:
             
             if len(matching_lines) > 0:
                 line = matching_lines.iloc[0]
-                row["spread_line"] = line.get("spread_line")
-                row["total_line"] = line.get("total_line")
+                for target_col, source_col in column_map.items():
+                    row[target_col] = line.get(source_col)
                 matched += 1
             else:
-                row["spread_line"] = None
-                row["total_line"] = None
+                for target_col in column_map:
+                    row[target_col] = None
             
             merged_rows.append(row)
         
@@ -459,22 +562,33 @@ class FreshDataPipeline:
             df["actual_1h_margin"] = df["home_1h_score"] - df["away_1h_score"]
             df["actual_1h_total"] = df["home_1h_score"] + df["away_1h_score"]
             
-            # Approximate 1H lines as half of full game lines
+            # First-half lines (prefer real data, fallback to FG approximations)
+            if "fh_spread_line" in df.columns:
+                df["1h_spread_line"] = df["fh_spread_line"]
+            else:
+                df["1h_spread_line"] = pd.Series([None] * len(df))
             if "spread_line" in df.columns:
-                df["1h_spread_line"] = df["spread_line"] / 2
-                df["1h_spread_covered"] = df.apply(
-                    lambda r: int(r["actual_1h_margin"] > -r["1h_spread_line"])
-                    if pd.notna(r["1h_spread_line"]) else None,
-                    axis=1
-                )
+                mask = df["1h_spread_line"].isna()
+                df.loc[mask, "1h_spread_line"] = df.loc[mask, "spread_line"] / 2
             
+            if "fh_total_line" in df.columns:
+                df["1h_total_line"] = df["fh_total_line"]
+            else:
+                df["1h_total_line"] = pd.Series([None] * len(df))
             if "total_line" in df.columns:
-                df["1h_total_line"] = df["total_line"] / 2
-                df["1h_total_over"] = df.apply(
-                    lambda r: int(r["actual_1h_total"] > r["1h_total_line"])
-                    if pd.notna(r["1h_total_line"]) else None,
-                    axis=1
-                )
+                mask = df["1h_total_line"].isna()
+                df.loc[mask, "1h_total_line"] = df.loc[mask, "total_line"] / 2
+            
+            df["1h_spread_covered"] = df.apply(
+                lambda r: int(r["actual_1h_margin"] > -r["1h_spread_line"])
+                if pd.notna(r["1h_spread_line"]) else None,
+                axis=1
+            )
+            df["1h_total_over"] = df.apply(
+                lambda r: int(r["actual_1h_total"] > r["1h_total_line"])
+                if pd.notna(r["1h_total_line"]) else None,
+                axis=1
+            )
         
         # First quarter labels
         if "home_q1" in df.columns and "away_q1" in df.columns:
@@ -484,10 +598,28 @@ class FreshDataPipeline:
             df["actual_q1_margin"] = df["home_q1"] - df["away_q1"]
             df["actual_q1_total"] = df["home_q1"] + df["away_q1"]
             
+            if "q1_spread_line" not in df.columns:
+                df["q1_spread_line"] = pd.Series([None] * len(df))
             if "spread_line" in df.columns:
-                df["q1_spread_line"] = df["spread_line"] / 4
+                mask = df["q1_spread_line"].isna()
+                df.loc[mask, "q1_spread_line"] = df.loc[mask, "spread_line"] / 4
+            
+            if "q1_total_line" not in df.columns:
+                df["q1_total_line"] = pd.Series([None] * len(df))
             if "total_line" in df.columns:
-                df["q1_total_line"] = df["total_line"] / 4
+                mask = df["q1_total_line"].isna()
+                df.loc[mask, "q1_total_line"] = df.loc[mask, "total_line"] / 4
+            
+            df["q1_spread_covered"] = df.apply(
+                lambda r: int(r["actual_q1_margin"] > -r["q1_spread_line"])
+                if pd.notna(r["q1_spread_line"]) else None,
+                axis=1
+            )
+            df["q1_total_over"] = df.apply(
+                lambda r: int(r["actual_q1_total"] > r["q1_total_line"])
+                if pd.notna(r["q1_total_line"]) else None,
+                axis=1
+            )
         
         return df
     
@@ -607,6 +739,19 @@ class FreshDataPipeline:
                 warnings.append(f"Only {total_coverage:.1f}% of games have total lines")
             else:
                 logger.info(f"  ✓ Total line coverage: {total_coverage:.1f}%")
+        
+        if "1h_spread_line" in df.columns:
+            fh_spread_cov = df["1h_spread_line"].notna().sum() / len(df) * 100
+            logger.info(f"  ✓ 1H spread coverage: {fh_spread_cov:.1f}%")
+        if "1h_total_line" in df.columns:
+            fh_total_cov = df["1h_total_line"].notna().sum() / len(df) * 100
+            logger.info(f"  ✓ 1H total coverage: {fh_total_cov:.1f}%")
+        if "q1_spread_line" in df.columns:
+            q1_spread_cov = df["q1_spread_line"].notna().sum() / len(df) * 100
+            logger.info(f"  ✓ Q1 spread coverage: {q1_spread_cov:.1f}%")
+        if "q1_total_line" in df.columns:
+            q1_total_cov = df["q1_total_line"].notna().sum() / len(df) * 100
+            logger.info(f"  ✓ Q1 total coverage: {q1_total_cov:.1f}%")
         
         # Check date range
         date_min = df["date"].min()

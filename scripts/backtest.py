@@ -224,11 +224,15 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
     if "spread_line" in df.columns:
         df["actual_margin"] = df["home_score"] - df["away_score"]
         df["spread_covered"] = (df["actual_margin"] > -df["spread_line"]).astype(int)
+        # Set to NaN where spread_line is NaN
+        df.loc[df["spread_line"].isna(), "spread_covered"] = None
     
     # Total over
     if "total_line" in df.columns:
         df["actual_total"] = df["home_score"] + df["away_score"]
         df["total_over"] = (df["actual_total"] > df["total_line"]).astype(int)
+        # Set to NaN where total_line is NaN
+        df.loc[df["total_line"].isna(), "total_over"] = None
     
     # 1H labels
     if "home_q1" in df.columns and "home_q2" in df.columns:
@@ -238,15 +242,27 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
         df["actual_1h_total"] = df["home_1h_score"] + df["away_1h_score"]
         df["actual_1h_margin"] = df["home_1h_score"] - df["away_1h_score"]
         
-        # 1H spread covered (approximate - use half of FG line)
+        if "fh_spread_line" in df.columns:
+            df["1h_spread_line"] = df["fh_spread_line"]
+        elif "1h_spread_line" not in df.columns:
+            df["1h_spread_line"] = None
         if "spread_line" in df.columns:
-            df["1h_spread_line"] = df["spread_line"] / 2
-            df["1h_spread_covered"] = (df["actual_1h_margin"] > -df["1h_spread_line"]).astype(int)
+            mask = df["1h_spread_line"].isna()
+            df.loc[mask, "1h_spread_line"] = df.loc[mask, "spread_line"] / 2
+        df["1h_spread_covered"] = (df["actual_1h_margin"] > -df["1h_spread_line"]).astype(int)
+        # Set to NaN where 1h_spread_line is NaN
+        df.loc[df["1h_spread_line"].isna(), "1h_spread_covered"] = None
         
-        # 1H total over (approximate - use half of FG line)
+        if "fh_total_line" in df.columns:
+            df["1h_total_line"] = df["fh_total_line"]
+        elif "1h_total_line" not in df.columns:
+            df["1h_total_line"] = None
         if "total_line" in df.columns:
-            df["1h_total_line"] = df["total_line"] / 2
-            df["1h_total_over"] = (df["actual_1h_total"] > df["1h_total_line"]).astype(int)
+            mask = df["1h_total_line"].isna()
+            df.loc[mask, "1h_total_line"] = df.loc[mask, "total_line"] / 2
+        df["1h_total_over"] = (df["actual_1h_total"] > df["1h_total_line"]).astype(int)
+        # Set to NaN where 1h_total_line is NaN
+        df.loc[df["1h_total_line"].isna(), "1h_total_over"] = None
     
     # Q1 labels
     if "home_q1" in df.columns and "away_q1" in df.columns:
@@ -254,15 +270,23 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
         df["actual_q1_total"] = df["home_q1"].fillna(0) + df["away_q1"].fillna(0)
         df["actual_q1_margin"] = df["home_q1"].fillna(0) - df["away_q1"].fillna(0)
         
-        # Q1 spread covered (approximate - use quarter of FG line)
+        if "q1_spread_line" not in df.columns:
+            df["q1_spread_line"] = None
         if "spread_line" in df.columns:
-            df["q1_spread_line"] = df["spread_line"] / 4
-            df["q1_spread_covered"] = (df["actual_q1_margin"] > -df["q1_spread_line"]).astype(int)
+            mask = df["q1_spread_line"].isna()
+            df.loc[mask, "q1_spread_line"] = df.loc[mask, "spread_line"] / 4
+        df["q1_spread_covered"] = (df["actual_q1_margin"] > -df["q1_spread_line"]).astype(int)
+        # Set to NaN where q1_spread_line is NaN
+        df.loc[df["q1_spread_line"].isna(), "q1_spread_covered"] = None
         
-        # Q1 total over (approximate - use quarter of FG line)
+        if "q1_total_line" not in df.columns:
+            df["q1_total_line"] = None
         if "total_line" in df.columns:
-            df["q1_total_line"] = df["total_line"] / 4
-            df["q1_total_over"] = (df["actual_q1_total"] > df["q1_total_line"]).astype(int)
+            mask = df["q1_total_line"].isna()
+            df.loc[mask, "q1_total_line"] = df.loc[mask, "total_line"] / 4
+        df["q1_total_over"] = (df["actual_q1_total"] > df["q1_total_line"]).astype(int)
+        # Set to NaN where q1_total_line is NaN
+        df.loc[df["q1_total_line"].isna(), "q1_total_over"] = None
     
     print(f"[OK] Loaded {len(df)} games")
     

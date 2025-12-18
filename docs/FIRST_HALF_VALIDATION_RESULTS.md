@@ -113,6 +113,15 @@ All 1H models are now integrated into the prediction system. The system automati
 - Uses dedicated 1H models for first half predictions
 - Falls back to FG models if 1H models unavailable (backwards compatible)
 
+## First Quarter Rollout Plan
+
+- **Line ingestion:** `scripts/collect_historical_lines.py` + `scripts/extract_betting_lines.py` capture real Q1 spreads/totals/moneylines into `data/processed/betting_lines.csv`.
+- **Dataset:** `scripts/generate_q1_training_data.py` builds `q1_training_data.parquet` with rolling Q1 features/labels.
+- **Models:** `scripts/train_first_quarter_models.py` trains and saves Q1 spread/total/moneyline models under `data/processed/models/`.
+- **Validation:** Run `python scripts/backtest.py --markets q1_spread,q1_total,q1_moneyline --strict` after regenerating `training_data.csv` to verify live performance.
+
+Once historical line coverage reaches the same threshold as FG/1H markets, we can promote Q1 models through the same production-readiness checklist.
+
 ## Next Steps
 
 ```bash

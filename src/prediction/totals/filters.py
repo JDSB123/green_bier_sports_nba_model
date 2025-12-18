@@ -100,3 +100,28 @@ class FirstHalfTotalFilter:
             return False, f"Insufficient edge ({model_edge_pct:.1%} < {self.min_edge_pct:.0%})"
 
         return True, None
+
+
+class FirstQuarterTotalFilter:
+    """Smart filtering for first quarter totals predictions (defaults to no filter)."""
+
+    def __init__(
+        self,
+        use_filter: bool = False,
+        min_edge_pct: float = 0.05,
+    ):
+        self.use_filter = use_filter
+        self.min_edge_pct = min_edge_pct
+
+    def should_bet(
+        self,
+        confidence: float,
+    ) -> Tuple[bool, Optional[str]]:
+        if not self.use_filter:
+            return True, None
+
+        model_edge_pct = abs(confidence - 0.5)
+        if model_edge_pct < self.min_edge_pct:
+            return False, f"Insufficient edge ({model_edge_pct:.1%} < {self.min_edge_pct:.0%})"
+
+        return True, None

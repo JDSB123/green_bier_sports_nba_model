@@ -240,6 +240,19 @@ Tested 3 approaches on same 422 games (Oct 2 - Dec 9, 2025):
 
 ---
 
+## First Quarter Markets (NEW)
+
+Support for Q1 spreads/totals/moneylines is now wired end-to-end:
+
+- **Line Source:** `data/processed/betting_lines.csv` (from `scripts/collect_historical_lines.py` + `scripts/extract_betting_lines.py`)
+- **Dataset:** `data/processed/q1_training_data.parquet` (from `scripts/generate_q1_training_data.py`)
+- **Models:** `scripts/train_first_quarter_models.py` saves `q1_spreads_model.joblib`, `q1_totals_model.joblib`, `q1_moneyline_model.joblib`
+- **Backtest:** `python scripts/backtest.py --markets q1_spread,q1_total,q1_moneyline --strict`
+
+Status: ✅ **Ready for validation** once the historical lines dataset is populated. This removes the old approximation (`spread_line / 4`) and ensures all Q1 bets use real market data.
+
+---
+
 ## Key Takeaways
 
 1. ✅ **Totals are excellent** - Keep betting these (13% ROI)
