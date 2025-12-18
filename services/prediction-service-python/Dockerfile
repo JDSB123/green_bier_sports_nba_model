@@ -1,3 +1,14 @@
+# Multi-stage build for smaller, more secure images
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+COPY services/prediction-service-python/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --user -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
+
+# Final stage
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -5,19 +16,28 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install dependencies
-COPY services/prediction-service-python/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/models && \
+    chown -R appuser:appuser /app
 
-# Copy application code + v4 source tree
-COPY services/prediction-service-python/app /app/app
-COPY src /app/src
-RUN mkdir -p /app/models
+# Copy only installed packages from builder
+COPY --from=builder /root/.local /home/appuser/.local
 
-ENV PYTHONPATH="/app:/app/src"
+# Copy application code
+COPY --chown=appuser:appuser services/prediction-service-python/app /app/app
+COPY --chown=appuser:appuser src /app/src
 
-# Expose port
+ENV PYTHONPATH="/app:/app/src" \
+    PATH="/home/appuser/.local/bin:$PATH"
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8082/health', timeout=5)" || exit 1
+
+# Switch to non-root user
+USER appuser
+
 EXPOSE 8082
 
 # Run service

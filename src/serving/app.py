@@ -15,8 +15,15 @@ from typing import Any, Dict, List
 from pathlib import Path as PathLib
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Query, Path
+from fastapi import FastAPI, HTTPException, Query, Path, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
 
 from src.config import settings
 from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
@@ -26,6 +33,22 @@ from scripts.build_rich_features import RichFeatureBuilder
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Prometheus metrics
+REQUEST_COUNT = Counter(
+    'nba_api_requests_total',
+    'Total number of API requests',
+    ['method', 'endpoint', 'status']
+)
+
+REQUEST_DURATION = Histogram(
+    'nba_api_request_duration_seconds',
+    'API request duration in seconds',
+    ['method', 'endpoint']
+)
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 
 # --- Request/Response Models - STRICT MODE ---
@@ -73,6 +96,39 @@ app = FastAPI(
     version="5.0.0-strict"
 )
 
+# Add rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS configuration - production safe
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8090").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+# Request metrics middleware
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    start_time = datetime.now()
+    method = request.method
+    endpoint = request.url.path
+    
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status).inc()
+        return response
+    except Exception as e:
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=500).inc()
+        raise
+    finally:
+        duration = (datetime.now() - start_time).total_seconds()
+        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
+
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
@@ -97,7 +153,8 @@ def startup_event():
 # --- Endpoints ---
 
 @app.get("/health")
-def health():
+@limiter.limit("100/minute")
+def health(request: Request):
     """Check API health - STRICT MODE."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     return {
@@ -110,11 +167,20 @@ def health():
     }
 
 
+@app.get("/metrics")
+def metrics():
+    """Prometheus metrics endpoint."""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.get("/slate/{date}", response_model=SlateResponse)
+@limiter.limit("30/minute")
 async def get_slate_predictions(
+    request: Request,
     date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
     use_splits: bool = Query(True, description="Whether to fetch and use betting splits")
 ):
+    """Get all predictions for a full day's slate. Rate limited to 30 requests/minute."""
     """
     Get all predictions for a full day's slate.
     
@@ -223,10 +289,13 @@ async def get_slate_predictions(
 
 
 @app.get("/slate/{date}/comprehensive")
+@limiter.limit("20/minute")
 async def get_comprehensive_slate_analysis(
+    request: Request,
     date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
     use_splits: bool = Query(True, description="Whether to fetch and use betting splits")
 ):
+    """Get comprehensive slate analysis. Rate limited to 20 requests/minute."""
     """
     Get comprehensive slate analysis with full edge calculations, rationale, and summary table.
     
@@ -334,7 +403,9 @@ async def get_comprehensive_slate_analysis(
 
 
 @app.post("/predict/game", response_model=GamePredictions)
-async def predict_single_game(req: GamePredictionRequest):
+@limiter.limit("60/minute")
+async def predict_single_game(request: Request, req: GamePredictionRequest):
+    """Generate predictions for a specific matchup. Rate limited to 60 requests/minute."""
     """
     Generate predictions for a specific matchup.
     

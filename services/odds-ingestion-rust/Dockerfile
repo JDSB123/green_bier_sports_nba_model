@@ -17,19 +17,31 @@ COPY src ./src
 # Build release
 RUN cargo build --release
 
-# Runtime image
+# Runtime image - minimal and secure
 FROM debian:bookworm-slim
+
+# Install only essential runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app && \
+    chown -R appuser:appuser /app
+
 WORKDIR /app
 
-# Copy binary
-COPY --from=builder /app/odds-ingestion/target/release/odds-ingestion /app/odds-ingestion
+# Copy binary with proper ownership
+COPY --from=builder --chown=appuser:appuser /app/odds-ingestion/target/release/odds-ingestion /app/odds-ingestion
 
-ENV THE_ODDS_API_KEY= \
-    DATABASE_URL=postgres://nba:nba@postgres:5432/nba \
-    REDIS_URL=redis://redis:6379 \
-    POLL_INTERVAL_SECONDS=30 \
+# Environment variables (set at runtime via docker-compose)
+ENV POLL_INTERVAL_SECONDS=30 \
     RUST_LOG=info
+
+# Switch to non-root user
+USER appuser
 
 ENTRYPOINT ["/app/odds-ingestion"]

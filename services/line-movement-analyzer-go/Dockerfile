@@ -6,8 +6,18 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o line-movement-analyzer .
 
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/line-movement-analyzer .
+RUN apk --no-cache add ca-certificates && \
+    addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+WORKDIR /app
+
+COPY --from=builder --chown=appuser:appuser /app/line-movement-analyzer /app/line-movement-analyzer
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8084/health || exit 1
+
+USER appuser
+
 EXPOSE 8084
 CMD ["./line-movement-analyzer"]

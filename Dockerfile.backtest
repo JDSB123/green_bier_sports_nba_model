@@ -19,7 +19,17 @@
 #   SEASONS               - Comma-separated seasons (default: 2024-2025,2025-2026)
 #   MARKETS               - Comma-separated markets (default: all)
 
-FROM python:3.11-slim AS base
+# Multi-stage build for smaller, more secure images
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+COPY requirements.txt pyproject.toml setup.py ./
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Final stage
+FROM python:3.11-slim
 
 # Prevent Python from buffering stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -29,34 +39,41 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies
+# Install only essential runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements and install dependencies
-COPY requirements.txt pyproject.toml setup.py ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/data/raw /app/data/processed /app/data/results && \
+    chown -R appuser:appuser /app
 
-# Copy application code
-COPY src/ ./src/
-COPY scripts/ ./scripts/
+# Copy installed packages from builder
+COPY --from=builder /root/.local /home/appuser/.local
 
-# Create data directories
-RUN mkdir -p /app/data/raw /app/data/processed /app/data/results
+# Copy application code with proper ownership
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser scripts/ ./scripts/
+
+# Copy entrypoint script and fix line endings (Windows -> Unix)
+COPY docker-entrypoint-backtest.sh /docker-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && \
+    chown appuser:appuser /docker-entrypoint.sh
 
 # Set environment
 ENV PYTHONPATH=/app \
     DATA_RAW_DIR=/app/data/raw \
-    DATA_PROCESSED_DIR=/app/data/processed
+    DATA_PROCESSED_DIR=/app/data/processed \
+    PATH="/home/appuser/.local/bin:$PATH"
 
 # Healthcheck - verify critical modules import
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "from src.config import settings; from src.modeling.models import SpreadsModel; print('OK')" || exit 1
 
-# Copy entrypoint script and fix line endings (Windows -> Unix)
-COPY docker-entrypoint-backtest.sh /docker-entrypoint.sh
-RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+# Switch to non-root user
+USER appuser
 
 # Default command runs the full backtest pipeline
 ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -18,7 +18,7 @@ services:
     environment:
       POSTGRES_DB: nba
       POSTGRES_USER: nba
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-nba_dev_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -56,7 +56,7 @@ services:
     container_name: nba-odds-ingestion
     environment:
       - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
-      - DATABASE_URL=postgres://nba:${DB_PASSWORD:-nba_dev_password}@postgres:5432/nba
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
       - REDIS_URL=redis://redis:6379
       - POLL_INTERVAL_SECONDS=30
       - RUST_LOG=info
@@ -74,7 +74,7 @@ services:
     container_name: nba-schedule-poller
     environment:
       - LISTEN_ADDR=:8085
-      - DATABASE_URL=postgres://nba:${DB_PASSWORD:-nba_dev_password}@postgres:5432/nba
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
       - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
     depends_on:
       postgres:
@@ -93,7 +93,7 @@ services:
       dockerfile: ./services/prediction-service-python/Dockerfile
     container_name: nba-prediction-service
     environment:
-      - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD:-nba_dev_password}@postgres:5432/nba
+      - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD}@postgres:5432/nba
       - REDIS_URL=redis://redis:6379
       - MODELS_DIR=/app/models
       # API keys for data sources (single source of truth functions will use these)
@@ -132,7 +132,7 @@ services:
     container_name: nba-line-analyzer
     environment:
       - LISTEN_ADDR=:8084
-      - DATABASE_URL=postgres://nba:${DB_PASSWORD:-nba_dev_password}@postgres:5432/nba
+      - DATABASE_URL=postgres://nba:${DB_PASSWORD}@postgres:5432/nba
     depends_on:
       postgres:
         condition: service_healthy

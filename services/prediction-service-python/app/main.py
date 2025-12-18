@@ -9,6 +9,7 @@ STRICT MODE: All inputs required. No fallbacks. No silent failures.
 - First Half: Spread (55.9%), Total (58.1%), Moneyline (63.0%)
 """
 import logging
+import os
 from datetime import datetime
 from typing import Dict, List
 from uuid import UUID
@@ -127,11 +128,13 @@ app = FastAPI(
     description="ML-based NBA betting predictions. STRICT MODE: All inputs required, no fallbacks. 6 BACKTESTED markets."
 )
 
-# CORS for local dev
+# CORS configuration - production safe
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8090").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
