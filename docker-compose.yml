@@ -150,7 +150,8 @@ services:
     environment:
       - PREDICTION_URL=http://prediction-service:8082
       - FEATURE_URL=http://feature-store:8081
-      - ODDS_URL=http://odds-ingestion:8083
+      # Note: odds-ingestion is a background worker, not an HTTP service
+      # Live odds are fetched directly by strict-api via The Odds API
       - LISTEN_ADDR=:8080
     ports:
       - "8080:8080"

@@ -1,5 +1,7 @@
 // NBA Prediction API Gateway v5.0
 // Minimal HTTP gateway that proxies requests to backend services.
+//
+// NOTE: This is a scaffolded gateway. The primary API is strict-api (port 8090).
 package main
 
 import (
@@ -14,7 +16,6 @@ import (
 var (
 	predictionURL = getenv("PREDICTION_URL", "http://localhost:8082")
 	featureURL    = getenv("FEATURE_URL", "http://localhost:8081")
-	oddsURL       = getenv("ODDS_URL", "http://localhost:8083")
 )
 
 func getenv(key, def string) string {
@@ -31,7 +32,7 @@ func main() {
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"service":"api-gateway","status":"ok"}`))
+		_, _ = w.Write([]byte(`{"service":"api-gateway","status":"ok","note":"Use strict-api:8090 for predictions"}`))
 	})
 
 	// Predict proxy -> prediction service
@@ -85,31 +86,18 @@ func main() {
 		io.Copy(w, resp.Body)
 	})
 
-	// Odds proxy -> odds ingestion service
+	// Odds endpoint - redirect to strict-api
+	// NOTE: odds-ingestion is a background worker, not an HTTP service
+	// Live odds are fetched directly by strict-api via The Odds API
 	mux.HandleFunc("/api/odds", func(w http.ResponseWriter, r *http.Request) {
-		client := &http.Client{Timeout: 10 * time.Second}
-		req, err := http.NewRequest(http.MethodGet, oddsURL+"/odds?"+r.URL.RawQuery, nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadGateway)
-			return
-		}
-		defer resp.Body.Close()
-		for k, vv := range resp.Header {
-			for _, v := range vv {
-				w.Header().Add(k, v)
-			}
-		}
-		w.WriteHeader(resp.StatusCode)
-		io.Copy(w, resp.Body)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte(`{"error":"Odds not available via gateway. Use strict-api:8090/slate/{date} instead."}`))
 	})
 
 	addr := getenv("LISTEN_ADDR", ":8080")
-	log.Printf("NBA API Gateway listening on %s (prediction=%s, features=%s, odds=%s)", addr, predictionURL, featureURL, oddsURL)
+	log.Printf("NBA API Gateway listening on %s (prediction=%s, features=%s)", addr, predictionURL, featureURL)
+	log.Printf("NOTE: For full predictions, use strict-api at port 8090")
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatal(err)
 	}
