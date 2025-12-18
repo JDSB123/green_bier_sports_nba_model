@@ -54,9 +54,54 @@ def get_target_date(date_str: str | None = None) -> date:
 
 
 async def fetch_todays_games(target_date: date) -> List[Dict]:
-    """Fetch games for a specific date."""
+    """
+    Fetch games for a specific date, including first half markets.
+    
+    First half markets (spreads_h1, totals_h1, h2h_h1) are only available
+    through the event-specific endpoint, so we fetch them separately for each game.
+    """
+    # Fetch main odds data (full game markets)
     raw_games = await the_odds.fetch_odds()
-    return filter_games_for_date(raw_games, target_date)
+    filtered_games = filter_games_for_date(raw_games, target_date)
+    
+    # Enrich with first half markets for each game
+    enriched_games = []
+    for game in filtered_games:
+        event_id = game.get("id")
+        if event_id:
+            try:
+                # Fetch 1H odds specifically (spreads_h1, totals_h1, h2h_h1)
+                event_odds = await the_odds.fetch_event_odds(
+                    event_id,
+                    markets="spreads_h1,totals_h1,h2h_h1"
+                )
+                
+                # MERGE instead of overwrite
+                # Keep existing bookmakers (FG) and add new ones (1H)
+                existing_bms = {bm["key"]: bm for bm in game.get("bookmakers", [])}
+                new_bms = event_odds.get("bookmakers", [])
+                
+                for nbm in new_bms:
+                    if nbm["key"] in existing_bms:
+                        # Add markets to existing bookmaker
+                        existing_markets = {m["key"]: m for m in existing_bms[nbm["key"]].get("markets", [])}
+                        for nm in nbm.get("markets", []):
+                            existing_markets[nm["key"]] = nm
+                        existing_bms[nbm["key"]]["markets"] = list(existing_markets.values())
+                    else:
+                        existing_bms[nbm["key"]] = nbm
+                
+                game["bookmakers"] = list(existing_bms.values())
+            except Exception as e:
+                # Log warning but continue - first half markets are optional
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"Could not fetch 1H odds for event {event_id}: {e}"
+                )
+        
+        enriched_games.append(game)
+    
+    return enriched_games
 
 
 def filter_games_for_date(games: list, target_date: date) -> list:
@@ -148,8 +193,9 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                         })
             
             # First half markets
-            elif key and ("h1" in key.lower() or "first_half" in key.lower() or "1h" in key.lower()):
-                if "spread" in key.lower() or "handicap" in key.lower():
+            # Market keys from API: "spreads_h1", "totals_h1", "h2h_h1"
+            elif key and ("h1" in key.lower() or "first_half" in key.lower() or "1h" in key.lower() or key.lower() == "spreads_h1" or key.lower() == "totals_h1"):
+                if "spread" in key.lower() or "handicap" in key.lower() or key.lower() == "spreads_h1":
                     for out in outcomes:
                         if out.get("name") == home_team:
                             fh_spreads_home.append({
@@ -161,7 +207,7 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                                 "price": out.get("price"),
                                 "point": out.get("point")
                             })
-                elif "total" in key.lower() or "over_under" in key.lower():
+                elif "total" in key.lower() or "over_under" in key.lower() or key.lower() == "totals_h1":
                     for out in outcomes:
                         if out.get("name") == "Over":
                             fh_totals.append({
