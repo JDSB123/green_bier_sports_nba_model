@@ -1,12 +1,17 @@
-"""Commercial-grade FastAPI model serving for NBA v4.0.
+"""
+NBA v5.0 BETA - FastAPI Prediction Server - STRICT MODE
 
-Exposes the full Unified Prediction Engine for all markets (FG + 1H).
+STRICT MODE: All inputs required. No fallbacks. No silent failures.
+
+6 BACKTESTED markets:
+- Full Game: Spread (60.6%), Total (59.2%), Moneyline (65.5%)
+- First Half: Spread (55.9%), Total (58.1%), Moneyline (63.0%)
 """
 from __future__ import annotations
 import os
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from pathlib import Path as PathLib
 from datetime import datetime
 
@@ -14,7 +19,7 @@ from fastapi import FastAPI, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 
 from src.config import settings
-from src.prediction import UnifiedPredictionEngine
+from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
 from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits
 from scripts.build_rich_features import RichFeatureBuilder
@@ -22,67 +27,88 @@ from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# --- Request/Response Models ---
+
+# --- Request/Response Models - STRICT MODE ---
 
 class GamePredictionRequest(BaseModel):
+    """Request for single game prediction - ALL LINES REQUIRED."""
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
-    fg_spread_line: Optional[float] = None
-    fg_total_line: Optional[float] = None
-    fh_spread_line: Optional[float] = None
-    fh_total_line: Optional[float] = None
+    # Full game lines - REQUIRED
+    fg_spread_line: float
+    fg_total_line: float
+    fg_home_ml: int = Field(..., example=-150)
+    fg_away_ml: int = Field(..., example=130)
+    # First half lines - REQUIRED
+    fh_spread_line: float
+    fh_total_line: float
+    fh_home_ml: int = Field(..., example=-130)
+    fh_away_ml: int = Field(..., example=110)
+
 
 class MarketPrediction(BaseModel):
-    side: Optional[str] = None
+    side: str
     confidence: float
-    edge: Optional[float] = None
+    edge: float
     passes_filter: bool
-    filter_reason: Optional[str] = None
+    filter_reason: str | None = None
+
 
 class GamePredictions(BaseModel):
     full_game: Dict[str, Any]
     first_half: Dict[str, Any]
+
 
 class SlateResponse(BaseModel):
     date: str
     predictions: List[Dict[str, Any]]
     total_plays: int
 
-# --- API Setup ---
+
+# --- API Setup - STRICT MODE ---
 
 app = FastAPI(
-    title="NBA v5.0 BETA Commercial Prediction API",
-    description="Full-market NBA betting predictions (FG + 1H) with Premium API integration.",
-    version="5.0.0-beta"
+    title="NBA v5.0 BETA - STRICT MODE",
+    description="6 BACKTESTED markets. All inputs required. No fallbacks.",
+    version="5.0.0-strict"
 )
+
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
 
+
 @app.on_event("startup")
 def startup_event():
-    """Initialize the engine and feature builder on startup."""
+    """
+    Initialize the prediction engine on startup.
+    
+    STRICT MODE: Fails LOUDLY if models are missing.
+    """
     models_dir = _models_dir()
-    try:
-        logger.info(f"Initializing Unified Prediction Engine from {models_dir}")
-        app.state.engine = UnifiedPredictionEngine(models_dir=models_dir)
-        app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
-        logger.info("NBA Prediction Engine initialized successfully.")
-    except Exception as e:
-        logger.error(f"Failed to initialize engine: {e}", exc_info=True)
-        app.state.engine = None
+    logger.info(f"STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    
+    # NO TRY/EXCEPT - Let it crash if models are missing
+    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir)
+    app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
+    logger.info("NBA Prediction Engine initialized - 4 models loaded, 6 markets active")
+
 
 # --- Endpoints ---
 
 @app.get("/health")
 def health():
-    """Check API and Engine health."""
+    """Check API health - STRICT MODE."""
+    engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     return {
         "status": "ok",
-        "engine_loaded": app.state.engine is not None,
+        "mode": "STRICT",
+        "markets": 6,
+        "engine_loaded": engine_loaded,
         "season": settings.current_season,
         "timestamp": datetime.now().isoformat()
     }
+
 
 @app.get("/slate/{date}", response_model=SlateResponse)
 async def get_slate_predictions(
@@ -91,10 +117,11 @@ async def get_slate_predictions(
 ):
     """
     Get all predictions for a full day's slate.
-    This is the primary endpoint for commercial consumers.
+    
+    STRICT MODE: Games without all required lines are skipped with warning.
     """
-    if app.state.engine is None:
-        raise HTTPException(status_code=503, detail="Prediction engine not loaded")
+    if not hasattr(app.state, 'engine') or app.state.engine is None:
+        raise HTTPException(status_code=503, detail="STRICT MODE: Engine not loaded - models missing")
 
     # Resolve date
     from scripts.predict import get_target_date, filter_games_for_date
@@ -137,9 +164,17 @@ async def get_slate_predictions(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
 
-            # Extract lines
+            # Extract lines - STRICT MODE requires all
             from scripts.predict import extract_lines
             lines = extract_lines(game, home_team)
+            
+            # Validate all lines present
+            required_lines = ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml",
+                             "fh_spread", "fh_total", "fh_home_ml", "fh_away_ml"]
+            missing = [k for k in required_lines if lines.get(k) is None]
+            if missing:
+                logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - missing lines: {missing}")
+                continue
 
             # Predict
             preds = app.state.engine.predict_all_markets(
@@ -172,8 +207,12 @@ async def get_slate_predictions(
                 "has_plays": game_plays > 0
             })
 
+        except ValueError as e:
+            # STRICT MODE: Missing required input
+            logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - {e}")
+            continue
         except Exception as e:
-            logger.error(f"Error processing game {home_team} vs {away_team}: {e}")
+            logger.error(f"Error processing {home_team} vs {away_team}: {e}")
             continue
 
     return SlateResponse(
@@ -182,14 +221,16 @@ async def get_slate_predictions(
         total_plays=total_plays
     )
 
+
 @app.post("/predict/game", response_model=GamePredictions)
 async def predict_single_game(req: GamePredictionRequest):
     """
-    Generate predictions for a specific matchup with custom lines.
-    Useful for 'What If' scenarios or checking specific sportsbook lines.
+    Generate predictions for a specific matchup.
+    
+    STRICT MODE: All 8 line/odds parameters are REQUIRED.
     """
-    if app.state.engine is None:
-        raise HTTPException(status_code=503, detail="Prediction engine not loaded")
+    if not hasattr(app.state, 'engine') or app.state.engine is None:
+        raise HTTPException(status_code=503, detail="STRICT MODE: Engine not loaded - models missing")
 
     try:
         # Build features
@@ -197,15 +238,21 @@ async def predict_single_game(req: GamePredictionRequest):
             req.home_team, req.away_team
         )
 
-        # Predict
+        # Predict - ALL parameters required
         preds = app.state.engine.predict_all_markets(
             features,
             fg_spread_line=req.fg_spread_line,
             fg_total_line=req.fg_total_line,
+            fg_home_ml_odds=req.fg_home_ml,
+            fg_away_ml_odds=req.fg_away_ml,
             fh_spread_line=req.fh_spread_line,
             fh_total_line=req.fh_total_line,
+            fh_home_ml_odds=req.fh_home_ml,
+            fh_away_ml_odds=req.fh_away_ml,
         )
         return preds
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"STRICT MODE: {e}")
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
