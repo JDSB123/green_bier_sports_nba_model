@@ -1,0 +1,127 @@
+# NBA Basketball Prediction System v5.0 BETA
+# Backtest Environment - Docker Compose
+#
+# This is the SINGLE SOURCE OF TRUTH for running backtests.
+#
+# Usage:
+#   # Full backtest (fetch data + build training + run backtest)
+#   docker-compose -f docker-compose.backtest.yml up backtest-full
+#
+#   # Just build training data
+#   docker-compose -f docker-compose.backtest.yml up backtest-data
+#
+#   # Run backtest on existing data
+#   docker-compose -f docker-compose.backtest.yml up backtest-only
+#
+#   # Interactive shell for debugging
+#   docker-compose -f docker-compose.backtest.yml run --rm backtest-shell
+#
+# Required Environment:
+#   Copy .env.example to .env and fill in your API keys
+
+version: '3.8'
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # FULL BACKTEST PIPELINE
+  # Fetches fresh data, builds training set, runs all market backtests
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-full:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-full
+    environment:
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - SEASONS=${SEASONS:-2024-2025,2025-2026}
+      - MARKETS=${MARKETS:-all}
+      - MIN_TRAINING=${MIN_TRAINING:-80}
+    volumes:
+      - ./data:/app/data
+      - backtest_cache:/app/.cache
+    command: ["full"]
+    networks:
+      - backtest-network
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # DATA PIPELINE ONLY
+  # Fetches fresh data and builds training set (no backtest)
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-data:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-data
+    environment:
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - SEASONS=${SEASONS:-2024-2025,2025-2026}
+    volumes:
+      - ./data:/app/data
+      - backtest_cache:/app/.cache
+    command: ["data"]
+    networks:
+      - backtest-network
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # BACKTEST ONLY
+  # Runs backtest on existing training data (no API calls)
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-only:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-only
+    environment:
+      - MARKETS=${MARKETS:-all}
+      - MIN_TRAINING=${MIN_TRAINING:-80}
+    volumes:
+      - ./data:/app/data
+    command: ["backtest"]
+    networks:
+      - backtest-network
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # VALIDATION
+  # Validates training data integrity
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-validate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-validate
+    volumes:
+      - ./data:/app/data:ro
+    command: ["validate"]
+    networks:
+      - backtest-network
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # INTERACTIVE SHELL
+  # For debugging and development
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-shell:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-shell
+    environment:
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src:ro
+      - ./scripts:/app/scripts:ro
+    command: ["shell"]
+    stdin_open: true
+    tty: true
+    networks:
+      - backtest-network
+
+volumes:
+  backtest_cache:
+
+networks:
+  backtest-network:
+    name: nba-backtest-network

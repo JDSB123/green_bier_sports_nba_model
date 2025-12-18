@@ -397,17 +397,183 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
     return splits_list
 
 
-async def fetch_splits_action_network(date: Optional[str] = None):
+async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSplits]:
     """
-    Fetch from Action Network API.
-    Requires: ACTION_NETWORK_API_KEY env variable
-
-    NOT IMPLEMENTED - requires paid subscription
+    Fetch betting splits from Action Network.
+    
+    Uses web scraping with authentication since Action Network 
+    doesn't have a public API for splits data.
+    
+    Requires:
+        ACTION_NETWORK_USERNAME and ACTION_NETWORK_PASSWORD env variables
+    
+    Returns:
+        List of GameSplits with public betting percentages
     """
-    raise NotImplementedError(
-        "Action Network API requires subscription. "
-        "Set ACTION_NETWORK_API_KEY and implement API calls."
-    )
+    import httpx
+    from datetime import datetime
+    
+    username = settings.action_network_username
+    password = settings.action_network_password
+    
+    if not username or not password:
+        logger.warning("Action Network credentials not set - skipping")
+        return []
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            # Action Network requires session-based auth
+            # First, get a session by logging in
+            login_url = "https://api.actionnetwork.com/web/v1/auth/login"
+            
+            login_response = await client.post(
+                login_url,
+                json={
+                    "email": username,
+                    "password": password,
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Origin": "https://www.actionnetwork.com",
+                    "Referer": "https://www.actionnetwork.com/",
+                }
+            )
+            
+            if login_response.status_code != 200:
+                logger.warning(f"Action Network login failed: {login_response.status_code}")
+                return []
+            
+            # Extract auth token from response
+            auth_data = login_response.json()
+            token = auth_data.get("token") or auth_data.get("access_token")
+            
+            if not token:
+                # Try cookies-based session
+                cookies = login_response.cookies
+                logger.info("Using cookie-based session for Action Network")
+            else:
+                cookies = None
+            
+            # Fetch NBA games with betting splits
+            target_date = date or datetime.now().strftime("%Y-%m-%d")
+            
+            games_url = f"https://api.actionnetwork.com/web/v1/games/nba"
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "application/json",
+                "Origin": "https://www.actionnetwork.com",
+                "Referer": "https://www.actionnetwork.com/nba/odds",
+            }
+            
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+            
+            games_response = await client.get(
+                games_url,
+                params={"date": target_date},
+                headers=headers,
+                cookies=cookies,
+            )
+            
+            if games_response.status_code != 200:
+                logger.warning(f"Action Network games fetch failed: {games_response.status_code}")
+                return []
+            
+            games_data = games_response.json()
+            games = games_data.get("games", []) or games_data.get("data", [])
+            
+            logger.info(f"Fetched {len(games)} games from Action Network")
+            
+            # Parse into GameSplits
+            splits_list = []
+            from src.ingestion.standardize import normalize_team_to_espn
+            
+            for game in games:
+                try:
+                    # Extract team names
+                    home_team_raw = (
+                        game.get("home_team", {}).get("full_name", "") 
+                        if isinstance(game.get("home_team"), dict) 
+                        else game.get("home_team", "")
+                    )
+                    away_team_raw = (
+                        game.get("away_team", {}).get("full_name", "")
+                        if isinstance(game.get("away_team"), dict)
+                        else game.get("away_team", "")
+                    )
+                    
+                    home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="action_network")
+                    away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="action_network")
+                    
+                    if not home_valid or not away_valid:
+                        continue
+                    
+                    # Extract betting percentages
+                    # Action Network structure varies - handle different formats
+                    betting_info = game.get("betting_info", {}) or game.get("odds", {}) or {}
+                    
+                    # Spread data
+                    spread_data = betting_info.get("spread", {}) or {}
+                    spread_line = spread_data.get("home_spread") or spread_data.get("line") or 0
+                    spread_home_pct = spread_data.get("home_tickets") or spread_data.get("home_pct") or 50
+                    spread_home_money = spread_data.get("home_money") or spread_data.get("home_money_pct") or 50
+                    spread_open = spread_data.get("opening") or spread_data.get("open") or spread_line
+                    
+                    # Total data
+                    total_data = betting_info.get("total", {}) or {}
+                    total_line = total_data.get("line") or total_data.get("total") or 0
+                    over_pct = total_data.get("over_tickets") or total_data.get("over_pct") or 50
+                    over_money = total_data.get("over_money") or total_data.get("over_money_pct") or 50
+                    total_open = total_data.get("opening") or total_data.get("open") or total_line
+                    
+                    # Moneyline data
+                    ml_data = betting_info.get("moneyline", {}) or betting_info.get("ml", {}) or {}
+                    ml_home_pct = ml_data.get("home_tickets") or ml_data.get("home_pct") or 50
+                    ml_home_money = ml_data.get("home_money") or ml_data.get("home_money_pct") or 50
+                    
+                    splits = GameSplits(
+                        event_id=str(game.get("id", "")),
+                        home_team=home_team,
+                        away_team=away_team,
+                        game_time=dt.datetime.fromisoformat(
+                            game.get("start_time", datetime.now().isoformat()).replace("Z", "+00:00")
+                        ),
+                        spread_line=float(spread_line) if spread_line else 0.0,
+                        spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct else 50.0,
+                        spread_away_ticket_pct=100 - float(spread_home_pct) if spread_home_pct else 50.0,
+                        spread_home_money_pct=float(spread_home_money) if spread_home_money else 50.0,
+                        spread_away_money_pct=100 - float(spread_home_money) if spread_home_money else 50.0,
+                        spread_open=float(spread_open) if spread_open else 0.0,
+                        spread_current=float(spread_line) if spread_line else 0.0,
+                        total_line=float(total_line) if total_line else 0.0,
+                        over_ticket_pct=float(over_pct) if over_pct else 50.0,
+                        under_ticket_pct=100 - float(over_pct) if over_pct else 50.0,
+                        over_money_pct=float(over_money) if over_money else 50.0,
+                        under_money_pct=100 - float(over_money) if over_money else 50.0,
+                        total_open=float(total_open) if total_open else 0.0,
+                        total_current=float(total_line) if total_line else 0.0,
+                        ml_home_ticket_pct=float(ml_home_pct) if ml_home_pct else 50.0,
+                        ml_away_ticket_pct=100 - float(ml_home_pct) if ml_home_pct else 50.0,
+                        ml_home_money_pct=float(ml_home_money) if ml_home_money else 50.0,
+                        ml_away_money_pct=100 - float(ml_home_money) if ml_home_money else 50.0,
+                        source="action_network",
+                        updated_at=dt.datetime.now(),
+                    )
+                    
+                    splits_list.append(detect_reverse_line_movement(splits))
+                    
+                except Exception as e:
+                    logger.debug(f"Failed to parse Action Network game: {e}")
+                    continue
+            
+            logger.info(f"Parsed {len(splits_list)} games with betting splits from Action Network")
+            return splits_list
+            
+    except Exception as e:
+        logger.warning(f"Action Network fetch failed: {e}")
+        return []
 
 
 async def scrape_splits_covers(date: Optional[str] = None) -> List[GameSplits]:
@@ -456,7 +622,7 @@ async def fetch_public_betting_splits(
 
     Args:
         games: List of game dicts with home_team, away_team, spread, total
-        source: Data source ("the_odds", "sbro", "covers", "mock", or "auto")
+        source: Data source ("action_network", "the_odds", "sbro", "covers", "mock", or "auto")
 
     Returns:
         Dict mapping game_id to GameSplits
@@ -465,10 +631,17 @@ async def fetch_public_betting_splits(
 
     if source == "auto":
         # Try sources in order of preference
-        sources = ["the_odds", "sbro", "covers", "mock"]
+        # Action Network first (best data if credentials available)
+        sources = ["action_network", "the_odds", "sbro", "covers"]
         for src in sources:
             try:
-                if src == "the_odds":
+                if src == "action_network":
+                    # Only try if credentials are set
+                    if not settings.action_network_username or not settings.action_network_password:
+                        logger.debug("Action Network credentials not set, skipping")
+                        continue
+                    splits_list = await fetch_splits_action_network()
+                elif src == "the_odds":
                     raw_splits = await the_odds.fetch_betting_splits()
                     if not raw_splits:
                         continue
@@ -479,21 +652,26 @@ async def fetch_public_betting_splits(
                 elif src == "covers":
                     splits_list = await scrape_splits_covers()
                 else:
-                    # Fall back to mock data
-                    splits_list = _create_mock_splits_for_games(games)
+                    continue
 
                 if splits_list:
                     for splits in splits_list:
                         game_key = f"{splits.away_team}@{splits.home_team}"
                         splits_dict[game_key] = splits
-                    print(f"[OK] Loaded betting splits from {src}: {len(splits_list)} games")
+                    logger.info(f"✓ Loaded betting splits from {src}: {len(splits_list)} games")
                     break
             except Exception as e:
-                print(f"[WARN] Failed to fetch from {src}: {e}")
+                logger.warning(f"Failed to fetch splits from {src}: {e}")
                 continue
+        
+        # If no real splits, log warning (don't use mock data in production)
+        if not splits_dict:
+            logger.warning("No betting splits available from any source")
     else:
         # Use specified source
-        if source == "the_odds":
+        if source == "action_network":
+            splits_list = await fetch_splits_action_network()
+        elif source == "the_odds":
             raw_splits = await the_odds.fetch_betting_splits()
             if raw_splits:
                 splits_list = parse_the_odds_splits(raw_splits)
@@ -506,7 +684,7 @@ async def fetch_public_betting_splits(
         elif source == "mock":
             splits_list = _create_mock_splits_for_games(games)
         else:
-            raise ValueError(f"Unknown source: {source}. Valid sources: 'the_odds', 'sbro', 'covers', 'mock', 'auto'")
+            raise ValueError(f"Unknown source: {source}. Valid sources: 'action_network', 'the_odds', 'sbro', 'covers', 'mock', 'auto'")
 
         for splits in splits_list:
             game_key = f"{splits.away_team}@{splits.home_team}"

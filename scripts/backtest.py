@@ -2,6 +2,8 @@
 """
 Unified backtest for all NBA betting markets.
 
+STRICT MODE: No silent failures, no placeholder data.
+
 This is the consolidated backtester for all market types.
 
 Markets:
@@ -19,6 +21,7 @@ Usage:
     python scripts/backtest.py --markets fg_spread,fg_total # Specific markets
     python scripts/backtest.py --markets fg_spread          # Single market
     python scripts/backtest.py --min-training 100           # More training data
+    python scripts/backtest.py --strict                     # Fail on any error
 
 Output:
     data/processed/all_markets_backtest_results.csv
@@ -26,15 +29,29 @@ Output:
 """
 import argparse
 import sys
+import traceback
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# Global strict mode flag
+STRICT_MODE = False
+
+
+class BacktestError(Exception):
+    """Raised when backtest encounters an unrecoverable error."""
+    pass
+
+
+class DataValidationError(Exception):
+    """Raised when data fails validation checks."""
+    pass
 
 from src.modeling.models import (
     SpreadsModel,
@@ -43,6 +60,9 @@ from src.modeling.models import (
     FirstHalfSpreadsModel,
     FirstHalfTotalsModel,
     FirstHalfMoneylineModel,
+    FirstQuarterSpreadsModel,
+    FirstQuarterTotalsModel,
+    FirstQuarterMoneylineModel,
 )
 from src.modeling.features import FeatureEngineer
 
@@ -87,6 +107,24 @@ MARKETS = {
         "label_col": "home_1h_win",
         "line_col": None,
     },
+    "q1_spread": {
+        "name": "First Quarter Spreads",
+        "model_class": FirstQuarterSpreadsModel,
+        "label_col": "q1_spread_covered",
+        "line_col": "q1_spread_line",
+    },
+    "q1_total": {
+        "name": "First Quarter Totals",
+        "model_class": FirstQuarterTotalsModel,
+        "label_col": "q1_total_over",
+        "line_col": "q1_total_line",
+    },
+    "q1_moneyline": {
+        "name": "First Quarter Moneyline",
+        "model_class": FirstQuarterMoneylineModel,
+        "label_col": "home_q1_win",
+        "line_col": None,
+    },
 }
 
 # Segments for analysis
@@ -104,11 +142,50 @@ TOTAL_SEGMENTS = [
 ]
 
 
-def load_training_data(data_file: str = None) -> pd.DataFrame:
+def validate_training_data(df: pd.DataFrame) -> None:
+    """
+    Validate training data integrity.
+    
+    Raises DataValidationError if validation fails.
+    """
+    errors = []
+    
+    # Check required columns
+    required = ["date", "home_team", "away_team", "home_score", "away_score"]
+    for col in required:
+        if col not in df.columns:
+            errors.append(f"Missing required column: {col}")
+    
+    if errors:
+        raise DataValidationError("\n".join(errors))
+    
+    # Check for empty dataset
+    if len(df) == 0:
+        raise DataValidationError("Training data is empty")
+    
+    # Check for null values
+    null_counts = df[required].isnull().sum()
+    for col, count in null_counts.items():
+        if count > 0:
+            pct = count / len(df) * 100
+            if pct > 20:
+                errors.append(f"Column '{col}' has {pct:.1f}% null values (too high)")
+    
+    if errors:
+        raise DataValidationError("\n".join(errors))
+    
+    print(f"[OK] Training data validated: {len(df)} games, {df['date'].min().date()} to {df['date'].max().date()}")
+
+
+def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFrame:
     """Load training data with game outcomes.
     
     Args:
         data_file: Optional filename in data/processed/ or full path to CSV
+        strict: If True, raise exception on any issue
+    
+    Raises:
+        DataValidationError: If data fails validation (in strict mode)
     """
     if data_file:
         # Check if it's a full path or just a filename
@@ -120,12 +197,25 @@ def load_training_data(data_file: str = None) -> pd.DataFrame:
         training_path = PROCESSED_DIR / "training_data.csv"
     
     if not training_path.exists():
-        print(f"[ERROR] Training data not found: {training_path}")
+        msg = f"Training data not found: {training_path}"
+        if strict or STRICT_MODE:
+            raise DataValidationError(msg)
+        print(f"[ERROR] {msg}")
         sys.exit(1)
     
     df = pd.read_csv(training_path)
-    df["date"] = pd.to_datetime(df["date"])
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    
+    # Drop rows with invalid dates
+    invalid_dates = df["date"].isna().sum()
+    if invalid_dates > 0:
+        print(f"[WARN] Dropping {invalid_dates} rows with invalid dates")
+        df = df.dropna(subset=["date"])
+    
     df = df.sort_values("date").reset_index(drop=True)
+    
+    # Validate
+    validate_training_data(df)
     
     # Create derived labels
     df["home_win"] = (df["home_score"] > df["away_score"]).astype(int)
@@ -157,6 +247,22 @@ def load_training_data(data_file: str = None) -> pd.DataFrame:
         if "total_line" in df.columns:
             df["1h_total_line"] = df["total_line"] / 2
             df["1h_total_over"] = (df["actual_1h_total"] > df["1h_total_line"]).astype(int)
+    
+    # Q1 labels
+    if "home_q1" in df.columns and "away_q1" in df.columns:
+        df["home_q1_win"] = (df["home_q1"].fillna(0) > df["away_q1"].fillna(0)).astype(int)
+        df["actual_q1_total"] = df["home_q1"].fillna(0) + df["away_q1"].fillna(0)
+        df["actual_q1_margin"] = df["home_q1"].fillna(0) - df["away_q1"].fillna(0)
+        
+        # Q1 spread covered (approximate - use quarter of FG line)
+        if "spread_line" in df.columns:
+            df["q1_spread_line"] = df["spread_line"] / 4
+            df["q1_spread_covered"] = (df["actual_q1_margin"] > -df["q1_spread_line"]).astype(int)
+        
+        # Q1 total over (approximate - use quarter of FG line)
+        if "total_line" in df.columns:
+            df["q1_total_line"] = df["total_line"] / 4
+            df["q1_total_over"] = (df["actual_q1_total"] > df["q1_total_line"]).astype(int)
     
     print(f"[OK] Loaded {len(df)} games")
     
@@ -311,6 +417,11 @@ def backtest_market(
             })
             
         except Exception as e:
+            if STRICT_MODE:
+                print(f"\n[ERROR] Backtest failed at game {i}: {e}")
+                traceback.print_exc()
+                raise BacktestError(f"Backtest failed at game {i}: {e}")
+            # In non-strict mode, log and continue
             continue
     
     results_df = pd.DataFrame(results)
@@ -433,7 +544,9 @@ def generate_summary_report(all_summaries: List[Dict]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Backtest all 6 markets")
+    global STRICT_MODE
+    
+    parser = argparse.ArgumentParser(description="Backtest all betting markets")
     parser.add_argument(
         "--markets",
         type=str,
@@ -452,7 +565,18 @@ def main():
         default=None,
         help="Training data file (filename in data/processed/ or full path)",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Strict mode: fail on any error instead of continuing",
+    )
     args = parser.parse_args()
+    
+    # Set global strict mode
+    STRICT_MODE = args.strict
+    
+    if STRICT_MODE:
+        print("[MODE] Running in STRICT mode - will fail on any error")
     
     print("=" * 60)
     print("ALL MARKETS BACKTEST")
@@ -470,7 +594,11 @@ def main():
         print(f"Data file: {args.data}")
     
     # Load data
-    df = load_training_data(args.data)
+    try:
+        df = load_training_data(args.data, strict=STRICT_MODE)
+    except DataValidationError as e:
+        print(f"\n[ERROR] Data validation failed:\n{e}")
+        sys.exit(1)
     
     # Run backtests
     all_results = []
@@ -509,10 +637,49 @@ def main():
         f.write(report)
     print(f"[OK] Report saved to {report_path}")
     
+    # Final validation summary
     print(f"\n{'='*60}")
     print("BACKTEST COMPLETE")
     print(f"{'='*60}")
+    
+    if not all_results:
+        print("\n[WARN] No backtest results generated!")
+        if STRICT_MODE:
+            sys.exit(1)
+    else:
+        # Summary of production-ready markets
+        print("\n📊 PRODUCTION READINESS SUMMARY:")
+        print("-" * 40)
+        
+        for summary in all_summaries:
+            if not summary:
+                continue
+            
+            name = summary.get("name", "Unknown")
+            acc = summary.get("accuracy", 0)
+            roi = summary.get("roi", 0)
+            bets = summary.get("total_bets", 0)
+            
+            if acc >= 0.55 and roi > 0.05:
+                status = "✅ PRODUCTION READY"
+            elif acc >= 0.52 and roi > 0:
+                status = "⚠️  NEEDS MONITORING"
+            else:
+                status = "❌ NOT RECOMMENDED"
+            
+            print(f"  {name}: {acc:.1%} acc, {roi:+.1%} ROI ({bets} bets) - {status}")
+        
+        print("")
+    
+    print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (BacktestError, DataValidationError) as e:
+        print(f"\n[FATAL] {e}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n[INTERRUPTED] Backtest cancelled by user")
+        sys.exit(130)

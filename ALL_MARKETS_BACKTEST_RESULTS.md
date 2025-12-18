@@ -1,6 +1,6 @@
 # All Markets Backtest Results
 
-**Generated:** 2025-12-17 16:10:05
+**Generated:** 2025-12-17 16:45:07
 
 ---
 

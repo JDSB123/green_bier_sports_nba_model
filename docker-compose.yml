@@ -84,8 +84,8 @@ services:
 
   prediction-service:
     build:
-      context: ./services/prediction-service-python
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/prediction-service-python/Dockerfile
     container_name: nba-prediction-service
     environment:
       - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD:-nba_dev_password}@postgres:5432/nba
@@ -93,6 +93,8 @@ services:
       - MODELS_DIR=/app/models
     ports:
       - "8082:8082"
+    volumes:
+      - ./data/processed/models:/app/models:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -144,6 +146,27 @@ services:
       feature-store:
         condition: service_started
     restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # BACKTEST SERVICE (on-demand)
+  # ─────────────────────────────────────────────────────────────────────────
+
+  backtest:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest
+    profiles:
+      - backtest
+    environment:
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - SEASONS=${SEASONS:-2024-2025,2025-2026}
+      - MARKETS=${MARKETS:-all}
+      - MIN_TRAINING=${MIN_TRAINING:-80}
+    volumes:
+      - ./data:/app/data
+    command: ["full"]
 
 volumes:
   postgres_data:

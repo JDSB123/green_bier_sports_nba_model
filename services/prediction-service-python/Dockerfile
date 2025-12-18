@@ -1,14 +1,21 @@
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY services/prediction-service-python/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
 
-# Copy application
-COPY app/ ./app/
-COPY models/ ./models/
+# Copy application code + v4 source tree
+COPY services/prediction-service-python/app /app/app
+COPY src /app/src
+RUN mkdir -p /app/models
+
+ENV PYTHONPATH="/app:/app/src"
 
 # Expose port
 EXPOSE 8082

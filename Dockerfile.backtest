@@ -1,0 +1,63 @@
+# NBA v5.0 Backtest Container
+# Single source of truth for backtesting environment
+#
+# This container:
+#   1. Fetches fresh data from APIs (no placeholders)
+#   2. Builds training data with real betting lines
+#   3. Runs comprehensive backtests
+#   4. Outputs results to mounted volume
+#
+# Usage:
+#   docker build -f Dockerfile.backtest -t nba-backtest .
+#   docker run --env-file .env -v $(pwd)/data:/app/data nba-backtest
+#
+# Required Environment Variables:
+#   THE_ODDS_API_KEY      - For betting lines
+#   API_BASKETBALL_KEY    - For game outcomes
+#
+# Optional:
+#   SEASONS               - Comma-separated seasons (default: 2024-2025,2025-2026)
+#   MARKETS               - Comma-separated markets (default: all)
+
+FROM python:3.11-slim AS base
+
+# Prevent Python from buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements.txt pyproject.toml setup.py ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+
+# Create data directories
+RUN mkdir -p /app/data/raw /app/data/processed /app/data/results
+
+# Set environment
+ENV PYTHONPATH=/app \
+    DATA_RAW_DIR=/app/data/raw \
+    DATA_PROCESSED_DIR=/app/data/processed
+
+# Healthcheck - verify critical modules import
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "from src.config import settings; from src.modeling.models import SpreadsModel; print('OK')" || exit 1
+
+# Copy entrypoint script and fix line endings (Windows -> Unix)
+COPY docker-entrypoint-backtest.sh /docker-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+
+# Default command runs the full backtest pipeline
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["full"]
