@@ -28,11 +28,14 @@ logger = get_logger(__name__)
 @dataclass
 class GameSplits:
     """Betting splits for a single game."""
+    # Required fields (no defaults)
     event_id: str
     home_team: str
     away_team: str
     game_time: dt.datetime
+    source: str  # Required - must be explicitly set (e.g., "action_network", "the_odds", "api_basketball")
     
+    # Optional fields (with defaults)
     # Spread splits
     spread_line: float = 0.0
     spread_home_ticket_pct: float = 50.0  # % of tickets on home
@@ -65,7 +68,6 @@ class GameSplits:
     sharp_spread_side: Optional[str] = None  # "home" or "away"
     sharp_total_side: Optional[str] = None   # "over" or "under"
     
-    source: str = "unknown"
     updated_at: Optional[dt.datetime] = None
 
 
@@ -162,6 +164,7 @@ def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
         game_time=dt.datetime.fromisoformat(
             game.get("start_time", dt.datetime.now().isoformat())
         ),
+        source="action_network",
         # Spread
         spread_line=spread_market.get("line", 0),
         spread_home_ticket_pct=spread_market.get("home_tickets_pct", 50),
@@ -183,7 +186,6 @@ def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
         ml_away_ticket_pct=ml_market.get("away_tickets_pct", 50),
         ml_home_money_pct=ml_market.get("home_money_pct", 50),
         ml_away_money_pct=ml_market.get("away_money_pct", 50),
-        source="action_network",
         updated_at=dt.datetime.now(),
     )
     
@@ -358,8 +360,8 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
     """Parse SBRO JSON response to GameSplits."""
     splits_list = []
 
-    # This structure depends on SBRO's actual API response
-    # Placeholder implementation
+    # Parse SBRO JSON response structure
+    # Note: Structure depends on SBRO's actual API response format
     games = data.get("events", []) or data.get("games", [])
 
     # Standardize team names to ESPN format (mandatory)
@@ -540,6 +542,7 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                         game_time=dt.datetime.fromisoformat(
                             game.get("start_time", datetime.now().isoformat()).replace("Z", "+00:00")
                         ),
+                        source="action_network",
                         spread_line=float(spread_line) if spread_line else 0.0,
                         spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct else 50.0,
                         spread_away_ticket_pct=100 - float(spread_home_pct) if spread_home_pct else 50.0,
@@ -558,7 +561,6 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                         ml_away_ticket_pct=100 - float(ml_home_pct) if ml_home_pct else 50.0,
                         ml_home_money_pct=float(ml_home_money) if ml_home_money else 50.0,
                         ml_away_money_pct=100 - float(ml_home_money) if ml_home_money else 50.0,
-                        source="action_network",
                         updated_at=dt.datetime.now(),
                     )
                     
@@ -776,6 +778,7 @@ def create_mock_splits(
         home_team=home_team,
         away_team=away_team,
         game_time=dt.datetime.now(),
+        source="mock",
         spread_line=spread_line,
         spread_home_ticket_pct=spread_home_pct,
         spread_away_ticket_pct=100 - spread_home_pct,
@@ -790,7 +793,6 @@ def create_mock_splits(
         under_money_pct=100 - over_money,
         total_open=total_open,
         total_current=total_line,
-        source="mock",
         updated_at=dt.datetime.now(),
     )
 

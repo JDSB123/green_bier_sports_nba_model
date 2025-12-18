@@ -91,10 +91,17 @@ services:
       - DATABASE_URL=postgresql+asyncpg://nba:${DB_PASSWORD:-nba_dev_password}@postgres:5432/nba
       - REDIS_URL=redis://redis:6379
       - MODELS_DIR=/app/models
+      # API keys for data sources (single source of truth functions will use these)
+      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
+      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
+      - ACTION_NETWORK_USERNAME=${ACTION_NETWORK_USERNAME}
+      - ACTION_NETWORK_PASSWORD=${ACTION_NETWORK_PASSWORD}
+      - DATA_PROCESSED_DIR=/app/data/processed
     ports:
       - "8082:8082"
     volumes:
       - ./data/processed/models:/app/models:ro
+      - ./data/processed:/app/data/processed:ro  # For cached data (injuries.csv, etc.)
     depends_on:
       postgres:
         condition: service_healthy

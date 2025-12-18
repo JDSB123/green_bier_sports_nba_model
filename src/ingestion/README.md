@@ -1,13 +1,21 @@
-**OddsAPI Ingest Module**
+**NBA Data Ingestion Modules**
 
-This README documents the OddsAPI (TheOdds) ingest helpers in this repository. It is focused solely on the OddsAPI ingest module and local testing helpers added alongside it.
-
-**Purpose:**
-- Describe the ingest module's responsibilities and how to run the lightweight test harness that verifies TheOdds v4 NBA endpoints.
+This directory contains modules for ingesting NBA data from various sources:
+- The Odds API (betting odds)
+- API-Basketball (game outcomes, statistics)
+- ESPN (injuries, schedule)
+- GitHub (open-source datasets)
+- Betting splits (public betting percentages)
 
 **Files:**
-- `src/ingestion/the_odds.py` — primary ingest helper used by the project to fetch TheOdds data (see module for implementation details).
-- `scripts/test_the_odds_endpoints.py` — test harness that exercises every NBA-capable TheOdds v4 endpoint and performs lightweight validation checks.
+- `src/ingestion/the_odds.py` — primary ingest helper for The Odds API data
+- `src/ingestion/api_basketball.py` — API-Basketball client for game data
+- `src/ingestion/injuries.py` — ESPN injury report fetcher
+- `src/ingestion/betting_splits.py` — public betting percentages
+- `src/ingestion/github_data.py` — GitHub-hosted open-source data fetcher
+- `src/ingestion/standardize.py` — team name standardization utilities
+- `scripts/test_the_odds_endpoints.py` — test harness for The Odds API endpoints
+- `scripts/fetch_github_data.py` — utility script for fetching GitHub-hosted data
 
 **Environment / Secrets:**
 - The test harness reads the API key from the environment variable `THE_ODDS_API_KEY`.
@@ -31,6 +39,27 @@ Remove-Item Env:\THE_ODDS_API_KEY
 **What the harness does:**
 - Calls: `/v4/sports`, `/v4/sports/basketball_nba/events`, `/v4/sports/basketball_nba/odds`, `/v4/sports/basketball_nba/events/{eventId}/odds`, `/v4/sports/basketball_nba/events/{eventId}/markets`, `/v4/sports/basketball_nba/scores`, `/v4/sports/basketball_nba/participants`, `/v4/historical/...` endpoints and `/v4/sports/upcoming/odds`.
 - Performs presence/shape checks and prints a concise summary with HTTP status codes.
+
+**GitHub Data Fetcher:**
+
+The `github_data.py` module provides utilities for fetching open-source NBA datasets from GitHub repositories (e.g., FiveThirtyEight ELO data).
+
+**Usage:**
+```python
+from src.ingestion.github_data import fetch_fivethirtyeight_elo
+
+# Fetch FiveThirtyEight ELO historical data
+df = await fetch_fivethirtyeight_elo("elo_historical")
+```
+
+**Command-line usage:**
+```powershell
+# Fetch FiveThirtyEight ELO data
+python scripts/fetch_github_data.py --source fivethirtyeight --dataset elo_historical
+
+# List all available sources
+python scripts/fetch_github_data.py --list-sources
+```
 
 **Notes / Next steps (optional):**
 - Add a CI job or GitHub Action to run the harness periodically (be mindful of API quota and historical endpoint cost).
