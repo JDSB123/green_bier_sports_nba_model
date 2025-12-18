@@ -2,6 +2,27 @@
 
 Production-grade containerized system for NBA betting predictions.
 
+---
+
+## 🚀 THE ONE COMMAND
+
+```powershell
+python scripts/run_slate.py
+```
+
+That's it. This handles everything automatically.
+
+**Options:**
+```powershell
+python scripts/run_slate.py --date tomorrow        # Tomorrow's games
+python scripts/run_slate.py --matchup Lakers       # Filter to Lakers
+python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
+```
+
+> See [`RUN.md`](RUN.md) for full usage guide.
+
+---
+
 > **📖 Single Source of Truth:** See [`docs/SINGLE_SOURCE_OF_TRUTH.md`](docs/SINGLE_SOURCE_OF_TRUTH.md) for the master reference.
 
 ## Architecture Overview

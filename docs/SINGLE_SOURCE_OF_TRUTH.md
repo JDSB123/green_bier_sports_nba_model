@@ -4,13 +4,35 @@
 
 ---
 
+## 🚀 THE ONE COMMAND
+
+```powershell
+python scripts/run_slate.py
+```
+
+This single command does everything:
+1. Checks Docker is running
+2. Starts the stack if needed
+3. Waits for API to be healthy
+4. Fetches predictions
+5. Displays picks with fire ratings
+
+**Options:**
+```powershell
+python scripts/run_slate.py --date tomorrow        # Tomorrow's games
+python scripts/run_slate.py --matchup Lakers       # Filter to specific team
+python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
+```
+
+---
+
 ## 🎯 Entry Points
 
-| What | URL/Path | Purpose |
-|------|----------|---------|
-| **Main API** | `http://localhost:8090` | Production prediction API (strict-api) |
+| What | Command/URL | Purpose |
+|------|-------------|---------|
+| **Run Predictions** | `python scripts/run_slate.py` | **THE ONE COMMAND** |
+| **Main API** | `http://localhost:8090` | Direct API access |
 | **Health Check** | `http://localhost:8090/health` | Verify system is running |
-| **Start Stack** | `docker compose up -d` | Start all services |
 | **Stop Stack** | `docker compose down` | Stop all services |
 | **Run Backtest** | `docker compose -f docker-compose.backtest.yml up backtest-full` | Full backtest |
 
