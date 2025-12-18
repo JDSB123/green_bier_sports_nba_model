@@ -3,6 +3,10 @@ NBA Prediction Service v5.0 - STRICT MODE
 FastAPI service for NBA betting predictions.
 
 STRICT MODE: All inputs required. No fallbacks. No silent failures.
+
+6 BACKTESTED markets:
+- Full Game: Spread (60.6%), Total (59.2%), Moneyline (65.5%)
+- First Half: Spread (55.9%), Total (58.1%), Moneyline (63.0%)
 """
 import logging
 from datetime import datetime
@@ -34,12 +38,10 @@ class GameFeaturesInput(BaseModel):
     home_papg: float
     away_ppg: float
     away_papg: float
-    predicted_margin: float  # REQUIRED for FG spread
-    predicted_total: float   # REQUIRED for FG total
-    predicted_margin_1h: float  # REQUIRED for 1H spread
-    predicted_total_1h: float   # REQUIRED for 1H total
-    predicted_margin_q1: float  # REQUIRED for Q1 spread
-    predicted_total_q1: float   # REQUIRED for Q1 total
+    predicted_margin: float      # REQUIRED for FG spread
+    predicted_total: float       # REQUIRED for FG total
+    predicted_margin_1h: float   # REQUIRED for 1H spread
+    predicted_total_1h: float    # REQUIRED for 1H total
 
     # Team form + situational factors - optional but recommended
     home_win_pct: float = 0.5
@@ -91,12 +93,6 @@ class MarketOddsInput(BaseModel):
     fh_home_ml: int
     fh_away_ml: int
 
-    # First quarter - ALL REQUIRED
-    q1_spread: float
-    q1_total: float
-    q1_home_ml: int
-    q1_away_ml: int
-
 
 class PredictRequest(BaseModel):
     """
@@ -113,12 +109,12 @@ class PredictRequest(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    """Response with predictions for all 9 markets."""
+    """Response with predictions for all 6 markets."""
     game_id: UUID
     home_team: str
     away_team: str
-    predictions: dict
-    recommendations: List[dict] = Field(default_factory=list)
+    predictions: Dict
+    recommendations: List[Dict]
 
 
 # -----------------------------
@@ -128,14 +124,13 @@ class PredictionResponse(BaseModel):
 app = FastAPI(
     title="NBA Prediction Service - STRICT MODE",
     version=settings.service_version,
-    description="ML-based NBA betting predictions. STRICT MODE: All inputs required, no fallbacks."
+    description="ML-based NBA betting predictions. STRICT MODE: All inputs required, no fallbacks. 6 BACKTESTED markets."
 )
 
 # CORS for local dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -143,11 +138,11 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
     return {
         "service": settings.service_name,
         "version": settings.service_version,
         "mode": "STRICT",
+        "markets": 6,
         "status": "ok",
     }
 
@@ -155,14 +150,13 @@ async def health():
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(req: PredictRequest):
     """
-    Generate predictions for ALL 9 markets.
+    Generate predictions for ALL 6 BACKTESTED markets.
     
     STRICT MODE: All inputs required. Missing input = 400 error.
     
     Markets:
     - Full Game: Spread, Total, Moneyline
-    - First Half: Spread, Total, Moneyline  
-    - First Quarter: Spread, Total, Moneyline
+    - First Half: Spread, Total, Moneyline
     """
     try:
         features_dict = req.features.as_feature_dict()
@@ -174,7 +168,7 @@ async def predict(req: PredictRequest):
         features_dict["total_line"] = odds.fg_total
         features_dict["total_vs_predicted"] = features_dict["predicted_total"] - odds.fg_total
 
-        # Generate predictions for ALL 9 markets
+        # Generate predictions for ALL 6 markets
         predictions = prediction_service.predict_all_markets(
             features=features_dict,
             # Full game
@@ -187,11 +181,6 @@ async def predict(req: PredictRequest):
             fh_total_line=odds.fh_total,
             fh_home_ml_odds=odds.fh_home_ml,
             fh_away_ml_odds=odds.fh_away_ml,
-            # First quarter
-            q1_spread_line=odds.q1_spread,
-            q1_total_line=odds.q1_total,
-            q1_home_ml_odds=odds.q1_home_ml,
-            q1_away_ml_odds=odds.q1_away_ml,
         )
 
         recommendations = prediction_service.build_recommendations(predictions)
@@ -209,9 +198,3 @@ async def predict(req: PredictRequest):
     except Exception as exc:
         logger.exception("Prediction failure for game %s", req.game_id)
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
-# Local run helper
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8082, reload=True)

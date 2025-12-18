@@ -1,8 +1,11 @@
 """
-NBA Prediction Engine v5.0 - STRICT MODE
+NBA Prediction Service - STRICT MODE
 
 STRICT MODE: All inputs required. No fallbacks. No silent failures.
-If something is missing, the system FAILS LOUDLY.
+
+Supports 6 BACKTESTED markets:
+- Full Game: Spread (60.6%), Total (59.2%), Moneyline (65.5%)
+- First Half: Spread (55.9%), Total (58.1%), Moneyline (63.0%)
 """
 
 from __future__ import annotations
@@ -23,6 +26,8 @@ class PredictionService:
     
     ALL inputs are REQUIRED. No Optional parameters.
     Missing input = immediate failure with clear error message.
+    
+    6 BACKTESTED markets only - no Q1 (not validated).
     """
 
     def __init__(self, models_dir: str | Path | None = None):
@@ -39,7 +44,7 @@ class PredictionService:
         """
         logger.info("Loading STRICT MODE prediction engine from %s", self.models_dir)
         engine = load_prediction_engine(str(self.models_dir))
-        logger.info("Successfully loaded prediction engine with all 7 models")
+        logger.info("Successfully loaded prediction engine with all 4 models")
         return engine
 
     def predict_full_game(
@@ -54,16 +59,6 @@ class PredictionService:
         Generate full-game predictions for all 3 markets.
         
         ALL INPUTS REQUIRED - no defaults, no None.
-        
-        Args:
-            features: Feature dictionary (REQUIRED)
-            spread_line: Vegas FG spread line (REQUIRED)
-            total_line: Vegas FG total line (REQUIRED)
-            home_ml_odds: Home team moneyline odds (REQUIRED)
-            away_ml_odds: Away team moneyline odds (REQUIRED)
-            
-        Returns:
-            Dict with spread, total, and moneyline predictions
         """
         return self._engine.predict_full_game(
             features=features,
@@ -85,49 +80,8 @@ class PredictionService:
         Generate first-half predictions for all 3 markets.
         
         ALL INPUTS REQUIRED - no defaults, no None.
-        
-        Args:
-            features: Feature dictionary (REQUIRED)
-            spread_line: Vegas 1H spread line (REQUIRED)
-            total_line: Vegas 1H total line (REQUIRED)
-            home_ml_odds: Home team 1H moneyline odds (REQUIRED)
-            away_ml_odds: Away team 1H moneyline odds (REQUIRED)
-            
-        Returns:
-            Dict with spread, total, and moneyline predictions
         """
         return self._engine.predict_first_half(
-            features=features,
-            spread_line=spread_line,
-            total_line=total_line,
-            home_ml_odds=home_ml_odds,
-            away_ml_odds=away_ml_odds,
-        )
-
-    def predict_first_quarter(
-        self,
-        features: Dict[str, float],
-        spread_line: float,
-        total_line: float,
-        home_ml_odds: int,
-        away_ml_odds: int,
-    ) -> Dict[str, Any]:
-        """
-        Generate first-quarter predictions for all 3 markets.
-        
-        ALL INPUTS REQUIRED - no defaults, no None.
-        
-        Args:
-            features: Feature dictionary (REQUIRED)
-            spread_line: Vegas Q1 spread line (REQUIRED)
-            total_line: Vegas Q1 total line (REQUIRED)
-            home_ml_odds: Home team Q1 moneyline odds (REQUIRED)
-            away_ml_odds: Away team Q1 moneyline odds (REQUIRED)
-            
-        Returns:
-            Dict with spread, total, and moneyline predictions
-        """
-        return self._engine.predict_first_quarter(
             features=features,
             spread_line=spread_line,
             total_line=total_line,
@@ -148,19 +102,11 @@ class PredictionService:
         fh_total_line: float,
         fh_home_ml_odds: int,
         fh_away_ml_odds: int,
-        # First quarter - ALL REQUIRED
-        q1_spread_line: float,
-        q1_total_line: float,
-        q1_home_ml_odds: int,
-        q1_away_ml_odds: int,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for ALL 9 markets.
+        Generate predictions for ALL 6 BACKTESTED markets.
         
-        ALL 12 LINE/ODDS PARAMETERS REQUIRED.
-        
-        Returns:
-            Dict with full_game, first_half, and first_quarter predictions
+        ALL 8 LINE/ODDS PARAMETERS REQUIRED.
         """
         return self._engine.predict_all_markets(
             features=features,
@@ -172,10 +118,6 @@ class PredictionService:
             fh_total_line=fh_total_line,
             fh_home_ml_odds=fh_home_ml_odds,
             fh_away_ml_odds=fh_away_ml_odds,
-            q1_spread_line=q1_spread_line,
-            q1_total_line=q1_total_line,
-            q1_home_ml_odds=q1_home_ml_odds,
-            q1_away_ml_odds=q1_away_ml_odds,
         )
 
     def build_recommendations(
@@ -186,16 +128,10 @@ class PredictionService:
         Generate a flattened list of actionable recommendations from predictions.
         
         Only includes bets that pass their respective filters.
-        
-        Args:
-            predictions: Output from predict_all_markets or individual predict methods
-            
-        Returns:
-            List of recommendation dicts for bets that pass filters
         """
         recommendations: List[Dict[str, Any]] = []
 
-        for scope in ["full_game", "first_half", "first_quarter"]:
+        for scope in ["full_game", "first_half"]:
             scope_data = predictions.get(scope, {})
             if not scope_data:
                 continue

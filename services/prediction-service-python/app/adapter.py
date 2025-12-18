@@ -2,7 +2,11 @@
 Adapters that let the Dockerized FastAPI service reuse the v5 STRICT MODE
 prediction stack (models + filters) without duplicating code.
 
-STRICT MODE: All models must exist. No fallbacks. No silent failures.
+STRICT MODE: All 4 models must exist. No fallbacks. No silent failures.
+
+Supports 6 BACKTESTED markets:
+- Full Game: Spread, Total, Moneyline
+- First Half: Spread, Total, Moneyline
 """
 
 from __future__ import annotations
@@ -70,14 +74,11 @@ def load_prediction_engine(models_dir: str | Path) -> "UnifiedPredictionEngine":
     """
     Load the STRICT MODE unified prediction engine.
     
-    ALL 7 models must exist:
+    ALL 4 models must exist:
     - spreads_model.joblib (FG Spread)
     - totals_model.joblib (FG Total)
     - first_half_spread_model.pkl (1H Spread)
     - first_half_total_model.pkl (1H Total)
-    - q1_spreads_model.joblib (Q1 Spread)
-    - q1_totals_model.joblib (Q1 Total)
-    - q1_moneyline_model.joblib (Q1 Moneyline)
     
     Args:
         models_dir: Path to directory containing all model files
@@ -99,6 +100,5 @@ def load_prediction_engine(models_dir: str | Path) -> "UnifiedPredictionEngine":
     # This will FAIL LOUDLY if any model is missing - no silent failures
     engine = UnifiedPredictionEngine(models_path)
     
-    logger.info("Successfully loaded all 7 required models")
+    logger.info("Successfully loaded all 4 required models for 6 markets")
     return engine
-

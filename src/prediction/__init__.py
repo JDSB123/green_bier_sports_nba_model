@@ -1,10 +1,9 @@
 """
 NBA Prediction Module - STRICT MODE
 
-Unified prediction engine for all 9 markets:
-- Full Game: Spread, Total, Moneyline
-- First Half: Spread, Total, Moneyline
-- First Quarter: Spread, Total, Moneyline
+Unified prediction engine for 6 BACKTESTED markets:
+- Full Game: Spread (60.6% acc), Total (59.2% acc), Moneyline (65.5% acc)
+- First Half: Spread (55.9% acc), Total (58.1% acc), Moneyline (63.0% acc)
 
 STRICT MODE: All models must exist. No fallbacks. No silent failures.
 """
@@ -22,9 +21,6 @@ from src.prediction.models import (
     load_total_model,
     load_first_half_spread_model,
     load_first_half_total_model,
-    load_first_quarter_spread_model,
-    load_first_quarter_total_model,
-    load_first_quarter_moneyline_model,
 )
 
 __all__ = [
@@ -40,7 +36,4 @@ __all__ = [
     "load_total_model",
     "load_first_half_spread_model",
     "load_first_half_total_model",
-    "load_first_quarter_spread_model",
-    "load_first_quarter_total_model",
-    "load_first_quarter_moneyline_model",
 ]

@@ -1,7 +1,8 @@
 """
-Spread prediction logic (Full Game + First Half + First Quarter).
+Spread prediction logic (Full Game + First Half).
 
 STRICT MODE: No fallbacks. Each market requires its own trained model.
+Only BACKTESTED markets supported: FG and 1H.
 """
 from typing import Dict, Any
 import pandas as pd
@@ -9,19 +10,13 @@ import pandas as pd
 from src.prediction.spreads.filters import (
     FGSpreadFilter,
     FirstHalfSpreadFilter,
-    FirstQuarterSpreadFilter,
 )
 from src.prediction.confidence import calculate_confidence_from_probabilities
 
 
-class MissingModelError(Exception):
-    """Raised when attempting to use a model that wasn't provided."""
-    pass
-
-
 class SpreadPredictor:
     """
-    Handles spread predictions for Full Game, First Half, and First Quarter.
+    Handles spread predictions for Full Game and First Half.
 
     STRICT MODE:
     - Each market uses its OWN dedicated model
@@ -35,8 +30,6 @@ class SpreadPredictor:
         fg_feature_columns: list,
         fh_model,
         fh_feature_columns: list,
-        fq_model,
-        fq_feature_columns: list,
     ):
         """
         Initialize spread predictor with ALL required models.
@@ -46,8 +39,6 @@ class SpreadPredictor:
             fg_feature_columns: FG feature column names (REQUIRED)
             fh_model: Trained 1H spread model (REQUIRED)
             fh_feature_columns: 1H feature column names (REQUIRED)
-            fq_model: Trained Q1 spread model (REQUIRED)
-            fq_feature_columns: Q1 feature column names (REQUIRED)
 
         Raises:
             ValueError: If any required model or features are None
@@ -61,22 +52,15 @@ class SpreadPredictor:
             raise ValueError("fh_model is REQUIRED - cannot be None")
         if fh_feature_columns is None:
             raise ValueError("fh_feature_columns is REQUIRED - cannot be None")
-        if fq_model is None:
-            raise ValueError("fq_model is REQUIRED - cannot be None")
-        if fq_feature_columns is None:
-            raise ValueError("fq_feature_columns is REQUIRED - cannot be None")
 
         self.fg_model = fg_model
         self.fg_feature_columns = fg_feature_columns
         self.fh_model = fh_model
         self.fh_feature_columns = fh_feature_columns
-        self.fq_model = fq_model
-        self.fq_feature_columns = fq_feature_columns
         
         # Filters use defaults - these are config, not models
         self.fg_filter = FGSpreadFilter()
         self.first_half_filter = FirstHalfSpreadFilter()
-        self.first_quarter_filter = FirstQuarterSpreadFilter()
 
     def predict_full_game(
         self,
@@ -114,57 +98,6 @@ class SpreadPredictor:
         edge = predicted_margin - spread_line
 
         passes_filter, filter_reason = self.fg_filter.should_bet(
-            spread_line=spread_line,
-            confidence=confidence,
-        )
-
-        return {
-            "home_cover_prob": home_cover_prob,
-            "away_cover_prob": away_cover_prob,
-            "predicted_margin": predicted_margin,
-            "confidence": confidence,
-            "bet_side": bet_side,
-            "edge": edge,
-            "model_edge_pct": abs(confidence - 0.5),
-            "passes_filter": passes_filter,
-            "filter_reason": filter_reason,
-        }
-
-    def predict_first_quarter(
-        self,
-        features: Dict[str, float],
-        spread_line: float,
-    ) -> Dict[str, Any]:
-        """
-        Generate first quarter spread prediction.
-
-        Args:
-            features: Feature dictionary (REQUIRED)
-            spread_line: Vegas Q1 spread line (REQUIRED)
-
-        Returns:
-            Prediction dictionary
-        """
-        # Use Q1 model ONLY - no fallbacks
-        feature_df = pd.DataFrame([features])
-        missing = set(self.fq_feature_columns) - set(feature_df.columns)
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.fq_feature_columns]
-        spread_proba = self.fq_model.predict_proba(X)[0]
-
-        home_cover_prob = float(spread_proba[1])
-        away_cover_prob = float(spread_proba[0])
-        confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
-        bet_side = "home" if home_cover_prob > 0.5 else "away"
-        
-        # Q1 predicted margin is REQUIRED in features
-        if "predicted_margin_q1" not in features:
-            raise ValueError("predicted_margin_q1 is REQUIRED in features for Q1 predictions")
-        predicted_margin = features["predicted_margin_q1"]
-
-        edge = predicted_margin - spread_line
-        passes_filter, filter_reason = self.first_quarter_filter.should_bet(
             spread_line=spread_line,
             confidence=confidence,
         )
