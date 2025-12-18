@@ -1,4 +1,23 @@
-# Python
+# Docker ignore file - exclude unnecessary files from build context
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,52 +26,45 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-*.egg
 
-# Virtual environments
+# Environment and secrets
 .env
-.venv
-env/
-venv/
-ENV/
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.cursor/
-
-# Git
-.git/
-.gitignore
-
-# Data files (don't include in container)
+# Data directories (models are baked in, don't copy from data/)
 data/raw/
-data/processed/cache/
+data/results/
+data/processed/training_data*.csv
+data/processed/*.pkl
+data/processed/*.joblib
+# But keep models/production/ (it's explicitly copied)
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# Azure deployment (legacy)
+azure/
 
-# Documentation
-docs/
-*.md
+# Backtest files (not needed in production container)
+docker-compose.backtest.yml
+Dockerfile.backtest
+docker-entrypoint-backtest.sh
 
-# Jupyter
-.ipynb_checkpoints/
+# Test files
+tests/
+*.test.py
+pytest.ini
 
-# OS
+# Logs
+*.log
+logs/
+
+# OS files
 .DS_Store
 Thumbs.db
 
-# Scripts (archived)
-scripts/archived/
-
 # Temporary files
-*.log
 *.tmp
-
+*.temp
+*.bak

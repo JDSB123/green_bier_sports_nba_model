@@ -1,88 +1,81 @@
 # NBA v5.0 BETA - Quick Start Guide
 
-## Prerequisites
+## The "Golden Path" (Single Container Production)
 
-- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
-- Docker Compose v2.x
-
-## Setup (5 minutes)
-
-### 1. Configure Environment
+The production system uses a single hardened Docker container with all models baked-in. No postgres/redis/microservices required.
 
 ```powershell
-# Copy template
-copy .env.example .env
-
-# Edit .env and add your API keys:
-# - THE_ODDS_API_KEY
-# - API_BASKETBALL_KEY
+./run.ps1
 ```
 
-### 2. Start the Stack
+This single command:
+1. Builds the production Docker image (`nba-strict-api:latest`)
+2. Starts the container with baked-in models
+3. Waits for the API to be healthy
+4. Runs analysis and saves reports to `data/processed/`
 
+**Options:**
 ```powershell
-docker compose up -d
+./run.ps1 --date tomorrow
+./run.ps1 --matchup "Lakers"
+./run.ps1 --date today --matchup "Lakers vs Celtics"
+```
+
+---
+
+## Manual Setup (If needed)
+
+### 1. Prerequisites
+- Docker Desktop must be running
+- `.env` file with API keys (copy from `.env.example` if needed)
+
+### 2. Build and Run Container Manually
+```powershell
+# Build the production image
+docker build -t nba-strict-api:latest -f Dockerfile .
+
+# Run the container
+docker run -d --name nba-api -p 8090:8080 --env-file .env --restart unless-stopped nba-strict-api:latest
 ```
 
 ### 3. Verify Health
-
 ```powershell
 curl http://localhost:8090/health
 ```
 
-Expected response:
-```json
-{
-  "status": "ok",
-  "mode": "STRICT",
-  "markets": 6,
-  "engine_loaded": true
-}
-```
+Expected response should show `"engine_loaded": true`.
 
-## Daily Usage
+## Advanced Usage
 
-### Get Today's Predictions
-
-```powershell
-curl http://localhost:8090/slate/today
-```
-
-### Full Analysis with Summary Table
+### Full Analysis Reports (Generates Files)
+`./run.ps1` already generates the detailed JSON/Text reports in `data/processed/`.
+If you want to run the analysis script directly (requires container to be running):
 
 ```powershell
 python scripts/analyze_slate_docker.py --date today
 ```
 
-This generates:
-- Console output with picks and fire ratings
-- `data/processed/slate_analysis_YYYYMMDD.txt`
-- `data/processed/slate_analysis_YYYYMMDD.json`
-
-### View Specific Game
-
+### Cleanup Old Docker Resources
+Remove old NBA containers/images/volumes:
 ```powershell
-curl "http://localhost:8090/slate/2025-12-18"
+.\scripts\cleanup_nba_docker.ps1 -All -Force
 ```
 
-## Running Backtests
-
+### Backtesting (Development)
+For backtesting and model training (development only):
 ```powershell
-# Full pipeline (fetch + train + backtest)
 docker compose -f docker-compose.backtest.yml up backtest-full
-
-# View results
-cat data/results/backtest_*.md
 ```
 
-## Stopping Services
+---
 
-```powershell
-docker compose down
-```
+## Production Model Pack
 
-## Next Steps
+The production models are baked into the Docker image from `models/production/`:
+- `spreads_model.joblib` - Full Game Spread
+- `totals_model.joblib` - Full Game Total  
+- `first_half_spread_model.pkl` + `first_half_spread_features.pkl` - 1H Spread
+- `first_half_total_model.pkl` + `first_half_total_features.pkl` - 1H Total
 
-- **Full documentation:** See `README.md`
-- **Architecture details:** See `docs/CURRENT_STACK_AND_FLOW.md`
-- **Troubleshooting:** See `docs/DOCKER_TROUBLESHOOTING.md`
+All models use **logistic regression with isotonic calibration** (backtested and validated).
+See `models/production/model_pack.json` for metadata and backtest results.

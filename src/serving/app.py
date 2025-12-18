@@ -7,11 +7,11 @@ STRICT MODE: All inputs required. No fallbacks. No silent failures.
 - Full Game: Spread (60.6%), Total (59.2%), Moneyline (65.5%)
 - First Half: Spread (55.9%), Total (58.1%), Moneyline (63.0%)
 """
-from __future__ import annotations
 import os
 import json
 import logging
-from typing import Any, Dict, List
+import numpy as np
+from typing import Any, Dict, List, Optional, Union
 from pathlib import Path as PathLib
 from datetime import datetime
 
@@ -35,6 +35,24 @@ from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, ma
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
 
 logger = get_logger(__name__)
+
+
+def convert_numpy_types(obj):
+    """Recursively convert numpy types to native Python types for JSON serialization."""
+    if isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, (np.integer, np.int64, np.int32)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32)):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
+
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
@@ -76,7 +94,7 @@ class MarketPrediction(BaseModel):
     confidence: float
     edge: float
     passes_filter: bool
-    filter_reason: str | None = None
+    filter_reason: Optional[str] = None
 
 
 class GamePredictions(BaseModel):
@@ -414,11 +432,11 @@ async def get_comprehensive_slate_analysis(
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
             continue
     
-    return {
+    return convert_numpy_types({
         "date": str(target_date),
         "analysis": analysis_results,
         "edge_thresholds": edge_thresholds
-    }
+    })
 
 
 @app.post("/predict/game", response_model=GamePredictions)

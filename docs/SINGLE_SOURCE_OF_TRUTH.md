@@ -7,21 +7,21 @@
 ## 🚀 THE ONE COMMAND
 
 ```powershell
-python scripts/run_slate.py
+./run.ps1
 ```
 
 This single command does everything:
-1. Checks Docker is running
-2. Starts the stack if needed
-3. Waits for API to be healthy
-4. Fetches predictions
+1. Builds the production Docker image (`nba-strict-api:latest`) with baked-in models
+2. Starts the single container (no postgres/redis dependencies)
+3. Waits for API to be healthy and engine loaded
+4. Runs analysis and saves reports to `data/processed/`
 5. Displays picks with fire ratings
 
 **Options:**
 ```powershell
-python scripts/run_slate.py --date tomorrow        # Tomorrow's games
-python scripts/run_slate.py --matchup Lakers       # Filter to specific team
-python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
+./run.ps1 --date tomorrow        # Tomorrow's games
+./run.ps1 --matchup "Lakers"     # Filter to specific team
+./run.ps1 --date today --matchup "Lakers vs Celtics"
 ```
 
 ---
@@ -30,11 +30,12 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 | What | Command/URL | Purpose |
 |------|-------------|---------|
-| **Run Predictions** | `python scripts/run_slate.py` | **THE ONE COMMAND** |
+| **Run Predictions** | `./run.ps1` | **THE ONE COMMAND** - Builds and runs single container |
 | **Main API** | `http://localhost:8090` | Direct API access |
 | **Health Check** | `http://localhost:8090/health` | Verify system is running |
-| **Stop Stack** | `docker compose down` | Stop all services |
-| **Run Backtest** | `docker compose -f docker-compose.backtest.yml up backtest-full` | Full backtest |
+| **Stop Container** | `docker stop nba-api` | Stop the production container |
+| **Cleanup Docker** | `.\scripts\cleanup_nba_docker.ps1 -All -Force` | Remove old containers/images/volumes |
+| **Run Backtest** | `docker compose -f docker-compose.backtest.yml up backtest-full` | Full backtest (dev only) |
 
 ---
 
@@ -53,20 +54,19 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 ---
 
-## 🐳 Docker Services
+## 🐳 Docker Architecture
 
-### Production Stack (docker-compose.yml)
+### Production (Single Container)
 
-| Service | Port | Status | Purpose |
-|---------|------|--------|---------|
-| **strict-api** | 8090 | ✅ PRIMARY | Main prediction API - USE THIS |
-| prediction-service | 8082 | ✅ | ML inference (internal) |
-| api-gateway | 8080 | ✅ | REST gateway (scaffolded) |
-| feature-store | 8081 | 🚧 | Feature serving (scaffolded) |
-| line-movement-analyzer | 8084 | 🚧 | RLM detection (scaffolded) |
-| schedule-poller | 8085 | 🚧 | Schedule aggregation (scaffolded) |
-| postgres | 5432 | ✅ | TimescaleDB |
-| redis | 6379 | ✅ | Cache |
+| Component | Details |
+|-----------|---------|
+| **Image** | `nba-strict-api:latest` |
+| **Container** | `nba-api` (port 8090:8080) |
+| **Models** | Baked into image from `models/production/` |
+| **Dependencies** | None (no postgres/redis/microservices) |
+| **Entry Point** | `./run.ps1` |
+
+**Note:** The multi-service `docker-compose.yml` has been deprecated. See `DEPRECATED_docker-compose/` for reference.
 
 ### Backtest Stack (docker-compose.backtest.yml)
 
@@ -83,14 +83,16 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 | File | Purpose |
 |------|---------|
-| `docker-compose.yml` | **PRODUCTION STACK** - Start here |
-| `docker-compose.backtest.yml` | Backtest pipeline |
-| `Dockerfile` | strict-api container |
+| `Dockerfile` | **PRODUCTION IMAGE** - Single container with baked-in models |
+| `run.ps1` | **PRODUCTION ENTRY POINT** - Builds and runs the container |
+| `models/production/` | **PRODUCTION MODEL PACK** - Backtested models (baked into image) |
+| `docker-compose.backtest.yml` | Backtest pipeline (development only) |
 | `Dockerfile.backtest` | Backtest container |
 | `.env.example` | Environment template |
 | `src/serving/app.py` | **MAIN API CODE** |
 | `src/prediction/engine.py` | Unified prediction engine |
-| `scripts/analyze_slate_docker.py` | Docker-only analysis script |
+| `scripts/analyze_slate_docker.py` | Analysis script (calls container API) |
+| `scripts/cleanup_nba_docker.ps1` | Cleanup old Docker resources |
 
 ---
 
@@ -131,16 +133,17 @@ Single game prediction (requires all 8 line parameters).
 ## 🚀 Daily Workflow
 
 ```powershell
-# 1. Start stack
-docker compose up -d
+# 1. Run predictions (builds image, starts container, runs analysis)
+./run.ps1
 
-# 2. Verify health
-curl http://localhost:8090/health
+# Or with options:
+./run.ps1 --date tomorrow
+./run.ps1 --matchup "Lakers"
 
-# 3. Get analysis
-python scripts/analyze_slate_docker.py --date today
+# 2. View results in data/processed/slate_analysis_*.txt
 
-# 4. View results in data/processed/slate_analysis_*.txt
+# 3. Stop container when done (optional)
+docker stop nba-api
 ```
 
 ---
@@ -190,11 +193,12 @@ nba_v5.0_BETA/
 
 ## ⚠️ Important Rules
 
-1. **Docker for computation** - models/predictions run in containers (the local `scripts/run_slate.py` just orchestrates and calls the API)
-2. **STRICT MODE** - All inputs required, no fallbacks
-3. **6 Markets Only** - Only backtested markets (no Q1)
-4. **No Placeholders** - Real data only, no mocks
-5. **Fail Loudly** - Errors crash, not silently pass
+1. **Single Container Production** - One hardened Docker image with all models baked-in (`nba-strict-api:latest`)
+2. **No External Dependencies** - Production container has no postgres/redis/microservice dependencies
+3. **STRICT MODE** - All inputs required, no fallbacks
+4. **6 Markets Only** - Only backtested markets (no Q1)
+5. **Models in Repo** - Production models committed in `models/production/` for reproducibility
+6. **Fail Loudly** - Errors crash, not silently pass
 
 ---
 

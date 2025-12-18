@@ -45,11 +45,15 @@ data/processed/
 !data/processed/.gitkeep
 !data/raw/.gitkeep
 
-# Model artifacts
+# Model artifacts (exclude from data/processed, but include production models)
 *.joblib
 *.pkl
 *.h5
 *.pt
+# Exception: Production model pack must be committed for reproducible builds
+!models/production/*.joblib
+!models/production/*.pkl
+!models/production/*.json
 
 # Logs
 *.log
@@ -79,3 +83,9 @@ htmlcov/
 scripts/archive/
 scripts/archived/
 docs/archive/
+
+# Azure Function App
+azure/function_app/local.settings.json
+azure/function_app/.python_packages/
+azure/function_app/__pycache__/
+azure/.vscode/

@@ -33,7 +33,7 @@ ENV PYTHONPATH="/app:/app/src" \
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8082/health', timeout=5)" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8082/health', timeout=5).read()" || exit 1
 
 # Switch to non-root user
 USER appuser

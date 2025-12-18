@@ -70,32 +70,39 @@ async def fetch_odds(
     except Exception as e:
         logger.error(f"Failed to fetch odds from The Odds API: {e}")
         raise
-        
-        # ALWAYS standardize team names to ESPN format (mandatory)
-        standardized_data = []
-        invalid_count = 0
-        for game in data:
-            try:
-                standardized = standardize_game_data(game, source="the_odds")
-                # Only include games with valid team names (prevent fake data)
-                if standardized.get("_data_valid", False):
-                    standardized_data.append(standardized)
-                else:
-                    invalid_count += 1
-                    logger.warning(
-                        f"Skipping game with invalid team names: "
-                        f"home='{standardized.get('home_team', 'N/A')}', "
-                        f"away='{standardized.get('away_team', 'N/A')}'"
-                    )
-            except Exception as e:
-                logger.error(f"Error standardizing game data: {e}. Game: {game.get('home_team', 'N/A')} vs {game.get('away_team', 'N/A')}")
-                # Do NOT add invalid data - skip it entirely
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    standardized_data = []
+    invalid_count = 0
+    for game in data:
+        try:
+            standardized = standardize_game_data(game, source="the_odds")
+            # Only include games with valid team names (prevent fake data)
+            if standardized.get("_data_valid", False):
+                standardized_data.append(standardized)
+            else:
                 invalid_count += 1
-        
-        logger.info(f"Standardized {len(standardized_data)} valid games (skipped {invalid_count} invalid games)")
-        if invalid_count > 0:
-            logger.warning(f"⚠️  {invalid_count} games were skipped due to invalid/unstandardized team names")
-        return standardized_data
+                logger.warning(
+                    "Skipping game with invalid team names: "
+                    f"home='{standardized.get('home_team', 'N/A')}', "
+                    f"away='{standardized.get('away_team', 'N/A')}'"
+                )
+        except Exception as e:
+            logger.error(
+                "Error standardizing game data: "
+                f"{e}. Game: {game.get('home_team', 'N/A')} vs {game.get('away_team', 'N/A')}"
+            )
+            # Do NOT add invalid data - skip it entirely
+            invalid_count += 1
+
+    logger.info(
+        f"Standardized {len(standardized_data)} valid games (skipped {invalid_count} invalid games)"
+    )
+    if invalid_count > 0:
+        logger.warning(
+            f"⚠️  {invalid_count} games were skipped due to invalid/unstandardized team names"
+        )
+    return standardized_data
 
 
 @retry(

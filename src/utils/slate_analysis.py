@@ -61,6 +61,8 @@ async def fetch_todays_games(target_date: date) -> List[Dict]:
 
 def filter_games_for_date(games: list, target_date: date) -> list:
     """Filter games to only include those on the target date (in CST)."""
+    if games is None:
+        return []
     filtered = []
     for game in games:
         commence_time = game.get("commence_time")

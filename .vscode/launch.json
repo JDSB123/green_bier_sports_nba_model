@@ -18,7 +18,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/scripts/predict.py",
             "console": "integratedTerminal",
-            "args": ["--date", "tomorrow"],
+            "args": [
+                "--date",
+                "tomorrow"
+            ],
             "envFile": "${workspaceFolder}/.env",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
@@ -51,12 +54,25 @@
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
-            "args": ["tests", "-v"],
+            "args": [
+                "tests",
+                "-v"
+            ],
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "Attach to Python Functions",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 9091
+            },
+            "preLaunchTask": "func: host start"
         }
     ]
 }
