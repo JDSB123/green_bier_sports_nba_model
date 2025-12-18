@@ -19,6 +19,7 @@ from src.prediction.models import (
     load_total_model,
     load_first_half_spread_model,
     load_first_half_total_model,
+    load_moneyline_model,
 )
 
 
@@ -59,13 +60,16 @@ class UnifiedPredictionEngine:
                 f"Run: python scripts/train_models.py"
             )
 
-        # Load ALL 4 models - NO TRY/EXCEPT, FAIL IF MISSING
+        # Load ALL 5 models - NO TRY/EXCEPT, FAIL IF MISSING
         # Full Game models (REQUIRED)
         fg_spread_model, fg_spread_features = self._load_required_model(
             load_spread_model, "Full Game Spread"
         )
         fg_total_model, fg_total_features = self._load_required_model(
             load_total_model, "Full Game Total"
+        )
+        fg_moneyline_model, fg_moneyline_features = self._load_required_model(
+            load_moneyline_model, "Full Game Moneyline"
         )
 
         # First Half models (REQUIRED)
@@ -90,9 +94,9 @@ class UnifiedPredictionEngine:
             fh_feature_columns=fh_total_features,
         )
         self.moneyline_predictor = MoneylinePredictor(
-            model=fg_spread_model,
-            feature_columns=fg_spread_features,
-            fh_model=fh_spread_model,
+            model=fg_moneyline_model,
+            feature_columns=fg_moneyline_features,
+            fh_model=fh_spread_model,  # 1H moneyline still uses spread model (no dedicated 1H ML model yet)
             fh_feature_columns=fh_spread_features,
         )
 

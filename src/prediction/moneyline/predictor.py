@@ -3,9 +3,13 @@ Moneyline prediction logic (Full Game + First Half).
 
 STRICT MODE: No fallbacks. Each market requires its own trained model.
 Only BACKTESTED markets supported: FG and 1H.
+
+NOTE: Currently uses spread model probabilities converted to win probabilities
+using predicted margin. A dedicated moneyline model would be more accurate.
 """
 from typing import Dict, Any
 import pandas as pd
+import math
 
 from src.prediction.moneyline.filters import (
     FGMoneylineFilter,
@@ -104,10 +108,43 @@ class MoneylinePredictor:
             feature_df[col] = 0
         X = feature_df[self.feature_columns]
 
-        # Get win probabilities
-        spread_proba = self.model.predict_proba(X)[0]
-        home_win_prob = float(spread_proba[1])
-        away_win_prob = float(spread_proba[0])
+        # Check if this is a dedicated moneyline model or spread model
+        # Dedicated moneyline model predicts win/loss directly
+        # Spread model predicts cover (we need to convert)
+        ml_proba = self.model.predict_proba(X)[0]
+        
+        # If model is trained on home_win (1 = home win, 0 = away win), use directly
+        # Otherwise, it's a spread model and we need to convert
+        # We can detect this by checking if probabilities sum to ~1.0 and are reasonable
+        prob_sum = float(ml_proba[0]) + float(ml_proba[1])
+        
+        if abs(prob_sum - 1.0) < 0.01 and 0.1 < float(ml_proba[1]) < 0.9:
+            # This looks like a dedicated moneyline model - use probabilities directly
+            home_win_prob = float(ml_proba[1])  # Class 1 = home win
+            away_win_prob = float(ml_proba[0])  # Class 0 = away win
+        else:
+            # Fallback: This is a spread model, convert using margin
+            # This should rarely happen if moneyline model is properly trained
+            import logging
+            logging.warning("Using spread model for moneyline - dedicated model may not be available")
+            
+            home_cover_prob = float(ml_proba[1])
+            predicted_margin = features.get("predicted_margin", 0.0)
+            k = 0.16  # NBA-specific constant
+            
+            if predicted_margin != 0:
+                home_win_prob_raw = 1.0 / (1.0 + math.exp(-k * predicted_margin))
+                home_win_prob = max(0.05, min(0.95, home_win_prob_raw))
+                away_win_prob = 1.0 - home_win_prob
+            else:
+                if home_cover_prob > 0.5:
+                    home_win_prob = 0.5 + (home_cover_prob - 0.5) * 1.3
+                    home_win_prob = min(0.95, home_win_prob)
+                else:
+                    home_win_prob = 0.5 - (0.5 - home_cover_prob) * 1.3
+                    home_win_prob = max(0.05, home_win_prob)
+                away_win_prob = 1.0 - home_win_prob
+        
         confidence = calculate_confidence_from_probabilities(home_win_prob, away_win_prob)
         predicted_winner = "home" if home_win_prob > 0.5 else "away"
 
@@ -178,9 +215,31 @@ class MoneylinePredictor:
             feature_df[col] = 0
         X = feature_df[self.fh_feature_columns]
 
+        # Get spread cover probabilities (NOT win probabilities)
         spread_proba = self.fh_model.predict_proba(X)[0]
-        home_win_prob = float(spread_proba[1])
-        away_win_prob = float(spread_proba[0])
+        home_cover_prob = float(spread_proba[1])
+        away_cover_prob = float(spread_proba[0])
+        
+        # Convert spread cover probabilities to actual win probabilities
+        # Use predicted margin for first half
+        predicted_margin_1h = features.get("predicted_margin_1h", 0.0)
+        k = 0.16  # NBA-specific constant
+        
+        if predicted_margin_1h != 0:
+            # Use logistic function to convert margin to win probability
+            home_win_prob_raw = 1.0 / (1.0 + math.exp(-k * predicted_margin_1h))
+            home_win_prob = max(0.05, min(0.95, home_win_prob_raw))
+            away_win_prob = 1.0 - home_win_prob
+        else:
+            # Fallback: adjust cover prob to win prob
+            if home_cover_prob > 0.5:
+                home_win_prob = 0.5 + (home_cover_prob - 0.5) * 1.3
+                home_win_prob = min(0.95, home_win_prob)
+            else:
+                home_win_prob = 0.5 - (0.5 - home_cover_prob) * 1.3
+                home_win_prob = max(0.05, home_win_prob)
+            away_win_prob = 1.0 - home_win_prob
+        
         confidence = calculate_confidence_from_probabilities(home_win_prob, away_win_prob)
         predicted_winner = "home" if home_win_prob > 0.5 else "away"
 

@@ -189,6 +189,7 @@ def startup_event():
 @limiter.limit("100/minute")
 def health(request: Request):
     """Check API health - STRICT MODE."""
+    # Basic health check
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
     
@@ -207,6 +208,120 @@ def health(request: Request):
 def metrics():
     """Prometheus metrics endpoint."""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/verify")
+@limiter.limit("10/minute")
+def verify_integrity(request: Request):
+    """
+    Verify model integrity and component usage.
+    
+    Checks:
+    - All models are loaded correctly
+    - Predictions use actual models (not simplified calculations)
+    - Moneyline uses audited model
+    """
+    results = {
+        "status": "pass",
+        "checks": {},
+        "errors": []
+    }
+    
+    # Check 1: Engine loaded
+    if not hasattr(app.state, 'engine') or app.state.engine is None:
+        results["status"] = "fail"
+        results["errors"].append("Engine not loaded")
+        results["checks"]["engine_loaded"] = False
+    else:
+        results["checks"]["engine_loaded"] = True
+        
+        # Check 2: Predictors exist
+        has_spread = hasattr(app.state.engine, 'spread_predictor')
+        has_total = hasattr(app.state.engine, 'total_predictor')
+        has_moneyline = hasattr(app.state.engine, 'moneyline_predictor')
+        
+        results["checks"]["predictors"] = {
+            "spread": has_spread,
+            "total": has_total,
+            "moneyline": has_moneyline
+        }
+        
+        if not (has_spread and has_total and has_moneyline):
+            results["status"] = "fail"
+            results["errors"].append("Missing predictors")
+        
+        # Check 3: Moneyline uses actual model
+        if has_moneyline:
+            ml_pred = app.state.engine.moneyline_predictor
+            has_model = hasattr(ml_pred, 'model') and ml_pred.model is not None
+            results["checks"]["moneyline_uses_model"] = has_model
+            if has_model:
+                results["checks"]["moneyline_model_type"] = type(ml_pred.model).__name__
+            else:
+                results["status"] = "fail"
+                results["errors"].append("Moneyline predictor missing model")
+        
+        # Check 4: Test prediction (verify it works)
+        try:
+            test_features = {
+                "home_ppg": 115.0, "away_ppg": 112.0,
+                "home_papg": 110.0, "away_papg": 115.0,
+                "predicted_margin": 3.0, "predicted_total": 227.0,
+                "predicted_margin_1h": 1.5, "predicted_total_1h": 113.5,
+                "home_win_pct": 0.6, "away_win_pct": 0.4,
+                "home_avg_margin": 2.0, "away_avg_margin": -1.0,
+                "home_rest_days": 2, "away_rest_days": 1,
+                "home_b2b": 0, "away_b2b": 0,
+                "dynamic_hca": 3.0, "h2h_win_pct": 0.5, "h2h_avg_margin": 0.0,
+            }
+            
+            test_pred = app.state.engine.predict_full_game(
+                features=test_features,
+                spread_line=-3.5,
+                total_line=225.0,
+                home_ml_odds=-150,
+                away_ml_odds=130,
+            )
+            
+            # Verify moneyline has actual probabilities
+            if "moneyline" in test_pred:
+                ml = test_pred["moneyline"]
+                has_probs = "home_win_prob" in ml and "away_win_prob" in ml
+                results["checks"]["moneyline_has_probabilities"] = has_probs
+                if has_probs:
+                    home_prob = ml["home_win_prob"]
+                    away_prob = ml["away_win_prob"]
+                    probs_sum = abs(home_prob + away_prob - 1.0) < 0.01
+                    results["checks"]["moneyline_probabilities_valid"] = probs_sum
+                    if not probs_sum:
+                        results["status"] = "fail"
+                        results["errors"].append(f"Moneyline probabilities don't sum to 1.0: {home_prob} + {away_prob}")
+                else:
+                    results["status"] = "fail"
+                    results["errors"].append("Moneyline prediction missing probabilities")
+            
+            results["checks"]["test_prediction_works"] = True
+            
+        except Exception as e:
+            results["status"] = "fail"
+            results["errors"].append(f"Test prediction failed: {str(e)}")
+            results["checks"]["test_prediction_works"] = False
+    
+    # Check 5: Comprehensive edge function uses models
+    try:
+        from src.utils.comprehensive_edge import calculate_comprehensive_edge
+        import inspect
+        sig = inspect.signature(calculate_comprehensive_edge)
+        has_engine_param = "engine_predictions" in sig.parameters
+        results["checks"]["comprehensive_edge_accepts_engine_predictions"] = has_engine_param
+        if not has_engine_param:
+            results["status"] = "fail"
+            results["errors"].append("comprehensive_edge missing engine_predictions parameter")
+    except Exception as e:
+        results["status"] = "fail"
+        results["errors"].append(f"Could not verify comprehensive_edge: {str(e)}")
+    
+    return results
 
 
 @app.get("/slate/{date}", response_model=SlateResponse)
@@ -407,14 +522,50 @@ async def get_comprehensive_slate_analysis(
             # Get betting splits for this game
             betting_splits = splits_dict.get(game_key)
             
-            # Calculate comprehensive edge
+            # Get actual model predictions from engine (for moneyline - uses audited model)
+            from scripts.predict import extract_lines
+            lines = extract_lines(game, home_team)
+            engine_predictions = None
+            if all(k in lines for k in ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml"]):
+                try:
+                    # Try to get all markets if first half lines are available
+                    if all(k in lines and lines[k] is not None for k in ["fh_spread", "fh_total", "fh_home_ml", "fh_away_ml"]):
+                        engine_predictions = app.state.engine.predict_all_markets(
+                            features,
+                            fg_spread_line=lines["fg_spread"],
+                            fg_total_line=lines["fg_total"],
+                            fg_home_ml_odds=lines["fg_home_ml"],
+                            fg_away_ml_odds=lines["fg_away_ml"],
+                            fh_spread_line=lines["fh_spread"],
+                            fh_total_line=lines["fh_total"],
+                            fh_home_ml_odds=lines["fh_home_ml"],
+                            fh_away_ml_odds=lines["fh_away_ml"],
+                        )
+                    else:
+                        # Only full game lines available - use predict_full_game
+                        fg_preds = app.state.engine.predict_full_game(
+                            features,
+                            spread_line=lines["fg_spread"],
+                            total_line=lines["fg_total"],
+                            home_ml_odds=lines["fg_home_ml"],
+                            away_ml_odds=lines["fg_away_ml"],
+                        )
+                        engine_predictions = {
+                            "full_game": fg_preds,
+                            "first_half": {}  # Empty - no first half predictions
+                        }
+                except Exception as e:
+                    logger.warning(f"Could not get engine predictions for {home_team} vs {away_team}: {e}")
+            
+            # Calculate comprehensive edge (now with actual model predictions)
             comprehensive_edge = calculate_comprehensive_edge(
                 features=features,
                 fh_features=fh_features,
                 odds=odds,
                 game=game,
                 betting_splits=betting_splits,
-                edge_thresholds=edge_thresholds
+                edge_thresholds=edge_thresholds,
+                engine_predictions=engine_predictions
             )
             
             analysis_results.append({

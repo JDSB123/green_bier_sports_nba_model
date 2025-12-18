@@ -21,6 +21,7 @@ from src.prediction.models import (
     load_total_model,
     load_first_half_spread_model,
     load_first_half_total_model,
+    load_moneyline_model,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "load_total_model",
     "load_first_half_spread_model",
     "load_first_half_total_model",
+    "load_moneyline_model",
 ]

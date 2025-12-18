@@ -18,7 +18,8 @@ def calculate_comprehensive_edge(
     odds: Dict,
     game: Dict,
     betting_splits: Optional[Any] = None,
-    edge_thresholds: Optional[Dict[str, float]] = None
+    edge_thresholds: Optional[Dict[str, float]] = None,
+    engine_predictions: Optional[Dict] = None
 ) -> Dict:
     """
     Calculate comprehensive betting edge for full game and first half.
@@ -130,19 +131,40 @@ def calculate_comprehensive_edge(
     fg_ml_pick = None
     fg_ml_confidence = 0
     fg_ml_rationale = "No moneyline value found."
+    fg_ml_edge_home = None
+    fg_ml_edge_away = None
     
     if fg_home_ml and fg_away_ml:
-        # Simplified ML calculation
-        model_home_prob = 0.5 + (fg_predicted_margin * 0.02)  # Simplified
-        model_home_prob = max(0.4, min(0.9, model_home_prob))
+        # Use actual engine predictions if available (audited model)
+        if engine_predictions and engine_predictions.get("full_game", {}).get("moneyline"):
+            ml_pred = engine_predictions["full_game"]["moneyline"]
+            # Extract probabilities from the actual model prediction
+            if ml_pred.get("home_win_prob") is not None and ml_pred.get("away_win_prob") is not None:
+                # Use actual model probabilities from audited moneyline model
+                model_home_prob = float(ml_pred["home_win_prob"])
+                model_away_prob = float(ml_pred["away_win_prob"])
+            else:
+                # Fallback to simplified if structure is unexpected
+                model_home_prob = 0.5 + (fg_predicted_margin * 0.02)
+                model_home_prob = max(0.4, min(0.9, model_home_prob))
+                model_away_prob = 1 - model_home_prob
+        else:
+            # Fallback: Simplified ML calculation (only if engine predictions not available)
+            # This should rarely happen in production - log a warning
+            import logging
+            logging.warning(f"Using simplified moneyline calculation for {home_team} vs {away_team} - engine predictions not available")
+            model_home_prob = 0.5 + (fg_predicted_margin * 0.02)  # Simplified
+            model_home_prob = max(0.4, min(0.9, model_home_prob))
+            model_away_prob = 1 - model_home_prob
+        
         market_home_prob = american_to_implied_prob(fg_home_ml)
         fg_ml_edge_home = model_home_prob - market_home_prob
         
-        model_away_prob = 1 - model_home_prob
         market_away_prob = american_to_implied_prob(fg_away_ml)
         fg_ml_edge_away = model_away_prob - market_away_prob
         
-        if fg_ml_edge_home > 0.03 or fg_ml_edge_away > 0.03:
+        ml_threshold = edge_thresholds.get("moneyline", 0.03)
+        if fg_ml_edge_home > ml_threshold or fg_ml_edge_away > ml_threshold:
             if fg_ml_edge_home > fg_ml_edge_away:
                 fg_ml_pick = home_team
                 fg_ml_confidence = min(fg_ml_edge_home * 2.5, 0.75)

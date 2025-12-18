@@ -149,3 +149,49 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
     feature_cols = joblib.load(features_path)
 
     return model, feature_cols
+
+
+def load_moneyline_model(models_dir: Path) -> Tuple[Any, List[str]]:
+    """
+    Load FG moneyline model with feature columns.
+
+    Args:
+        models_dir: Path to models directory
+
+    Returns:
+        Tuple of (model, feature_columns)
+
+    Raises:
+        FileNotFoundError: If model not found
+    """
+    # Try to get active version from tracker
+    tracker = ModelTracker()
+    moneyline_version = tracker.get_active_version("moneyline")
+    model_path = None
+
+    if moneyline_version:
+        info = tracker.get_version_info(moneyline_version)
+        if info and info.get("file_path"):
+            candidate = models_dir / info["file_path"]
+            if candidate.exists():
+                model_path = candidate
+
+    # Fallback to standard names
+    if model_path is None:
+        model_path = models_dir / "moneyline_model.joblib"
+        if not model_path.exists():
+            model_path = models_dir / "moneyline_model.pkl"
+
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"Moneyline model not found in {models_dir}. "
+            f"Run: python scripts/train_models.py"
+        )
+
+    model_data = joblib.load(model_path)
+
+    # Support both formats
+    model = model_data.get("pipeline") or model_data.get("model")
+    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+
+    return model, feature_cols

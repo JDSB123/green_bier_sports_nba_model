@@ -106,11 +106,11 @@ while ($attempt -lt $maxAttempts -and -not $ready) {
                 $ready = $true
                 Write-Host "✓ API is healthy and engine is loaded" -ForegroundColor Green
             } else {
-                Write-Host "  Attempt $attempt/$maxAttempts: Engine not loaded yet..." -ForegroundColor Gray
+                Write-Host "  Attempt ${attempt}/${maxAttempts}: Engine not loaded yet..." -ForegroundColor Gray
             }
         }
     } catch {
-        Write-Host "  Attempt $attempt/$maxAttempts: Waiting for API..." -ForegroundColor Gray
+        Write-Host "  Attempt ${attempt}/${maxAttempts}: Waiting for API..." -ForegroundColor Gray
     }
 }
 
