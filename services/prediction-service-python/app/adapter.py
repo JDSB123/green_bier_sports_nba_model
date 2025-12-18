@@ -1,16 +1,16 @@
 """
-Adapters that let the Dockerized FastAPI service reuse the proven v4
+Adapters that let the Dockerized FastAPI service reuse the v5 STRICT MODE
 prediction stack (models + filters) without duplicating code.
+
+STRICT MODE: All models must exist. No fallbacks. No silent failures.
 """
 
 from __future__ import annotations
 
 import logging
 import sys
-from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +36,12 @@ def _ensure_repo_on_path(repo_root: Path) -> None:
             sys.path.append(candidate_str)
 
 
-@dataclass(frozen=True)
-class V4Predictors:
-    spread_total_engine: "PredictionEngine"
-    moneyline_predictor: "MoneylinePredictor"
-
-
 def _sanitize_models_dir(models_dir: str | Path) -> Path:
     """
     Normalize and validate the models directory path.
+    
+    Raises:
+        FileNotFoundError: If models directory does not exist
     """
     path = Path(models_dir).expanduser().resolve()
     if not path.exists():
@@ -52,29 +49,56 @@ def _sanitize_models_dir(models_dir: str | Path) -> Path:
     return path
 
 
-def _bootstrap_v4_context(models_dir: str | Path) -> Tuple[Path, Path]:
+def _bootstrap_context(models_dir: str | Path) -> Path:
     """
     Resolve repo + models paths and make sure imports work.
+    
+    Returns:
+        Path to models directory
+        
+    Raises:
+        RuntimeError: If repo root cannot be found
+        FileNotFoundError: If models directory does not exist
     """
     repo_root = _find_repo_root()
     _ensure_repo_on_path(repo_root)
-    models_path = _sanitize_models_dir(models_dir)
-    return repo_root, models_path
+    return _sanitize_models_dir(models_dir)
 
 
 @lru_cache(maxsize=1)
-def load_v4_predictors(models_dir: str | Path) -> V4Predictors:
+def load_prediction_engine(models_dir: str | Path) -> "UnifiedPredictionEngine":
     """
-    Load the canonical v4 prediction engine + moneyline predictor.
+    Load the STRICT MODE unified prediction engine.
+    
+    ALL 7 models must exist:
+    - spreads_model.joblib (FG Spread)
+    - totals_model.joblib (FG Total)
+    - first_half_spread_model.pkl (1H Spread)
+    - first_half_total_model.pkl (1H Total)
+    - q1_spreads_model.joblib (Q1 Spread)
+    - q1_totals_model.joblib (Q1 Total)
+    - q1_moneyline_model.joblib (Q1 Moneyline)
+    
+    Args:
+        models_dir: Path to directory containing all model files
+        
+    Returns:
+        UnifiedPredictionEngine instance with all predictors loaded
+        
+    Raises:
+        ModelNotFoundError: If ANY required model is missing
+        FileNotFoundError: If models directory does not exist
     """
-    repo_root, models_path = _bootstrap_v4_context(models_dir)
+    models_path = _bootstrap_context(models_dir)
 
-    # Imports happen after repo_path has been added to sys.path.
-    from src.prediction.predictor import PredictionEngine as V4PredictionEngine
-    from src.prediction.moneyline import MoneylinePredictor
+    # Import after repo_path has been added to sys.path
+    from src.prediction.engine import UnifiedPredictionEngine
 
-    logger.info("Loading v4 predictors from %s", models_path)
-    engine = V4PredictionEngine(models_path)
-    moneyline = MoneylinePredictor(engine.spread_model, engine.spread_features)
+    logger.info("Loading STRICT MODE prediction engine from %s", models_path)
+    
+    # This will FAIL LOUDLY if any model is missing - no silent failures
+    engine = UnifiedPredictionEngine(models_path)
+    
+    logger.info("Successfully loaded all 7 required models")
+    return engine
 
-    return V4Predictors(spread_total_engine=engine, moneyline_predictor=moneyline)

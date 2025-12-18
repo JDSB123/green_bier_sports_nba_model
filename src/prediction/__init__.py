@@ -1,40 +1,46 @@
 """
-NBA Prediction Module
+NBA Prediction Module - STRICT MODE
 
-Market-based modular prediction system for all markets (spreads, totals, moneyline)
-across full game and first half with smart filtering.
+Unified prediction engine for all 9 markets:
+- Full Game: Spread, Total, Moneyline
+- First Half: Spread, Total, Moneyline
+- First Quarter: Spread, Total, Moneyline
+
+STRICT MODE: All models must exist. No fallbacks. No silent failures.
 """
-# Unified engine (recommended entry point)
-from src.prediction.engine import UnifiedPredictionEngine
+# Unified engine (THE ONLY ENTRY POINT)
+from src.prediction.engine import UnifiedPredictionEngine, ModelNotFoundError
 
-# Market-specific modules
-from src.prediction import spreads, totals, moneyline
+# Market-specific modules (for direct access if needed)
+from src.prediction.spreads import SpreadPredictor
+from src.prediction.totals import TotalPredictor
+from src.prediction.moneyline import MoneylinePredictor
 
-# Legacy support (old modular architecture)
-from src.prediction.filters import (
-    SpreadFilter,
-    TotalFilter,
-    FirstHalfSpreadFilter,
-    FirstHalfTotalFilter,
-    filter_predictions,
+# Model loading (used by engine)
+from src.prediction.models import (
+    load_spread_model,
+    load_total_model,
+    load_first_half_spread_model,
+    load_first_half_total_model,
+    load_first_quarter_spread_model,
+    load_first_quarter_total_model,
+    load_first_quarter_moneyline_model,
 )
-from src.prediction.models import load_spread_model, load_total_model
-from src.prediction.predictor import PredictionEngine
 
 __all__ = [
-    # Unified engine (NEW - recommended)
+    # Engine (PRIMARY ENTRY POINT)
     "UnifiedPredictionEngine",
-    # Market modules
-    "spreads",
-    "totals",
-    "moneyline",
-    # Legacy (OLD - for compatibility)
-    "SpreadFilter",
-    "TotalFilter",
-    "FirstHalfSpreadFilter",
-    "FirstHalfTotalFilter",
-    "filter_predictions",
+    "ModelNotFoundError",
+    # Predictors
+    "SpreadPredictor",
+    "TotalPredictor",
+    "MoneylinePredictor",
+    # Model loaders
     "load_spread_model",
     "load_total_model",
-    "PredictionEngine",
+    "load_first_half_spread_model",
+    "load_first_half_total_model",
+    "load_first_quarter_spread_model",
+    "load_first_quarter_total_model",
+    "load_first_quarter_moneyline_model",
 ]

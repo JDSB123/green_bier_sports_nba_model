@@ -61,3 +61,4 @@ RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 # Default command runs the full backtest pipeline
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["full"]
+

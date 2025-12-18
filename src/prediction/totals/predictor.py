@@ -1,7 +1,9 @@
 """
-Totals prediction logic for full game and first half.
+Totals prediction logic for Full Game, First Half, and First Quarter.
+
+STRICT MODE: No fallbacks. Each market requires its own trained model.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import pandas as pd
 
 from src.prediction.totals.filters import (
@@ -14,111 +16,104 @@ from src.prediction.confidence import calculate_confidence_from_probabilities
 
 class TotalPredictor:
     """
-    Totals predictor for full game and first half markets.
+    Totals predictor for Full Game, First Half, and First Quarter markets.
 
-    Uses separate models for FG and 1H trained on respective data.
+    STRICT MODE:
+    - Each market uses its OWN dedicated model
+    - NO fallbacks to other models
+    - Missing model = immediate failure
     """
 
     def __init__(
         self,
         fg_model,
         fg_feature_columns: list,
-        fh_model=None,
-        fh_feature_columns: Optional[list] = None,
-        fq_model=None,
-        fq_feature_columns: Optional[list] = None,
-        fg_filter: Optional[FGTotalFilter] = None,
-        first_half_filter: Optional[FirstHalfTotalFilter] = None,
-        first_quarter_filter: Optional[FirstQuarterTotalFilter] = None,
+        fh_model,
+        fh_feature_columns: list,
+        fq_model,
+        fq_feature_columns: list,
     ):
         """
-        Initialize totals predictor.
+        Initialize totals predictor with ALL required models.
 
         Args:
-            fg_model: Trained FG total model
-            fg_feature_columns: List of FG feature column names
-            fh_model: Trained 1H total model (None = fallback to FG model)
-            fh_feature_columns: List of 1H feature column names
-            fg_filter: FGTotalFilter instance (None = use defaults)
-            first_half_filter: FirstHalfTotalFilter instance (None = use defaults)
+            fg_model: Trained FG total model (REQUIRED)
+            fg_feature_columns: FG feature column names (REQUIRED)
+            fh_model: Trained 1H total model (REQUIRED)
+            fh_feature_columns: 1H feature column names (REQUIRED)
+            fq_model: Trained Q1 total model (REQUIRED)
+            fq_feature_columns: Q1 feature column names (REQUIRED)
+
+        Raises:
+            ValueError: If any required model or features are None
         """
+        # Validate ALL inputs - NO NONE ALLOWED
+        if fg_model is None:
+            raise ValueError("fg_model is REQUIRED - cannot be None")
+        if fg_feature_columns is None:
+            raise ValueError("fg_feature_columns is REQUIRED - cannot be None")
+        if fh_model is None:
+            raise ValueError("fh_model is REQUIRED - cannot be None")
+        if fh_feature_columns is None:
+            raise ValueError("fh_feature_columns is REQUIRED - cannot be None")
+        if fq_model is None:
+            raise ValueError("fq_model is REQUIRED - cannot be None")
+        if fq_feature_columns is None:
+            raise ValueError("fq_feature_columns is REQUIRED - cannot be None")
+
         self.fg_model = fg_model
         self.fg_feature_columns = fg_feature_columns
         self.fh_model = fh_model
-        self.fh_feature_columns = fh_feature_columns or fg_feature_columns
+        self.fh_feature_columns = fh_feature_columns
         self.fq_model = fq_model
-        self.fq_feature_columns = fq_feature_columns or self.fh_feature_columns or fg_feature_columns
+        self.fq_feature_columns = fq_feature_columns
 
-        # Initialize filters
-        self.fg_filter = fg_filter or FGTotalFilter()
-        self.first_half_filter = first_half_filter or FirstHalfTotalFilter()
-        self.first_quarter_filter = first_quarter_filter or FirstQuarterTotalFilter()
+        # Filters use defaults - these are config, not models
+        self.fg_filter = FGTotalFilter()
+        self.first_half_filter = FirstHalfTotalFilter()
+        self.first_quarter_filter = FirstQuarterTotalFilter()
 
     def predict_full_game(
         self,
         features: Dict[str, float],
-        total_line: Optional[float] = None,
+        total_line: float,
     ) -> Dict[str, Any]:
         """
         Generate full game total prediction.
 
         Args:
-            features: Feature dictionary for the game
-            total_line: Vegas FG total line
+            features: Feature dictionary (REQUIRED, must contain predicted_total)
+            total_line: Vegas FG total line (REQUIRED)
 
         Returns:
-            Dictionary with:
-                - over_prob: Probability over
-                - under_prob: Probability under
-                - predicted_total: Predicted total points
-                - confidence: Max(over_prob, under_prob)
-                - bet_side: "over" or "under"
-                - edge: Predicted total - total line (if line provided)
-                - model_edge_pct: abs(confidence - 0.5)
-                - passes_filter: bool
-                - filter_reason: str or None
+            Prediction dictionary
         """
-        # Create feature dataframe
-        feature_df = pd.DataFrame([features])
+        # Validate required inputs
+        if "predicted_total" not in features:
+            raise ValueError("predicted_total is REQUIRED in features for FG total predictions")
 
-        # Add missing features with 0
+        # Prepare features
+        feature_df = pd.DataFrame([features])
         missing = set(self.fg_feature_columns) - set(feature_df.columns)
         for col in missing:
             feature_df[col] = 0
-
-        # Align columns
         X = feature_df[self.fg_feature_columns]
 
         # Get prediction
         total_proba = self.fg_model.predict_proba(X)[0]
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
-
-        # Calculate confidence from probabilities using entropy-based approach
-        # This accounts for uncertainty rather than using raw probability
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
+        bet_side = "over" if over_prob > 0.5 else "under"
+        predicted_total = features["predicted_total"]
 
-        # Determine bet side
-        if over_prob > 0.5:
-            bet_side = "over"
+        # Calculate edge
+        if bet_side == "over":
+            edge = predicted_total - total_line
         else:
-            bet_side = "under"
+            edge = total_line - predicted_total
 
-        # Get predicted total from features
-        predicted_total = features.get("predicted_total", 0.0)
-
-        # Calculate edge if total line provided
-        edge = None
-        if total_line is not None:
-            if bet_side == "over":
-                edge = predicted_total - total_line
-            else:
-                edge = total_line - predicted_total
-
-        # Apply FG total filter
-        passes_filter, filter_reason = self.fg_filter.should_bet(
-            confidence=confidence,
-        )
+        passes_filter, filter_reason = self.fg_filter.should_bet(confidence=confidence)
 
         return {
             "over_prob": over_prob,
@@ -135,70 +130,48 @@ class TotalPredictor:
     def predict_first_half(
         self,
         features: Dict[str, float],
-        first_half_total_line: Optional[float] = None,
+        total_line: float,
     ) -> Dict[str, Any]:
         """
         Generate first half total prediction.
 
-        Uses dedicated 1H model if available, else falls back to FG model.
-
         Args:
-            features: Feature dictionary for the game
-            first_half_total_line: Vegas 1H total line
+            features: Feature dictionary (REQUIRED, must contain predicted_total_1h)
+            total_line: Vegas 1H total line (REQUIRED)
 
         Returns:
-            Dictionary with 1H total prediction
+            Prediction dictionary
         """
-        # Use 1H model if available
-        if self.fh_model is not None:
-            feature_df = pd.DataFrame([features])
-            missing = set(self.fh_feature_columns) - set(feature_df.columns)
-            for col in missing:
-                feature_df[col] = 0
-            X = feature_df[self.fh_feature_columns]
-            total_proba = self.fh_model.predict_proba(X)[0]
-        else:
-            # Fallback to FG model
-            feature_df = pd.DataFrame([features])
-            missing = set(self.fg_feature_columns) - set(feature_df.columns)
-            for col in missing:
-                feature_df[col] = 0
-            X = feature_df[self.fg_feature_columns]
-            total_proba = self.fg_model.predict_proba(X)[0]
+        # Validate required inputs
+        if "predicted_total_1h" not in features:
+            raise ValueError("predicted_total_1h is REQUIRED in features for 1H total predictions")
+
+        # Use 1H model ONLY - no fallbacks
+        feature_df = pd.DataFrame([features])
+        missing = set(self.fh_feature_columns) - set(feature_df.columns)
+        for col in missing:
+            feature_df[col] = 0
+        X = feature_df[self.fh_feature_columns]
+        total_proba = self.fh_model.predict_proba(X)[0]
 
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
-
-        # Calculate confidence from probabilities using entropy-based approach
-        # This accounts for uncertainty rather than using raw probability
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
+        bet_side = "over" if over_prob > 0.5 else "under"
+        predicted_total = features["predicted_total_1h"]
 
-        # Determine bet side
-        if over_prob > 0.5:
-            bet_side = "over"
+        # Calculate edge
+        if bet_side == "over":
+            edge = predicted_total - total_line
         else:
-            bet_side = "under"
+            edge = total_line - predicted_total
 
-        # Get predicted total from features
-        predicted_total_1h = features.get("predicted_total_1h", 0.0)
-
-        # Calculate edge if 1H total line provided
-        edge = None
-        if first_half_total_line is not None:
-            if bet_side == "over":
-                edge = predicted_total_1h - first_half_total_line
-            else:
-                edge = first_half_total_line - predicted_total_1h
-
-        # Apply 1H total filter
-        passes_filter, filter_reason = self.first_half_filter.should_bet(
-            confidence=confidence,
-        )
+        passes_filter, filter_reason = self.first_half_filter.should_bet(confidence=confidence)
 
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
-            "predicted_total": predicted_total_1h,
+            "predicted_total": predicted_total,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge,
@@ -210,43 +183,48 @@ class TotalPredictor:
     def predict_first_quarter(
         self,
         features: Dict[str, float],
-        total_line: Optional[float] = None,
+        total_line: float,
     ) -> Dict[str, Any]:
-        model = self.fq_model or self.fh_model or self.fg_model
-        feature_columns = (
-            self.fq_feature_columns
-            if self.fq_model is not None
-            else self.fh_feature_columns
-            if self.fh_model is not None
-            else self.fg_feature_columns
-        )
+        """
+        Generate first quarter total prediction.
+
+        Args:
+            features: Feature dictionary (REQUIRED, must contain predicted_total_q1)
+            total_line: Vegas Q1 total line (REQUIRED)
+
+        Returns:
+            Prediction dictionary
+        """
+        # Validate required inputs
+        if "predicted_total_q1" not in features:
+            raise ValueError("predicted_total_q1 is REQUIRED in features for Q1 total predictions")
+
+        # Use Q1 model ONLY - no fallbacks
         feature_df = pd.DataFrame([features])
-        missing = set(feature_columns) - set(feature_df.columns)
+        missing = set(self.fq_feature_columns) - set(feature_df.columns)
         for col in missing:
             feature_df[col] = 0
-        X = feature_df[feature_columns]
-        total_proba = model.predict_proba(X)[0]
+        X = feature_df[self.fq_feature_columns]
+        total_proba = self.fq_model.predict_proba(X)[0]
+
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
         bet_side = "over" if over_prob > 0.5 else "under"
-        predicted_total_q1 = features.get("predicted_total_q1", features.get("predicted_total_1h", 0.0) / 2)
+        predicted_total = features["predicted_total_q1"]
 
-        edge = None
-        if total_line is not None:
-            if bet_side == "over":
-                edge = predicted_total_q1 - total_line
-            else:
-                edge = total_line - predicted_total_q1
+        # Calculate edge
+        if bet_side == "over":
+            edge = predicted_total - total_line
+        else:
+            edge = total_line - predicted_total
 
-        passes_filter, filter_reason = self.first_quarter_filter.should_bet(
-            confidence=confidence,
-        )
+        passes_filter, filter_reason = self.first_quarter_filter.should_bet(confidence=confidence)
 
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
-            "predicted_total": predicted_total_q1,
+            "predicted_total": predicted_total,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge,

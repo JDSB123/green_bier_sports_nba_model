@@ -1,11 +1,11 @@
 """
 Unified prediction engine composing all market predictors.
 
-Provides single interface for predicting all markets (spreads, totals, moneyline)
-across both full game and first half.
+STRICT MODE: No fallbacks, no silent failures. All models must exist.
+If a model is missing, initialization FAILS LOUDLY.
 """
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from src.prediction.spreads import SpreadPredictor
 from src.prediction.totals import TotalPredictor
@@ -21,69 +21,74 @@ from src.prediction.models import (
 )
 
 
+class ModelNotFoundError(Exception):
+    """Raised when a required model file is missing."""
+    pass
+
+
 class UnifiedPredictionEngine:
     """
     Unified prediction engine for all NBA betting markets.
 
-    Composes three market-specific predictors:
-    - SpreadPredictor (FG + 1H)
-    - TotalPredictor (FG + 1H)
-    - MoneylinePredictor (FG + 1H)
+    STRICT MODE:
+    - ALL models must exist at initialization
+    - NO fallbacks - 1H predictions require 1H models
+    - NO silent failures - missing model = crash
 
-    Each predictor has its own smart filtering based on backtest validation.
+    Supports 9 markets:
+    - Full Game: Spread, Total, Moneyline
+    - First Half: Spread, Total, Moneyline
+    - First Quarter: Spread, Total, Moneyline
     """
 
-    def __init__(
-        self,
-        models_dir: Path,
-        spread_predictor: Optional[SpreadPredictor] = None,
-        total_predictor: Optional[TotalPredictor] = None,
-        moneyline_predictor: Optional[MoneylinePredictor] = None,
-    ):
+    def __init__(self, models_dir: Path):
         """
         Initialize unified prediction engine.
 
         Args:
-            models_dir: Path to models directory
-            spread_predictor: SpreadPredictor instance (None = use defaults)
-            total_predictor: TotalPredictor instance (None = use defaults)
-            moneyline_predictor: MoneylinePredictor instance (None = use defaults)
+            models_dir: Path to models directory (must contain ALL required models)
+
+        Raises:
+            ModelNotFoundError: If ANY required model is missing
         """
-        self.models_dir = models_dir
+        self.models_dir = Path(models_dir)
+        
+        if not self.models_dir.exists():
+            raise ModelNotFoundError(
+                f"Models directory does not exist: {self.models_dir}\n"
+                f"Run: python scripts/train_models.py"
+            )
 
-        # Load FG models
-        fg_spread_model, fg_spread_features = load_spread_model(models_dir)
-        fg_total_model, fg_total_features = load_total_model(models_dir)
+        # Load ALL models - NO TRY/EXCEPT, FAIL IF MISSING
+        # Full Game models (REQUIRED)
+        fg_spread_model, fg_spread_features = self._load_required_model(
+            load_spread_model, "Full Game Spread"
+        )
+        fg_total_model, fg_total_features = self._load_required_model(
+            load_total_model, "Full Game Total"
+        )
 
-        # Load 1H models (if available)
-        try:
-            fh_spread_model, fh_spread_features = load_first_half_spread_model(models_dir)
-        except FileNotFoundError:
-            fh_spread_model, fh_spread_features = None, None
+        # First Half models (REQUIRED)
+        fh_spread_model, fh_spread_features = self._load_required_model(
+            load_first_half_spread_model, "First Half Spread"
+        )
+        fh_total_model, fh_total_features = self._load_required_model(
+            load_first_half_total_model, "First Half Total"
+        )
 
-        try:
-            fh_total_model, fh_total_features = load_first_half_total_model(models_dir)
-        except FileNotFoundError:
-            fh_total_model, fh_total_features = None, None
+        # First Quarter models (REQUIRED)
+        fq_spread_model, fq_spread_features = self._load_required_model(
+            load_first_quarter_spread_model, "First Quarter Spread"
+        )
+        fq_total_model, fq_total_features = self._load_required_model(
+            load_first_quarter_total_model, "First Quarter Total"
+        )
+        fq_moneyline_model, fq_moneyline_features = self._load_required_model(
+            load_first_quarter_moneyline_model, "First Quarter Moneyline"
+        )
 
-        # Load Q1 models (optional)
-        try:
-            fq_spread_model, fq_spread_features = load_first_quarter_spread_model(models_dir)
-        except FileNotFoundError:
-            fq_spread_model, fq_spread_features = None, None
-
-        try:
-            fq_total_model, fq_total_features = load_first_quarter_total_model(models_dir)
-        except FileNotFoundError:
-            fq_total_model, fq_total_features = None, None
-
-        try:
-            fq_moneyline_model, fq_moneyline_features = load_first_quarter_moneyline_model(models_dir)
-        except FileNotFoundError:
-            fq_moneyline_model, fq_moneyline_features = None, None
-
-        # Initialize market predictors
-        self.spread_predictor = spread_predictor or SpreadPredictor(
+        # Initialize predictors with EXPLICIT models - NO OR CHAINS
+        self.spread_predictor = SpreadPredictor(
             fg_model=fg_spread_model,
             fg_feature_columns=fg_spread_features,
             fh_model=fh_spread_model,
@@ -91,7 +96,7 @@ class UnifiedPredictionEngine:
             fq_model=fq_spread_model,
             fq_feature_columns=fq_spread_features,
         )
-        self.total_predictor = total_predictor or TotalPredictor(
+        self.total_predictor = TotalPredictor(
             fg_model=fg_total_model,
             fg_feature_columns=fg_total_features,
             fh_model=fh_total_model,
@@ -99,40 +104,49 @@ class UnifiedPredictionEngine:
             fq_model=fq_total_model,
             fq_feature_columns=fq_total_features,
         )
-        self.moneyline_predictor = moneyline_predictor or MoneylinePredictor(
-            model=fg_spread_model,  # Moneyline uses FG spread model
+        self.moneyline_predictor = MoneylinePredictor(
+            model=fg_spread_model,
             feature_columns=fg_spread_features,
-            fh_model=fh_spread_model or fg_spread_model,
-            fh_feature_columns=fh_spread_features or fg_spread_features,
-            fq_model=fq_moneyline_model or fh_spread_model or fg_spread_model,
-            fq_feature_columns=fq_moneyline_features or fh_spread_features or fg_spread_features,
+            fh_model=fh_spread_model,
+            fh_feature_columns=fh_spread_features,
+            fq_model=fq_moneyline_model,
+            fq_feature_columns=fq_moneyline_features,
         )
+
+    def _load_required_model(self, loader_func, model_name: str):
+        """Load a model - FAIL LOUDLY if missing."""
+        try:
+            return loader_func(self.models_dir)
+        except FileNotFoundError as e:
+            raise ModelNotFoundError(
+                f"REQUIRED MODEL MISSING: {model_name}\n"
+                f"Details: {e}\n"
+                f"Models directory: {self.models_dir}\n"
+                f"Run: python scripts/train_models.py"
+            ) from e
 
     def predict_full_game(
         self,
         features: Dict[str, float],
-        spread_line: Optional[float] = None,
-        total_line: Optional[float] = None,
-        home_ml_odds: Optional[int] = None,
-        away_ml_odds: Optional[int] = None,
+        spread_line: float,
+        total_line: float,
+        home_ml_odds: int,
+        away_ml_odds: int,
     ) -> Dict[str, Any]:
         """
         Generate predictions for all full game markets.
 
+        ALL INPUTS REQUIRED - no defaults, no None.
+
         Args:
-            features: Feature dictionary for the game
-            spread_line: Vegas FG spread line (home perspective)
-            total_line: Vegas FG total line
-            home_ml_odds: Home team moneyline odds (American)
-            away_ml_odds: Away team moneyline odds (American)
+            features: Feature dictionary (REQUIRED)
+            spread_line: Vegas FG spread line (REQUIRED)
+            total_line: Vegas FG total line (REQUIRED)
+            home_ml_odds: Home team moneyline odds (REQUIRED)
+            away_ml_odds: Away team moneyline odds (REQUIRED)
 
         Returns:
-            Dictionary with predictions for all FG markets:
-                {
-                    "spread": {...},
-                    "total": {...},
-                    "moneyline": {...}
-                }
+            Predictions for all FG markets
         """
         return {
             "spread": self.spread_predictor.predict_full_game(features, spread_line),
@@ -145,28 +159,25 @@ class UnifiedPredictionEngine:
     def predict_first_half(
         self,
         features: Dict[str, float],
-        spread_line: Optional[float] = None,
-        total_line: Optional[float] = None,
-        home_ml_odds: Optional[int] = None,
-        away_ml_odds: Optional[int] = None,
+        spread_line: float,
+        total_line: float,
+        home_ml_odds: int,
+        away_ml_odds: int,
     ) -> Dict[str, Any]:
         """
         Generate predictions for all first half markets.
 
+        ALL INPUTS REQUIRED - no defaults, no None.
+
         Args:
-            features: Feature dictionary for the game
-            spread_line: Vegas 1H spread line (home perspective)
-            total_line: Vegas 1H total line
-            home_ml_odds: Home team 1H moneyline odds (American)
-            away_ml_odds: Away team 1H moneyline odds (American)
+            features: Feature dictionary (REQUIRED)
+            spread_line: Vegas 1H spread line (REQUIRED)
+            total_line: Vegas 1H total line (REQUIRED)
+            home_ml_odds: Home team 1H moneyline odds (REQUIRED)
+            away_ml_odds: Away team 1H moneyline odds (REQUIRED)
 
         Returns:
-            Dictionary with predictions for all 1H markets:
-                {
-                    "spread": {...},
-                    "total": {...},
-                    "moneyline": {...}
-                }
+            Predictions for all 1H markets
         """
         return {
             "spread": self.spread_predictor.predict_first_half(features, spread_line),
@@ -179,13 +190,25 @@ class UnifiedPredictionEngine:
     def predict_first_quarter(
         self,
         features: Dict[str, float],
-        spread_line: Optional[float] = None,
-        total_line: Optional[float] = None,
-        home_ml_odds: Optional[int] = None,
-        away_ml_odds: Optional[int] = None,
+        spread_line: float,
+        total_line: float,
+        home_ml_odds: int,
+        away_ml_odds: int,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for first quarter markets.
+        Generate predictions for all first quarter markets.
+
+        ALL INPUTS REQUIRED - no defaults, no None.
+
+        Args:
+            features: Feature dictionary (REQUIRED)
+            spread_line: Vegas Q1 spread line (REQUIRED)
+            total_line: Vegas Q1 total line (REQUIRED)
+            home_ml_odds: Home team Q1 moneyline odds (REQUIRED)
+            away_ml_odds: Away team Q1 moneyline odds (REQUIRED)
+
+        Returns:
+            Predictions for all Q1 markets
         """
         return {
             "spread": self.spread_predictor.predict_first_quarter(features, spread_line),
@@ -198,55 +221,44 @@ class UnifiedPredictionEngine:
     def predict_all_markets(
         self,
         features: Dict[str, float],
-        # Full game lines
-        fg_spread_line: Optional[float] = None,
-        fg_total_line: Optional[float] = None,
-        fg_home_ml_odds: Optional[int] = None,
-        fg_away_ml_odds: Optional[int] = None,
-        # First half lines
-        fh_spread_line: Optional[float] = None,
-        fh_total_line: Optional[float] = None,
-        fh_home_ml_odds: Optional[int] = None,
-        fh_away_ml_odds: Optional[int] = None,
-        # First quarter lines
-        q1_spread_line: Optional[float] = None,
-        q1_total_line: Optional[float] = None,
-        q1_home_ml_odds: Optional[int] = None,
-        q1_away_ml_odds: Optional[int] = None,
+        # Full game lines - ALL REQUIRED
+        fg_spread_line: float,
+        fg_total_line: float,
+        fg_home_ml_odds: int,
+        fg_away_ml_odds: int,
+        # First half lines - ALL REQUIRED
+        fh_spread_line: float,
+        fh_total_line: float,
+        fh_home_ml_odds: int,
+        fh_away_ml_odds: int,
+        # First quarter lines - ALL REQUIRED
+        q1_spread_line: float,
+        q1_total_line: float,
+        q1_home_ml_odds: int,
+        q1_away_ml_odds: int,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for ALL markets (FG + 1H, spreads + totals + moneyline).
+        Generate predictions for ALL 9 markets.
+
+        ALL 12 LINE/ODDS PARAMETERS REQUIRED - no defaults, no None.
 
         Args:
-            features: Feature dictionary for the game
-            fg_spread_line: Vegas FG spread line (home perspective)
-            fg_total_line: Vegas FG total line
-            fg_home_ml_odds: Home team FG moneyline odds
-            fg_away_ml_odds: Away team FG moneyline odds
-            fh_spread_line: Vegas 1H spread line (home perspective)
-            fh_total_line: Vegas 1H total line
-            fh_home_ml_odds: Home team 1H moneyline odds
-            fh_away_ml_odds: Away team 1H moneyline odds
+            features: Feature dictionary (REQUIRED)
+            fg_spread_line: Vegas FG spread line (REQUIRED)
+            fg_total_line: Vegas FG total line (REQUIRED)
+            fg_home_ml_odds: Home team FG moneyline odds (REQUIRED)
+            fg_away_ml_odds: Away team FG moneyline odds (REQUIRED)
+            fh_spread_line: Vegas 1H spread line (REQUIRED)
+            fh_total_line: Vegas 1H total line (REQUIRED)
+            fh_home_ml_odds: Home team 1H moneyline odds (REQUIRED)
+            fh_away_ml_odds: Away team 1H moneyline odds (REQUIRED)
+            q1_spread_line: Vegas Q1 spread line (REQUIRED)
+            q1_total_line: Vegas Q1 total line (REQUIRED)
+            q1_home_ml_odds: Home team Q1 moneyline odds (REQUIRED)
+            q1_away_ml_odds: Away team Q1 moneyline odds (REQUIRED)
 
         Returns:
-            Dictionary with predictions for all markets:
-                {
-                    "full_game": {
-                        "spread": {...},
-                        "total": {...},
-                        "moneyline": {...}
-                    },
-                    "first_half": {
-                        "spread": {...},
-                        "total": {...},
-                        "moneyline": {...}
-                    },
-                    "first_quarter": {
-                        "spread": {...},
-                        "total": {...},
-                        "moneyline": {...}
-                    }
-                }
+            Predictions for all 9 markets (3 periods x 3 bet types)
         """
         return {
             "full_game": self.predict_full_game(
