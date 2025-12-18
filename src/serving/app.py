@@ -526,7 +526,7 @@ async def get_comprehensive_slate_analysis(
             from scripts.predict import extract_lines
             lines = extract_lines(game, home_team)
             engine_predictions = None
-            if all(k in lines for k in ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml"]):
+            if all(k in lines and lines[k] is not None for k in ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml"]):
                 try:
                     # Try to get all markets if first half lines are available
                     if all(k in lines and lines[k] is not None for k in ["fh_spread", "fh_total", "fh_home_ml", "fh_away_ml"]):
