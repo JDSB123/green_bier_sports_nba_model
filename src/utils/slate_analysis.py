@@ -138,6 +138,9 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
     # Collect all odds
     h2h_home = []
     h2h_away = []
+    # First half moneyline (h2h_h1)
+    fh_h2h_home = []
+    fh_h2h_away = []
     spreads_home = []
     spreads_away = []
     totals = []
@@ -164,6 +167,18 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                         price = out.get("price")
                         if price is not None:
                             h2h_away.append(price)
+
+            # First half moneyline market keys from API: "h2h_h1"
+            elif key and ("h2h" in key.lower()) and ("h1" in key.lower() or "1h" in key.lower() or "first_half" in key.lower()):
+                for out in outcomes:
+                    if out.get("name") == home_team:
+                        price = out.get("price")
+                        if price is not None:
+                            fh_h2h_home.append(price)
+                    elif out.get("name") == away_team:
+                        price = out.get("price")
+                        if price is not None:
+                            fh_h2h_away.append(price)
             
             elif key == "spreads":
                 for out in outcomes:
@@ -225,12 +240,16 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
     result = {
         "home_ml": None,
         "away_ml": None,
+        "fh_home_ml": None,
+        "fh_away_ml": None,
         "home_spread": None,
         "home_spread_price": None,
         "total": None,
         "total_price": None,
         "home_implied_prob": None,
         "away_implied_prob": None,
+        "fh_home_implied_prob": None,
+        "fh_away_implied_prob": None,
         "fh_home_spread": None,
         "fh_home_spread_price": None,
         "fh_total": None,
@@ -249,6 +268,19 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
             median_away = 1000 * (1 if median_away > 0 else -1)
         result["away_ml"] = int(median_away)
         result["away_implied_prob"] = american_to_implied_prob(result["away_ml"])
+
+    if fh_h2h_home:
+        median_home = statistics.median(fh_h2h_home)
+        if abs(median_home) > 2000:
+            median_home = 1000 * (1 if median_home > 0 else -1)
+        result["fh_home_ml"] = int(median_home)
+        result["fh_home_implied_prob"] = american_to_implied_prob(result["fh_home_ml"])
+    if fh_h2h_away:
+        median_away = statistics.median(fh_h2h_away)
+        if abs(median_away) > 2000:
+            median_away = 1000 * (1 if median_away > 0 else -1)
+        result["fh_away_ml"] = int(median_away)
+        result["fh_away_implied_prob"] = american_to_implied_prob(result["fh_away_ml"])
     
     if spreads_home:
         median_spread = statistics.median([s.get("point", 0) for s in spreads_home if s.get("point") is not None])

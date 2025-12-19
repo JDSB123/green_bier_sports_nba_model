@@ -342,8 +342,8 @@ async def get_slate_predictions(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="STRICT MODE: Engine not loaded - models missing")
 
-    # Resolve date
-    from scripts.predict import get_target_date, filter_games_for_date
+    # Resolve date (production source of truth)
+    from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
     try:
         target_date = get_target_date(date)
     except ValueError:
@@ -351,8 +351,8 @@ async def get_slate_predictions(
 
     # Fetch games
     try:
-        raw_games = await the_odds.fetch_odds()
-        games = filter_games_for_date(raw_games, target_date)
+        # Includes FG + 1H markets (1H via event-specific endpoint)
+        games = await fetch_todays_games(target_date)
     except Exception as e:
         logger.error(f"Error fetching odds: {e}")
         raise HTTPException(status_code=502, detail="Failed to fetch data from Odds API")
@@ -383,9 +383,18 @@ async def get_slate_predictions(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
 
-            # Extract lines - STRICT MODE requires all
-            from scripts.predict import extract_lines
-            lines = extract_lines(game, home_team)
+            # Extract consensus lines - STRICT MODE requires all
+            odds = extract_consensus_odds(game)
+            lines = {
+                "fg_spread": odds.get("home_spread"),
+                "fg_total": odds.get("total"),
+                "fg_home_ml": odds.get("home_ml"),
+                "fg_away_ml": odds.get("away_ml"),
+                "fh_spread": odds.get("fh_home_spread"),
+                "fh_total": odds.get("fh_total"),
+                "fh_home_ml": odds.get("fh_home_ml"),
+                "fh_away_ml": odds.get("fh_away_ml"),
+            }
             
             # Validate all lines present
             required_lines = ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml",
@@ -523,8 +532,17 @@ async def get_comprehensive_slate_analysis(
             betting_splits = splits_dict.get(game_key)
             
             # Get actual model predictions from engine (for moneyline - uses audited model)
-            from scripts.predict import extract_lines
-            lines = extract_lines(game, home_team)
+            # Use the same consensus lines as the edge output (single source of truth).
+            lines = {
+                "fg_spread": odds.get("home_spread"),
+                "fg_total": odds.get("total"),
+                "fg_home_ml": odds.get("home_ml"),
+                "fg_away_ml": odds.get("away_ml"),
+                "fh_spread": odds.get("fh_home_spread"),
+                "fh_total": odds.get("fh_total"),
+                "fh_home_ml": odds.get("fh_home_ml"),
+                "fh_away_ml": odds.get("fh_away_ml"),
+            }
             engine_predictions = None
             if all(k in lines and lines[k] is not None for k in ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml"]):
                 try:
