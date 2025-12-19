@@ -31,7 +31,7 @@ build/
 .env
 .env.local
 .env.*.local
-secrets/
+# secrets/ - REMOVED: secrets are baked into container at build time
 *.key
 *.pem
 

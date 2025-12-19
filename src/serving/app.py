@@ -448,6 +448,338 @@ async def get_slate_predictions(
     )
 
 
+def format_american_odds(odds: int) -> str:
+    """Format American odds with +/- prefix."""
+    if odds is None:
+        return "N/A"
+    return f"+{odds}" if odds > 0 else str(odds)
+
+
+def get_fire_rating(confidence: float, edge: float) -> str:
+    """
+    Get fire rating based on confidence and edge.
+    🔥🔥🔥 = Elite (conf >= 70% AND edge >= 5)
+    🔥🔥 = Strong (conf >= 60% AND edge >= 3)
+    🔥 = Good (passes filters)
+    """
+    if confidence >= 0.70 and abs(edge) >= 5:
+        return "🔥🔥🔥"
+    elif confidence >= 0.60 and abs(edge) >= 3:
+        return "🔥🔥"
+    else:
+        return "🔥"
+
+
+@app.get("/slate/{date}/executive")
+@limiter.limit("30/minute")
+async def get_executive_summary(
+    request: Request,
+    date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    use_splits: bool = Query(True, description="Whether to fetch and use betting splits")
+):
+    """
+    BLUF (Bottom Line Up Front) Executive Summary.
+    
+    Returns a clean actionable betting card with all picks that pass filters.
+    Sorted by game time, then fire rating.
+    """
+    if not hasattr(app.state, 'engine') or app.state.engine is None:
+        raise HTTPException(status_code=503, detail="v5.1: Engine not loaded - models missing")
+
+    from src.utils.slate_analysis import (
+        get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
+    )
+    from zoneinfo import ZoneInfo
+    
+    CST = ZoneInfo("America/Chicago")
+    
+    # Resolve date
+    try:
+        target_date = get_target_date(date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+
+    # Fetch games
+    games = await fetch_todays_games(target_date)
+    if not games:
+        return {
+            "date": str(target_date),
+            "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
+            "version": "5.1-FINAL",
+            "total_plays": 0,
+            "plays": [],
+            "summary": "No games scheduled"
+        }
+
+    # Fetch betting splits
+    splits_dict = {}
+    if use_splits:
+        try:
+            from src.ingestion.betting_splits import fetch_public_betting_splits
+            splits_dict = await fetch_public_betting_splits(games, source="auto")
+        except Exception as e:
+            logger.warning(f"Could not fetch splits: {e}")
+
+    # Process each game and collect plays
+    all_plays = []
+    
+    for game in games:
+        home_team = game.get("home_team")
+        away_team = game.get("away_team")
+        commence_time = game.get("commence_time")
+        
+        try:
+            # Parse time
+            game_dt = parse_utc_time(commence_time) if commence_time else None
+            game_cst = to_cst(game_dt) if game_dt else None
+            time_cst_str = game_cst.strftime("%m/%d %I:%M %p") if game_cst else "TBD"
+            
+            # Build features
+            game_key = f"{away_team}@{home_team}"
+            features = await app.state.feature_builder.build_game_features(
+                home_team, away_team, betting_splits=splits_dict.get(game_key)
+            )
+            
+            # Extract team records from features
+            home_games = features.get("home_games_played", 0)
+            away_games = features.get("away_games_played", 0)
+            home_win_pct = features.get("home_win_pct", 0.5)
+            away_win_pct = features.get("away_win_pct", 0.5)
+            home_wins = int(home_games * home_win_pct)
+            home_losses = home_games - home_wins
+            away_wins = int(away_games * away_win_pct)
+            away_losses = away_games - away_wins
+            
+            home_record = f"({home_wins}-{home_losses})"
+            away_record = f"({away_wins}-{away_losses})"
+            matchup_display = f"{away_team} {away_record} @ {home_team} {home_record}"
+            
+            # Extract odds
+            odds = extract_consensus_odds(game)
+            fg_spread = odds.get("home_spread")
+            fg_total = odds.get("total")
+            fh_spread = odds.get("fh_home_spread")
+            fh_total = odds.get("fh_total")
+            home_ml = odds.get("home_ml")
+            away_ml = odds.get("away_ml")
+            fh_home_ml = odds.get("fh_home_ml")
+            fh_away_ml = odds.get("fh_away_ml")
+            
+            if fg_spread is None or fg_total is None:
+                continue
+            
+            # Get predictions
+            preds = app.state.engine.predict_all_markets(
+                features,
+                fg_spread_line=fg_spread,
+                fg_total_line=fg_total,
+                fh_spread_line=fh_spread,
+                fh_total_line=fh_total,
+                home_ml_odds=home_ml,
+                away_ml_odds=away_ml,
+                fh_home_ml_odds=fh_home_ml,
+                fh_away_ml_odds=fh_away_ml,
+            )
+            
+            # Process Full Game markets
+            fg = preds.get("full_game", {})
+            
+            # FG Spread
+            fg_spread_pred = fg.get("spread", {})
+            if fg_spread_pred.get("passes_filter"):
+                bet_side = fg_spread_pred.get("bet_side", "home")
+                pick_team = home_team if bet_side == "home" else away_team
+                pick_line = fg_spread if bet_side == "home" else -fg_spread
+                pick_price = odds.get("home_spread_price", -110)
+                model_margin = features.get("predicted_margin", 0)
+                
+                all_plays.append({
+                    "time_cst": time_cst_str,
+                    "sort_time": game_cst.isoformat() if game_cst else "",
+                    "matchup": matchup_display,
+                    "period": "FG",
+                    "market": "SPREAD",
+                    "pick": f"{pick_team} {pick_line:+.1f}",
+                    "pick_odds": format_american_odds(pick_price),
+                    "model_prediction": f"{model_margin:+.1f} pts",
+                    "market_line": f"{fg_spread:+.1f}",
+                    "edge": f"{fg_spread_pred.get('edge', 0):+.1f} pts",
+                    "edge_raw": abs(fg_spread_pred.get('edge', 0)),
+                    "confidence": fg_spread_pred.get("confidence", 0),
+                    "fire_rating": get_fire_rating(fg_spread_pred.get("confidence", 0), fg_spread_pred.get("edge", 0))
+                })
+            
+            # FG Total
+            fg_total_pred = fg.get("total", {})
+            if fg_total_pred.get("passes_filter"):
+                bet_side = fg_total_pred.get("bet_side", "over")
+                model_total = features.get("predicted_total", 0)
+                pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {fg_total}"
+                
+                all_plays.append({
+                    "time_cst": time_cst_str,
+                    "sort_time": game_cst.isoformat() if game_cst else "",
+                    "matchup": matchup_display,
+                    "period": "FG",
+                    "market": "TOTAL",
+                    "pick": pick_display,
+                    "pick_odds": format_american_odds(odds.get("total_price", -110)),
+                    "model_prediction": f"{model_total:.1f}",
+                    "market_line": f"{fg_total}",
+                    "edge": f"{fg_total_pred.get('edge', 0):+.1f} pts",
+                    "edge_raw": abs(fg_total_pred.get('edge', 0)),
+                    "confidence": fg_total_pred.get("confidence", 0),
+                    "fire_rating": get_fire_rating(fg_total_pred.get("confidence", 0), fg_total_pred.get("edge", 0))
+                })
+            
+            # FG Moneyline
+            fg_ml_pred = fg.get("moneyline", {})
+            if fg_ml_pred.get("passes_filter"):
+                rec_bet = fg_ml_pred.get("recommended_bet")
+                if rec_bet:
+                    pick_team = home_team if rec_bet == "home" else away_team
+                    pick_odds_val = home_ml if rec_bet == "home" else away_ml
+                    model_prob = fg_ml_pred.get("home_win_prob", 0.5) if rec_bet == "home" else fg_ml_pred.get("away_win_prob", 0.5)
+                    market_prob = odds.get("home_implied_prob", 0.5) if rec_bet == "home" else odds.get("away_implied_prob", 0.5)
+                    edge_pct = fg_ml_pred.get("home_edge", 0) if rec_bet == "home" else fg_ml_pred.get("away_edge", 0)
+                    
+                    all_plays.append({
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "FG",
+                        "market": "ML",
+                        "pick": pick_team,
+                        "pick_odds": format_american_odds(pick_odds_val),
+                        "model_prediction": f"{model_prob*100:.1f}%",
+                        "market_line": f"{market_prob*100:.1f}%",
+                        "edge": f"{edge_pct*100:+.1f}%",
+                        "edge_raw": abs(edge_pct * 100),
+                        "confidence": fg_ml_pred.get("confidence", 0),
+                        "fire_rating": get_fire_rating(fg_ml_pred.get("confidence", 0), edge_pct * 100)
+                    })
+            
+            # Process First Half markets
+            fh = preds.get("first_half", {})
+            
+            # 1H Spread
+            fh_spread_pred = fh.get("spread", {})
+            if fh_spread_pred.get("passes_filter") and fh_spread is not None:
+                bet_side = fh_spread_pred.get("bet_side", "home")
+                pick_team = home_team if bet_side == "home" else away_team
+                pick_line = fh_spread if bet_side == "home" else -fh_spread
+                pick_price = odds.get("fh_home_spread_price", -110)
+                model_margin_1h = features.get("predicted_margin_1h", 0)
+                
+                all_plays.append({
+                    "time_cst": time_cst_str,
+                    "sort_time": game_cst.isoformat() if game_cst else "",
+                    "matchup": matchup_display,
+                    "period": "1H",
+                    "market": "SPREAD",
+                    "pick": f"{pick_team} {pick_line:+.1f}",
+                    "pick_odds": format_american_odds(pick_price),
+                    "model_prediction": f"{model_margin_1h:+.1f} pts",
+                    "market_line": f"{fh_spread:+.1f}",
+                    "edge": f"{fh_spread_pred.get('edge', 0):+.1f} pts",
+                    "edge_raw": abs(fh_spread_pred.get('edge', 0)),
+                    "confidence": fh_spread_pred.get("confidence", 0),
+                    "fire_rating": get_fire_rating(fh_spread_pred.get("confidence", 0), fh_spread_pred.get("edge", 0))
+                })
+            
+            # 1H Total
+            fh_total_pred = fh.get("total", {})
+            if fh_total_pred.get("passes_filter") and fh_total is not None:
+                bet_side = fh_total_pred.get("bet_side", "over")
+                model_total_1h = features.get("predicted_total_1h", 0)
+                pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {fh_total}"
+                
+                all_plays.append({
+                    "time_cst": time_cst_str,
+                    "sort_time": game_cst.isoformat() if game_cst else "",
+                    "matchup": matchup_display,
+                    "period": "1H",
+                    "market": "TOTAL",
+                    "pick": pick_display,
+                    "pick_odds": format_american_odds(odds.get("fh_total_price", -110)),
+                    "model_prediction": f"{model_total_1h:.1f}",
+                    "market_line": f"{fh_total}",
+                    "edge": f"{fh_total_pred.get('edge', 0):+.1f} pts",
+                    "edge_raw": abs(fh_total_pred.get('edge', 0)),
+                    "confidence": fh_total_pred.get("confidence", 0),
+                    "fire_rating": get_fire_rating(fh_total_pred.get("confidence", 0), fh_total_pred.get("edge", 0))
+                })
+            
+            # 1H Moneyline
+            fh_ml_pred = fh.get("moneyline", {})
+            if fh_ml_pred.get("passes_filter") and fh_home_ml is not None:
+                rec_bet = fh_ml_pred.get("recommended_bet")
+                if rec_bet:
+                    pick_team = home_team if rec_bet == "home" else away_team
+                    pick_odds_val = fh_home_ml if rec_bet == "home" else fh_away_ml
+                    model_prob = fh_ml_pred.get("home_win_prob", 0.5) if rec_bet == "home" else fh_ml_pred.get("away_win_prob", 0.5)
+                    market_prob = odds.get("fh_home_implied_prob", 0.5) if rec_bet == "home" else odds.get("fh_away_implied_prob", 0.5)
+                    edge_pct = fh_ml_pred.get("home_edge", 0) if rec_bet == "home" else fh_ml_pred.get("away_edge", 0)
+                    
+                    all_plays.append({
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "1H",
+                        "market": "ML",
+                        "pick": pick_team,
+                        "pick_odds": format_american_odds(pick_odds_val),
+                        "model_prediction": f"{model_prob*100:.1f}%",
+                        "market_line": f"{market_prob*100:.1f}%",
+                        "edge": f"{edge_pct*100:+.1f}%",
+                        "edge_raw": abs(edge_pct * 100),
+                        "confidence": fh_ml_pred.get("confidence", 0),
+                        "fire_rating": get_fire_rating(fh_ml_pred.get("confidence", 0), edge_pct * 100)
+                    })
+            
+        except Exception as e:
+            logger.error(f"Error processing {home_team} vs {away_team}: {e}")
+            continue
+    
+    # Sort by time, then by fire rating (descending), then by edge (descending)
+    fire_order = {"🔥🔥🔥": 3, "🔥🔥": 2, "🔥": 1}
+    all_plays.sort(key=lambda x: (x["sort_time"], -fire_order.get(x["fire_rating"], 0), -x["edge_raw"]))
+    
+    # Format for output - remove internal fields
+    formatted_plays = []
+    for play in all_plays:
+        formatted_plays.append({
+            "time_cst": play["time_cst"],
+            "matchup": play["matchup"],
+            "period": play["period"],
+            "market": play["market"],
+            "pick": play["pick"],
+            "pick_odds": play["pick_odds"],
+            "model_prediction": play["model_prediction"],
+            "market_line": play["market_line"],
+            "edge": play["edge"],
+            "confidence": f"{play['confidence']*100:.0f}%",
+            "fire_rating": play["fire_rating"]
+        })
+    
+    return convert_numpy_types({
+        "date": str(target_date),
+        "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
+        "version": "5.1-FINAL",
+        "total_plays": len(formatted_plays),
+        "plays": formatted_plays,
+        "legend": {
+            "fire_rating": {
+                "🔥🔥🔥": "ELITE - 70%+ confidence AND 5+ pt edge",
+                "🔥🔥": "STRONG - 60%+ confidence AND 3+ pt edge", 
+                "🔥": "GOOD - Passes all filters"
+            },
+            "periods": {"FG": "Full Game", "1H": "First Half"},
+            "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}
+        }
+    })
+
+
 @app.get("/slate/{date}/comprehensive")
 @limiter.limit("20/minute")
 async def get_comprehensive_slate_analysis(
