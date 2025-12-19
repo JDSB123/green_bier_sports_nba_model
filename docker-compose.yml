@@ -25,7 +25,7 @@ services:
   nba-v51-api:
     build:
       context: .
-      dockerfile: Dockerfile.v51
+      dockerfile: Dockerfile
     image: nba-v51-final:latest
     container_name: nba-v51-final
     
