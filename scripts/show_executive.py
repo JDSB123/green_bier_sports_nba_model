@@ -3,6 +3,7 @@
 import json
 import sys
 import urllib.request
+from collections import defaultdict
 
 # Fix Windows console encoding for emojis
 if sys.platform == 'win32':
@@ -20,6 +21,12 @@ def emoji_to_text(fire_rating: str) -> str:
         return "*GOOD*"
 
 
+def get_fire_tier(fire_rating: str) -> int:
+    """Get numeric tier for sorting (3=ELITE, 2=STRONG, 1=GOOD)."""
+    fire_count = fire_rating.count('🔥')
+    return fire_count if fire_count >= 1 else 1
+
+
 def main():
     url = "http://localhost:8090/slate/today/executive"
     
@@ -30,10 +37,62 @@ def main():
         print(f"Error fetching data: {e}")
         sys.exit(1)
     
+    plays = data['plays']
+    
+    # ==================== CONSOLIDATED SUMMARY ====================
     print()
+    print("=" * 100)
+    print(f"CONSOLIDATED SUMMARY - {data['date']} | {data['generated_at']}")
+    print("=" * 100)
+    
+    # Count by tier
+    elite_plays = [p for p in plays if get_fire_tier(p['fire_rating']) >= 3]
+    strong_plays = [p for p in plays if get_fire_tier(p['fire_rating']) == 2]
+    good_plays = [p for p in plays if get_fire_tier(p['fire_rating']) == 1]
+    
+    print(f"\nTOTAL PLAYS: {len(plays)}  |  ELITE: {len(elite_plays)}  |  STRONG: {len(strong_plays)}  |  GOOD: {len(good_plays)}")
+    print()
+    
+    # Top picks by tier
+    if elite_plays:
+        print("-" * 100)
+        print(">>> ELITE PICKS (Best Plays) <<<")
+        print("-" * 100)
+        for p in elite_plays:
+            matchup_short = p['matchup'].split('@')[0].strip()[:20] + " @ " + p['matchup'].split('@')[1].strip()[:20] if '@' in p['matchup'] else p['matchup'][:42]
+            print(f"  {p['time_cst']:<14} {matchup_short:<42} {p['period']:<3} {p['market']:<7} >> {p['pick']:<26} {p['pick_odds']:<6} | Edge: {p['edge']}")
+    
+    if strong_plays:
+        print()
+        print("-" * 100)
+        print(">>> STRONG PICKS <<<")
+        print("-" * 100)
+        for p in strong_plays:
+            matchup_short = p['matchup'].split('@')[0].strip()[:20] + " @ " + p['matchup'].split('@')[1].strip()[:20] if '@' in p['matchup'] else p['matchup'][:42]
+            print(f"  {p['time_cst']:<14} {matchup_short:<42} {p['period']:<3} {p['market']:<7} >> {p['pick']:<26} {p['pick_odds']:<6} | Edge: {p['edge']}")
+    
+    # Games summary
+    games = defaultdict(list)
+    for p in plays:
+        games[p['matchup']].append(p)
+    
+    print()
+    print("-" * 100)
+    print("PLAYS BY GAME:")
+    print("-" * 100)
+    for matchup, game_plays in games.items():
+        elite_count = len([p for p in game_plays if get_fire_tier(p['fire_rating']) >= 3])
+        strong_count = len([p for p in game_plays if get_fire_tier(p['fire_rating']) == 2])
+        time_cst = game_plays[0]['time_cst']
+        print(f"  {time_cst:<14} {matchup[:60]:<60} | {len(game_plays)} plays ({elite_count} ELITE, {strong_count} STRONG)")
+    
+    print()
+    print("=" * 100)
+    print()
+    
+    # ==================== DETAILED TABLE ====================
     print("=" * 140)
-    print(f"NBA EXECUTIVE BETTING CARD - {data['date']} | Generated: {data['generated_at']}")
-    print(f"v{data['version']} | Total Plays: {data['total_plays']}")
+    print(f"DETAILED BETTING CARD")
     print("=" * 140)
     print()
     
@@ -43,7 +102,7 @@ def main():
     print("-" * 140)
     
     # Plays
-    for play in data['plays']:
+    for play in plays:
         matchup = play['matchup'][:53]
         pick = play['pick'][:26]
         fire = emoji_to_text(play['fire_rating'])
