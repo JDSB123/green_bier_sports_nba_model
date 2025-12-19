@@ -112,6 +112,10 @@ def secret_exists(secret_name: str) -> bool:
     Returns:
         True if secret exists, False otherwise
     """
+    # Check baked-in secrets first (secrets baked into container)
+    if (BAKED_SECRETS_DIR / secret_name).exists():
+        return True
+    
     # Check Docker secrets
     if (DOCKER_SECRETS_DIR / secret_name).exists():
         return True
@@ -135,8 +139,12 @@ def get_secret_source(secret_name: str) -> str:
         secret_name: Name of the secret
     
     Returns:
-        Source description ("docker-secret", "local-file", "environment", or "not-found")
+        Source description ("baked-in", "docker-secret", "local-file", "environment", or "not-found")
     """
+    # Check baked-in secrets first (secrets baked into container)
+    if (BAKED_SECRETS_DIR / secret_name).exists():
+        return "baked-in"
+    
     if (DOCKER_SECRETS_DIR / secret_name).exists():
         return "docker-secret"
     
@@ -177,16 +185,25 @@ def read_secret_strict(secret_name: str) -> str:
     if baked_secret_path.exists() and baked_secret_path.is_file():
         try:
             value = baked_secret_path.read_text(encoding="utf-8").strip()
-            if value:
-                return value
+            if not value:
+                # File exists but is empty - fail loudly (NO FALLBACKS in strict mode)
+                raise SecretNotFoundError(
+                    f"Baked-in secret file exists but is empty: {secret_name}\n"
+                    f"File path: {baked_secret_path}\n"
+                    f"Required secret must contain a non-empty value"
+                )
+            return value
         except Exception as e:
+            # If it's already a SecretNotFoundError, re-raise it
+            if isinstance(e, SecretNotFoundError):
+                raise
             raise SecretNotFoundError(
                 f"Failed to read baked-in secret: {secret_name}\n"
                 f"File path: {baked_secret_path}\n"
                 f"Error: {e}"
             )
     
-    # Fallback to Docker secrets (for backward compatibility)
+    # Fallback to Docker secrets (for backward compatibility) - only if baked-in doesn't exist
     docker_secret_path = DOCKER_SECRETS_DIR / secret_name
     if docker_secret_path.exists() and docker_secret_path.is_file():
         try:

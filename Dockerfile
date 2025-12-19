@@ -94,10 +94,21 @@ RUN echo "=== NBA v5.1 FINAL Model Verification ===" && \
     echo "=== All 6 required models verified! ===" && \
     echo "" && \
     echo "=== Verifying baked-in secrets ===" && \
-    test -f /app/secrets/THE_ODDS_API_KEY && \
-    echo "  ✓ THE_ODDS_API_KEY" && \
-    test -f /app/secrets/API_BASKETBALL_KEY && \
-    echo "  ✓ API_BASKETBALL_KEY" && \
+    if test -f /app/secrets/THE_ODDS_API_KEY && test -s /app/secrets/THE_ODDS_API_KEY; then \
+        echo "  ✓ THE_ODDS_API_KEY (non-empty)"; \
+    else \
+        echo "ERROR: THE_ODDS_API_KEY missing or empty in /app/secrets/"; \
+        echo "Secrets must exist in ./secrets/ directory BEFORE building"; \
+        exit 1; \
+    fi && \
+    if test -f /app/secrets/API_BASKETBALL_KEY && test -s /app/secrets/API_BASKETBALL_KEY; then \
+        echo "  ✓ API_BASKETBALL_KEY (non-empty)"; \
+    else \
+        echo "ERROR: API_BASKETBALL_KEY missing or empty in /app/secrets/"; \
+        echo "Secrets must exist in ./secrets/ directory BEFORE building"; \
+        echo "Note: .example files are NOT valid secrets - actual key files required!"; \
+        exit 1; \
+    fi && \
     echo "=== All secrets verified! ==="
 
 # =============================================================================

@@ -13,7 +13,24 @@ This container is fully hardened for production deployment:
 
 ## Export Container for Distribution
 
-### Step 1: Build the Container
+### Step 1: Prepare Secrets (REQUIRED BEFORE BUILD)
+
+**IMPORTANT**: Secrets must exist in `./secrets/` directory BEFORE building the container.
+
+The Dockerfile copies secrets from `./secrets/` into the container. Only `.example` files are committed to git - you must create the actual secret files:
+
+```powershell
+# Create secrets directory (if it doesn't exist)
+if (-not (Test-Path secrets)) { New-Item -ItemType Directory -Path secrets }
+
+# Create actual API key files (replace with your real API keys)
+echo "your_actual_odds_api_key" | Out-File -FilePath secrets\THE_ODDS_API_KEY -Encoding utf8 -NoNewline
+echo "your_actual_basketball_api_key" | Out-File -FilePath secrets\API_BASKETBALL_KEY -Encoding utf8 -NoNewline
+```
+
+**CRITICAL**: The build will FAIL if these files don't exist or are empty. `.example` files are NOT valid secrets.
+
+### Step 2: Build the Container
 
 ```powershell
 docker compose build
@@ -21,14 +38,16 @@ docker compose build
 
 This creates the image: `nba-v51-final:latest`
 
-### Step 2: Export Container Image
+The build process will verify that both secret files exist and are non-empty before completing.
+
+### Step 3: Export Container Image
 
 ```powershell
 # Export as compressed tar.gz
 docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
 ```
 
-### Step 3: Package for Distribution
+### Step 4: Package for Distribution
 
 Include these files in your distribution package:
 
@@ -38,7 +57,7 @@ Include these files in your distribution package:
 
 **Note**: Secrets are BAKED INTO the container image - no separate secrets setup required!
 
-### Step 4: Load Container on Target System
+### Step 5: Load Container on Target System
 
 ```bash
 # Load the container image
@@ -48,7 +67,7 @@ docker load -i nba_v5.1_model_FINAL.tar.gz
 docker images | grep nba-v51-final
 ```
 
-### Step 5: Deploy Container
+### Step 6: Deploy Container
 
 **No secrets setup needed - they're already in the container!**
 
@@ -66,7 +85,7 @@ docker run -d `
   nba-v51-final:latest
 ```
 
-### Step 6: Verify Deployment
+### Step 7: Verify Deployment
 
 ```powershell
 # Check container status
@@ -129,7 +148,13 @@ The exported container includes:
 - Check API keys are valid
 - Review container logs for errors
 
-### Secrets not found
-- Secrets should be baked into container at `/app/secrets/`
-- Verify secrets were included at build time (check Dockerfile COPY command)
-- Rebuild container if secrets are missing
+### Build fails with "Required secret files missing or empty"
+- Ensure actual secret files exist in `./secrets/` before building (not just `.example` files)
+- Verify files are non-empty: `Get-Content secrets\THE_ODDS_API_KEY` should show your actual API key
+- Check that `.gitignore` in `secrets/` is not preventing files from being present locally
+- Note: Only `.example` files are in git - you must create actual secret files locally before building
+
+### Secrets not found at runtime
+- Secrets should be baked into container at `/app/secrets/` during build
+- If container starts but fails with SecretNotFoundError, secrets may have been missing/empty at build time
+- Rebuild container with valid secret files in `./secrets/` directory
