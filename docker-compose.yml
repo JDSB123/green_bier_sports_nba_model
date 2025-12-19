@@ -12,8 +12,8 @@
 # - Total: 58.1% accuracy, +11.4% ROI
 # - Moneyline: 63.0% accuracy, +19.8% ROI
 #
-# Build:   docker compose -f docker-compose.v51.yml build
-# Run:     docker compose -f docker-compose.v51.yml up -d
+# Build:   docker compose build
+# Run:     docker compose up -d
 # Export:  docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
 
 version: "3.8"

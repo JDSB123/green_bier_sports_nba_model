@@ -13,8 +13,9 @@
 # - Total: 58.1% accuracy, +11.4% ROI
 # - Moneyline: 63.0% accuracy, +19.8% ROI
 #
-# Build: docker build -f Dockerfile.v51 -t nba-v51-final:latest .
-# Run:   docker run -p 8090:8080 --read-only --tmpfs /tmp --env-file .env nba-v51-final:latest
+# Build: docker build -f Dockerfile -t nba-v51-final:latest .
+# Run:   docker compose up -d  (uses docker-compose.yml with read-only and secrets)
+# Export: docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
 
 # =============================================================================
 # Stage 1: Builder - Install dependencies
