@@ -3,9 +3,9 @@ NBA v5.0 BETA - FastAPI Prediction Server - STRICT MODE
 
 STRICT MODE: All inputs required. No fallbacks. No silent failures.
 
-6 BACKTESTED markets:
-- Full Game: Spread (60.6%), Total (59.2%), Moneyline (65.5%)
-- First Half: Spread (55.9%), Total (58.1%), Moneyline (63.0%)
+4 BACKTESTED markets:
+- Full Game: Spread (60.6%), Total (59.2%)
+- First Half: Spread (55.9%), Total (58.1%)
 """
 import os
 import json
@@ -80,13 +80,9 @@ class GamePredictionRequest(BaseModel):
     # Full game lines - REQUIRED
     fg_spread_line: float
     fg_total_line: float
-    fg_home_ml: int = Field(..., example=-150)
-    fg_away_ml: int = Field(..., example=130)
     # First half lines - REQUIRED
     fh_spread_line: float
     fh_total_line: float
-    fh_home_ml: int = Field(..., example=-130)
-    fh_away_ml: int = Field(..., example=110)
 
 
 class MarketPrediction(BaseModel):
@@ -112,7 +108,7 @@ class SlateResponse(BaseModel):
 
 app = FastAPI(
     title="NBA v5.0 BETA - STRICT MODE",
-    description="6 BACKTESTED markets. All inputs required. No fallbacks.",
+    description="4 BACKTESTED markets. All inputs required. No fallbacks.",
     version="5.0.0-strict"
 )
 
@@ -177,10 +173,20 @@ def startup_event():
     models_dir = _models_dir()
     logger.info(f"STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
     
+    # Diagnostic: List files in models directory
+    if models_dir.exists():
+        model_files = list(models_dir.glob("*"))
+        logger.info(f"Found {len(model_files)} files in models directory:")
+        for f in sorted(model_files):
+            size = f.stat().st_size if f.is_file() else 0
+            logger.info(f"  - {f.name} ({size:,} bytes)")
+    else:
+        logger.error(f"Models directory does not exist: {models_dir}")
+    
     # NO TRY/EXCEPT - Let it crash if models are missing
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
-    logger.info("NBA Prediction Engine initialized - 4 models loaded, 6 markets active")
+    logger.info("NBA Prediction Engine initialized - 4 models loaded, 4 markets active")
 
 
 # --- Endpoints ---
@@ -196,7 +202,7 @@ def health(request: Request):
     return {
         "status": "ok",
         "mode": "STRICT",
-        "markets": 6,
+        "markets": 4,
         "engine_loaded": engine_loaded,
         "season": settings.current_season,
         "api_keys": api_keys,
@@ -238,30 +244,17 @@ def verify_integrity(request: Request):
         # Check 2: Predictors exist
         has_spread = hasattr(app.state.engine, 'spread_predictor')
         has_total = hasattr(app.state.engine, 'total_predictor')
-        has_moneyline = hasattr(app.state.engine, 'moneyline_predictor')
         
         results["checks"]["predictors"] = {
             "spread": has_spread,
             "total": has_total,
-            "moneyline": has_moneyline
         }
         
-        if not (has_spread and has_total and has_moneyline):
+        if not (has_spread and has_total):
             results["status"] = "fail"
             results["errors"].append("Missing predictors")
         
-        # Check 3: Moneyline uses actual model
-        if has_moneyline:
-            ml_pred = app.state.engine.moneyline_predictor
-            has_model = hasattr(ml_pred, 'model') and ml_pred.model is not None
-            results["checks"]["moneyline_uses_model"] = has_model
-            if has_model:
-                results["checks"]["moneyline_model_type"] = type(ml_pred.model).__name__
-            else:
-                results["status"] = "fail"
-                results["errors"].append("Moneyline predictor missing model")
-        
-        # Check 4: Test prediction (verify it works)
+        # Check 3: Test prediction (verify it works)
         try:
             test_features = {
                 "home_ppg": 115.0, "away_ppg": 112.0,
@@ -279,26 +272,7 @@ def verify_integrity(request: Request):
                 features=test_features,
                 spread_line=-3.5,
                 total_line=225.0,
-                home_ml_odds=-150,
-                away_ml_odds=130,
             )
-            
-            # Verify moneyline has actual probabilities
-            if "moneyline" in test_pred:
-                ml = test_pred["moneyline"]
-                has_probs = "home_win_prob" in ml and "away_win_prob" in ml
-                results["checks"]["moneyline_has_probabilities"] = has_probs
-                if has_probs:
-                    home_prob = ml["home_win_prob"]
-                    away_prob = ml["away_win_prob"]
-                    probs_sum = abs(home_prob + away_prob - 1.0) < 0.01
-                    results["checks"]["moneyline_probabilities_valid"] = probs_sum
-                    if not probs_sum:
-                        results["status"] = "fail"
-                        results["errors"].append(f"Moneyline probabilities don't sum to 1.0: {home_prob} + {away_prob}")
-                else:
-                    results["status"] = "fail"
-                    results["errors"].append("Moneyline prediction missing probabilities")
             
             results["checks"]["test_prediction_works"] = True
             
@@ -388,17 +362,12 @@ async def get_slate_predictions(
             lines = {
                 "fg_spread": odds.get("home_spread"),
                 "fg_total": odds.get("total"),
-                "fg_home_ml": odds.get("home_ml"),
-                "fg_away_ml": odds.get("away_ml"),
                 "fh_spread": odds.get("fh_home_spread"),
                 "fh_total": odds.get("fh_total"),
-                "fh_home_ml": odds.get("fh_home_ml"),
-                "fh_away_ml": odds.get("fh_away_ml"),
             }
             
             # Validate all lines present
-            required_lines = ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml",
-                             "fh_spread", "fh_total", "fh_home_ml", "fh_away_ml"]
+            required_lines = ["fg_spread", "fg_total", "fh_spread", "fh_total"]
             missing = [k for k in required_lines if lines.get(k) is None]
             if missing:
                 logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - missing lines: {missing}")
@@ -409,18 +378,14 @@ async def get_slate_predictions(
                 features,
                 fg_spread_line=lines["fg_spread"],
                 fg_total_line=lines["fg_total"],
-                fg_home_ml_odds=lines["fg_home_ml"],
-                fg_away_ml_odds=lines["fg_away_ml"],
                 fh_spread_line=lines["fh_spread"],
                 fh_total_line=lines["fh_total"],
-                fh_home_ml_odds=lines["fh_home_ml"],
-                fh_away_ml_odds=lines["fh_away_ml"],
             )
 
             # Count plays
             game_plays = 0
             for period in ["full_game", "first_half"]:
-                for market in ["spread", "total", "moneyline"]:
+                for market in ["spread", "total"]:
                     if preds[period][market].get("passes_filter"):
                         game_plays += 1
             
@@ -486,7 +451,7 @@ async def get_comprehensive_slate_analysis(
     # Get edge thresholds
     edge_thresholds = get_edge_thresholds_for_game(
         game_date=target_date,
-        bet_types=["spread", "total", "moneyline", "1h_spread", "1h_total"]
+        bet_types=["spread", "total", "1h_spread", "1h_total"]
     )
 
     # Fetch games
@@ -531,33 +496,25 @@ async def get_comprehensive_slate_analysis(
             # Get betting splits for this game
             betting_splits = splits_dict.get(game_key)
             
-            # Get actual model predictions from engine (for moneyline - uses audited model)
+            # Get actual model predictions from engine
             # Use the same consensus lines as the edge output (single source of truth).
             lines = {
                 "fg_spread": odds.get("home_spread"),
                 "fg_total": odds.get("total"),
-                "fg_home_ml": odds.get("home_ml"),
-                "fg_away_ml": odds.get("away_ml"),
                 "fh_spread": odds.get("fh_home_spread"),
                 "fh_total": odds.get("fh_total"),
-                "fh_home_ml": odds.get("fh_home_ml"),
-                "fh_away_ml": odds.get("fh_away_ml"),
             }
             engine_predictions = None
-            if all(k in lines and lines[k] is not None for k in ["fg_spread", "fg_total", "fg_home_ml", "fg_away_ml"]):
+            if all(k in lines and lines[k] is not None for k in ["fg_spread", "fg_total"]):
                 try:
                     # Try to get all markets if first half lines are available
-                    if all(k in lines and lines[k] is not None for k in ["fh_spread", "fh_total", "fh_home_ml", "fh_away_ml"]):
+                    if all(k in lines and lines[k] is not None for k in ["fh_spread", "fh_total"]):
                         engine_predictions = app.state.engine.predict_all_markets(
                             features,
                             fg_spread_line=lines["fg_spread"],
                             fg_total_line=lines["fg_total"],
-                            fg_home_ml_odds=lines["fg_home_ml"],
-                            fg_away_ml_odds=lines["fg_away_ml"],
                             fh_spread_line=lines["fh_spread"],
                             fh_total_line=lines["fh_total"],
-                            fh_home_ml_odds=lines["fh_home_ml"],
-                            fh_away_ml_odds=lines["fh_away_ml"],
                         )
                     else:
                         # Only full game lines available - use predict_full_game
@@ -565,8 +522,6 @@ async def get_comprehensive_slate_analysis(
                             features,
                             spread_line=lines["fg_spread"],
                             total_line=lines["fg_total"],
-                            home_ml_odds=lines["fg_home_ml"],
-                            away_ml_odds=lines["fg_away_ml"],
                         )
                         engine_predictions = {
                             "full_game": fg_preds,
@@ -631,12 +586,8 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             features,
             fg_spread_line=req.fg_spread_line,
             fg_total_line=req.fg_total_line,
-            fg_home_ml_odds=req.fg_home_ml,
-            fg_away_ml_odds=req.fg_away_ml,
             fh_spread_line=req.fh_spread_line,
             fh_total_line=req.fh_total_line,
-            fh_home_ml_odds=req.fh_home_ml,
-            fh_away_ml_odds=req.fh_away_ml,
         )
         return preds
     except ValueError as e:

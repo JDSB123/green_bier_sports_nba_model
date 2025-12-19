@@ -33,7 +33,7 @@ COPY --chown=appuser:appuser scripts/ ./scripts/
 # Copy production model pack (baked into image for reproducibility)
 COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 
-# Verify model files exist (fail fast if missing)
+# Verify 4 REQUIRED model files exist (fail fast if missing)
 RUN ls -la /app/data/processed/models/ && \
     test -f /app/data/processed/models/spreads_model.joblib && \
     test -f /app/data/processed/models/totals_model.joblib && \
@@ -41,7 +41,10 @@ RUN ls -la /app/data/processed/models/ && \
     test -f /app/data/processed/models/first_half_spread_features.pkl && \
     test -f /app/data/processed/models/first_half_total_model.pkl && \
     test -f /app/data/processed/models/first_half_total_features.pkl && \
-    echo "✓ All required model files verified"
+    echo "✓ All 4 required model files verified (spreads, totals, 1H spread, 1H total)"
+
+# Copy verification script for runtime checks
+COPY --chown=appuser:appuser scripts/verify_container_startup.py /app/scripts/
 
 # Set environment variables
 ENV DATA_PROCESSED_DIR=/app/data/processed
