@@ -5,13 +5,12 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Load .env from project root (fallback for development)
-load_dotenv(PROJECT_ROOT / ".env")
+# NOTE: NO .env loading - Container uses Docker secrets ONLY (strict mode)
+# All required API keys MUST be in /run/secrets/ (mounted from ./secrets/)
+# Container will fail loudly if secrets are missing (no silent fallbacks)
 
 # Import secrets utility
 try:
