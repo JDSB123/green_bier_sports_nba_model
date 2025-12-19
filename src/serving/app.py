@@ -540,15 +540,11 @@ async def get_executive_summary(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            # Extract team records from features
-            home_games = features.get("home_games_played", 0)
-            away_games = features.get("away_games_played", 0)
-            home_win_pct = features.get("home_win_pct", 0.5)
-            away_win_pct = features.get("away_win_pct", 0.5)
-            home_wins = int(home_games * home_win_pct)
-            home_losses = home_games - home_wins
-            away_wins = int(away_games * away_win_pct)
-            away_losses = away_games - away_wins
+            # Extract team records from features (use raw wins/losses to avoid rounding errors)
+            home_wins = features.get("home_wins", 0)
+            home_losses = features.get("home_losses", 0)
+            away_wins = features.get("away_wins", 0)
+            away_losses = features.get("away_losses", 0)
             
             home_record = f"({home_wins}-{home_losses})"
             away_record = f"({away_wins}-{away_losses})"
