@@ -89,3 +89,6 @@ azure/function_app/local.settings.json
 azure/function_app/.python_packages/
 azure/function_app/__pycache__/
 azure/.vscode/
+
+# Container exports (too large for git)
+export/

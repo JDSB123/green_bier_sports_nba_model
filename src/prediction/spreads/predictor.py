@@ -1,10 +1,10 @@
 """
 Spread prediction logic (Full Game + First Half).
 
+NBA v5.1 FINAL: All 6 markets required.
 STRICT MODE: No fallbacks. Each market requires its own trained model.
-Only BACKTESTED markets supported: FG and 1H.
 """
-from typing import Dict, Any
+from typing import Dict, Any, List
 import pandas as pd
 
 from src.prediction.spreads.filters import (
@@ -18,18 +18,16 @@ class SpreadPredictor:
     """
     Handles spread predictions for Full Game and First Half.
 
-    STRICT MODE:
-    - Each market uses its OWN dedicated model
-    - NO fallbacks to other models
-    - Missing model = immediate failure
+    NBA v5.1 FINAL: Both FG and 1H models required.
+    STRICT MODE: Missing model = immediate failure.
     """
 
     def __init__(
         self,
         fg_model,
-        fg_feature_columns: list,
+        fg_feature_columns: List[str],
         fh_model,
-        fh_feature_columns: list,
+        fh_feature_columns: List[str],
     ):
         """
         Initialize spread predictor with ALL required models.
@@ -41,9 +39,9 @@ class SpreadPredictor:
             fh_feature_columns: 1H feature column names (REQUIRED)
 
         Raises:
-            ValueError: If any required model or features are None
+            ValueError: If any model or features are None
         """
-        # Validate ALL inputs - NO NONE ALLOWED
+        # Validate ALL inputs - REQUIRED
         if fg_model is None:
             raise ValueError("fg_model is REQUIRED - cannot be None")
         if fg_feature_columns is None:
@@ -145,8 +143,8 @@ class SpreadPredictor:
         away_cover_prob = float(spread_proba[0])
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
-        predicted_margin = features.get("predicted_margin_1h", features.get("predicted_margin", 0) * 0.48)
-        edge = predicted_margin - spread_line
+        predicted_margin_1h = features.get("predicted_margin_1h", features.get("predicted_margin", 0) * 0.48)
+        edge = predicted_margin_1h - spread_line
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(
             spread_line=spread_line,

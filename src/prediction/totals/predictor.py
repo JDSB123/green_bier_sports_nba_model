@@ -1,10 +1,10 @@
 """
 Totals prediction logic (Full Game + First Half).
 
+NBA v5.1 FINAL: All 6 markets required.
 STRICT MODE: No fallbacks. Each market requires its own trained model.
-Only BACKTESTED markets supported: FG and 1H.
 """
-from typing import Dict, Any
+from typing import Dict, Any, List
 import pandas as pd
 
 from src.prediction.totals.filters import (
@@ -16,20 +16,18 @@ from src.prediction.confidence import calculate_confidence_from_probabilities
 
 class TotalPredictor:
     """
-    Totals predictor for Full Game and First Half markets.
+    Totals predictor for Full Game and First Half.
 
-    STRICT MODE:
-    - Each market uses its OWN dedicated model
-    - NO fallbacks to other models
-    - Missing model = immediate failure
+    NBA v5.1 FINAL: Both FG and 1H models required.
+    STRICT MODE: Missing model = immediate failure.
     """
 
     def __init__(
         self,
         fg_model,
-        fg_feature_columns: list,
+        fg_feature_columns: List[str],
         fh_model,
-        fh_feature_columns: list,
+        fh_feature_columns: List[str],
     ):
         """
         Initialize totals predictor with ALL required models.
@@ -41,9 +39,9 @@ class TotalPredictor:
             fh_feature_columns: 1H feature column names (REQUIRED)
 
         Raises:
-            ValueError: If any required model or features are None
+            ValueError: If any model or features are None
         """
-        # Validate ALL inputs - NO NONE ALLOWED
+        # Validate ALL inputs - REQUIRED
         if fg_model is None:
             raise ValueError("fg_model is REQUIRED - cannot be None")
         if fg_feature_columns is None:
@@ -147,13 +145,13 @@ class TotalPredictor:
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
         bet_side = "over" if over_prob > 0.5 else "under"
-        predicted_total = features.get("predicted_total_1h", features.get("predicted_total", 220) * 0.49)
+        predicted_total_1h = features.get("predicted_total_1h", features.get("predicted_total", 220) * 0.49)
 
         # Calculate edge
         if bet_side == "over":
-            edge = predicted_total - total_line
+            edge = predicted_total_1h - total_line
         else:
-            edge = total_line - predicted_total
+            edge = total_line - predicted_total_1h
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(confidence=confidence)
 

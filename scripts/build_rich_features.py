@@ -50,9 +50,14 @@ class RichFeatureBuilder:
         self._stats_cache: Dict[int, Dict] = {}
         self._games_cache: Optional[List[Dict]] = None
         
-        # Ensure cache directory exists
+        # Ensure cache directory exists (use /tmp if main cache is read-only)
         self.cache_dir = os.path.join(settings.data_processed_dir, "cache")
-        os.makedirs(self.cache_dir, exist_ok=True)
+        try:
+            os.makedirs(self.cache_dir, exist_ok=True)
+        except OSError:
+            # Fall back to /tmp for read-only filesystems (Docker production)
+            self.cache_dir = "/tmp/nba_cache"
+            os.makedirs(self.cache_dir, exist_ok=True)
         
     async def get_team_id(self, team_name: str) -> int:
         """Get team ID from name, with caching."""

@@ -1,7 +1,10 @@
 """
 Model loading and management for predictions.
 
-Only BACKTESTED models: FG and 1H (4 models total).
+NBA v5.1 FINAL: FG-only markets (3 models):
+- Spread (60.6% acc)
+- Total (59.2% acc)
+- Moneyline (65.5% acc)
 """
 from pathlib import Path
 from typing import Tuple, Any, List
@@ -150,4 +153,48 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     return model, feature_cols
 
+
+def load_moneyline_model(models_dir: Path) -> Tuple[Any, List[str]]:
+    """
+    Load FG moneyline model with feature columns.
+    
+    NBA v5.1: Proven ROE 65.5% accuracy, +25.1% ROI
+    
+    Args:
+        models_dir: Path to models directory
+        
+    Returns:
+        Tuple of (model, feature_columns)
+        
+    Raises:
+        FileNotFoundError: If model not found
+    """
+    # Try to get active version from tracker
+    tracker = ModelTracker()
+    ml_version = tracker.get_active_version("moneyline")
+    model_path = None
+    
+    if ml_version:
+        info = tracker.get_version_info(ml_version)
+        if info and info.get("file_path"):
+            candidate = models_dir / info["file_path"]
+            if candidate.exists():
+                model_path = candidate
+    
+    # Fallback to standard names
+    if model_path is None:
+        model_path = models_dir / "moneyline_model.joblib"
+        if not model_path.exists():
+            model_path = models_dir / "moneyline_model.pkl"
+    
+    if not model_path.exists():
+        raise FileNotFoundError(f"Moneyline model not found in {models_dir}")
+    
+    model_data = joblib.load(model_path)
+    
+    # Support both formats
+    model = model_data.get("pipeline") or model_data.get("model")
+    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+    
+    return model, feature_cols
 
