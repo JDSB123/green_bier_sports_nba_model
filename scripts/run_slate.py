@@ -150,10 +150,31 @@ def format_odds(odds: int) -> str:
 
 
 def _match_game(game: dict, matchup_filter: str) -> bool:
-    """Match on single team name or 'teamA vs teamB' style strings."""
+    """Match on one or more matchup filters.
+
+    Supports:
+    - Single team: "Lakers"
+    - Specific matchup: "Lakers vs Celtics" / "Celtics @ Lakers"
+    - Multiple filters: "Lakers, Celtics @ Knicks, Heat"
+    """
     home = (game.get("home_team") or "").lower()
     away = (game.get("away_team") or "").lower()
-    raw = (matchup_filter or "").strip().lower()
+    raw = (matchup_filter or "").strip()
+    if not raw:
+        return True
+
+    # Multiple filters separated by commas: match ANY
+    filters = [f.strip().lower() for f in raw.split(",") if f.strip()]
+    if not filters:
+        return True
+    for f in filters:
+        if _match_single_filter(home=home, away=away, raw=f):
+            return True
+    return False
+
+
+def _match_single_filter(*, home: str, away: str, raw: str) -> bool:
+    """Match one filter against one game (home/away already lowercased)."""
     if not raw:
         return True
 

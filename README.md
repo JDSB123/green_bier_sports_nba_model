@@ -28,20 +28,13 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ## Architecture Overview
 
 **All prediction/model computation runs through Docker containers.**
-`scripts/run_slate.py` is a local *orchestrator* (starts the stack and calls the API); it does not run models locally.
+`scripts/run_slate.py` is a thin local *orchestrator* (starts the container and calls the API); it does not run models locally.
 
 ### Services (Docker Compose)
 
 | Service | Port | Purpose |
 |---------|------|---------|
 | `strict-api` | 8090 | **Main prediction API** - FastAPI with 6 backtested markets |
-| `prediction-service` | 8082 | ML inference service |
-| `api-gateway` | 8080 | Unified REST API gateway |
-| `feature-store` | 8081 | Feature serving (Go) |
-| `line-movement-analyzer` | 8084 | RLM detection (Go) |
-| `schedule-poller` | 8085 | Game schedule aggregation (Go) |
-| `postgres` | 5432 | TimescaleDB for time-series data |
-| `redis` | 6379 | Caching and pub/sub |
 
 ### Backtest Services (On-Demand)
 
@@ -90,7 +83,6 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
    # REQUIRED - System will not start without these
    THE_ODDS_API_KEY=your_key_here
    API_BASKETBALL_KEY=your_key_here
-   DB_PASSWORD=your_secure_password_min_12_chars
    
    # OPTIONAL - For production API authentication
    SERVICE_API_KEY=your_service_api_key
@@ -99,24 +91,21 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
    
    **Note:** The system prefers Docker secrets over `.env` files. See [`docs/DOCKER_SECRETS.md`](docs/DOCKER_SECRETS.md) for full secrets guide.
 
-### Running the Stack
+### Running Production
 
-**Start all services:**
+**Start the production container:**
 ```powershell
 docker compose up -d
 ```
 
-**Check service health:**
+**Check health:**
 ```powershell
 curl http://localhost:8090/health   # Main API
-curl http://localhost:8080/health   # Gateway
-curl http://localhost:8082/health   # Prediction service
 ```
 
 **View logs:**
 ```powershell
 docker compose logs -f strict-api
-docker compose logs -f prediction-service
 ```
 
 **Stop all services:**
@@ -200,20 +189,12 @@ This script connects to the running Docker container and generates comprehensive
 
 ```
 nba_v5.0_BETA/
-├── services/                    # Microservices (Go, Rust, Python)
-│   ├── api-gateway-go/
-│   ├── feature-store-go/
-│   ├── line-movement-analyzer-go/
-│   ├── schedule-poller-go/
-│   ├── odds-ingestion-rust/
-│   └── prediction-service-python/
 ├── src/                         # Core Python prediction code
 │   ├── ingestion/               # Data ingestion modules
 │   ├── modeling/                # ML models and features
 │   ├── prediction/              # Prediction engine
 │   └── serving/                 # FastAPI app (containerized)
 ├── scripts/                     # Utility scripts (run via containers)
-├── database/                    # SQL migrations
 ├── docker-compose.yml           # Main stack
 ├── docker-compose.backtest.yml  # Backtest stack
 ├── Dockerfile                   # Main API container
@@ -256,7 +237,7 @@ Optional:
 
 The system includes comprehensive security hardening:
 
-- ✅ **Docker Secrets** - Production-grade secret management (Swarm & Compose)
+- ✅ **Docker Secrets** - Production-grade secret management (Compose-mounted secret files)
 - ✅ **API Key Validation** - Fails fast if keys missing at startup
 - ✅ **Optional API Authentication** - Protect endpoints with API keys
 - ✅ **Circuit Breakers** - Prevent cascading API failures

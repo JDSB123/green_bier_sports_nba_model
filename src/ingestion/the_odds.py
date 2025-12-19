@@ -448,3 +448,61 @@ async def fetch_betting_splits(
         splits = data.get("data", [])
         logger.info(f"Successfully fetched betting splits for {len(splits)} games")
         return splits
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+)
+async def fetch_participants(
+    sport: str = "basketball_nba",
+    standardize: bool = True,
+) -> List[Dict[str, Any]]:
+    """
+    Fetch participants (teams) from The Odds API.
+    
+    This endpoint provides a reference list of all participants (teams) 
+    in the sport, useful for team name standardization and validation.
+    
+    Args:
+        sport: Sport identifier
+        standardize: If True, standardize team names to ESPN format
+    
+    Returns:
+        List of participant dictionaries with team information
+    """
+    logger.info(f"Fetching participants for {sport}")
+    params = {
+        "apiKey": settings.the_odds_api_key,
+        "dateFormat": "iso",
+    }
+    async with httpx.AsyncClient(timeout=30) as client:
+        url = f"{settings.the_odds_base_url}/sports/{sport}/participants"
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        
+        participants = data if isinstance(data, list) else data.get("data", [])
+        logger.info(f"Successfully fetched {len(participants)} participants")
+        
+        # Standardize team names if requested
+        if standardize:
+            standardized_participants = []
+            for participant in participants:
+                try:
+                    name = participant.get("name") or participant.get("team") or participant.get("id")
+                    if name:
+                        from src.ingestion.standardize import normalize_team_to_espn
+                        standardized_name, is_valid = normalize_team_to_espn(str(name), source="the_odds")
+                        if is_valid:
+                            participant["name"] = standardized_name
+                            participant["name_standardized"] = True
+                        else:
+                            participant["name_standardized"] = False
+                    standardized_participants.append(participant)
+                except Exception as e:
+                    logger.warning(f"Error standardizing participant {participant.get('name', 'N/A')}: {e}")
+                    standardized_participants.append(participant)
+            return standardized_participants
+        
+        return participants

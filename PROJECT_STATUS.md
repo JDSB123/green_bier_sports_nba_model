@@ -11,18 +11,11 @@
 
 ## 🐳 Docker Stack
 
-### Main Services (`docker compose up -d`)
+### Production (`docker compose up -d`)
 
 | Service | Port | Status |
 |---------|------|--------|
 | `strict-api` | 8090 | ✅ Production ready - Main prediction API |
-| `prediction-service` | 8082 | ✅ Working |
-| `api-gateway` | 8080 | ✅ Working |
-| `feature-store` | 8081 | ✅ Scaffolded |
-| `line-movement-analyzer` | 8084 | ✅ Scaffolded |
-| `schedule-poller` | 8085 | ✅ Scaffolded |
-| `postgres` | 5432 | ✅ TimescaleDB |
-| `redis` | 6379 | ✅ Working |
 
 ### Backtest Services (`docker compose -f docker-compose.backtest.yml`)
 
@@ -69,7 +62,7 @@ curl http://localhost:8090/slate/today
 
 **Full analysis:**
 ```powershell
-python scripts/analyze_slate_docker.py --date today
+python scripts/run_slate.py --date today
 ```
 
 **Run backtest:**
@@ -98,8 +91,8 @@ docker compose down
 
 ## ⚠️ Important Notes
 
-1. **No local Python execution** - Everything runs in containers
-2. **Use `analyze_slate_docker.py`** - Legacy scripts are disabled
+1. **Models run in containers** - `scripts/run_slate.py` is a thin local orchestrator
+2. **Use `run_slate.py` / `run.ps1`** - Single source of truth for production picks
 3. **API keys required** - Set in `.env` before starting
 
 ---

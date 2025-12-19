@@ -147,7 +147,7 @@ class TotalPredictor:
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
         bet_side = "over" if over_prob > 0.5 else "under"
-        predicted_total = features["predicted_total_1h"]
+        predicted_total = features.get("predicted_total_1h", features.get("predicted_total", 220) * 0.49)
 
         # Calculate edge
         if bet_side == "over":
@@ -160,7 +160,7 @@ class TotalPredictor:
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
-            "predicted_total": predicted_total,
+            "predicted_total": predicted_total_1h,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge,

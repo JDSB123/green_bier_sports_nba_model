@@ -1,17 +1,33 @@
-# NBA v5.0 BETA - Production Docker Compose
 #
-# ⚠️  DEPRECATED: This multi-service compose file has been replaced by a single-container production image.
+# NBA v5.0 BETA - Production (Single Container)
 #
-# For production use, run:
-#   ./run.ps1
+# This compose file intentionally runs ONLY the production inference API.
+# Backtesting is intentionally separated into docker-compose.backtest.yml.
 #
-# This builds and runs the hardened `nba-strict-api` Docker image with all models baked-in.
-# No postgres/redis/microservices required.
+# Start production:
+#   docker compose up -d
 #
-# The archived multi-service compose is available in DEPRECATED_docker-compose/ for reference.
+# Hit API:
+#   http://localhost:8090/health
+#   http://localhost:8090/slate/today
 #
-# For backtesting (development), use:
-#   docker compose -f docker-compose.backtest.yml up backtest-full
-
-# This file is kept for backwards compatibility but should not be used for production.
-# See DEPRECATED_docker-compose/docker-compose.yml for the original multi-service configuration.
+services:
+  strict-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nba-strict-api:latest
+    container_name: nba-api
+    ports:
+      - "8090:8080"
+    env_file:
+      - .env
+    volumes:
+      # Optional: local secrets folder (safe if empty)
+      - ./secrets:/run/secrets:ro
+    environment:
+      # Allow runtime overrides (optional)
+      - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8090}
+      - DATA_PROCESSED_DIR=/app/data/processed
+    restart: unless-stopped

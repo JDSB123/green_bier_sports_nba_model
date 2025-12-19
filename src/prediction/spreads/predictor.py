@@ -145,7 +145,7 @@ class SpreadPredictor:
         away_cover_prob = float(spread_proba[0])
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
-        predicted_margin = features["predicted_margin_1h"]
+        predicted_margin = features.get("predicted_margin_1h", features.get("predicted_margin", 0) * 0.48)
         edge = predicted_margin - spread_line
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(
@@ -156,7 +156,7 @@ class SpreadPredictor:
         return {
             "home_cover_prob": home_cover_prob,
             "away_cover_prob": away_cover_prob,
-            "predicted_margin": predicted_margin,
+            "predicted_margin": predicted_margin_1h,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge,

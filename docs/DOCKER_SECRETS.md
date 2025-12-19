@@ -10,8 +10,7 @@
 NBA v5.0 BETA now supports Docker secrets for secure API key and credential management. This provides a production-grade solution for managing sensitive data.
 
 **Features:**
-- ✅ Docker Swarm secrets (production)
-- ✅ Docker Compose secret files (development)
+- ✅ Secret files mounted into containers (`./secrets` → `/run/secrets`)
 - ✅ Automatic fallback to environment variables
 - ✅ Secret management scripts
 - ✅ Never committed to version control
@@ -24,17 +23,14 @@ NBA v5.0 BETA now supports Docker secrets for secure API key and credential mana
 
 The application reads secrets in this order:
 
-1. **Docker Swarm secrets** (`/run/secrets/{name}`) - Production
-2. **Docker Compose secret files** (`/run/secrets/{name}`) - Development
-3. **Local secret files** (`./secrets/{name}`) - Local development
-4. **Environment variables** (`{NAME}`) - Fallback
-5. **Default value** - If none found
+1. **Mounted secret files** (`/run/secrets/{name}`) - Compose/local
+2. **Environment variables** (`{NAME}`) - Fallback
+3. **Default value** - If none found
 
 ### Secret Sources
 
 | Source | Use Case | Location |
 |--------|----------|----------|
-| Docker Swarm Secrets | Production deployment | `/run/secrets/` (in container) |
 | Secret Files (Compose) | Development/testing | `./secrets/` (mounted to `/run/secrets/`) |
 | Environment Variables | Quick setup | `.env` file or shell environment |
 
@@ -57,7 +53,6 @@ The application reads secrets in this order:
    # Create secret files (one per secret)
    echo "your_odds_api_key_here" > secrets\THE_ODDS_API_KEY
    echo "your_basketball_api_key_here" > secrets\API_BASKETBALL_KEY
-   echo "your_secure_password" > secrets\DB_PASSWORD
    ```
 
 3. **Start the stack:**
@@ -66,35 +61,6 @@ The application reads secrets in this order:
    ```
 
    Secrets are automatically mounted from `./secrets/` to `/run/secrets/` in containers.
-
-### Production (Docker Swarm)
-
-1. **Initialize Swarm (if not already):**
-   ```powershell
-   docker swarm init
-   ```
-
-2. **Create secrets in Swarm:**
-   ```powershell
-   # Create secrets from secret files
-   python scripts/manage_secrets.py create-swarm
-   
-   # Or create manually:
-   echo "your_key" | docker secret create THE_ODDS_API_KEY -
-   echo "your_key" | docker secret create API_BASKETBALL_KEY -
-   echo "your_password" | docker secret create DB_PASSWORD -
-   ```
-
-3. **Deploy the stack:**
-   ```powershell
-   docker stack deploy -c docker-compose.swarm.yml nba
-   ```
-
-4. **Check services:**
-   ```powershell
-   docker stack services nba
-   docker service logs nba_strict-api
-   ```
 
 ---
 
@@ -107,11 +73,6 @@ The `scripts/manage_secrets.py` script provides utilities for managing secrets:
 **Create secrets from .env file:**
 ```powershell
 python scripts/manage_secrets.py create-from-env
-```
-
-**Create Docker Swarm secrets:**
-```powershell
-python scripts/manage_secrets.py create-swarm
 ```
 
 **List all secret files:**
@@ -132,7 +93,6 @@ python scripts/manage_secrets.py validate
 |-------------|-------------|----------|
 | `THE_ODDS_API_KEY` | The Odds API key | ✅ Yes |
 | `API_BASKETBALL_KEY` | API-Basketball key | ✅ Yes |
-| `DB_PASSWORD` | Database password | ✅ Yes |
 
 ### Optional Secrets
 
@@ -193,7 +153,7 @@ del .env
 
 ## Docker Compose Configuration
 
-The `docker-compose.yml` file mounts secrets as volumes:
+The `docker-compose.yml` file mounts secrets as a volume:
 
 ```yaml
 volumes:
@@ -201,45 +161,6 @@ volumes:
 ```
 
 Services automatically read from `/run/secrets/` in the container.
-
-### Example Service Configuration
-
-```yaml
-strict-api:
-  volumes:
-    - ./secrets:/run/secrets:ro
-  environment:
-    # Secrets take precedence over env vars
-    - THE_ODDS_API_KEY=${THE_ODDS_API_KEY:-}
-```
-
----
-
-## Docker Swarm Configuration
-
-The `docker-compose.swarm.yml` file uses native Docker secrets:
-
-```yaml
-services:
-  strict-api:
-    secrets:
-      - THE_ODDS_API_KEY
-      - API_BASKETBALL_KEY
-
-secrets:
-  THE_ODDS_API_KEY:
-    external: true  # Must be created in Swarm first
-```
-
-### Creating Swarm Secrets
-
-```powershell
-# From secret files
-python scripts/manage_secrets.py create-swarm
-
-# Or manually
-cat secrets/THE_ODDS_API_KEY | docker secret create THE_ODDS_API_KEY -
-```
 
 ---
 
@@ -287,19 +208,13 @@ The management script sets these automatically.
 ```powershell
 # Update secret file
 echo "new_key" > secrets/THE_ODDS_API_KEY
-
-# For Swarm, update the secret
-echo "new_key" | docker secret create THE_ODDS_API_KEY_new -
-# Update service to use new secret
-# Remove old secret
-docker secret rm THE_ODDS_API_KEY
 ```
 
 ### 4. Use Different Secrets per Environment
 
 - Development: `secrets-dev/`
 - Staging: `secrets-staging/`
-- Production: Docker Swarm secrets
+- Production: `secrets-prod/` (mounted read-only)
 
 ---
 
@@ -325,26 +240,6 @@ docker secret rm THE_ODDS_API_KEY
    ls -la secrets/
    ```
 
-### Swarm Secrets Not Working
-
-**Error:** `secret not found` in Swarm
-
-**Solution:**
-1. Check Swarm is initialized:
-   ```powershell
-   docker info | Select-String Swarm
-   ```
-
-2. List Swarm secrets:
-   ```powershell
-   docker secret ls
-   ```
-
-3. Create missing secrets:
-   ```powershell
-   python scripts/manage_secrets.py create-swarm
-   ```
-
 ### Fallback to Environment Variables
 
 If secrets aren't working, the system automatically falls back to environment variables. Check:
@@ -359,11 +254,10 @@ If secrets aren't working, the system automatically falls back to environment va
 
 | Feature | Docker Secrets | .env File |
 |---------|---------------|-----------|
-| Security | ✅ Encrypted at rest (Swarm) | ⚠️ Plain text |
+| Security | ✅ Read-only mount (kept out of git) | ⚠️ Plain text |
 | Version Control | ✅ Never committed | ⚠️ Risk of committing |
-| Production Ready | ✅ Yes | ❌ No |
+| Production Ready | ✅ Yes | ⚠️ Depends on host hardening |
 | Development | ✅ Works | ✅ Works |
-| Swarm Support | ✅ Native | ❌ No |
 | Rotation | ✅ Easy | ⚠️ Manual |
 
 ---
@@ -373,19 +267,16 @@ If secrets aren't working, the system automatically falls back to environment va
 ✅ **Docker secrets implemented** - Production-grade secret management  
 ✅ **Backward compatible** - Falls back to `.env` for development  
 ✅ **Management scripts** - Easy secret creation and validation  
-✅ **Swarm support** - Native Docker Swarm secrets  
 ✅ **Security hardened** - Secrets never logged or exposed  
 
 **Next Steps:**
 1. Create secrets from your `.env` file
 2. Test with Docker Compose
-3. Deploy to Swarm for production
-4. Remove `.env` file once secrets are working
+3. Remove `.env` file once secrets are working (optional)
 
 ---
 
 ## References
 
-- [Docker Secrets Documentation](https://docs.docker.com/engine/swarm/secrets/)
 - [Docker Compose Secrets](https://docs.docker.com/compose/use-secrets/)
 - [Security Hardening Guide](SECURITY_HARDENING.md)

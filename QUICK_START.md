@@ -5,20 +5,20 @@
 The production system uses a single hardened Docker container with all models baked-in. No postgres/redis/microservices required.
 
 ```powershell
-./run.ps1
+.\run.ps1
 ```
 
 This single command:
-1. Builds the production Docker image (`nba-strict-api:latest`)
-2. Starts the container with baked-in models
-3. Waits for the API to be healthy
-4. Runs analysis and saves reports to `data/processed/`
+1. Starts the production container via `docker compose up -d` (builds if needed)
+2. Waits for the API to be healthy
+3. Runs analysis and saves reports to `data/processed/`
 
 **Options:**
 ```powershell
-./run.ps1 --date tomorrow
-./run.ps1 --matchup "Lakers"
-./run.ps1 --date today --matchup "Lakers vs Celtics"
+.\run.ps1 -Date tomorrow
+.\run.ps1 -Matchup "Lakers"
+.\run.ps1 -Date today -Matchup "Lakers vs Celtics"
+.\run.ps1 -Date 2025-12-19 -Matchup "Lakers vs Celtics, Heat @ Knicks"
 ```
 
 ---
@@ -31,11 +31,8 @@ This single command:
 
 ### 2. Build and Run Container Manually
 ```powershell
-# Build the production image
-docker build -t nba-strict-api:latest -f Dockerfile .
-
-# Run the container
-docker run -d --name nba-api -p 8090:8080 --env-file .env --restart unless-stopped nba-strict-api:latest
+# Start production (recommended)
+docker compose up -d
 ```
 
 ### 3. Verify Health

@@ -34,8 +34,56 @@ from src.utils.team_names import (
     VARIANT_TO_CANONICAL,
     CANONICAL_NAMES,
 )
+from src.config import settings
 
 logger = get_logger(__name__)
+
+# Best-effort read-through cache (does NOT replace team_mapping.json as source of truth)
+_VARIANT_OVERRIDE_CACHE_PATH = Path(settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
+_VARIANT_OVERRIDE_CACHE: dict[str, str] | None = None
+
+
+def _load_variant_override_cache() -> dict[str, str]:
+    global _VARIANT_OVERRIDE_CACHE
+    if _VARIANT_OVERRIDE_CACHE is not None:
+        return _VARIANT_OVERRIDE_CACHE
+    try:
+        if _VARIANT_OVERRIDE_CACHE_PATH.exists():
+            with open(_VARIANT_OVERRIDE_CACHE_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    _VARIANT_OVERRIDE_CACHE = {str(k).lower(): str(v) for k, v in data.items()}
+                    return _VARIANT_OVERRIDE_CACHE
+    except Exception:
+        pass
+    _VARIANT_OVERRIDE_CACHE = {}
+    return _VARIANT_OVERRIDE_CACHE
+
+
+def _persist_variant_override_cache(cache: dict[str, str]) -> None:
+    try:
+        _VARIANT_OVERRIDE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_VARIANT_OVERRIDE_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+    except Exception:
+        return
+
+
+def _cache_variant_override(*, raw: str, normalized: str) -> None:
+    """Cache a resolved variant for faster future normalization."""
+    try:
+        if not raw or not normalized:
+            return
+        cache = _load_variant_override_cache()
+        key = str(raw).strip().lower()
+        if not key:
+            return
+        if cache.get(key) == normalized:
+            return
+        cache[key] = normalized
+        _persist_variant_override_cache(cache)
+    except Exception:
+        return
 
 # ESPN team names (canonical format)
 ESPN_TEAM_NAMES = {
@@ -211,6 +259,7 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     """
     if not team_name:
         logger.error(f"Empty team name from source '{source}' - CANNOT STANDARDIZE")
+        _record_team_variant(source=source, raw=team_name, normalized="", is_valid=False, reason="empty")
         if raise_on_failure:
             raise ValueError(f"Empty team name from source '{source}'")
         return "", False
@@ -220,12 +269,24 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     
     if not team_name:
         logger.error(f"Team name is whitespace only from source '{source}' - CANNOT STANDARDIZE")
+        _record_team_variant(source=source, raw=original_name, normalized="", is_valid=False, reason="whitespace")
         if raise_on_failure:
             raise ValueError(f"Whitespace-only team name from source '{source}'")
         return "", False
+
+    # Fast path: cached resolved variant
+    try:
+        cached = _load_variant_override_cache().get(original_name.strip().lower())
+        if cached and cached in ESPN_TEAM_NAMES:
+            _record_team_variant(source=source, raw=original_name, normalized=cached, is_valid=True, reason="variant_cache")
+            return cached, True
+    except Exception:
+        pass
     
     # Check if already in ESPN format (exact match)
     if team_name in ESPN_TEAM_NAMES:
+        _record_team_variant(source=source, raw=original_name, normalized=team_name, is_valid=True, reason="already_espn")
+        _cache_variant_override(raw=original_name, normalized=team_name)
         return team_name, True
     
     # ==========================================
@@ -238,6 +299,8 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         # Found in MASTER database - get ESPN full name
         espn_name = get_canonical_name(canonical_id)
         logger.debug(f"MASTER matched '{original_name}' -> {canonical_id} -> '{espn_name}' (source: {source})")
+        _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="master_db")
+        _cache_variant_override(raw=original_name, normalized=espn_name)
         return espn_name, True
     
     # ==========================================
@@ -249,6 +312,8 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     if team_name in TEAM_NAME_MAPPING:
         result = TEAM_NAME_MAPPING[team_name]
         logger.debug(f"Legacy mapped '{original_name}' -> '{result}' (source: {source})")
+        _record_team_variant(source=source, raw=original_name, normalized=result, is_valid=True, reason="legacy_map_exact")
+        _cache_variant_override(raw=original_name, normalized=result)
         return result, True
     
     # Try case-insensitive match in mapping
@@ -256,6 +321,8 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     for key, espn_name in TEAM_NAME_MAPPING.items():
         if key.lower().strip() == team_lower:
             logger.debug(f"Case-insensitive mapped '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="legacy_map_case_insensitive")
+            _cache_variant_override(raw=original_name, normalized=espn_name)
             return espn_name, True
     
     # Try fuzzy matching (check if team name contains ESPN team name or vice versa)
@@ -264,18 +331,24 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         # Check if team name contains ESPN name or vice versa
         if team_lower in espn_lower or espn_lower in team_lower:
             logger.info(f"Fuzzy matched '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="fuzzy_contains")
+            _cache_variant_override(raw=original_name, normalized=espn_name)
             return espn_name, True
         # Check abbreviations
         for abbrev in abbrevs:
             abbrev_lower = abbrev.lower().strip()
             if abbrev_lower == team_lower or team_lower in abbrev_lower or abbrev_lower in team_lower:
                 logger.info(f"Abbrev matched '{original_name}' -> '{espn_name}' (source: {source})")
+                _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="fuzzy_abbrev")
+                _cache_variant_override(raw=original_name, normalized=espn_name)
                 return espn_name, True
     
     # Try matching against ESPN team names directly (case-insensitive substring)
     for espn_name in ESPN_TEAM_NAMES:
         if team_lower in espn_name.lower() or espn_name.lower() in team_lower:
             logger.info(f"Substring matched '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="fuzzy_substring")
+            _cache_variant_override(raw=original_name, normalized=espn_name)
             return espn_name, True
     
     # If no match found, log ERROR (not warning) - this is a data quality issue
@@ -284,6 +357,7 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         f"Not found in MASTER database (team_mapping.json) or legacy mappings. "
         f"Add variant to team_mapping.json to fix."
     )
+    _record_team_variant(source=source, raw=original_name, normalized="", is_valid=False, reason="no_match")
     
     if raise_on_failure:
         raise ValueError(
@@ -293,6 +367,31 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     
     # Return empty string to indicate failure - DO NOT return original name (prevents fake data)
     return "", False
+
+
+def _record_team_variant(*, source: str, raw: str, normalized: str, is_valid: bool, reason: str) -> None:
+    """Append observed team-name variants to a JSONL cache for later reconciliation.
+
+    This is intentionally best-effort and must never crash ingestion/prediction.
+    """
+    try:
+        # Keep this under processed/cache so both prod + backtest can read it.
+        cache_dir = Path(settings.data_processed_dir) / "cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        out_path = cache_dir / "team_name_variants.jsonl"
+        payload = {
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "source": source,
+            "raw": raw,
+            "normalized": normalized,
+            "is_valid": bool(is_valid),
+            "reason": reason,
+        }
+        with open(out_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        # Never break core flow for diagnostics
+        return
 
 
 def standardize_game_data(

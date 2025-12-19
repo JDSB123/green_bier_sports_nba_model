@@ -324,16 +324,28 @@ case "$COMMAND" in
         validate_python
         ;;
     
+    diagnose-team-names)
+        echo ""
+        echo "============================================================"
+        echo "TEAM NAME FORMAT DIAGNOSTIC"
+        echo "============================================================"
+        echo ""
+        python scripts/diagnose_team_names.py
+        echo ""
+        echo "Diagnostic reports saved to: /app/data/diagnostics/"
+        ;;
+    
     *)
         echo "Unknown command: $COMMAND"
         echo ""
         echo "Available commands:"
-        echo "  full      - Full pipeline: fetch data + build training + run backtest"
-        echo "  data      - Fetch and build training data only"
-        echo "  backtest  - Run backtest on existing data"
-        echo "  validate  - Validate existing training data"
-        echo "  shell     - Interactive shell for debugging"
-        echo "  diagnose  - Show diagnostic information"
+        echo "  full                - Full pipeline: fetch data + build training + run backtest"
+        echo "  data                - Fetch and build training data only"
+        echo "  backtest            - Run backtest on existing data"
+        echo "  validate            - Validate existing training data"
+        echo "  shell               - Interactive shell for debugging"
+        echo "  diagnose            - Show diagnostic information"
+        echo "  diagnose-team-names - Analyze team name formats from all sources"
         exit 1
         ;;
 esac

@@ -814,6 +814,20 @@ class FeatureEngineer:
         # Predicted total
         features["predicted_total"] = (home_stats["pace"] + away_stats["pace"]) / 2
 
+        # === FIRST HALF PREDICTIONS ===
+        # 1H margin is approximately 45-50% of full game margin (adjusted for pace)
+        # Scale down home court advantage for 1H (~1.5 pts vs 3 pts for FG)
+        hca_1h = hca * 0.5  # Half the HCA for first half
+        features["predicted_margin_1h"] = (
+            (home_stats["margin"] - away_stats["margin"]) / 2 * 0.48  # ~48% of FG margin
+            + hca_1h  # Scaled HCA
+            + (home_rest - away_rest) * 0.25  # Rest advantage (half impact)
+            - away_travel["travel_fatigue"] * 0.5  # Travel fatigue (half impact for 1H)
+        )
+        
+        # 1H total is approximately 48-50% of full game total
+        features["predicted_total_1h"] = features["predicted_total"] * 0.49
+
         # Form features
         if "form_trend" in home_stats and "form_trend" in away_stats:
             features["home_form_trend"] = home_stats["form_trend"]

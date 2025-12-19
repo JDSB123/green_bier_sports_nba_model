@@ -9,19 +9,11 @@
 
 **All operations run through Docker containers.** The stack consists of:
 
-### Main Services (docker-compose.yml)
+### Production (docker-compose.yml)
 
 | Service | Port | Technology | Purpose |
 |---------|------|------------|---------|
 | `strict-api` | 8090 | Python/FastAPI | **Main prediction API** - 6 backtested markets |
-| `prediction-service` | 8082 | Python/FastAPI | ML inference service |
-| `api-gateway` | 8080 | Go | Unified REST API gateway |
-| `feature-store` | 8081 | Go | Feature serving |
-| `line-movement-analyzer` | 8084 | Go | RLM detection |
-| `schedule-poller` | 8085 | Go | Game schedule aggregation |
-| `odds-ingestion` | - | Rust | Real-time odds streaming |
-| `postgres` | 5432 | TimescaleDB | Time-series database |
-| `redis` | 6379 | Redis | Caching and pub/sub |
 
 ### Backtest Services (docker-compose.backtest.yml)
 
@@ -76,11 +68,12 @@ curl "http://localhost:8090/slate/today/comprehensive?use_splits=true"
 ### Full Analysis (with summary table)
 
 ```powershell
-python scripts/analyze_slate_docker.py --date today
+python scripts/run_slate.py --date today
 ```
 
 This script:
-- Connects to the running Docker container
+- Starts the production container (if needed)
+- Connects to the running container API
 - Fetches comprehensive analysis from the API
 - Generates fire ratings and summary table
 - Saves reports to `data/processed/`
@@ -220,7 +213,6 @@ nba_v5.0_BETA/
 │   ├── prediction/              # Prediction engine
 │   ├── modeling/                # Models and features
 │   └── ingestion/               # Data sources
-├── services/                    # Go/Rust microservices
 ├── scripts/
 │   └── analyze_slate_docker.py  # Docker-only analysis script
 └── data/
@@ -232,7 +224,7 @@ nba_v5.0_BETA/
 
 ## Summary
 
-- ✅ **Docker-first** - No local Python execution
+- ✅ **Docker-first** - Models run in containers (local runner is orchestration only)
 - ✅ **6 backtested markets** - All validated with strong ROI
 - ✅ **STRICT MODE** - All inputs required, no fallbacks
 - ✅ **Production ready** - containerized, health checks, logging

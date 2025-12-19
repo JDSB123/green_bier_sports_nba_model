@@ -7,21 +7,21 @@
 ## 🚀 THE ONE COMMAND
 
 ```powershell
-./run.ps1
+.\run.ps1
 ```
 
 This single command does everything:
-1. Builds the production Docker image (`nba-strict-api:latest`) with baked-in models
-2. Starts the single container (no postgres/redis dependencies)
-3. Waits for API to be healthy and engine loaded
-4. Runs analysis and saves reports to `data/processed/`
-5. Displays picks with fire ratings
+1. Starts the production container via `docker compose up -d` (builds if needed)
+2. Waits for the API to be ready
+3. Runs analysis for the requested date/game(s) and saves reports to `data/processed/`
+4. Displays picks with fire ratings
 
 **Options:**
 ```powershell
-./run.ps1 --date tomorrow        # Tomorrow's games
-./run.ps1 --matchup "Lakers"     # Filter to specific team
-./run.ps1 --date today --matchup "Lakers vs Celtics"
+.\run.ps1 -Date tomorrow                          # Tomorrow's games
+.\run.ps1 -Matchup "Lakers"                       # Filter to specific team
+.\run.ps1 -Date today -Matchup "Lakers vs Celtics" # Specific game
+.\run.ps1 -Date 2025-12-19 -Matchup "Lakers vs Celtics, Heat @ Knicks" # Multiple filters
 ```
 
 ---
@@ -30,10 +30,10 @@ This single command does everything:
 
 | What | Command/URL | Purpose |
 |------|-------------|---------|
-| **Run Predictions** | `./run.ps1` | **THE ONE COMMAND** - Builds and runs single container |
+| **Run Predictions** | `.\run.ps1` | **THE ONE COMMAND** - Starts container and runs analysis |
 | **Main API** | `http://localhost:8090` | Direct API access |
 | **Health Check** | `http://localhost:8090/health` | Verify system is running |
-| **Stop Container** | `docker stop nba-api` | Stop the production container |
+| **Stop Container** | `docker compose down` | Stop the production container |
 | **Cleanup Docker** | `.\scripts\cleanup_nba_docker.ps1 -All -Force` | Remove old containers/images/volumes |
 | **Run Backtest** | `docker compose -f docker-compose.backtest.yml up backtest-full` | Full backtest (dev only) |
 
@@ -63,10 +63,8 @@ This single command does everything:
 | **Image** | `nba-strict-api:latest` |
 | **Container** | `nba-api` (port 8090:8080) |
 | **Models** | Baked into image from `models/production/` |
-| **Dependencies** | None (no postgres/redis/microservices) |
-| **Entry Point** | `./run.ps1` |
-
-**Note:** The multi-service `docker-compose.yml` has been deprecated. See `DEPRECATED_docker-compose/` for reference.
+| **Dependencies** | None (no database/microservices) |
+| **Entry Point** | `.\run.ps1` (wrapper) / `python scripts/run_slate.py` (source of truth) |
 
 ### Backtest Stack (docker-compose.backtest.yml)
 
@@ -133,17 +131,17 @@ Single game prediction (requires all 8 line parameters).
 ## 🚀 Daily Workflow
 
 ```powershell
-# 1. Run predictions (builds image, starts container, runs analysis)
-./run.ps1
+# 1. Run predictions (starts container if needed, runs analysis)
+.\run.ps1
 
 # Or with options:
-./run.ps1 --date tomorrow
-./run.ps1 --matchup "Lakers"
+.\run.ps1 -Date tomorrow
+.\run.ps1 -Matchup "Lakers"
 
 # 2. View results in data/processed/slate_analysis_*.txt
 
 # 3. Stop container when done (optional)
-docker stop nba-api
+docker compose down
 ```
 
 ---
@@ -165,15 +163,10 @@ nba_v5.0_BETA/
 │   └── ingestion/             # Data sources
 │
 ├── scripts/
-│   └── analyze_slate_docker.py  # Docker-only analysis
+│   ├── run_slate.py             # SINGLE SOURCE OF TRUTH runner (starts compose + calls API)
+│   └── analyze_slate_docker.py  # Legacy/alternate formatter (calls API)
 │
-├── services/                  # Microservices (Go/Rust)
-│   ├── api-gateway-go/
-│   ├── feature-store-go/
-│   ├── line-movement-analyzer-go/
-│   ├── odds-ingestion-rust/
-│   ├── prediction-service-python/
-│   └── schedule-poller-go/
+├── docs/                      # Documentation
 │
 ├── data/
 │   ├── processed/             # Models, predictions
@@ -194,7 +187,7 @@ nba_v5.0_BETA/
 ## ⚠️ Important Rules
 
 1. **Single Container Production** - One hardened Docker image with all models baked-in (`nba-strict-api:latest`)
-2. **No External Dependencies** - Production container has no postgres/redis/microservice dependencies
+2. **No External Dependencies** - Production container has no database/microservice dependencies
 3. **STRICT MODE** - All inputs required, no fallbacks
 4. **6 Markets Only** - Only backtested markets (no Q1)
 5. **Models in Repo** - Production models committed in `models/production/` for reproducibility

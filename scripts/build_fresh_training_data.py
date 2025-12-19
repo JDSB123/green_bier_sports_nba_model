@@ -135,8 +135,17 @@ class FreshDataPipeline:
             client = APIBasketballClient(season=season)
             
             try:
-                result = await client.fetch_games()
-                games = result.data.get("response", [])
+                # OPTIMIZED: Use ingest_essential() to fetch ALL Tier 1 endpoints in one call
+                # This fetches: teams, games, statistics, and game_stats_teams
+                logger.info(f"  Fetching all essential endpoints for season {season}...")
+                results = await client.ingest_essential()
+                
+                # Extract games from the results
+                games_result = next((r for r in results if r.name == "games"), None)
+                if not games_result:
+                    logger.warning(f"  No games result found for season {season}")
+                    continue
+                games = games_result.data.get("response", [])
                 
                 if not games:
                     logger.warning(f"  No games found for season {season}")
@@ -234,7 +243,14 @@ class FreshDataPipeline:
                 logger.warning(f"Failed to load cached betting lines ({cache_path}): {exc}")
         
         # Import here to avoid circular imports
-        from src.ingestion.the_odds import fetch_historical_odds, fetch_odds
+        from src.ingestion.the_odds import (
+            fetch_historical_odds,
+            fetch_odds,
+            fetch_events,
+            fetch_event_odds,
+            fetch_betting_splits,
+            fetch_participants,
+        )
         
         all_lines: List[Dict[str, Any]] = []
         
@@ -264,7 +280,7 @@ class FreshDataPipeline:
                     logger.warning(f"Error testing historical endpoint: {e}")
         
         if historical_available:
-            # Use historical endpoint
+            # Use historical endpoint - OPTIMIZED to fetch ALL markets including 1H/Q1
             for i, date_str in enumerate(game_dates):
                 if i % 10 == 0:
                     logger.info(f"  Processing date {i+1}/{len(game_dates)}...")
@@ -273,13 +289,43 @@ class FreshDataPipeline:
                     dt = datetime.strptime(date_str, "%Y-%m-%d")
                     iso_date = dt.strftime("%Y-%m-%dT12:00:00Z")
                     
+                    # Fetch FG markets from historical odds
                     data = await fetch_historical_odds(
                         date=iso_date,
                         markets="spreads,totals,h2h",
                     )
                     
                     events = data.get("data", [])
-                    lines = self._extract_lines_from_events(events, date_str)
+                    
+                    # For each event, fetch event-specific odds for 1H/Q1 markets
+                    enriched_events = []
+                    for event in events:
+                        event_id = event.get("id")
+                        if event_id:
+                            try:
+                                # Fetch 1H and Q1 markets (not available in historical endpoint)
+                                # Note: Event-specific odds may not be available for historical dates
+                                # This is best-effort
+                                event_odds = await fetch_event_odds(
+                                    event_id,
+                                    markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1",
+                                )
+                                # Merge 1H/Q1 markets into event data
+                                if event_odds.get("bookmakers"):
+                                    existing_bms = {bm["key"]: bm for bm in event.get("bookmakers", [])}
+                                    for bm in event_odds.get("bookmakers", []):
+                                        if bm["key"] in existing_bms:
+                                            existing_bms[bm["key"]]["markets"].extend(bm.get("markets", []))
+                                        else:
+                                            existing_bms[bm["key"]] = bm
+                                    event["bookmakers"] = list(existing_bms.values())
+                            except Exception as e:
+                                logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
+                                # Continue with FG markets only
+                        
+                        enriched_events.append(event)
+                    
+                    lines = self._extract_lines_from_events(enriched_events, date_str)
                     all_lines.extend(lines)
                     
                 except Exception as e:
@@ -292,12 +338,52 @@ class FreshDataPipeline:
                 "   2. Or collect odds going forward with regular data collection"
             )
             
-            # Try to get current/recent odds at least
+            # Try to get current/recent odds and ALL markets
             try:
+                # Fetch events list first to get event IDs
+                events = await fetch_events()
+                logger.info(f"  Fetched {len(events)} events for current date")
+                
+                # Fetch main odds (FG markets)
                 current_odds = await fetch_odds(markets="spreads,totals,h2h")
-                lines = self._extract_lines_from_events(current_odds, datetime.now().strftime("%Y-%m-%d"))
+                logger.info(f"  Fetched FG odds for {len(current_odds)} events")
+                
+                # Enrich each event with 1H/Q1 markets
+                enriched_odds = []
+                for event in current_odds:
+                    event_id = event.get("id")
+                    if event_id:
+                        try:
+                            # Fetch 1H and Q1 markets for this event
+                            event_odds = await fetch_event_odds(
+                                event_id,
+                                markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1",
+                            )
+                            # Merge markets
+                            existing_bms = {bm["key"]: bm for bm in event.get("bookmakers", [])}
+                            for bm in event_odds.get("bookmakers", []):
+                                if bm["key"] in existing_bms:
+                                    existing_bms[bm["key"]]["markets"].extend(bm.get("markets", []))
+                                else:
+                                    existing_bms[bm["key"]] = bm
+                            event["bookmakers"] = list(existing_bms.values())
+                        except Exception as e:
+                            logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
+                    
+                    enriched_odds.append(event)
+                
+                lines = self._extract_lines_from_events(enriched_odds, datetime.now().strftime("%Y-%m-%d"))
                 all_lines.extend(lines)
-                logger.info(f"✓ Fetched current odds for {len(current_odds)} events")
+                logger.info(f"✓ Fetched current odds with 1H/Q1 markets for {len(enriched_odds)} events")
+                
+                # OPTIMIZATION: Fetch betting splits if available (paid plan)
+                try:
+                    splits = await fetch_betting_splits()
+                    logger.info(f"✓ Fetched betting splits for {len(splits)} games")
+                    # Note: Splits will be merged later in enrich_with_betting_splits()
+                except Exception as e:
+                    logger.debug(f"Betting splits not available: {e}")
+                    
             except Exception as e:
                 logger.warning(f"Could not fetch current odds: {e}")
         
@@ -625,26 +711,115 @@ class FreshDataPipeline:
     
     async def enrich_with_betting_splits(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Enrich training data with betting splits from Action Network.
+        Enrich training data with betting splits from multiple sources.
+        
+        Tries in order:
+        1. The Odds API betting-splits endpoint (if available, paid plan)
+        2. Action Network (if credentials available)
         
         Adds columns for:
         - Public betting percentages (spread, total, ML)
         - Sharp money indicators
         - Reverse line movement (RLM) signals
         """
-        logger.info("Fetching betting splits from Action Network...")
+        logger.info("Enriching with betting splits from available sources...")
         
+        # Try The Odds API betting splits first (optimized, single call)
+        try:
+            from src.ingestion.the_odds import fetch_betting_splits
+            
+            logger.info("  Attempting The Odds API betting-splits endpoint...")
+            splits_data = await fetch_betting_splits()
+            
+            if splits_data and len(splits_data) > 0:
+                logger.info(f"  ✓ Fetched {len(splits_data)} games with betting splits from The Odds API")
+                
+                # Convert to DataFrame format
+                splits_features = []
+                for split in splits_data:
+                    # Extract splits data from The Odds API format
+                    # Structure: split["markets"]["spreads"]["choices"][0/1]["value"]
+                    try:
+                        markets = split.get("markets", {})
+                        
+                        # Spread splits
+                        spread_market = markets.get("spreads", {})
+                        spread_choices = spread_market.get("choices", [])
+                        if len(spread_choices) >= 2:
+                            home_spread_pct = spread_choices[0].get("value", 50)
+                            away_spread_pct = spread_choices[1].get("value", 50)
+                        else:
+                            home_spread_pct = away_spread_pct = 50
+                        
+                        # Total splits
+                        total_market = markets.get("totals", {})
+                        total_choices = total_market.get("choices", [])
+                        if len(total_choices) >= 2:
+                            over_pct = total_choices[0].get("value", 50)
+                            under_pct = total_choices[1].get("value", 50)
+                        else:
+                            over_pct = under_pct = 50
+                        
+                        # Moneyline splits
+                        ml_market = markets.get("h2h", {})
+                        ml_choices = ml_market.get("choices", [])
+                        if len(ml_choices) >= 2:
+                            home_ml_pct = ml_choices[0].get("value", 50)
+                            away_ml_pct = ml_choices[1].get("value", 50)
+                        else:
+                            home_ml_pct = away_ml_pct = 50
+                        
+                        # Extract teams (already standardized)
+                        teams = split.get("home_team", ""), split.get("away_team", "")
+                        
+                        splits_features.append({
+                            "home_team": teams[0],
+                            "away_team": teams[1],
+                            "game_date": split.get("commence_time", "").split("T")[0] if split.get("commence_time") else "",
+                            "spread_public_home_pct": home_spread_pct,
+                            "over_public_pct": over_pct,
+                            "home_ml_public_pct": home_ml_pct,
+                            # Derived features
+                            "is_rlm_spread": 1 if (home_spread_pct > 60 and away_spread_pct < 40) else 0,
+                            "spread_ticket_money_diff": home_spread_pct - away_spread_pct,
+                        })
+                    except Exception as e:
+                        logger.debug(f"Error parsing splits data: {e}")
+                        continue
+                
+                if splits_features:
+                    splits_df = pd.DataFrame(splits_features)
+                    df["game_date_str"] = df["date"].dt.strftime("%Y-%m-%d")
+                    
+                    merged = df.merge(
+                        splits_df,
+                        left_on=["home_team", "away_team", "game_date_str"],
+                        right_on=["home_team", "away_team", "game_date"],
+                        how="left",
+                        suffixes=("", "_splits"),
+                    )
+                    
+                    merged = merged.drop(columns=["game_date_str", "game_date"], errors="ignore")
+                    splits_count = merged["is_rlm_spread"].notna().sum()
+                    logger.info(f"✓ Enriched {splits_count}/{len(df)} games with The Odds API betting splits")
+                    return merged
+                    
+        except Exception as e:
+            logger.debug(f"The Odds API betting splits not available: {e}")
+        
+        # Fallback to Action Network if The Odds API splits unavailable
         try:
             from src.ingestion.betting_splits import (
                 fetch_splits_action_network,
                 splits_to_features,
             )
             
+            logger.info("  Falling back to Action Network betting splits...")
+            
             # Get unique dates to fetch
             unique_dates = df["date"].dt.strftime("%Y-%m-%d").unique().tolist()
             
             # Fetch splits for recent dates (Action Network only has current/recent)
-            # For historical, we'd need to have collected them over time
             all_splits = []
             
             for date_str in unique_dates[-30:]:  # Last 30 days
@@ -652,10 +827,10 @@ class FreshDataPipeline:
                     splits = await fetch_splits_action_network(date_str)
                     all_splits.extend(splits)
                 except Exception as e:
-                    logger.debug(f"No splits for {date_str}: {e}")
+                    logger.debug(f"No Action Network splits for {date_str}: {e}")
             
             if not all_splits:
-                logger.warning("No betting splits fetched - continuing without splits features")
+                logger.warning("No betting splits fetched from any source - continuing without splits features")
                 return df
             
             # Convert to features and merge
@@ -684,12 +859,12 @@ class FreshDataPipeline:
             merged = merged.drop(columns=["game_date_str", "game_date"], errors="ignore")
             
             splits_count = merged["is_rlm_spread"].notna().sum()
-            logger.info(f"✓ Enriched {splits_count}/{len(df)} games with betting splits")
+            logger.info(f"✓ Enriched {splits_count}/{len(df)} games with Action Network betting splits")
             
             return merged
             
         except Exception as e:
-            logger.warning(f"Failed to enrich with betting splits: {e}")
+            logger.warning(f"Failed to enrich with betting splits from any source: {e}")
             return df
     
     def validate_dataset(self, df: pd.DataFrame) -> None:
@@ -796,7 +971,15 @@ class FreshDataPipeline:
         logger.info(f"Output: {self.output_dir / output_file}")
         logger.info("")
         
-        # Step 1: Fetch game outcomes
+        # OPTIMIZATION: Fetch participants reference first (for team validation)
+        logger.info("Fetching participants reference from The Odds API...")
+        try:
+            participants = await fetch_participants()
+            logger.info(f"✓ Fetched {len(participants)} participants for team validation")
+        except Exception as e:
+            logger.warning(f"Could not fetch participants: {e} (continuing anyway)")
+        
+        # Step 1: Fetch game outcomes (with ALL essential endpoints)
         outcomes_df = await self.fetch_game_outcomes(seasons)
         
         # Step 2: Fetch betting lines (if not skipped)
@@ -812,9 +995,8 @@ class FreshDataPipeline:
         # Step 4: Compute labels
         labeled_df = self.compute_labels(merged_df)
         
-        # Step 4.5: Fetch betting splits (if Action Network credentials available)
-        if settings.action_network_username and settings.action_network_password:
-            labeled_df = await self.enrich_with_betting_splits(labeled_df)
+        # Step 4.5: Fetch betting splits (tries The Odds API first, falls back to Action Network)
+        labeled_df = await self.enrich_with_betting_splits(labeled_df)
         
         # Step 5: Validate
         self.validate_dataset(labeled_df)

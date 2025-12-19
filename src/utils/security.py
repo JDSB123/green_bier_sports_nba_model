@@ -100,17 +100,20 @@ def validate_database_config() -> ValidationResult:
     errors = []
     warnings = []
     
-    db_password = os.getenv("DB_PASSWORD", "")
-    if not db_password or not db_password.strip():
-        errors.append("DB_PASSWORD is not set or is empty")
+    database_url = os.getenv("DATABASE_URL", "").strip()
+    db_password = os.getenv("DB_PASSWORD", "").strip()
+
+    # Database is OPTIONAL in the current single-container production flow.
+    # Only validate strictly when the user has configured a database URL.
+    if not database_url and not db_password:
+        return ValidationResult(is_valid=True, errors=[], warnings=[])
+
+    if database_url and not db_password:
+        errors.append("DB_PASSWORD is required when DATABASE_URL is set")
     elif db_password == "nba_dev_password":
         warnings.append("DB_PASSWORD is using default value - change for production")
-    elif len(db_password) < 12:
+    elif db_password and len(db_password) < 12:
         warnings.append("DB_PASSWORD is shorter than 12 characters (weak)")
-    
-    database_url = os.getenv("DATABASE_URL", "")
-    if not database_url:
-        warnings.append("DATABASE_URL not explicitly set (may use defaults)")
     
     return ValidationResult(
         is_valid=len(errors) == 0,

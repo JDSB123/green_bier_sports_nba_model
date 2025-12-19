@@ -4,7 +4,6 @@ Docker Secrets Management Script
 
 Manages Docker secrets for NBA v5.0 BETA:
 - Creates secret files from .env
-- Creates Docker Swarm secrets
 - Validates secrets
 - Lists secrets
 """
@@ -23,7 +22,6 @@ ENV_FILE = PROJECT_ROOT / ".env"
 REQUIRED_SECRETS = [
     "THE_ODDS_API_KEY",
     "API_BASKETBALL_KEY",
-    "DB_PASSWORD",
 ]
 
 # Optional secrets
@@ -105,76 +103,6 @@ def create_from_env() -> None:
     if missing:
         print(f"\n⚠️  Missing required secrets: {', '.join(missing)}")
         print("   These will need to be created manually")
-
-
-def create_swarm_secrets() -> None:
-    """Create Docker Swarm secrets from secret files."""
-    print("🐳 Creating Docker Swarm secrets...")
-    
-    if not SECRETS_DIR.exists():
-        print(f"❌ Secrets directory not found: {SECRETS_DIR}")
-        print("   Run 'create-from-env' first to create secret files")
-        sys.exit(1)
-    
-    # Check if swarm is initialized
-    try:
-        result = subprocess.run(
-            ["docker", "info", "--format", "{{.Swarm.LocalNodeState}}"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        if result.stdout.strip() != "active":
-            print("❌ Docker Swarm is not initialized")
-            print("   Run: docker swarm init")
-            sys.exit(1)
-    except subprocess.CalledProcessError:
-        print("❌ Failed to check Docker Swarm status")
-        sys.exit(1)
-    
-    created = 0
-    skipped = 0
-    
-    # Create secrets for all secret files
-    for secret_file in SECRETS_DIR.glob("*"):
-        if secret_file.is_file() and not secret_file.name.startswith(".") and not secret_file.suffix == ".example":
-            secret_name = secret_file.name
-            
-            # Check if secret already exists
-            try:
-                result = subprocess.run(
-                    ["docker", "secret", "inspect", secret_name],
-                    capture_output=True,
-                    text=True
-                )
-                if result.returncode == 0:
-                    print(f"⏭️  Secret already exists: {secret_name}")
-                    skipped += 1
-                    continue
-            except Exception:
-                pass
-            
-            # Create secret
-            try:
-                with open(secret_file, "r", encoding="utf-8") as f:
-                    secret_value = f.read().strip()
-                
-                # Create secret using docker secret create
-                result = subprocess.run(
-                    ["docker", "secret", "create", secret_name, "-"],
-                    input=secret_value,
-                    text=True,
-                    capture_output=True,
-                    check=True
-                )
-                print(f"✅ Created Swarm secret: {secret_name}")
-                created += 1
-            except subprocess.CalledProcessError as e:
-                print(f"❌ Failed to create secret {secret_name}: {e.stderr}")
-            except Exception as e:
-                print(f"❌ Error creating secret {secret_name}: {e}")
-    
-    print(f"\n✅ Created {created} Swarm secret(s), skipped {skipped} existing")
 
 
 def list_secrets() -> None:
@@ -265,7 +193,6 @@ def main():
         epilog="""
 Examples:
   python scripts/manage_secrets.py create-from-env    # Create secrets from .env
-  python scripts/manage_secrets.py create-swarm        # Create Swarm secrets
   python scripts/manage_secrets.py list                # List secret files
   python scripts/manage_secrets.py validate            # Validate secrets
         """
@@ -277,12 +204,6 @@ Examples:
     subparsers.add_parser(
         "create-from-env",
         help="Create secret files from .env file"
-    )
-    
-    # Create Swarm secrets
-    subparsers.add_parser(
-        "create-swarm",
-        help="Create Docker Swarm secrets from secret files"
     )
     
     # List secrets
@@ -305,8 +226,6 @@ Examples:
     
     if args.command == "create-from-env":
         create_from_env()
-    elif args.command == "create-swarm":
-        create_swarm_secrets()
     elif args.command == "list":
         list_secrets()
     elif args.command == "validate":
