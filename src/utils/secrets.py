@@ -9,7 +9,10 @@ import os
 from pathlib import Path
 from typing import Optional
 
-# Docker secrets are mounted at /run/secrets/ in containers
+# Baked-in secrets location (secrets copied into container at build time)
+BAKED_SECRETS_DIR = Path("/app/secrets")
+
+# Docker secrets are mounted at /run/secrets/ in containers (fallback for mounted secrets)
 DOCKER_SECRETS_DIR = Path("/run/secrets")
 
 # For Docker Compose, secrets can be mounted at a custom path
@@ -20,14 +23,15 @@ LOCAL_SECRETS_DIR = Path(__file__).resolve().parent.parent.parent / "secrets"
 
 def read_secret(secret_name: str, default: str = "") -> str:
     """
-    Read a secret from Docker secrets or secret files.
+    Read a secret from baked-in secrets or fallback sources.
     
     Priority order:
-    1. Docker Swarm secrets (/run/secrets/{secret_name})
-    2. Docker Compose secrets (/run/secrets/{secret_name})
-    3. Local secret files (./secrets/{secret_name})
-    4. Environment variable ({secret_name})
-    5. Default value
+    1. Baked-in secrets (/app/secrets/{secret_name}) - SECRETS IN CONTAINER
+    2. Docker Swarm secrets (/run/secrets/{secret_name})
+    3. Docker Compose secrets (/run/secrets/{secret_name})
+    4. Local secret files (./secrets/{secret_name})
+    5. Environment variable ({secret_name})
+    6. Default value
     
     Args:
         secret_name: Name of the secret
@@ -36,7 +40,17 @@ def read_secret(secret_name: str, default: str = "") -> str:
     Returns:
         Secret value as string
     """
-    # Try Docker secrets (Swarm/Compose)
+    # Try baked-in secrets FIRST (secrets baked into container at build time)
+    baked_secret_path = BAKED_SECRETS_DIR / secret_name
+    if baked_secret_path.exists() and baked_secret_path.is_file():
+        try:
+            value = baked_secret_path.read_text(encoding="utf-8").strip()
+            if value:
+                return value
+        except Exception:
+            pass
+    
+    # Try Docker secrets (Swarm/Compose) - fallback only
     docker_secret_path = DOCKER_SECRETS_DIR / secret_name
     if docker_secret_path.exists() and docker_secret_path.is_file():
         try:
@@ -142,11 +156,15 @@ class SecretNotFoundError(Exception):
 
 def read_secret_strict(secret_name: str) -> str:
     """
-    STRICT MODE: Read a secret ONLY from Docker secrets (/run/secrets).
+    STRICT MODE: Read a secret from baked-in location (/app/secrets) or Docker secrets.
     NO FALLBACKS. FAILS LOUDLY if secret not found.
     
+    Priority:
+    1. Baked-in secrets (/app/secrets/{secret_name}) - SECRETS IN CONTAINER
+    2. Docker secrets (/run/secrets/{secret_name}) - fallback
+    
     Args:
-        secret_name: Name of the secret file in /run/secrets/
+        secret_name: Name of the secret file
     
     Returns:
         Secret value as string
@@ -154,28 +172,39 @@ def read_secret_strict(secret_name: str) -> str:
     Raises:
         SecretNotFoundError: If secret file does not exist or is empty
     """
-    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
-    
-    if not docker_secret_path.exists() or not docker_secret_path.is_file():
-        raise SecretNotFoundError(
-            f"Required secret not found: {secret_name}\n"
-            f"Expected file: {docker_secret_path}\n"
-            f"Make sure secrets are mounted in docker-compose.yml: ./secrets:/run/secrets:ro"
-        )
-    
-    try:
-        value = docker_secret_path.read_text(encoding="utf-8").strip()
-        if not value:
+    # Try baked-in secrets first (secrets baked into container)
+    baked_secret_path = BAKED_SECRETS_DIR / secret_name
+    if baked_secret_path.exists() and baked_secret_path.is_file():
+        try:
+            value = baked_secret_path.read_text(encoding="utf-8").strip()
+            if value:
+                return value
+        except Exception as e:
             raise SecretNotFoundError(
-                f"Secret file exists but is empty: {secret_name}\n"
-                f"File path: {docker_secret_path}"
+                f"Failed to read baked-in secret: {secret_name}\n"
+                f"File path: {baked_secret_path}\n"
+                f"Error: {e}"
             )
-        return value
-    except Exception as e:
-        if isinstance(e, SecretNotFoundError):
-            raise
-        raise SecretNotFoundError(
-            f"Failed to read secret: {secret_name}\n"
-            f"File path: {docker_secret_path}\n"
-            f"Error: {e}"
-        )
+    
+    # Fallback to Docker secrets (for backward compatibility)
+    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
+    if docker_secret_path.exists() and docker_secret_path.is_file():
+        try:
+            value = docker_secret_path.read_text(encoding="utf-8").strip()
+            if value:
+                return value
+        except Exception as e:
+            raise SecretNotFoundError(
+                f"Failed to read Docker secret: {secret_name}\n"
+                f"File path: {docker_secret_path}\n"
+                f"Error: {e}"
+            )
+    
+    # Secret not found in either location
+    raise SecretNotFoundError(
+        f"Required secret not found: {secret_name}\n"
+        f"Checked locations:\n"
+        f"  - {baked_secret_path} (baked-in)\n"
+        f"  - {docker_secret_path} (Docker secrets)\n"
+        f"Secrets must be baked into container at build time in /app/secrets/"
+    )

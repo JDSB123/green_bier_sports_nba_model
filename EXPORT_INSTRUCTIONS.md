@@ -32,11 +32,11 @@ docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
 
 Include these files in your distribution package:
 
-1. **Container image**: `nba_v5.1_model_FINAL.tar.gz`
-2. **Docker Compose config**: `docker-compose.yml`
-3. **Environment template**: `.env.example` (optional, for reference)
-4. **Secrets examples**: `secrets/*.example` files
-5. **This file**: `EXPORT_INSTRUCTIONS.md`
+1. **Container image**: `nba_v5.1_model_FINAL.tar.gz` (includes secrets baked-in)
+2. **Docker Compose config**: `docker-compose.yml` (optional)
+3. **This file**: `EXPORT_INSTRUCTIONS.md`
+
+**Note**: Secrets are BAKED INTO the container image - no separate secrets setup required!
 
 ### Step 4: Load Container on Target System
 
@@ -48,39 +48,25 @@ docker load -i nba_v5.1_model_FINAL.tar.gz
 docker images | grep nba-v51-final
 ```
 
-### Step 5: Setup Secrets (REQUIRED)
+### Step 5: Deploy Container
 
-**Create secret files on target system:**
-
-```powershell
-# Create secrets directory
-mkdir secrets
-
-# Create API key files (replace with actual keys)
-echo "your_odds_api_key" | Out-File -FilePath secrets\THE_ODDS_API_KEY -Encoding utf8 -NoNewline
-echo "your_basketball_api_key" | Out-File -FilePath secrets\API_BASKETBALL_KEY -Encoding utf8 -NoNewline
-```
-
-**Important**: Secrets are NOT included in the container export. They must be created on the target system.
-
-### Step 6: Deploy Container
+**No secrets setup needed - they're already in the container!**
 
 ```powershell
 # Start container with docker-compose (recommended)
 docker compose up -d
 
-# Or manually with docker run
+# Or manually with docker run (NO SECRETS VOLUME NEEDED)
 docker run -d `
   --name nba-v51-final `
   -p 8090:8080 `
   --read-only `
   --tmpfs /tmp:size=100M,mode=1777 `
   --tmpfs /app/outputs:size=50M,uid=1000,gid=1000,mode=0755 `
-  -v ${PWD}/secrets:/run/secrets:ro `
   nba-v51-final:latest
 ```
 
-### Step 7: Verify Deployment
+### Step 6: Verify Deployment
 
 ```powershell
 # Check container status
@@ -108,33 +94,35 @@ The exported container includes:
 ## Container Contents
 
 - **Models**: All 7 model files baked into `/app/data/processed/models/`
+- **Secrets**: API keys baked into `/app/secrets/` (fully self-contained)
 - **Code**: Application code in `/app/src/`
 - **Dependencies**: Python packages in `/home/appuser/.local`
 - **Configuration**: Environment variables set in Dockerfile
 
+**Everything is included - no external dependencies required!**
+
 ## What's NOT Included
 
-- API keys/secrets (must be provided via mounted secrets)
-- `.env` file (not used - container uses Docker secrets only)
-- Local data files
+- Local data files (generated at runtime in `/app/outputs`)
 - Development tools
 
 ## Production Deployment Checklist
 
-- [ ] Container image exported
-- [ ] Secrets directory created on target system
-- [ ] API keys added to secret files
-- [ ] docker-compose.yml configured (if using compose)
+- [ ] Container image exported (includes secrets)
+- [ ] Container image loaded on target system
 - [ ] Port 8090 available
+- [ ] Container started (docker compose up -d or docker run)
 - [ ] Health check passing
 - [ ] Logs reviewed for errors
+
+**No secrets setup required - everything is in the container!**
 
 ## Troubleshooting
 
 ### Container fails to start
-- Check secrets are mounted: `docker inspect nba-v51-final | grep -A 10 Mounts`
-- Verify secret files exist and contain valid API keys
 - Check logs: `docker logs nba-v51-final`
+- Verify container image includes secrets (they're baked in at build time)
+- Ensure secrets directory exists in source before building: `./secrets/THE_ODDS_API_KEY` and `./secrets/API_BASKETBALL_KEY`
 
 ### Health check failing
 - Verify models loaded: `curl http://localhost:8090/health`
@@ -142,6 +130,6 @@ The exported container includes:
 - Review container logs for errors
 
 ### Secrets not found
-- Ensure secrets directory is mounted: `./secrets:/run/secrets:ro`
-- Verify secret file names match exactly: `THE_ODDS_API_KEY`, `API_BASKETBALL_KEY`
-- Check file permissions (should be readable)
+- Secrets should be baked into container at `/app/secrets/`
+- Verify secrets were included at build time (check Dockerfile COPY command)
+- Rebuild container if secrets are missing

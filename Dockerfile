@@ -49,6 +49,7 @@ WORKDIR /app
 RUN useradd -m -u 1000 -s /bin/bash appuser && \
     mkdir -p /app/data/processed/models && \
     mkdir -p /app/outputs && \
+    mkdir -p /app/secrets && \
     chown -R appuser:appuser /app
 
 # Copy Python packages from builder stage
@@ -62,6 +63,12 @@ COPY --chown=appuser:appuser scripts/ ./scripts/
 # Bake in production models (immutable in container)
 # =============================================================================
 COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
+
+# =============================================================================
+# Bake in API keys/secrets (immutable in container - fully self-contained)
+# =============================================================================
+# SECRETS ARE BAKED INTO CONTAINER - No external secrets required
+COPY --chown=appuser:appuser secrets/ /app/secrets/
 
 # Verify ALL 6 REQUIRED model files exist (fail fast if missing)
 RUN echo "=== NBA v5.1 FINAL Model Verification ===" && \
@@ -84,7 +91,14 @@ RUN echo "=== NBA v5.1 FINAL Model Verification ===" && \
     test -f /app/data/processed/models/first_half_total_features.pkl && \
     echo "  ✓ first_half_total_model.pkl (58.1% acc, +11.4% ROI)" && \
     echo "" && \
-    echo "=== All 6 required models verified! ==="
+    echo "=== All 6 required models verified! ===" && \
+    echo "" && \
+    echo "=== Verifying baked-in secrets ===" && \
+    test -f /app/secrets/THE_ODDS_API_KEY && \
+    echo "  ✓ THE_ODDS_API_KEY" && \
+    test -f /app/secrets/API_BASKETBALL_KEY && \
+    echo "  ✓ API_BASKETBALL_KEY" && \
+    echo "=== All secrets verified! ==="
 
 # =============================================================================
 # Environment Configuration

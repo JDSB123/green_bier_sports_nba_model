@@ -8,9 +8,9 @@ from pathlib import Path
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# NOTE: NO .env loading - Container uses Docker secrets ONLY (strict mode)
-# All required API keys MUST be in /run/secrets/ (mounted from ./secrets/)
-# Container will fail loudly if secrets are missing (no silent fallbacks)
+# NOTE: Secrets are BAKED INTO CONTAINER at build time (/app/secrets/)
+# All required API keys are copied from ./secrets/ into container during build
+# Container is fully self-contained - no external secrets or .env files needed
 
 # Import secrets utility
 try:
@@ -67,7 +67,8 @@ def _env_or_default(key: str, default: str) -> str:
 
 def _secret_strict(secret_name: str) -> str:
     """
-    STRICT MODE: Read secret ONLY from Docker secrets (/run/secrets).
+    STRICT MODE: Read secret from baked-in location (/app/secrets).
+    Secrets are baked into container at build time - fully self-contained.
     NO FALLBACKS. FAILS LOUDLY if not found.
     """
     return read_secret_strict(secret_name)

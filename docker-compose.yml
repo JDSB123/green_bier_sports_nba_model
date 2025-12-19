@@ -40,12 +40,9 @@ services:
     ports:
       - "8090:8080"
     
-    # Docker Secrets: Mount secrets directory to /run/secrets (read-only)
-    # STRICT MODE: Secrets MUST be in /run/secrets/{SECRET_NAME} files
-    # NO FALLBACKS - Container will FAIL LOUDLY if secrets not found
-    # Required files: secrets/THE_ODDS_API_KEY and secrets/API_BASKETBALL_KEY
-    volumes:
-      - ./secrets:/run/secrets:ro
+    # SECRETS ARE BAKED INTO CONTAINER - No volume mount required
+    # Secrets are copied from ./secrets/ into /app/secrets/ at build time
+    # Container is fully self-contained - no external secrets needed
     
     environment:
       # Optional auth
