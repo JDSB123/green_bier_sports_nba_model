@@ -133,3 +133,49 @@ def get_secret_source(secret_name: str) -> str:
         return "environment"
     
     return "not-found"
+
+
+class SecretNotFoundError(Exception):
+    """Raised when a required secret is not found."""
+    pass
+
+
+def read_secret_strict(secret_name: str) -> str:
+    """
+    STRICT MODE: Read a secret ONLY from Docker secrets (/run/secrets).
+    NO FALLBACKS. FAILS LOUDLY if secret not found.
+    
+    Args:
+        secret_name: Name of the secret file in /run/secrets/
+    
+    Returns:
+        Secret value as string
+    
+    Raises:
+        SecretNotFoundError: If secret file does not exist or is empty
+    """
+    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
+    
+    if not docker_secret_path.exists() or not docker_secret_path.is_file():
+        raise SecretNotFoundError(
+            f"Required secret not found: {secret_name}\n"
+            f"Expected file: {docker_secret_path}\n"
+            f"Make sure secrets are mounted in docker-compose.yml: ./secrets:/run/secrets:ro"
+        )
+    
+    try:
+        value = docker_secret_path.read_text(encoding="utf-8").strip()
+        if not value:
+            raise SecretNotFoundError(
+                f"Secret file exists but is empty: {secret_name}\n"
+                f"File path: {docker_secret_path}"
+            )
+        return value
+    except Exception as e:
+        if isinstance(e, SecretNotFoundError):
+            raise
+        raise SecretNotFoundError(
+            f"Failed to read secret: {secret_name}\n"
+            f"File path: {docker_secret_path}\n"
+            f"Error: {e}"
+        )

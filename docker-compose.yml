@@ -40,11 +40,14 @@ services:
     ports:
       - "8090:8080"
     
+    # Docker Secrets: Mount secrets directory to /run/secrets (read-only)
+    # STRICT MODE: Secrets MUST be in /run/secrets/{SECRET_NAME} files
+    # NO FALLBACKS - Container will FAIL LOUDLY if secrets not found
+    # Required files: secrets/THE_ODDS_API_KEY and secrets/API_BASKETBALL_KEY
+    volumes:
+      - ./secrets:/run/secrets:ro
+    
     environment:
-      # Required API keys (set in .env file)
-      - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
-      - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
-      
       # Optional auth
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
