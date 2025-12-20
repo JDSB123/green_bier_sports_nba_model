@@ -2,13 +2,31 @@
 
 **Last Updated:** 2025-12-19
 
-## Resource Locations (NEVER CHANGES)
+## Actual Azure Architecture
 
-| Resource | Name | Resource Group |
-|----------|------|----------------|
-| **Container App** | `nba-picks-api` | `greenbier-enterprise-rg` |
-| **Container Registry** | `greenbieracr` | `greenbier-enterprise-rg` |
-| **Function App** | `nba-picks-trigger` | `greenbier-enterprise-rg` |
+```
+greenbier-enterprise-rg                    <-- Resource Group
+├── greenbieracr                           <-- Container Registry
+├── greenbier-nba-env                      <-- Container Apps Environment
+│   └── nba-picks-api                      <-- Container App
+│       ├── Image: nba-model:v5.1
+│       ├── Registry: greenbieracr.azurecr.io
+│       ├── Scaling: 1-3 replicas
+│       └── Environment Variables
+│           ├── NBA_MODEL_VERSION
+│           └── NBA_MARKETS
+└── nba-picks-trigger                      <-- Function App (optional)
+```
+
+## Resource Names (NEVER CHANGES)
+
+| Resource | Name |
+|----------|------|
+| **Resource Group** | `greenbier-enterprise-rg` |
+| **Container Apps Environment** | `greenbier-nba-env` |
+| **Container App** | `nba-picks-api` |
+| **Container Registry** | `greenbieracr` |
+| **Function App** | `nba-picks-trigger` |
 
 ## Get Current API URL (DYNAMICALLY)
 
@@ -32,7 +50,7 @@ All scripts use these environment variables (no hardcoded values):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `NBA_API_URL` | `http://localhost:8090` | Full API URL |
+| `NBA_API_URL` | `http://localhost:${NBA_API_PORT}` | Full API URL |
 | `NBA_API_PORT` | `8090` | Local container port |
 | `TEAMS_WEBHOOK_URL` | (required) | Teams webhook URL |
 | `ALLOWED_ORIGINS` | `*` | CORS origins |
@@ -43,7 +61,7 @@ All scripts use these environment variables (no hardcoded values):
 # View container app logs
 az containerapp logs show -n nba-picks-api -g greenbier-enterprise-rg --follow
 
-# Update container app
+# Update container app with new image
 az containerapp update -n nba-picks-api -g greenbier-enterprise-rg \
   --image greenbieracr.azurecr.io/nba-model:latest
 
@@ -52,8 +70,12 @@ docker build -t greenbieracr.azurecr.io/nba-model:latest .
 az acr login -n greenbieracr
 docker push greenbieracr.azurecr.io/nba-model:latest
 
-# Run locally with custom port
+# Run locally with custom port (avoids conflicts)
 NBA_API_PORT=9000 docker compose up -d
+
+# Check current scaling
+az containerapp show -n nba-picks-api -g greenbier-enterprise-rg \
+  --query properties.template.scale
 ```
 
 ## CI/CD
@@ -65,8 +87,8 @@ GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 
 ## Model Version
 
-- **Current:** 5.1-FINAL (6 markets: FG + 1H)
-- **Target:** 6.0 (9 markets: Q1 + 1H + FG)
+- **Current Deployed:** v5.1 (6 markets: FG + 1H)
+- **Target:** v6.0 (9 markets: Q1 + 1H + FG)
 
 ## Important Files
 
@@ -75,5 +97,6 @@ GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 | `azure/function_app/function_app.py` | Azure Function trigger + Teams webhook |
 | `.github/workflows/gbs-nba-deploy.yml` | CI/CD pipeline |
 | `infra/nba/main.bicep` | Infrastructure as Code |
+| `infra/shared/main.bicep` | Shared resources (ACR, Environment) |
 | `Dockerfile` | Container definition |
 | `.env.example` | Environment variable template |

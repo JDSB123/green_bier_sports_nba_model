@@ -90,10 +90,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 // ============================================================================
-// Container Apps Environment (shared, apps scale independently)
+// Container Apps Environment - ACTUAL: greenbier-nba-env
 // ============================================================================
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
-  name: '${prefix}-apps-env-${environment}'
+  name: 'greenbier-nba-env'
   location: location
   tags: tags
   properties: {

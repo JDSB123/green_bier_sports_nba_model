@@ -29,9 +29,9 @@ resource sharedRg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
   scope: subscription()
 }
 
-// Get shared Container Apps Environment
+// Get Container Apps Environment - ACTUAL: greenbier-nba-env
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
-  name: 'gbs-apps-env-${environment}'
+  name: 'greenbier-nba-env'
   scope: resourceGroup(sharedResourceGroup)
 }
 
