@@ -163,12 +163,12 @@ class SecretNotFoundError(Exception):
 
 def read_secret_strict(secret_name: str) -> str:
     """
-    STRICT MODE: Read a secret from baked-in location, Docker secrets, or local development.
+    STRICT MODE: Read a secret from container-mounted Docker secrets, baked-in files, or local dev files.
     NO ENV VAR FALLBACKS. FAILS LOUDLY if secret not found.
 
     Priority:
-    1. Baked-in secrets (/app/secrets/{secret_name}) - SECRETS IN CONTAINER
-    2. Docker secrets (/run/secrets/{secret_name}) - fallback
+    1. Docker secrets (/run/secrets/{secret_name}) - Compose/Swarm mount
+    2. Baked-in secrets (/app/secrets/{secret_name}) - legacy fallback
     3. Local secrets (./secrets/{secret_name}) - for local development
 
     Args:
@@ -180,21 +180,41 @@ def read_secret_strict(secret_name: str) -> str:
     Raises:
         SecretNotFoundError: If secret file does not exist or is empty
     """
-    # Try baked-in secrets first (secrets baked into container)
+    # 1. Prefer Docker secrets mount (/run/secrets)
+    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
+    if docker_secret_path.exists() and docker_secret_path.is_file():
+        try:
+            value = docker_secret_path.read_text(encoding="utf-8").strip()
+            if value:
+                return value
+            # File exists but empty
+            raise SecretNotFoundError(
+                f"Docker secret file exists but is empty: {secret_name}\n"
+                f"File path: {docker_secret_path}\n"
+                f"Required secret must contain a non-empty value"
+            )
+        except Exception as e:
+            if isinstance(e, SecretNotFoundError):
+                raise
+            raise SecretNotFoundError(
+                f"Failed to read Docker secret: {secret_name}\n"
+                f"File path: {docker_secret_path}\n"
+                f"Error: {e}"
+            )
+
+    # 2. Fallback to baked-in secrets (/app/secrets)
     baked_secret_path = BAKED_SECRETS_DIR / secret_name
     if baked_secret_path.exists() and baked_secret_path.is_file():
         try:
             value = baked_secret_path.read_text(encoding="utf-8").strip()
-            if not value:
-                # File exists but is empty - fail loudly (NO FALLBACKS in strict mode)
-                raise SecretNotFoundError(
-                    f"Baked-in secret file exists but is empty: {secret_name}\n"
-                    f"File path: {baked_secret_path}\n"
-                    f"Required secret must contain a non-empty value"
-                )
-            return value
+            if value:
+                return value
+            raise SecretNotFoundError(
+                f"Baked-in secret file exists but is empty: {secret_name}\n"
+                f"File path: {baked_secret_path}\n"
+                f"Required secret must contain a non-empty value"
+            )
         except Exception as e:
-            # If it's already a SecretNotFoundError, re-raise it
             if isinstance(e, SecretNotFoundError):
                 raise
             raise SecretNotFoundError(
@@ -203,21 +223,7 @@ def read_secret_strict(secret_name: str) -> str:
                 f"Error: {e}"
             )
 
-    # Fallback to Docker secrets (for backward compatibility) - only if baked-in doesn't exist
-    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
-    if docker_secret_path.exists() and docker_secret_path.is_file():
-        try:
-            value = docker_secret_path.read_text(encoding="utf-8").strip()
-            if value:
-                return value
-        except Exception as e:
-            raise SecretNotFoundError(
-                f"Failed to read Docker secret: {secret_name}\n"
-                f"File path: {docker_secret_path}\n"
-                f"Error: {e}"
-            )
-
-    # Try local secrets (for local development) - only if Docker paths don't exist
+    # 3. Local secrets for development
     local_secret_path = LOCAL_SECRETS_DIR / secret_name
     if local_secret_path.exists() and local_secret_path.is_file():
         try:
@@ -235,8 +241,8 @@ def read_secret_strict(secret_name: str) -> str:
     raise SecretNotFoundError(
         f"Required secret not found: {secret_name}\n"
         f"Checked locations:\n"
-        f"  - {baked_secret_path} (baked-in)\n"
         f"  - {docker_secret_path} (Docker secrets)\n"
+        f"  - {baked_secret_path} (baked-in)\n"
         f"  - {local_secret_path} (local development)\n"
-        f"Secrets must be in /app/secrets/ (container) or ./secrets/ (local)"
+        f"Secrets must be mounted at /run/secrets/ (Compose/Swarm) or provided in ./secrets/ (local dev)."
     )

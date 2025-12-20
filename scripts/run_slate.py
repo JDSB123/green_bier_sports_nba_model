@@ -82,12 +82,14 @@ def check_stack_running() -> bool:
     """Check if the NBA stack is running."""
     try:
         result = subprocess.run(
-            ["docker", "ps", "--filter", "name=nba-api", "--format", "{{.Names}}"],
+            ["docker", "ps", "--filter", "name=nba-v60", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        return "nba-api" in result.stdout
+        # Container is named 'nba-v60' per compose; service name is 'nba-v60-api'
+        names = result.stdout.splitlines()
+        return any(n in ("nba-v60", "nba-v60-api") for n in names)
     except Exception:
         return False
 
@@ -342,7 +344,7 @@ def main():
     
     # Step 3: Wait for API
     if not wait_for_api():
-        print("\n💡 Try: docker compose logs strict-api")
+        print("\n💡 Try: docker compose logs nba-v60")
         sys.exit(1)
     
     # Step 4: Fetch and display

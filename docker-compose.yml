@@ -40,9 +40,10 @@ services:
     ports:
       - "${NBA_API_PORT:-8090}:8080"
 
-    # SECRETS ARE BAKED INTO CONTAINER - No volume mount required
-    # Secrets are copied from ./secrets/ into /app/secrets/ at build time
-    # Container is fully self-contained - no external secrets needed
+    # Secrets: Mounted via Docker secrets for production/dev
+    # Secret files in ./secrets are mounted read-only into /run/secrets inside the container
+    volumes:
+      - ./secrets:/run/secrets:ro
 
     environment:
       # Optional auth
