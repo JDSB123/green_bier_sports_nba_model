@@ -23,15 +23,14 @@ LOCAL_SECRETS_DIR = Path(__file__).resolve().parent.parent.parent / "secrets"
 
 def read_secret(secret_name: str, default: str = "") -> str:
     """
-    Read a secret from baked-in secrets or fallback sources.
+    Read a secret from environment variables or fallback sources.
     
     Priority order:
-    1. Baked-in secrets (/app/secrets/{secret_name}) - SECRETS IN CONTAINER
+    1. Environment variable ({secret_name}) - HIGHEST PRIORITY (Azure/Cloud)
     2. Docker Swarm secrets (/run/secrets/{secret_name})
-    3. Docker Compose secrets (/run/secrets/{secret_name})
-    4. Local secret files (./secrets/{secret_name})
-    5. Environment variable ({secret_name})
-    6. Default value
+    3. Baked-in secrets (/app/secrets/{secret_name}) - Legacy
+    4. Local secret files (./secrets/{secret_name}) - Dev
+    5. Default value
     
     Args:
         secret_name: Name of the secret
@@ -40,7 +39,22 @@ def read_secret(secret_name: str, default: str = "") -> str:
     Returns:
         Secret value as string
     """
-    # Try baked-in secrets FIRST (secrets baked into container at build time)
+    # 1. Try environment variable FIRST (Cloud/Azure override)
+    env_value = os.getenv(secret_name)
+    if env_value:
+        return env_value
+
+    # 2. Try Docker secrets (Swarm/Compose)
+    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
+    if docker_secret_path.exists() and docker_secret_path.is_file():
+        try:
+            value = docker_secret_path.read_text(encoding="utf-8").strip()
+            if value:
+                return value
+        except Exception:
+            pass
+            
+    # 3. Try baked-in secrets (Legacy/Fallback)
     baked_secret_path = BAKED_SECRETS_DIR / secret_name
     if baked_secret_path.exists() and baked_secret_path.is_file():
         try:
@@ -50,17 +64,7 @@ def read_secret(secret_name: str, default: str = "") -> str:
         except Exception:
             pass
     
-    # Try Docker secrets (Swarm/Compose) - fallback only
-    docker_secret_path = DOCKER_SECRETS_DIR / secret_name
-    if docker_secret_path.exists() and docker_secret_path.is_file():
-        try:
-            value = docker_secret_path.read_text(encoding="utf-8").strip()
-            if value:
-                return value
-        except Exception:
-            pass
-    
-    # Try local secret files (for development)
+    # 4. Try local secret files (for development)
     local_secret_path = LOCAL_SECRETS_DIR / secret_name
     if local_secret_path.exists() and local_secret_path.is_file():
         try:
@@ -69,11 +73,6 @@ def read_secret(secret_name: str, default: str = "") -> str:
                 return value
         except Exception:
             pass
-    
-    # Fall back to environment variable
-    env_value = os.getenv(secret_name, default)
-    if env_value:
-        return env_value
     
     return default
 
