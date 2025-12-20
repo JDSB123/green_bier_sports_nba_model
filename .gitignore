@@ -71,8 +71,13 @@ nul
 # Testing
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 .tox/
+
+# Type checking
+.mypy_cache/
 
 # Backup files
 *_BACKUP.*
@@ -92,3 +97,8 @@ azure/.vscode/
 
 # Container exports (too large for git)
 export/
+
+# Temporary output files
+nba_betting_card_*.txt
+*.tmp
+temp/
