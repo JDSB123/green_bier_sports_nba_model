@@ -159,7 +159,8 @@ class ComprehensiveIngestion:
             return []
 
         results = []
-        for event_id in event_ids[:10]:  # Limit to 10 to conserve API calls
+        # PREMIUM API: Fetch ALL events, not just 10
+        for event_id in event_ids:
             key = f"the_odds_1h_{event_id}_{datetime.now().strftime('%Y%m%d_%H')}"
 
             async def fetch(eid=event_id):
@@ -184,6 +185,121 @@ class ComprehensiveIngestion:
                 logger.warning(f"Failed to fetch 1H odds for {event_id}: {e}")
 
         self._record_result("the_odds", "/events/*/odds (1H)", True, len(results))
+        return results
+
+    async def fetch_the_odds_first_quarter(
+        self,
+        event_ids: Optional[List[str]] = None,
+        sport: str = "basketball_nba",
+    ) -> List[Dict]:
+        """Fetch first quarter odds for events.
+
+        TTL: 15 minutes (odds are live)
+
+        Args:
+            event_ids: List of event IDs to fetch. If None, fetches events first.
+            sport: Sport identifier
+        """
+        from src.ingestion import the_odds
+
+        # Get event IDs if not provided
+        if event_ids is None:
+            events = await self.fetch_the_odds_events(sport)
+            event_ids = [e.get("id") for e in events if e.get("id")]
+
+        if not event_ids:
+            logger.warning("No event IDs available for first quarter odds")
+            return []
+
+        results = []
+        # PREMIUM API: Fetch ALL events
+        for event_id in event_ids:
+            key = f"the_odds_q1_{event_id}_{datetime.now().strftime('%Y%m%d_%H')}"
+
+            async def fetch(eid=event_id):
+                return await the_odds.fetch_event_odds(
+                    event_id=eid,
+                    sport=sport,
+                    markets="spreads_q1,totals_q1,h2h_q1",
+                )
+
+            try:
+                data = await api_cache.get_or_fetch(
+                    key=key,
+                    fetch_fn=fetch,
+                    ttl_hours=APICache.TTL_LIVE,
+                    source="the_odds",
+                    endpoint=f"/events/{event_id}/odds",
+                    force_refresh=self.force_refresh,
+                )
+                if data:
+                    results.append(data)
+            except Exception as e:
+                logger.warning(f"Failed to fetch Q1 odds for {event_id}: {e}")
+
+        self._record_result("the_odds", "/events/*/odds (Q1)", True, len(results))
+        return results
+
+    async def fetch_the_odds_all_quarters(
+        self,
+        event_ids: Optional[List[str]] = None,
+        sport: str = "basketball_nba",
+    ) -> List[Dict]:
+        """Fetch ALL quarter odds (Q1, Q2, Q3, Q4) for events.
+
+        PREMIUM API: Uses all available period markets.
+
+        TTL: 15 minutes (odds are live)
+
+        Args:
+            event_ids: List of event IDs to fetch. If None, fetches events first.
+            sport: Sport identifier
+        """
+        from src.ingestion import the_odds
+
+        # Get event IDs if not provided
+        if event_ids is None:
+            events = await self.fetch_the_odds_events(sport)
+            event_ids = [e.get("id") for e in events if e.get("id")]
+
+        if not event_ids:
+            logger.warning("No event IDs available for quarter odds")
+            return []
+
+        results = []
+        # All quarter markets available from The Odds API
+        all_quarter_markets = (
+            "spreads_q1,totals_q1,h2h_q1,"
+            "spreads_q2,totals_q2,h2h_q2,"
+            "spreads_q3,totals_q3,h2h_q3,"
+            "spreads_q4,totals_q4,h2h_q4"
+        )
+
+        for event_id in event_ids:
+            key = f"the_odds_quarters_{event_id}_{datetime.now().strftime('%Y%m%d_%H')}"
+
+            async def fetch(eid=event_id):
+                return await the_odds.fetch_event_odds(
+                    event_id=eid,
+                    sport=sport,
+                    markets=all_quarter_markets,
+                )
+
+            try:
+                data = await api_cache.get_or_fetch(
+                    key=key,
+                    fetch_fn=fetch,
+                    ttl_hours=APICache.TTL_LIVE,
+                    source="the_odds",
+                    endpoint=f"/events/{event_id}/odds",
+                    force_refresh=self.force_refresh,
+                )
+                if data:
+                    results.append(data)
+            except Exception as e:
+                logger.warning(f"Failed to fetch quarter odds for {event_id}: {e}")
+
+        self._record_result("the_odds", "/events/*/odds (Q1-Q4)", True, len(results))
         return results
 
     async def fetch_the_odds_scores(self, sport: str = "basketball_nba") -> List[Dict]:
@@ -557,12 +673,24 @@ class ComprehensiveIngestion:
                 self.status.errors.append(str(result))
                 logger.error(f"Ingestion error: {result}")
 
-        # Fetch first-half odds (depends on events)
+        # Fetch period-specific odds (depends on events) - PREMIUM API: ALL periods
         try:
             await self.fetch_the_odds_first_half()
         except Exception as e:
             logger.warning(f"First half odds fetch failed: {e}")
             self.status.errors.append(f"1H odds: {e}")
+
+        try:
+            await self.fetch_the_odds_first_quarter()
+        except Exception as e:
+            logger.warning(f"First quarter odds fetch failed: {e}")
+            self.status.errors.append(f"Q1 odds: {e}")
+
+        try:
+            await self.fetch_the_odds_all_quarters()
+        except Exception as e:
+            logger.warning(f"All quarters odds fetch failed: {e}")
+            self.status.errors.append(f"Q1-Q4 odds: {e}")
 
         logger.info(f"Ingestion complete: {len(self.status.results)} endpoints, {len(self.status.errors)} errors")
         return self.status
@@ -600,11 +728,21 @@ class ComprehensiveIngestion:
         await asyncio.gather(*tasks, return_exceptions=True)
         await asyncio.gather(*optional_tasks, return_exceptions=True)
 
-        # Fetch first-half odds
+        # Fetch period-specific odds - PREMIUM API: ALL periods
         try:
             await self.fetch_the_odds_first_half()
         except Exception as e:
             logger.warning(f"First half odds: {e}")
+
+        try:
+            await self.fetch_the_odds_first_quarter()
+        except Exception as e:
+            logger.warning(f"First quarter odds: {e}")
+
+        try:
+            await self.fetch_the_odds_all_quarters()
+        except Exception as e:
+            logger.warning(f"All quarters odds: {e}")
 
         return self.status
 

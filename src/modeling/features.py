@@ -241,29 +241,34 @@ class FeatureEngineer:
         if len(home_games) + len(away_games) < 3:
             return {}
 
-        # Compute period-specific scores
+        # Compute period-specific scores - NO ZERO-FILLING!
+        # Games with missing quarter data are EXCLUDED, not corrupted with zeros.
         if period == "q1":
             if has_quarter_data:
-                home_games["team_score"] = home_games["home_q1"].fillna(0)
-                home_games["opp_score"] = home_games["away_q1"].fillna(0)
-                away_games["team_score"] = away_games["away_q1"].fillna(0)
-                away_games["opp_score"] = away_games["home_q1"].fillna(0)
+                # Only include games where Q1 data exists
+                home_games = home_games.dropna(subset=["home_q1", "away_q1"])
+                away_games = away_games.dropna(subset=["away_q1", "home_q1"])
+                if len(home_games) + len(away_games) < 3:
+                    logger.debug(f"Insufficient Q1 data for {team}: {len(home_games)} home, {len(away_games)} away games with Q1 scores")
+                    return {}
+                home_games["team_score"] = home_games["home_q1"]
+                home_games["opp_score"] = home_games["away_q1"]
+                away_games["team_score"] = away_games["away_q1"]
+                away_games["opp_score"] = away_games["home_q1"]
             else:
                 return {}
         elif period == "1h":
             if has_quarter_data:
-                home_games["team_score"] = (
-                    home_games["home_q1"].fillna(0) + home_games["home_q2"].fillna(0)
-                )
-                home_games["opp_score"] = (
-                    home_games["away_q1"].fillna(0) + home_games["away_q2"].fillna(0)
-                )
-                away_games["team_score"] = (
-                    away_games["away_q1"].fillna(0) + away_games["away_q2"].fillna(0)
-                )
-                away_games["opp_score"] = (
-                    away_games["home_q1"].fillna(0) + away_games["home_q2"].fillna(0)
-                )
+                # Only include games where Q1 AND Q2 data exists
+                home_games = home_games.dropna(subset=["home_q1", "home_q2", "away_q1", "away_q2"])
+                away_games = away_games.dropna(subset=["away_q1", "away_q2", "home_q1", "home_q2"])
+                if len(home_games) + len(away_games) < 3:
+                    logger.debug(f"Insufficient 1H data for {team}: {len(home_games)} home, {len(away_games)} away games with 1H scores")
+                    return {}
+                home_games["team_score"] = home_games["home_q1"] + home_games["home_q2"]
+                home_games["opp_score"] = home_games["away_q1"] + home_games["away_q2"]
+                away_games["team_score"] = away_games["away_q1"] + away_games["away_q2"]
+                away_games["opp_score"] = away_games["home_q1"] + away_games["home_q2"]
             else:
                 return {}
         else:  # fg
@@ -1066,10 +1071,12 @@ class FeatureEngineer:
                 home_stats.get("form_3g", 0) - away_stats.get("form_3g", 0)
             )
 
-        # *** LINE AS FEATURE ***
+        # *** LINE AS FEATURE - ALL PERIODS ***
+        # Full Game lines
         if "spread_line" in game and pd.notna(game["spread_line"]):
             spread_line = game["spread_line"]
             features["spread_line"] = spread_line
+            features["fg_spread_line"] = spread_line  # Alias for consistency
             features["spread_vs_predicted"] = (
                 features["predicted_margin"] - (-spread_line)
             )
@@ -1077,11 +1084,60 @@ class FeatureEngineer:
         if "total_line" in game and pd.notna(game["total_line"]):
             total_line = game["total_line"]
             features["total_line"] = total_line
+            features["fg_total_line"] = total_line  # Alias for consistency
             features["total_vs_predicted"] = (
                 features["predicted_total"] - total_line
             )
 
+        # First Half lines - PREMIUM API DATA
+        if "fh_spread_line" in game and pd.notna(game["fh_spread_line"]):
+            fh_spread = game["fh_spread_line"]
+            features["fh_spread_line"] = fh_spread
+            features["1h_spread_line"] = fh_spread  # Alias
+            if "predicted_margin_1h" in features:
+                features["fh_spread_vs_predicted"] = features["predicted_margin_1h"] - (-fh_spread)
+
+        if "fh_total_line" in game and pd.notna(game["fh_total_line"]):
+            fh_total = game["fh_total_line"]
+            features["fh_total_line"] = fh_total
+            features["1h_total_line"] = fh_total  # Alias
+            if "predicted_total_1h" in features:
+                features["fh_total_vs_predicted"] = features["predicted_total_1h"] - fh_total
+
+        # First Quarter lines - PREMIUM API DATA
+        if "q1_spread_line" in game and pd.notna(game["q1_spread_line"]):
+            q1_spread = game["q1_spread_line"]
+            features["q1_spread_line"] = q1_spread
+
+        if "q1_total_line" in game and pd.notna(game["q1_total_line"]):
+            q1_total = game["q1_total_line"]
+            features["q1_total_line"] = q1_total
+
+        # Moneyline odds - ALL PERIODS
+        if "home_ml_odds" in game and pd.notna(game["home_ml_odds"]):
+            features["home_ml_odds"] = game["home_ml_odds"]
+            features["fg_home_ml"] = game["home_ml_odds"]
+        if "away_ml_odds" in game and pd.notna(game["away_ml_odds"]):
+            features["away_ml_odds"] = game["away_ml_odds"]
+            features["fg_away_ml"] = game["away_ml_odds"]
+
+        # 1H moneyline
+        if "fh_home_ml" in game and pd.notna(game["fh_home_ml"]):
+            features["fh_home_ml"] = game["fh_home_ml"]
+            features["1h_home_ml"] = game["fh_home_ml"]
+        if "fh_away_ml" in game and pd.notna(game["fh_away_ml"]):
+            features["fh_away_ml"] = game["fh_away_ml"]
+            features["1h_away_ml"] = game["fh_away_ml"]
+
+        # Q1 moneyline
+        if "q1_home_ml" in game and pd.notna(game["q1_home_ml"]):
+            features["q1_home_ml"] = game["q1_home_ml"]
+        if "q1_away_ml" in game and pd.notna(game["q1_away_ml"]):
+            features["q1_away_ml"] = game["q1_away_ml"]
+
         # *** INJURY IMPACT FEATURES ***
+        # Injury features - has_injury_data indicates whether we have real API data
+        features["has_injury_data"] = game.get("has_injury_data", 0)
         features["home_injury_spread_impact"] = game.get(
             "home_injury_spread_impact", 0
         )
@@ -1096,8 +1152,12 @@ class FeatureEngineer:
         features["away_star_out"] = game.get("away_star_out", 0)
 
         # *** RLM / SHARP MONEY FEATURES ***
+        # IMPORTANT: has_real_splits indicates whether we have REAL betting splits data
+        # If 0, the splits features are defaults/missing and should be weighted accordingly
+        features["has_real_splits"] = game.get("has_real_splits", 0)
         features["is_rlm_spread"] = game.get("is_rlm_spread", 0)
         features["sharp_side_spread"] = game.get("sharp_side_spread", 0)
+        # NOTE: Default 50 means "no data" - models should check has_real_splits
         features["spread_public_home_pct"] = game.get("spread_public_home_pct", 50)
         features["spread_ticket_money_diff"] = game.get(
             "spread_ticket_money_diff", 0

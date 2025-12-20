@@ -42,14 +42,16 @@ from src.modeling.team_factors import (
 
 class RichFeatureBuilder:
     """Build prediction features from live API-Basketball data."""
-    
+
     def __init__(self, league_id: int = 12, season: str = None):
         self.league_id = league_id
         self.season = season or settings.current_season
         self._team_cache: Dict[str, int] = {}
         self._stats_cache: Dict[int, Dict] = {}
         self._games_cache: Optional[List[Dict]] = None
-        
+        self._injuries_cache: Optional[pd.DataFrame] = None
+        self._injuries_fetched: bool = False
+
         # Ensure cache directory exists (use /tmp if main cache is read-only)
         self.cache_dir = os.path.join(settings.data_processed_dir, "cache")
         try:
@@ -184,7 +186,82 @@ class RichFeatureBuilder:
                 }
         
         return standings
-    
+
+    async def get_injuries_df(self) -> Optional[pd.DataFrame]:
+        """
+        Get injuries dataframe, fetching dynamically if needed.
+
+        PREMIUM API: Uses ESPN (free) + API-Basketball for comprehensive injury data.
+        Results are cached for the session to avoid excessive API calls.
+        """
+        if self._injuries_fetched:
+            return self._injuries_cache
+
+        self._injuries_fetched = True
+
+        # First try loading from file (may be recently updated)
+        injury_path = os.path.join(settings.data_processed_dir, "injuries.csv")
+        from datetime import timedelta
+
+        if os.path.exists(injury_path):
+            file_mtime = datetime.fromtimestamp(os.path.getmtime(injury_path))
+            file_age = datetime.now() - file_mtime
+            # Use file if less than 4 hours old
+            if file_age < timedelta(hours=4):
+                try:
+                    self._injuries_cache = pd.read_csv(injury_path)
+                    print(f"[INJURIES] Loaded {len(self._injuries_cache)} injuries from cache (age: {file_age})")
+                    return self._injuries_cache
+                except Exception as e:
+                    print(f"[INJURIES] Failed to load cache: {e}")
+
+        # Fetch fresh injuries from all sources
+        try:
+            from src.ingestion.injuries import fetch_all_injuries, enrich_injuries_with_stats
+
+            print("[INJURIES] Fetching fresh injury data...")
+            injuries = await fetch_all_injuries()
+
+            if not injuries:
+                print("[INJURIES] No injury data available from any source")
+                self._injuries_cache = None
+                return None
+
+            # Enrich with player stats
+            injuries = await enrich_injuries_with_stats(injuries)
+
+            # Convert to DataFrame
+            rows = []
+            for inj in injuries:
+                rows.append({
+                    "player_id": inj.player_id,
+                    "player_name": inj.player_name,
+                    "team": inj.team,
+                    "status": inj.status,
+                    "injury_type": inj.injury_type,
+                    "ppg": inj.ppg,
+                    "minutes_per_game": inj.minutes_per_game,
+                    "usage_rate": inj.usage_rate,
+                    "source": inj.source,
+                })
+
+            self._injuries_cache = pd.DataFrame(rows)
+            print(f"[INJURIES] Fetched {len(self._injuries_cache)} injuries from live API")
+
+            # Save to cache file for future runs
+            try:
+                self._injuries_cache.to_csv(injury_path, index=False)
+                print(f"[INJURIES] Saved to {injury_path}")
+            except Exception as e:
+                print(f"[INJURIES] Could not save cache: {e}")
+
+            return self._injuries_cache
+
+        except Exception as e:
+            print(f"[INJURIES] Error fetching injuries: {e}")
+            self._injuries_cache = None
+            return None
+
     async def build_game_features(
         self,
         home_team: str,
@@ -510,26 +587,39 @@ class RichFeatureBuilder:
         
         predicted_margin_nba = base_margin + HOME_COURT_ADV + rest_margin_adj + form_margin_adj
         
-        # Injury integration
-        injury_path = os.path.join(settings.data_processed_dir, "injuries.csv")
-        if os.path.exists(injury_path):
-            injuries_df = pd.read_csv(injury_path)
+        # Injury integration - DYNAMIC FETCH from ESPN + API-Basketball
+        injuries_df = await self.get_injuries_df()
+        has_injury_data = injuries_df is not None and len(injuries_df) > 0
+
+        if has_injury_data:
             out_injuries = injuries_df[injuries_df['status'] == 'out']
-            
+
+            # Match team names (partial match for flexibility)
             home_out_ppg = out_injuries[out_injuries['team'].str.contains(home_team, case=False, na=False)]['ppg'].sum()
             away_out_ppg = out_injuries[out_injuries['team'].str.contains(away_team, case=False, na=False)]['ppg'].sum()
-            
-            # Adjust expected points
-            home_expected_pts -= home_out_ppg * 0.8  # 80% replacement efficiency
+
+            # Adjust expected points - 80% replacement efficiency
+            home_expected_pts -= home_out_ppg * 0.8
             away_expected_pts -= away_out_ppg * 0.8
-            
+
             predicted_total_nba = home_expected_pts + away_expected_pts
             predicted_margin_nba = home_expected_pts - away_expected_pts  # Re-calc margin after adjustment
-            
+
             injury_margin_adj = -home_out_ppg * 0.8 + away_out_ppg * 0.8
+
+            # Count star players out (players with 15+ PPG)
+            home_star_out = len(out_injuries[
+                (out_injuries['team'].str.contains(home_team, case=False, na=False)) &
+                (out_injuries['ppg'] >= 15)
+            ])
+            away_star_out = len(out_injuries[
+                (out_injuries['team'].str.contains(away_team, case=False, na=False)) &
+                (out_injuries['ppg'] >= 15)
+            ])
         else:
             home_out_ppg = away_out_ppg = 0.0
             injury_margin_adj = 0.0
+            home_star_out = away_star_out = 0
 
         # Build feature dict
         features = {
@@ -646,9 +736,13 @@ class RichFeatureBuilder:
             # ELO proxy (derived from win% and margin)
             "home_elo": 1500 + (home_win_pct - 0.5) * 400 + (home_ppg - home_papg) * 10,
             "away_elo": 1500 + (away_win_pct - 0.5) * 400 + (away_ppg - away_papg) * 10,
+            # Injury features - PREMIUM API DATA (ESPN + API-Basketball)
+            "has_injury_data": 1 if has_injury_data else 0,
             "home_injury_impact_ppg": home_out_ppg,
             "away_injury_impact_ppg": away_out_ppg,
             "injury_margin_adj": injury_margin_adj,
+            "home_star_out": home_star_out,
+            "away_star_out": away_star_out,
         }
         
         features["elo_diff"] = features["home_elo"] - features["away_elo"]
@@ -706,6 +800,30 @@ class RichFeatureBuilder:
             from src.ingestion.betting_splits import splits_to_features
             splits_features = splits_to_features(betting_splits)
             features.update(splits_features)
+        else:
+            # EXPLICIT: No splits data available - mark as missing
+            # Models should use has_real_splits to weight these features accordingly
+            features["has_real_splits"] = 0
+            features["spread_public_home_pct"] = 50.0
+            features["spread_public_away_pct"] = 50.0
+            features["spread_money_home_pct"] = 50.0
+            features["spread_money_away_pct"] = 50.0
+            features["over_public_pct"] = 50.0
+            features["under_public_pct"] = 50.0
+            features["over_money_pct"] = 50.0
+            features["under_money_pct"] = 50.0
+            features["spread_open"] = 0.0
+            features["spread_current"] = 0.0
+            features["spread_movement"] = 0.0
+            features["total_open"] = 0.0
+            features["total_current"] = 0.0
+            features["total_movement"] = 0.0
+            features["is_rlm_spread"] = 0
+            features["is_rlm_total"] = 0
+            features["sharp_side_spread"] = 0
+            features["sharp_side_total"] = 0
+            features["spread_ticket_money_diff"] = 0.0
+            features["total_ticket_money_diff"] = 0.0
 
         return features
 

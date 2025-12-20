@@ -25,6 +25,34 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+def validate_splits_sources_configured() -> Dict[str, bool]:
+    """
+    Validate which betting splits sources are configured.
+
+    Returns dict mapping source name to whether it's configured.
+    CRITICAL: At least one source should be configured for real data.
+    """
+    from src.config import settings
+
+    sources = {
+        "action_network": bool(settings.action_network_username and settings.action_network_password),
+        "the_odds_splits": bool(settings.the_odds_api_key),  # Needs Group 2+ plan
+        "betsapi": bool(getattr(settings, "betsapi_key", None)),
+    }
+
+    configured = [s for s, v in sources.items() if v]
+    if not configured:
+        logger.warning(
+            "WARNING: No betting splits sources configured! "
+            "Features will be missing sharp money signals. "
+            "Configure ACTION_NETWORK_USERNAME/PASSWORD or upgrade The Odds API plan."
+        )
+    else:
+        logger.info(f"Betting splits sources configured: {configured}")
+
+    return sources
+
+
 @dataclass
 class GameSplits:
     """Betting splits for a single game."""
@@ -34,7 +62,7 @@ class GameSplits:
     away_team: str
     game_time: dt.datetime
     source: str  # Required - must be explicitly set (e.g., "action_network", "the_odds", "api_basketball")
-    
+
     # Optional fields (with defaults)
     # Spread splits
     spread_line: float = 0.0
@@ -263,10 +291,23 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
 def splits_to_features(splits: GameSplits) -> Dict[str, float]:
     """
     Convert GameSplits to feature dict for model input.
-    
-    Maps to the BettingSplits dataclass in features.py
+
+    Maps to the BettingSplits dataclass in features.py.
+    Includes a has_real_splits flag to indicate whether data is real or synthetic.
     """
+    # Determine if this is real data (not mock, not defaults)
+    # Real splits should have non-50/50 percentages from an actual source
+    is_real_data = splits.source not in ("mock", "synthetic", "default")
+    is_non_default = (
+        splits.spread_home_ticket_pct != 50.0
+        or splits.spread_home_money_pct != 50.0
+        or splits.over_ticket_pct != 50.0
+    )
+
     return {
+        # Flag: 1 = real splits data, 0 = missing/synthetic
+        "has_real_splits": 1 if (is_real_data and is_non_default) else 0,
+        "splits_source": splits.source,
         # Spread splits
         "spread_public_home_pct": splits.spread_home_ticket_pct,
         "spread_public_away_pct": splits.spread_away_ticket_pct,

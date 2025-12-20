@@ -42,10 +42,10 @@ from starlette.responses import Response
 from src.config import settings
 from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
 from src.ingestion import the_odds
-from src.ingestion.betting_splits import fetch_public_betting_splits
+from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
 from scripts.build_rich_features import RichFeatureBuilder
 from src.utils.logging import get_logger
-from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key
+from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
 from src.tracking import PickTracker
 
@@ -195,6 +195,14 @@ def startup_event():
     except Exception as e:
         logger.error(f"Security validation failed: {e}")
         raise
+
+    # Validate betting splits sources (warning only, not fatal)
+    splits_sources = validate_splits_sources_configured()
+    app.state.splits_sources_configured = splits_sources
+
+    # Validate all premium features and log what's available
+    premium_features = validate_premium_features()
+    app.state.premium_features = premium_features
 
     models_dir = _models_dir()
     logger.info(f"v6.0: Loading Unified Prediction Engine from {models_dir}")

@@ -196,7 +196,7 @@ def sanitize_for_logging(data: Dict[str, any]) -> Dict[str, any]:
 def get_api_key_status() -> Dict[str, str]:
     """
     Get status of all API keys (masked) for health checks.
-    
+
     Returns:
         Dictionary with key status (masked)
     """
@@ -206,3 +206,63 @@ def get_api_key_status() -> Dict[str, str]:
         "ACTION_NETWORK_USERNAME": "set" if settings.action_network_username else "not_set",
         "BETSAPI_KEY": "set" if settings.betsapi_key else "not_set",
     }
+
+
+def validate_premium_features() -> Dict[str, Dict[str, any]]:
+    """
+    Validate configuration for all premium features.
+
+    Returns detailed status for each premium data source:
+    - Required keys for each feature
+    - Whether the feature is fully configured
+    - What data will be available/missing
+
+    This is meant to be called at startup to give a clear picture
+    of what premium data will be available for predictions.
+    """
+    features = {
+        "odds_primary": {
+            "name": "The Odds API (Primary Odds)",
+            "configured": bool(settings.the_odds_api_key),
+            "required": True,
+            "keys_needed": ["THE_ODDS_API_KEY"],
+            "provides": ["spreads", "totals", "moneylines", "period markets (Q1/1H)"],
+        },
+        "game_data": {
+            "name": "API-Basketball (Team/Game Stats)",
+            "configured": bool(settings.api_basketball_key),
+            "required": True,
+            "keys_needed": ["API_BASKETBALL_KEY"],
+            "provides": ["team statistics", "game results", "H2H history", "standings"],
+        },
+        "betting_splits": {
+            "name": "Action Network (Betting Splits)",
+            "configured": bool(settings.action_network_username and settings.action_network_password),
+            "required": False,
+            "keys_needed": ["ACTION_NETWORK_USERNAME", "ACTION_NETWORK_PASSWORD"],
+            "provides": ["public betting %", "money %", "RLM detection", "sharp money signals"],
+        },
+        "odds_backup": {
+            "name": "BetsAPI (Backup Odds)",
+            "configured": bool(settings.betsapi_key),
+            "required": False,
+            "keys_needed": ["BETSAPI_KEY"],
+            "provides": ["backup odds source", "live odds"],
+        },
+    }
+
+    # Log summary
+    configured_count = sum(1 for f in features.values() if f["configured"])
+    total_count = len(features)
+    required_missing = [f["name"] for f in features.values() if f["required"] and not f["configured"]]
+
+    if required_missing:
+        logger.error(f"MISSING REQUIRED API KEYS: {required_missing}")
+    else:
+        logger.info(f"Premium data sources: {configured_count}/{total_count} configured")
+
+    optional_missing = [f["name"] for f in features.values() if not f["required"] and not f["configured"]]
+    if optional_missing:
+        logger.warning(f"Optional features not configured (predictions may be less accurate): {optional_missing}")
+
+    return features
