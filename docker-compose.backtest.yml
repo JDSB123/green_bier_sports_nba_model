@@ -36,6 +36,7 @@ services:
       - MIN_TRAINING=${MIN_TRAINING:-80}
     volumes:
       - ./data:/app/data
+      - ./secrets:/app/secrets:ro
       - backtest_cache:/app/.cache
     command: ["full"]
     networks:

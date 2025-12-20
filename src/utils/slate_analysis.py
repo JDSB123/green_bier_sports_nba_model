@@ -141,6 +141,9 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
     # First half moneyline (h2h_h1)
     fh_h2h_home = []
     fh_h2h_away = []
+    # First quarter moneyline (h2h_q1)
+    q1_h2h_home = []
+    q1_h2h_away = []
     spreads_home = []
     spreads_away = []
     totals = []
@@ -148,6 +151,10 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
     fh_spreads_home = []
     fh_spreads_away = []
     fh_totals = []
+    # First quarter markets
+    q1_spreads_home = []
+    q1_spreads_away = []
+    q1_totals = []
     
     home_team = game.get("home_team")
     away_team = game.get("away_team")
@@ -235,6 +242,45 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                                 "price": out.get("price"),
                                 "side": "Under"
                             })
+            
+            # First quarter markets
+            # Market keys from API: "spreads_q1", "totals_q1", "h2h_q1"
+            elif key and ("q1" in key.lower() or "first_quarter" in key.lower() or "1q" in key.lower()):
+                if "h2h" in key.lower():
+                    for out in outcomes:
+                        if out.get("name") == home_team:
+                            price = out.get("price")
+                            if price is not None:
+                                q1_h2h_home.append(price)
+                        elif out.get("name") == away_team:
+                            price = out.get("price")
+                            if price is not None:
+                                q1_h2h_away.append(price)
+                elif "spread" in key.lower() or "handicap" in key.lower() or key.lower() == "spreads_q1":
+                    for out in outcomes:
+                        if out.get("name") == home_team:
+                            q1_spreads_home.append({
+                                "price": out.get("price"),
+                                "point": out.get("point")
+                            })
+                        elif out.get("name") == away_team:
+                            q1_spreads_away.append({
+                                "price": out.get("price"),
+                                "point": out.get("point")
+                            })
+                elif "total" in key.lower() or "over_under" in key.lower() or key.lower() == "totals_q1":
+                    for out in outcomes:
+                        if out.get("name") == "Over":
+                            q1_totals.append({
+                                "point": out.get("point"),
+                                "price": out.get("price")
+                            })
+                        elif out.get("name") == "Under":
+                            q1_totals.append({
+                                "point": out.get("point"),
+                                "price": out.get("price"),
+                                "side": "Under"
+                            })
     
     # Calculate consensus
     result = {
@@ -242,6 +288,8 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
         "away_ml": None,
         "fh_home_ml": None,
         "fh_away_ml": None,
+        "q1_home_ml": None,
+        "q1_away_ml": None,
         "home_spread": None,
         "home_spread_price": None,
         "total": None,
@@ -254,6 +302,12 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
         "fh_home_spread_price": None,
         "fh_total": None,
         "fh_total_price": None,
+        "q1_home_implied_prob": None,
+        "q1_away_implied_prob": None,
+        "q1_home_spread": None,
+        "q1_home_spread_price": None,
+        "q1_total": None,
+        "q1_total_price": None,
     }
     
     if h2h_home:
@@ -305,5 +359,33 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
         median_fh_price = statistics.median([t.get("price", -110) for t in fh_totals if t.get("price") is not None])
         result["fh_total"] = float(median_fh_total)
         result["fh_total_price"] = int(median_fh_price)
+    
+    # Q1 moneyline
+    if q1_h2h_home:
+        median_home = statistics.median(q1_h2h_home)
+        if abs(median_home) > 2000:
+            median_home = 1000 * (1 if median_home > 0 else -1)
+        result["q1_home_ml"] = int(median_home)
+        result["q1_home_implied_prob"] = american_to_implied_prob(result["q1_home_ml"])
+    if q1_h2h_away:
+        median_away = statistics.median(q1_h2h_away)
+        if abs(median_away) > 2000:
+            median_away = 1000 * (1 if median_away > 0 else -1)
+        result["q1_away_ml"] = int(median_away)
+        result["q1_away_implied_prob"] = american_to_implied_prob(result["q1_away_ml"])
+    
+    # Q1 spread
+    if q1_spreads_home:
+        median_q1_spread = statistics.median([s.get("point", 0) for s in q1_spreads_home if s.get("point") is not None])
+        median_q1_price = statistics.median([s.get("price", -110) for s in q1_spreads_home if s.get("price") is not None])
+        result["q1_home_spread"] = float(median_q1_spread)
+        result["q1_home_spread_price"] = int(median_q1_price)
+    
+    # Q1 total
+    if q1_totals:
+        median_q1_total = statistics.median([t.get("point", 55) for t in q1_totals if t.get("point") is not None])
+        median_q1_price = statistics.median([t.get("price", -110) for t in q1_totals if t.get("price") is not None])
+        result["q1_total"] = float(median_q1_total)
+        result["q1_total_price"] = int(median_q1_price)
     
     return result

@@ -47,9 +47,9 @@ data/processed/*.joblib
 azure/
 
 # Backtest files (not needed in production container)
+# NOTE: docker-entrypoint-backtest.sh is NOT excluded because Dockerfile.backtest needs it
 docker-compose.backtest.yml
 Dockerfile.backtest
-docker-entrypoint-backtest.sh
 
 # Test files
 tests/

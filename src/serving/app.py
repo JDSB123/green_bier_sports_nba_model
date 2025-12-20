@@ -47,6 +47,7 @@ from scripts.build_rich_features import RichFeatureBuilder
 from src.utils.logging import get_logger
 from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
+from src.tracking import PickTracker
 
 logger = get_logger(__name__)
 
@@ -211,6 +212,12 @@ def startup_event():
     # Load engine (gracefully handles missing models)
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=False)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
+    
+    # Initialize live pick tracker
+    picks_dir = PathLib(settings.data_processed_dir) / "picks"
+    picks_dir.mkdir(parents=True, exist_ok=True)
+    app.state.tracker = PickTracker(storage_path=str(picks_dir / "tracked_picks.json"))
+    logger.info(f"Pick tracker initialized at {picks_dir}")
 
     # Log model info
     model_info = app.state.engine.get_model_info()
@@ -456,36 +463,74 @@ async def get_slate_predictions(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
+            q1_spread = odds.get("q1_home_spread")
+            q1_total = odds.get("q1_total")
             home_ml = odds.get("home_ml")
             away_ml = odds.get("away_ml")
             fh_home_ml = odds.get("fh_home_ml")
             fh_away_ml = odds.get("fh_away_ml")
+            q1_home_ml = odds.get("q1_home_ml")
+            q1_away_ml = odds.get("q1_away_ml")
             
             # Validate required lines (FG at minimum)
             if fg_spread is None or fg_total is None:
                 logger.warning(f"v5.1: Skipping {home_team} vs {away_team} - missing FG lines")
                 continue
 
-            # Predict all 6 markets
+            # Predict all 9 markets
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
                 fg_total_line=fg_total,
                 fh_spread_line=fh_spread,
                 fh_total_line=fh_total,
+                q1_spread_line=q1_spread,
+                q1_total_line=q1_total,
                 home_ml_odds=home_ml,
                 away_ml_odds=away_ml,
                 fh_home_ml_odds=fh_home_ml,
                 fh_away_ml_odds=fh_away_ml,
+                q1_home_ml_odds=q1_home_ml,
+                q1_away_ml_odds=q1_away_ml,
             )
 
-            # Count plays (all 6 markets)
+            # Count plays (all 9 markets) and record picks
             game_plays = 0
-            for period in ["full_game", "first_half"]:
+            game_date = target_date.strftime("%Y-%m-%d")
+            for period in ["first_quarter", "first_half", "full_game"]:
                 period_preds = preds.get(period, {})
                 for market in ["spread", "total", "moneyline"]:
-                    if period_preds.get(market, {}).get("passes_filter"):
+                    pred_data = period_preds.get(market, {})
+                    if pred_data.get("passes_filter"):
                         game_plays += 1
+                        # Record the pick for live tracking
+                        market_key = f"{period.replace('first_quarter', 'q1').replace('first_half', '1h').replace('full_game', 'fg')}_{market}"
+                        line = None
+                        if market == "spread":
+                            if period == "first_quarter":
+                                line = q1_spread
+                            elif period == "first_half":
+                                line = fh_spread
+                            else:
+                                line = fg_spread
+                        elif market == "total":
+                            if period == "first_quarter":
+                                line = q1_total
+                            elif period == "first_half":
+                                line = fh_total
+                            else:
+                                line = fg_total
+                        
+                        app.state.tracker.record_pick(
+                            game_date=game_date,
+                            home_team=home_team,
+                            away_team=away_team,
+                            market=market_key,
+                            side=pred_data.get("side"),
+                            line=line,
+                            confidence=pred_data.get("confidence"),
+                            edge=pred_data.get("edge"),
+                        )
             
             total_plays += game_plays
 
@@ -620,25 +665,33 @@ async def get_executive_summary(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
+            q1_spread = odds.get("q1_home_spread")
+            q1_total = odds.get("q1_total")
             home_ml = odds.get("home_ml")
             away_ml = odds.get("away_ml")
             fh_home_ml = odds.get("fh_home_ml")
             fh_away_ml = odds.get("fh_away_ml")
+            q1_home_ml = odds.get("q1_home_ml")
+            q1_away_ml = odds.get("q1_away_ml")
             
             if fg_spread is None or fg_total is None:
                 continue
             
-            # Get predictions
+            # Get predictions for all 9 markets
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
                 fg_total_line=fg_total,
                 fh_spread_line=fh_spread,
                 fh_total_line=fh_total,
+                q1_spread_line=q1_spread,
+                q1_total_line=q1_total,
                 home_ml_odds=home_ml,
                 away_ml_odds=away_ml,
                 fh_home_ml_odds=fh_home_ml,
                 fh_away_ml_odds=fh_away_ml,
+                q1_home_ml_odds=q1_home_ml,
+                q1_away_ml_odds=q1_away_ml,
             )
             
             # Process Full Game markets
@@ -795,6 +848,84 @@ async def get_executive_summary(
                         "edge_raw": abs(edge_pct * 100),
                         "confidence": fh_ml_pred.get("confidence", 0),
                         "fire_rating": get_fire_rating(fh_ml_pred.get("confidence", 0), edge_pct * 100)
+                    })
+            
+            # Process First Quarter markets
+            q1 = preds.get("first_quarter", {})
+            
+            # Q1 Spread
+            q1_spread_pred = q1.get("spread", {})
+            if q1_spread_pred.get("passes_filter") and q1_spread is not None:
+                bet_side = q1_spread_pred.get("bet_side", "home")
+                pick_team = home_team if bet_side == "home" else away_team
+                pick_line = q1_spread if bet_side == "home" else -q1_spread
+                pick_price = odds.get("q1_home_spread_price", -110)
+                model_margin_q1 = features.get("predicted_margin_q1", 0)
+                
+                all_plays.append({
+                    "time_cst": time_cst_str,
+                    "sort_time": game_cst.isoformat() if game_cst else "",
+                    "matchup": matchup_display,
+                    "period": "Q1",
+                    "market": "SPREAD",
+                    "pick": f"{pick_team} {pick_line:+.1f}",
+                    "pick_odds": format_american_odds(pick_price),
+                    "model_prediction": f"{model_margin_q1:+.1f} pts",
+                    "market_line": f"{q1_spread:+.1f}",
+                    "edge": f"{q1_spread_pred.get('edge', 0):+.1f} pts",
+                    "edge_raw": abs(q1_spread_pred.get('edge', 0)),
+                    "confidence": q1_spread_pred.get("confidence", 0),
+                    "fire_rating": get_fire_rating(q1_spread_pred.get("confidence", 0), q1_spread_pred.get("edge", 0))
+                })
+            
+            # Q1 Total
+            q1_total_pred = q1.get("total", {})
+            if q1_total_pred.get("passes_filter") and q1_total is not None:
+                bet_side = q1_total_pred.get("bet_side", "over")
+                model_total_q1 = features.get("predicted_total_q1", 0)
+                pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {q1_total}"
+                
+                all_plays.append({
+                    "time_cst": time_cst_str,
+                    "sort_time": game_cst.isoformat() if game_cst else "",
+                    "matchup": matchup_display,
+                    "period": "Q1",
+                    "market": "TOTAL",
+                    "pick": pick_display,
+                    "pick_odds": format_american_odds(odds.get("q1_total_price", -110)),
+                    "model_prediction": f"{model_total_q1:.1f}",
+                    "market_line": f"{q1_total}",
+                    "edge": f"{q1_total_pred.get('edge', 0):+.1f} pts",
+                    "edge_raw": abs(q1_total_pred.get('edge', 0)),
+                    "confidence": q1_total_pred.get("confidence", 0),
+                    "fire_rating": get_fire_rating(q1_total_pred.get("confidence", 0), q1_total_pred.get("edge", 0))
+                })
+            
+            # Q1 Moneyline
+            q1_ml_pred = q1.get("moneyline", {})
+            if q1_ml_pred.get("passes_filter") and q1_home_ml is not None:
+                rec_bet = q1_ml_pred.get("recommended_bet")
+                if rec_bet:
+                    pick_team = home_team if rec_bet == "home" else away_team
+                    pick_odds_val = q1_home_ml if rec_bet == "home" else q1_away_ml
+                    model_prob = q1_ml_pred.get("home_win_prob", 0.5) if rec_bet == "home" else q1_ml_pred.get("away_win_prob", 0.5)
+                    market_prob = odds.get("q1_home_implied_prob", 0.5) if rec_bet == "home" else odds.get("q1_away_implied_prob", 0.5)
+                    edge_pct = q1_ml_pred.get("home_edge", 0) if rec_bet == "home" else q1_ml_pred.get("away_edge", 0)
+                    
+                    all_plays.append({
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "Q1",
+                        "market": "ML",
+                        "pick": pick_team,
+                        "pick_odds": format_american_odds(pick_odds_val),
+                        "model_prediction": f"{model_prob*100:.1f}%",
+                        "market_line": f"{market_prob*100:.1f}%",
+                        "edge": f"{edge_pct*100:+.1f}%",
+                        "edge_raw": abs(edge_pct * 100),
+                        "confidence": q1_ml_pred.get("confidence", 0),
+                        "fire_rating": get_fire_rating(q1_ml_pred.get("confidence", 0), edge_pct * 100)
                     })
             
         except Exception as e:
@@ -1022,3 +1153,93 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================================================
+# LIVE PICK TRACKING ENDPOINTS - v6.0
+# =============================================================================
+
+@app.get("/tracking/summary")
+@limiter.limit("30/minute")
+async def get_tracking_summary(
+    request: Request,
+    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
+    period: Optional[str] = Query(None, description="Filter by period (q1, 1h, fg)"),
+    market_type: Optional[str] = Query(None, description="Filter by market (spread, total, moneyline)")
+):
+    """
+    Get ROI summary for tracked picks.
+    
+    Provides accuracy, ROI, and win/loss breakdown for live tracked predictions.
+    Only includes picks that passed the betting filter.
+    """
+    from src.tracking import PickTracker
+    
+    tracker = PickTracker()
+    summary = tracker.get_roi_summary(
+        date=date,
+        period=period,
+        market_type=market_type,
+        passes_filter_only=True
+    )
+    streak = tracker.get_streak(passes_filter_only=True)
+    
+    return {
+        "summary": summary,
+        "current_streak": streak,
+        "filters": {
+            "date": date,
+            "period": period,
+            "market_type": market_type
+        }
+    }
+
+
+@app.get("/tracking/picks")
+@limiter.limit("30/minute")
+async def get_tracked_picks(
+    request: Request,
+    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
+    status: Optional[str] = Query(None, description="Filter by status (pending, win, loss, push)"),
+    limit: int = Query(50, ge=1, le=500)
+):
+    """
+    Get list of tracked picks with optional filters.
+    """
+    from src.tracking import PickTracker
+    
+    tracker = PickTracker()
+    picks = tracker.get_picks(date=date, status=status, passes_filter_only=True)
+    
+    # Sort by creation time, newest first
+    picks.sort(key=lambda p: p.created_at, reverse=True)
+    
+    return {
+        "total": len(picks),
+        "picks": [p.to_dict() for p in picks[:limit]]
+    }
+
+
+@app.post("/tracking/validate")
+@limiter.limit("10/minute")
+async def validate_pick_outcomes(
+    request: Request,
+    date: Optional[str] = Query(None, description="Date to validate (YYYY-MM-DD)")
+):
+    """
+    Validate pending picks against game outcomes.
+    
+    Fetches completed game results and updates pick statuses.
+    Only processes games that are confirmed complete.
+    """
+    from src.tracking import PickTracker
+    
+    tracker = PickTracker()
+    results = await tracker.validate_outcomes(date=date)
+    
+    return {
+        "validated": results["validated"],
+        "wins": results["wins"],
+        "losses": results["losses"],
+        "pushes": results["pushes"],
+        "details": results.get("details", [])
+    }
