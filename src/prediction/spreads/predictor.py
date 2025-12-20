@@ -1,10 +1,11 @@
 """
 Spread prediction logic (Full Game + First Half).
 
-NBA v5.1 FINAL: All 6 markets required.
+NBA v6.0: All 9 markets with independent models.
 STRICT MODE: No fallbacks. Each market requires its own trained model.
 """
 from typing import Dict, Any, List
+import logging
 import pandas as pd
 
 from src.prediction.spreads.filters import (
@@ -12,6 +13,8 @@ from src.prediction.spreads.filters import (
     FirstHalfSpreadFilter,
 )
 from src.prediction.confidence import calculate_confidence_from_probabilities
+
+logger = logging.getLogger(__name__)
 
 
 class SpreadPredictor:
@@ -82,6 +85,8 @@ class SpreadPredictor:
         # Prepare features
         feature_df = pd.DataFrame([features])
         missing = set(self.fg_feature_columns) - set(feature_df.columns)
+        if missing:
+            logger.warning(f"[fg_spread] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
         for col in missing:
             feature_df[col] = 0
         X = feature_df[self.fg_feature_columns]
@@ -134,6 +139,8 @@ class SpreadPredictor:
         # Use 1H model ONLY - no fallbacks
         feature_df = pd.DataFrame([features])
         missing = set(self.fh_feature_columns) - set(feature_df.columns)
+        if missing:
+            logger.warning(f"[1h_spread] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
         for col in missing:
             feature_df[col] = 0
         X = feature_df[self.fh_feature_columns]

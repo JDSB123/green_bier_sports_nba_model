@@ -1,14 +1,12 @@
 # Green Bier Sports Ventures - Enterprise Deployment Script
-# 
-# This script deploys the full enterprise infrastructure:
-#   1. Shared resources (Key Vault, ACR, Container Apps Environment)
-#   2. NBA-specific resources
+#
+# SINGLE SOURCE OF TRUTH:
+#   Resource Group: greenbier-enterprise-rg
+#   Container App:  nba-picks-api
+#   ACR:            greenbieracr
 #
 # Usage:
 #   .\deploy-enterprise.ps1 -TheOddsApiKey "<key>" -ApiBasketballKey "<key>"
-#
-# For NCAAM (run from NCAAM workspace):
-#   .\deploy-sport.ps1 -Sport ncaam
 
 param(
     [Parameter(Mandatory=$false)]
@@ -59,12 +57,12 @@ Write-Host ""
 # ============================================================================
 if (-not $NbaOnly) {
     Write-Host "[2/6] Deploying SHARED infrastructure..." -ForegroundColor Yellow
-    Write-Host "  → Resource Group: gbs-shared-rg" -ForegroundColor Cyan
-    
-    az group create --name "gbs-shared-rg" --location $Location --output none
-    
+    Write-Host "  → Resource Group: greenbier-enterprise-rg" -ForegroundColor Cyan
+
+    az group create --name "greenbier-enterprise-rg" --location $Location --output none
+
     $sharedResult = az deployment group create `
-        --resource-group "gbs-shared-rg" `
+        --resource-group "greenbier-enterprise-rg" `
         --name "gbs-shared-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
         --template-file "$ScriptDir\shared\main.bicep" `
         --parameters environment=$Environment location=$Location `
@@ -102,8 +100,8 @@ if (-not $NbaOnly) {
 } else {
     Write-Host "[2/6] Skipping shared (--NbaOnly)" -ForegroundColor Gray
     Write-Host "[3/6] Skipping secrets (--NbaOnly)" -ForegroundColor Gray
-    $acrServer = "gbssportsacr.azurecr.io"
-    $acrName = "gbssportsacr"
+    $acrServer = "greenbieracr.azurecr.io"
+    $acrName = "greenbieracr"
 }
 
 if ($SharedOnly) {
@@ -118,18 +116,19 @@ if ($SharedOnly) {
 }
 
 # ============================================================================
-# STEP 4: Deploy NBA Infrastructure
+# STEP 4: Deploy NBA Infrastructure (into greenbier-enterprise-rg)
 # ============================================================================
 Write-Host "[4/6] Deploying NBA infrastructure..." -ForegroundColor Yellow
-Write-Host "  → Resource Group: gbs-nba-rg" -ForegroundColor Cyan
+Write-Host "  → Resource Group: greenbier-enterprise-rg" -ForegroundColor Cyan
 
-az group create --name "gbs-nba-rg" --location $Location --output none
+# Resource group already exists from shared deployment or pre-existing
+az group create --name "greenbier-enterprise-rg" --location $Location --output none 2>$null
 
 $nbaResult = az deployment group create `
-    --resource-group "gbs-nba-rg" `
+    --resource-group "greenbier-enterprise-rg" `
     --name "gbs-nba-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
     --template-file "$ScriptDir\nba\main.bicep" `
-    --parameters environment=$Environment location=$Location sharedResourceGroup="gbs-shared-rg" `
+    --parameters environment=$Environment location=$Location sharedResourceGroup="greenbier-enterprise-rg" `
     --output json | ConvertFrom-Json
 
 if ($LASTEXITCODE -ne 0) {
@@ -163,13 +162,13 @@ Write-Host "  ✓ Pushed: $imageName" -ForegroundColor Green
 Write-Host ""
 
 # ============================================================================
-# STEP 6: Update Container App
+# STEP 6: Update Container App (nba-picks-api in greenbier-enterprise-rg)
 # ============================================================================
 Write-Host "[6/6] Updating Container App with new image..." -ForegroundColor Yellow
 
 az containerapp update `
-    --name "gbs-nba-api" `
-    --resource-group "gbs-nba-rg" `
+    --name "nba-picks-api" `
+    --resource-group "greenbier-enterprise-rg" `
     --image $imageName `
     --output none
 
@@ -192,7 +191,8 @@ Write-Host "Test:" -ForegroundColor Yellow
 Write-Host "  curl $nbaApiUrl/health" -ForegroundColor White
 Write-Host "  curl $nbaApiUrl/slate/today" -ForegroundColor White
 Write-Host ""
-Write-Host "Deploy NCAAM (from NCAAM workspace):" -ForegroundColor Yellow
-Write-Host "  az deployment group create -g gbs-ncaam-rg -f infra/ncaam/main.bicep \" -ForegroundColor White
-Write-Host "    --parameters sharedResourceGroup=gbs-shared-rg" -ForegroundColor White
+Write-Host "AZURE RESOURCES:" -ForegroundColor Yellow
+Write-Host "  Resource Group:  greenbier-enterprise-rg" -ForegroundColor White
+Write-Host "  Container App:   nba-picks-api" -ForegroundColor White
+Write-Host "  ACR:             greenbieracr.azurecr.io" -ForegroundColor White
 Write-Host ""

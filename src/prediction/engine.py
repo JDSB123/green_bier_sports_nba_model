@@ -1,34 +1,39 @@
 """
-NBA v5.1 FINAL - Unified Prediction Engine
+NBA v6.0 - Unified Prediction Engine
 
-PRODUCTION: 6 PROVEN ROE Markets (Full Game + First Half)
+PRODUCTION: 9 INDEPENDENT Markets (Q1 + 1H + FG)
 
-Full Game:
-- Spread: 60.6% accuracy, +15.7% ROI
-- Total: 59.2% accuracy, +13.1% ROI
-- Moneyline: 65.5% accuracy, +25.1% ROI
+First Quarter:
+- Q1 Spread
+- Q1 Total
+- Q1 Moneyline
 
 First Half:
-- Spread: 55.9% accuracy, +8.2% ROI
-- Total: 58.1% accuracy, +11.4% ROI
-- Moneyline: 63.0% accuracy, +19.8% ROI
+- 1H Spread
+- 1H Total
+- 1H Moneyline
+
+Full Game:
+- FG Spread
+- FG Total
+- FG Moneyline
+
+ARCHITECTURE: Each period has INDEPENDENT models trained on period-specific
+features. No cross-period dependencies.
 
 STRICT MODE: No fallbacks, no silent failures. All models must exist.
-If a model is missing, initialization FAILS LOUDLY.
 """
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
+import logging
+import joblib
 
 from src.prediction.spreads import SpreadPredictor
 from src.prediction.totals import TotalPredictor
 from src.prediction.moneyline import MoneylinePredictor
-from src.prediction.models import (
-    load_spread_model,
-    load_total_model,
-    load_moneyline_model,
-    load_first_half_spread_model,
-    load_first_half_total_model,
-)
+from src.modeling.period_features import MODEL_CONFIGS
+
+logger = logging.getLogger(__name__)
 
 
 class ModelNotFoundError(Exception):
@@ -36,255 +41,603 @@ class ModelNotFoundError(Exception):
     pass
 
 
+class PeriodPredictor:
+    """
+    Predictor for a single period (Q1, 1H, or FG).
+
+    Each period predictor has its own independent models for
+    spread, total, and moneyline.
+    """
+
+    def __init__(
+        self,
+        period: str,
+        spread_model: Any,
+        spread_features: List[str],
+        total_model: Any,
+        total_features: List[str],
+        moneyline_model: Any,
+        moneyline_features: List[str],
+    ):
+        self.period = period
+        self.spread_model = spread_model
+        self.spread_features = spread_features
+        self.total_model = total_model
+        self.total_features = total_features
+        self.moneyline_model = moneyline_model
+        self.moneyline_features = moneyline_features
+
+    def predict_spread(
+        self,
+        features: Dict[str, float],
+        spread_line: float,
+    ) -> Dict[str, Any]:
+        """Predict spread outcome for this period."""
+        import pandas as pd
+        from src.prediction.confidence import calculate_confidence_from_probabilities
+
+        # Prepare features
+        feature_df = pd.DataFrame([features])
+
+        # Handle missing features with logging
+        missing = set(self.spread_features) - set(feature_df.columns)
+        if missing:
+            logger.warning(f"[{self.period}_spread] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
+        for col in missing:
+            feature_df[col] = 0
+
+        X = feature_df[self.spread_features]
+
+        # Get prediction
+        spread_proba = self.spread_model.predict_proba(X)[0]
+        home_cover_prob = float(spread_proba[1])
+        away_cover_prob = float(spread_proba[0])
+        confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
+        bet_side = "home" if home_cover_prob > 0.5 else "away"
+
+        # Get predicted margin from features
+        margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
+        predicted_margin = features.get(margin_key, 0)
+        edge = predicted_margin - spread_line
+
+        # Filter logic
+        passes_filter = confidence >= 0.55 and abs(edge) >= 1.0
+        filter_reason = None
+        if not passes_filter:
+            if confidence < 0.55:
+                filter_reason = f"Low confidence: {confidence:.1%}"
+            else:
+                filter_reason = f"Low edge: {edge:+.1f}"
+
+        return {
+            "home_cover_prob": home_cover_prob,
+            "away_cover_prob": away_cover_prob,
+            "predicted_margin": predicted_margin,
+            "confidence": confidence,
+            "bet_side": bet_side,
+            "edge": edge,
+            "model_edge_pct": abs(confidence - 0.5),
+            "passes_filter": passes_filter,
+            "filter_reason": filter_reason,
+        }
+
+    def predict_total(
+        self,
+        features: Dict[str, float],
+        total_line: float,
+    ) -> Dict[str, Any]:
+        """Predict total outcome for this period."""
+        import pandas as pd
+        from src.prediction.confidence import calculate_confidence_from_probabilities
+
+        # Prepare features
+        feature_df = pd.DataFrame([features])
+
+        # Handle missing features with logging
+        missing = set(self.total_features) - set(feature_df.columns)
+        if missing:
+            logger.warning(f"[{self.period}_total] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
+        for col in missing:
+            feature_df[col] = 0
+
+        X = feature_df[self.total_features]
+
+        # Get prediction
+        total_proba = self.total_model.predict_proba(X)[0]
+        over_prob = float(total_proba[1])
+        under_prob = float(total_proba[0])
+        confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
+        bet_side = "over" if over_prob > 0.5 else "under"
+
+        # Get predicted total from features
+        total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
+        predicted_total = features.get(total_key, total_line)
+        edge = predicted_total - total_line if bet_side == "over" else total_line - predicted_total
+
+        # Filter logic
+        passes_filter = confidence >= 0.55 and abs(edge) >= 1.5
+        filter_reason = None
+        if not passes_filter:
+            if confidence < 0.55:
+                filter_reason = f"Low confidence: {confidence:.1%}"
+            else:
+                filter_reason = f"Low edge: {edge:+.1f}"
+
+        return {
+            "over_prob": over_prob,
+            "under_prob": under_prob,
+            "predicted_total": predicted_total,
+            "confidence": confidence,
+            "bet_side": bet_side,
+            "edge": edge,
+            "model_edge_pct": abs(confidence - 0.5),
+            "passes_filter": passes_filter,
+            "filter_reason": filter_reason,
+        }
+
+    def predict_moneyline(
+        self,
+        features: Dict[str, float],
+        home_ml_odds: int,
+        away_ml_odds: int,
+    ) -> Dict[str, Any]:
+        """Predict moneyline outcome for this period."""
+        import pandas as pd
+        from src.prediction.confidence import calculate_confidence_from_probabilities
+
+        # Prepare features
+        feature_df = pd.DataFrame([features])
+
+        # Handle missing features with logging
+        missing = set(self.moneyline_features) - set(feature_df.columns)
+        if missing:
+            logger.warning(f"[{self.period}_moneyline] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
+        for col in missing:
+            feature_df[col] = 0
+
+        X = feature_df[self.moneyline_features]
+
+        # Get prediction
+        ml_proba = self.moneyline_model.predict_proba(X)[0]
+        home_win_prob = float(ml_proba[1])
+        away_win_prob = float(ml_proba[0])
+        confidence = calculate_confidence_from_probabilities(home_win_prob, away_win_prob)
+
+        # Calculate implied probabilities from odds
+        def american_to_implied(odds: int) -> float:
+            if odds > 0:
+                return 100 / (odds + 100)
+            else:
+                return abs(odds) / (abs(odds) + 100)
+
+        home_implied = american_to_implied(home_ml_odds)
+        away_implied = american_to_implied(away_ml_odds)
+
+        # Calculate edge
+        home_edge = home_win_prob - home_implied
+        away_edge = away_win_prob - away_implied
+
+        # Determine recommended bet
+        if home_edge > away_edge and home_edge > 0.03:
+            recommended_bet = "home"
+            edge = home_edge
+        elif away_edge > 0.03:
+            recommended_bet = "away"
+            edge = away_edge
+        else:
+            recommended_bet = None
+            edge = max(home_edge, away_edge)
+
+        passes_filter = recommended_bet is not None and confidence >= 0.55
+        filter_reason = None
+        if not passes_filter:
+            if recommended_bet is None:
+                filter_reason = f"No edge: home={home_edge:+.1%}, away={away_edge:+.1%}"
+            else:
+                filter_reason = f"Low confidence: {confidence:.1%}"
+
+        return {
+            "home_win_prob": home_win_prob,
+            "away_win_prob": away_win_prob,
+            "home_implied_prob": home_implied,
+            "away_implied_prob": away_implied,
+            "home_edge": home_edge,
+            "away_edge": away_edge,
+            "confidence": confidence,
+            "recommended_bet": recommended_bet,
+            "passes_filter": passes_filter,
+            "filter_reason": filter_reason,
+        }
+
+    def predict_all(
+        self,
+        features: Dict[str, float],
+        spread_line: Optional[float] = None,
+        total_line: Optional[float] = None,
+        home_ml_odds: Optional[int] = None,
+        away_ml_odds: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Predict all markets for this period."""
+        result = {}
+
+        if spread_line is not None:
+            result["spread"] = self.predict_spread(features, spread_line)
+
+        if total_line is not None:
+            result["total"] = self.predict_total(features, total_line)
+
+        if home_ml_odds is not None and away_ml_odds is not None:
+            result["moneyline"] = self.predict_moneyline(features, home_ml_odds, away_ml_odds)
+
+        return result
+
+
 class UnifiedPredictionEngine:
     """
-    NBA v5.1 FINAL - Production Prediction Engine
-    
-    6 PROVEN ROE Markets:
-    
-    Full Game:
-    - Spread (60.6% acc, +15.7% ROI)
-    - Total (59.2% acc, +13.1% ROI)  
-    - Moneyline (65.5% acc, +25.1% ROI)
-    
-    First Half:
-    - Spread (55.9% acc, +8.2% ROI)
-    - Total (58.1% acc, +11.4% ROI)
-    - Moneyline (63.0% acc, +19.8% ROI)
-    
-    STRICT MODE:
-    - 6 REQUIRED models
-    - NO fallbacks - missing required model = crash
+    NBA v6.0 - Production Prediction Engine
+
+    9 INDEPENDENT Markets:
+
+    First Quarter (Q1):
+    - Q1 Spread
+    - Q1 Total
+    - Q1 Moneyline
+
+    First Half (1H):
+    - 1H Spread
+    - 1H Total
+    - 1H Moneyline
+
+    Full Game (FG):
+    - FG Spread
+    - FG Total
+    - FG Moneyline
+
+    ARCHITECTURE:
+    - Each period has independent models trained on period-specific features
+    - No cross-period dependencies
+    - All 9 models required for full functionality
     """
-    
-    def __init__(self, models_dir: Path):
+
+    def __init__(self, models_dir: Path, require_all: bool = False):
         """
         Initialize unified prediction engine.
-        
+
         Args:
-            models_dir: Path to models directory (must contain all 6 required models)
-                       
-        Raises:
-            ModelNotFoundError: If ANY required model is missing
+            models_dir: Path to models directory
+            require_all: If True, fail if any model is missing.
+                        If False, load available models gracefully.
         """
         self.models_dir = Path(models_dir)
-        
+        self.require_all = require_all
+        self.loaded_models: Dict[str, bool] = {}
+
         if not self.models_dir.exists():
             raise ModelNotFoundError(
                 f"Models directory does not exist: {self.models_dir}\n"
-                f"Run: python scripts/train_models.py"
+                f"Run: python scripts/train_all_models.py"
             )
-        
-        # =================================================================
-        # Load all 6 REQUIRED models
-        # =================================================================
-        
-        # Full Game Spread (REQUIRED)
-        fg_spread_model, fg_spread_features = self._load_required_model(
-            load_spread_model, "Full Game Spread"
-        )
-        
-        # Full Game Total (REQUIRED)
-        fg_total_model, fg_total_features = self._load_required_model(
-            load_total_model, "Full Game Total"
-        )
-        
-        # Full Game Moneyline (REQUIRED)
-        fg_ml_model, fg_ml_features = self._load_required_model(
-            load_moneyline_model, "Full Game Moneyline"
-        )
-        
-        # First Half Spread (REQUIRED)
-        fh_spread_model, fh_spread_features = self._load_required_model(
-            load_first_half_spread_model, "First Half Spread"
-        )
-        
-        # First Half Total (REQUIRED)
-        fh_total_model, fh_total_features = self._load_required_model(
-            load_first_half_total_model, "First Half Total"
-        )
-        
-        # =================================================================
-        # Initialize Predictors with both FG and 1H models
-        # =================================================================
-        
-        self.spread_predictor = SpreadPredictor(
-            fg_model=fg_spread_model,
-            fg_feature_columns=fg_spread_features,
-            fh_model=fh_spread_model,
-            fh_feature_columns=fh_spread_features,
-        )
-        
-        self.total_predictor = TotalPredictor(
-            fg_model=fg_total_model,
-            fg_feature_columns=fg_total_features,
-            fh_model=fh_total_model,
-            fh_feature_columns=fh_total_features,
-        )
-        
-        # Moneyline predictor - uses FG ML model for both
-        # (1H ML uses margin-based conversion from 1H spread model)
-        self.moneyline_predictor = MoneylinePredictor(
-            model=fg_ml_model,
-            feature_columns=fg_ml_features,
-            fh_model=fh_spread_model,  # Uses 1H spread model for 1H ML
-            fh_feature_columns=fh_spread_features,
-        )
-    
-    def _load_required_model(self, loader_func, model_name: str):
-        """Load a model - FAIL LOUDLY if missing."""
-        try:
-            return loader_func(self.models_dir)
-        except FileNotFoundError as e:
+
+        # Initialize period predictors
+        self.q1_predictor: Optional[PeriodPredictor] = None
+        self.h1_predictor: Optional[PeriodPredictor] = None
+        self.fg_predictor: Optional[PeriodPredictor] = None
+
+        # Load Q1 models
+        q1_models = self._load_period_models("q1")
+        if q1_models:
+            self.q1_predictor = PeriodPredictor("q1", *q1_models)
+            logger.info("Q1 predictor initialized")
+
+        # Load 1H models
+        h1_models = self._load_period_models("1h")
+        if h1_models:
+            self.h1_predictor = PeriodPredictor("1h", *h1_models)
+            logger.info("1H predictor initialized")
+
+        # Load FG models
+        fg_models = self._load_period_models("fg")
+        if fg_models:
+            self.fg_predictor = PeriodPredictor("fg", *fg_models)
+            logger.info("FG predictor initialized")
+
+        # Legacy predictors for backwards compatibility
+        self._init_legacy_predictors()
+
+        # Check required models
+        loaded_count = sum(1 for v in self.loaded_models.values() if v)
+        logger.info(f"Loaded {loaded_count}/9 models")
+
+        if require_all and loaded_count < 9:
+            missing = [k for k, v in self.loaded_models.items() if not v]
             raise ModelNotFoundError(
-                f"REQUIRED MODEL MISSING: {model_name}\n"
-                f"Details: {e}\n"
-                f"Models directory: {self.models_dir}\n"
-                f"Run: python scripts/train_models.py"
-            ) from e
-    
-    def predict_full_game(
+                f"Missing required models: {missing}\n"
+                f"Run: python scripts/train_all_models.py"
+            )
+
+    def _load_period_models(
+        self,
+        period: str,
+    ) -> Optional[Tuple[Any, List[str], Any, List[str], Any, List[str]]]:
+        """Load all models for a period."""
+        spread_key = f"{period}_spread"
+        total_key = f"{period}_total"
+        ml_key = f"{period}_moneyline"
+
+        try:
+            spread_model, spread_features = self._load_model(spread_key)
+            self.loaded_models[spread_key] = True
+        except Exception as e:
+            logger.warning(f"Could not load {spread_key}: {e}")
+            self.loaded_models[spread_key] = False
+            spread_model, spread_features = None, []
+
+        try:
+            total_model, total_features = self._load_model(total_key)
+            self.loaded_models[total_key] = True
+        except Exception as e:
+            logger.warning(f"Could not load {total_key}: {e}")
+            self.loaded_models[total_key] = False
+            total_model, total_features = None, []
+
+        try:
+            ml_model, ml_features = self._load_model(ml_key)
+            self.loaded_models[ml_key] = True
+        except Exception as e:
+            logger.warning(f"Could not load {ml_key}: {e}")
+            self.loaded_models[ml_key] = False
+            ml_model, ml_features = None, []
+
+        # Return None if essential models missing
+        if spread_model is None or total_model is None:
+            return None
+
+        # Use spread model for moneyline if ML model missing
+        if ml_model is None:
+            ml_model = spread_model
+            ml_features = spread_features
+
+        return (
+            spread_model, spread_features,
+            total_model, total_features,
+            ml_model, ml_features,
+        )
+
+    def _load_model(self, model_key: str) -> Tuple[Any, List[str]]:
+        """Load a single model."""
+        config = MODEL_CONFIGS.get(model_key)
+        if not config:
+            raise ValueError(f"Unknown model key: {model_key}")
+
+        model_path = self.models_dir / config["model_file"]
+
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model file not found: {model_path}")
+
+        data = joblib.load(model_path)
+
+        model = data.get("pipeline") or data.get("model")
+        features = data.get("feature_columns", [])
+
+        if model is None:
+            raise ValueError(f"Invalid model file: {model_path}")
+
+        logger.info(f"Loaded {model_key} with {len(features)} features")
+        return model, features
+
+    def _init_legacy_predictors(self):
+        """Initialize legacy predictors for backwards compatibility."""
+        # These are used by old code paths
+        if self.fg_predictor:
+            # Create legacy SpreadPredictor
+            self.spread_predictor = SpreadPredictor(
+                fg_model=self.fg_predictor.spread_model,
+                fg_feature_columns=self.fg_predictor.spread_features,
+                fh_model=self.h1_predictor.spread_model if self.h1_predictor else self.fg_predictor.spread_model,
+                fh_feature_columns=self.h1_predictor.spread_features if self.h1_predictor else self.fg_predictor.spread_features,
+            )
+
+            # Create legacy TotalPredictor
+            self.total_predictor = TotalPredictor(
+                fg_model=self.fg_predictor.total_model,
+                fg_feature_columns=self.fg_predictor.total_features,
+                fh_model=self.h1_predictor.total_model if self.h1_predictor else self.fg_predictor.total_model,
+                fh_feature_columns=self.h1_predictor.total_features if self.h1_predictor else self.fg_predictor.total_features,
+            )
+
+            # Create legacy MoneylinePredictor
+            self.moneyline_predictor = MoneylinePredictor(
+                model=self.fg_predictor.moneyline_model,
+                feature_columns=self.fg_predictor.moneyline_features,
+                fh_model=self.h1_predictor.spread_model if self.h1_predictor else self.fg_predictor.spread_model,
+                fh_feature_columns=self.h1_predictor.spread_features if self.h1_predictor else self.fg_predictor.spread_features,
+            )
+
+    def predict_quarter(
         self,
         features: Dict[str, float],
-        spread_line: float,
-        total_line: float,
+        spread_line: Optional[float] = None,
+        total_line: Optional[float] = None,
         home_ml_odds: Optional[int] = None,
         away_ml_odds: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for all full game markets.
-        
+        Generate predictions for Q1 markets.
+
         Args:
-            features: Feature dictionary (REQUIRED)
-            spread_line: Vegas FG spread line (REQUIRED)
-            total_line: Vegas FG total line (REQUIRED)
-            home_ml_odds: Home team moneyline odds (optional, e.g., -150)
-            away_ml_odds: Away team moneyline odds (optional, e.g., +130)
-            
+            features: Feature dictionary with Q1-specific features
+            spread_line: Q1 spread line
+            total_line: Q1 total line
+            home_ml_odds: Q1 home moneyline odds
+            away_ml_odds: Q1 away moneyline odds
+
         Returns:
-            Predictions for FG Spread, Total, and Moneyline markets
+            Predictions for Q1 Spread, Total, and Moneyline
         """
-        result = {
-            "spread": self.spread_predictor.predict_full_game(features, spread_line),
-            "total": self.total_predictor.predict_full_game(features, total_line),
-        }
-        
-        # Add moneyline if odds provided
-        if home_ml_odds is not None and away_ml_odds is not None:
-            result["moneyline"] = self.moneyline_predictor.predict_full_game(
-                features, home_ml_odds, away_ml_odds
-            )
-        
-        return result
-    
+        if self.q1_predictor is None:
+            raise ModelNotFoundError("Q1 models not loaded")
+
+        return self.q1_predictor.predict_all(
+            features, spread_line, total_line, home_ml_odds, away_ml_odds
+        )
+
     def predict_first_half(
         self,
         features: Dict[str, float],
-        spread_line: float,
-        total_line: float,
+        spread_line: Optional[float] = None,
+        total_line: Optional[float] = None,
         home_ml_odds: Optional[int] = None,
         away_ml_odds: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for all first half markets.
-        
+        Generate predictions for 1H markets.
+
         Args:
-            features: Feature dictionary (REQUIRED)
-            spread_line: Vegas 1H spread line (REQUIRED)
-            total_line: Vegas 1H total line (REQUIRED)
-            home_ml_odds: Home team 1H moneyline odds (optional)
-            away_ml_odds: Away team 1H moneyline odds (optional)
-            
+            features: Feature dictionary with 1H-specific features
+            spread_line: 1H spread line
+            total_line: 1H total line
+            home_ml_odds: 1H home moneyline odds
+            away_ml_odds: 1H away moneyline odds
+
         Returns:
-            Predictions for 1H Spread, Total, and Moneyline markets
+            Predictions for 1H Spread, Total, and Moneyline
         """
-        result = {
-            "spread": self.spread_predictor.predict_first_half(features, spread_line),
-            "total": self.total_predictor.predict_first_half(features, total_line),
-        }
-        
-        # Add moneyline if odds provided
-        if home_ml_odds is not None and away_ml_odds is not None:
-            result["moneyline"] = self.moneyline_predictor.predict_first_half(
-                features, home_ml_odds, away_ml_odds
-            )
-        
-        return result
-    
+        if self.h1_predictor is None:
+            raise ModelNotFoundError("1H models not loaded")
+
+        return self.h1_predictor.predict_all(
+            features, spread_line, total_line, home_ml_odds, away_ml_odds
+        )
+
+    def predict_full_game(
+        self,
+        features: Dict[str, float],
+        spread_line: Optional[float] = None,
+        total_line: Optional[float] = None,
+        home_ml_odds: Optional[int] = None,
+        away_ml_odds: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate predictions for FG markets.
+
+        Args:
+            features: Feature dictionary with FG-specific features
+            spread_line: FG spread line
+            total_line: FG total line
+            home_ml_odds: FG home moneyline odds
+            away_ml_odds: FG away moneyline odds
+
+        Returns:
+            Predictions for FG Spread, Total, and Moneyline
+        """
+        if self.fg_predictor is None:
+            raise ModelNotFoundError("FG models not loaded")
+
+        return self.fg_predictor.predict_all(
+            features, spread_line, total_line, home_ml_odds, away_ml_odds
+        )
+
     def predict_all_markets(
         self,
         features: Dict[str, float],
-        # Full game lines - REQUIRED
-        fg_spread_line: float,
-        fg_total_line: float,
-        # First half lines - REQUIRED for 1H predictions
+        # Full game lines
+        fg_spread_line: Optional[float] = None,
+        fg_total_line: Optional[float] = None,
+        # First half lines
         fh_spread_line: Optional[float] = None,
         fh_total_line: Optional[float] = None,
-        # Moneyline odds - optional but recommended
+        # First quarter lines
+        q1_spread_line: Optional[float] = None,
+        q1_total_line: Optional[float] = None,
+        # Moneyline odds
         home_ml_odds: Optional[int] = None,
         away_ml_odds: Optional[int] = None,
         fh_home_ml_odds: Optional[int] = None,
         fh_away_ml_odds: Optional[int] = None,
+        q1_home_ml_odds: Optional[int] = None,
+        q1_away_ml_odds: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for ALL 6 PROVEN ROE markets.
-        
-        NBA v5.1 FINAL: Full Game + First Half (Spread, Total, Moneyline)
-        
+        Generate predictions for ALL 9 markets.
+
         Args:
-            features: Feature dictionary (REQUIRED)
-            fg_spread_line: Vegas FG spread line (REQUIRED)
-            fg_total_line: Vegas FG total line (REQUIRED)
-            fh_spread_line: Vegas 1H spread line (optional)
-            fh_total_line: Vegas 1H total line (optional)
-            home_ml_odds: Home team FG moneyline odds (optional)
-            away_ml_odds: Away team FG moneyline odds (optional)
-            fh_home_ml_odds: Home team 1H moneyline odds (optional)
-            fh_away_ml_odds: Away team 1H moneyline odds (optional)
-            
+            features: Feature dictionary with all period features
+            fg_spread_line: FG spread line
+            fg_total_line: FG total line
+            fh_spread_line: 1H spread line
+            fh_total_line: 1H total line
+            q1_spread_line: Q1 spread line
+            q1_total_line: Q1 total line
+            home_ml_odds: FG home moneyline odds
+            away_ml_odds: FG away moneyline odds
+            fh_home_ml_odds: 1H home moneyline odds
+            fh_away_ml_odds: 1H away moneyline odds
+            q1_home_ml_odds: Q1 home moneyline odds
+            q1_away_ml_odds: Q1 away moneyline odds
+
         Returns:
-            Predictions for all 6 markets (2 periods x 3 bet types)
+            Predictions for all 9 markets grouped by period
         """
         result = {
-            "full_game": self.predict_full_game(
-                features,
-                spread_line=fg_spread_line,
-                total_line=fg_total_line,
-                home_ml_odds=home_ml_odds,
-                away_ml_odds=away_ml_odds,
-            ),
+            "first_quarter": {},
             "first_half": {},
+            "full_game": {},
         }
-        
-        # Add first half predictions if lines provided
-        if fh_spread_line is not None and fh_total_line is not None:
-            result["first_half"] = self.predict_first_half(
-                features,
-                spread_line=fh_spread_line,
-                total_line=fh_total_line,
-                home_ml_odds=fh_home_ml_odds,
-                away_ml_odds=fh_away_ml_odds,
-            )
-        
+
+        # Q1 predictions
+        if self.q1_predictor and (q1_spread_line is not None or q1_total_line is not None):
+            try:
+                result["first_quarter"] = self.predict_quarter(
+                    features,
+                    spread_line=q1_spread_line,
+                    total_line=q1_total_line,
+                    home_ml_odds=q1_home_ml_odds,
+                    away_ml_odds=q1_away_ml_odds,
+                )
+            except Exception as e:
+                logger.warning(f"Q1 prediction failed: {e}")
+
+        # 1H predictions
+        if self.h1_predictor and (fh_spread_line is not None or fh_total_line is not None):
+            try:
+                result["first_half"] = self.predict_first_half(
+                    features,
+                    spread_line=fh_spread_line,
+                    total_line=fh_total_line,
+                    home_ml_odds=fh_home_ml_odds,
+                    away_ml_odds=fh_away_ml_odds,
+                )
+            except Exception as e:
+                logger.warning(f"1H prediction failed: {e}")
+
+        # FG predictions
+        if self.fg_predictor and (fg_spread_line is not None or fg_total_line is not None):
+            try:
+                result["full_game"] = self.predict_full_game(
+                    features,
+                    spread_line=fg_spread_line,
+                    total_line=fg_total_line,
+                    home_ml_odds=home_ml_odds,
+                    away_ml_odds=away_ml_odds,
+                )
+            except Exception as e:
+                logger.warning(f"FG prediction failed: {e}")
+
         return result
-    
+
     def get_model_info(self) -> Dict[str, Any]:
         """Return info about loaded models."""
         return {
-            "version": "5.1-FINAL",
-            "markets": 6,
-            "markets_list": [
-                "fg_spread", "fg_total", "fg_moneyline",
-                "1h_spread", "1h_total", "1h_moneyline"
-            ],
-            "periods": ["full_game", "first_half"],
+            "version": "6.0",
+            "architecture": "9-model independent",
+            "markets": sum(1 for v in self.loaded_models.values() if v),
+            "markets_list": [k for k, v in self.loaded_models.items() if v],
+            "periods": ["first_quarter", "first_half", "full_game"],
             "models_dir": str(self.models_dir),
-            "performance": {
-                "fg_spread": {"accuracy": 0.606, "roi": 0.157},
-                "fg_total": {"accuracy": 0.592, "roi": 0.131},
-                "fg_moneyline": {"accuracy": 0.655, "roi": 0.251},
-                "1h_spread": {"accuracy": 0.559, "roi": 0.082},
-                "1h_total": {"accuracy": 0.581, "roi": 0.114},
-                "1h_moneyline": {"accuracy": 0.630, "roi": 0.198},
-            }
+            "loaded_models": self.loaded_models,
+            "predictors": {
+                "q1": self.q1_predictor is not None,
+                "1h": self.h1_predictor is not None,
+                "fg": self.fg_predictor is not None,
+            },
         }

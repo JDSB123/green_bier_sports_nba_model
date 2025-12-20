@@ -1,19 +1,25 @@
 """
-NBA v5.1 FINAL - FastAPI Prediction Server
+NBA v6.0 - FastAPI Prediction Server
 
-PRODUCTION: 6 PROVEN ROE Markets (Full Game + First Half)
+PRODUCTION: 9 INDEPENDENT Markets (Q1 + 1H + FG)
 
-Full Game:
-- Spread: 60.6% accuracy, +15.7% ROI
-- Total: 59.2% accuracy, +13.1% ROI
-- Moneyline: 65.5% accuracy, +25.1% ROI
+First Quarter (Q1):
+- Q1 Spread
+- Q1 Total
+- Q1 Moneyline
 
-First Half:
-- Spread: 55.9% accuracy, +8.2% ROI
-- Total: 58.1% accuracy, +11.4% ROI
-- Moneyline: 63.0% accuracy, +19.8% ROI
+First Half (1H):
+- 1H Spread
+- 1H Total
+- 1H Moneyline
 
-All inputs required. No fallbacks. No silent failures.
+Full Game (FG):
+- FG Spread
+- FG Total
+- FG Moneyline
+
+All periods use INDEPENDENT models trained on period-specific features.
+No cross-period dependencies. No fallbacks. No silent failures.
 """
 import os
 import json
@@ -82,7 +88,7 @@ limiter = Limiter(key_func=get_remote_address)
 # --- Request/Response Models - v5.1 FINAL ---
 
 class GamePredictionRequest(BaseModel):
-    """Request for single game prediction - v5.1 all markets."""
+    """Request for single game prediction - v6.0 all 9 markets."""
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
     # Full game lines - REQUIRED
@@ -91,11 +97,16 @@ class GamePredictionRequest(BaseModel):
     # First half lines - optional but recommended
     fh_spread_line: Optional[float] = None
     fh_total_line: Optional[float] = None
+    # First quarter lines - optional
+    q1_spread_line: Optional[float] = None
+    q1_total_line: Optional[float] = None
     # Moneyline odds - optional but recommended
     home_ml_odds: Optional[int] = Field(None, example=-150)
     away_ml_odds: Optional[int] = Field(None, example=130)
     fh_home_ml_odds: Optional[int] = None
     fh_away_ml_odds: Optional[int] = None
+    q1_home_ml_odds: Optional[int] = None
+    q1_away_ml_odds: Optional[int] = None
 
 
 class MarketPrediction(BaseModel):
@@ -107,8 +118,9 @@ class MarketPrediction(BaseModel):
 
 
 class GamePredictions(BaseModel):
-    full_game: Dict[str, Any]
-    first_half: Dict[str, Any]
+    first_quarter: Dict[str, Any] = {}
+    first_half: Dict[str, Any] = {}
+    full_game: Dict[str, Any] = {}
 
 
 class SlateResponse(BaseModel):
@@ -120,9 +132,9 @@ class SlateResponse(BaseModel):
 # --- API Setup - v5.1 FINAL ---
 
 app = FastAPI(
-    title="NBA v5.1 FINAL - Production Picks",
-    description="6 PROVEN ROE Markets: FG+1H Spread, Total, Moneyline",
-    version="5.1.0-final"
+    title="NBA v6.0 - Production Picks",
+    description="9 INDEPENDENT Markets: Q1+1H+FG for Spread, Total, Moneyline",
+    version="6.0.0"
 )
 
 # Add rate limiter
@@ -171,21 +183,21 @@ def _models_dir() -> PathLib:
 def startup_event():
     """
     Initialize the prediction engine on startup.
-    
-    v5.1 FINAL: 6 markets (FG+1H for Spread, Total, Moneyline)
+
+    v6.0: 9 INDEPENDENT markets (Q1+1H+FG for Spread, Total, Moneyline)
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # SECURITY: Validate API keys at startup - fail fast if missing
     try:
         fail_fast_on_missing_keys()
-        logger.info("✓ API keys validated")
+        logger.info("API keys validated")
     except Exception as e:
         logger.error(f"Security validation failed: {e}")
         raise
-    
+
     models_dir = _models_dir()
-    logger.info(f"v5.1 FINAL: Loading Unified Prediction Engine from {models_dir}")
-    
+    logger.info(f"v6.0: Loading Unified Prediction Engine from {models_dir}")
+
     # Diagnostic: List files in models directory
     if models_dir.exists():
         model_files = list(models_dir.glob("*"))
@@ -195,14 +207,14 @@ def startup_event():
             logger.info(f"  - {f.name} ({size:,} bytes)")
     else:
         logger.error(f"Models directory does not exist: {models_dir}")
-    
-    # NO TRY/EXCEPT - Let it crash if models are missing
-    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir)
+
+    # Load engine (gracefully handles missing models)
+    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=False)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
-    
+
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"NBA v5.1 FINAL initialized - {model_info['markets']} markets: {model_info['markets_list']}")
+    logger.info(f"NBA v6.0 initialized - {model_info['markets']}/9 markets loaded: {model_info['markets_list']}")
 
 
 # --- Endpoints ---
@@ -210,23 +222,25 @@ def startup_event():
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v5.1 FINAL with 6 markets."""
+    """Check API health - v6.0 with 9 independent markets."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
-    
+
     model_info = {}
     if engine_loaded:
         model_info = app.state.engine.get_model_info()
-    
+
     return {
         "status": "ok",
-        "version": "5.1-FINAL",
-        "markets": 6,
+        "version": "6.0",
+        "architecture": "9-model independent",
+        "markets": model_info.get("markets", 0),
         "markets_list": [
+            "q1_spread", "q1_total", "q1_moneyline",
+            "1h_spread", "1h_total", "1h_moneyline",
             "fg_spread", "fg_total", "fg_moneyline",
-            "1h_spread", "1h_total", "1h_moneyline"
         ],
-        "periods": ["full_game", "first_half"],
+        "periods": ["first_quarter", "first_half", "full_game"],
         "engine_loaded": engine_loaded,
         "model_info": model_info,
         "season": settings.current_season,
@@ -924,11 +938,11 @@ async def get_comprehensive_slate_analysis(
 async def predict_single_game(request: Request, req: GamePredictionRequest):
     """
     Generate predictions for a specific matchup.
-    
-    v5.1 FINAL: All 6 markets (FG+1H Spread, Total, Moneyline).
+
+    v6.0: All 9 markets (Q1+1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v5.1: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v6.0: Engine not loaded - models missing")
 
     try:
         # Build features
@@ -936,21 +950,25 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             req.home_team, req.away_team
         )
 
-        # Predict all 6 markets
+        # Predict all 9 markets
         preds = app.state.engine.predict_all_markets(
             features,
             fg_spread_line=req.fg_spread_line,
             fg_total_line=req.fg_total_line,
             fh_spread_line=req.fh_spread_line,
             fh_total_line=req.fh_total_line,
+            q1_spread_line=req.q1_spread_line,
+            q1_total_line=req.q1_total_line,
             home_ml_odds=req.home_ml_odds,
             away_ml_odds=req.away_ml_odds,
             fh_home_ml_odds=req.fh_home_ml_odds,
             fh_away_ml_odds=req.fh_away_ml_odds,
+            q1_home_ml_odds=req.q1_home_ml_odds,
+            q1_away_ml_odds=req.q1_away_ml_odds,
         )
         return preds
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"v5.1: {e}")
+        raise HTTPException(status_code=400, detail=f"v6.0: {e}")
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

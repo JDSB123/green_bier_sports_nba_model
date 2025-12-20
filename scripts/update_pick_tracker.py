@@ -51,14 +51,17 @@ def main():
     
     update_tracker_results(target_date)
     
+    import os
+    tracker_path = os.getenv("PICK_TRACKER_PATH", "Set PICK_TRACKER_PATH environment variable")
+
     print("\n" + "=" * 80)
-    print("✅ Tracker update complete!")
+    print("Tracker update complete!")
     print("=" * 80)
-    print("\n⚠️  NOTE: Please manually update the following columns in the tracker:")
+    print("\nNOTE: Please manually update the following columns in the tracker:")
     print("   - Result: Final score or outcome")
     print("   - Win/Loss: W or L")
     print("   - Notes: Any additional notes")
-    print(f"\n   File: C:\\Users\\JB\\Green Bier Capital\\Early Stage Sport Ventures - Documents\\Daily Picks\\tracker_bombay711_daily_picks.xlsx")
+    print(f"\n   File: {tracker_path}")
 
 
 if __name__ == "__main__":

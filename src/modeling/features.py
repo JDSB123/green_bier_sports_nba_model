@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 import logging
 
 import numpy as np
@@ -12,6 +12,7 @@ from src.modeling.team_factors import (
     get_timezone_difference,
     calculate_travel_fatigue,
 )
+from src.modeling.period_features import PERIOD_SCALING
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +194,235 @@ class FeatureEngineer:
             stats["consistency"] = 0.5
 
         return stats
+
+    def compute_period_rolling_stats(
+        self,
+        games_df: pd.DataFrame,
+        team: str,
+        as_of_date: pd.Timestamp,
+        period: str = "fg",
+    ) -> Dict[str, float]:
+        """
+        Compute period-specific rolling stats (Q1, 1H, or FG).
+
+        This method computes INDEPENDENT statistics for each period using
+        actual historical data for that period, not scaled from FG stats.
+
+        Args:
+            games_df: DataFrame with historical games (must have quarter columns)
+            team: Team name to compute stats for
+            as_of_date: Compute stats as of this date (exclusive)
+            period: "q1", "1h", or "fg"
+
+        Returns:
+            Dictionary of period-specific statistics
+        """
+        # Check for required quarter columns for sub-game periods
+        quarter_cols = ["home_q1", "home_q2", "home_q3", "home_q4",
+                        "away_q1", "away_q2", "away_q3", "away_q4"]
+
+        has_quarter_data = all(col in games_df.columns for col in quarter_cols)
+
+        if period in ["q1", "1h"] and not has_quarter_data:
+            logger.warning(
+                f"Quarter columns not available for {period} stats. "
+                f"Missing columns will result in empty stats."
+            )
+            return {}
+
+        # Get all games for this team before the date
+        home_games = games_df[
+            (games_df["home_team"] == team) & (games_df["date"] < as_of_date)
+        ].copy()
+        away_games = games_df[
+            (games_df["away_team"] == team) & (games_df["date"] < as_of_date)
+        ].copy()
+
+        if len(home_games) + len(away_games) < 3:
+            return {}
+
+        # Compute period-specific scores
+        if period == "q1":
+            if has_quarter_data:
+                home_games["team_score"] = home_games["home_q1"].fillna(0)
+                home_games["opp_score"] = home_games["away_q1"].fillna(0)
+                away_games["team_score"] = away_games["away_q1"].fillna(0)
+                away_games["opp_score"] = away_games["home_q1"].fillna(0)
+            else:
+                return {}
+        elif period == "1h":
+            if has_quarter_data:
+                home_games["team_score"] = (
+                    home_games["home_q1"].fillna(0) + home_games["home_q2"].fillna(0)
+                )
+                home_games["opp_score"] = (
+                    home_games["away_q1"].fillna(0) + home_games["away_q2"].fillna(0)
+                )
+                away_games["team_score"] = (
+                    away_games["away_q1"].fillna(0) + away_games["away_q2"].fillna(0)
+                )
+                away_games["opp_score"] = (
+                    away_games["home_q1"].fillna(0) + away_games["home_q2"].fillna(0)
+                )
+            else:
+                return {}
+        else:  # fg
+            home_games["team_score"] = home_games["home_score"]
+            home_games["opp_score"] = home_games["away_score"]
+            away_games["team_score"] = away_games["away_score"]
+            away_games["opp_score"] = away_games["home_score"]
+
+        home_games["is_home"] = 1
+        away_games["is_home"] = 0
+
+        all_games = pd.concat(
+            [
+                home_games[["date", "team_score", "opp_score", "is_home"]],
+                away_games[["date", "team_score", "opp_score", "is_home"]],
+            ]
+        ).sort_values("date", ascending=False)
+
+        # Drop rows with NaN scores
+        all_games = all_games.dropna(subset=["team_score", "opp_score"])
+
+        if len(all_games) < 3:
+            return {}
+
+        # Period suffix for feature names
+        suffix = f"_{period}" if period != "fg" else ""
+
+        # Last N games
+        recent = all_games.head(self.lookback)
+
+        stats = {}
+
+        # Basic stats
+        stats[f"ppg{suffix}"] = recent["team_score"].mean()
+        stats[f"papg{suffix}"] = recent["opp_score"].mean()
+        stats[f"margin{suffix}"] = (recent["team_score"] - recent["opp_score"]).mean()
+        stats[f"win_pct{suffix}"] = (recent["team_score"] > recent["opp_score"]).mean()
+        stats[f"pace{suffix}"] = recent["team_score"].mean() + recent["opp_score"].mean()
+
+        # Volatility
+        stats[f"margin_std{suffix}"] = (recent["team_score"] - recent["opp_score"]).std()
+
+        # Last 5 performance
+        last5 = recent.head(5)
+        if len(last5) >= 3:
+            stats[f"l5_margin{suffix}"] = (last5["team_score"] - last5["opp_score"]).mean()
+            stats[f"l5_ppg{suffix}"] = last5["team_score"].mean()
+            stats[f"l5_papg{suffix}"] = last5["opp_score"].mean()
+
+        # Last 10 performance
+        last10 = recent.head(10)
+        if len(last10) >= 5:
+            stats[f"l10_margin{suffix}"] = (last10["team_score"] - last10["opp_score"]).mean()
+
+        # Period lead/win rate
+        stats[f"lead_pct{suffix}"] = stats.get(f"win_pct{suffix}", 0.5)
+
+        # Efficiency ratings (simple version for periods)
+        ppg = stats.get(f"ppg{suffix}", 25)
+        papg = stats.get(f"papg{suffix}", 25)
+        if ppg > 0 and papg > 0:
+            stats[f"ortg{suffix}"] = ppg / (ppg + papg) * 100
+            stats[f"drtg{suffix}"] = papg / (ppg + papg) * 100
+            stats[f"net_rtg{suffix}"] = stats[f"ortg{suffix}"] - stats[f"drtg{suffix}"]
+
+        # Over rate (total > average)
+        avg_total = stats[f"pace{suffix}"] if f"pace{suffix}" in stats else 50
+        over_count = ((recent["team_score"] + recent["opp_score"]) > avg_total).sum()
+        stats[f"over_pct{suffix}"] = over_count / len(recent) if len(recent) > 0 else 0.5
+
+        return stats
+
+    def build_all_period_features(
+        self,
+        game: pd.Series,
+        historical_df: pd.DataFrame,
+    ) -> Dict[str, float]:
+        """
+        Build features for ALL periods (Q1, 1H, FG) independently.
+
+        This is the main entry point for building period-independent features.
+        Each period's features are computed from that period's historical data.
+
+        Args:
+            game: Game row with team names and date
+            historical_df: Historical games DataFrame (must have quarter data)
+
+        Returns:
+            Combined dictionary with features for all periods
+        """
+        home_team = game["home_team"]
+        away_team = game["away_team"]
+        game_date = pd.to_datetime(game["date"])
+
+        features: Dict[str, float] = {}
+
+        # Build features for each period independently
+        for period in ["q1", "1h", "fg"]:
+            home_period_stats = self.compute_period_rolling_stats(
+                historical_df, home_team, game_date, period
+            )
+            away_period_stats = self.compute_period_rolling_stats(
+                historical_df, away_team, game_date, period
+            )
+
+            if not home_period_stats or not away_period_stats:
+                # Skip this period if insufficient data
+                logger.debug(f"Insufficient {period} data for {home_team} vs {away_team}")
+                continue
+
+            suffix = f"_{period}" if period != "fg" else ""
+
+            # Add home team stats
+            for key, val in home_period_stats.items():
+                features[f"home_{key}"] = val
+
+            # Add away team stats
+            for key, val in away_period_stats.items():
+                features[f"away_{key}"] = val
+
+            # Compute differentials
+            ppg_key = f"ppg{suffix}"
+            margin_key = f"margin{suffix}"
+            pace_key = f"pace{suffix}"
+
+            if ppg_key in home_period_stats and ppg_key in away_period_stats:
+                features[f"ppg_diff{suffix}"] = (
+                    home_period_stats[ppg_key] - away_period_stats[ppg_key]
+                )
+            if margin_key in home_period_stats and margin_key in away_period_stats:
+                features[f"margin_diff{suffix}"] = (
+                    home_period_stats[margin_key] - away_period_stats[margin_key]
+                )
+            if pace_key in home_period_stats and pace_key in away_period_stats:
+                features[f"expected_pace{suffix}"] = (
+                    home_period_stats[pace_key] + away_period_stats[pace_key]
+                ) / 2
+
+            # Compute period-specific predicted margin and total
+            scaling = PERIOD_SCALING.get(period, PERIOD_SCALING["fg"])
+
+            # Get dynamic HCA and scale for period
+            base_hca = get_home_court_advantage(home_team)
+            period_hca = base_hca * scaling["hca_factor"]
+            features[f"dynamic_hca{suffix}"] = period_hca
+
+            # Predicted margin for this period
+            home_margin = home_period_stats.get(margin_key, 0)
+            away_margin = away_period_stats.get(margin_key, 0)
+            features[f"predicted_margin{suffix}"] = (
+                (home_margin - away_margin) / 2 + period_hca
+            )
+
+            # Predicted total for this period
+            home_pace = home_period_stats.get(pace_key, 50)
+            away_pace = away_period_stats.get(pace_key, 50)
+            features[f"predicted_total{suffix}"] = (home_pace + away_pace) / 2
+
+        return features
 
     def compute_rest_days(
         self,

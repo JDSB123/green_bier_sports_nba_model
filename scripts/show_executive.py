@@ -28,7 +28,10 @@ def get_fire_tier(fire_rating: str) -> int:
 
 
 def main():
-    url = "http://localhost:8090/slate/today/executive"
+    import os
+    api_port = os.getenv("NBA_API_PORT", "8090")
+    api_base = os.getenv("NBA_API_URL", f"http://localhost:{api_port}")
+    url = f"{api_base}/slate/today/executive"
     
     try:
         with urllib.request.urlopen(url, timeout=60) as response:

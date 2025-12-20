@@ -1,20 +1,15 @@
 # NBA v5.1 FINAL - Docker Compose Production Configuration
-# 
-# 6 PROVEN ROE Markets (Full Game + First Half):
 #
-# Full Game:
-# - Spread: 60.6% accuracy, +15.7% ROI
-# - Total: 59.2% accuracy, +13.1% ROI
-# - Moneyline: 65.5% accuracy, +25.1% ROI
+# CONFIGURATION (via .env file or environment):
+#   NBA_API_PORT - External port (default: 8090)
+#   REQUIRE_API_AUTH - Enable API key auth (default: false)
+#   SERVICE_API_KEY - API key if auth enabled
 #
-# First Half:
-# - Spread: 55.9% accuracy, +8.2% ROI
-# - Total: 58.1% accuracy, +11.4% ROI
-# - Moneyline: 63.0% accuracy, +19.8% ROI
-#
-# Build:   docker compose build
-# Run:     docker compose up -d
-# Export:  docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
+# Usage:
+#   Build:   docker compose build
+#   Run:     docker compose up -d
+#   Run with custom port: NBA_API_PORT=9000 docker compose up -d
+#   Export:  docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
 
 version: "3.8"
 
@@ -38,24 +33,24 @@ services:
       - /app/outputs:size=50M,uid=1000,gid=1000,mode=0755
     
     ports:
-      - "8090:8080"
-    
+      - "${NBA_API_PORT:-8090}:8080"
+
     # SECRETS ARE BAKED INTO CONTAINER - No volume mount required
     # Secrets are copied from ./secrets/ into /app/secrets/ at build time
     # Container is fully self-contained - no external secrets needed
-    
+
     environment:
       # Optional auth
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
-      
+
       # v5.1 configuration (6 markets)
       - NBA_MODEL_VERSION=5.1-FINAL
       - NBA_MARKETS=fg_spread,fg_total,fg_moneyline,1h_spread,1h_total,1h_moneyline
       - NBA_PERIODS=full_game,first_half
-      
-      # CORS (customize as needed)
-      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8090
+
+      # CORS - configured via environment variable
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
     
     # Health check (override container healthcheck for compose)
     healthcheck:

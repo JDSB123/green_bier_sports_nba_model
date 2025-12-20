@@ -1,31 +1,41 @@
 #!/usr/bin/env python3
 """
-Unified backtest for all NBA betting markets.
+Unified backtest for all 9 NBA betting markets.
 
+NBA v6.0: 9 INDEPENDENT Markets Architecture
 STRICT MODE: No silent failures, no placeholder data.
 
-This is the consolidated backtester for all market types.
+Markets (All INDEPENDENT models):
+    Q1 (First Quarter):
+        q1_spread    - First Quarter Spreads
+        q1_total     - First Quarter Totals
+        q1_moneyline - First Quarter Moneyline
 
-Markets:
-    fg_spread    - Full Game Spreads (60.6% acc, +15.7% ROI)
-    fg_total     - Full Game Totals (59.2% acc, +13.1% ROI)
-    fg_moneyline - Full Game Moneyline
-    1h_spread    - First Half Spreads (55.9% acc, +6.7% ROI)
-    1h_total     - First Half Totals (58.2% acc, +11.1% ROI)
-    1h_moneyline - First Half Moneyline
+    1H (First Half):
+        1h_spread    - First Half Spreads
+        1h_total     - First Half Totals
+        1h_moneyline - First Half Moneyline
+
+    FG (Full Game):
+        fg_spread    - Full Game Spreads
+        fg_total     - Full Game Totals
+        fg_moneyline - Full Game Moneyline
+
+ARCHITECTURE:
+    Each period (Q1, 1H, FG) uses INDEPENDENT features computed from
+    historical data for that specific period. No cross-period dependencies.
 
 Method: Walk-forward validation (train on past, predict next game - NO LEAKAGE)
 
 Usage:
-    python scripts/backtest.py                              # All markets
-    python scripts/backtest.py --markets fg_spread,fg_total # Specific markets
-    python scripts/backtest.py --markets fg_spread          # Single market
+    python scripts/backtest.py                              # All 9 markets
+    python scripts/backtest.py --markets fg_spread,q1_total # Specific markets
+    python scripts/backtest.py --periods q1,1h              # Specific periods
     python scripts/backtest.py --min-training 100           # More training data
     python scripts/backtest.py --strict                     # Fail on any error
 
 Output:
     data/processed/all_markets_backtest_results.csv
-    ALL_MARKETS_BACKTEST_RESULTS.md (moved to docs/ during cleanup)
 """
 import argparse
 import sys
@@ -69,61 +79,73 @@ from src.modeling.features import FeatureEngineer
 DATA_DIR = PROJECT_ROOT / "data"
 PROCESSED_DIR = DATA_DIR / "processed"
 
-# Market configurations
+# Market configurations with period info
 MARKETS = {
+    # Full Game Markets
     "fg_spread": {
         "name": "Full Game Spreads",
         "model_class": SpreadsModel,
         "label_col": "spread_covered",
         "line_col": "spread_line",
+        "period": "fg",
     },
     "fg_total": {
         "name": "Full Game Totals",
         "model_class": TotalsModel,
         "label_col": "total_over",
         "line_col": "total_line",
+        "period": "fg",
     },
     "fg_moneyline": {
         "name": "Full Game Moneyline",
         "model_class": MoneylineModel,
         "label_col": "home_win",
         "line_col": None,
+        "period": "fg",
     },
+    # First Half Markets
     "1h_spread": {
         "name": "First Half Spreads",
         "model_class": FirstHalfSpreadsModel,
         "label_col": "1h_spread_covered",
         "line_col": "1h_spread_line",
+        "period": "1h",
     },
     "1h_total": {
         "name": "First Half Totals",
         "model_class": FirstHalfTotalsModel,
         "label_col": "1h_total_over",
         "line_col": "1h_total_line",
+        "period": "1h",
     },
     "1h_moneyline": {
         "name": "First Half Moneyline",
         "model_class": FirstHalfMoneylineModel,
         "label_col": "home_1h_win",
         "line_col": None,
+        "period": "1h",
     },
+    # First Quarter Markets
     "q1_spread": {
         "name": "First Quarter Spreads",
         "model_class": FirstQuarterSpreadsModel,
         "label_col": "q1_spread_covered",
         "line_col": "q1_spread_line",
+        "period": "q1",
     },
     "q1_total": {
         "name": "First Quarter Totals",
         "model_class": FirstQuarterTotalsModel,
         "label_col": "q1_total_over",
         "line_col": "q1_total_line",
+        "period": "q1",
     },
     "q1_moneyline": {
         "name": "First Quarter Moneyline",
         "model_class": FirstQuarterMoneylineModel,
         "label_col": "home_q1_win",
         "line_col": None,
+        "period": "q1",
     },
 }
 
@@ -320,79 +342,141 @@ def backtest_market(
 ) -> pd.DataFrame:
     """
     Run walk-forward backtest for a single market.
+
+    NBA v6.0: Uses period-specific features computed from historical
+    data for that specific period (Q1, 1H, or FG).
     """
     config = MARKETS[market_key]
-    
+
     print(f"\n{'='*60}")
-    print(f"BACKTEST: {config['name']}")
+    print(f"BACKTEST: {config['name']} (period: {config['period']})")
     print(f"{'='*60}")
-    
+
     label_col = config["label_col"]
     line_col = config["line_col"]
     ModelClass = config["model_class"]
-    
+    period = config["period"]
+
     # Filter to games with valid labels
     if label_col not in df.columns:
         print(f"[WARN] Label column {label_col} not found. Skipping.")
         return pd.DataFrame()
-    
+
     valid_df = df[df[label_col].notna()].copy()
-    
+
     if len(valid_df) < min_training + 50:
         print(f"[WARN] Not enough data: {len(valid_df)} games. Skipping.")
         return pd.DataFrame()
-    
+
     fe = FeatureEngineer(lookback=10)
     results = []
-    
+
     total_games = len(valid_df)
-    
+
     for i in range(min_training, total_games):
         if i % 100 == 0:
-            print(f"  Processing game {i}/{total_games}...")
+            print(f"  Processing game {i}/{total_games} (period={period})...")
         
         # Training data
         train_df = valid_df.iloc[:i].copy()
         test_game = valid_df.iloc[i]
         
         try:
-            # Build features for training
+            # Build PERIOD-SPECIFIC features for training
+            # Each period (Q1, 1H, FG) uses its own historical stats
             train_features = []
             for idx, game in train_df.iterrows():
                 historical = train_df[train_df["date"] < game["date"]]
                 if len(historical) < 30:
                     continue
-                
-                features = fe.build_game_features(game, historical)
-                if features:
-                    features = enrich_features(features, game)
-                    features[label_col] = game[label_col]
-                    if line_col and line_col in game.index:
-                        features[line_col] = game[line_col]
-                    train_features.append(features)
-            
+
+                # Get period-specific rolling stats
+                home_stats = fe.compute_period_rolling_stats(
+                    historical, game["home_team"],
+                    pd.to_datetime(game["date"]), period
+                )
+                away_stats = fe.compute_period_rolling_stats(
+                    historical, game["away_team"],
+                    pd.to_datetime(game["date"]), period
+                )
+
+                if not home_stats or not away_stats:
+                    continue
+
+                # Build feature dict with period-specific stats
+                features = {}
+                for key, val in home_stats.items():
+                    features[f"home_{key}"] = val
+                for key, val in away_stats.items():
+                    features[f"away_{key}"] = val
+
+                # Add differentials
+                suffix = f"_{period}" if period != "fg" else ""
+                if f"ppg{suffix}" in home_stats and f"ppg{suffix}" in away_stats:
+                    features[f"ppg_diff{suffix}"] = home_stats[f"ppg{suffix}"] - away_stats[f"ppg{suffix}"]
+                if f"margin{suffix}" in home_stats and f"margin{suffix}" in away_stats:
+                    features[f"margin_diff{suffix}"] = home_stats[f"margin{suffix}"] - away_stats[f"margin{suffix}"]
+
+                # Also get standard features for context
+                base_features = fe.build_game_features(game, historical)
+                if base_features:
+                    features.update(base_features)
+
+                features = enrich_features(features, game)
+                features[label_col] = game[label_col]
+                if line_col and line_col in game.index:
+                    features[line_col] = game[line_col]
+                train_features.append(features)
+
             if len(train_features) < 50:
                 continue
-            
+
             train_features_df = pd.DataFrame(train_features)
             train_features_df = train_features_df[train_features_df[label_col].notna()]
-            
+
             # Train model
             model = ModelClass(
                 model_type="logistic",
                 use_calibration=True,
             )
-            
+
             y_train = train_features_df[label_col].astype(int)
             model.fit(train_features_df, y_train)
-            
-            # Build features for test game
+
+            # Build PERIOD-SPECIFIC features for test game
             historical = train_df.copy()
-            test_features = fe.build_game_features(test_game, historical)
-            
-            if not test_features:
+
+            # Get period-specific rolling stats for test game
+            home_stats = fe.compute_period_rolling_stats(
+                historical, test_game["home_team"],
+                pd.to_datetime(test_game["date"]), period
+            )
+            away_stats = fe.compute_period_rolling_stats(
+                historical, test_game["away_team"],
+                pd.to_datetime(test_game["date"]), period
+            )
+
+            if not home_stats or not away_stats:
                 continue
-            
+
+            test_features = {}
+            for key, val in home_stats.items():
+                test_features[f"home_{key}"] = val
+            for key, val in away_stats.items():
+                test_features[f"away_{key}"] = val
+
+            # Add differentials
+            suffix = f"_{period}" if period != "fg" else ""
+            if f"ppg{suffix}" in home_stats and f"ppg{suffix}" in away_stats:
+                test_features[f"ppg_diff{suffix}"] = home_stats[f"ppg{suffix}"] - away_stats[f"ppg{suffix}"]
+            if f"margin{suffix}" in home_stats and f"margin{suffix}" in away_stats:
+                test_features[f"margin_diff{suffix}"] = home_stats[f"margin{suffix}"] - away_stats[f"margin{suffix}"]
+
+            # Also add base features
+            base_features = fe.build_game_features(test_game, historical)
+            if base_features:
+                test_features.update(base_features)
+
             test_features = enrich_features(test_features, test_game)
             
             test_features_df = pd.DataFrame([test_features])

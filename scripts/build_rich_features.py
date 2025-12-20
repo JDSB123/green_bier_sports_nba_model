@@ -61,59 +61,13 @@ class RichFeatureBuilder:
         
     async def get_team_id(self, team_name: str) -> int:
         """Get team ID from name, with caching."""
-        # #region agent log
-        DEBUG_LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".cursor", "debug.log")
-        try:
-            import json as json_lib
-            from datetime import datetime, timezone
-            log_entry = {
-                "sessionId": "debug-session",
-                "runId": "prediction-debug",
-                "hypothesisId": "C",
-                "location": "build_rich_features.py:50",
-                "message": "Looking up team ID",
-                "data": {
-                    "team_name_input": team_name,
-                    "season": self.season,
-                    "league_id": self.league_id
-                },
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-            with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-                f.write(json_lib.dumps(log_entry) + "\n")
-        except Exception:
-            pass
-        # #endregion
-        
         if team_name in self._team_cache:
             return self._team_cache[team_name]
-        
+
         # Search for team with season parameter
         result = await api_basketball.fetch_teams(search=team_name, league=self.league_id, season=self.season)
         teams = result.get("response", [])
-        
-        # #region agent log
-        try:
-            log_entry = {
-                "sessionId": "debug-session",
-                "runId": "prediction-debug",
-                "hypothesisId": "C",
-                "location": "build_rich_features.py:60",
-                "message": "Team lookup result",
-                "data": {
-                    "team_name_input": team_name,
-                    "teams_found": len(teams),
-                    "team_names_found": [t.get("name") for t in teams[:3]] if teams else [],
-                    "team_id_found": teams[0]["id"] if teams else None
-                },
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-            with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-                f.write(json_lib.dumps(log_entry) + "\n")
-        except Exception:
-            pass
-        # #endregion
-        
+
         if not teams:
             raise ValueError(f"Team not found: {team_name}")
         

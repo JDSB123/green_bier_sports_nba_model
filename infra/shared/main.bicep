@@ -1,9 +1,12 @@
 // Green Bier Sports Ventures - Shared Infrastructure
 // Deploy ONCE - shared across all sports (NBA, NCAAM, NFL, MLB, etc.)
 //
+// SINGLE SOURCE OF TRUTH:
+//   Resource Group: greenbier-enterprise-rg
+//   ACR:            greenbieracr
+//
 // Usage:
-//   az group create -n gbs-shared-rg -l eastus
-//   az deployment group create -g gbs-shared-rg -f infra/shared/main.bicep
+//   az deployment group create -g greenbier-enterprise-rg -f infra/shared/main.bicep
 
 targetScope = 'resourceGroup'
 
@@ -23,10 +26,10 @@ var tags = {
 }
 
 // ============================================================================
-// Container Registry (shared across all sports)
+// Container Registry (shared across all sports) - ACTUAL: greenbieracr
 // ============================================================================
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: '${prefix}sportsacr'
+  name: 'greenbieracr'
   location: location
   tags: tags
   sku: {

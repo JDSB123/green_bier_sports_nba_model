@@ -23,8 +23,13 @@ import json
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+import os
+
 CST = ZoneInfo("America/Chicago")
-API_BASE_URL = "http://localhost:8090"  # NBA API container port
+
+# API URL from environment - no hardcoded ports
+API_PORT = os.getenv("NBA_API_PORT", "8090")
+API_BASE_URL = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
 
 
 def _match_game(game: dict, matchup_filter: str) -> bool:

@@ -1,4 +1,8 @@
 # Green Bier Sports - NBA Function App CI/CD
+#
+# SINGLE SOURCE OF TRUTH - See AZURE_CONFIG.md
+#   Resource Group: greenbier-enterprise-rg
+#   Function App:   nba-picks-trigger
 
 name: GBS NBA - Deploy Function
 

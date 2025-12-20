@@ -37,8 +37,13 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
+import os
+
 PROJECT_ROOT = Path(__file__).parent.parent
-API_URL = "http://localhost:8090"
+
+# API URL from environment - no hardcoded ports
+API_PORT = os.getenv("NBA_API_PORT", "8090")
+API_URL = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
 
 
 def http_get_json(url: str, params: dict | None = None, timeout: int = 30) -> dict:

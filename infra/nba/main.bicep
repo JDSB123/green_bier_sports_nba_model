@@ -1,12 +1,12 @@
 // Green Bier Sports - NBA Model Infrastructure
 // Deploys NBA-specific resources (Container App, Function, Storage)
 //
-// Prerequisites: Deploy shared infrastructure first (infra/shared/main.bicep)
+// SINGLE SOURCE OF TRUTH - All NBA resources in greenbier-enterprise-rg
+// Container App: nba-picks-api
+// ACR: greenbieracr
 //
 // Usage:
-//   az group create -n gbs-nba-rg -l eastus
-//   az deployment group create -g gbs-nba-rg -f infra/nba/main.bicep \
-//     --parameters sharedResourceGroup=gbs-shared-rg
+//   az deployment group create -g greenbier-enterprise-rg -f infra/nba/main.bicep
 
 targetScope = 'resourceGroup'
 
@@ -17,8 +17,8 @@ param location string = resourceGroup().location
 @allowed(['dev', 'staging', 'prod'])
 param environment string = 'prod'
 
-@description('Shared resource group name')
-param sharedResourceGroup string = 'gbs-shared-rg'
+@description('Shared resource group name - same as NBA for simplicity')
+param sharedResourceGroup string = 'greenbier-enterprise-rg'
 
 @description('Container image tag')
 param imageTag string = 'latest'
@@ -35,9 +35,9 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing
   scope: resourceGroup(sharedResourceGroup)
 }
 
-// Get shared Container Registry
+// Get shared Container Registry - greenbieracr in greenbier-enterprise-rg
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: 'gbssportsacr'
+  name: 'greenbieracr'
   scope: resourceGroup(sharedResourceGroup)
 }
 
@@ -110,10 +110,10 @@ resource resultsContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
 }
 
 // ============================================================================
-// Container App - NBA Picks API
+// Container App - NBA Picks API (ACTUAL NAME: nba-picks-api)
 // ============================================================================
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
-  name: 'gbs-${sport}-api'
+  name: 'nba-picks-api'
   location: location
   tags: tags
   identity: {

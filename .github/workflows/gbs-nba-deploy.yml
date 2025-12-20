@@ -1,5 +1,10 @@
 # Green Bier Sports - NBA Model CI/CD
 # Triggers on push to main/master, deploys to Azure Container Apps
+#
+# SINGLE SOURCE OF TRUTH - See AZURE_CONFIG.md
+#   Resource Group: greenbier-enterprise-rg
+#   Container App:  nba-picks-api
+#   ACR:            greenbieracr
 
 name: GBS NBA - Build & Deploy
 
