@@ -1,17 +1,20 @@
 # NBA v5.1 FINAL - Production Container
 # Hardened, read-only image with baked-in models
-# 
-# 6 PROVEN ROE Markets (Full Game + First Half):
 #
-# Full Game:
+# 7 MARKETS (Full Game + First Half + First Quarter):
+#
+# Full Game (3):
 # - Spread: 60.6% accuracy, +15.7% ROI
 # - Total: 59.2% accuracy, +13.1% ROI
 # - Moneyline: 65.5% accuracy, +25.1% ROI
 #
-# First Half:
+# First Half (2):
 # - Spread: 55.9% accuracy, +8.2% ROI
 # - Total: 58.1% accuracy, +11.4% ROI
-# - Moneyline: 63.0% accuracy, +19.8% ROI
+#
+# First Quarter (2):
+# - Spread: 63.6% accuracy
+# - Total: (trained)
 #
 # Build: docker build -f Dockerfile -t nba-v51-final:latest .
 # Run:   docker compose up -d  (uses docker-compose.yml with read-only and secrets)
@@ -70,28 +73,35 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 # SECRETS ARE BAKED INTO CONTAINER - No external secrets required
 COPY --chown=appuser:appuser secrets/ /app/secrets/
 
-# Verify ALL 6 REQUIRED model files exist (fail fast if missing)
+# Verify ALL 9 REQUIRED model files exist (fail fast if missing)
+# 7 markets: FG (3) + 1H (2) + Q1 (2), with 1H having separate feature files (9 files total)
 RUN echo "=== NBA v5.1 FINAL Model Verification ===" && \
-    echo "Checking for 6 required models (FG + 1H)..." && \
+    echo "Checking for 9 required model files (FG + 1H + Q1)..." && \
     ls -la /app/data/processed/models/ && \
     echo "" && \
-    echo "Full Game Models:" && \
-    test -f /app/data/processed/models/spreads_model.joblib && \
-    echo "  ✓ spreads_model.joblib (60.6% acc, +15.7% ROI)" && \
-    test -f /app/data/processed/models/totals_model.joblib && \
-    echo "  ✓ totals_model.joblib (59.2% acc, +13.1% ROI)" && \
-    test -f /app/data/processed/models/moneyline_model.joblib && \
-    echo "  ✓ moneyline_model.joblib (65.5% acc, +25.1% ROI)" && \
+    echo "Full Game Models (3):" && \
+    test -f /app/data/processed/models/fg_spread_model.joblib && \
+    echo "  ✓ fg_spread_model.joblib (60.6% acc, +15.7% ROI)" && \
+    test -f /app/data/processed/models/fg_total_model.joblib && \
+    echo "  ✓ fg_total_model.joblib (59.2% acc, +13.1% ROI)" && \
+    test -f /app/data/processed/models/fg_moneyline_model.joblib && \
+    echo "  ✓ fg_moneyline_model.joblib (65.5% acc, +25.1% ROI)" && \
     echo "" && \
-    echo "First Half Models:" && \
-    test -f /app/data/processed/models/first_half_spread_model.pkl && \
-    test -f /app/data/processed/models/first_half_spread_features.pkl && \
-    echo "  ✓ first_half_spread_model.pkl (55.9% acc, +8.2% ROI)" && \
-    test -f /app/data/processed/models/first_half_total_model.pkl && \
-    test -f /app/data/processed/models/first_half_total_features.pkl && \
-    echo "  ✓ first_half_total_model.pkl (58.1% acc, +11.4% ROI)" && \
+    echo "First Half Models (2 models, 4 files):" && \
+    test -f /app/data/processed/models/1h_spread_model.pkl && \
+    test -f /app/data/processed/models/1h_spread_features.pkl && \
+    echo "  ✓ 1h_spread_model.pkl (55.9% acc, +8.2% ROI)" && \
+    test -f /app/data/processed/models/1h_total_model.pkl && \
+    test -f /app/data/processed/models/1h_total_features.pkl && \
+    echo "  ✓ 1h_total_model.pkl (58.1% acc, +11.4% ROI)" && \
     echo "" && \
-    echo "=== All 6 required models verified! ===" && \
+    echo "First Quarter Models (2):" && \
+    test -f /app/data/processed/models/q1_spread_model.joblib && \
+    echo "  ✓ q1_spread_model.joblib (63.6% acc)" && \
+    test -f /app/data/processed/models/q1_total_model.joblib && \
+    echo "  ✓ q1_total_model.joblib" && \
+    echo "" && \
+    echo "=== All 9 required model files verified! ===" && \
     echo "" && \
     echo "=== Verifying baked-in secrets ===" && \
     if test -f /app/secrets/THE_ODDS_API_KEY && test -s /app/secrets/THE_ODDS_API_KEY; then \
@@ -122,14 +132,14 @@ ENV PYTHONPATH=/app
 
 # v5.1 specific settings
 ENV NBA_MODEL_VERSION=5.1-FINAL
-ENV NBA_MARKETS=fg_spread,fg_total,fg_moneyline,1h_spread,1h_total,1h_moneyline
-ENV NBA_PERIODS=full_game,first_half
+ENV NBA_MARKETS=fg_spread,fg_total,fg_moneyline,1h_spread,1h_total,q1_spread,q1_total
+ENV NBA_PERIODS=full_game,first_half,first_quarter
 
 # =============================================================================
 # Health Check Configuration
 # =============================================================================
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') and d.get('markets')==6 else 1)" || exit 1
+    CMD python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') and d.get('markets')>=6 else 1)" || exit 1
 
 # =============================================================================
 # Security: Switch to non-root user

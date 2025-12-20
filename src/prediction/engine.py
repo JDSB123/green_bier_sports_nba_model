@@ -404,7 +404,12 @@ class UnifiedPredictionEngine:
         )
 
     def _load_model(self, model_key: str) -> Tuple[Any, List[str]]:
-        """Load a single model."""
+        """Load a single model.
+
+        Supports both .joblib (combined model+features) and .pkl (separate files) formats.
+        """
+        import pickle
+
         config = MODEL_CONFIGS.get(model_key)
         if not config:
             raise ValueError(f"Unknown model key: {model_key}")
@@ -414,6 +419,28 @@ class UnifiedPredictionEngine:
         if not model_path.exists():
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
+        # Handle .pkl files (1H models use separate model and features files)
+        if model_path.suffix == ".pkl":
+            with open(model_path, "rb") as f:
+                model = pickle.load(f)
+
+            # Load features from separate file if specified
+            features = []
+            if "features_file" in config:
+                features_path = self.models_dir / config["features_file"]
+                if features_path.exists():
+                    with open(features_path, "rb") as f:
+                        features = pickle.load(f)
+                else:
+                    # Fall back to config features
+                    features = config.get("features", [])
+            else:
+                features = config.get("features", [])
+
+            logger.info(f"Loaded {model_key} (pkl) with {len(features)} features")
+            return model, features
+
+        # Handle .joblib files (combined format)
         data = joblib.load(model_path)
 
         model = data.get("pipeline") or data.get("model")

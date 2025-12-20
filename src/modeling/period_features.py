@@ -409,13 +409,14 @@ MODEL_CONFIGS: Dict[str, Dict] = {
         "model_file": "q1_moneyline_model.joblib",
         "features": get_model_features("q1", "moneyline"),
     },
-    # First Half Models
+    # First Half Models (using .pkl format with separate features file)
     "1h_spread": {
         "period": "1h",
         "market": "spread",
         "label_col": "1h_spread_covered",
         "line_col": "1h_spread_line",
-        "model_file": "1h_spread_model.joblib",
+        "model_file": "1h_spread_model.pkl",
+        "features_file": "1h_spread_features.pkl",
         "features": get_model_features("1h", "spread"),
     },
     "1h_total": {
@@ -423,7 +424,8 @@ MODEL_CONFIGS: Dict[str, Dict] = {
         "market": "total",
         "label_col": "1h_total_over",
         "line_col": "1h_total_line",
-        "model_file": "1h_total_model.joblib",
+        "model_file": "1h_total_model.pkl",
+        "features_file": "1h_total_features.pkl",
         "features": get_model_features("1h", "total"),
     },
     "1h_moneyline": {
@@ -431,7 +433,7 @@ MODEL_CONFIGS: Dict[str, Dict] = {
         "market": "moneyline",
         "label_col": "home_1h_win",
         "line_col": None,
-        "model_file": "1h_moneyline_model.joblib",
+        "model_file": "1h_moneyline_model.pkl",
         "features": get_model_features("1h", "moneyline"),
     },
     # Full Game Models
