@@ -1,0 +1,70 @@
+# Docker ignore file - exclude unnecessary files from build context
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+# secrets/ - REMOVED: secrets are baked into container at build time
+*.key
+*.pem
+
+# Data directories (models are baked in, don't copy from data/)
+data/raw/
+data/results/
+data/processed/training_data*.csv
+data/processed/*.pkl
+data/processed/*.joblib
+# But keep models/production/ (it's explicitly copied)
+
+# Azure deployment (legacy)
+azure/
+
+# Backtest files (not needed in production container)
+# NOTE: docker-entrypoint-backtest.sh is NOT excluded because Dockerfile.backtest needs it
+docker-compose.backtest.yml
+Dockerfile.backtest
+
+# Test files
+tests/
+*.test.py
+pytest.ini
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

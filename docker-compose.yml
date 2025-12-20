@@ -1,0 +1,105 @@
+# NBA v6.0 - Docker Compose Production Configuration (9 Independent Markets)
+#
+# CONFIGURATION (via .env file or environment):
+#   NBA_API_PORT - External port (default: 8090)
+#   REQUIRE_API_AUTH - Enable API key auth (default: false)
+#   SERVICE_API_KEY - API key if auth enabled
+#
+# Markets (9 independent prediction models):
+#   Q1: q1_spread, q1_total, q1_moneyline
+#   1H: 1h_spread, 1h_total, 1h_moneyline
+#   FG: fg_spread, fg_total, fg_moneyline
+#
+# Usage:
+#   Build:   docker compose build
+#   Run:     docker compose up -d
+#   Run with custom port: NBA_API_PORT=9000 docker compose up -d
+#   Export:  docker save nba-v60:latest | gzip > nba_v6.0_model.tar.gz
+
+version: "3.8"
+
+services:
+  # ==========================================================================
+  # NBA v6.0 - Production API (9 Independent Markets)
+  # ==========================================================================
+  nba-v60-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nba-v60:latest
+    container_name: nba-v60
+    
+    # Security: Read-only root filesystem
+    read_only: true
+    
+    # Temporary filesystems for runtime needs
+    tmpfs:
+      - /tmp:size=100M,mode=1777
+      - /app/outputs:size=50M,uid=1000,gid=1000,mode=0755
+    
+    ports:
+      - "${NBA_API_PORT:-8090}:8080"
+
+    # SECRETS ARE BAKED INTO CONTAINER - No volume mount required
+    # Secrets are copied from ./secrets/ into /app/secrets/ at build time
+    # Container is fully self-contained - no external secrets needed
+
+    environment:
+      # Optional auth
+      - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
+      - SERVICE_API_KEY=${SERVICE_API_KEY:-}
+
+      # v6.0 configuration (9 independent markets)
+      - NBA_MODEL_VERSION=6.0
+      - NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+      - NBA_PERIODS=first_quarter,first_half,full_game
+
+      # CORS - configured via environment variable
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    
+    # Health check (override container healthcheck for compose)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Logging
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # NO AUTO-RESTART - Container only runs when manually triggered
+    # Start:  docker compose up -d
+    # Stop:   docker compose down
+    restart: "no"
+
+  # ==========================================================================
+  # Optional: Model Output Volume for persistence
+  # ==========================================================================
+  # Uncomment to persist model outputs outside container
+  # volumes:
+  #   - nba-outputs:/app/outputs
+
+# Optional: Named volume for persistent outputs
+# volumes:
+#   nba-outputs:
+#     driver: local
+

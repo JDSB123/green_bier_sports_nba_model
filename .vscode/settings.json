@@ -1,0 +1,35 @@
+{
+  "ndjson.port": 9001,
+  "claudeCodeChat.permissions.yoloMode": true,
+  "docker.showStartPage": false,
+  "docker.defaultRegistryPath": "",
+  "docker.composeBuild": {
+    "detach": true,
+    "progress": "plain"
+  },
+  "docker.composeUp": {
+    "detach": true,
+    "files": [
+      "docker-compose.yml",
+      "docker-compose.backtest.yml"
+    ]
+  },
+  "docker.containers.label": "ContainerName",
+  "docker.images.label": "Tag",
+  "docker.volumes.label": "Name",
+  "docker.networks.label": "Name",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+  "azureFunctions.deploySubpath": "azure\\function_app",
+  "azureFunctions.scmDoBuildDuringDeployment": true,
+  "azureFunctions.pythonVenv": ".venv",
+  "azureFunctions.projectLanguage": "Python",
+  "azureFunctions.projectRuntime": "~4",
+  "debug.internalConsoleOptions": "neverOpen",
+  "containers.containers.label": "ContainerName",
+  "containers.images.label": "Tag",
+  "containers.networks.label": "Name",
+  "containers.volumes.label": "Name"
+}
