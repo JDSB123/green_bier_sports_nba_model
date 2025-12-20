@@ -1,5 +1,5 @@
 """
-Docker Secrets Utility for NBA v5.0 BETA
+Docker Secrets Utility for NBA v6.0
 
 Reads secrets from Docker secrets (Swarm mode) or secret files (Compose mode).
 Falls back to environment variables for backward compatibility.

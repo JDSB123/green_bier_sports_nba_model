@@ -1,5 +1,5 @@
 """
-API Authentication middleware for NBA v5.0 BETA.
+API Authentication middleware for NBA v6.0.
 
 Provides API key authentication to protect endpoints.
 """

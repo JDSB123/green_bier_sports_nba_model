@@ -2,7 +2,7 @@
 """
 Docker Secrets Management Script
 
-Manages Docker secrets for NBA v5.0 BETA:
+Manages Docker secrets for NBA v6.0:
 - Creates secret files from .env
 - Validates secrets
 - Lists secrets
@@ -188,7 +188,7 @@ def validate_secrets() -> None:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Manage Docker secrets for NBA v5.0 BETA",
+        description="Manage Docker secrets for NBA v6.0",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

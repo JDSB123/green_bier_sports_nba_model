@@ -21,7 +21,7 @@ class SpreadPredictor:
     """
     Handles spread predictions for Full Game and First Half.
 
-    NBA v5.1 FINAL: Both FG and 1H models required.
+    NBA v6.0: Both FG and 1H models required.
     STRICT MODE: Missing model = immediate failure.
     """
 

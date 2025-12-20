@@ -1,15 +1,12 @@
 """
 Comprehensive edge calculation utilities.
 
-Extracted from deprecated analyze_todays_slate.py script.
-These functions calculate betting edges for full game and first half markets.
+Calculates betting edges for all 9 markets (Q1 + 1H + FG).
 """
 from __future__ import annotations
 from typing import Dict, List, Any, Optional
 from datetime import datetime, date
 
-# Note: These functions have dependencies on models that may need to be refactored
-# For now, keeping the core logic but simplifying dependencies
 
 
 def calculate_comprehensive_edge(
@@ -22,12 +19,8 @@ def calculate_comprehensive_edge(
     engine_predictions: Optional[Dict] = None
 ) -> Dict:
     """
-    Calculate comprehensive betting edge for full game and first half.
-    
-    NOTE: This is a simplified version extracted from the deprecated script.
-    The original had dependencies on models from scripts/archive/ which don't exist.
-    This version uses simplified calculations that work with the current codebase.
-    
+    Calculate comprehensive betting edge for all periods.
+
     Args:
         features: Full game features
         fh_features: First half features

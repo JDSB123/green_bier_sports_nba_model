@@ -1,10 +1,10 @@
 """
 Model loading and management for predictions.
 
-NBA v5.1 FINAL: FG-only markets (3 models):
-- Spread (60.6% acc)
-- Total (59.2% acc)
-- Moneyline (65.5% acc)
+NBA v6.0: 9 independent markets (Q1 + 1H + FG):
+- Q1 Spread, Total, Moneyline
+- 1H Spread, Total, Moneyline
+- FG Spread (60.6% acc), Total (59.2% acc), Moneyline (65.5% acc)
 """
 from pathlib import Path
 from typing import Tuple, Any, List
@@ -157,9 +157,9 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
 def load_moneyline_model(models_dir: Path) -> Tuple[Any, List[str]]:
     """
     Load FG moneyline model with feature columns.
-    
-    NBA v5.1: Proven ROE 65.5% accuracy, +25.1% ROI
-    
+
+    NBA v6.0: Proven ROE 65.5% accuracy, +25.1% ROI
+
     Args:
         models_dir: Path to models directory
         

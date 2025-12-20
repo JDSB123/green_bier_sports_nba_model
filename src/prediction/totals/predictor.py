@@ -1,7 +1,7 @@
 """
 Totals prediction logic (Full Game + First Half).
 
-NBA v5.1 FINAL: All 6 markets required.
+NBA v6.0: All 9 markets with independent models.
 STRICT MODE: No fallbacks. Each market requires its own trained model.
 """
 from typing import Dict, Any, List
@@ -18,7 +18,7 @@ class TotalPredictor:
     """
     Totals predictor for Full Game and First Half.
 
-    NBA v5.1 FINAL: Both FG and 1H models required.
+    NBA v6.0: Both FG and 1H models required.
     STRICT MODE: Missing model = immediate failure.
     """
 

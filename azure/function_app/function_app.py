@@ -399,7 +399,7 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
         <tbody>{rows_html}</tbody>
     </table>
     
-    <div class="footer">NBA Prediction System v5.1 FINAL</div>
+    <div class="footer">NBA Prediction System v6.0</div>
 </body>
 </html>"""
     return func.HttpResponse(html, status_code=200, mimetype="text/html")

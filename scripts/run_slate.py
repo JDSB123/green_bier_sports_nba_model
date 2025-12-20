@@ -325,7 +325,7 @@ def main():
     args = parser.parse_args()
     
     print("\n" + "="*80)
-    print("🏀 NBA PREDICTION SYSTEM v5.0")
+    print("🏀 NBA PREDICTION SYSTEM v6.0")
     print("="*80)
     
     # Step 1: Check Docker

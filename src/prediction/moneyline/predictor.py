@@ -1,7 +1,7 @@
 """
 Moneyline prediction logic (Full Game + First Half).
 
-NBA v5.1 FINAL: All 6 markets required.
+NBA v6.0: All 9 markets with independent models.
 - FG Moneyline: 65.5% accuracy, +25.1% ROI
 - 1H Moneyline: 63.0% accuracy, +19.8% ROI
 """
@@ -38,7 +38,7 @@ class MoneylinePredictor:
     """
     Moneyline predictor for Full Game and First Half.
 
-    NBA v5.1 FINAL: Both FG and 1H models required.
+    NBA v6.0: Both FG and 1H models required.
     - FG Moneyline: 65.5% accuracy, +25.1% ROI
     - 1H Moneyline: 63.0% accuracy, +19.8% ROI
     """

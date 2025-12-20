@@ -1,5 +1,5 @@
 """
-Security utilities for NBA v5.0 BETA.
+Security utilities for NBA v6.0.
 
 Handles:
 - API key validation

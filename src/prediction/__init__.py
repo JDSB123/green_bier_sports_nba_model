@@ -1,12 +1,12 @@
 """
-NBA Prediction Module - v5.1 FINAL
+NBA Prediction Module - v6.0
 
-Production prediction engine for 3 PROVEN ROE markets:
-- Full Game Spread (60.6% acc, +15.7% ROI)
-- Full Game Total (59.2% acc, +13.1% ROI)
-- Full Game Moneyline (65.5% acc, +25.1% ROI)
+Production prediction engine for 9 INDEPENDENT markets:
+- First Quarter: Spread, Total, Moneyline
+- First Half: Spread, Total, Moneyline
+- Full Game: Spread (60.6% acc), Total (59.2% acc), Moneyline (65.5% acc)
 
-STRICT MODE: All models must exist. No fallbacks. No silent failures.
+STRICT MODE: All 9 models must exist. No fallbacks. No silent failures.
 """
 # Unified engine (THE ONLY ENTRY POINT)
 from src.prediction.engine import UnifiedPredictionEngine, ModelNotFoundError
