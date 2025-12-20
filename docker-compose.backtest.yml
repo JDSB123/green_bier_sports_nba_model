@@ -31,7 +31,7 @@ services:
     environment:
       - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
       - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
-      - SEASONS=${SEASONS:-2024-2025,2025-2026}
+      - SEASONS=${SEASONS:-202
       - MARKETS=${MARKETS:-all}
       - MIN_TRAINING=${MIN_TRAINING:-80}
     volumes:
@@ -54,7 +54,7 @@ services:
     environment:
       - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
       - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
-      - SEASONS=${SEASONS:-2024-2025,2025-2026}
+      - SEASONS=${SEASONS:-2022-2023,2023-2024,2024-2025,2025-2026}
     volumes:
       - ./data:/app/data
       - backtest_cache:/app/.cache

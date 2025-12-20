@@ -298,10 +298,15 @@ class FreshDataPipeline:
                     events = data.get("data", [])
                     
                     # For each event, fetch event-specific odds for 1H/Q1 markets
-                    enriched_events = []
-                    for event in events:
+                    # OPTIMIZATION: Use asyncio.gather with semaphore to speed up fetching
+                    sem = asyncio.Semaphore(5)
+                    
+                    async def process_historical_event(event):
                         event_id = event.get("id")
-                        if event_id:
+                        if not event_id:
+                            return event
+                            
+                        async with sem:
                             try:
                                 # Fetch 1H and Q1 markets (not available in historical endpoint)
                                 # Note: Event-specific odds may not be available for historical dates
@@ -322,8 +327,10 @@ class FreshDataPipeline:
                             except Exception as e:
                                 logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
                                 # Continue with FG markets only
-                        
-                        enriched_events.append(event)
+                        return event
+
+                    tasks = [process_historical_event(event) for event in events]
+                    enriched_events = await asyncio.gather(*tasks)
                     
                     lines = self._extract_lines_from_events(enriched_events, date_str)
                     all_lines.extend(lines)
@@ -349,10 +356,15 @@ class FreshDataPipeline:
                 logger.info(f"  Fetched FG odds for {len(current_odds)} events")
                 
                 # Enrich each event with 1H/Q1 markets
-                enriched_odds = []
-                for event in current_odds:
+                # OPTIMIZATION: Use asyncio.gather with semaphore
+                sem = asyncio.Semaphore(5)
+                
+                async def process_current_event(event):
                     event_id = event.get("id")
-                    if event_id:
+                    if not event_id:
+                        return event
+                        
+                    async with sem:
                         try:
                             # Fetch 1H and Q1 markets for this event
                             event_odds = await fetch_event_odds(
@@ -369,8 +381,10 @@ class FreshDataPipeline:
                             event["bookmakers"] = list(existing_bms.values())
                         except Exception as e:
                             logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
-                    
-                    enriched_odds.append(event)
+                    return event
+
+                tasks = [process_current_event(event) for event in current_odds]
+                enriched_odds = await asyncio.gather(*tasks)
                 
                 lines = self._extract_lines_from_events(enriched_odds, datetime.now().strftime("%Y-%m-%d"))
                 all_lines.extend(lines)
