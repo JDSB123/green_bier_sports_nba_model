@@ -32,6 +32,7 @@ from src.prediction.spreads import SpreadPredictor
 from src.prediction.totals import TotalPredictor
 from src.prediction.moneyline import MoneylinePredictor
 from src.modeling.period_features import MODEL_CONFIGS
+from src.config import filter_thresholds
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +80,13 @@ class PeriodPredictor:
         # Prepare features
         feature_df = pd.DataFrame([features])
 
-        # Handle missing features with logging
+        # STRICT MODE: Fail on missing features - NO SILENT ZERO-FILL
         missing = set(self.spread_features) - set(feature_df.columns)
         if missing:
-            logger.warning(f"[{self.period}_spread] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
-        for col in missing:
-            feature_df[col] = 0
+            raise ValueError(
+                f"[{self.period}_spread] MISSING {len(missing)} REQUIRED FEATURES: {sorted(missing)[:10]}. "
+                f"Feature pipeline is broken - fix data ingestion, do not zero-fill."
+            )
 
         X = feature_df[self.spread_features]
 
@@ -100,11 +102,13 @@ class PeriodPredictor:
         predicted_margin = features.get(margin_key, 0)
         edge = predicted_margin - spread_line
 
-        # Filter logic
-        passes_filter = confidence >= 0.55 and abs(edge) >= 1.0
+        # Filter logic using configurable thresholds
+        min_conf = filter_thresholds.spread_min_confidence
+        min_edge = filter_thresholds.spread_min_edge
+        passes_filter = confidence >= min_conf and abs(edge) >= min_edge
         filter_reason = None
         if not passes_filter:
-            if confidence < 0.55:
+            if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
                 filter_reason = f"Low edge: {edge:+.1f}"
@@ -133,12 +137,13 @@ class PeriodPredictor:
         # Prepare features
         feature_df = pd.DataFrame([features])
 
-        # Handle missing features with logging
+        # STRICT MODE: Fail on missing features - NO SILENT ZERO-FILL
         missing = set(self.total_features) - set(feature_df.columns)
         if missing:
-            logger.warning(f"[{self.period}_total] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
-        for col in missing:
-            feature_df[col] = 0
+            raise ValueError(
+                f"[{self.period}_total] MISSING {len(missing)} REQUIRED FEATURES: {sorted(missing)[:10]}. "
+                f"Feature pipeline is broken - fix data ingestion, do not zero-fill."
+            )
 
         X = feature_df[self.total_features]
 
@@ -154,11 +159,13 @@ class PeriodPredictor:
         predicted_total = features.get(total_key, total_line)
         edge = predicted_total - total_line if bet_side == "over" else total_line - predicted_total
 
-        # Filter logic
-        passes_filter = confidence >= 0.55 and abs(edge) >= 1.5
+        # Filter logic using configurable thresholds
+        min_conf = filter_thresholds.total_min_confidence
+        min_edge = filter_thresholds.total_min_edge
+        passes_filter = confidence >= min_conf and abs(edge) >= min_edge
         filter_reason = None
         if not passes_filter:
-            if confidence < 0.55:
+            if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
                 filter_reason = f"Low edge: {edge:+.1f}"
@@ -188,12 +195,13 @@ class PeriodPredictor:
         # Prepare features
         feature_df = pd.DataFrame([features])
 
-        # Handle missing features with logging
+        # STRICT MODE: Fail on missing features - NO SILENT ZERO-FILL
         missing = set(self.moneyline_features) - set(feature_df.columns)
         if missing:
-            logger.warning(f"[{self.period}_moneyline] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
-        for col in missing:
-            feature_df[col] = 0
+            raise ValueError(
+                f"[{self.period}_moneyline] MISSING {len(missing)} REQUIRED FEATURES: {sorted(missing)[:10]}. "
+                f"Feature pipeline is broken - fix data ingestion, do not zero-fill."
+            )
 
         X = feature_df[self.moneyline_features]
 
@@ -217,18 +225,20 @@ class PeriodPredictor:
         home_edge = home_win_prob - home_implied
         away_edge = away_win_prob - away_implied
 
-        # Determine recommended bet
-        if home_edge > away_edge and home_edge > 0.03:
+        # Determine recommended bet using configurable thresholds
+        min_edge_pct = filter_thresholds.moneyline_min_edge_pct
+        min_conf = filter_thresholds.moneyline_min_confidence
+        if home_edge > away_edge and home_edge > min_edge_pct:
             recommended_bet = "home"
             edge = home_edge
-        elif away_edge > 0.03:
+        elif away_edge > min_edge_pct:
             recommended_bet = "away"
             edge = away_edge
         else:
             recommended_bet = None
             edge = max(home_edge, away_edge)
 
-        passes_filter = recommended_bet is not None and confidence >= 0.55
+        passes_filter = recommended_bet is not None and confidence >= min_conf
         filter_reason = None
         if not passes_filter:
             if recommended_bet is None:
@@ -299,17 +309,22 @@ class UnifiedPredictionEngine:
     - All 9 models required for full functionality
     """
 
-    def __init__(self, models_dir: Path, require_all: bool = False):
+    def __init__(self, models_dir: Path, require_all: bool = True):
         """
         Initialize unified prediction engine.
 
+        STRICT MODE (v6.0): All 9 models REQUIRED. No fallbacks.
+
         Args:
             models_dir: Path to models directory
-            require_all: If True, fail if any model is missing.
-                        If False, load available models gracefully.
+            require_all: DEPRECATED - always True. All 9 models required.
         """
+        if not require_all:
+            raise ValueError(
+                "STRICT MODE ENFORCED: require_all=False is no longer supported. "
+                "All 9 models must be present. No silent fallbacks."
+            )
         self.models_dir = Path(models_dir)
-        self.require_all = require_all
         self.loaded_models: Dict[str, bool] = {}
 
         if not self.models_dir.exists():
@@ -318,42 +333,42 @@ class UnifiedPredictionEngine:
                 f"Run: python scripts/train_all_models.py"
             )
 
+        # STRICT MODE: All 9 models MUST be loaded - NO FALLBACKS
         # Initialize period predictors
         self.q1_predictor: Optional[PeriodPredictor] = None
         self.h1_predictor: Optional[PeriodPredictor] = None
         self.fg_predictor: Optional[PeriodPredictor] = None
 
-        # Load Q1 models
+        # Load Q1 models - WILL RAISE if any missing
+        logger.info("Loading Q1 models (spread, total, moneyline)...")
         q1_models = self._load_period_models("q1")
-        if q1_models:
-            self.q1_predictor = PeriodPredictor("q1", *q1_models)
-            logger.info("Q1 predictor initialized")
+        self.q1_predictor = PeriodPredictor("q1", *q1_models)
+        logger.info("Q1 predictor initialized (3/3 models)")
 
-        # Load 1H models
+        # Load 1H models - WILL RAISE if any missing
+        logger.info("Loading 1H models (spread, total, moneyline)...")
         h1_models = self._load_period_models("1h")
-        if h1_models:
-            self.h1_predictor = PeriodPredictor("1h", *h1_models)
-            logger.info("1H predictor initialized")
+        self.h1_predictor = PeriodPredictor("1h", *h1_models)
+        logger.info("1H predictor initialized (3/3 models)")
 
-        # Load FG models
+        # Load FG models - WILL RAISE if any missing
+        logger.info("Loading FG models (spread, total, moneyline)...")
         fg_models = self._load_period_models("fg")
-        if fg_models:
-            self.fg_predictor = PeriodPredictor("fg", *fg_models)
-            logger.info("FG predictor initialized")
+        self.fg_predictor = PeriodPredictor("fg", *fg_models)
+        logger.info("FG predictor initialized (3/3 models)")
 
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
 
-        # Check required models
+        # Verify all 9 models loaded
         loaded_count = sum(1 for v in self.loaded_models.values() if v)
-        logger.info(f"Loaded {loaded_count}/9 models")
-
-        if require_all and loaded_count < 9:
+        if loaded_count < 9:
             missing = [k for k, v in self.loaded_models.items() if not v]
             raise ModelNotFoundError(
-                f"Missing required models: {missing}\n"
+                f"FATAL: Only {loaded_count}/9 models loaded. Missing: {missing}\n"
                 f"Run: python scripts/train_all_models.py"
             )
+        logger.info(f"SUCCESS: All 9/9 models loaded - STRICT MODE ACTIVE")
 
     def _load_period_models(
         self,
@@ -388,14 +403,19 @@ class UnifiedPredictionEngine:
             self.loaded_models[ml_key] = False
             ml_model, ml_features = None, []
 
-        # Return None if essential models missing
-        if spread_model is None or total_model is None:
-            return None
-
-        # Use spread model for moneyline if ML model missing
+        # STRICT MODE: ALL 3 models required per period - NO FALLBACKS
+        if spread_model is None:
+            raise ModelNotFoundError(
+                f"[{period}] MISSING spread model. Train with: python scripts/train_all_models.py --markets {period}_spread"
+            )
+        if total_model is None:
+            raise ModelNotFoundError(
+                f"[{period}] MISSING total model. Train with: python scripts/train_all_models.py --markets {period}_total"
+            )
         if ml_model is None:
-            ml_model = spread_model
-            ml_features = spread_features
+            raise ModelNotFoundError(
+                f"[{period}] MISSING moneyline model. Train with: python scripts/train_all_models.py --markets {period}_moneyline"
+            )
 
         return (
             spread_model, spread_features,

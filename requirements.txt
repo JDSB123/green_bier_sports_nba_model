@@ -42,7 +42,3 @@ uvicorn[standard]==0.31.0
 
 # String matching
 rapidfuzz==3.10.0
-
-# Advanced ML models (optional)
-# xgboost==2.1.1
-# lightgbm==4.5.0

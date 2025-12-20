@@ -85,6 +85,51 @@ def _current_season_default() -> str:
 
 
 @dataclass(frozen=True)
+class FilterThresholds:
+    """
+    Configurable filter thresholds for betting predictions.
+
+    These thresholds determine whether a prediction passes the betting filter.
+    A prediction must meet BOTH confidence AND edge thresholds to pass.
+
+    Thresholds can be overridden via environment variables:
+    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.55)
+    - FILTER_SPREAD_MIN_EDGE (default: 1.0)
+    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.55)
+    - FILTER_TOTAL_MIN_EDGE (default: 1.5)
+    - FILTER_MONEYLINE_MIN_CONFIDENCE (default: 0.55)
+    - FILTER_MONEYLINE_MIN_EDGE_PCT (default: 0.03, i.e., 3%)
+    """
+    # Spread thresholds
+    spread_min_confidence: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_SPREAD_MIN_CONFIDENCE", "0.55"))
+    )
+    spread_min_edge: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_SPREAD_MIN_EDGE", "1.0"))
+    )
+
+    # Total thresholds
+    total_min_confidence: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_TOTAL_MIN_CONFIDENCE", "0.55"))
+    )
+    total_min_edge: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_TOTAL_MIN_EDGE", "1.5"))
+    )
+
+    # Moneyline thresholds
+    moneyline_min_confidence: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_MONEYLINE_MIN_CONFIDENCE", "0.55"))
+    )
+    moneyline_min_edge_pct: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_MONEYLINE_MIN_EDGE_PCT", "0.03"))
+    )
+
+
+# Global filter thresholds instance
+filter_thresholds = FilterThresholds()
+
+
+@dataclass(frozen=True)
 class Settings:
     # Core API Keys (Required) - STRICT MODE: Docker secrets only, NO FALLBACKS
     the_odds_api_key: str = field(default_factory=lambda: _secret_strict("THE_ODDS_API_KEY"))

@@ -86,7 +86,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - v5.1 FINAL ---
+# --- Request/Response Models - v6.0 ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - v6.0 all 9 markets."""
@@ -130,7 +130,7 @@ class SlateResponse(BaseModel):
     total_plays: int
 
 
-# --- API Setup - v5.1 FINAL ---
+# --- API Setup - v6.0 ---
 
 app = FastAPI(
     title="NBA v6.0 - Production Picks",
@@ -217,8 +217,9 @@ def startup_event():
     else:
         logger.error(f"Models directory does not exist: {models_dir}")
 
-    # Load engine (gracefully handles missing models)
-    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=False)
+    # STRICT MODE: Load engine - ALL 9 models required, NO FALLBACKS
+    logger.info("STRICT MODE: Requiring all 9 models (Q1/1H/FG × Spread/Total/ML)")
+    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
     
     # Initialize live pick tracker
@@ -420,10 +421,10 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
     
-    v5.1 FINAL: Returns all 6 markets (FG+1H Spread, Total, Moneyline).
+    v6.0: Returns all 9 markets (Q1+1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v5.1: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v6.0: Engine not loaded - models missing")
 
     # Resolve date
     from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
@@ -482,7 +483,7 @@ async def get_slate_predictions(
             
             # Validate required lines (FG at minimum)
             if fg_spread is None or fg_total is None:
-                logger.warning(f"v5.1: Skipping {home_team} vs {away_team} - missing FG lines")
+                logger.warning(f"v6.0: Skipping {home_team} vs {away_team} - missing FG lines")
                 continue
 
             # Predict all 9 markets
@@ -552,7 +553,7 @@ async def get_slate_predictions(
             })
 
         except ValueError as e:
-            logger.warning(f"v5.1: Skipping {home_team} vs {away_team} - {e}")
+            logger.warning(f"v6.0: Skipping {home_team} vs {away_team} - {e}")
             continue
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
@@ -601,7 +602,7 @@ async def get_executive_summary(
     Sorted by game time, then fire rating.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v5.1: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v6.0: Engine not loaded - models missing")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -622,7 +623,7 @@ async def get_executive_summary(
         return {
             "date": str(target_date),
             "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
-            "version": "5.1-FINAL",
+            "version": "6.0",
             "total_plays": 0,
             "plays": [],
             "summary": "No games scheduled"
@@ -964,16 +965,16 @@ async def get_executive_summary(
     return convert_numpy_types({
         "date": str(target_date),
         "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
-        "version": "5.1-FINAL",
+        "version": "6.0",
         "total_plays": len(formatted_plays),
         "plays": formatted_plays,
         "legend": {
             "fire_rating": {
                 "🔥🔥🔥": "ELITE - 70%+ confidence AND 5+ pt edge",
-                "🔥🔥": "STRONG - 60%+ confidence AND 3+ pt edge", 
+                "🔥🔥": "STRONG - 60%+ confidence AND 3+ pt edge",
                 "🔥": "GOOD - Passes all filters"
             },
-            "periods": {"FG": "Full Game", "1H": "First Half"},
+            "periods": {"FG": "Full Game", "1H": "First Half", "Q1": "First Quarter"},
             "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}
         }
     })
@@ -989,10 +990,10 @@ async def get_comprehensive_slate_analysis(
     """
     Get comprehensive slate analysis with full edge calculations.
     
-    v5.1 FINAL: Full analysis for all 6 markets.
+    v6.0: Full analysis for all 9 markets.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v5.1: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v6.0: Engine not loaded - models missing")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -1112,10 +1113,11 @@ async def get_comprehensive_slate_analysis(
     
     return convert_numpy_types({
         "date": str(target_date),
-        "version": "5.1-FINAL",
+        "version": "6.0",
         "markets": [
-            "fg_spread", "fg_total", "fg_moneyline",
-            "1h_spread", "1h_total", "1h_moneyline"
+            "q1_spread", "q1_total", "q1_moneyline",
+            "1h_spread", "1h_total", "1h_moneyline",
+            "fg_spread", "fg_total", "fg_moneyline"
         ],
         "analysis": analysis_results,
         "edge_thresholds": edge_thresholds

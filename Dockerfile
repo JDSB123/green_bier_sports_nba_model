@@ -137,16 +137,17 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/app
 
-# v5.1 specific settings
-ENV NBA_MODEL_VERSION=5.1-FINAL
-ENV NBA_MARKETS=fg_spread,fg_total,fg_moneyline,1h_spread,1h_total,q1_spread,q1_total
-ENV NBA_PERIODS=full_game,first_half,first_quarter
+# v6.0 STRICT MODE - All 9 markets required
+ENV NBA_MODEL_VERSION=6.0-STRICT
+ENV NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+ENV NBA_PERIODS=first_quarter,first_half,full_game
+ENV NBA_STRICT_MODE=true
 
 # =============================================================================
-# Health Check Configuration
+# Health Check Configuration - STRICT MODE: All 9 models required
 # =============================================================================
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') and d.get('markets')>=6 else 1)" || exit 1
+    CMD python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') and d.get('markets')==9 else 1)" || exit 1
 
 # =============================================================================
 # Security: Switch to non-root user
