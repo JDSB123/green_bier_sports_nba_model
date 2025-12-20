@@ -1,0 +1,218 @@
+{
+  "dashboard": {
+    "title": "NCAAF v5.0 - Ingestion Service",
+    "tags": ["ncaaf", "ingestion", "go"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Uptime",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "ncaaf_system_uptime_seconds",
+            "legendFormat": "Uptime"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 3600, "color": "yellow"},
+                {"value": 86400, "color": "green"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "API Calls (Total)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(ncaaf_api_calls_total[5m]))",
+            "legendFormat": "Calls/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Database Queries",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(ncaaf_db_queries_total[5m]))",
+            "legendFormat": "Queries/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "qps"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Active Games",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "ncaaf_active_games",
+            "legendFormat": "Active"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"},
+                {"value": 1, "color": "green"},
+                {"value": 10, "color": "yellow"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "API Call Duration (P95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ncaaf_api_call_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s"},
+          {"show": false}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Database Query Duration (P95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ncaaf_db_query_duration_seconds_bucket[5m])) by (le, table, operation))",
+            "legendFormat": "{{operation}} - {{table}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "s"},
+          {"show": false}
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(ncaaf_cache_hits_total[5m]) / (rate(ncaaf_cache_hits_total[5m]) + rate(ncaaf_cache_misses_total[5m])) * 100",
+            "legendFormat": "Hit Rate %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "min": 0, "max": 100},
+          {"show": false}
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "DB Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ncaaf_db_connections_active",
+            "legendFormat": "Active"
+          },
+          {
+            "expr": "ncaaf_db_connections_idle",
+            "legendFormat": "Idle"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Sync Operations Status",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(ncaaf_sync_operations_total{status=\"success\"}[5m])",
+            "legendFormat": "Success"
+          },
+          {
+            "expr": "rate(ncaaf_sync_operations_total{status=\"error\"}[5m])",
+            "legendFormat": "Error"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 18}
+      },
+      {
+        "id": 10,
+        "title": "Ingestion Counts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ncaaf_teams_ingested_total",
+            "legendFormat": "Teams"
+          },
+          {
+            "expr": "ncaaf_games_ingested_total",
+            "legendFormat": "Games"
+          },
+          {
+            "expr": "ncaaf_odds_records_total",
+            "legendFormat": "Odds Records"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 18}
+      },
+      {
+        "id": 11,
+        "title": "Line Movements Detected",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(ncaaf_line_movements_detected_total[5m])",
+            "legendFormat": "Movements/sec"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 12,
+        "title": "Errors by Component",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(ncaaf_errors_total[5m])",
+            "legendFormat": "{{component}} - {{error_type}}"
+          }
+        ],
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 24}
+      }
+    ]
+  }
+}
