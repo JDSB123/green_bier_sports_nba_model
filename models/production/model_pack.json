@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "created_at": "2025-12-18T00:00:00Z",
+  "git_commit": "3ea352ddf6e9e2224f095108239878c69f2af29a",
+  "backtest_window": {
+    "start_date": "2025-10-02",
+    "end_date": "2025-12-16",
+    "total_predictions": 1000,
+    "source": "docs/BACKTEST_STATUS.md"
+  },
+  "backtest_results": {
+    "fg_spread": {
+      "accuracy": 0.606,
+      "roi": 0.157,
+      "predictions": 422
+    },
+    "fg_total": {
+      "accuracy": 0.592,
+      "roi": 0.131,
+      "predictions": 422
+    },
+    "fg_moneyline": {
+      "accuracy": 0.655,
+      "roi": 0.251,
+      "predictions": 316
+    },
+    "1h_spread": {
+      "accuracy": 0.559,
+      "roi": 0.082,
+      "predictions": 300
+    },
+    "1h_total": {
+      "accuracy": 0.581,
+      "roi": 0.114,
+      "predictions": 300
+    },
+    "1h_moneyline": {
+      "accuracy": 0.630,
+      "roi": 0.198,
+      "predictions": 234
+    }
+  },
+  "model_algorithm": {
+    "type": "logistic",
+    "calibration": "isotonic",
+    "source": "src/modeling/models.py (default model_type='logistic')"
+  },
+  "files": {
+    "spreads_model.joblib": {
+      "sha256": "4EE4C94E7FA4DD1332D53E583895DEBE8052B2E4878BC1DE3FB288FAA408CA17",
+      "purpose": "Full Game Spread predictions",
+      "required": true
+    },
+    "totals_model.joblib": {
+      "sha256": "1F2D71D9E9ABB84451EE71930C24411E9B3D2785D42CEEC435EC03BA3D2F7EF8",
+      "purpose": "Full Game Total predictions",
+      "required": true
+    },
+    "first_half_spread_model.pkl": {
+      "sha256": "962757EB8CB8A1E6F15ED8084D3AE4539E0F227045F08440AD8036B61BAD2DAA",
+      "purpose": "First Half Spread predictions",
+      "required": true
+    },
+    "first_half_spread_features.pkl": {
+      "sha256": "177DC66ECC3DF2347D46ED577C002789D4B8A593E001AD3344A89FE4C38E4688",
+      "purpose": "First Half Spread feature columns",
+      "required": true
+    },
+    "first_half_total_model.pkl": {
+      "sha256": "D4856D0D3DA7BBB9AEB4A0AA3F33C636EBF03C9ADC7D3A8B081991D646E89CEE",
+      "purpose": "First Half Total predictions",
+      "required": true
+    },
+    "first_half_total_features.pkl": {
+      "sha256": "177DC66ECC3DF2347D46ED577C002789D4B8A593E001AD3344A89FE4C38E4688",
+      "purpose": "First Half Total feature columns",
+      "required": true
+    }
+  },
+  "training_data": {
+    "source": "data/processed/training_data.csv",
+    "date_range": "2024-10-02 to 2025-12-16",
+    "note": "Walk-forward validation used in backtest"
+  },
+  "notes": "This model pack contains the backtested and validated logistic models with isotonic calibration. All models are required for the UnifiedPredictionEngine to function. Moneyline predictions are derived from the spread model, so no separate moneyline model file is included."
+}

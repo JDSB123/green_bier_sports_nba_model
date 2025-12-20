@@ -1,0 +1,104 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "pytest",
+                "tests",
+                "-v"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Train Models",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/train_models.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Generate Predictions",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/predict.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Collect Odds Data",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/run_the_odds_tomorrow.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Run Backtest",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": [
+                "scripts/backtest.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "type": "func",
+            "label": "func: host start",
+            "command": "host start",
+            "problemMatcher": "$func-python-watch",
+            "isBackground": true,
+            "dependsOn": "pip install (functions)",
+            "options": {
+                "cwd": "${workspaceFolder}/azure\\function_app"
+            }
+        },
+        {
+            "label": "pip install (functions)",
+            "type": "shell",
+            "osx": {
+                "command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt"
+            },
+            "windows": {
+                "command": "${config:azureFunctions.pythonVenv}\\Scripts\\python -m pip install -r requirements.txt"
+            },
+            "linux": {
+                "command": "${config:azureFunctions.pythonVenv}/bin/python -m pip install -r requirements.txt"
+            },
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/azure\\function_app"
+            }
+        }
+    ]
+}

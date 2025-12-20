@@ -1,0 +1,576 @@
+"""
+Data Standardization Module - Unified Team Name Matching.
+
+This module provides functions to standardize team names, dates, and game data
+from different sources (The Odds API, API-Basketball) to match ESPN's format.
+
+Uses the MASTER team_mapping.json database via src.utils.team_names for:
+- Canonical team IDs (nba_lal, nba_bos, etc.)
+- Comprehensive variant matching (95+ variants)
+- Fuzzy matching for edge cases
+
+ESPN team names are the OUTPUT format. Internal processing uses canonical IDs.
+
+STANDARD FORMAT: "AWAY TEAM vs. HOME TEAM"
+- All game data uses 'away_team' and 'home_team' fields
+- away_team always comes before home_team
+- Display format: "AWAY TEAM vs. HOME TEAM"
+"""
+from __future__ import annotations
+
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import json
+
+from src.config import get_nba_season
+from src.utils.logging import get_logger
+
+# Import MASTER team name system
+from src.utils.team_names import (
+    normalize_team_name as master_normalize,
+    get_canonical_name,
+    VARIANT_TO_CANONICAL,
+    CANONICAL_NAMES,
+)
+from src.config import settings
+
+logger = get_logger(__name__)
+
+# Best-effort read-through cache (does NOT replace team_mapping.json as source of truth)
+_VARIANT_OVERRIDE_CACHE_PATH = Path(settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
+_VARIANT_OVERRIDE_CACHE: dict[str, str] | None = None
+
+
+def _load_variant_override_cache() -> dict[str, str]:
+    global _VARIANT_OVERRIDE_CACHE
+    if _VARIANT_OVERRIDE_CACHE is not None:
+        return _VARIANT_OVERRIDE_CACHE
+    try:
+        if _VARIANT_OVERRIDE_CACHE_PATH.exists():
+            with open(_VARIANT_OVERRIDE_CACHE_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    _VARIANT_OVERRIDE_CACHE = {str(k).lower(): str(v) for k, v in data.items()}
+                    return _VARIANT_OVERRIDE_CACHE
+    except Exception:
+        pass
+    _VARIANT_OVERRIDE_CACHE = {}
+    return _VARIANT_OVERRIDE_CACHE
+
+
+def _persist_variant_override_cache(cache: dict[str, str]) -> None:
+    try:
+        _VARIANT_OVERRIDE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_VARIANT_OVERRIDE_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
+    except Exception:
+        return
+
+
+def _cache_variant_override(*, raw: str, normalized: str) -> None:
+    """Cache a resolved variant for faster future normalization."""
+    try:
+        if not raw or not normalized:
+            return
+        cache = _load_variant_override_cache()
+        key = str(raw).strip().lower()
+        if not key:
+            return
+        if cache.get(key) == normalized:
+            return
+        cache[key] = normalized
+        _persist_variant_override_cache(cache)
+    except Exception:
+        return
+
+# ESPN team names (canonical format)
+ESPN_TEAM_NAMES = {
+    "Atlanta Hawks",
+    "Boston Celtics",
+    "Brooklyn Nets",
+    "Charlotte Hornets",
+    "Chicago Bulls",
+    "Cleveland Cavaliers",
+    "Dallas Mavericks",
+    "Denver Nuggets",
+    "Detroit Pistons",
+    "Golden State Warriors",
+    "Houston Rockets",
+    "Indiana Pacers",
+    "LA Clippers",
+    "Los Angeles Clippers",  # ESPN uses both
+    "Los Angeles Lakers",
+    "Memphis Grizzlies",
+    "Miami Heat",
+    "Milwaukee Bucks",
+    "Minnesota Timberwolves",
+    "New Orleans Pelicans",
+    "New York Knicks",
+    "Oklahoma City Thunder",
+    "Orlando Magic",
+    "Philadelphia 76ers",
+    "Phoenix Suns",
+    "Portland Trail Blazers",
+    "Sacramento Kings",
+    "San Antonio Spurs",
+    "Toronto Raptors",
+    "Utah Jazz",
+    "Washington Wizards",
+}
+
+# Mapping from other sources to ESPN team names
+TEAM_NAME_MAPPING = {
+    # The Odds API -> ESPN
+    "Philadelphia 76ers": "Philadelphia 76ers",
+    "Phi 76ers": "Philadelphia 76ers",
+    "Phoenix Suns": "Phoenix Suns",
+    "PHX Suns": "Phoenix Suns",
+    "Los Angeles Lakers": "Los Angeles Lakers",
+    "LA Lakers": "Los Angeles Lakers",
+    "Los Angeles Clippers": "LA Clippers",
+    "LA Clippers": "LA Clippers",
+    "Golden State Warriors": "Golden State Warriors",
+    "GS Warriors": "Golden State Warriors",
+    "New York Knicks": "New York Knicks",
+    "NY Knicks": "New York Knicks",
+    "Brooklyn Nets": "Brooklyn Nets",
+    "BKN Nets": "Brooklyn Nets",
+    "San Antonio Spurs": "San Antonio Spurs",
+    "SA Spurs": "San Antonio Spurs",
+    "New Orleans Pelicans": "New Orleans Pelicans",
+    "NO Pelicans": "New Orleans Pelicans",
+    "Oklahoma City Thunder": "Oklahoma City Thunder",
+    "OKC Thunder": "Oklahoma City Thunder",
+    "Portland Trail Blazers": "Portland Trail Blazers",
+    "POR Trail Blazers": "Portland Trail Blazers",
+    "Toronto Raptors": "Toronto Raptors",
+    "TOR Raptors": "Toronto Raptors",
+    "Washington Wizards": "Washington Wizards",
+    "WAS Wizards": "Washington Wizards",
+    # API-Basketball -> ESPN (common variations)
+    "Lakers": "Los Angeles Lakers",
+    "Celtics": "Boston Celtics",
+    "Knicks": "New York Knicks",
+    "Warriors": "Golden State Warriors",
+    "Nets": "Brooklyn Nets",
+    "Heat": "Miami Heat",
+    "76ers": "Philadelphia 76ers",
+    "Sixers": "Philadelphia 76ers",
+    "Clippers": "LA Clippers",
+    "Nuggets": "Denver Nuggets",
+    "Thunder": "Oklahoma City Thunder",
+    "Pelicans": "New Orleans Pelicans",
+    "Spurs": "San Antonio Spurs",
+    "Trail Blazers": "Portland Trail Blazers",
+    "Blazers": "Portland Trail Blazers",
+    "Suns": "Phoenix Suns",
+    "Hawks": "Atlanta Hawks",
+    "Pistons": "Detroit Pistons",
+    "Cavaliers": "Cleveland Cavaliers",
+    "Cavs": "Cleveland Cavaliers",
+    "Bulls": "Chicago Bulls",
+    "Pacers": "Indiana Pacers",
+    "Mavericks": "Dallas Mavericks",
+    "Mavs": "Dallas Mavericks",
+    "Timberwolves": "Minnesota Timberwolves",
+    "Twolves": "Minnesota Timberwolves",
+    "Jazz": "Utah Jazz",
+    "Kings": "Sacramento Kings",
+    "Magic": "Orlando Magic",
+    "Raptors": "Toronto Raptors",
+    "Rockets": "Houston Rockets",
+    "Wizards": "Washington Wizards",
+    "Grizzlies": "Memphis Grizzlies",
+    "Bucks": "Milwaukee Bucks",
+    "Hornets": "Charlotte Hornets",
+}
+
+# Reverse mapping: ESPN -> common abbreviations (for fuzzy matching)
+ESPN_TO_ABBREV = {
+    "Los Angeles Lakers": ["LAL", "Lakers", "LA Lakers"],
+    "Boston Celtics": ["BOS", "Celtics"],
+    "New York Knicks": ["NYK", "Knicks", "NY Knicks"],
+    "Golden State Warriors": ["GSW", "Warriors", "GS Warriors"],
+    "Brooklyn Nets": ["BKN", "Nets"],
+    "Miami Heat": ["MIA", "Heat"],
+    "Philadelphia 76ers": ["PHI", "76ers", "Sixers"],
+    "LA Clippers": ["LAC", "Clippers", "Los Angeles Clippers"],
+    "Denver Nuggets": ["DEN", "Nuggets"],
+    "Oklahoma City Thunder": ["OKC", "Thunder"],
+    "New Orleans Pelicans": ["NOP", "Pelicans"],
+    "San Antonio Spurs": ["SAS", "Spurs"],
+    "Portland Trail Blazers": ["POR", "Trail Blazers", "Blazers"],
+    "Phoenix Suns": ["PHX", "Suns"],
+    "Atlanta Hawks": ["ATL", "Hawks"],
+    "Detroit Pistons": ["DET", "Pistons"],
+    "Cleveland Cavaliers": ["CLE", "Cavaliers", "Cavs"],
+    "Chicago Bulls": ["CHI", "Bulls"],
+    "Indiana Pacers": ["IND", "Pacers"],
+    "Dallas Mavericks": ["DAL", "Mavericks", "Mavs"],
+    "Minnesota Timberwolves": ["MIN", "Timberwolves", "Twolves"],
+    "Utah Jazz": ["UTA", "Jazz"],
+    "Sacramento Kings": ["SAC", "Kings"],
+    "Orlando Magic": ["ORL", "Magic"],
+    "Toronto Raptors": ["TOR", "Raptors"],
+    "Houston Rockets": ["HOU", "Rockets"],
+    "Washington Wizards": ["WAS", "Wizards"],
+    "Memphis Grizzlies": ["MEM", "Grizzlies"],
+    "Milwaukee Bucks": ["MIL", "Bucks"],
+    "Charlotte Hornets": ["CHA", "Hornets"],
+}
+
+
+def is_valid_espn_team_name(team_name: str) -> bool:
+    """
+    Check if a team name is a valid ESPN team name.
+    
+    Args:
+        team_name: Team name to validate
+    
+    Returns:
+        True if team name is in ESPN_TEAM_NAMES set
+    """
+    return team_name in ESPN_TEAM_NAMES
+
+
+def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_failure: bool = False) -> Tuple[str, bool]:
+    """
+    Normalize team name from any source to ESPN format.
+    
+    USES MASTER DATABASE: team_mapping.json via src.utils.team_names
+    - Canonical IDs (nba_lal, nba_bos, etc.) for internal matching
+    - ESPN full names as OUTPUT format
+    - Fuzzy matching for edge cases (95+ variants supported)
+    
+    Args:
+        team_name: Team name from any source
+        source: Source identifier ("the_odds", "api_basketball", etc.)
+        raise_on_failure: If True, raise ValueError when normalization fails (default: False)
+    
+    Returns:
+        Tuple of (normalized_name: str, is_valid: bool)
+        - normalized_name: ESPN team name if successful, empty string if failed
+        - is_valid: True if name is a valid ESPN team name, False otherwise
+    
+    Raises:
+        ValueError: If raise_on_failure=True and normalization fails
+    """
+    if not team_name:
+        logger.error(f"Empty team name from source '{source}' - CANNOT STANDARDIZE")
+        _record_team_variant(source=source, raw=team_name, normalized="", is_valid=False, reason="empty")
+        if raise_on_failure:
+            raise ValueError(f"Empty team name from source '{source}'")
+        return "", False
+    
+    original_name = team_name
+    team_name = team_name.strip()
+    
+    if not team_name:
+        logger.error(f"Team name is whitespace only from source '{source}' - CANNOT STANDARDIZE")
+        _record_team_variant(source=source, raw=original_name, normalized="", is_valid=False, reason="whitespace")
+        if raise_on_failure:
+            raise ValueError(f"Whitespace-only team name from source '{source}'")
+        return "", False
+
+    # Fast path: cached resolved variant
+    try:
+        cached = _load_variant_override_cache().get(original_name.strip().lower())
+        if cached and cached in ESPN_TEAM_NAMES:
+            _record_team_variant(source=source, raw=original_name, normalized=cached, is_valid=True, reason="variant_cache")
+            return cached, True
+    except Exception:
+        pass
+    
+    # Check if already in ESPN format (exact match)
+    if team_name in ESPN_TEAM_NAMES:
+        _record_team_variant(source=source, raw=original_name, normalized=team_name, is_valid=True, reason="already_espn")
+        _cache_variant_override(raw=original_name, normalized=team_name)
+        return team_name, True
+    
+    # ==========================================
+    # MASTER DATABASE LOOKUP (team_mapping.json)
+    # Uses canonical IDs for matching, ESPN names for output
+    # ==========================================
+    canonical_id = master_normalize(team_name)
+    
+    if canonical_id.startswith("nba_"):
+        # Found in MASTER database - get ESPN full name
+        espn_name = get_canonical_name(canonical_id)
+        logger.debug(f"MASTER matched '{original_name}' -> {canonical_id} -> '{espn_name}' (source: {source})")
+        _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="master_db")
+        _cache_variant_override(raw=original_name, normalized=espn_name)
+        return espn_name, True
+    
+    # ==========================================
+    # FALLBACK: Legacy hardcoded mappings
+    # (for any variants not yet in MASTER database)
+    # ==========================================
+    
+    # Check direct mapping (exact match)
+    if team_name in TEAM_NAME_MAPPING:
+        result = TEAM_NAME_MAPPING[team_name]
+        logger.debug(f"Legacy mapped '{original_name}' -> '{result}' (source: {source})")
+        _record_team_variant(source=source, raw=original_name, normalized=result, is_valid=True, reason="legacy_map_exact")
+        _cache_variant_override(raw=original_name, normalized=result)
+        return result, True
+    
+    # Try case-insensitive match in mapping
+    team_lower = team_name.lower().strip()
+    for key, espn_name in TEAM_NAME_MAPPING.items():
+        if key.lower().strip() == team_lower:
+            logger.debug(f"Case-insensitive mapped '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="legacy_map_case_insensitive")
+            _cache_variant_override(raw=original_name, normalized=espn_name)
+            return espn_name, True
+    
+    # Try fuzzy matching (check if team name contains ESPN team name or vice versa)
+    for espn_name, abbrevs in ESPN_TO_ABBREV.items():
+        espn_lower = espn_name.lower()
+        # Check if team name contains ESPN name or vice versa
+        if team_lower in espn_lower or espn_lower in team_lower:
+            logger.info(f"Fuzzy matched '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="fuzzy_contains")
+            _cache_variant_override(raw=original_name, normalized=espn_name)
+            return espn_name, True
+        # Check abbreviations
+        for abbrev in abbrevs:
+            abbrev_lower = abbrev.lower().strip()
+            if abbrev_lower == team_lower or team_lower in abbrev_lower or abbrev_lower in team_lower:
+                logger.info(f"Abbrev matched '{original_name}' -> '{espn_name}' (source: {source})")
+                _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="fuzzy_abbrev")
+                _cache_variant_override(raw=original_name, normalized=espn_name)
+                return espn_name, True
+    
+    # Try matching against ESPN team names directly (case-insensitive substring)
+    for espn_name in ESPN_TEAM_NAMES:
+        if team_lower in espn_name.lower() or espn_name.lower() in team_lower:
+            logger.info(f"Substring matched '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(source=source, raw=original_name, normalized=espn_name, is_valid=True, reason="fuzzy_substring")
+            _cache_variant_override(raw=original_name, normalized=espn_name)
+            return espn_name, True
+    
+    # If no match found, log ERROR (not warning) - this is a data quality issue
+    logger.error(
+        f"❌ FAILED TO NORMALIZE team name '{original_name}' from source '{source}' to ESPN format. "
+        f"Not found in MASTER database (team_mapping.json) or legacy mappings. "
+        f"Add variant to team_mapping.json to fix."
+    )
+    _record_team_variant(source=source, raw=original_name, normalized="", is_valid=False, reason="no_match")
+    
+    if raise_on_failure:
+        raise ValueError(
+            f"Could not normalize team name '{original_name}' from source '{source}' to ESPN format. "
+            f"Add variant to src/ingestion/team_mapping.json."
+        )
+    
+    # Return empty string to indicate failure - DO NOT return original name (prevents fake data)
+    return "", False
+
+
+def _record_team_variant(*, source: str, raw: str, normalized: str, is_valid: bool, reason: str) -> None:
+    """Append observed team-name variants to a JSONL cache for later reconciliation.
+
+    This is intentionally best-effort and must never crash ingestion/prediction.
+    """
+    try:
+        # Keep this under processed/cache so both prod + backtest can read it.
+        cache_dir = Path(settings.data_processed_dir) / "cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        out_path = cache_dir / "team_name_variants.jsonl"
+        payload = {
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "source": source,
+            "raw": raw,
+            "normalized": normalized,
+            "is_valid": bool(is_valid),
+            "reason": reason,
+        }
+        with open(out_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        # Never break core flow for diagnostics
+        return
+
+
+def standardize_game_data(
+    game_data: Dict[str, Any],
+    source: str,
+    espn_schedule: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """
+    Standardize game data from any source to ESPN format.
+    
+    This function ALWAYS standardizes team names. It handles various input formats
+    and ensures team names are normalized to ESPN format.
+    
+    Standard format: "AWAY TEAM vs. HOME TEAM"
+    All game data will have 'away_team' and 'home_team' fields in that order.
+    
+    Args:
+        game_data: Game data dictionary from source
+        source: Source identifier ("the_odds", "api_basketball", etc.)
+        espn_schedule: Optional ESPN schedule to match against
+    
+    Returns:
+        Standardized game data with ESPN team names in "AWAY vs. HOME" format
+    
+    Note:
+        This function never fails - it always returns standardized data even if
+        team name matching is incomplete.
+    """
+    standardized = game_data.copy()
+    
+    # Extract team names (handle different source formats)
+    # Try multiple possible keys for team names
+    home_team_raw = (
+        standardized.get("home_team") 
+        or standardized.get("homeTeam") 
+        or standardized.get("home")
+        or (standardized.get("teams", {}).get("home", {}) if isinstance(standardized.get("teams"), dict) else {}).get("name", "")
+        or ""
+    )
+    away_team_raw = (
+        standardized.get("away_team")
+        or standardized.get("awayTeam")
+        or standardized.get("away")
+        or (standardized.get("teams", {}).get("away", {}) if isinstance(standardized.get("teams"), dict) else {}).get("name", "")
+        or ""
+    )
+    
+    # ALWAYS normalize team names to ESPN format (mandatory)
+    # Track validation status to prevent using fake/unstandardized data
+    home_team_valid = False
+    away_team_valid = False
+    
+    if home_team_raw:
+        standardized["home_team"], home_team_valid = normalize_team_to_espn(str(home_team_raw), source)
+        if not home_team_valid:
+            logger.error(f"❌ INVALID DATA: Failed to standardize home_team '{home_team_raw}' from source '{source}'")
+            standardized["home_team"] = ""  # Set to empty to indicate invalid
+    else:
+        logger.error(f"❌ MISSING DATA: Missing home_team in game data from source '{source}'")
+        standardized["home_team"] = ""
+    
+    if away_team_raw:
+        standardized["away_team"], away_team_valid = normalize_team_to_espn(str(away_team_raw), source)
+        if not away_team_valid:
+            logger.error(f"❌ INVALID DATA: Failed to standardize away_team '{away_team_raw}' from source '{source}'")
+            standardized["away_team"] = ""  # Set to empty to indicate invalid
+    else:
+        logger.error(f"❌ MISSING DATA: Missing away_team in game data from source '{source}'")
+        standardized["away_team"] = ""
+    
+    # Add validation flags to the standardized data
+    standardized["_home_team_valid"] = home_team_valid
+    standardized["_away_team_valid"] = away_team_valid
+    standardized["_data_valid"] = home_team_valid and away_team_valid
+    
+    # Log error if data is invalid
+    if not standardized["_data_valid"]:
+        logger.error(
+            f"❌ INVALID GAME DATA from source '{source}': "
+            f"home_team_valid={home_team_valid}, away_team_valid={away_team_valid}. "
+            f"This game data should NOT be used for merging/predictions."
+        )
+    
+    # Ensure standard format: "AWAY TEAM vs. HOME TEAM"
+    # Remove any non-standard keys
+    for key in ["homeTeam", "awayTeam", "home", "away"]:
+        if key in standardized and key not in ["home_team", "away_team"]:
+            del standardized[key]
+    
+    # Ensure away_team comes before home_team in the dict (for consistency)
+    # Create new dict with correct order
+    result = {}
+    if "away_team" in standardized:
+        result["away_team"] = standardized["away_team"]
+    if "home_team" in standardized:
+        result["home_team"] = standardized["home_team"]
+    
+    # Copy all other fields
+    for key, value in standardized.items():
+        if key not in ["away_team", "home_team"]:
+            result[key] = value
+    
+    # Normalize date if present
+    if "date" in result or "commence_time" in result or "start_time" in result:
+        date_key = "date" if "date" in result else ("commence_time" if "commence_time" in result else "start_time")
+        date_value = result.get(date_key)
+        if date_value:
+            try:
+                if isinstance(date_value, str):
+                    # Try parsing ISO format
+                    if "T" in date_value or "Z" in date_value:
+                        dt = datetime.fromisoformat(date_value.replace("Z", "+00:00"))
+                    else:
+                        dt = datetime.strptime(date_value, "%Y-%m-%d")
+                    result["date"] = dt.date().isoformat()
+                    result["season"] = get_nba_season(dt.date())
+                elif isinstance(date_value, datetime):
+                    result["date"] = date_value.date().isoformat()
+                    result["season"] = get_nba_season(date_value.date())
+            except Exception as e:
+                logger.warning(f"Error normalizing date '{date_value}': {e}")
+    
+    # Add source metadata
+    result["_source"] = source
+    result["_standardized"] = True
+    
+    return result
+
+
+def format_game_string(away_team: str, home_team: str) -> str:
+    """
+    Format game as standard string: "AWAY TEAM vs. HOME TEAM"
+    
+    Args:
+        away_team: Away team name
+        home_team: Home team name
+    
+    Returns:
+        Formatted string: "AWAY TEAM vs. HOME TEAM"
+    """
+    return f"{away_team} vs. {home_team}"
+
+
+def match_game_to_espn_schedule(
+    game_data: Dict[str, Any],
+    espn_schedule: List[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    """
+    Match game data to ESPN schedule entry.
+    
+    Format: AWAY TEAM vs. HOME TEAM
+    
+    Args:
+        game_data: Standardized game data (with away_team and home_team)
+        espn_schedule: List of ESPN schedule entries
+    
+    Returns:
+        Matching ESPN schedule entry or None
+    """
+    away_team = game_data.get("away_team")
+    home_team = game_data.get("home_team")
+    game_date = game_data.get("date")
+    
+    if not away_team or not home_team:
+        return None
+    
+    for espn_game in espn_schedule:
+        espn_away = espn_game.get("away_team")
+        espn_home = espn_game.get("home_team")
+        espn_date = espn_game.get("date")
+        
+        # Match: AWAY vs. HOME format
+        if (espn_away == away_team and espn_home == home_team):
+            # Check date if available
+            if game_date and espn_date:
+                if game_date == espn_date:
+                    return espn_game
+            else:
+                return espn_game
+    
+    return None
+
