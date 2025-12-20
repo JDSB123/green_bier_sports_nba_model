@@ -1,0 +1,14 @@
+{
+  "production": {
+    "spreads": {
+      "path": "data/processed/models/spreads_model.joblib",
+      "saved_at": "2025-12-03T03:23:15.043730Z",
+      "model_type": "gradient_boosting"
+    },
+    "totals": {
+      "path": "data/processed/models/totals_model.joblib",
+      "saved_at": "2025-12-03T03:23:16.143235Z",
+      "model_type": "gradient_boosting"
+    }
+  }
+}

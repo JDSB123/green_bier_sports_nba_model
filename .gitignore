@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Docker secrets
+secrets/*
+!secrets/.gitignore
+!secrets/README.md
+!secrets/*.example
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Data directories
+data/raw/
+data/processed/
+!data/processed/.gitkeep
+!data/raw/.gitkeep
+
+# Model artifacts (exclude from data/processed, but include production models)
+*.joblib
+*.pkl
+*.h5
+*.pt
+# Exception: Production model pack must be committed for reproducible builds
+!models/production/*.joblib
+!models/production/*.pkl
+!models/production/*.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+
+# Type checking
+.mypy_cache/
+
+# Backup files
+*_BACKUP.*
+*_OLD.*
+*.bak
+
+# Archived scripts
+scripts/archive/
+scripts/archived/
+docs/archive/
+
+# Azure Function App
+azure/function_app/local.settings.json
+azure/function_app/.python_packages/
+azure/function_app/__pycache__/
+azure/.vscode/
+
+# Container exports (too large for git)
+export/
+
+# Temporary output files
+nba_betting_card_*.txt
+*.tmp
+temp/
