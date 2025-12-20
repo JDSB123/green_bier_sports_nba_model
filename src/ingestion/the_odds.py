@@ -105,6 +105,25 @@ async def fetch_odds(
     return standardized_data
 
 
+# All available period/alt markets for NBA
+ALL_PERIOD_MARKETS = (
+    # First Half
+    "h2h_h1,spreads_h1,totals_h1,"
+    # First Quarter
+    "h2h_q1,spreads_q1,totals_q1,"
+    # Second Quarter
+    "h2h_q2,spreads_q2,totals_q2,"
+    # Third Quarter
+    "h2h_q3,spreads_q3,totals_q3,"
+    # Fourth Quarter
+    "h2h_q4,spreads_q4,totals_q4,"
+    # Alternate lines
+    "alternate_spreads,alternate_totals,"
+    # Player props (if available)
+    "player_points,player_rebounds,player_assists"
+)
+
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=1, max=8),
@@ -113,27 +132,27 @@ async def fetch_event_odds(
     event_id: str,
     sport: str = "basketball_nba",
     regions: str = "us",
-    markets: str = "spreads_h1,totals_h1,h2h_h1",
+    markets: str = ALL_PERIOD_MARKETS,
     standardize: bool = True,
 ) -> Dict[str, Any]:
     """
     Fetch odds for a specific event from The Odds API.
-    
-    First half markets (spreads_h1, totals_h1, h2h_h1) are only available
-    through the event-specific endpoint, not the main /odds endpoint.
-    
+
+    Fetches ALL available markets including:
+    - First half (1H): spreads, totals, moneyline
+    - All quarters (Q1, Q2, Q3, Q4): spreads, totals, moneyline
+    - Alternate lines: spreads, totals
+    - Player props: points, rebounds, assists
+
     Args:
         event_id: The event ID from The Odds API
         sport: Sport identifier
         regions: Regions to fetch odds for
-        markets: Markets to fetch (default: all first half markets including moneyline)
+        markets: Markets to fetch (default: ALL available markets)
         standardize: If True, standardize team names to ESPN format
-    
+
     Returns:
-        Event dictionary with odds data including first half markets:
-        - spreads_h1: First half spreads
-        - totals_h1: First half totals
-        - h2h_h1: First half moneyline
+        Event dictionary with odds data including all period markets
     """
     logger.info(f"Fetching event odds for {event_id} with markets: {markets}")
     params = {

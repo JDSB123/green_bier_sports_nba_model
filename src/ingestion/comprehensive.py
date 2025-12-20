@@ -5,10 +5,11 @@ Uses ALL available API endpoints with intelligent caching to minimize API calls
 while maximizing data richness.
 
 Data Sources:
-1. The Odds API - Betting odds (FG, 1H, Q1 markets)
+1. The Odds API - Betting odds (FG, 1H, Q1-Q4, alt lines, player props)
 2. API-Basketball - Game stats, team stats, standings
-3. Action Network - Betting splits (requires login)
-4. ESPN - Schedule, injuries (FREE)
+3. BetsAPI - Live odds, quarters, player props
+4. Action Network - Betting splits (requires login)
+5. ESPN - Schedule, injuries (FREE)
 
 Caching Strategy:
 - Static data (teams): 7 days
@@ -381,6 +382,87 @@ class ComprehensiveIngestion:
             return []
 
     # =========================================================================
+    # BETSAPI - Live Odds, Quarters, Player Props
+    # =========================================================================
+
+    async def fetch_betsapi_events(self, target_date: Optional[str] = None) -> List[Dict]:
+        """Fetch upcoming NBA events from BetsAPI.
+
+        TTL: 2 hours
+
+        Args:
+            target_date: Date string (YYYYMMDD). Defaults to today.
+        """
+        # Check if BetsAPI key is configured
+        if not settings.betsapi_key:
+            logger.info("BetsAPI key not configured - skipping")
+            self._record_result("betsapi", "/events/upcoming", False, 0, error="No API key")
+            return []
+
+        from src.ingestion.betsapi import BetsAPIClient
+
+        client = BetsAPIClient()
+        target = target_date or datetime.now().strftime("%Y%m%d")
+
+        try:
+            events = await client.fetch_upcoming_events(day=target)
+            self._record_result("betsapi", "/events/upcoming", True, len(events))
+            return [vars(e) for e in events]  # Convert dataclass to dict
+        except Exception as e:
+            logger.warning(f"BetsAPI events fetch failed: {e}")
+            self._record_result("betsapi", "/events/upcoming", False, 0, error=str(e))
+            return []
+
+    async def fetch_betsapi_live(self) -> Dict[str, Any]:
+        """Fetch live/in-play NBA data from BetsAPI.
+
+        TTL: 5 minutes (live data)
+        """
+        if not settings.betsapi_key:
+            logger.info("BetsAPI key not configured - skipping live")
+            self._record_result("betsapi", "/events/inplay", False, 0, error="No API key")
+            return {}
+
+        from src.ingestion.betsapi import BetsAPIClient
+
+        client = BetsAPIClient()
+
+        try:
+            data = await client.fetch_live_nba()
+            event_count = len(data.get("events", []))
+            self._record_result("betsapi", "/events/inplay", True, event_count)
+            return data
+        except Exception as e:
+            logger.warning(f"BetsAPI live fetch failed: {e}")
+            self._record_result("betsapi", "/events/inplay", False, 0, error=str(e))
+            return {}
+
+    async def fetch_betsapi_all_odds(self, target_date: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch odds for all NBA events from BetsAPI.
+
+        Includes quarters (Q1-Q4), player props, and multiple bookmakers.
+
+        TTL: 15 minutes
+        """
+        if not settings.betsapi_key:
+            logger.info("BetsAPI key not configured - skipping odds")
+            self._record_result("betsapi", "/event/odds", False, 0, error="No API key")
+            return {}
+
+        from src.ingestion.betsapi import BetsAPIClient
+
+        client = BetsAPIClient()
+
+        try:
+            odds = await client.fetch_all_nba_odds(target_date=target_date)
+            self._record_result("betsapi", "/event/odds", True, len(odds))
+            return odds
+        except Exception as e:
+            logger.warning(f"BetsAPI odds fetch failed: {e}")
+            self._record_result("betsapi", "/event/odds", False, 0, error=str(e))
+            return {}
+
+    # =========================================================================
     # ESPN - FREE Data (Schedule, Injuries)
     # =========================================================================
 
@@ -445,7 +527,7 @@ class ComprehensiveIngestion:
 
         # Run all ingestions in parallel where possible
         tasks = [
-            # The Odds API - Core
+            # The Odds API - Core (FG, 1H, Q1-Q4, alt lines)
             self.fetch_the_odds_full_game(),
             self.fetch_the_odds_events(),
             self.fetch_the_odds_scores(),
@@ -454,6 +536,10 @@ class ComprehensiveIngestion:
             # API-Basketball - Essential
             self.fetch_api_basketball_essential(),
             self.fetch_api_basketball_standings(),
+
+            # BetsAPI - Live odds, quarters, player props
+            self.fetch_betsapi_events(),
+            self.fetch_betsapi_all_odds(),
 
             # Action Network - Betting splits
             self.fetch_action_network_splits(),
@@ -499,12 +585,16 @@ class ComprehensiveIngestion:
             self.fetch_espn_schedule(target.replace("-", "")),
             self.fetch_espn_injuries(),
             self.fetch_api_basketball_essential(),
+            # BetsAPI for quarters and live odds
+            self.fetch_betsapi_events(target.replace("-", "")),
+            self.fetch_betsapi_all_odds(target.replace("-", "")),
         ]
 
         # Optional enhancements
         optional_tasks = [
             self.fetch_action_network_splits(target),
             self.fetch_the_odds_betting_splits(),
+            self.fetch_betsapi_live(),  # Live odds if games in progress
         ]
 
         await asyncio.gather(*tasks, return_exceptions=True)
