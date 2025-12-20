@@ -267,24 +267,36 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
         if "fh_spread_line" in df.columns:
             df["1h_spread_line"] = df["fh_spread_line"]
         elif "1h_spread_line" not in df.columns:
-            df["1h_spread_line"] = None
+            df["1h_spread_line"] = np.nan
         if "spread_line" in df.columns:
             mask = df["1h_spread_line"].isna()
             df.loc[mask, "1h_spread_line"] = df.loc[mask, "spread_line"] / 2
-        df["1h_spread_covered"] = (df["actual_1h_margin"] > -df["1h_spread_line"]).astype(int)
-        # Set to NaN where 1h_spread_line is NaN
-        df.loc[df["1h_spread_line"].isna(), "1h_spread_covered"] = None
-        
+        # Only compute if we have valid line data
+        if df["1h_spread_line"].notna().any():
+            df["1h_spread_covered"] = np.where(
+                df["1h_spread_line"].notna(),
+                (df["actual_1h_margin"] > -df["1h_spread_line"]).astype(int),
+                np.nan
+            )
+        else:
+            df["1h_spread_covered"] = np.nan
+
         if "fh_total_line" in df.columns:
             df["1h_total_line"] = df["fh_total_line"]
         elif "1h_total_line" not in df.columns:
-            df["1h_total_line"] = None
+            df["1h_total_line"] = np.nan
         if "total_line" in df.columns:
             mask = df["1h_total_line"].isna()
             df.loc[mask, "1h_total_line"] = df.loc[mask, "total_line"] / 2
-        df["1h_total_over"] = (df["actual_1h_total"] > df["1h_total_line"]).astype(int)
-        # Set to NaN where 1h_total_line is NaN
-        df.loc[df["1h_total_line"].isna(), "1h_total_over"] = None
+        # Only compute if we have valid line data
+        if df["1h_total_line"].notna().any():
+            df["1h_total_over"] = np.where(
+                df["1h_total_line"].notna(),
+                (df["actual_1h_total"] > df["1h_total_line"]).astype(int),
+                np.nan
+            )
+        else:
+            df["1h_total_over"] = np.nan
     
     # Q1 labels
     if "home_q1" in df.columns and "away_q1" in df.columns:
@@ -293,22 +305,34 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
         df["actual_q1_margin"] = df["home_q1"].fillna(0) - df["away_q1"].fillna(0)
         
         if "q1_spread_line" not in df.columns:
-            df["q1_spread_line"] = None
+            df["q1_spread_line"] = np.nan
         if "spread_line" in df.columns:
             mask = df["q1_spread_line"].isna()
             df.loc[mask, "q1_spread_line"] = df.loc[mask, "spread_line"] / 4
-        df["q1_spread_covered"] = (df["actual_q1_margin"] > -df["q1_spread_line"]).astype(int)
-        # Set to NaN where q1_spread_line is NaN
-        df.loc[df["q1_spread_line"].isna(), "q1_spread_covered"] = None
-        
+        # Only compute if we have valid line data
+        if df["q1_spread_line"].notna().any():
+            df["q1_spread_covered"] = np.where(
+                df["q1_spread_line"].notna(),
+                (df["actual_q1_margin"] > -df["q1_spread_line"]).astype(int),
+                np.nan
+            )
+        else:
+            df["q1_spread_covered"] = np.nan
+
         if "q1_total_line" not in df.columns:
-            df["q1_total_line"] = None
+            df["q1_total_line"] = np.nan
         if "total_line" in df.columns:
             mask = df["q1_total_line"].isna()
             df.loc[mask, "q1_total_line"] = df.loc[mask, "total_line"] / 4
-        df["q1_total_over"] = (df["actual_q1_total"] > df["q1_total_line"]).astype(int)
-        # Set to NaN where q1_total_line is NaN
-        df.loc[df["q1_total_line"].isna(), "q1_total_over"] = None
+        # Only compute if we have valid line data
+        if df["q1_total_line"].notna().any():
+            df["q1_total_over"] = np.where(
+                df["q1_total_line"].notna(),
+                (df["actual_q1_total"] > df["q1_total_line"]).astype(int),
+                np.nan
+            )
+        else:
+            df["q1_total_over"] = np.nan
     
     print(f"[OK] Loaded {len(df)} games")
     
