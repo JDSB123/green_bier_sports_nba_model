@@ -198,13 +198,17 @@ This script connects to the running Docker container and generates comprehensive
 ## Project Structure
 
 ```
-nba_v5.0_BETA/
+nba_v5.1_model_FINAL/
 ├── src/                         # Core Python prediction code
 │   ├── ingestion/               # Data ingestion modules
 │   ├── modeling/                # ML models and features
 │   ├── prediction/              # Prediction engine
+│   ├── tracking/                # Pick tracking and validation
+│   ├── utils/                   # Utilities (security, caching, etc.)
 │   └── serving/                 # FastAPI app (containerized)
-├── scripts/                     # Utility scripts (run via containers)
+├── scripts/                     # Utility scripts (see scripts/README.md)
+├── tests/                       # pytest test suite
+├── docs/                        # Documentation
 ├── docker-compose.yml           # Main stack
 ├── docker-compose.backtest.yml  # Backtest stack
 ├── Dockerfile                   # Main API container
