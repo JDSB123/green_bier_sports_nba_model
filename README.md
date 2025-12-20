@@ -1,6 +1,16 @@
-# NBA Basketball Prediction System v5.0 BETA
+# NBA Basketball Prediction System v6.0
 
-Production-grade containerized system for NBA betting predictions.
+Production-grade containerized system for NBA betting predictions with **9 independent markets**.
+
+## Markets (9 Independent Models)
+
+| Period | Spread | Total | Moneyline |
+|--------|--------|-------|-----------|
+| **Q1** (First Quarter) | q1_spread | q1_total | q1_moneyline |
+| **1H** (First Half) | 1h_spread | 1h_total | 1h_moneyline |
+| **FG** (Full Game) | fg_spread | fg_total | fg_moneyline |
+
+Each market uses independent feature engineering and model training, tailored to period-specific scoring patterns.
 
 ---
 
@@ -34,7 +44,7 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| `strict-api` | 8090 | **Main prediction API** - FastAPI with 6 backtested markets |
+| `nba-v60-api` | 8090 | **Main prediction API** - FastAPI with 9 independent markets |
 
 ### Backtest Services (On-Demand)
 

@@ -1,24 +1,26 @@
-# NBA v5.1 FINAL - Production Container
+# NBA v6.0 - Production Container (9 Independent Markets)
 # Hardened, read-only image with baked-in models
 #
-# 7 MARKETS (Full Game + First Half + First Quarter):
+# 9 INDEPENDENT MARKETS (Q1 + 1H + FG × Spread/Total/Moneyline):
+#
+# First Quarter (3):
+# - Spread: q1_spread_model.joblib
+# - Total: q1_total_model.joblib
+# - Moneyline: q1_moneyline_model.joblib
+#
+# First Half (3):
+# - Spread: 1h_spread_model.pkl (55.9% accuracy, +8.2% ROI)
+# - Total: 1h_total_model.pkl (58.1% accuracy, +11.4% ROI)
+# - Moneyline: 1h_moneyline_model.pkl
 #
 # Full Game (3):
-# - Spread: 60.6% accuracy, +15.7% ROI
-# - Total: 59.2% accuracy, +13.1% ROI
-# - Moneyline: 65.5% accuracy, +25.1% ROI
+# - Spread: fg_spread_model.joblib (60.6% accuracy, +15.7% ROI)
+# - Total: fg_total_model.joblib (59.2% accuracy, +13.1% ROI)
+# - Moneyline: fg_moneyline_model.joblib (65.5% accuracy, +25.1% ROI)
 #
-# First Half (2):
-# - Spread: 55.9% accuracy, +8.2% ROI
-# - Total: 58.1% accuracy, +11.4% ROI
-#
-# First Quarter (2):
-# - Spread: 63.6% accuracy
-# - Total: (trained)
-#
-# Build: docker build -f Dockerfile -t nba-v51-final:latest .
+# Build: docker build -f Dockerfile -t nba-v60:latest .
 # Run:   docker compose up -d  (uses docker-compose.yml with read-only and secrets)
-# Export: docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
+# Export: docker save nba-v60:latest | gzip > nba_v6.0_model.tar.gz
 
 # =============================================================================
 # Stage 1: Builder - Install dependencies
@@ -43,8 +45,8 @@ FROM python:3.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="5.1-FINAL"
-LABEL description="NBA Production Picks Model - 6 Proven ROE Markets (FG+1H)"
+LABEL version="6.0"
+LABEL description="NBA Production Picks Model - 9 Independent Markets (Q1+1H+FG)"
 
 WORKDIR /app
 
@@ -74,10 +76,29 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 COPY --chown=appuser:appuser secrets/ /app/secrets/
 
 # Verify ALL 9 REQUIRED model files exist (fail fast if missing)
-# 7 markets: FG (3) + 1H (2) + Q1 (2), with 1H having separate feature files (9 files total)
-RUN echo "=== NBA v5.1 FINAL Model Verification ===" && \
-    echo "Checking for 9 required model files (FG + 1H + Q1)..." && \
+# 9 markets: Q1 (3) + 1H (3) + FG (3), with 1H having separate feature files
+RUN echo "=== NBA v6.0 Model Verification ===" && \
+    echo "Checking for 9 independent market models (Q1 + 1H + FG)..." && \
     ls -la /app/data/processed/models/ && \
+    echo "" && \
+    echo "First Quarter Models (3):" && \
+    test -f /app/data/processed/models/q1_spread_model.joblib && \
+    echo "  ✓ q1_spread_model.joblib" && \
+    test -f /app/data/processed/models/q1_total_model.joblib && \
+    echo "  ✓ q1_total_model.joblib" && \
+    test -f /app/data/processed/models/q1_moneyline_model.joblib && \
+    echo "  ✓ q1_moneyline_model.joblib" && \
+    echo "" && \
+    echo "First Half Models (3 models, 6 files):" && \
+    test -f /app/data/processed/models/1h_spread_model.pkl && \
+    test -f /app/data/processed/models/1h_spread_features.pkl && \
+    echo "  ✓ 1h_spread_model.pkl (55.9% acc, +8.2% ROI)" && \
+    test -f /app/data/processed/models/1h_total_model.pkl && \
+    test -f /app/data/processed/models/1h_total_features.pkl && \
+    echo "  ✓ 1h_total_model.pkl (58.1% acc, +11.4% ROI)" && \
+    test -f /app/data/processed/models/1h_moneyline_model.pkl && \
+    test -f /app/data/processed/models/1h_moneyline_features.pkl && \
+    echo "  ✓ 1h_moneyline_model.pkl" && \
     echo "" && \
     echo "Full Game Models (3):" && \
     test -f /app/data/processed/models/fg_spread_model.joblib && \
@@ -87,21 +108,7 @@ RUN echo "=== NBA v5.1 FINAL Model Verification ===" && \
     test -f /app/data/processed/models/fg_moneyline_model.joblib && \
     echo "  ✓ fg_moneyline_model.joblib (65.5% acc, +25.1% ROI)" && \
     echo "" && \
-    echo "First Half Models (2 models, 4 files):" && \
-    test -f /app/data/processed/models/1h_spread_model.pkl && \
-    test -f /app/data/processed/models/1h_spread_features.pkl && \
-    echo "  ✓ 1h_spread_model.pkl (55.9% acc, +8.2% ROI)" && \
-    test -f /app/data/processed/models/1h_total_model.pkl && \
-    test -f /app/data/processed/models/1h_total_features.pkl && \
-    echo "  ✓ 1h_total_model.pkl (58.1% acc, +11.4% ROI)" && \
-    echo "" && \
-    echo "First Quarter Models (2):" && \
-    test -f /app/data/processed/models/q1_spread_model.joblib && \
-    echo "  ✓ q1_spread_model.joblib (63.6% acc)" && \
-    test -f /app/data/processed/models/q1_total_model.joblib && \
-    echo "  ✓ q1_total_model.joblib" && \
-    echo "" && \
-    echo "=== All 9 required model files verified! ===" && \
+    echo "=== All 9 independent market models verified! ===" && \
     echo "" && \
     echo "=== Verifying baked-in secrets ===" && \
     if test -f /app/secrets/THE_ODDS_API_KEY && test -s /app/secrets/THE_ODDS_API_KEY; then \

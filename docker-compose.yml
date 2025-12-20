@@ -1,28 +1,33 @@
-# NBA v5.1 FINAL - Docker Compose Production Configuration
+# NBA v6.0 - Docker Compose Production Configuration (9 Independent Markets)
 #
 # CONFIGURATION (via .env file or environment):
 #   NBA_API_PORT - External port (default: 8090)
 #   REQUIRE_API_AUTH - Enable API key auth (default: false)
 #   SERVICE_API_KEY - API key if auth enabled
 #
+# Markets (9 independent prediction models):
+#   Q1: q1_spread, q1_total, q1_moneyline
+#   1H: 1h_spread, 1h_total, 1h_moneyline
+#   FG: fg_spread, fg_total, fg_moneyline
+#
 # Usage:
 #   Build:   docker compose build
 #   Run:     docker compose up -d
 #   Run with custom port: NBA_API_PORT=9000 docker compose up -d
-#   Export:  docker save nba-v51-final:latest | gzip > nba_v5.1_model_FINAL.tar.gz
+#   Export:  docker save nba-v60:latest | gzip > nba_v6.0_model.tar.gz
 
 version: "3.8"
 
 services:
   # ==========================================================================
-  # NBA v5.1 FINAL - Production API (Read-Only Mode)
+  # NBA v6.0 - Production API (9 Independent Markets)
   # ==========================================================================
-  nba-v51-api:
+  nba-v60-api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: nba-v51-final:latest
-    container_name: nba-v51-final
+    image: nba-v60:latest
+    container_name: nba-v60
     
     # Security: Read-only root filesystem
     read_only: true
@@ -44,10 +49,10 @@ services:
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
 
-      # v5.1 configuration (6 markets)
-      - NBA_MODEL_VERSION=5.1-FINAL
-      - NBA_MARKETS=fg_spread,fg_total,fg_moneyline,1h_spread,1h_total,1h_moneyline
-      - NBA_PERIODS=full_game,first_half
+      # v6.0 configuration (9 independent markets)
+      - NBA_MODEL_VERSION=6.0
+      - NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+      - NBA_PERIODS=first_quarter,first_half,full_game
 
       # CORS - configured via environment variable
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}

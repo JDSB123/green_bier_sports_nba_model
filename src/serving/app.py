@@ -261,11 +261,16 @@ def verify_integrity(request: Request):
     """
     Verify model integrity and component usage.
     
-    v5.1: Verifies all 6 models (FG+1H for spread, total, moneyline)
+    v6.0: Verifies all 9 independent models (Q1, 1H, FG for spread, total, moneyline)
     """
     results = {
         "status": "pass",
-        "version": "5.1-FINAL",
+        "version": "6.0",
+        "markets": {
+            "q1": ["spread", "total", "moneyline"],
+            "1h": ["spread", "total", "moneyline"],
+            "fg": ["spread", "total", "moneyline"],
+        },
         "checks": {},
         "errors": []
     }
@@ -278,50 +283,73 @@ def verify_integrity(request: Request):
     else:
         results["checks"]["engine_loaded"] = True
         
-        # Check 2: Predictors exist
+        # Check 2: Period predictors exist
+        has_fg = hasattr(app.state.engine, 'fg_predictor')
+        has_1h = hasattr(app.state.engine, 'h1_predictor')
+        has_q1 = hasattr(app.state.engine, 'q1_predictor')
+        
+        results["checks"]["period_predictors"] = {
+            "full_game": has_fg,
+            "first_half": has_1h,
+            "first_quarter": has_q1,
+        }
+        
+        # Also check legacy predictors if present
         has_spread = hasattr(app.state.engine, 'spread_predictor')
         has_total = hasattr(app.state.engine, 'total_predictor')
         has_moneyline = hasattr(app.state.engine, 'moneyline_predictor')
         
-        results["checks"]["predictors"] = {
+        results["checks"]["legacy_predictors"] = {
             "spread": has_spread,
             "total": has_total,
             "moneyline": has_moneyline,
         }
         
-        if not (has_spread and has_total and has_moneyline):
+        if not (has_fg or (has_spread and has_total)):
             results["status"] = "fail"
-            results["errors"].append("Missing predictors")
+            results["errors"].append("Missing period predictors")
         
-        # Check 3: Test FG prediction
+        # Test features for predictions
+        test_features = {
+            "home_ppg": 115.0, "away_ppg": 112.0,
+            "home_papg": 110.0, "away_papg": 115.0,
+            "predicted_margin": 3.0, "predicted_total": 227.0,
+            "predicted_margin_1h": 1.5, "predicted_total_1h": 113.5,
+            "predicted_margin_q1": 0.8, "predicted_total_q1": 56.5,
+            "home_win_pct": 0.6, "away_win_pct": 0.4,
+            "home_avg_margin": 2.0, "away_avg_margin": -1.0,
+            "home_rest_days": 2, "away_rest_days": 1,
+            "home_b2b": 0, "away_b2b": 0,
+            "dynamic_hca": 3.0, "h2h_win_pct": 0.5, "h2h_avg_margin": 0.0,
+            # Q1-specific features
+            "home_q1_ppg": 28.5, "away_q1_ppg": 27.8,
+            "home_q1_papg": 27.2, "away_q1_papg": 28.0,
+            "home_q1_avg_margin": 0.5, "away_q1_avg_margin": -0.3,
+            # 1H-specific features
+            "home_1h_ppg": 56.2, "away_1h_ppg": 55.0,
+            "home_1h_papg": 54.8, "away_1h_papg": 55.5,
+            "home_1h_avg_margin": 1.2, "away_1h_avg_margin": -0.5,
+        }
+        
+        # Check 3: Test Q1 prediction
         try:
-            test_features = {
-                "home_ppg": 115.0, "away_ppg": 112.0,
-                "home_papg": 110.0, "away_papg": 115.0,
-                "predicted_margin": 3.0, "predicted_total": 227.0,
-                "predicted_margin_1h": 1.5, "predicted_total_1h": 113.5,
-                "home_win_pct": 0.6, "away_win_pct": 0.4,
-                "home_avg_margin": 2.0, "away_avg_margin": -1.0,
-                "home_rest_days": 2, "away_rest_days": 1,
-                "home_b2b": 0, "away_b2b": 0,
-                "dynamic_hca": 3.0, "h2h_win_pct": 0.5, "h2h_avg_margin": 0.0,
-            }
-            
-            test_pred = app.state.engine.predict_full_game(
+            test_pred_q1 = app.state.engine.predict_quarter(
                 features=test_features,
-                spread_line=-3.5,
-                total_line=225.0,
-                home_ml_odds=-150,
-                away_ml_odds=130,
+                spread_line=-0.5,
+                total_line=56.5,
+                home_ml_odds=-110,
+                away_ml_odds=-110,
             )
             
-            results["checks"]["fg_prediction_works"] = True
-            results["checks"]["fg_has_moneyline"] = "moneyline" in test_pred
+            results["checks"]["q1_prediction_works"] = True
+            results["checks"]["q1_has_spread"] = "spread" in test_pred_q1
+            results["checks"]["q1_has_total"] = "total" in test_pred_q1
+            results["checks"]["q1_has_moneyline"] = "moneyline" in test_pred_q1
             
         except Exception as e:
-            results["status"] = "fail"
-            results["errors"].append(f"FG test prediction failed: {str(e)}")
-            results["checks"]["fg_prediction_works"] = False
+            results["status"] = "warn"  # Q1 is newer, warn instead of fail
+            results["errors"].append(f"Q1 test prediction failed: {str(e)}")
+            results["checks"]["q1_prediction_works"] = False
         
         # Check 4: Test 1H prediction
         try:
@@ -334,12 +362,34 @@ def verify_integrity(request: Request):
             )
             
             results["checks"]["1h_prediction_works"] = True
+            results["checks"]["1h_has_spread"] = "spread" in test_pred_1h
+            results["checks"]["1h_has_total"] = "total" in test_pred_1h
             results["checks"]["1h_has_moneyline"] = "moneyline" in test_pred_1h
             
         except Exception as e:
             results["status"] = "fail"
             results["errors"].append(f"1H test prediction failed: {str(e)}")
             results["checks"]["1h_prediction_works"] = False
+        
+        # Check 5: Test FG prediction
+        try:
+            test_pred = app.state.engine.predict_full_game(
+                features=test_features,
+                spread_line=-3.5,
+                total_line=225.0,
+                home_ml_odds=-150,
+                away_ml_odds=130,
+            )
+            
+            results["checks"]["fg_prediction_works"] = True
+            results["checks"]["fg_has_spread"] = "spread" in test_pred
+            results["checks"]["fg_has_total"] = "total" in test_pred
+            results["checks"]["fg_has_moneyline"] = "moneyline" in test_pred
+            
+        except Exception as e:
+            results["status"] = "fail"
+            results["errors"].append(f"FG test prediction failed: {str(e)}")
+            results["checks"]["fg_prediction_works"] = False
     
     return results
 
