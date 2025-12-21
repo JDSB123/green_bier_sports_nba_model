@@ -787,8 +787,9 @@ class UnifiedPredictionEngine:
 
     def get_model_info(self) -> Dict[str, Any]:
         """Return info about loaded models."""
+        # Updated to v6.5
         return {
-            "version": "6.0",
+            "version": "6.5",
             "architecture": "9-model independent",
             "markets": sum(1 for v in self.loaded_models.values() if v),
             "markets_list": [k for k, v in self.loaded_models.items() if v],
