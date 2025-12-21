@@ -36,7 +36,7 @@
       "predictions": 300
     },
     "1h_moneyline": {
-      "accuracy": 0.630,
+      "accuracy": 0.63,
       "roi": 0.198,
       "predictions": 234
     }
@@ -83,7 +83,7 @@
     "date_range": "2024-10-02 to 2025-12-16",
     "note": "Walk-forward validation used in backtest"
   },
-  "notes": "This model pack contains the backtested and validated logistic models with isotonic calibration. All models are required for the UnifiedPredictionEngine to function. Moneyline predictions are derived from the spread model, so no separate moneyline model file is included.",
+  "notes": "7 of 9 markets ready. Missing: 1h_moneyline, q1_moneyline. Q1 markets require high-confidence filter (>=60%) for profitability.",
   "ingestion_modules": {
     "version": "6.0.0",
     "hardening_status": "production",
@@ -91,24 +91,86 @@
       "file": "src/ingestion/the_odds.py",
       "endpoints": 11,
       "hardened": true,
-      "features": ["circuit_breaker", "api_key_validation", "zero_fallback", "mandatory_standardization"]
+      "features": [
+        "circuit_breaker",
+        "api_key_validation",
+        "zero_fallback",
+        "mandatory_standardization"
+      ]
     },
     "api_basketball": {
       "file": "src/ingestion/api_basketball.py",
       "endpoints": 10,
       "hardened": true,
-      "features": ["circuit_breaker", "api_key_validation", "logger_only"]
+      "features": [
+        "circuit_breaker",
+        "api_key_validation",
+        "logger_only"
+      ]
     },
     "betting_splits": {
       "file": "src/ingestion/betting_splits.py",
-      "sources": ["action_network", "the_odds_api", "sbro", "covers"],
+      "sources": [
+        "action_network",
+        "the_odds_api",
+        "sbro",
+        "covers"
+      ],
       "hardened": true,
-      "features": ["credential_validation", "graceful_degradation", "logger_only"]
+      "features": [
+        "credential_validation",
+        "graceful_degradation",
+        "logger_only"
+      ]
     },
     "standardize": {
       "file": "src/ingestion/standardize.py",
       "canonical_format": "ESPN",
-      "validation_flags": ["_data_valid", "_home_team_valid", "_away_team_valid"]
+      "validation_flags": [
+        "_data_valid",
+        "_home_team_valid",
+        "_away_team_valid"
+      ]
+    }
+  },
+  "market_status": {
+    "fg_spread": {
+      "status": "ready",
+      "model_file": "fg_spread_model.joblib"
+    },
+    "fg_total": {
+      "status": "ready",
+      "model_file": "fg_total_model.joblib"
+    },
+    "fg_moneyline": {
+      "status": "ready",
+      "model_file": "fg_moneyline_model.joblib"
+    },
+    "1h_spread": {
+      "status": "ready",
+      "model_file": "1h_spread_model.pkl"
+    },
+    "1h_total": {
+      "status": "ready",
+      "model_file": "1h_total_model.pkl"
+    },
+    "1h_moneyline": {
+      "status": "pending",
+      "model_file": null,
+      "note": "Needs training - run: python scripts/train_models.py --market 1h_moneyline"
+    },
+    "q1_spread": {
+      "status": "ready",
+      "model_file": "q1_spread_model.joblib"
+    },
+    "q1_total": {
+      "status": "ready",
+      "model_file": "q1_total_model.joblib"
+    },
+    "q1_moneyline": {
+      "status": "pending",
+      "model_file": null,
+      "note": "Needs training - run: python scripts/train_models.py --market q1_moneyline"
     }
   }
 }
