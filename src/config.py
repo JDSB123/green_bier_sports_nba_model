@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
+from typing import Optional
 
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
