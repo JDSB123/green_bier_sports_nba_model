@@ -99,28 +99,45 @@ class PeriodPredictor:
             market=f"{self.period}_spread",
         )
 
-        # Get prediction
+        # Get prediction probabilities from classifier
         spread_proba = self.spread_model.predict_proba(X)[0]
         home_cover_prob = float(spread_proba[1])
         away_cover_prob = float(spread_proba[0])
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
-        bet_side = "home" if home_cover_prob > 0.5 else "away"
 
         # Get predicted margin from features
         margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
         predicted_margin = features.get(margin_key, 0)
-        edge = predicted_margin - spread_line
+
+        # EDGE CALCULATION (v6.5 FIX):
+        # spread_line is the HOME spread from sportsbooks (negative = home favored)
+        # predicted_margin is positive when home wins
+        #
+        # Example: home -3.5 (spread_line = -3.5), model predicts home +5
+        # Market implies home wins by ~3.5, model says home wins by 5
+        # Edge = how much better home does vs market = 5 - 3.5 = 1.5
+        # Formula: edge = predicted_margin - (-spread_line) = predicted_margin + spread_line
+        edge = predicted_margin + spread_line
+
+        # BET SIDE DETERMINATION (v6.5 FIX):
+        # Use edge sign, not just classifier probability
+        # Positive edge = model says home covers → bet HOME
+        # Negative edge = model says away covers → bet AWAY
+        bet_side = "home" if edge > 0 else "away"
+
+        # For filtering and display, use absolute edge value
+        edge_abs = abs(edge)
 
         # Filter logic using configurable thresholds
         min_conf = filter_thresholds.spread_min_confidence
         min_edge = filter_thresholds.spread_min_edge
-        passes_filter = confidence >= min_conf and abs(edge) >= min_edge
+        passes_filter = confidence >= min_conf and edge_abs >= min_edge
         filter_reason = None
         if not passes_filter:
             if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
-                filter_reason = f"Low edge: {edge:+.1f}"
+                filter_reason = f"Low edge: {edge_abs:.1f}"
 
         return {
             "home_cover_prob": home_cover_prob,
@@ -128,7 +145,8 @@ class PeriodPredictor:
             "predicted_margin": predicted_margin,
             "confidence": confidence,
             "bet_side": bet_side,
-            "edge": edge,
+            "edge": edge_abs,  # Always positive for the recommended side
+            "raw_edge": edge,  # Signed edge for diagnostics
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
@@ -154,28 +172,40 @@ class PeriodPredictor:
             market=f"{self.period}_total",
         )
 
-        # Get prediction
+        # Get prediction probabilities from classifier
         total_proba = self.total_model.predict_proba(X)[0]
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
-        bet_side = "over" if over_prob > 0.5 else "under"
 
         # Get predicted total from features
         total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
         predicted_total = features.get(total_key, total_line)
-        edge = predicted_total - total_line if bet_side == "over" else total_line - predicted_total
+
+        # EDGE CALCULATION (v6.5 FIX):
+        # Compare model's predicted total to market line
+        # Positive = model predicts OVER the line
+        # Negative = model predicts UNDER the line
+        edge = predicted_total - total_line
+
+        # BET SIDE DETERMINATION (v6.5 FIX):
+        # Use model prediction vs line, not just classifier probability
+        # This ensures bet_side is CONSISTENT with the edge sign
+        bet_side = "over" if edge > 0 else "under"
+
+        # For filtering and display, use absolute edge value
+        edge_abs = abs(edge)
 
         # Filter logic using configurable thresholds
         min_conf = filter_thresholds.total_min_confidence
         min_edge = filter_thresholds.total_min_edge
-        passes_filter = confidence >= min_conf and abs(edge) >= min_edge
+        passes_filter = confidence >= min_conf and edge_abs >= min_edge
         filter_reason = None
         if not passes_filter:
             if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
-                filter_reason = f"Low edge: {edge:+.1f}"
+                filter_reason = f"Low edge: {edge_abs:.1f}"
 
         return {
             "over_prob": over_prob,
@@ -183,7 +213,8 @@ class PeriodPredictor:
             "predicted_total": predicted_total,
             "confidence": confidence,
             "bet_side": bet_side,
-            "edge": edge,
+            "edge": edge_abs,  # Always positive for the recommended side
+            "raw_edge": edge,  # Signed edge for diagnostics
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
