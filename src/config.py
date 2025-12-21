@@ -99,6 +99,10 @@ class FilterThresholds:
     - FILTER_TOTAL_MIN_EDGE (default: 1.5)
     - FILTER_MONEYLINE_MIN_CONFIDENCE (default: 0.55)
     - FILTER_MONEYLINE_MIN_EDGE_PCT (default: 0.03, i.e., 3%)
+
+    Q1-specific thresholds (STRICTER due to marginal accuracy):
+    - FILTER_Q1_MIN_CONFIDENCE (default: 0.60) - Higher than FG/1H
+    - FILTER_Q1_MIN_EDGE_PCT (default: 0.05)
     """
     # Spread thresholds
     spread_min_confidence: float = field(
@@ -116,12 +120,20 @@ class FilterThresholds:
         default_factory=lambda: float(_env_or_default("FILTER_TOTAL_MIN_EDGE", "1.5"))
     )
 
-    # Moneyline thresholds
+    # Moneyline thresholds (FG/1H)
     moneyline_min_confidence: float = field(
         default_factory=lambda: float(_env_or_default("FILTER_MONEYLINE_MIN_CONFIDENCE", "0.55"))
     )
     moneyline_min_edge_pct: float = field(
         default_factory=lambda: float(_env_or_default("FILTER_MONEYLINE_MIN_EDGE_PCT", "0.03"))
+    )
+
+    # Q1-specific thresholds (STRICTER - backtest shows 53% overall, 58.8% at >=60% conf)
+    q1_min_confidence: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_Q1_MIN_CONFIDENCE", "0.60"))
+    )
+    q1_min_edge_pct: float = field(
+        default_factory=lambda: float(_env_or_default("FILTER_Q1_MIN_EDGE_PCT", "0.05"))
     )
 
 

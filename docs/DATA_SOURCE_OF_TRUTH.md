@@ -1,6 +1,6 @@
-# Data Source of Truth - NBA v5.0
+# Data Source of Truth - NBA v6.0
 
-**Last Updated:** 2025-12-17  
+**Last Updated:** 2025-12-20
 **Status:** ✅ Production Ready - No Mock Data
 
 ---
