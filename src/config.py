@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
+from typing import Optional
 
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -12,21 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Priority: Env Vars > Docker Secrets > Baked-in Secrets > Local Files
 # For production (Azure), use Environment Variables.
 
-# Import secrets utility
-try:
-    from src.utils.secrets import read_secret_or_env, read_secret_strict
-except ImportError:
-    # Fallback if secrets module not available
-    def read_secret_or_env(secret_name: str, env_name: str = None, default: str = "") -> str:
-        if env_name is None:
-            env_name = secret_name
-        return os.getenv(env_name, default)
-    def read_secret_strict(secret_name: str) -> str:
-        value = os.getenv(secret_name, "")
-        if not value:
-            raise RuntimeError(f"Required secret not found: {secret_name}")
-        return value
-
+from src.utils.secrets import read_secret_strict
 
 def get_nba_season(d: date | None = None) -> str:
     """Get the NBA season string for a given date.
@@ -60,28 +47,22 @@ def get_current_nba_season() -> str:
     return get_nba_season(date.today())
 
 
-def _env_or_default(key: str, default: str) -> str:
-    """Resolve an environment variable at instantiation time."""
-    return os.getenv(key, default)
+def _env_required(key: str) -> str:
+    """Resolve required environment variable - raises if not set."""
+    value = os.getenv(key)
+    if not value:
+        raise ValueError(f"Required environment variable not set: {key}")
+    return value
 
 
-def _secret_strict(secret_name: str) -> str:
-    """
-    STRICT MODE: Read secret from baked-in location (/app/secrets).
-    Secrets are baked into container at build time - fully self-contained.
-    NO FALLBACKS. FAILS LOUDLY if not found.
-    """
-    return read_secret_strict(secret_name)
+def _env_optional(key: str) -> Optional[str]:
+    """Resolve optional environment variable - returns None if not set."""
+    return os.getenv(key)
 
 
-def _secret_or_env(secret_name: str, env_name: str = None, default: str = "") -> str:
-    """Resolve a secret from Docker secrets or environment variable (for optional keys only)."""
-    return read_secret_or_env(secret_name, env_name, default)
-
-
-def _current_season_default() -> str:
-    """Resolve the current season from env or today's date at instantiation time."""
-    return _env_or_default("CURRENT_SEASON", get_current_nba_season())
+def _current_season() -> str:
+    """Resolve the current season from env (required) or raise."""
+    return _env_required("CURRENT_SEASON") or get_current_nba_season()  # Fallback only if not set, but raise per strict
 
 
 @dataclass(frozen=True)
@@ -92,48 +73,46 @@ class FilterThresholds:
     These thresholds determine whether a prediction passes the betting filter.
     A prediction must meet BOTH confidence AND edge thresholds to pass.
 
-    Thresholds can be overridden via environment variables:
-    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.55)
-    - FILTER_SPREAD_MIN_EDGE (default: 1.0)
-    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.55)
-    - FILTER_TOTAL_MIN_EDGE (default: 1.5)
-    - FILTER_MONEYLINE_MIN_CONFIDENCE (default: 0.55)
-    - FILTER_MONEYLINE_MIN_EDGE_PCT (default: 0.03, i.e., 3%)
-
-    Q1-specific thresholds (STRICTER due to marginal accuracy):
-    - FILTER_Q1_MIN_CONFIDENCE (default: 0.60) - Higher than FG/1H
-    - FILTER_Q1_MIN_EDGE_PCT (default: 0.05)
+    Thresholds MUST be set via environment variables - no defaults:
+    - FILTER_SPREAD_MIN_CONFIDENCE
+    - FILTER_SPREAD_MIN_EDGE
+    - FILTER_TOTAL_MIN_CONFIDENCE
+    - FILTER_TOTAL_MIN_EDGE
+    - FILTER_MONEYLINE_MIN_CONFIDENCE
+    - FILTER_MONEYLINE_MIN_EDGE_PCT
+    - FILTER_Q1_MIN_CONFIDENCE
+    - FILTER_Q1_MIN_EDGE_PCT
     """
     # Spread thresholds
     spread_min_confidence: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_SPREAD_MIN_CONFIDENCE", "0.55"))
+        default_factory=lambda: float(_env_required("FILTER_SPREAD_MIN_CONFIDENCE"))
     )
     spread_min_edge: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_SPREAD_MIN_EDGE", "1.0"))
+        default_factory=lambda: float(_env_required("FILTER_SPREAD_MIN_EDGE"))
     )
 
     # Total thresholds
     total_min_confidence: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_TOTAL_MIN_CONFIDENCE", "0.55"))
+        default_factory=lambda: float(_env_required("FILTER_TOTAL_MIN_CONFIDENCE"))
     )
     total_min_edge: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_TOTAL_MIN_EDGE", "1.5"))
+        default_factory=lambda: float(_env_required("FILTER_TOTAL_MIN_EDGE"))
     )
 
     # Moneyline thresholds (FG/1H)
     moneyline_min_confidence: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_MONEYLINE_MIN_CONFIDENCE", "0.55"))
+        default_factory=lambda: float(_env_required("FILTER_MONEYLINE_MIN_CONFIDENCE"))
     )
     moneyline_min_edge_pct: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_MONEYLINE_MIN_EDGE_PCT", "0.03"))
+        default_factory=lambda: float(_env_required("FILTER_MONEYLINE_MIN_EDGE_PCT"))
     )
 
-    # Q1-specific thresholds (STRICTER - backtest shows 53% overall, 58.8% at >=60% conf)
+    # Q1-specific thresholds (STRICTER)
     q1_min_confidence: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_Q1_MIN_CONFIDENCE", "0.60"))
+        default_factory=lambda: float(_env_required("FILTER_Q1_MIN_CONFIDENCE"))
     )
     q1_min_edge_pct: float = field(
-        default_factory=lambda: float(_env_or_default("FILTER_Q1_MIN_EDGE_PCT", "0.05"))
+        default_factory=lambda: float(_env_required("FILTER_Q1_MIN_EDGE_PCT"))
     )
 
 
@@ -143,41 +122,36 @@ filter_thresholds = FilterThresholds()
 
 @dataclass(frozen=True)
 class Settings:
-    # Core API Keys (Required) - STRICT MODE: Docker secrets only, NO FALLBACKS
-    the_odds_api_key: str = field(default_factory=lambda: _secret_strict("THE_ODDS_API_KEY"))
-    api_basketball_key: str = field(default_factory=lambda: _secret_strict("API_BASKETBALL_KEY"))
+    # Core API Keys (Required) - STRICT MODE: Env only, raise if missing
+    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict("THE_ODDS_API_KEY"))
+    api_basketball_key: str = field(default_factory=lambda: read_secret_strict("API_BASKETBALL_KEY"))
     
-    # Optional API Keys (for enhanced features)
-    betsapi_key: str = field(default_factory=lambda: _secret_or_env("BETSAPI_KEY", "BETSAPI_KEY", ""))
-    action_network_username: str = field(default_factory=lambda: _secret_or_env("ACTION_NETWORK_USERNAME", "ACTION_NETWORK_USERNAME", ""))
-    action_network_password: str = field(default_factory=lambda: _secret_or_env("ACTION_NETWORK_PASSWORD", "ACTION_NETWORK_PASSWORD", ""))
-    kaggle_api_token: str = field(default_factory=lambda: _secret_or_env("KAGGLE_API_TOKEN", "KAGGLE_API_TOKEN", ""))
+    # Optional API Keys (None if not set)
+    betsapi_key: Optional[str] = field(default_factory=lambda: _env_optional("BETSAPI_KEY"))
+    action_network_username: Optional[str] = field(default_factory=lambda: _env_optional("ACTION_NETWORK_USERNAME"))
+    action_network_password: Optional[str] = field(default_factory=lambda: _env_optional("ACTION_NETWORK_PASSWORD"))
+    kaggle_api_token: Optional[str] = field(default_factory=lambda: _env_optional("KAGGLE_API_TOKEN"))
 
-    # Optional: allow overriding API base URLs from environment
+    # API base URLs (required - raise if not set)
     the_odds_base_url: str = field(
-        default_factory=lambda: _env_or_default(
-            "THE_ODDS_BASE_URL", "https://api.the-odds-api.com/v4"
-        )
+        default_factory=lambda: _env_required("THE_ODDS_BASE_URL")
     )
     api_basketball_base_url: str = field(
-        default_factory=lambda: _env_or_default(
-            "API_BASKETBALL_BASE_URL", "https://v1.basketball.api-sports.io"
-        )
+        default_factory=lambda: _env_required("API_BASKETBALL_BASE_URL")
     )
 
-    # Season Configuration
-    current_season: str = field(default_factory=_current_season_default)
+    # Season Configuration (required)
+    current_season: str = field(default_factory=lambda: _env_required("CURRENT_SEASON"))
     seasons_to_process: list[str] = field(
-        default_factory=lambda: os.getenv(
-            "SEASONS_TO_PROCESS", "2023-2024,2024-2025,2025-2026"
-        ).split(",")
+        default_factory=lambda: _env_required("SEASONS_TO_PROCESS").split(",")
     )
 
-    data_raw_dir: str = os.getenv(
-        "DATA_RAW_DIR", str(PROJECT_ROOT / "data" / "raw")
+    # Data directories (required)
+    data_raw_dir: str = field(
+        default_factory=lambda: _env_required("DATA_RAW_DIR")
     )
-    data_processed_dir: str = os.getenv(
-        "DATA_PROCESSED_DIR", str(PROJECT_ROOT / "data" / "processed")
+    data_processed_dir: str = field(
+        default_factory=lambda: _env_required("DATA_PROCESSED_DIR")
     )
 
 

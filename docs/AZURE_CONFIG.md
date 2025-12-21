@@ -87,8 +87,8 @@ GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 
 ## Model Version
 
-- **Current Deployed:** v5.1 (6 markets: FG + 1H)
-- **Target:** v6.0 (9 markets: Q1 + 1H + FG)
+- **Current Deployed:** v6.0 (9 markets: Q1 + 1H + FG)
+- **Markets:** q1_spread, q1_total, q1_moneyline, 1h_spread, 1h_total, 1h_moneyline, fg_spread, fg_total, fg_moneyline
 
 ## Important Files
 
@@ -100,3 +100,4 @@ GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 | `infra/shared/main.bicep` | Shared resources (ACR, Environment) |
 | `Dockerfile` | Container definition |
 | `.env.example` | Environment variable template |
+

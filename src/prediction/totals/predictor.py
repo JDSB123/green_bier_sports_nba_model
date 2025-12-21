@@ -2,9 +2,16 @@
 Totals prediction logic (Full Game + First Half).
 
 NBA v6.0: All 9 markets with independent models.
-STRICT MODE: No fallbacks. Each market requires its own trained model.
+
+FEATURE VALIDATION:
+    Uses unified validation from src/prediction/feature_validation.py
+    Controlled by PREDICTION_FEATURE_MODE environment variable:
+    - "strict" (default): Raise error on missing features
+    - "warn": Log warning, zero-fill missing features
+    - "silent": Zero-fill without logging
 """
 from typing import Dict, Any, List
+import logging
 import pandas as pd
 
 from src.prediction.totals.filters import (
@@ -12,6 +19,9 @@ from src.prediction.totals.filters import (
     FirstHalfTotalFilter,
 )
 from src.prediction.confidence import calculate_confidence_from_probabilities
+from src.prediction.feature_validation import validate_and_prepare_features
+
+logger = logging.getLogger(__name__)
 
 
 class TotalPredictor:
@@ -79,12 +89,13 @@ class TotalPredictor:
         if "predicted_total" not in features:
             raise ValueError("predicted_total is REQUIRED in features for FG total predictions")
 
-        # Prepare features
+        # Prepare features using unified validation
         feature_df = pd.DataFrame([features])
-        missing = set(self.fg_feature_columns) - set(feature_df.columns)
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.fg_feature_columns]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.fg_feature_columns,
+            market="fg_total",
+        )
 
         # Get prediction
         total_proba = self.fg_model.predict_proba(X)[0]
@@ -129,23 +140,27 @@ class TotalPredictor:
         Returns:
             Prediction dictionary
         """
-        # Validate required inputs
+        # Validate required inputs - NO FALLBACK CALCULATIONS
         if "predicted_total_1h" not in features:
-            raise ValueError("predicted_total_1h is REQUIRED in features for 1H total predictions")
+            raise ValueError(
+                "predicted_total_1h is REQUIRED in features for 1H total predictions. "
+                "Do not use full-game total with arbitrary multipliers."
+            )
 
         # Use 1H model ONLY - no fallbacks
         feature_df = pd.DataFrame([features])
-        missing = set(self.fh_feature_columns) - set(feature_df.columns)
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.fh_feature_columns]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.fh_feature_columns,
+            market="1h_total",
+        )
         total_proba = self.fh_model.predict_proba(X)[0]
 
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
         bet_side = "over" if over_prob > 0.5 else "under"
-        predicted_total_1h = features.get("predicted_total_1h", features.get("predicted_total", 220) * 0.49)
+        predicted_total_1h = features["predicted_total_1h"]  # No fallback - already validated
 
         # Calculate edge
         if bet_side == "over":

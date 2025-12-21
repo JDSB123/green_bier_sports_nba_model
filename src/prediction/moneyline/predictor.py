@@ -4,8 +4,16 @@ Moneyline prediction logic (Full Game + First Half).
 NBA v6.0: All 9 markets with independent models.
 - FG Moneyline: 65.5% accuracy, +25.1% ROI
 - 1H Moneyline: 63.0% accuracy, +19.8% ROI
+
+FEATURE VALIDATION:
+    Uses unified validation from src/prediction/feature_validation.py
+    Controlled by PREDICTION_FEATURE_MODE environment variable:
+    - "strict" (default): Raise error on missing features
+    - "warn": Log warning, zero-fill missing features
+    - "silent": Zero-fill without logging
 """
 from typing import Dict, Any, List
+import logging
 import pandas as pd
 import math
 
@@ -14,6 +22,26 @@ from src.prediction.moneyline.filters import (
     FirstHalfMoneylineFilter,
 )
 from src.prediction.confidence import calculate_confidence_from_probabilities
+from src.prediction.feature_validation import validate_and_prepare_features
+
+logger = logging.getLogger(__name__)
+
+
+def validate_american_odds(odds: int, param_name: str = "odds") -> None:
+    """
+    Validate American odds to prevent division by zero and unrealistic values.
+
+    Args:
+        odds: American odds to validate
+        param_name: Parameter name for error messages
+
+    Raises:
+        ValueError: If odds are invalid
+    """
+    if odds == 0:
+        raise ValueError(f"{param_name} cannot be zero - invalid American odds")
+    if odds > 0 and odds < 100:
+        logger.warning(f"{param_name}={odds} is unusual - American odds are typically >= +100 or negative")
 
 
 def american_odds_to_implied_prob(odds: int) -> float:
@@ -21,11 +49,17 @@ def american_odds_to_implied_prob(odds: int) -> float:
     Convert American odds to implied probability.
 
     Args:
-        odds: American odds (e.g., -110, +150)
+        odds: American odds (e.g., -110, +150). Must not be zero.
 
     Returns:
         Implied probability (0-1)
+
+    Raises:
+        ValueError: If odds is zero
     """
+    if odds == 0:
+        raise ValueError("Cannot convert odds=0 to implied probability - division by zero")
+
     if odds < 0:
         # Favorite (e.g., -200 = 200/(200+100) = 66.7%)
         return abs(odds) / (abs(odds) + 100)
@@ -97,13 +131,21 @@ class MoneylinePredictor:
 
         Returns:
             Prediction dictionary
+
+        Raises:
+            ValueError: If odds are invalid (zero)
         """
-        # Prepare features
+        # Validate odds
+        validate_american_odds(home_odds, "home_odds")
+        validate_american_odds(away_odds, "away_odds")
+
+        # Prepare features using unified validation
         feature_df = pd.DataFrame([features])
-        missing = set(self.feature_columns) - set(feature_df.columns)
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.feature_columns]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.feature_columns,
+            market="fg_moneyline",
+        )
 
         # Get predictions from dedicated moneyline model
         # Model is trained on home_win (1 = home win, 0 = away win)
@@ -173,13 +215,21 @@ class MoneylinePredictor:
 
         Returns:
             Prediction dictionary
+
+        Raises:
+            ValueError: If odds are invalid (zero)
         """
-        # Prepare features - use 1H model ONLY
+        # Validate odds
+        validate_american_odds(home_odds, "home_odds")
+        validate_american_odds(away_odds, "away_odds")
+
+        # Prepare features using unified validation - use 1H model ONLY
         feature_df = pd.DataFrame([features])
-        missing = set(self.fh_feature_columns) - set(feature_df.columns)
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.fh_feature_columns]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.fh_feature_columns,
+            market="1h_moneyline",
+        )
 
         # Get spread cover probabilities (NOT win probabilities)
         spread_proba = self.fh_model.predict_proba(X)[0]

@@ -21,7 +21,13 @@ Full Game:
 ARCHITECTURE: Each period has INDEPENDENT models trained on period-specific
 features. No cross-period dependencies.
 
-STRICT MODE: No fallbacks, no silent failures. All models must exist.
+FEATURE VALIDATION:
+    Controlled by PREDICTION_FEATURE_MODE environment variable:
+    - "strict" (default): Raise error on missing features
+    - "warn": Log warning, zero-fill missing features
+    - "silent": Zero-fill without logging
+
+    See src/prediction/feature_validation.py for details.
 """
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
@@ -31,6 +37,11 @@ import joblib
 from src.prediction.spreads import SpreadPredictor
 from src.prediction.totals import TotalPredictor
 from src.prediction.moneyline import MoneylinePredictor
+from src.prediction.feature_validation import (
+    validate_and_prepare_features,
+    MissingFeaturesError,
+    get_feature_mode,
+)
 from src.modeling.period_features import MODEL_CONFIGS
 from src.config import filter_thresholds
 
@@ -77,18 +88,13 @@ class PeriodPredictor:
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # Prepare features
+        # Prepare features using unified validation
         feature_df = pd.DataFrame([features])
-
-        # STRICT MODE: Fail on missing features - NO SILENT ZERO-FILL
-        missing = set(self.spread_features) - set(feature_df.columns)
-        if missing:
-            raise ValueError(
-                f"[{self.period}_spread] MISSING {len(missing)} REQUIRED FEATURES: {sorted(missing)[:10]}. "
-                f"Feature pipeline is broken - fix data ingestion, do not zero-fill."
-            )
-
-        X = feature_df[self.spread_features]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.spread_features,
+            market=f"{self.period}_spread",
+        )
 
         # Get prediction
         spread_proba = self.spread_model.predict_proba(X)[0]
@@ -134,18 +140,13 @@ class PeriodPredictor:
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # Prepare features
+        # Prepare features using unified validation
         feature_df = pd.DataFrame([features])
-
-        # STRICT MODE: Fail on missing features - NO SILENT ZERO-FILL
-        missing = set(self.total_features) - set(feature_df.columns)
-        if missing:
-            raise ValueError(
-                f"[{self.period}_total] MISSING {len(missing)} REQUIRED FEATURES: {sorted(missing)[:10]}. "
-                f"Feature pipeline is broken - fix data ingestion, do not zero-fill."
-            )
-
-        X = feature_df[self.total_features]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.total_features,
+            market=f"{self.period}_total",
+        )
 
         # Get prediction
         total_proba = self.total_model.predict_proba(X)[0]
@@ -192,18 +193,19 @@ class PeriodPredictor:
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # Prepare features
+        # Validate odds to prevent division by zero
+        if home_ml_odds == 0:
+            raise ValueError("home_ml_odds cannot be zero - invalid American odds")
+        if away_ml_odds == 0:
+            raise ValueError("away_ml_odds cannot be zero - invalid American odds")
+
+        # Prepare features using unified validation
         feature_df = pd.DataFrame([features])
-
-        # STRICT MODE: Fail on missing features - NO SILENT ZERO-FILL
-        missing = set(self.moneyline_features) - set(feature_df.columns)
-        if missing:
-            raise ValueError(
-                f"[{self.period}_moneyline] MISSING {len(missing)} REQUIRED FEATURES: {sorted(missing)[:10]}. "
-                f"Feature pipeline is broken - fix data ingestion, do not zero-fill."
-            )
-
-        X = feature_df[self.moneyline_features]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.moneyline_features,
+            market=f"{self.period}_moneyline",
+        )
 
         # Get prediction
         ml_proba = self.moneyline_model.predict_proba(X)[0]

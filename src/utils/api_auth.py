@@ -68,8 +68,10 @@ def verify_api_key(api_key: Optional[str]) -> bool:
         return True  # Auth disabled for development
     
     if not SERVICE_API_KEY:
-        logger.warning("SERVICE_API_KEY not set - authentication disabled")
-        return True  # Allow if no key configured (backward compatibility)
+        raise ValueError(
+            "REQUIRE_API_AUTH=true but SERVICE_API_KEY is not set. "
+            "Either set SERVICE_API_KEY or disable auth with REQUIRE_API_AUTH=false"
+        )
     
     if not api_key:
         return False

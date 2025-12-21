@@ -26,10 +26,12 @@ import json
 import logging
 import numpy as np
 import sys
+import uuid
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path as PathLib
 from datetime import datetime
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -44,7 +46,7 @@ from src.config import settings
 from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
 from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
-from scripts.build_rich_features import RichFeatureBuilder
+from src.features import RichFeatureBuilder
 from src.utils.logging import get_logger
 from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
@@ -133,62 +135,20 @@ class SlateResponse(BaseModel):
 
 # --- API Setup - v6.0 ---
 
-app = FastAPI(
-    title="NBA v6.0 - Production Picks",
-    description="9 INDEPENDENT Markets: Q1+1H+FG for Spread, Total, Moneyline",
-    version="6.0.0"
-)
-
-# Add rate limiter
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# API Authentication (optional - can be disabled via REQUIRE_API_AUTH=false)
-if os.getenv("REQUIRE_API_AUTH", "false").lower() == "true":
-    app.add_middleware(APIKeyMiddleware, require_auth=True)
-
-# CORS configuration - production safe
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8090").split(",")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*", "X-API-Key"],
-)
-
-# Request metrics middleware
-@app.middleware("http")
-async def metrics_middleware(request: Request, call_next):
-    start_time = datetime.now()
-    method = request.method
-    endpoint = request.url.path
-    
-    try:
-        response = await call_next(request)
-        status = response.status_code
-        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status).inc()
-        return response
-    except Exception as e:
-        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=500).inc()
-        raise
-    finally:
-        duration = (datetime.now() - start_time).total_seconds()
-        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
-
-
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
 
 
-@app.on_event("startup")
-def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    Initialize the prediction engine on startup.
+    Application lifespan context manager.
 
+    Startup: Initialize the prediction engine.
     v6.0: 9 INDEPENDENT markets (Q1+1H+FG for Spread, Total, Moneyline)
     Fails LOUDLY if models are missing or API keys are invalid.
     """
+    # === STARTUP ===
     # SECURITY: Validate API keys at startup - fail fast if missing
     try:
         fail_fast_on_missing_keys()
@@ -222,7 +182,7 @@ def startup_event():
     logger.info("STRICT MODE: Requiring all 9 models (Q1/1H/FG × Spread/Total/ML)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
-    
+
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
     picks_dir.mkdir(parents=True, exist_ok=True)
@@ -232,6 +192,80 @@ def startup_event():
     # Log model info
     model_info = app.state.engine.get_model_info()
     logger.info(f"NBA v6.0 initialized - {model_info['markets']}/9 markets loaded: {model_info['markets_list']}")
+
+    yield  # Application runs here
+
+    # === SHUTDOWN ===
+    logger.info("NBA v6.0 shutting down")
+
+
+app = FastAPI(
+    title="NBA v6.0 - Production Picks",
+    description="9 INDEPENDENT Markets: Q1+1H+FG for Spread, Total, Moneyline",
+    version="6.0.0",
+    lifespan=lifespan
+)
+
+# Add rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# API Authentication (optional - can be disabled via REQUIRE_API_AUTH=false)
+if os.getenv("REQUIRE_API_AUTH", "false").lower() == "true":
+    app.add_middleware(APIKeyMiddleware, require_auth=True)
+
+# CORS configuration - STRICT: Must be explicitly configured for production
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+if not allowed_origins_str:
+    logger.warning("ALLOWED_ORIGINS not set - CORS will reject all cross-origin requests")
+    allowed_origins = []
+else:
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*", "X-API-Key"],
+)
+
+
+# Request ID middleware for distributed tracing
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    # Use existing request ID from header or generate new one
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    # Store in request state for access in handlers
+    request.state.request_id = request_id
+
+    response = await call_next(request)
+    # Add request ID to response headers
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
+# Request metrics middleware
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    start_time = datetime.now()
+    method = request.method
+    endpoint = request.url.path
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status).inc()
+        return response
+    except Exception as e:
+        logger.error(f"[{request_id}] Request failed: {e}")
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=500).inc()
+        raise
+    finally:
+        duration = (datetime.now() - start_time).total_seconds()
+        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
+        if duration > 5.0:  # Log slow requests
+            logger.warning(f"[{request_id}] Slow request: {method} {endpoint} took {duration:.2f}s")
 
 
 # --- Endpoints ---
@@ -577,16 +611,16 @@ def format_american_odds(odds: int) -> str:
 def get_fire_rating(confidence: float, edge: float) -> str:
     """
     Get fire rating based on confidence and edge.
-    🔥🔥🔥 = Elite (conf >= 70% AND edge >= 5)
-    🔥🔥 = Strong (conf >= 60% AND edge >= 3)
-    🔥 = Good (passes filters)
+    ELITE = conf >= 70% AND edge >= 5
+    STRONG = conf >= 60% AND edge >= 3
+    GOOD = passes filters
     """
     if confidence >= 0.70 and abs(edge) >= 5:
-        return "🔥🔥🔥"
+        return "ELITE"
     elif confidence >= 0.60 and abs(edge) >= 3:
-        return "🔥🔥"
+        return "STRONG"
     else:
-        return "🔥"
+        return "GOOD"
 
 
 @app.get("/slate/{date}/executive")
@@ -943,7 +977,7 @@ async def get_executive_summary(
             continue
     
     # Sort by time, then by fire rating (descending), then by edge (descending)
-    fire_order = {"🔥🔥🔥": 3, "🔥🔥": 2, "🔥": 1}
+    fire_order = {"ELITE": 3, "STRONG": 2, "GOOD": 1}
     all_plays.sort(key=lambda x: (x["sort_time"], -fire_order.get(x["fire_rating"], 0), -x["edge_raw"]))
     
     # Format for output - remove internal fields
@@ -971,9 +1005,9 @@ async def get_executive_summary(
         "plays": formatted_plays,
         "legend": {
             "fire_rating": {
-                "🔥🔥🔥": "ELITE - 70%+ confidence AND 5+ pt edge",
-                "🔥🔥": "STRONG - 60%+ confidence AND 3+ pt edge",
-                "🔥": "GOOD - Passes all filters"
+                "ELITE": "70%+ confidence AND 5+ pt edge",
+                "STRONG": "60%+ confidence AND 3+ pt edge",
+                "GOOD": "Passes all filters"
             },
             "periods": {"FG": "Full Game", "1H": "First Half", "Q1": "First Quarter"},
             "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}

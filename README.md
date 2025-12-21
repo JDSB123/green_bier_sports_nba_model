@@ -29,8 +29,6 @@ python scripts/run_slate.py --matchup Lakers       # Filter to Lakers
 python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ```
 
-> See [`QUICK_START.md`](QUICK_START.md) for full usage guide.
-
 ---
 
 > **📖 Single Source of Truth:** See [`docs/SINGLE_SOURCE_OF_TRUTH.md`](docs/SINGLE_SOURCE_OF_TRUTH.md) for the master reference.
