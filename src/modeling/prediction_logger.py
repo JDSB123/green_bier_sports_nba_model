@@ -2,16 +2,57 @@
 Prediction logging system for retrospective analysis.
 
 Logs all model predictions with full context for later analysis.
+Includes model version tracking for data lineage.
 """
 from __future__ import annotations
 
 import json
 import os
+import subprocess
 from datetime import datetime, date
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from src.config import settings
+
+
+def get_model_version_info() -> Dict[str, Any]:
+    """
+    Get current model version info for data lineage tracking.
+
+    Returns:
+        Dict with version, git_commit, and model_pack info
+    """
+    version_info = {
+        "version": os.getenv("NBA_MODEL_VERSION", "unknown"),
+        "git_commit": None,
+        "model_pack_version": None,
+    }
+
+    # Try to get git commit
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            version_info["git_commit"] = result.stdout.strip()
+    except Exception:
+        pass
+
+    # Try to get model_pack version
+    try:
+        model_pack_path = Path(settings.data_processed_dir).parent / "models" / "production" / "model_pack.json"
+        if model_pack_path.exists():
+            model_pack = json.loads(model_pack_path.read_text())
+            version_info["model_pack_version"] = model_pack.get("version")
+            version_info["model_pack_git"] = model_pack.get("git_commit", "")[:8] if model_pack.get("git_commit") else None
+    except Exception:
+        pass
+
+    return version_info
 
 
 class PredictionLogger:
@@ -41,7 +82,7 @@ class PredictionLogger:
     ) -> str:
         """
         Log a complete prediction set for a game.
-        
+
         Args:
             game_date: Date of the game
             home_team: Home team name
@@ -50,12 +91,23 @@ class PredictionLogger:
             features: Feature values used for prediction (optional)
             odds: Market odds at prediction time (optional)
             metadata: Additional metadata (model version, etc.)
-            
+
         Returns:
             Log file path
         """
         timestamp = datetime.now()
-        
+
+        # Get model version info for data lineage
+        version_info = get_model_version_info()
+
+        # Merge version info with provided metadata
+        full_metadata = {
+            "model_version": version_info.get("version"),
+            "model_pack_version": version_info.get("model_pack_version"),
+            "git_commit": version_info.get("git_commit"),
+            **(metadata or {}),
+        }
+
         log_entry = {
             "timestamp": timestamp.isoformat(),
             "game_date": game_date.isoformat(),
@@ -64,7 +116,7 @@ class PredictionLogger:
             "predictions": predictions,
             "features": features or {},
             "odds": odds or {},
-            "metadata": metadata or {},
+            "metadata": full_metadata,
         }
         
         # Save to date-based file
