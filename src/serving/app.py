@@ -25,6 +25,7 @@ import os
 import json
 import logging
 import numpy as np
+import sys
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path as PathLib
 from datetime import datetime
@@ -1122,6 +1123,18 @@ async def get_comprehensive_slate_analysis(
         "analysis": analysis_results,
         "edge_thresholds": edge_thresholds
     })
+
+
+@app.get("/meta", tags=["Ops"])
+async def get_meta_info():
+    """Get metadata about the running service."""
+    return {
+        "version": os.getenv("NBA_MODEL_VERSION", "6.0-STRICT"),
+        "markets": os.getenv("NBA_MARKETS", "").split(","),
+        "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
+        "server_time": datetime.now().isoformat(),
+        "python_version": sys.version
+    }
 
 
 @app.post("/predict/game", response_model=GamePredictions)

@@ -8,9 +8,9 @@ from pathlib import Path
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# NOTE: Secrets are BAKED INTO CONTAINER at build time (/app/secrets/)
-# All required API keys are copied from ./secrets/ into container during build
-# Container is fully self-contained - no external secrets or .env files needed
+# NOTE: Secrets are managed via src.utils.secrets
+# Priority: Env Vars > Docker Secrets > Baked-in Secrets > Local Files
+# For production (Azure), use Environment Variables.
 
 # Import secrets utility
 try:

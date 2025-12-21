@@ -73,7 +73,7 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 # Bake in API keys/secrets (immutable in container - fully self-contained)
 # =============================================================================
 # SECRETS ARE BAKED INTO CONTAINER - No external secrets required
-COPY --chown=appuser:appuser secrets/ /app/secrets/
+# COPY --chown=appuser:appuser secrets/ /app/secrets/
 
 # Verify ALL 9 REQUIRED model files exist (fail fast if missing)
 # 9 markets: Q1 (3) + 1H (3) + FG (3), with 1H having separate feature files
@@ -108,25 +108,7 @@ RUN echo "=== NBA v6.0 Model Verification ===" && \
     test -f /app/data/processed/models/fg_moneyline_model.joblib && \
     echo "  ✓ fg_moneyline_model.joblib (65.5% acc, +25.1% ROI)" && \
     echo "" && \
-    echo "=== All 9 independent market models verified! ===" && \
-    echo "" && \
-    echo "=== Verifying baked-in secrets ===" && \
-    if test -f /app/secrets/THE_ODDS_API_KEY && test -s /app/secrets/THE_ODDS_API_KEY; then \
-        echo "  ✓ THE_ODDS_API_KEY (non-empty)"; \
-    else \
-        echo "ERROR: THE_ODDS_API_KEY missing or empty in /app/secrets/"; \
-        echo "Secrets must exist in ./secrets/ directory BEFORE building"; \
-        exit 1; \
-    fi && \
-    if test -f /app/secrets/API_BASKETBALL_KEY && test -s /app/secrets/API_BASKETBALL_KEY; then \
-        echo "  ✓ API_BASKETBALL_KEY (non-empty)"; \
-    else \
-        echo "ERROR: API_BASKETBALL_KEY missing or empty in /app/secrets/"; \
-        echo "Secrets must exist in ./secrets/ directory BEFORE building"; \
-        echo "Note: .example files are NOT valid secrets - actual key files required!"; \
-        exit 1; \
-    fi && \
-    echo "=== All secrets verified! ==="
+    echo "=== All 9 independent market models verified! ==="
 
 # =============================================================================
 # Environment Configuration

@@ -102,3 +102,4 @@ export/
 nba_betting_card_*.txt
 *.tmp
 temp/
+.claude/
