@@ -36,7 +36,7 @@
       "predictions": 300
     },
     "1h_moneyline": {
-      "accuracy": 0.630,
+      "accuracy": 0.63,
       "roi": 0.198,
       "predictions": 234
     }
@@ -46,44 +46,12 @@
     "calibration": "isotonic",
     "source": "src/modeling/models.py (default model_type='logistic')"
   },
-  "files": {
-    "spreads_model.joblib": {
-      "sha256": "4EE4C94E7FA4DD1332D53E583895DEBE8052B2E4878BC1DE3FB288FAA408CA17",
-      "purpose": "Full Game Spread predictions",
-      "required": true
-    },
-    "totals_model.joblib": {
-      "sha256": "1F2D71D9E9ABB84451EE71930C24411E9B3D2785D42CEEC435EC03BA3D2F7EF8",
-      "purpose": "Full Game Total predictions",
-      "required": true
-    },
-    "first_half_spread_model.pkl": {
-      "sha256": "962757EB8CB8A1E6F15ED8084D3AE4539E0F227045F08440AD8036B61BAD2DAA",
-      "purpose": "First Half Spread predictions",
-      "required": true
-    },
-    "first_half_spread_features.pkl": {
-      "sha256": "177DC66ECC3DF2347D46ED577C002789D4B8A593E001AD3344A89FE4C38E4688",
-      "purpose": "First Half Spread feature columns",
-      "required": true
-    },
-    "first_half_total_model.pkl": {
-      "sha256": "D4856D0D3DA7BBB9AEB4A0AA3F33C636EBF03C9ADC7D3A8B081991D646E89CEE",
-      "purpose": "First Half Total predictions",
-      "required": true
-    },
-    "first_half_total_features.pkl": {
-      "sha256": "177DC66ECC3DF2347D46ED577C002789D4B8A593E001AD3344A89FE4C38E4688",
-      "purpose": "First Half Total feature columns",
-      "required": true
-    }
-  },
   "training_data": {
     "source": "data/processed/training_data.csv",
     "date_range": "2024-10-02 to 2025-12-16",
     "note": "Walk-forward validation used in backtest"
   },
-  "notes": "This model pack contains the backtested and validated logistic models with isotonic calibration. All models are required for the UnifiedPredictionEngine to function. Moneyline predictions are derived from the spread model, so no separate moneyline model file is included.",
+  "notes": "7 of 9 markets ready. Missing: 1h_moneyline, q1_moneyline. Q1 markets require high-confidence filter (>=60%) for profitability.",
   "ingestion_modules": {
     "version": "6.0.0",
     "hardening_status": "production",
@@ -91,24 +59,86 @@
       "file": "src/ingestion/the_odds.py",
       "endpoints": 11,
       "hardened": true,
-      "features": ["circuit_breaker", "api_key_validation", "zero_fallback", "mandatory_standardization"]
+      "features": [
+        "circuit_breaker",
+        "api_key_validation",
+        "zero_fallback",
+        "mandatory_standardization"
+      ]
     },
     "api_basketball": {
       "file": "src/ingestion/api_basketball.py",
       "endpoints": 10,
       "hardened": true,
-      "features": ["circuit_breaker", "api_key_validation", "logger_only"]
+      "features": [
+        "circuit_breaker",
+        "api_key_validation",
+        "logger_only"
+      ]
     },
     "betting_splits": {
       "file": "src/ingestion/betting_splits.py",
-      "sources": ["action_network", "the_odds_api", "sbro", "covers"],
+      "sources": [
+        "action_network",
+        "the_odds_api",
+        "sbro",
+        "covers"
+      ],
       "hardened": true,
-      "features": ["credential_validation", "graceful_degradation", "logger_only"]
+      "features": [
+        "credential_validation",
+        "graceful_degradation",
+        "logger_only"
+      ]
     },
     "standardize": {
       "file": "src/ingestion/standardize.py",
       "canonical_format": "ESPN",
-      "validation_flags": ["_data_valid", "_home_team_valid", "_away_team_valid"]
+      "validation_flags": [
+        "_data_valid",
+        "_home_team_valid",
+        "_away_team_valid"
+      ]
+    }
+  },
+  "market_status": {
+    "fg_spread": {
+      "status": "ready",
+      "model_file": "fg_spread_model.joblib"
+    },
+    "fg_total": {
+      "status": "ready",
+      "model_file": "fg_total_model.joblib"
+    },
+    "fg_moneyline": {
+      "status": "ready",
+      "model_file": "fg_moneyline_model.joblib"
+    },
+    "1h_spread": {
+      "status": "ready",
+      "model_file": "1h_spread_model.pkl"
+    },
+    "1h_total": {
+      "status": "ready",
+      "model_file": "1h_total_model.pkl"
+    },
+    "1h_moneyline": {
+      "status": "pending",
+      "model_file": null,
+      "note": "Needs training - run: python scripts/train_models.py --market 1h_moneyline"
+    },
+    "q1_spread": {
+      "status": "ready",
+      "model_file": "q1_spread_model.joblib"
+    },
+    "q1_total": {
+      "status": "ready",
+      "model_file": "q1_total_model.joblib"
+    },
+    "q1_moneyline": {
+      "status": "pending",
+      "model_file": null,
+      "note": "Needs training - run: python scripts/train_models.py --market q1_moneyline"
     }
   }
 }
