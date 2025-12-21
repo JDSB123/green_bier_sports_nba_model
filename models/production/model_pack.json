@@ -46,38 +46,6 @@
     "calibration": "isotonic",
     "source": "src/modeling/models.py (default model_type='logistic')"
   },
-  "files": {
-    "spreads_model.joblib": {
-      "sha256": "4EE4C94E7FA4DD1332D53E583895DEBE8052B2E4878BC1DE3FB288FAA408CA17",
-      "purpose": "Full Game Spread predictions",
-      "required": true
-    },
-    "totals_model.joblib": {
-      "sha256": "1F2D71D9E9ABB84451EE71930C24411E9B3D2785D42CEEC435EC03BA3D2F7EF8",
-      "purpose": "Full Game Total predictions",
-      "required": true
-    },
-    "first_half_spread_model.pkl": {
-      "sha256": "962757EB8CB8A1E6F15ED8084D3AE4539E0F227045F08440AD8036B61BAD2DAA",
-      "purpose": "First Half Spread predictions",
-      "required": true
-    },
-    "first_half_spread_features.pkl": {
-      "sha256": "177DC66ECC3DF2347D46ED577C002789D4B8A593E001AD3344A89FE4C38E4688",
-      "purpose": "First Half Spread feature columns",
-      "required": true
-    },
-    "first_half_total_model.pkl": {
-      "sha256": "D4856D0D3DA7BBB9AEB4A0AA3F33C636EBF03C9ADC7D3A8B081991D646E89CEE",
-      "purpose": "First Half Total predictions",
-      "required": true
-    },
-    "first_half_total_features.pkl": {
-      "sha256": "177DC66ECC3DF2347D46ED577C002789D4B8A593E001AD3344A89FE4C38E4688",
-      "purpose": "First Half Total feature columns",
-      "required": true
-    }
-  },
   "training_data": {
     "source": "data/processed/training_data.csv",
     "date_range": "2024-10-02 to 2025-12-16",
