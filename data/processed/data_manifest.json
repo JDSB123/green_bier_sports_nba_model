@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "created_at": "2025-12-21T00:00:00Z",
+  "git_commit": "876fafe19716ceea23dbf06a5933f383b82679cd",
+  "training_data": {
+    "file": "training_data.csv",
+    "sha256": "7ab7828fb2fab3ce6189a235166eda0d6112c1b26841be0e106732e4736889ce",
+    "rows": 3061,
+    "columns": 85,
+    "date_range": {
+      "start": "2024-10-22",
+      "end": "2025-12-20"
+    },
+    "seasons": ["2024-2025"],
+    "last_updated": "2025-12-20T20:41:00Z"
+  },
+  "data_sources": {
+    "game_outcomes": {
+      "source": "api-basketball",
+      "endpoint": "games",
+      "fields": ["home_score", "away_score", "quarter_scores"]
+    },
+    "betting_lines": {
+      "source": "the-odds-api",
+      "endpoint": "odds",
+      "markets": ["spreads", "totals", "h2h"],
+      "periods": ["full_game", "first_half", "first_quarter"]
+    },
+    "team_stats": {
+      "source": "derived",
+      "method": "rolling_averages",
+      "lookback": "season_to_date"
+    }
+  },
+  "feature_columns": {
+    "identifiers": ["game_id", "date", "season", "home_team", "away_team"],
+    "scores": ["home_score", "away_score", "home_q1", "home_q2", "home_q3", "home_q4", "away_q1", "away_q2", "away_q3", "away_q4"],
+    "lines": ["spread_line", "total_line", "1h_spread_line", "1h_total_line", "q1_spread_line", "q1_total_line"],
+    "labels": ["home_win", "spread_covered", "total_over", "1h_spread_covered", "1h_total_over", "q1_spread_covered", "q1_total_over"],
+    "features_fg": ["home_ppg", "home_papg", "home_avg_margin", "home_win_pct", "away_ppg", "away_papg", "away_avg_margin", "away_win_pct", "ppg_diff"],
+    "features_1h": ["home_ppg_1h", "home_papg_1h", "home_avg_margin_1h", "home_win_pct_1h", "away_ppg_1h", "away_papg_1h", "away_avg_margin_1h", "away_win_pct_1h"],
+    "features_q1": ["home_ppg_q1", "home_papg_q1", "home_avg_margin_q1", "home_win_pct_q1", "away_ppg_q1", "away_papg_q1", "away_avg_margin_q1", "away_win_pct_q1"],
+    "features_elo": ["home_elo", "away_elo", "elo_diff"],
+    "features_rest": ["home_rest_days", "away_rest_days", "home_b2b", "away_b2b", "rest_diff"]
+  },
+  "build_script": "scripts/build_fresh_training_data.py",
+  "validation": {
+    "method": "walk_forward",
+    "min_training_games": 80,
+    "no_future_leakage": true
+  },
+  "notes": "Training data built from live API sources. Walk-forward validation ensures no future data leakage."
+}

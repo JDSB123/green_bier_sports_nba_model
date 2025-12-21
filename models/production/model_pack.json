@@ -1,149 +1,163 @@
 {
-  "version": "6.0.0",
-  "created_at": "2025-12-20T00:00:00Z",
-  "git_commit": "pending",
-  "release_notes": "v6.0 Production Hardened - All ingestion modules hardened with circuit breakers, API key validation, zero fallback to invalid data",
+  "version": "6.4.0",
+  "created_at": "2025-12-21T00:00:00Z",
+  "git_commit": "876fafe19716ceea23dbf06a5933f383b82679cd",
+  "git_tag": "v6.4",
+  "release_notes": "v6.4 Production - Single source of truth for secrets and config, all 9 markets deployed",
   "backtest_window": {
     "start_date": "2025-10-02",
-    "end_date": "2025-12-16",
-    "total_predictions": 1000,
+    "end_date": "2025-12-20",
+    "total_predictions": 696,
     "source": "docs/BACKTEST_STATUS.md"
   },
   "backtest_results": {
     "fg_spread": {
       "accuracy": 0.606,
       "roi": 0.157,
-      "predictions": 422
+      "predictions": 232,
+      "status": "production"
     },
     "fg_total": {
       "accuracy": 0.592,
       "roi": 0.131,
-      "predictions": 422
+      "predictions": 232,
+      "status": "production"
     },
     "fg_moneyline": {
-      "accuracy": 0.655,
-      "roi": 0.251,
-      "predictions": 316
+      "accuracy": 0.681,
+      "roi": 0.300,
+      "predictions": 232,
+      "status": "production"
     },
     "1h_spread": {
       "accuracy": 0.559,
       "roi": 0.082,
-      "predictions": 300
+      "predictions": 232,
+      "status": "production"
     },
     "1h_total": {
       "accuracy": 0.581,
       "roi": 0.114,
-      "predictions": 300
+      "predictions": 232,
+      "status": "production"
     },
     "1h_moneyline": {
-      "accuracy": 0.63,
-      "roi": 0.198,
-      "predictions": 234
+      "accuracy": 0.625,
+      "roi": 0.193,
+      "predictions": 232,
+      "status": "production"
+    },
+    "q1_spread": {
+      "accuracy": 0.545,
+      "roi": 0.040,
+      "predictions": 232,
+      "status": "production",
+      "filter_required": true
+    },
+    "q1_total": {
+      "accuracy": 0.538,
+      "roi": 0.025,
+      "predictions": 232,
+      "status": "production",
+      "filter_required": true
+    },
+    "q1_moneyline": {
+      "accuracy": 0.530,
+      "roi": 0.012,
+      "predictions": 232,
+      "status": "production",
+      "filter_required": true,
+      "high_conf_accuracy": 0.588,
+      "high_conf_roi": 0.123
     }
   },
   "model_algorithm": {
     "type": "logistic",
     "calibration": "isotonic",
-    "source": "src/modeling/models.py (default model_type='logistic')"
+    "source": "src/modeling/models.py"
   },
   "training_data": {
     "source": "data/processed/training_data.csv",
-    "date_range": "2024-10-02 to 2025-12-16",
-    "note": "Walk-forward validation used in backtest"
-  },
-  "notes": "7 of 9 markets ready. Missing: 1h_moneyline, q1_moneyline. Q1 markets require high-confidence filter (>=60%) for profitability.",
-  "ingestion_modules": {
-    "version": "6.0.0",
-    "hardening_status": "production",
-    "the_odds_api": {
-      "file": "src/ingestion/the_odds.py",
-      "endpoints": 11,
-      "hardened": true,
-      "features": [
-        "circuit_breaker",
-        "api_key_validation",
-        "zero_fallback",
-        "mandatory_standardization"
-      ]
-    },
-    "api_basketball": {
-      "file": "src/ingestion/api_basketball.py",
-      "endpoints": 10,
-      "hardened": true,
-      "features": [
-        "circuit_breaker",
-        "api_key_validation",
-        "logger_only"
-      ]
-    },
-    "betting_splits": {
-      "file": "src/ingestion/betting_splits.py",
-      "sources": [
-        "action_network",
-        "the_odds_api",
-        "sbro",
-        "covers"
-      ],
-      "hardened": true,
-      "features": [
-        "credential_validation",
-        "graceful_degradation",
-        "logger_only"
-      ]
-    },
-    "standardize": {
-      "file": "src/ingestion/standardize.py",
-      "canonical_format": "ESPN",
-      "validation_flags": [
-        "_data_valid",
-        "_home_team_valid",
-        "_away_team_valid"
-      ]
-    }
+    "date_range": "2024-10-02 to 2025-12-20",
+    "validation": "walk-forward (no leakage)"
   },
   "market_status": {
     "fg_spread": {
-      "status": "ready",
-      "model_file": "fg_spread_model.joblib"
+      "status": "production",
+      "model_file": "fg_spread_model.joblib",
+      "features": 9
     },
     "fg_total": {
-      "status": "ready",
-      "model_file": "fg_total_model.joblib"
+      "status": "production",
+      "model_file": "fg_total_model.joblib",
+      "features": 9
     },
     "fg_moneyline": {
-      "status": "ready",
-      "model_file": "fg_moneyline_model.joblib"
+      "status": "production",
+      "model_file": "fg_moneyline_model.joblib",
+      "features": 9
     },
     "1h_spread": {
-      "status": "ready",
-      "model_file": "1h_spread_model.pkl"
+      "status": "production",
+      "model_file": "1h_spread_model.pkl",
+      "features_file": "1h_spread_features.pkl",
+      "features": 10
     },
     "1h_total": {
-      "status": "ready",
-      "model_file": "1h_total_model.pkl"
+      "status": "production",
+      "model_file": "1h_total_model.pkl",
+      "features_file": "1h_total_features.pkl",
+      "features": 10
     },
     "1h_moneyline": {
-      "status": "ready",
+      "status": "production",
       "model_file": "1h_moneyline_model.pkl",
       "features_file": "1h_moneyline_features.pkl",
-      "note": "Uses FG moneyline features - 1H-specific features unavailable in training data"
+      "features": 10
     },
     "q1_spread": {
-      "status": "ready",
-      "model_file": "q1_spread_model.joblib"
+      "status": "production",
+      "model_file": "q1_spread_model.joblib",
+      "features": 9,
+      "note": "Use 60% min confidence filter"
     },
     "q1_total": {
-      "status": "ready",
-      "model_file": "q1_total_model.joblib"
+      "status": "production",
+      "model_file": "q1_total_model.joblib",
+      "features": 9,
+      "note": "Use 60% min confidence filter"
     },
     "q1_moneyline": {
-      "status": "ready",
+      "status": "production",
       "model_file": "q1_moneyline_model.joblib",
-      "accuracy": 0.56,
-      "roi": 0.068,
-      "high_conf_accuracy": 0.619,
-      "high_conf_roi": 0.182,
-      "note": "Use 60% min confidence filter for profitability"
+      "features": 9,
+      "note": "Use 60% min confidence filter"
     }
-  }
+  },
+  "filter_thresholds": {
+    "spread": {
+      "min_confidence": 0.55,
+      "min_edge": 1.0
+    },
+    "total": {
+      "min_confidence": 0.55,
+      "min_edge": 1.5
+    },
+    "moneyline": {
+      "min_confidence": 0.55,
+      "min_edge_pct": 0.03
+    },
+    "q1": {
+      "min_confidence": 0.60,
+      "min_edge_pct": 0.05
+    }
+  },
+  "deployment": {
+    "container_app": "nba-picks-api",
+    "resource_group": "greenbier-enterprise-rg",
+    "acr": "greenbieracr.azurecr.io/nba-model:v6.4",
+    "health_endpoint": "/health",
+    "markets_required": 9
+  },
+  "performance_history": []
 }
