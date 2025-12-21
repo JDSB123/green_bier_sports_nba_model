@@ -14,6 +14,76 @@ from src.ingestion.standardize import standardize_game_data
 logger = get_logger(__name__)
 
 
+# =============================================================================
+# FOUNDATION ENDPOINTS
+# =============================================================================
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+)
+async def fetch_sports(
+    all_sports: bool = False,
+) -> List[Dict[str, Any]]:
+    """
+    Fetch list of available sports from The Odds API.
+
+    This is a FREE endpoint (no quota cost) useful for:
+    - Validating sport keys before making other API calls
+    - Discovering available sports and leagues
+    - Checking if a sport is in-season
+
+    Args:
+        all_sports: If True, include out-of-season sports
+
+    Returns:
+        List of sport dictionaries with keys:
+        - key: Sport identifier (e.g., "basketball_nba")
+        - group: Sport group (e.g., "Basketball")
+        - title: Display name (e.g., "NBA")
+        - description: Full description
+        - active: Whether currently in-season
+        - has_outrights: Whether futures/outrights available
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the API request fails
+    """
+    logger.info(f"Fetching sports list (all={all_sports})")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
+    params = {"apiKey": settings.the_odds_api_key}
+    if all_sports:
+        params["all"] = "true"
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/sports",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
+        logger.info(f"Successfully fetched {len(data)} sports")
+        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch sports from The Odds API: {e}")
+        raise
+
+
+# =============================================================================
+# CORE ODDS ENDPOINTS
+# =============================================================================
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=1, max=8),
@@ -210,11 +280,98 @@ async def fetch_event_odds(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=1, max=8),
 )
+async def fetch_event_markets(
+    event_id: str,
+    sport: str = "basketball_nba",
+    regions: str = "us",
+) -> Dict[str, Any]:
+    """
+    Fetch available market keys for each bookmaker for a specific event.
+
+    This endpoint shows which markets each bookmaker is currently offering.
+    Useful for:
+    - Discovering available player props
+    - Finding alternate lines
+    - Checking which bookmakers have specific markets
+
+    Args:
+        event_id: The event ID from The Odds API
+        sport: Sport identifier
+        regions: Regions to check (determines which bookmakers)
+
+    Returns:
+        Event dictionary with bookmakers array, each containing:
+        - key: Bookmaker identifier
+        - title: Bookmaker name
+        - markets: List of available market keys
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set or event has invalid team names
+        httpx.HTTPStatusError: If the API request fails
+    """
+    logger.info(f"Fetching available markets for event {event_id}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
+    params = {
+        "apiKey": settings.the_odds_api_key,
+        "regions": regions,
+        "dateFormat": "iso",
+    }
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/sports/{sport}/events/{event_id}/markets",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
+        bookmakers = data.get("bookmakers", [])
+        total_markets = sum(len(bm.get("markets", [])) for bm in bookmakers)
+        logger.info(f"Fetched {total_markets} markets from {len(bookmakers)} bookmakers for event {event_id}")
+    except Exception as e:
+        logger.error(f"Failed to fetch event markets from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    try:
+        standardized = standardize_game_data(data, source="the_odds")
+        if not standardized.get("_data_valid", False):
+            raise ValueError(
+                f"Event {event_id} has invalid team names: "
+                f"home='{standardized.get('home_team', 'N/A')}', "
+                f"away='{standardized.get('away_team', 'N/A')}'"
+            )
+        return standardized
+    except Exception as e:
+        logger.error(f"Error standardizing event markets for {event_id}: {e}")
+        raise
+
+
+# =============================================================================
+# EVENTS & SCORES ENDPOINTS
+# =============================================================================
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+)
 async def fetch_events(
     sport: str = "basketball_nba",
 ) -> List[Dict[str, Any]]:
     """
     Fetch all upcoming events (games) with their IDs.
+
+    This is a FREE endpoint (no quota cost).
 
     Use this to get event IDs for fetching event-specific odds
     (e.g., first half markets, alternate lines).
@@ -569,6 +726,100 @@ async def fetch_historical_events(
     return data
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+)
+async def fetch_historical_event_odds(
+    event_id: str,
+    date: str,
+    sport: str = "basketball_nba",
+    regions: str = "us",
+    markets: str = "h2h,spreads,totals",
+) -> Dict[str, Any]:
+    """
+    Fetch historical odds for a specific event at a given timestamp.
+
+    NOTE: This endpoint requires a paid plan and costs 10 credits per region per market.
+    Player props are available for events after May 2023.
+
+    Team name standardization is MANDATORY and always performed.
+
+    Args:
+        event_id: The event ID from The Odds API
+        date: ISO format date string (e.g., "2025-12-01T12:00:00Z")
+        sport: Sport identifier
+        regions: Regions to fetch odds for
+        markets: Markets to fetch
+
+    Returns:
+        Dictionary with historical odds data including:
+        - timestamp: The snapshot timestamp
+        - previous_timestamp: Previous available snapshot
+        - next_timestamp: Next available snapshot
+        - data: Single event with odds at that timestamp
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set or event has invalid team names
+        httpx.HTTPStatusError: If the request fails (403 = not enabled)
+    """
+    logger.info(f"Fetching historical odds for event {event_id} at {date}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
+    params = {
+        "apiKey": settings.the_odds_api_key,
+        "regions": regions,
+        "markets": markets,
+        "date": date,
+        "oddsFormat": "american",
+        "dateFormat": "iso",
+    }
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/historical/sports/{sport}/events/{event_id}/odds",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
+        event_data = data.get("data", {})
+        logger.info(f"Successfully fetched historical odds for event {event_id}")
+    except Exception as e:
+        logger.error(f"Failed to fetch historical event odds from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    if event_data:
+        try:
+            standardized = standardize_game_data(event_data, source="the_odds")
+            if not standardized.get("_data_valid", False):
+                raise ValueError(
+                    f"Event {event_id} has invalid team names: "
+                    f"home='{standardized.get('home_team', 'N/A')}', "
+                    f"away='{standardized.get('away_team', 'N/A')}'"
+                )
+            data["data"] = standardized
+        except Exception as e:
+            logger.error(f"Error standardizing historical event odds for {event_id}: {e}")
+            raise
+
+    return data
+
+
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
 async def save_odds(
     data: list[Dict[str, Any]],
     out_dir: str | None = None,
@@ -606,8 +857,15 @@ async def fetch_betting_splits(
     """
     Fetch betting splits (public percentages) from The Odds API.
 
-    NOTE: This endpoint requires a paid plan (Group 2 or higher).
+    WARNING: This endpoint (/sports/{sport}/betting-splits) is NOT documented
+    in the official API documentation. It may be:
+    - A beta/experimental endpoint
+    - A deprecated endpoint
+    - Not available for all API plans
+
     Returns empty list if 403 (not enabled for your API key).
+    Consider using fetch_odds with betting percentage data from bookmakers
+    as an alternative if this endpoint is unavailable.
 
     Team name standardization is MANDATORY and always performed.
 
