@@ -44,8 +44,8 @@ $kvBasketVal = az keyvault secret show --vault-name $KeyVaultName --name API-BAS
 if (-not $kvBasketVal) { Write-Error "Secret API-BASKETBALL-KEY not found or empty in Key Vault $KeyVaultName"; exit 1 }
 
 Write-Host "Setting app secrets and environment variables..."
-az containerapp secret set -n $AppName -g $ResourceGroup --secrets THE_ODDS_API_KEY=$kvOddsVal API_BASKETBALL_KEY=$kvBasketVal
-az containerapp update -n $AppName -g $ResourceGroup --set-env-vars THE_ODDS_API_KEY=secretref:THE_ODDS_API_KEY API_BASKETBALL_KEY=secretref:API_BASKETBALL_KEY
+az containerapp secret set -n $AppName -g $ResourceGroup --secrets the-odds-api-key=$kvOddsVal api-basketball-key=$kvBasketVal
+az containerapp update -n $AppName -g $ResourceGroup --set-env-vars THE_ODDS_API_KEY=secretref:the-odds-api-key API_BASKETBALL_KEY=secretref:api-basketball-key
 
 Write-Host "Updating app image..."
 az containerapp update -n $AppName -g $ResourceGroup --image $Image
