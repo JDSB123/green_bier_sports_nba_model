@@ -85,6 +85,9 @@ class PeriodPredictor:
         spread_line: float,
     ) -> Dict[str, Any]:
         """Predict spread outcome for this period."""
+        if self.spread_model is None:
+            raise ModelNotFoundError(f"Spread model for {self.period} not loaded")
+
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
@@ -137,6 +140,9 @@ class PeriodPredictor:
         total_line: float,
     ) -> Dict[str, Any]:
         """Predict total outcome for this period."""
+        if self.total_model is None:
+            raise ModelNotFoundError(f"Total model for {self.period} not loaded")
+
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
@@ -190,6 +196,9 @@ class PeriodPredictor:
         away_ml_odds: int,
     ) -> Dict[str, Any]:
         """Predict moneyline outcome for this period."""
+        if self.moneyline_model is None:
+            raise ModelNotFoundError(f"Moneyline model for {self.period} not loaded")
+
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
@@ -362,15 +371,16 @@ class UnifiedPredictionEngine:
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
 
-        # Verify all 9 models loaded
+        # Verify loaded models
         loaded_count = sum(1 for v in self.loaded_models.values() if v)
         if loaded_count < 9:
             missing = [k for k, v in self.loaded_models.items() if not v]
-            raise ModelNotFoundError(
-                f"FATAL: Only {loaded_count}/9 models loaded. Missing: {missing}\n"
-                f"Run: python scripts/train_all_models.py"
+            logger.warning(
+                f"PARTIAL LOAD: Only {loaded_count}/9 models loaded. Missing: {missing}\n"
+                f"Some predictions will be skipped."
             )
-        logger.info(f"SUCCESS: All 9/9 models loaded - STRICT MODE ACTIVE")
+        else:
+            logger.info(f"SUCCESS: All 9/9 models loaded")
 
     def _load_period_models(
         self,
@@ -405,19 +415,13 @@ class UnifiedPredictionEngine:
             self.loaded_models[ml_key] = False
             ml_model, ml_features = None, []
 
-        # STRICT MODE: ALL 3 models required per period - NO FALLBACKS
+        # STRICT MODE DISABLED: Allow partial loading
         if spread_model is None:
-            raise ModelNotFoundError(
-                f"[{period}] MISSING spread model. Train with: python scripts/train_all_models.py --markets {period}_spread"
-            )
+            logger.warning(f"[{period}] MISSING spread model. Predictions for this market will fail.")
         if total_model is None:
-            raise ModelNotFoundError(
-                f"[{period}] MISSING total model. Train with: python scripts/train_all_models.py --markets {period}_total"
-            )
+            logger.warning(f"[{period}] MISSING total model. Predictions for this market will fail.")
         if ml_model is None:
-            raise ModelNotFoundError(
-                f"[{period}] MISSING moneyline model. Train with: python scripts/train_all_models.py --markets {period}_moneyline"
-            )
+            logger.warning(f"[{period}] MISSING moneyline model. Predictions for this market will fail.")
 
         return (
             spread_model, spread_features,
@@ -443,8 +447,22 @@ class UnifiedPredictionEngine:
 
         # Handle .pkl files (1H models use separate model and features files)
         if model_path.suffix == ".pkl":
-            with open(model_path, "rb") as f:
-                model = pickle.load(f)
+            model = None
+            try:
+                with open(model_path, "rb") as f:
+                    model = pickle.load(f)
+            except Exception as e:
+                logger.warning(f"pickle.load failed for {model_path}: {e}")
+
+            # Check if the loaded object is a valid model (has predict methods)
+            # If not, it might be a joblib file saved with .pkl extension (common in this repo)
+            if not (hasattr(model, "predict") or hasattr(model, "predict_proba")):
+                logger.info(f"Object loaded from {model_path} via pickle does not look like a model. Trying joblib...")
+                try:
+                    model = joblib.load(model_path)
+                    logger.info(f"Successfully loaded {model_path} using joblib fallback.")
+                except Exception as e:
+                    logger.warning(f"joblib fallback failed for {model_path}: {e}")
 
             # Load features from separate file if specified
             features = []
@@ -459,6 +477,13 @@ class UnifiedPredictionEngine:
             else:
                 features = config.get("features", [])
 
+            # AUTO-CORRECTION: Use model's internal feature names if available
+            if hasattr(model, "feature_names_in_"):
+                model_features = model.feature_names_in_.tolist()
+                if set(model_features) != set(features):
+                    logger.warning(f"Feature mismatch for {model_key}. Using model's internal features ({len(model_features)}) instead of config/file ({len(features)}).")
+                features = model_features
+
             logger.info(f"Loaded {model_key} (pkl) with {len(features)} features")
             return model, features
 
@@ -471,6 +496,13 @@ class UnifiedPredictionEngine:
         if model is None:
             raise ValueError(f"Invalid model file: {model_path}")
 
+        # AUTO-CORRECTION: Use model's internal feature names if available
+        if hasattr(model, "feature_names_in_"):
+            model_features = model.feature_names_in_.tolist()
+            if set(model_features) != set(features):
+                logger.warning(f"Feature mismatch for {model_key}. Using model's internal features ({len(model_features)}) instead of config/file ({len(features)}).")
+            features = model_features
+
         logger.info(f"Loaded {model_key} with {len(features)} features")
         return model, features
 
@@ -479,28 +511,40 @@ class UnifiedPredictionEngine:
         # These are used by old code paths
         if self.fg_predictor:
             # Create legacy SpreadPredictor
-            self.spread_predictor = SpreadPredictor(
-                fg_model=self.fg_predictor.spread_model,
-                fg_feature_columns=self.fg_predictor.spread_features,
-                fh_model=self.h1_predictor.spread_model if self.h1_predictor else self.fg_predictor.spread_model,
-                fh_feature_columns=self.h1_predictor.spread_features if self.h1_predictor else self.fg_predictor.spread_features,
-            )
+            if self.fg_predictor.spread_model:
+                try:
+                    self.spread_predictor = SpreadPredictor(
+                        fg_model=self.fg_predictor.spread_model,
+                        fg_feature_columns=self.fg_predictor.spread_features,
+                        fh_model=self.h1_predictor.spread_model if (self.h1_predictor and self.h1_predictor.spread_model) else self.fg_predictor.spread_model,
+                        fh_feature_columns=self.h1_predictor.spread_features if (self.h1_predictor and self.h1_predictor.spread_model) else self.fg_predictor.spread_features,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to init legacy SpreadPredictor: {e}")
 
             # Create legacy TotalPredictor
-            self.total_predictor = TotalPredictor(
-                fg_model=self.fg_predictor.total_model,
-                fg_feature_columns=self.fg_predictor.total_features,
-                fh_model=self.h1_predictor.total_model if self.h1_predictor else self.fg_predictor.total_model,
-                fh_feature_columns=self.h1_predictor.total_features if self.h1_predictor else self.fg_predictor.total_features,
-            )
+            if self.fg_predictor.total_model:
+                try:
+                    self.total_predictor = TotalPredictor(
+                        fg_model=self.fg_predictor.total_model,
+                        fg_feature_columns=self.fg_predictor.total_features,
+                        fh_model=self.h1_predictor.total_model if (self.h1_predictor and self.h1_predictor.total_model) else self.fg_predictor.total_model,
+                        fh_feature_columns=self.h1_predictor.total_features if (self.h1_predictor and self.h1_predictor.total_model) else self.fg_predictor.total_features,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to init legacy TotalPredictor: {e}")
 
             # Create legacy MoneylinePredictor
-            self.moneyline_predictor = MoneylinePredictor(
-                model=self.fg_predictor.moneyline_model,
-                feature_columns=self.fg_predictor.moneyline_features,
-                fh_model=self.h1_predictor.spread_model if self.h1_predictor else self.fg_predictor.spread_model,
-                fh_feature_columns=self.h1_predictor.spread_features if self.h1_predictor else self.fg_predictor.spread_features,
-            )
+            if self.fg_predictor.moneyline_model:
+                try:
+                    self.moneyline_predictor = MoneylinePredictor(
+                        model=self.fg_predictor.moneyline_model,
+                        feature_columns=self.fg_predictor.moneyline_features,
+                        fh_model=self.h1_predictor.spread_model if (self.h1_predictor and self.h1_predictor.spread_model) else self.fg_predictor.spread_model,
+                        fh_feature_columns=self.h1_predictor.spread_features if (self.h1_predictor and self.h1_predictor.spread_model) else self.fg_predictor.spread_features,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to init legacy MoneylinePredictor: {e}")
 
     def predict_quarter(
         self,

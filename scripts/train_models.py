@@ -46,6 +46,10 @@ import sys
 import random
 import logging
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 import numpy as np
 

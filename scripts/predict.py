@@ -6,6 +6,10 @@ Production-ready predictor with smart filtering for all markets:
 - First Half: Spreads, Totals, Moneyline
 - First Quarter: Spreads, Totals, Moneyline
 """
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import asyncio
 import argparse
 import random
@@ -27,7 +31,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 DATA_DIR = PROJECT_ROOT / "data"
-MODELS_DIR = DATA_DIR / "processed" / "models"
+MODELS_DIR = PROJECT_ROOT / "models" / "production"
 
 from src.config import settings
 from src.ingestion import the_odds
@@ -483,8 +487,8 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
                 features,
                 fg_spread_line=lines["fg_spread"],
                 fg_total_line=lines["fg_total"],
-                fg_home_ml_odds=lines["fg_home_ml"],
-                fg_away_ml_odds=lines["fg_away_ml"],
+                home_ml_odds=lines["fg_home_ml"],
+                away_ml_odds=lines["fg_away_ml"],
                 fh_spread_line=lines["fh_spread"],
                 fh_total_line=lines["fh_total"],
                 fh_home_ml_odds=lines["fh_home_ml"],
@@ -557,118 +561,137 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
         prefix = "q1"
 
     # Spread
-    spread_pred = preds["spread"]
-    print(f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
-    print(f"           Vegas line: {lines[f'{prefix}_spread'] or 'N/A'}")
-    print(f"           Bet: {spread_pred['bet_side']} ({spread_pred['confidence']:.1%})")
-    if spread_pred['edge'] is not None:
-        print(f"           Edge: {spread_pred['edge']:+.1f} pts")
-    
-    # Generate rationale
-    if spread_pred['edge'] is not None:
-        rat = generate_rationale(
-            play_type=f"{market_type.upper()}_SPREAD",
-            pick=spread_pred['bet_side'],
-            line=lines[f'{prefix}_spread'] or 0,
-            odds=-110, # default
-            edge=spread_pred['edge'],
-            model_prob=spread_pred['confidence'],
-            features=features,
-            betting_splits=splits,
-            home_team=home_team,
-            away_team=away_team,
-            model_prediction=spread_pred['predicted_margin'],
-            market_line=lines[f'{prefix}_spread'] or 0
-        )
-        spread_pred['rationale'] = rat
-        print(f"           Rationale: {rat}")
+    if "spread" in preds:
+        spread_pred = preds["spread"]
+        print(f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
+        print(f"           Vegas line: {lines[f'{prefix}_spread'] or 'N/A'}")
+        print(f"           Bet: {spread_pred['bet_side']} ({spread_pred['confidence']:.1%})")
+        if spread_pred['edge'] is not None:
+            print(f"           Edge: {spread_pred['edge']:+.1f} pts")
+        
+        # Generate rationale
+        if spread_pred['edge'] is not None:
+            rat = generate_rationale(
+                play_type=f"{market_type.upper()}_SPREAD",
+                pick=spread_pred['bet_side'],
+                line=lines[f'{prefix}_spread'] or 0,
+                odds=-110, # default
+                edge=spread_pred['edge'],
+                model_prob=spread_pred['confidence'],
+                features=features,
+                betting_splits=splits,
+                home_team=home_team,
+                away_team=away_team,
+                model_prediction=spread_pred['predicted_margin'],
+                market_line=lines[f'{prefix}_spread'] or 0
+            )
+            spread_pred['rationale'] = rat
+            print(f"           Rationale: {rat}")
 
-    print(f"           {'[PLAY]' if spread_pred['passes_filter'] else '[SKIP]'}"
-          f"{'' if spread_pred['passes_filter'] else ': ' + spread_pred['filter_reason']}")
+        print(f"           {'[PLAY]' if spread_pred['passes_filter'] else '[SKIP]'}"
+              f"{'' if spread_pred['passes_filter'] else ': ' + spread_pred['filter_reason']}")
+    else:
+        print(f"  [SPREAD] Model not loaded")
 
     # Total
-    total_pred = preds["total"]
-    print(f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
-    print(f"          Vegas line: {lines[f'{prefix}_total'] or 'N/A'}")
-    print(f"          Bet: {total_pred['bet_side']} ({total_pred['confidence']:.1%})")
-    if total_pred['edge'] is not None:
-        print(f"          Edge: {total_pred['edge']:+.1f} pts")
-    
-    if total_pred['edge'] is not None:
-        rat = generate_rationale(
-            play_type=f"{market_type.upper()}_TOTAL",
-            pick=total_pred['bet_side'],
-            line=lines[f'{prefix}_total'] or 0,
-            odds=-110,
-            edge=total_pred['edge'],
-            model_prob=total_pred['confidence'],
-            features=features,
-            betting_splits=splits,
-            home_team=home_team,
-            away_team=away_team,
-            model_prediction=total_pred['predicted_total'],
-            market_line=lines[f'{prefix}_total'] or 0
-        )
-        total_pred['rationale'] = rat
-        print(f"          Rationale: {rat}")
+    if "total" in preds:
+        total_pred = preds["total"]
+        print(f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
+        print(f"          Vegas line: {lines[f'{prefix}_total'] or 'N/A'}")
+        print(f"          Bet: {total_pred['bet_side']} ({total_pred['confidence']:.1%})")
+        if total_pred['edge'] is not None:
+            print(f"          Edge: {total_pred['edge']:+.1f} pts")
+        
+        if total_pred['edge'] is not None:
+            rat = generate_rationale(
+                play_type=f"{market_type.upper()}_TOTAL",
+                pick=total_pred['bet_side'],
+                line=lines[f'{prefix}_total'] or 0,
+                odds=-110,
+                edge=total_pred['edge'],
+                model_prob=total_pred['confidence'],
+                features=features,
+                betting_splits=splits,
+                home_team=home_team,
+                away_team=away_team,
+                model_prediction=total_pred['predicted_total'],
+                market_line=lines[f'{prefix}_total'] or 0
+            )
+            total_pred['rationale'] = rat
+            print(f"          Rationale: {rat}")
 
-    print(f"          {'[PLAY]' if total_pred['passes_filter'] else '[SKIP]'}"
-          f"{'' if total_pred['passes_filter'] else ': ' + total_pred['filter_reason']}")
+        print(f"          {'[PLAY]' if total_pred['passes_filter'] else '[SKIP]'}"
+              f"{'' if total_pred['passes_filter'] else ': ' + total_pred['filter_reason']}")
+    else:
+        print(f"  [TOTAL] Model not loaded")
 
     # Moneyline
-    ml_pred = preds["moneyline"]
-    print(f"  [ML] Predicted winner: {ml_pred['predicted_winner']} ({ml_pred['confidence']:.1%})")
-    print(f"       Home odds: {lines[f'{prefix}_home_ml'] or 'N/A'}, Away odds: {lines[f'{prefix}_away_ml'] or 'N/A'}")
-    if ml_pred['recommended_bet']:
-        print(f"       Bet: {ml_pred['recommended_bet']}")
-        edge = ml_pred['home_edge'] if ml_pred['recommended_bet'] == 'home' else ml_pred['away_edge']
-        if edge is not None:
-            print(f"       Value edge: {edge:+.1%}")
-            rat = f"[MODEL] Model assigns {ml_pred['confidence']:.1%} to {ml_pred['predicted_winner']}."
-            if edge >= 0.05:
-                rat += f" High value edge of {edge:+.1%} found at market odds."
-            ml_pred['rationale'] = rat
-            print(f"       Rationale: {rat}")
+    if "moneyline" in preds:
+        ml_pred = preds["moneyline"]
+        if not ml_pred:
+             print(f"  [ML] Prediction failed")
+        else:
+            predicted_winner = ml_pred.get('predicted_winner', 'Unknown')
+            confidence = ml_pred.get('confidence', 0)
+            
+            print(f"  [ML] Predicted winner: {predicted_winner} ({confidence:.1%})")
+            print(f"       Home odds: {lines[f'{prefix}_home_ml'] or 'N/A'}, Away odds: {lines[f'{prefix}_away_ml'] or 'N/A'}")
+            
+            recommended_bet = ml_pred.get('recommended_bet')
+            if recommended_bet:
+                print(f"       Bet: {recommended_bet}")
+                edge = ml_pred.get('home_edge') if recommended_bet == 'home' else ml_pred.get('away_edge')
+                if edge is not None:
+                    print(f"       Value edge: {edge:+.1%}")
+                    rat = f"[MODEL] Model assigns {confidence:.1%} to {predicted_winner}."
+                    if edge >= 0.05:
+                        rat += f" High value edge of {edge:+.1%} found at market odds."
+                    ml_pred['rationale'] = rat
+                    print(f"       Rationale: {rat}")
 
-    print(f"       {'[PLAY]' if ml_pred['passes_filter'] else '[SKIP]'}"
-          f"{'' if ml_pred['passes_filter'] else ': ' + ml_pred['filter_reason']}")
+            passes_filter = ml_pred.get('passes_filter', False)
+            filter_reason = ml_pred.get('filter_reason', 'Unknown')
+            print(f"       {'[PLAY]' if passes_filter else '[SKIP]'}"
+                  f"{'' if passes_filter else ': ' + str(filter_reason)}")
+    else:
+        print(f"  [ML] Model not loaded")
 
 
 def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
     """Format predictions for CSV output."""
-    spread_pred = preds["spread"]
-    total_pred = preds["total"]
-    ml_pred = preds["moneyline"]
+    spread_pred = preds.get("spread", {})
+    total_pred = preds.get("total", {})
+    ml_pred = preds.get("moneyline", {})
 
     return {
         # Spread
-        f"{prefix}_spread_line": lines[f"{prefix}_spread"],
-        f"{prefix}_spread_pred_margin": round(spread_pred['predicted_margin'], 1),
-        f"{prefix}_spread_edge": round(spread_pred['edge'], 1) if spread_pred['edge'] else None,
-        f"{prefix}_spread_bet_side": spread_pred['bet_side'],
-        f"{prefix}_spread_confidence": round(spread_pred['confidence'], 3),
-        f"{prefix}_spread_passes_filter": spread_pred['passes_filter'],
-        f"{prefix}_spread_filter_reason": spread_pred['filter_reason'] or "",
+        f"{prefix}_spread_line": lines.get(f"{prefix}_spread"),
+        f"{prefix}_spread_pred_margin": round(spread_pred.get('predicted_margin', 0), 1) if spread_pred else None,
+        f"{prefix}_spread_edge": round(spread_pred.get('edge', 0), 1) if spread_pred and spread_pred.get('edge') else None,
+        f"{prefix}_spread_bet_side": spread_pred.get('bet_side'),
+        f"{prefix}_spread_confidence": round(spread_pred.get('confidence', 0), 3) if spread_pred else None,
+        f"{prefix}_spread_passes_filter": spread_pred.get('passes_filter', False),
+        f"{prefix}_spread_filter_reason": spread_pred.get('filter_reason', "") or "",
         f"{prefix}_spread_rationale": spread_pred.get('rationale', ""),
         # Total
-        f"{prefix}_total_line": lines[f"{prefix}_total"],
-        f"{prefix}_total_pred": round(total_pred['predicted_total'], 1),
-        f"{prefix}_total_edge": round(total_pred['edge'], 1) if total_pred['edge'] else None,
-        f"{prefix}_total_bet_side": total_pred['bet_side'],
-        f"{prefix}_total_confidence": round(total_pred['confidence'], 3),
-        f"{prefix}_total_passes_filter": total_pred['passes_filter'],
-        f"{prefix}_total_filter_reason": total_pred['filter_reason'] or "",
+        f"{prefix}_total_line": lines.get(f"{prefix}_total"),
+        f"{prefix}_total_pred": round(total_pred.get('predicted_total', 0), 1) if total_pred else None,
+        f"{prefix}_total_edge": round(total_pred.get('edge', 0), 1) if total_pred and total_pred.get('edge') else None,
+        f"{prefix}_total_bet_side": total_pred.get('bet_side'),
+        f"{prefix}_total_confidence": round(total_pred.get('confidence', 0), 3) if total_pred else None,
+        f"{prefix}_total_passes_filter": total_pred.get('passes_filter', False),
+        f"{prefix}_total_filter_reason": total_pred.get('filter_reason', "") or "",
         f"{prefix}_total_rationale": total_pred.get('rationale', ""),
         # Moneyline
-        f"{prefix}_ml_home_odds": lines[f"{prefix}_home_ml"],
-        f"{prefix}_ml_away_odds": lines[f"{prefix}_away_ml"],
-        f"{prefix}_ml_predicted_winner": ml_pred['predicted_winner'],
-        f"{prefix}_ml_recommended_bet": ml_pred['recommended_bet'],
-        f"{prefix}_ml_confidence": round(ml_pred['confidence'], 3),
-        f"{prefix}_ml_home_edge": round(ml_pred['home_edge'], 3) if ml_pred['home_edge'] else None,
-        f"{prefix}_ml_away_edge": round(ml_pred['away_edge'], 3) if ml_pred['away_edge'] else None,
-        f"{prefix}_ml_passes_filter": ml_pred['passes_filter'],
-        f"{prefix}_ml_filter_reason": ml_pred['filter_reason'] or "",
+        f"{prefix}_ml_home_odds": lines.get(f"{prefix}_home_ml"),
+        f"{prefix}_ml_away_odds": lines.get(f"{prefix}_away_ml"),
+        f"{prefix}_ml_predicted_winner": ml_pred.get('predicted_winner'),
+        f"{prefix}_ml_recommended_bet": ml_pred.get('recommended_bet'),
+        f"{prefix}_ml_confidence": round(ml_pred.get('confidence', 0), 3) if ml_pred else None,
+        f"{prefix}_ml_home_edge": round(ml_pred.get('home_edge', 0), 3) if ml_pred and ml_pred.get('home_edge') else None,
+        f"{prefix}_ml_away_edge": round(ml_pred.get('away_edge', 0), 3) if ml_pred and ml_pred.get('away_edge') else None,
+        f"{prefix}_ml_passes_filter": ml_pred.get('passes_filter', False),
+        f"{prefix}_ml_filter_reason": ml_pred.get('filter_reason', "") or "",
         f"{prefix}_ml_rationale": ml_pred.get('rationale', ""),
     }
 
@@ -1132,7 +1155,8 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                 lines.append(f"      [PLAY] {row['fg_spread_bet_side']} {row['fg_spread_line']:+.1f} (-110)")
             else:
                 lines.append(f"      [SKIP] {row.get('fg_spread_filter_reason', 'Filtered')}")
-            lines.append(f"      Win Probability: {row['fg_spread_confidence']:.1%} | Confidence: {row['fg_spread_confidence']:.1%}")
+            if pd.notna(row.get('fg_spread_confidence')):
+                lines.append(f"      Win Probability: {row['fg_spread_confidence']:.1%} | Confidence: {row['fg_spread_confidence']:.1%}")
             if row.get('fg_spread_rationale'):
                 lines.append(f"      Rationale: {row['fg_spread_rationale']}")
         else:
@@ -1151,7 +1175,8 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                 lines.append(f"      [PLAY] {row['fg_total_bet_side']} {row['fg_total_line']:.1f} (-110)")
             else:
                 lines.append(f"      [SKIP] {row.get('fg_total_filter_reason', 'Filtered')}")
-            lines.append(f"      Probability: {row['fg_total_confidence']:.1%}")
+            if pd.notna(row.get('fg_total_confidence')):
+                lines.append(f"      Probability: {row['fg_total_confidence']:.1%}")
             if row.get('fg_total_rationale'):
                 lines.append(f"      Rationale: {row['fg_total_rationale']}")
         else:
@@ -1171,7 +1196,8 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                 lines.append(f"      [PLAY] {bet.capitalize()} ({home_odds if bet == 'home' else away_odds:+d})")
                 if pd.notna(edge):
                     lines.append(f"      Value Edge: {edge:+.1%}")
-            lines.append(f"      Confidence: {row['fg_ml_confidence']:.1%}")
+            if pd.notna(row.get('fg_ml_confidence')):
+                lines.append(f"      Confidence: {row['fg_ml_confidence']:.1%}")
             if row.get('fg_ml_rationale'):
                 lines.append(f"      Rationale: {row['fg_ml_rationale']}")
         else:

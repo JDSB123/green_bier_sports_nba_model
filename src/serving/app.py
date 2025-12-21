@@ -186,7 +186,7 @@ async def lifespan(app: FastAPI):
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
     picks_dir.mkdir(parents=True, exist_ok=True)
-    app.state.tracker = PickTracker(storage_path=str(picks_dir / "tracked_picks.json"))
+    app.state.tracker = PickTracker(tracking_dir=picks_dir)
     logger.info(f"Pick tracker initialized at {picks_dir}")
 
     # Log model info
@@ -573,7 +573,6 @@ async def get_slate_predictions(
                             side=pred_data.get("side"),
                             line=line,
                             confidence=pred_data.get("confidence"),
-                            edge=pred_data.get("edge"),
                         )
             
             total_plays += game_plays
