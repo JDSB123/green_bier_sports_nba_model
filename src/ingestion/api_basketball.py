@@ -268,7 +268,7 @@ class APIBasketballClient:
                     player["team_id"] = team_id
                 all_players.extend(data.get("response", []))
             except Exception as e:
-                print(f"  Warning: players for team {team_id}: {e}")
+                logger.warning(f"Failed to fetch players for team {team_id}: {e}")
 
         payload = {"response": all_players, "results": len(all_players)}
         path = self._save("players", payload)
@@ -356,7 +356,7 @@ class APIBasketballClient:
                 if stats:
                     all_stats.append(stats)
             except Exception as e:
-                print(f"  Warning: statistics for team {team_id}: {e}")
+                logger.warning(f"Failed to fetch statistics for team {team_id}: {e}")
 
         payload = {"response": all_stats, "results": len(all_stats)}
         path = self._save("statistics", payload)
@@ -382,7 +382,7 @@ class APIBasketballClient:
                 )
                 all_stats.extend(data.get("response", []))
             except Exception as e:
-                print(f"  Warning: game_stats_teams batch {i}: {e}")
+                logger.warning(f"Failed to fetch game_stats_teams batch {i}: {e}")
 
         payload = {"response": all_stats, "results": len(all_stats)}
         path = self._save("game_stats_teams", payload)
@@ -411,7 +411,7 @@ class APIBasketballClient:
                 )
                 all_stats.extend(data.get("response", []))
             except Exception as e:
-                print(f"  Warning: game_stats_players batch {i}: {e}")
+                logger.warning(f"Failed to fetch game_stats_players batch {i}: {e}")
 
         payload = {"response": all_stats, "results": len(all_stats)}
         path = self._save("game_stats_players", payload)
@@ -454,7 +454,7 @@ class APIBasketballClient:
                     g["matchup"] = key
                 all_h2h.extend(data.get("response", []))
             except Exception as e:
-                print(f"  Warning: h2h for {key}: {e}")
+                logger.warning(f"Failed to fetch h2h for {key}: {e}")
 
         payload = {"response": all_h2h, "results": len(all_h2h)}
         path = self._save("h2h", payload)
@@ -679,13 +679,13 @@ class APIBasketballClient:
         ]
 
         for name, fetch_fn in endpoints:
-            print(f"Ingesting: {name}")
+            logger.info(f"Ingesting: {name}")
             try:
                 result = await fetch_fn()
                 results.append(result)
-                print(f"  [OK] {result.count} records -> {result.path}")
+                logger.info(f"  [OK] {result.count} records -> {result.path}")
             except Exception as e:
-                print(f"  [ERROR] Error: {e}")
+                logger.error(f"  [ERROR] {name} failed: {e}")
 
         return results
 
@@ -724,13 +724,13 @@ class APIBasketballClient:
         ]
 
         for name, fetch_fn in endpoints:
-            print(f"Ingesting: {name}")
+            logger.info(f"Ingesting: {name}")
             try:
                 result = await fetch_fn()
                 results.append(result)
-                print(f"  [OK] {result.count} records -> {result.path}")
+                logger.info(f"  [OK] {result.count} records -> {result.path}")
             except Exception as e:
-                print(f"  [ERROR] Error: {e}")
+                logger.error(f"  [ERROR] {name} failed: {e}")
 
         return results
 
