@@ -23,17 +23,21 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to login to ACR: $AcrName"; exit 1
 }
 
-$fullImage = "$(
-    $AcrName
-).azurecr.io/$(
-    $ImageName
-):$(
-    $Tag
-)"
+$fullImage = "$AcrName.azurecr.io/$ImageName:$Tag"
 Write-Host "Building Docker image: $fullImage"
 
-docker build -t $fullImage .
-if ($LASTEXITCODE -ne 0) { Write-Error "Docker build failed"; exit 1 }
+# Determine repo root (deploy.ps1 is expected in infra/nba/, Dockerfile at repo root)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot = Resolve-Path (Join-Path $ScriptDir "..\..")
+Write-Host "Repository root: $RepoRoot"
+
+Push-Location $RepoRoot
+try {
+    docker build -t $fullImage .
+    if ($LASTEXITCODE -ne 0) { Write-Error "Docker build failed"; exit 1 }
+} finally {
+    Pop-Location
+}
 
 Write-Host "Pushing image: $fullImage"
 docker push $fullImage

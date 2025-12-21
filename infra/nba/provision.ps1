@@ -1,10 +1,10 @@
 Param(
   [string]$Subscription = "",
   [string]$ResourceGroup = "greenbier-enterprise-rg",
-  [string]$EnvironmentName = "greenbier-env",
+  [string]$EnvironmentName = "greenbier-nba-env",
   [string]$AppName = "nba-picks-api",
   [string]$AcrName = "greenbieracr",
-  [string]$Image = "greenbieracr.azurecr.io/nba-model:v6.1",
+  [string]$Image = "greenbieracr.azurecr.io/nba-model:v6.0",
   [string]$Location = "eastus",
   [string]$KeyVaultName = "greenbier-keyvault"
 )
@@ -38,7 +38,10 @@ az role assignment create --assignee $principalId --scope $acrScope --role "AcrP
 
 Write-Host "Fetching secret values from Key Vault '$KeyVaultName'..."
 $kvOddsVal = az keyvault secret show --vault-name $KeyVaultName --name THE-ODDS-API-KEY --query value -o tsv
+if (-not $kvOddsVal) { Write-Error "Secret THE-ODDS-API-KEY not found or empty in Key Vault $KeyVaultName"; exit 1 }
+
 $kvBasketVal = az keyvault secret show --vault-name $KeyVaultName --name API-BASKETBALL-KEY --query value -o tsv
+if (-not $kvBasketVal) { Write-Error "Secret API-BASKETBALL-KEY not found or empty in Key Vault $KeyVaultName"; exit 1 }
 
 Write-Host "Setting app secrets and environment variables..."
 az containerapp secret set -n $AppName -g $ResourceGroup --secrets THE_ODDS_API_KEY=$kvOddsVal API_BASKETBALL_KEY=$kvBasketVal
