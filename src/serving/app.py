@@ -1162,7 +1162,7 @@ async def get_comprehensive_slate_analysis(
 async def get_meta_info():
     """Get metadata about the running service."""
     return {
-        "version": os.getenv("NBA_MODEL_VERSION", "6.0-STRICT"),
+        "version": os.getenv("NBA_MODEL_VERSION", "6.4-STRICT"),
         "markets": os.getenv("NBA_MARKETS", "").split(","),
         "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
         "server_time": datetime.now().isoformat(),
