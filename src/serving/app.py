@@ -26,6 +26,7 @@ import json
 import logging
 import numpy as np
 import sys
+import uuid
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path as PathLib
 from datetime import datetime
@@ -45,7 +46,7 @@ from src.config import settings
 from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
 from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
-from scripts.build_rich_features import RichFeatureBuilder
+from src.features import RichFeatureBuilder
 from src.utils.logging import get_logger
 from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
@@ -229,12 +230,27 @@ app.add_middleware(
 )
 
 
+# Request ID middleware for distributed tracing
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    # Use existing request ID from header or generate new one
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    # Store in request state for access in handlers
+    request.state.request_id = request_id
+
+    response = await call_next(request)
+    # Add request ID to response headers
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
 # Request metrics middleware
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
     start_time = datetime.now()
     method = request.method
     endpoint = request.url.path
+    request_id = getattr(request.state, "request_id", "unknown")
 
     try:
         response = await call_next(request)
@@ -242,11 +258,14 @@ async def metrics_middleware(request: Request, call_next):
         REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status).inc()
         return response
     except Exception as e:
+        logger.error(f"[{request_id}] Request failed: {e}")
         REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=500).inc()
         raise
     finally:
         duration = (datetime.now() - start_time).total_seconds()
         REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
+        if duration > 5.0:  # Log slow requests
+            logger.warning(f"[{request_id}] Slow request: {method} {endpoint} took {duration:.2f}s")
 
 
 # --- Endpoints ---
