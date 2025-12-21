@@ -282,7 +282,7 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
             )
             splits_list.append(detect_reverse_line_movement(splits))
         except Exception as e:
-            print(f"[WARN] Failed to parse The Odds API game: {e}")
+            logger.warning(f"Failed to parse The Odds API game: {e}")
             continue
             
     return splits_list
@@ -377,7 +377,7 @@ async def fetch_splits_sbro(sport: str = "NBA") -> List[GameSplits]:
             )
 
             if response.status_code != 200:
-                print(f"[WARN] SBRO returned status {response.status_code}")
+                logger.warning(f"SBRO returned status {response.status_code}")
                 return []
 
             # Check if response is JSON (API endpoint) or HTML
@@ -389,11 +389,11 @@ async def fetch_splits_sbro(sport: str = "NBA") -> List[GameSplits]:
                 return parse_sbro_json(data)
             else:
                 # HTML response - would need parsing
-                print("[WARN] SBRO returned HTML - may need JavaScript rendering")
+                logger.warning("SBRO returned HTML - may need JavaScript rendering")
                 return []
 
     except Exception as e:
-        print(f"[WARN] Failed to fetch SBRO splits: {e}")
+        logger.warning(f"Failed to fetch SBRO splits: {e}")
         return []
 
 
@@ -434,7 +434,7 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
             )
             splits_list.append(detect_reverse_line_movement(splits))
         except Exception as e:
-            print(f"[WARN] Failed to parse SBRO game: {e}")
+            logger.warning(f"Failed to parse SBRO game: {e}")
             continue
 
     return splits_list
@@ -443,22 +443,30 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
 async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSplits]:
     """
     Fetch betting splits from Action Network.
-    
-    Uses web scraping with authentication since Action Network 
+
+    Uses web scraping with authentication since Action Network
     doesn't have a public API for splits data.
-    
+
     Requires:
         ACTION_NETWORK_USERNAME and ACTION_NETWORK_PASSWORD env variables
-    
+
     Returns:
         List of GameSplits with public betting percentages
+
+    Raises:
+        ValueError: If credentials are not configured
     """
     import httpx
     from datetime import datetime
-    
+
     username = settings.action_network_username
     password = settings.action_network_password
-    
+
+    # Validate credentials are configured
+    if not username or not password:
+        logger.warning("Action Network credentials not configured - skipping")
+        return []
+
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             # Action Network requires session-based auth
@@ -648,7 +656,7 @@ async def scrape_splits_covers(date: Optional[str] = None) -> List[GameSplits]:
             return []
 
     except Exception as e:
-        print(f"[WARN] Failed to scrape Covers.com: {e}")
+        logger.warning(f"Failed to scrape Covers.com: {e}")
         return []
 
 
