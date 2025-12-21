@@ -138,7 +138,10 @@ def parse_command(text: str) -> dict:
 
 
 def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: str = None) -> dict:
-    """Format predictions as Teams Adaptive Card."""
+    """Format predictions as Teams Adaptive Card matching dashboard format.
+
+    Columns: Date/Time | Matchup | Segment | Pick | Model | Market | Edge | Fire
+    """
     plays = data.get("plays", [])
 
     # Apply filters
@@ -164,28 +167,53 @@ def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: st
     elif matchup_filter:
         filter_label = f" ({matchup_filter})"
 
-    # Build Adaptive Card body
+    # Build Adaptive Card body - matching dashboard table format
     body = [
         {"type": "TextBlock", "text": "GREEN BIER SPORT VENTURES", "weight": "Bolder", "size": "Large", "color": "Good"},
-        {"type": "TextBlock", "text": f"NBA Picks - {generated_at}{filter_label}", "size": "Medium"},
+        {"type": "TextBlock", "text": f"Today's Picks - {generated_at}{filter_label}", "size": "Medium"},
         {"type": "TextBlock", "text": f"{len(plays)} Picks | Sorted by Edge", "size": "Small", "isSubtle": True},
         {
             "type": "ColumnSet",
+            "separator": True,
             "columns": [
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "PER", "weight": "Bolder", "size": "Small"}]},
+                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "MATCHUP", "weight": "Bolder", "size": "Small"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "SEG", "weight": "Bolder", "size": "Small"}]},
                 {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "PICK", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "ODDS", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "EDGE", "weight": "Bolder", "size": "Small"}]}
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "MODEL", "weight": "Bolder", "size": "Small"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "MKT", "weight": "Bolder", "size": "Small"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "EDGE", "weight": "Bolder", "size": "Small"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "FIRE", "weight": "Bolder", "size": "Small"}]}
             ]
         }
     ]
 
     # Add each pick as a row
-    for i, p in enumerate(sorted_plays):
-        period = p.get("period", "FG")[:3]
-        pick = p.get("pick", "")[:22]
+    for p in sorted_plays:
+        matchup = p.get("matchup", "")
+        # Shorten matchup - extract team names
+        if " @ " in matchup:
+            parts = matchup.split(" @ ")
+            away = parts[0].split("(")[0].strip()[:12]
+            home = parts[1].split("(")[0].strip()[:12]
+            matchup_short = f"{away} @ {home}"
+        else:
+            matchup_short = matchup[:25]
+
+        segment = p.get("period", "FG")
+        pick = p.get("pick", "")[:18]
+        market = p.get("market", "")
         odds = p.get("pick_odds", "N/A")
         edge = p.get("edge", "N/A")
+        fire_rating = p.get("fire_rating", "")
+        fire_count = fire_rating.count("\U0001F525")
+
+        # Model value based on market type
+        if "SPREAD" in market.upper():
+            model_val = edge.replace(" pts", "")
+        elif "TOTAL" in market.upper():
+            model_val = pick.split()[-1] if pick else "N/A"
+        else:
+            model_val = "-"
 
         # Color based on edge value
         try:
@@ -194,14 +222,19 @@ def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: st
         except (ValueError, AttributeError):
             edge_color = "Default"
 
+        # Fire emoji display
+        fire_display = "\U0001F525" * fire_count if fire_count > 0 else "-"
+
         row = {
             "type": "ColumnSet",
-            "separator": i == 0,
             "columns": [
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": period, "size": "Small"}]},
+                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": matchup_short, "size": "Small", "wrap": True}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": segment, "size": "Small"}]},
                 {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": pick, "size": "Small", "weight": "Bolder"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": model_val, "size": "Small"}]},
                 {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": odds, "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": edge, "size": "Small", "color": edge_color}]}
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": edge, "size": "Small", "color": edge_color}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": fire_display, "size": "Small"}]}
             ]
         }
         body.append(row)
