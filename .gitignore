@@ -103,3 +103,6 @@ nba_betting_card_*.txt
 *.tmp
 temp/
 .claude/
+
+# Testing branch (local development only)
+# Note: The 'testing' branch should not be pushed to remote

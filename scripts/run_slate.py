@@ -19,6 +19,7 @@ This script:
     2. Waits for API to be healthy
     3. Fetches predictions from strict-api container
     4. Displays formatted results with fire ratings
+    5. Saves output to data/processed/slate_output_YYYYMMDD_HHMMSS.txt
 """
 import argparse
 import json
@@ -26,10 +27,12 @@ import re
 import subprocess
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
+from zoneinfo import ZoneInfo
 
 # Fix Windows console encoding
 import io
@@ -40,6 +43,8 @@ if sys.platform == "win32":
 import os
 
 PROJECT_ROOT = Path(__file__).parent.parent
+OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
+CST = ZoneInfo("America/Chicago")
 
 # API URL from environment - no hardcoded ports
 API_PORT = os.getenv("NBA_API_PORT", "8090")
@@ -130,15 +135,12 @@ def wait_for_api(max_wait: int = 60) -> bool:
     return False
 
 
-def calculate_fire_rating(confidence: float, edge: float, edge_type: str = "pts") -> str:
-    """Calculate fire rating (1-5 fires)."""
-    if edge_type == "pct":
-        edge_norm = min(abs(edge) / 0.20, 1.0)
-    else:
-        edge_norm = min(abs(edge) / 10.0, 1.0)
-    
+def calculate_fire_rating(confidence: float, edge_pts: float) -> str:
+    """Calculate fire rating (1-5 fires). All edges in pts."""
+    edge_norm = min(abs(edge_pts) / 10.0, 1.0)
+
     combined = (confidence * 0.6) + (edge_norm * 0.4)
-    
+
     if combined >= 0.85:
         return "🔥🔥🔥🔥🔥"
     elif combined >= 0.70:
@@ -149,6 +151,16 @@ def calculate_fire_rating(confidence: float, edge: float, edge_type: str = "pts"
         return "🔥🔥"
     else:
         return "🔥"
+
+
+def prob_edge_to_pts(prob_edge: float) -> float:
+    """Convert probability edge to equivalent point edge.
+
+    Rule of thumb: ~3% probability edge ≈ 1 point edge
+    """
+    if prob_edge is None:
+        return 0.0
+    return prob_edge * 33.33  # 3% = 1 pt, so multiply by 33.33
 
 
 def format_odds(odds: int | None) -> str:
@@ -202,11 +214,20 @@ def _match_single_filter(*, home: str, away: str, raw: str) -> bool:
 
 
 def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
-    """Fetch slate and display results."""
-    print(f"\n{'='*80}")
-    print(f"🏀 NBA PREDICTIONS - {date_str.upper()}")
-    print(f"{'='*80}\n")
-    
+    """Fetch slate, display results, and save to file."""
+    now_cst = datetime.now(CST)
+    output_lines = []
+
+    def log(line: str = ""):
+        """Print and store line for file output."""
+        print(line)
+        output_lines.append(line)
+
+    log(f"\n{'='*100}")
+    log(f"NBA PREDICTIONS - {date_str.upper()}")
+    log(f"Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')}")
+    log(f"{'='*100}\n")
+
     try:
         data = http_get_json(
             f"{API_URL}/slate/{date_str}/comprehensive",
@@ -214,36 +235,35 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             timeout=120,
         )
         analysis = data.get("analysis", [])
-        
+
         if not analysis:
-            print("📭 No games found for this date")
+            log("No games found for this date")
             return
-        
+
         # Filter by matchup if specified
         if matchup_filter:
             analysis = [g for g in analysis if _match_game(g, matchup_filter)]
             if not analysis:
-                print(f"❌ No games matching '{matchup_filter}'")
-                print("\nAvailable games for this date:")
+                log(f"No games matching '{matchup_filter}'")
+                log("\nAvailable games for this date:")
                 for g in data.get("analysis", []):
                     home = g.get("home_team", "")
                     away = g.get("away_team", "")
                     time_cst = g.get("time_cst", "TBD")
-                    print(f"  - {away} @ {home} ({time_cst})")
+                    log(f"  - {away} @ {home} ({time_cst})")
                 return
-        
-        print(f"📊 Found {len(analysis)} game(s)\n")
+
+        log(f"Found {len(analysis)} game(s)\n")
 
         # --- BLUF TABLE ---
-        print(f"{'='*120}")
-        print(f"{'BOTTOM LINE UP FRONT (BLUF)':^120}")
-        print(f"{'='*120}")
-        
+        log("=" * 140)
+        log(f"{'RECOMMENDED PICKS':^140}")
+        log("=" * 140)
+
         # Header
-        # Date/Time | Matchup (Records) | Pick | Odds | Model | Market | Edge | Fire
-        header = f"{'Time (CST)':<12} | {'Matchup':<35} | {'Pick':<20} | {'Odds':<6} | {'Model':<8} | {'Market':<8} | {'Edge':<10} | {'Fire'}"
-        print(header)
-        print("-" * 120)
+        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Model':<10} | {'Market':<10} | {'Edge':<8} | {'Fire'}"
+        log(header)
+        log("-" * 140)
 
         for game in analysis:
             home = game.get("home_team", "")
@@ -251,52 +271,68 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             time_cst = game.get("time_cst", "TBD")
             odds = game.get("odds", {})
             edge_data = game.get("comprehensive_edge", {})
-            
-            # Try to get records from features if available
             features = game.get("features", {})
-            # Assuming features might have raw stats, but if not, we skip records for now
-            # Or we can try to parse them if they exist in a known format
-            # For now, just Matchup
-            matchup_str = f"{away} @ {home}"
+
+            # Get team records from features
+            home_wins = features.get("home_wins", 0)
+            home_losses = features.get("home_losses", 0)
+            away_wins = features.get("away_wins", 0)
+            away_losses = features.get("away_losses", 0)
+
+            home_record = f"({home_wins}-{home_losses})" if home_wins or home_losses else ""
+            away_record = f"({away_wins}-{away_losses})" if away_wins or away_losses else ""
+
+            matchup_str = f"{away} {away_record} @ {home} {home_record}"
 
             # Collect all picks for this game
             picks = []
-            
-            # Helper to add pick
+
+            # Helper to add pick - ALL edges in pts
             def add_pick(market_name, p_data, p_type="spread"):
                 if not p_data or not p_data.get("pick"):
                     return
-                
+
                 pick_team = p_data.get("pick")
                 market_line = p_data.get("market_line", 0)
-                market_odds = p_data.get("market_odds")
-                edge = p_data.get("edge", 0)
+                market_odds_val = p_data.get("market_odds")
                 conf = p_data.get("confidence", 0)
-                
-                # Fire rating
-                fire = calculate_fire_rating(conf, abs(edge), "pct" if p_type == "ml" else "pts")
-                
+
+                # Get edge - convert ML probability edge to pts
+                if p_type == "ml":
+                    is_home_pick = (pick_team == home)
+                    prob_edge = p_data.get("edge_home" if is_home_pick else "edge_away", 0) or 0
+                    edge_pts = prob_edge_to_pts(prob_edge)
+                    # For ML, get the actual odds for the picked team
+                    market_odds_val = odds.get("home_ml" if is_home_pick else "away_ml")
+                else:
+                    edge_pts = p_data.get("edge", 0) or 0
+
+                # Fire rating - all in pts now
+                fire = calculate_fire_rating(conf, abs(edge_pts))
+
                 # Pick display
                 if p_type == "ml":
-                    pick_str = f"{pick_team}"
-                    model_val = "WIN" # Simplified for table
+                    pick_str = f"{pick_team} ML"
+                    model_val = f"{conf*100:.0f}% WIN"
+                    market_val = format_odds(market_odds_val)
                 elif p_type == "total":
                     pick_str = f"{pick_team} {market_line}"
                     model_val = f"{p_data.get('model_total', 0):.1f}"
-                else: # spread
+                    market_val = f"{market_line:.1f}"
+                else:  # spread
                     pick_str = f"{pick_team} {market_line:+.1f}"
-                    # Model projection
                     model_margin = p_data.get("model_margin", 0)
                     proj = model_margin if pick_team == home else -model_margin
                     model_val = f"{proj:+.1f}"
+                    market_val = f"{market_line:+.1f}"
 
                 picks.append({
                     "market": market_name,
                     "pick": pick_str,
-                    "odds": format_odds(market_odds),
+                    "odds": format_odds(market_odds_val),
                     "model": model_val,
-                    "market_line": f"{market_line:+.1f}" if p_type == "spread" else f"{market_line}",
-                    "edge": f"{edge:+.1f}" if p_type != "ml" else f"{edge:+.1%}",
+                    "market_line": market_val,
+                    "edge": f"{edge_pts:+.1f} pts",
                     "fire": fire
                 })
 
@@ -305,7 +341,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             add_pick("FG Spread", fg.get("spread"), "spread")
             add_pick("FG Total", fg.get("total"), "total")
             add_pick("FG ML", fg.get("moneyline"), "ml")
-            
+
             # 1H
             fh = edge_data.get("first_half", {})
             add_pick("1H Spread", fh.get("spread"), "spread")
@@ -318,18 +354,18 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 for p in picks:
                     t_str = time_cst if first else ""
                     m_str = matchup_str if first else ""
-                    print(f"{t_str:<12} | {m_str:<35} | {p['pick']:<20} | {p['odds']:<6} | {p['model']:<8} | {p['market_line']:<8} | {p['edge']:<10} | {p['fire']}")
+                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<10} | {p['market_line']:<10} | {p['edge']:<8} | {p['fire']}")
                     first = False
-                print("-" * 120)
+                log("-" * 140)
             else:
                 # No picks for this game
-                print(f"{time_cst:<12} | {matchup_str:<35} | {'No Action':<20} | {'-':<6} | {'-':<8} | {'-':<8} | {'-':<10} | {'-'}")
-                print("-" * 120)
+                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<10} | {'-':<10} | {'-':<8} | -")
+                log("-" * 140)
 
-        print("\n" + "="*80)
-        print("DETAILED RATIONALE")
-        print("="*80 + "\n")
-        
+        log("\n" + "=" * 100)
+        log("DETAILED RATIONALE")
+        log("=" * 100 + "\n")
+
         # Display each game (Detailed)
         for game in analysis:
             home = game.get("home_team", "")
@@ -337,122 +373,138 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             time_cst = game.get("time_cst", "TBD")
             odds = game.get("odds", {})
             edge_data = game.get("comprehensive_edge", {})
-            
-            print(f"{'─'*80}")
-            print(f"🎯 {away} @ {home}")
-            print(f"⏰ {time_cst}")
-            print()
-            
+            features = game.get("features", {})
+
+            # Get team records
+            home_wins = features.get("home_wins", 0)
+            home_losses = features.get("home_losses", 0)
+            away_wins = features.get("away_wins", 0)
+            away_losses = features.get("away_losses", 0)
+
+            home_record = f"({home_wins}-{home_losses})" if home_wins or home_losses else ""
+            away_record = f"({away_wins}-{away_losses})" if away_wins or away_losses else ""
+
+            log("-" * 100)
+            log(f"GAME: {away} {away_record} @ {home} {home_record}")
+            log(f"TIME: {time_cst}")
+            log()
+
             # Full Game picks
             fg = edge_data.get("full_game", {})
             if fg:
-                print("  FULL GAME:")
-                
+                log("  FULL GAME:")
+
                 # Spread
                 spread = fg.get("spread", {})
                 if spread.get("pick"):
                     pick_team = spread["pick"]
                     line = spread.get("market_line", 0)
-                    market_odds = spread.get("market_odds")
-                    edge = spread.get("edge", 0)
+                    market_odds_val = spread.get("market_odds")
+                    edge = spread.get("edge", 0) or 0
                     conf = spread.get("confidence", 0)
                     model_margin = spread.get("model_margin", 0)
-                    fire = calculate_fire_rating(conf, abs(edge), "pts")
-                    
-                    # Calculate model projection for the picked team
-                    # model_margin is usually Home Margin
+                    fire = calculate_fire_rating(conf, abs(edge))
+
                     proj_margin = model_margin if pick_team == home else -model_margin
-                    
-                    print(f"    📌 SPREAD: {pick_team} {line:+.1f} ({format_odds(market_odds)})")
-                    print(f"       Model: {pick_team} {proj_margin:+.1f}")
-                    print(f"       Market: {line:+.1f} ({format_odds(market_odds)})")
-                    print(f"       Edge: {edge:+.1f} pts  |  {fire}")
-                
+
+                    log(f"    SPREAD: {pick_team} {line:+.1f} ({format_odds(market_odds_val)})")
+                    log(f"       Model: {pick_team} {proj_margin:+.1f}")
+                    log(f"       Market: {line:+.1f} ({format_odds(market_odds_val)})")
+                    log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+
                 # Total
                 total = fg.get("total", {})
                 if total.get("pick"):
                     pick_side = total["pick"]
                     line = total.get("market_line", 0)
-                    market_odds = total.get("market_odds")
-                    edge = total.get("edge", 0)
+                    market_odds_val = total.get("market_odds")
+                    edge = total.get("edge", 0) or 0
                     conf = total.get("confidence", 0)
                     model_total = total.get("model_total", 0)
-                    fire = calculate_fire_rating(conf, abs(edge), "pts")
-                    
-                    print(f"    📌 TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds)})")
-                    print(f"       Model: {model_total:.1f}")
-                    print(f"       Market: {line:.1f} ({format_odds(market_odds)})")
-                    print(f"       Edge: {edge:+.1f} pts  |  {fire}")
-                
+                    fire = calculate_fire_rating(conf, abs(edge))
+
+                    log(f"    TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds_val)})")
+                    log(f"       Model: {model_total:.1f}")
+                    log(f"       Market: {line:.1f} ({format_odds(market_odds_val)})")
+                    log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+
                 # Moneyline
                 ml = fg.get("moneyline", {})
                 if ml.get("pick"):
                     pick_team = ml["pick"]
                     is_home = (pick_team == home)
                     ml_odds = odds.get("home_ml" if is_home else "away_ml")
-                    
-                    # Edge is split in result
-                    edge = ml.get("edge_home" if is_home else "edge_away", 0)
-                    if edge is None: edge = 0
-                    
+
+                    prob_edge = ml.get("edge_home" if is_home else "edge_away", 0) or 0
+                    edge_pts = prob_edge_to_pts(prob_edge)
+
                     conf = ml.get("confidence", 0)
-                    fire = calculate_fire_rating(conf, abs(edge), "pct")
+                    fire = calculate_fire_rating(conf, abs(edge_pts))
                     rationale = ml.get("rationale", "")
-                    
-                    print(f"    📌 ML: {pick_team} ({format_odds(ml_odds)})")
-                    print(f"       Model: {rationale}")
-                    print(f"       Market: {format_odds(ml_odds)}")
-                    print(f"       Edge: {edge:+.1%}  |  {fire}")
-            
+
+                    log(f"    ML: {pick_team} ({format_odds(ml_odds)})")
+                    log(f"       Model: {rationale}")
+                    log(f"       Market: {format_odds(ml_odds)}")
+                    log(f"       Edge: {edge_pts:+.1f} pts  |  {fire}")
+
             # First Half picks
             fh = edge_data.get("first_half", {})
             if fh:
                 has_fh_picks = any(fh.get(m, {}).get("pick") for m in ["spread", "total", "moneyline"])
                 if has_fh_picks:
-                    print("\n  FIRST HALF:")
-                    
+                    log("\n  FIRST HALF:")
+
                     spread = fh.get("spread", {})
                     if spread.get("pick"):
                         pick_team = spread["pick"]
                         line = spread.get("market_line", 0)
-                        market_odds = spread.get("market_odds")
-                        edge = spread.get("edge", 0)
+                        market_odds_val = spread.get("market_odds")
+                        edge = spread.get("edge", 0) or 0
                         conf = spread.get("confidence", 0)
                         model_margin = spread.get("model_margin", 0)
-                        fire = calculate_fire_rating(conf, abs(edge), "pts")
-                        
+                        fire = calculate_fire_rating(conf, abs(edge))
+
                         proj_margin = model_margin if pick_team == home else -model_margin
-                        
-                        print(f"    📌 1H SPREAD: {pick_team} {line:+.1f} ({format_odds(market_odds)})")
-                        print(f"       Model: {pick_team} {proj_margin:+.1f}")
-                        print(f"       Market: {line:+.1f} ({format_odds(market_odds)})")
-                        print(f"       Edge: {edge:+.1f} pts  |  {fire}")
-                    
+
+                        log(f"    1H SPREAD: {pick_team} {line:+.1f} ({format_odds(market_odds_val)})")
+                        log(f"       Model: {pick_team} {proj_margin:+.1f}")
+                        log(f"       Market: {line:+.1f} ({format_odds(market_odds_val)})")
+                        log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+
                     total = fh.get("total", {})
                     if total.get("pick"):
                         pick_side = total["pick"]
                         line = total.get("market_line", 0)
-                        market_odds = total.get("market_odds")
-                        edge = total.get("edge", 0)
+                        market_odds_val = total.get("market_odds")
+                        edge = total.get("edge", 0) or 0
                         conf = total.get("confidence", 0)
                         model_total = total.get("model_total", 0)
-                        fire = calculate_fire_rating(conf, abs(edge), "pts")
-                        
-                        print(f"    📌 1H TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds)})")
-                        print(f"       Model: {model_total:.1f}")
-                        print(f"       Market: {line:.1f} ({format_odds(market_odds)})")
-                        print(f"       Edge: {edge:+.1f} pts  |  {fire}")
-            
-            print()
-        
-        print(f"{'='*80}")
-        print("✅ Analysis complete")
-        print(f"   More fires = stronger pick (🔥🔥🔥🔥🔥 = best)")
-        
+                        fire = calculate_fire_rating(conf, abs(edge))
+
+                        log(f"    1H TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds_val)})")
+                        log(f"       Model: {model_total:.1f}")
+                        log(f"       Market: {line:.1f} ({format_odds(market_odds_val)})")
+                        log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+
+            log()
+
+        log("=" * 100)
+        log("Analysis complete")
+        log("   More fires = stronger pick (5 fires = best)")
+        log("=" * 100)
+
+        # Save output to file
+        timestamp = now_cst.strftime("%Y%m%d_%H%M%S")
+        output_file = OUTPUT_DIR / f"slate_output_{timestamp}.txt"
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("\n".join(output_lines))
+        print(f"\n[SAVED] Output saved to: {output_file}")
+
     except TimeoutError:
-        print("❌ Request timed out - API may be processing")
+        print("Request timed out - API may be processing")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def main():
