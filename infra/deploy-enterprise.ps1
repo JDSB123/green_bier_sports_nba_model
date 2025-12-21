@@ -11,22 +11,22 @@
 param(
     [Parameter(Mandatory=$false)]
     [string]$Location = "eastus",
-    
+
     [Parameter(Mandatory=$false)]
     [string]$Environment = "prod",
-    
+
     [Parameter(Mandatory=$true)]
     [string]$TheOddsApiKey,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$ApiBasketballKey = "",
-    
+
+    [Parameter(Mandatory=$true)]
+    [string]$ApiBasketballKey,
+
     [Parameter(Mandatory=$false)]
     [string]$TeamsWebhookUrl = "",
-    
+
     [Parameter(Mandatory=$false)]
     [switch]$SharedOnly,
-    
+
     [Parameter(Mandatory=$false)]
     [switch]$NbaOnly
 )
@@ -129,6 +129,8 @@ $nbaResult = az deployment group create `
     --name "gbs-nba-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
     --template-file "$ScriptDir\nba\main.bicep" `
     --parameters environment=$Environment location=$Location sharedResourceGroup="greenbier-enterprise-rg" `
+                 theOddsApiKey=$TheOddsApiKey apiBasketballKey=$ApiBasketballKey `
+                 teamsWebhookUrl=$TeamsWebhookUrl imageTag="v6.4" `
     --output json | ConvertFrom-Json
 
 if ($LASTEXITCODE -ne 0) {
@@ -151,14 +153,14 @@ Write-Host ""
 Write-Host "[5/6] Building and pushing NBA container..." -ForegroundColor Yellow
 
 az acr login --name $acrName
-$imageName = "$acrServer/nba-model:v5.1"
+$imageName = "$acrServer/nba-model:v6.4"
 $imageLatest = "$acrServer/nba-model:latest"
 
 docker build -t $imageName -t $imageLatest -f "$ScriptDir\..\Dockerfile" "$ScriptDir\.."
 docker push $imageName
 docker push $imageLatest
 
-Write-Host "  ✓ Pushed: $imageName" -ForegroundColor Green
+Write-Host "  ✓ Pushed: $imageName (v6.4)" -ForegroundColor Green
 Write-Host ""
 
 # ============================================================================

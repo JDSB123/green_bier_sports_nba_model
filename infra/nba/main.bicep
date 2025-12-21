@@ -23,6 +23,21 @@ param sharedResourceGroup string = 'greenbier-enterprise-rg'
 @description('Container image tag')
 param imageTag string = 'latest'
 
+// =============================================================================
+// API KEYS - Required for the NBA Picks API to function
+// =============================================================================
+@description('The Odds API Key (required)')
+@secure()
+param theOddsApiKey string
+
+@description('API-Basketball Key (required)')
+@secure()
+param apiBasketballKey string
+
+@description('Teams Webhook URL (optional)')
+@secure()
+param teamsWebhookUrl string = ''
+
 // Reference shared resources
 resource sharedRg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
   name: sharedResourceGroup
@@ -148,6 +163,14 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'acr-password'
           value: acr.listCredentials().passwords[0].value
         }
+        {
+          name: 'the-odds-api-key'
+          value: theOddsApiKey
+        }
+        {
+          name: 'api-basketball-key'
+          value: apiBasketballKey
+        }
       ]
     }
     template: {
@@ -160,18 +183,39 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
             memory: '1Gi'
           }
           env: [
+            // ================================================================
+            // REQUIRED API KEYS - Referenced from secrets
+            // ================================================================
+            {
+              name: 'THE_ODDS_API_KEY'
+              secretRef: 'the-odds-api-key'
+            }
+            {
+              name: 'API_BASKETBALL_KEY'
+              secretRef: 'api-basketball-key'
+            }
+            // ================================================================
+            // NBA v6.4 Configuration
+            // ================================================================
             {
               name: 'GBS_SPORT'
               value: 'nba'
             }
             {
               name: 'NBA_MODEL_VERSION'
-              value: '5.1-FINAL'
+              value: '6.4-STRICT'
             }
             {
               name: 'NBA_MARKETS'
-              value: 'fg_spread,fg_total,fg_moneyline,1h_spread,1h_total,1h_moneyline'
+              value: 'q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline'
             }
+            {
+              name: 'NBA_PERIODS'
+              value: 'first_quarter,first_half,full_game'
+            }
+            // ================================================================
+            // Azure Integration
+            // ================================================================
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               value: appInsights.properties.ConnectionString

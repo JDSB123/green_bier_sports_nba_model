@@ -4,7 +4,7 @@ Param(
   [string]$EnvironmentName = "greenbier-nba-env",
   [string]$AppName = "nba-picks-api",
   [string]$AcrName = "greenbieracr",
-  [string]$Image = "greenbieracr.azurecr.io/nba-model:v6.0",
+  [string]$Image = "greenbieracr.azurecr.io/nba-model:v6.4",
   [string]$Location = "eastus",
   [string]$KeyVaultName = "greenbier-keyvault"
 )

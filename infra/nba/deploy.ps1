@@ -4,7 +4,7 @@ Param(
     [string]$ContainerAppName = "nba-picks-api",
     [string]$AcrName = "greenbieracr",
     [string]$ImageName = "nba-model",
-    [string]$Tag = "v6.0"
+    [string]$Tag = "v6.4"
 )
 
 Write-Host "Starting NBA deployment to Azure Container Apps..."

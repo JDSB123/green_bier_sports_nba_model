@@ -111,19 +111,56 @@ RUN echo "=== NBA v6.0 Model Verification ===" && \
     echo "=== All 9 independent market models verified! ==="
 
 # =============================================================================
-# Environment Configuration
+# Environment Configuration - ALL NON-SENSITIVE DEFAULTS BAKED IN
 # =============================================================================
-ENV DATA_PROCESSED_DIR=/app/data/processed
+# This ensures the container works out-of-the-box with ONLY API keys needed
+
+# Python Configuration
 ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/app
 
-# v6.0 STRICT MODE - All 9 markets required
-ENV NBA_MODEL_VERSION=6.0-STRICT
+# Data Directories (REQUIRED by src/config.py)
+ENV DATA_RAW_DIR=data/raw
+ENV DATA_PROCESSED_DIR=/app/data/processed
+
+# API Base URLs (REQUIRED by src/config.py)
+ENV THE_ODDS_BASE_URL=https://api.the-odds-api.com/v4
+ENV API_BASKETBALL_BASE_URL=https://v1.basketball.api-sports.io
+
+# Season Configuration (REQUIRED by src/config.py)
+ENV CURRENT_SEASON=2024-2025
+ENV SEASONS_TO_PROCESS=2024-2025,2025-2026
+
+# Filter Thresholds (REQUIRED by src/config.py - betting prediction filters)
+# Spread filters
+ENV FILTER_SPREAD_MIN_CONFIDENCE=0.55
+ENV FILTER_SPREAD_MIN_EDGE=1.0
+# Total filters
+ENV FILTER_TOTAL_MIN_CONFIDENCE=0.55
+ENV FILTER_TOTAL_MIN_EDGE=1.5
+# Moneyline filters (FG/1H)
+ENV FILTER_MONEYLINE_MIN_CONFIDENCE=0.55
+ENV FILTER_MONEYLINE_MIN_EDGE_PCT=0.03
+# Q1-specific filters (STRICTER for profitability)
+ENV FILTER_Q1_MIN_CONFIDENCE=0.60
+ENV FILTER_Q1_MIN_EDGE_PCT=0.05
+
+# CORS Configuration
+ENV ALLOWED_ORIGINS=*
+
+# v6.4 STRICT MODE - All 9 markets required (baked-in env defaults)
+ENV NBA_MODEL_VERSION=6.4-STRICT
 ENV NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
 ENV NBA_PERIODS=first_quarter,first_half,full_game
 ENV NBA_STRICT_MODE=true
+
+# =============================================================================
+# ONLY THESE 2 SECRETS ARE REQUIRED AT RUNTIME:
+#   - THE_ODDS_API_KEY (via env var or /run/secrets/THE_ODDS_API_KEY)
+#   - API_BASKETBALL_KEY (via env var or /run/secrets/API_BASKETBALL_KEY)
+# =============================================================================
 
 # =============================================================================
 # Health Check Configuration - STRICT MODE: All 9 models required
