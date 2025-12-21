@@ -4,7 +4,7 @@
         {
             "label": "Run Tests",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "-m",
                 "pytest",
@@ -23,7 +23,7 @@
         {
             "label": "Train Models",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "scripts/train_models.py"
             ],
@@ -36,7 +36,7 @@
         {
             "label": "Generate Predictions",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "scripts/predict.py"
             ],
@@ -49,7 +49,7 @@
         {
             "label": "Collect Odds Data",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "scripts/run_the_odds_tomorrow.py"
             ],
@@ -62,7 +62,7 @@
         {
             "label": "Run Backtest",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "scripts/backtest.py"
             ],
