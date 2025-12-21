@@ -1,26 +1,27 @@
 """
-API Response Caching Layer.
+API Response Caching Layer - v6.5 STRICT MODE.
 
-Provides file-based caching for API responses to minimize redundant API calls.
-Each cache entry is stored as a JSON file with metadata (timestamp, TTL).
+v6.5 STRICT MODE: FILE CACHING DISABLED
+Only session-memory caching for within-request deduplication.
+All file caching operations are NO-OPs in STRICT MODE.
 
-Cache TTL Guidelines:
-- Static data (teams, rosters): 7 days
-- Semi-static (standings, statistics): 24 hours
-- Dynamic (odds, injuries): 2 hours
-- Real-time (live odds): 15 minutes
+This ensures:
+- Every request gets fresh data from APIs
+- No stale data persists between requests
+- ESPN standings are always current
+- Team records are always accurate
 
 Usage:
     from src.utils.api_cache import api_cache
 
-    # Cached fetch
+    # In STRICT MODE, this always fetches fresh data
     data = await api_cache.get_or_fetch(
         key="the_odds_events_2024-01-15",
         fetch_fn=lambda: the_odds.fetch_events(),
-        ttl_hours=2,
+        ttl_hours=2,  # Ignored in STRICT MODE
     )
 
-    # Invalidate cache
+    # Invalidate cache (clears memory cache only)
     api_cache.invalidate("the_odds_events_2024-01-15")
 """
 from __future__ import annotations
@@ -53,23 +54,30 @@ class CacheEntry:
 
 
 class APICache:
-    """File-based API response cache."""
+    """
+    API response cache - v6.5 STRICT MODE.
 
-    # Default TTLs by data type (in hours)
-    TTL_STATIC = 7 * 24  # 7 days (teams, rosters)
-    TTL_DAILY = 24  # 24 hours (standings, statistics, schedule)
-    TTL_FREQUENT = 2  # 2 hours (injuries)
-    TTL_LIVE = 0.25  # 15 minutes (live odds)
+    STRICT MODE: File caching is DISABLED.
+    Only session-memory caching for within-request deduplication.
+    """
+
+    # TTLs are ignored in STRICT MODE - always fetch fresh
+    TTL_STATIC = 0  # DISABLED
+    TTL_DAILY = 0   # DISABLED
+    TTL_FREQUENT = 0  # DISABLED
+    TTL_LIVE = 0  # DISABLED
 
     def __init__(self, cache_dir: Optional[Path] = None):
-        """Initialize the cache.
+        """Initialize the cache - STRICT MODE (memory only).
 
         Args:
-            cache_dir: Directory to store cache files. Defaults to data/cache/api/
+            cache_dir: Ignored in STRICT MODE - no file caching
         """
+        # STRICT MODE: No file cache directory needed
         self.cache_dir = cache_dir or Path(settings.data_processed_dir) / "cache" / "api"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._memory_cache: dict[str, CacheEntry] = {}
+        self._strict_mode = True  # v6.5 STRICT MODE enabled
+        logger.info("v6.5 STRICT MODE: File caching DISABLED - memory cache only")
 
     def _get_cache_path(self, key: str) -> Path:
         """Generate cache file path from key."""
@@ -85,13 +93,15 @@ class APICache:
     def get(self, key: str) -> Optional[Any]:
         """Get cached data if valid.
 
+        STRICT MODE: Only checks memory cache, never file cache.
+
         Args:
             key: Cache key
 
         Returns:
             Cached data or None if not found/expired
         """
-        # Check memory cache first
+        # STRICT MODE: Memory cache only (within-request deduplication)
         if key in self._memory_cache:
             entry = self._memory_cache[key]
             if self._is_valid(entry):
@@ -100,26 +110,7 @@ class APICache:
             else:
                 del self._memory_cache[key]
 
-        # Check file cache
-        cache_path = self._get_cache_path(key)
-        if cache_path.exists():
-            try:
-                with open(cache_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                entry = CacheEntry(**data)
-
-                if self._is_valid(entry):
-                    # Promote to memory cache
-                    self._memory_cache[key] = entry
-                    logger.debug(f"Cache HIT (file): {key}")
-                    return entry.data
-                else:
-                    # Expired, delete file
-                    cache_path.unlink()
-                    logger.debug(f"Cache EXPIRED: {key}")
-            except Exception as e:
-                logger.warning(f"Failed to read cache {key}: {e}")
-
+        # STRICT MODE: No file cache lookup
         return None
 
     def set(
@@ -132,10 +123,12 @@ class APICache:
     ) -> None:
         """Store data in cache.
 
+        STRICT MODE: Only stores in memory cache, not file.
+
         Args:
             key: Cache key
             data: Data to cache
-            ttl_hours: Time-to-live in hours
+            ttl_hours: Time-to-live in hours (used for memory cache within request)
             source: API source name
             endpoint: API endpoint
         """
@@ -148,17 +141,9 @@ class APICache:
             endpoint=endpoint,
         )
 
-        # Store in memory
+        # STRICT MODE: Memory cache only (within-request deduplication)
         self._memory_cache[key] = entry
-
-        # Store in file
-        cache_path = self._get_cache_path(key)
-        try:
-            with open(cache_path, "w", encoding="utf-8") as f:
-                json.dump(asdict(entry), f, ensure_ascii=False)
-            logger.debug(f"Cache SET: {key} (TTL: {ttl_hours}h)")
-        except Exception as e:
-            logger.warning(f"Failed to write cache {key}: {e}")
+        logger.debug(f"Cache SET (memory only): {key}")
 
     async def get_or_fetch(
         self,
@@ -260,50 +245,38 @@ class APICache:
     def get_stats(self) -> dict[str, Any]:
         """Get cache statistics.
 
+        STRICT MODE: Only returns memory cache stats.
+
         Returns:
             Dict with cache stats
         """
-        file_count = len(list(self.cache_dir.glob("*.json")))
         memory_count = len(self._memory_cache)
 
-        # Calculate total size
-        total_size = sum(f.stat().st_size for f in self.cache_dir.glob("*.json"))
-
-        # Count by source
+        # Count by source in memory
         by_source: dict[str, int] = {}
-        for cache_file in self.cache_dir.glob("*.json"):
-            try:
-                with open(cache_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                source = data.get("source", "unknown")
-                by_source[source] = by_source.get(source, 0) + 1
-            except Exception:
-                pass
+        for entry in self._memory_cache.values():
+            source = entry.source
+            by_source[source] = by_source.get(source, 0) + 1
 
         return {
-            "file_count": file_count,
+            "mode": "STRICT",
+            "file_caching": "DISABLED",
             "memory_count": memory_count,
-            "total_size_bytes": total_size,
-            "total_size_mb": round(total_size / (1024 * 1024), 2),
             "by_source": by_source,
-            "cache_dir": str(self.cache_dir),
         }
 
     def clear_all(self) -> int:
         """Clear all cache entries.
 
+        STRICT MODE: Only clears memory cache.
+
         Returns:
             Number of entries cleared
         """
-        count = 0
-
-        for cache_file in self.cache_dir.glob("*.json"):
-            cache_file.unlink()
-            count += 1
-
+        count = len(self._memory_cache)
         self._memory_cache.clear()
 
-        logger.info(f"Cleared {count} cache entries")
+        logger.info(f"v6.5 STRICT MODE: Cleared {count} memory cache entries")
         return count
 
 

@@ -1,8 +1,13 @@
 """
 Azure Function: NBA Picks Trigger - Green Bier Sport Ventures
 
+v6.5 STRICT MODE: Always fetches FRESH data before predictions.
+
 Triggers the NBA prediction API and posts results to Teams.
 Supports interactive commands via Teams messages or direct HTTP calls.
+
+IMPORTANT: This function calls /admin/cache/clear BEFORE fetching predictions
+to ensure fresh data from ESPN and other sources.
 
 Endpoints:
   GET  /api/nba-picks              - Get today's picks and post to Teams
@@ -48,6 +53,110 @@ def _get_teams_webhook_url() -> str:
     return os.environ.get("TEAMS_WEBHOOK_URL", "").strip()
 
 
+def _get_graph_access_token() -> str:
+    """Get Microsoft Graph API access token using client credentials flow."""
+    tenant_id = os.environ.get("GRAPH_TENANT_ID", "").strip()
+    client_id = os.environ.get("GRAPH_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("GRAPH_CLIENT_SECRET", "").strip()
+
+    if not all([tenant_id, client_id, client_secret]):
+        logging.warning("Graph API credentials not configured")
+        return None
+
+    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+    data = f"client_id={client_id}&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default&client_secret={client_secret}&grant_type=client_credentials"
+
+    try:
+        req = Request(token_url, data=data.encode(), headers={"Content-Type": "application/x-www-form-urlencoded"})
+        with urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            return result.get("access_token")
+    except Exception as e:
+        logging.error(f"Failed to get Graph token: {e}")
+        return None
+
+
+def generate_csv_content(plays: list) -> str:
+    """Generate CSV content from plays list for download or SharePoint upload."""
+    # Sort by edge
+    sorted_plays = sorted(plays, key=lambda p: (
+        -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
+    ))
+
+    csv_lines = []
+    csv_lines.append("Time (CST),Matchup,Segment,Pick,Model,Market,Edge,Fire Rating")
+
+    for p in sorted_plays:
+        fire_rating = p.get("fire_rating", "")
+        time_cst = p.get("time_cst", "").replace(",", "")
+        matchup = p.get("matchup", "").replace(",", " vs ")
+        segment = p.get("period", "FG")
+        pick = p.get("pick", "").replace(",", "")
+        model = p.get("model_prediction", "")
+        market = p.get("market_line", "")
+        edge = p.get("edge", "N/A")
+
+        csv_lines.append(f"{time_cst},{matchup},{segment},{pick},{model},{market},{edge},{fire_rating}")
+
+    return "\n".join(csv_lines)
+
+
+def upload_to_sharepoint(filename: str, content: str) -> bool:
+    """Upload file to SharePoint using Microsoft Graph API."""
+    from urllib.parse import quote
+
+    token = _get_graph_access_token()
+    if not token:
+        logging.error("No Graph token available for SharePoint upload")
+        return False
+
+    site_name = os.environ.get("SHAREPOINT_SITE_NAME", "").strip()
+    folder_path = os.environ.get("SHAREPOINT_FOLDER_PATH", "").strip()
+
+    if not site_name:
+        logging.error("SHAREPOINT_SITE_NAME not configured")
+        return False
+
+    try:
+        # Get site ID
+        site_url = f"https://graph.microsoft.com/v1.0/sites/{site_name}"
+        req = Request(site_url, headers={"Authorization": f"Bearer {token}"})
+        with urlopen(req, timeout=30) as resp:
+            site_data = json.loads(resp.read().decode())
+            site_id = site_data.get("id")
+
+        logging.info(f"Got SharePoint site ID: {site_id}")
+
+        # Upload file directly using site-based path (more reliable than drive ID)
+        # URL-encode the folder path and filename for spaces
+        if folder_path:
+            encoded_path = quote(folder_path, safe='')
+            upload_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:/{encoded_path}/{filename}:/content"
+        else:
+            upload_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:/{filename}:/content"
+
+        logging.info(f"Uploading to: {upload_url}")
+
+        req = Request(
+            upload_url,
+            data=content.encode('utf-8'),
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "text/csv"
+            },
+            method="PUT"
+        )
+        with urlopen(req, timeout=60) as resp:
+            if resp.status in [200, 201]:
+                logging.info(f"Successfully uploaded {filename} to SharePoint")
+                return True
+
+    except Exception as e:
+        logging.error(f"SharePoint upload failed: {e}")
+
+    return False
+
+
 def get_fire_tier(rating: str) -> str:
     """Convert fire emoji rating to tier name."""
     fire_count = rating.count("\U0001F525")
@@ -60,12 +169,41 @@ def get_fire_tier(rating: str) -> str:
     return "NONE"
 
 
+def clear_api_cache() -> bool:
+    """
+    Clear API cache to ensure fresh data - v6.5 STRICT MODE.
+
+    MUST be called before fetching predictions to ensure:
+    - Fresh ESPN standings (real-time team records)
+    - Fresh game data
+    - Fresh statistics
+    """
+    url = f"{_get_nba_api_url()}/admin/cache/clear"
+    try:
+        req = Request(url, method="POST", headers={"Accept": "application/json"})
+        with urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            logging.info(f"v6.5 STRICT MODE: Cache cleared - {result}")
+            return True
+    except Exception as e:
+        logging.warning(f"Could not clear cache (will proceed anyway): {e}")
+        return False
+
+
 def fetch_predictions(date: str = "today") -> dict:
-    """Fetch predictions from NBA API."""
+    """
+    Fetch predictions from NBA API.
+
+    v6.5 STRICT MODE: Always clears cache first to ensure fresh data.
+    """
+    # STRICT MODE: Clear cache first to force fresh data
+    clear_api_cache()
+
     url = f"{_get_nba_api_url()}/slate/{date}/executive"
     try:
+        logging.info(f"v6.5 STRICT MODE: Fetching fresh predictions for {date}")
         req = Request(url, headers={"Accept": "application/json"})
-        with urlopen(req, timeout=60) as resp:
+        with urlopen(req, timeout=90) as resp:  # Increased timeout for fresh data fetch
             return json.loads(resp.read().decode())
     except Exception as e:
         logging.error(f"Failed to fetch predictions: {e}")
@@ -138,11 +276,13 @@ def parse_command(text: str) -> dict:
 
 
 def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: str = None) -> dict:
-    """Format predictions as Teams Adaptive Card matching dashboard format.
+    """Format predictions as Teams Adaptive Card matching weekly-lineup dashboard.
 
-    Columns: Date/Time | Matchup | Segment | Pick | Model | Market | Edge | Fire
+    Columns: Time | Matchup (Away vs Home w/records) | Segment | Pick | Model | Market | Edge | Fire
+    Limited to top 5 picks to stay within Teams webhook size limits.
     """
     plays = data.get("plays", [])
+    total_plays = len(plays)
 
     # Apply filters
     if filter_elite:
@@ -154,11 +294,11 @@ def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: st
     # Use API-provided timestamp or generate one
     generated_at = data.get("generated_at", datetime.now().strftime("%m/%d/%Y %I:%M %p CST"))
 
-    # Sort by edge (highest first)
+    # Sort by edge (highest first) and limit to top 5 for Teams size limits
     sorted_plays = sorted(plays, key=lambda p: (
         -p.get("fire_rating", "").count("\U0001F525"),
         -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
-    ))
+    ))[:5]
 
     # Filter label
     filter_label = ""
@@ -167,53 +307,43 @@ def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: st
     elif matchup_filter:
         filter_label = f" ({matchup_filter})"
 
-    # Build Adaptive Card body - matching dashboard table format
+    # Build Adaptive Card body - matching weekly-lineup dashboard format
     body = [
         {"type": "TextBlock", "text": "GREEN BIER SPORT VENTURES", "weight": "Bolder", "size": "Large", "color": "Good"},
         {"type": "TextBlock", "text": f"Today's Picks - {generated_at}{filter_label}", "size": "Medium"},
-        {"type": "TextBlock", "text": f"{len(plays)} Picks | Sorted by Edge", "size": "Small", "isSubtle": True},
-        {
-            "type": "ColumnSet",
-            "separator": True,
-            "columns": [
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "MATCHUP", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "SEG", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "PICK", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "MODEL", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "MKT", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "EDGE", "weight": "Bolder", "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "FIRE", "weight": "Bolder", "size": "Small"}]}
-            ]
-        }
+        {"type": "TextBlock", "text": f"Top {len(sorted_plays)} of {total_plays} picks | Sorted by Edge", "size": "Small", "isSubtle": True, "spacing": "Small"}
     ]
 
-    # Add each pick as a row
-    for p in sorted_plays:
-        matchup = p.get("matchup", "")
-        # Shorten matchup - extract team names
-        if " @ " in matchup:
-            parts = matchup.split(" @ ")
-            away = parts[0].split("(")[0].strip()[:12]
-            home = parts[1].split("(")[0].strip()[:12]
-            matchup_short = f"{away} @ {home}"
-        else:
-            matchup_short = matchup[:25]
+    # Table header
+    body.append({
+        "type": "ColumnSet",
+        "spacing": "Medium",
+        "columns": [
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Time", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "Matchup", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Seg", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Pick", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Model", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Mkt", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Edge", "weight": "Bolder", "size": "Small"}]},
+            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "Fire", "weight": "Bolder", "size": "Small"}]}
+        ]
+    })
 
+    # Add each pick as a table row
+    for p in sorted_plays:
+        matchup = p.get("matchup", "")  # e.g. "Chicago Bulls (15-17) @ Atlanta Hawks (17-16)"
+        time_cst = p.get("time_cst", "")  # e.g. "12/21 02:40 PM"
         segment = p.get("period", "FG")
-        pick = p.get("pick", "")[:18]
-        market = p.get("market", "")
-        odds = p.get("pick_odds", "N/A")
+        pick = p.get("pick", "")
+        model_pred = p.get("model_prediction", "")  # e.g. "233.3" or "+1.0 pts"
+        market_line = p.get("market_line", "")  # e.g. "248.0" or "-2.5"
         edge = p.get("edge", "N/A")
         fire_rating = p.get("fire_rating", "")
-        fire_count = fire_rating.count("\U0001F525")
 
-        # Model value based on market type
-        if "SPREAD" in market.upper():
-            model_val = edge.replace(" pts", "")
-        elif "TOTAL" in market.upper():
-            model_val = pick.split()[-1] if pick else "N/A"
-        else:
-            model_val = "-"
+        # Convert fire rating text to emoji display
+        fire_map = {"ELITE": "\U0001F525\U0001F525\U0001F525", "STRONG": "\U0001F525\U0001F525", "GOOD": "\U0001F525"}
+        fire_display = fire_map.get(fire_rating, "-")
 
         # Color based on edge value
         try:
@@ -222,28 +352,30 @@ def format_teams_card(data: dict, filter_elite: bool = False, matchup_filter: st
         except (ValueError, AttributeError):
             edge_color = "Default"
 
-        # Fire emoji display
-        fire_display = "\U0001F525" * fire_count if fire_count > 0 else "-"
-
-        row = {
+        # Table row
+        body.append({
             "type": "ColumnSet",
+            "spacing": "Small",
             "columns": [
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": matchup_short, "size": "Small", "wrap": True}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": time_cst, "size": "Small"}]},
+                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": matchup, "size": "Small", "wrap": True}]},
                 {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": segment, "size": "Small"}]},
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": pick, "size": "Small", "weight": "Bolder"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": model_val, "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": odds, "size": "Small"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": pick, "size": "Small", "wrap": True}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": str(model_pred), "size": "Small"}]},
+                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": str(market_line), "size": "Small"}]},
                 {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": edge, "size": "Small", "color": edge_color}]},
                 {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": fire_display, "size": "Small"}]}
             ]
-        }
-        body.append(row)
+        })
 
     card = {
         "type": "AdaptiveCard",
         "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
         "version": "1.2",
-        "body": body
+        "body": body,
+        "actions": [
+            {"type": "Action.OpenUrl", "title": "View All Picks", "url": "https://nba-picks-trigger.azurewebsites.net/api/dashboard"}
+        ]
     }
 
     return {
@@ -436,6 +568,15 @@ def nba_picks(req: func.HttpRequest) -> func.HttpResponse:
         else:
             logging.warning("Failed to post to Teams")
 
+        # Also upload CSV to SharePoint
+        csv_content = generate_csv_content(plays)
+        date_str = datetime.now().strftime("%Y%m%d_%H%M")
+        filename = f"NBA_Picks_{date_str}.csv"
+        uploaded = upload_to_sharepoint(filename, csv_content)
+        result["uploaded_to_sharepoint"] = uploaded
+        if uploaded:
+            logging.info(f"Uploaded {filename} to SharePoint")
+
     return func.HttpResponse(
         json.dumps(result, indent=2),
         status_code=200,
@@ -458,13 +599,16 @@ def menu(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="health", methods=["GET"])
 def health(req: func.HttpRequest) -> func.HttpResponse:
-    """Health check endpoint."""
+    """Health check endpoint - v6.5 STRICT MODE."""
     return func.HttpResponse(
         json.dumps({
             "status": "ok",
+            "version": "6.5",
+            "mode": "STRICT",
             "service": "nba-picks-trigger",
             "api_url": _get_nba_api_url(),
             "teams_webhook_configured": bool(_get_teams_webhook_url()),
+            "fresh_data": "Always clears cache before predictions",
         }),
         status_code=200,
         mimetype="application/json"
@@ -506,19 +650,30 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
     strong = len([p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
     good = len([p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
     
-    # Build table rows
+    # Build table rows - matching weekly-lineup dashboard format
     rows_html = ""
     for p in sorted_plays:
-        tier = get_fire_tier(p.get("fire_rating", ""))
-        tier_class = tier
+        fire_rating = p.get("fire_rating", "")
+        fire_map = {"ELITE": "\U0001F525\U0001F525\U0001F525", "STRONG": "\U0001F525\U0001F525", "GOOD": "\U0001F525"}
+        fire_display = fire_map.get(fire_rating, "-")
+
+        # Edge coloring
+        edge = p.get("edge", "N/A")
+        try:
+            edge_val = float(edge.replace("+", "").replace(" pts", "").replace("%", ""))
+            edge_class = "positive" if edge_val > 0 else "negative"
+        except (ValueError, AttributeError):
+            edge_class = ""
+
         rows_html += f"""<tr>
+            <td>{p.get("time_cst", "")}</td>
             <td>{p.get("matchup", "")}</td>
-            <td>{p.get("period", "FG")}</td>
-            <td>{p.get("market", "")}</td>
+            <td class="center">{p.get("period", "FG")}</td>
             <td class="pick-cell">{p.get("pick", "")}</td>
-            <td class="odds-cell">{p.get("pick_odds", "N/A")}</td>
-            <td>{p.get("edge", "N/A")}</td>
-            <td class="tier-cell {tier_class}">{tier}</td>
+            <td class="center">{p.get("model_prediction", "")}</td>
+            <td class="center">{p.get("market_line", "")}</td>
+            <td class="edge-cell {edge_class}">{edge}</td>
+            <td class="fire-cell">{fire_display}</td>
         </tr>"""
     
     status_msg = f"POSTED {len(plays)} picks to Teams!" if posted else f"Found {len(plays)} picks (Teams post failed)"
@@ -559,19 +714,26 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
         }}
         .picks-table td {{ padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }}
         .picks-table tr:hover {{ background: rgba(255,255,255,0.05); }}
-        .tier-cell {{ font-weight: bold; text-align: center; }}
-        .tier-cell.ELITE {{ color: #ff4757; }}
-        .tier-cell.STRONG {{ color: #ffa502; }}
-        .tier-cell.GOOD {{ color: #2ed573; }}
+        .center {{ text-align: center; }}
         .pick-cell {{ font-weight: bold; color: #00d4aa; }}
-        .odds-cell {{ font-weight: bold; }}
+        .edge-cell {{ font-weight: bold; text-align: center; }}
+        .edge-cell.positive {{ color: #2ed573; }}
+        .edge-cell.negative {{ color: #ff4757; }}
+        .fire-cell {{ text-align: center; font-size: 1rem; }}
+        .actions {{ text-align: center; margin: 30px 0; }}
+        .download-btn {{
+            display: inline-block; padding: 12px 24px; background: #00d4aa; color: #1a1a2e;
+            text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 1rem;
+            transition: background 0.2s;
+        }}
+        .download-btn:hover {{ background: #00b894; }}
         .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 0.8rem; }}
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>NBA Picks</h1>
-        <p>Green Bier Capital | Powered by Azure</p>
+        <h1>GREEN BIER SPORT VENTURES</h1>
+        <p>NBA Picks | {data.get("generated_at", "")}</p>
     </div>
     
     <div class="status {status_class}">
@@ -586,21 +748,53 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
     <table class="picks-table">
         <thead>
             <tr>
-                <th>Matchup</th>
-                <th>Per</th>
-                <th>Market</th>
+                <th>Time (CST)</th>
+                <th>Matchup (Away vs Home)</th>
+                <th>Seg</th>
                 <th>Pick</th>
-                <th>Odds</th>
+                <th>Model</th>
+                <th>Market</th>
                 <th>Edge</th>
-                <th>Tier</th>
+                <th>Fire</th>
             </tr>
         </thead>
         <tbody>{rows_html}</tbody>
     </table>
     
+    <div class="actions">
+        <a href="/api/csv" class="download-btn">Download Excel (CSV)</a>
+    </div>
+
     <div class="footer">NBA Prediction System v6.0</div>
 </body>
 </html>"""
     return func.HttpResponse(html, status_code=200, mimetype="text/html")
+
+
+@app.route(route="csv", methods=["GET"])
+def csv_download(req: func.HttpRequest) -> func.HttpResponse:
+    """Generate CSV file for Excel download."""
+    logging.info("CSV download requested")
+
+    data = fetch_predictions("today")
+
+    if not data or not data.get("plays"):
+        return func.HttpResponse("No picks available", status_code=404)
+
+    plays = data.get("plays", [])
+
+    # Use shared CSV generation function
+    csv_content = generate_csv_content(plays)
+
+    # Generate filename with date
+    date_str = datetime.now().strftime("%Y%m%d")
+    filename = f"NBA_Picks_{date_str}.csv"
+
+    return func.HttpResponse(
+        csv_content,
+        status_code=200,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 

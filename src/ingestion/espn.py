@@ -224,14 +224,122 @@ async def fetch_espn_schedule(
 ) -> List[ESPNGame]:
     """
     Convenience function to fetch ESPN schedule.
-    
+
     Args:
         dates: List of dates in YYYYMMDD format (e.g., ["20251208"])
         season: Season string (e.g., "2025")
-    
+
     Returns:
         List of ESPNGame objects
     """
     client = ESPNScheduleClient()
     return await client.fetch_schedule(dates=dates, season=season)
+
+
+@dataclass
+class ESPNTeamStanding:
+    """Team standings data from ESPN."""
+    team_name: str
+    team_id: str
+    wins: int
+    losses: int
+    win_pct: float
+    games_behind: float
+    streak: str
+    home_record: str
+    away_record: str
+    last_10: str
+    conference: str
+
+
+async def fetch_espn_standings() -> Dict[str, ESPNTeamStanding]:
+    """
+    Fetch current NBA standings from ESPN.
+
+    v6.5 STRICT MODE: ESPN is the PRIMARY and ONLY source for team records.
+    Raises error on failure - no silent fallbacks.
+
+    ESPN's standings API is FREE and provides real-time accurate W-L records.
+
+    Returns:
+        Dictionary mapping team name to ESPNTeamStanding object
+
+    Raises:
+        RuntimeError: If ESPN API fails or returns no data
+    """
+    url = "https://site.api.espn.com/apis/v2/sports/basketball/nba/standings"
+    standings: Dict[str, ESPNTeamStanding] = {}
+
+    logger.info("[API] Fetching fresh ESPN standings (STRICT MODE)")
+
+    try:
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+
+        # Parse conferences (Eastern and Western)
+        for conference in data.get("children", []):
+            conf_name = conference.get("abbreviation", "")
+            standings_data = conference.get("standings", {})
+            entries = standings_data.get("entries", [])
+
+            for entry in entries:
+                try:
+                    team_info = entry.get("team", {})
+                    team_name = team_info.get("displayName", "")
+                    team_id = str(team_info.get("id", ""))
+
+                    if not team_name:
+                        continue
+
+                    # Parse stats array
+                    stats = entry.get("stats", [])
+                    stats_dict = {}
+                    for stat in stats:
+                        stat_name = stat.get("name", "")
+                        stat_value = stat.get("displayValue", "")
+                        stats_dict[stat_name] = stat_value
+
+                    # Extract key values
+                    wins = int(stats_dict.get("wins", "0"))
+                    losses = int(stats_dict.get("losses", "0"))
+                    win_pct_str = stats_dict.get("winPercent", "0")
+                    try:
+                        win_pct = float(win_pct_str)
+                    except ValueError:
+                        win_pct = wins / (wins + losses) if (wins + losses) > 0 else 0.0
+
+                    games_behind_str = stats_dict.get("gamesBehind", "0")
+                    try:
+                        games_behind = float(games_behind_str) if games_behind_str != "-" else 0.0
+                    except ValueError:
+                        games_behind = 0.0
+
+                    standings[team_name] = ESPNTeamStanding(
+                        team_name=team_name,
+                        team_id=team_id,
+                        wins=wins,
+                        losses=losses,
+                        win_pct=win_pct,
+                        games_behind=games_behind,
+                        streak=stats_dict.get("streak", ""),
+                        home_record=stats_dict.get("Home", ""),
+                        away_record=stats_dict.get("Road", ""),
+                        last_10=stats_dict.get("Last Ten Games", ""),
+                        conference=conf_name,
+                    )
+                except Exception as e:
+                    logger.warning(f"Error parsing team standing: {e}")
+                    continue
+
+        if not standings:
+            raise RuntimeError("STRICT MODE: ESPN returned no standings data")
+
+        logger.info(f"[API] Fetched ESPN standings for {len(standings)} teams")
+        return standings
+
+    except Exception as e:
+        logger.error(f"STRICT MODE: ESPN standings fetch FAILED: {e}")
+        raise RuntimeError(f"STRICT MODE: Cannot proceed without ESPN standings - {e}")
 

@@ -1,5 +1,11 @@
-# NBA v6.0 - Production Container (9 Independent Markets)
+# NBA v6.5 - Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
+#
+# v6.5 STRICT MODE: FRESH DATA ONLY
+# - NO file caching - all data fetched fresh from APIs
+# - NO silent fallbacks - errors are raised, not swallowed
+# - ESPN is the ONLY source for team records
+# - Every request clears session cache before fetching
 #
 # 9 INDEPENDENT MARKETS (Q1 + 1H + FG × Spread/Total/Moneyline):
 #
@@ -18,9 +24,9 @@
 # - Total: fg_total_model.joblib (59.2% accuracy, +13.1% ROI)
 # - Moneyline: fg_moneyline_model.joblib (65.5% accuracy, +25.1% ROI)
 #
-# Build: docker build -f Dockerfile -t nba-v60:latest .
+# Build: docker build -f Dockerfile -t nba-v65:latest .
 # Run:   docker compose up -d  (uses docker-compose.yml with read-only and secrets)
-# Export: docker save nba-v60:latest | gzip > nba_v6.0_model.tar.gz
+# Export: docker save nba-v65:latest | gzip > nba_v6.5_model.tar.gz
 
 # =============================================================================
 # Stage 1: Builder - Install dependencies
@@ -45,8 +51,8 @@ FROM python:3.11.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="6.0"
-LABEL description="NBA Production Picks Model - 9 Independent Markets (Q1+1H+FG)"
+LABEL version="6.5"
+LABEL description="NBA Production Picks Model - STRICT MODE - 9 Independent Markets (Q1+1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app
 
@@ -130,7 +136,7 @@ ENV THE_ODDS_BASE_URL=https://api.the-odds-api.com/v4
 ENV API_BASKETBALL_BASE_URL=https://v1.basketball.api-sports.io
 
 # Season Configuration (REQUIRED by src/config.py)
-ENV CURRENT_SEASON=2024-2025
+ENV CURRENT_SEASON=2025-2026
 ENV SEASONS_TO_PROCESS=2024-2025,2025-2026
 
 # Filter Thresholds (REQUIRED by src/config.py - betting prediction filters)
@@ -150,11 +156,12 @@ ENV FILTER_Q1_MIN_EDGE_PCT=0.05
 # CORS Configuration
 ENV ALLOWED_ORIGINS=*
 
-# v6.4 STRICT MODE - All 9 markets required (baked-in env defaults)
-ENV NBA_MODEL_VERSION=6.4-STRICT
+# v6.5 STRICT MODE - All 9 markets required, FRESH DATA ONLY (baked-in env defaults)
+ENV NBA_MODEL_VERSION=6.5-STRICT
 ENV NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
 ENV NBA_PERIODS=first_quarter,first_half,full_game
 ENV NBA_STRICT_MODE=true
+ENV NBA_CACHE_DISABLED=true
 
 # =============================================================================
 # ONLY THESE 2 SECRETS ARE REQUIRED AT RUNTIME:

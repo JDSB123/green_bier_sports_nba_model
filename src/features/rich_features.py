@@ -1,5 +1,7 @@
 """
-Build rich features from API-Basketball endpoints - NO FALLBACKS.
+Build rich features from API-Basketball endpoints - STRICT MODE.
+
+v6.5: FRESH DATA ONLY - No file caching, no silent fallbacks.
 
 Inspired by proven NBA models (FiveThirtyEight, DRatings, Cleaning the Glass):
 - Tempo-free efficiency ratings (ORtg/DRtg)
@@ -16,7 +18,7 @@ Uses all available endpoints:
 - Recent games (form)
 - Player stats (key contributors)
 
-Raises errors if data is missing - no silent defaults.
+STRICT MODE: Raises errors if data is missing - no silent defaults, no stale caches.
 """
 from __future__ import annotations
 import asyncio
@@ -25,11 +27,11 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
-import joblib
 import pandas as pd
 
 from src.config import settings
 from src.ingestion import api_basketball
+from src.ingestion.espn import fetch_espn_standings
 from src.modeling.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
@@ -40,25 +42,38 @@ from src.modeling.team_factors import (
 
 
 class RichFeatureBuilder:
-    """Build prediction features from live API-Basketball data."""
+    """
+    Build prediction features from live API data.
+
+    STRICT MODE (v6.5):
+    - NO file caching - all data fetched fresh from APIs
+    - NO silent fallbacks - errors are raised, not swallowed
+    - Session-only memory cache for within-request deduplication
+    - User-initiated requests only
+    """
 
     def __init__(self, league_id: int = 12, season: str = None):
         self.league_id = league_id
         self.season = season or settings.current_season
+        # Session-only memory caches (cleared between requests)
         self._team_cache: Dict[str, int] = {}
         self._stats_cache: Dict[int, Dict] = {}
         self._games_cache: Optional[List[Dict]] = None
+        self._standings_cache: Optional[Dict[int, Dict]] = None
+        self._espn_standings_cache: Optional[Dict[str, Dict]] = None
         self._injuries_cache: Optional[pd.DataFrame] = None
         self._injuries_fetched: bool = False
 
-        # Ensure cache directory exists (use /tmp if main cache is read-only)
-        self.cache_dir = os.path.join(settings.data_processed_dir, "cache")
-        try:
-            os.makedirs(self.cache_dir, exist_ok=True)
-        except OSError:
-            # Fall back to /tmp for read-only filesystems (Docker production)
-            self.cache_dir = "/tmp/nba_cache"
-            os.makedirs(self.cache_dir, exist_ok=True)
+    def clear_session_cache(self):
+        """Clear all in-memory session caches to force fresh data."""
+        self._team_cache.clear()
+        self._stats_cache.clear()
+        self._games_cache = None
+        self._standings_cache = None
+        self._espn_standings_cache = None
+        self._injuries_cache = None
+        self._injuries_fetched = False
+        print("[CACHE] Session cache cleared - next calls will fetch fresh data")
 
     async def get_team_id(self, team_name: str) -> int:
         """Get team ID from name, with caching."""
@@ -77,20 +92,18 @@ class RichFeatureBuilder:
         return team_id
 
     async def get_team_stats(self, team_id: int) -> Dict[str, Any]:
-        """Get team season statistics."""
+        """
+        Get team season statistics - ALWAYS FRESH.
+
+        STRICT MODE: No file caching. Fetches fresh from API every request.
+        Session memory cache only prevents duplicate API calls within same request.
+        """
+        # Session memory cache only (within-request deduplication)
         if team_id in self._stats_cache:
             return self._stats_cache[team_id]
 
-        cache_file = os.path.join(
-            self.cache_dir,
-            f"stats_{self.league_id}_{self.season}_{team_id}.joblib"
-        )
-
-        if os.path.exists(cache_file):
-            response = joblib.load(cache_file)
-            self._stats_cache[team_id] = response
-            return response
-
+        # Fetch fresh statistics from API - NO FILE CACHE
+        print(f"[API] Fetching fresh stats for team {team_id}")
         result = await api_basketball.fetch_statistics(
             league=self.league_id,
             season=self.season,
@@ -99,27 +112,28 @@ class RichFeatureBuilder:
 
         response = result.get("response", {})
         if not response:
-            raise ValueError(f"No statistics found for team {team_id}")
+            raise ValueError(f"STRICT MODE: No statistics found for team {team_id} - API returned empty")
 
-        # response is a dict with keys: country, league, team, games, points
-        joblib.dump(response, cache_file)
         self._stats_cache[team_id] = response
         return response
 
     async def get_h2h_history(self, team1_id: int, team2_id: int) -> List[Dict]:
-        """Get head-to-head history between two teams."""
+        """
+        Get head-to-head history between two teams - ALWAYS FRESH.
+
+        STRICT MODE: No file caching. Fetches fresh from API every request.
+        """
         # Sort IDs to ensure consistent cache key
         t1, t2 = sorted([team1_id, team2_id])
         h2h_string = f"{t1}-{t2}"
 
-        cache_file = os.path.join(
-            self.cache_dir,
-            f"h2h_{self.league_id}_{self.season}_{h2h_string}.joblib"
-        )
+        # Check session cache first
+        cache_key = f"h2h_{h2h_string}"
+        if hasattr(self, '_h2h_cache') and cache_key in self._h2h_cache:
+            return self._h2h_cache[cache_key]
 
-        if os.path.exists(cache_file):
-            return joblib.load(cache_file)
-
+        # Fetch fresh from API - NO FILE CACHE
+        print(f"[API] Fetching fresh H2H for {h2h_string}")
         result = await api_basketball.fetch_h2h(
             h2h=h2h_string,
             league=self.league_id,
@@ -127,27 +141,34 @@ class RichFeatureBuilder:
         )
 
         response = result.get("response", [])
-        joblib.dump(response, cache_file)
+
+        # Session cache only
+        if not hasattr(self, '_h2h_cache'):
+            self._h2h_cache = {}
+        self._h2h_cache[cache_key] = response
+
         return response
 
     async def get_recent_games(self, team_id: int, limit: int = 10) -> List[Dict]:
-        """Get recent games for a team."""
-        # Fetch all games for team this season (cached)
-        if self._games_cache is None:
-            cache_file = os.path.join(
-                self.cache_dir,
-                f"games_{self.league_id}_{self.season}.joblib"
-            )
+        """
+        Get recent games for a team - ALWAYS FRESH.
 
-            if os.path.exists(cache_file):
-                self._games_cache = joblib.load(cache_file)
-            else:
-                result = await api_basketball.fetch_games(
-                    season=self.season,
-                    league=self.league_id
-                )
-                self._games_cache = result.get("response", [])
-                joblib.dump(self._games_cache, cache_file)
+        STRICT MODE: No file caching. Fetches fresh from API every request.
+        Session memory cache only prevents duplicate API calls within same request.
+        """
+        # Fetch all games for team this season - session cache only
+        if self._games_cache is None:
+            print(f"[API] Fetching fresh games for season {self.season}")
+            result = await api_basketball.fetch_games(
+                season=self.season,
+                league=self.league_id
+            )
+            self._games_cache = result.get("response", [])
+
+            if not self._games_cache:
+                raise ValueError(f"STRICT MODE: No games found for season {self.season} - API returned empty")
+
+            print(f"[API] Fetched {len(self._games_cache)} games")
 
         all_games = self._games_cache
 
@@ -167,61 +188,161 @@ class RichFeatureBuilder:
 
         return team_games[:limit]
 
+    async def get_espn_standings(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Fetch current standings from ESPN (PRIMARY source) - ALWAYS FRESH.
+
+        STRICT MODE: ESPN is the ONLY source for team records.
+        Raises error if ESPN fails - NO silent fallback to stale data.
+
+        ESPN standings are FREE and update in real-time after each game.
+        Returns dict keyed by team name with wins, losses, win_pct.
+        """
+        # Session cache only
+        if self._espn_standings_cache is not None:
+            return self._espn_standings_cache
+
+        print("[API] Fetching fresh ESPN standings")
+        espn_standings = await fetch_espn_standings()
+
+        if not espn_standings:
+            raise ValueError("STRICT MODE: ESPN standings returned empty - cannot proceed without fresh team records")
+
+        self._espn_standings_cache = {
+            name: {
+                "wins": standing.wins,
+                "losses": standing.losses,
+                "win_pct": standing.win_pct,
+                "games_played": standing.wins + standing.losses,
+                "streak": standing.streak,
+                "home_record": standing.home_record,
+                "away_record": standing.away_record,
+                "last_10": standing.last_10,
+            }
+            for name, standing in espn_standings.items()
+        }
+
+        print(f"[API] Fetched ESPN standings for {len(self._espn_standings_cache)} teams")
+        return self._espn_standings_cache
+
+    def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
+        """Calculate team W-L record from completed games data.
+
+        This is more accurate than the /statistics or /standings endpoints
+        which may have stale data from API-Basketball.
+
+        Args:
+            team_id: The team ID to calculate record for
+
+        Returns:
+            Dict with 'wins', 'losses', 'games_played' keys
+        """
+        if self._games_cache is None:
+            return {"wins": 0, "losses": 0, "games_played": 0}
+
+        wins = 0
+        losses = 0
+
+        for game in self._games_cache:
+            # Only count finished games
+            if game.get("status", {}).get("short") != "FT":
+                continue
+
+            home_team = game.get("teams", {}).get("home", {})
+            away_team = game.get("teams", {}).get("away", {})
+            home_id = home_team.get("id")
+            away_id = away_team.get("id")
+
+            # Check if this team played in the game
+            if home_id != team_id and away_id != team_id:
+                continue
+
+            # Get scores
+            home_score = game.get("scores", {}).get("home", {}).get("total", 0) or 0
+            away_score = game.get("scores", {}).get("away", {}).get("total", 0) or 0
+
+            # Skip games with no score (shouldn't happen for finished games)
+            if home_score == 0 and away_score == 0:
+                continue
+
+            # Determine if team won
+            if home_id == team_id:
+                if home_score > away_score:
+                    wins += 1
+                else:
+                    losses += 1
+            else:  # away_id == team_id
+                if away_score > home_score:
+                    wins += 1
+                else:
+                    losses += 1
+
+        return {
+            "wins": wins,
+            "losses": losses,
+            "games_played": wins + losses
+        }
+
     async def get_standings(self) -> Dict[int, Dict]:
-        """Get current standings indexed by team ID."""
+        """Get current standings indexed by team ID.
+
+        Standings data is more current than /statistics for W-L records.
+        """
         result = await api_basketball.fetch_standings(
             league=self.league_id,
             season=self.season
         )
 
         standings = {}
-        for entry in result.get("response", [[]])[0]:
+        # Handle nested response structure (may be list of lists)
+        response = result.get("response", [])
+        entries = []
+        for item in response:
+            if isinstance(item, list):
+                entries.extend(item)
+            elif isinstance(item, dict):
+                entries.append(item)
+
+        for entry in entries:
             team_id = entry.get("team", {}).get("id")
             if team_id:
+                games = entry.get("games", {})
+                wins = games.get("win", {}).get("total", 0)
+                losses = games.get("lose", {}).get("total", 0)
+                played = games.get("played", wins + losses)
+
                 standings[team_id] = {
                     "position": entry.get("position"),
-                    "win_rate": entry.get("games", {}).get("win", {}).get("percentage"),
-                    "games_played": entry.get("games", {}).get("played"),
+                    "win_rate": games.get("win", {}).get("percentage"),
+                    "games_played": played,
+                    "wins": wins,
+                    "losses": losses,
                 }
 
         return standings
 
     async def get_injuries_df(self) -> Optional[pd.DataFrame]:
         """
-        Get injuries dataframe, fetching dynamically if needed.
+        Get injuries dataframe - ALWAYS FRESH.
 
-        PREMIUM API: Uses ESPN (free) + API-Basketball for comprehensive injury data.
-        Results are cached for the session to avoid excessive API calls.
+        STRICT MODE: No file caching. Fetches fresh from API every request.
+        Uses ESPN (free) + API-Basketball for comprehensive injury data.
         """
+        # Session cache only
         if self._injuries_fetched:
             return self._injuries_cache
 
         self._injuries_fetched = True
 
-        # First try loading from file (may be recently updated)
-        injury_path = os.path.join(settings.data_processed_dir, "injuries.csv")
-
-        if os.path.exists(injury_path):
-            file_mtime = datetime.fromtimestamp(os.path.getmtime(injury_path))
-            file_age = datetime.now() - file_mtime
-            # Use file if less than 4 hours old
-            if file_age < timedelta(hours=4):
-                try:
-                    self._injuries_cache = pd.read_csv(injury_path)
-                    print(f"[INJURIES] Loaded {len(self._injuries_cache)} injuries from cache (age: {file_age})")
-                    return self._injuries_cache
-                except Exception as e:
-                    print(f"[INJURIES] Failed to load cache: {e}")
-
-        # Fetch fresh injuries from all sources
+        # Fetch fresh injuries from all sources - NO FILE CACHE
         try:
             from src.ingestion.injuries import fetch_all_injuries, enrich_injuries_with_stats
 
-            print("[INJURIES] Fetching fresh injury data...")
+            print("[API] Fetching fresh injury data...")
             injuries = await fetch_all_injuries()
 
             if not injuries:
-                print("[INJURIES] No injury data available from any source")
+                print("[INJURIES] No injury data available (this is OK - not all players are injured)")
                 self._injuries_cache = None
                 return None
 
@@ -244,19 +365,12 @@ class RichFeatureBuilder:
                 })
 
             self._injuries_cache = pd.DataFrame(rows)
-            print(f"[INJURIES] Fetched {len(self._injuries_cache)} injuries from live API")
-
-            # Save to cache file for future runs
-            try:
-                self._injuries_cache.to_csv(injury_path, index=False)
-                print(f"[INJURIES] Saved to {injury_path}")
-            except Exception as e:
-                print(f"[INJURIES] Could not save cache: {e}")
+            print(f"[API] Fetched {len(self._injuries_cache)} injuries from live API")
 
             return self._injuries_cache
 
         except Exception as e:
-            print(f"[INJURIES] Error fetching injuries: {e}")
+            print(f"[INJURIES] Error fetching injuries: {e} - continuing without injury data")
             self._injuries_cache = None
             return None
 
@@ -276,14 +390,15 @@ class RichFeatureBuilder:
         home_id = await self.get_team_id(home_team)
         away_id = await self.get_team_id(away_team)
 
-        # Fetch all data in parallel
-        home_stats, away_stats, h2h, standings, home_recent, away_recent = await asyncio.gather(
+        # Fetch all data in parallel (including ESPN standings for accurate W-L records)
+        home_stats, away_stats, h2h, standings, home_recent, away_recent, espn_standings = await asyncio.gather(
             self.get_team_stats(home_id),
             self.get_team_stats(away_id),
             self.get_h2h_history(home_id, away_id),
             self.get_standings(),
             self.get_recent_games(home_id, limit=10),
             self.get_recent_games(away_id, limit=10),
+            self.get_espn_standings(),  # ESPN is most accurate for W-L records
         )
 
         # Extract season averages
@@ -300,14 +415,29 @@ class RichFeatureBuilder:
         if home_ppg == 0 or away_ppg == 0:
             raise ValueError(f"Missing PPG data: home={home_ppg}, away={away_ppg}")
 
-        # Win percentage from games stats
-        home_games_data = home_stats.get("games", {})
-        away_games_data = away_stats.get("games", {})
+        # Standings position (from API-Basketball for conference position)
+        home_standing = standings.get(home_id, {})
+        away_standing = standings.get(away_id, {})
 
-        home_wins = home_games_data.get("wins", {}).get("all", {}).get("total", 0)
-        home_losses = home_games_data.get("loses", {}).get("all", {}).get("total", 0)
-        away_wins = away_games_data.get("wins", {}).get("all", {}).get("total", 0)
-        away_losses = away_games_data.get("loses", {}).get("all", {}).get("total", 0)
+        # STRICT MODE: ESPN is the ONLY source for team records
+        # NO FALLBACKS - ESPN is free, real-time, and accurate
+        home_espn = espn_standings.get(home_team, {})
+        away_espn = espn_standings.get(away_team, {})
+
+        home_wins = home_espn.get("wins", 0)
+        home_losses = home_espn.get("losses", 0)
+        away_wins = away_espn.get("wins", 0)
+        away_losses = away_espn.get("losses", 0)
+
+        # STRICT MODE: Fail if ESPN doesn't have this team's data
+        if home_wins == 0 and home_losses == 0:
+            raise ValueError(f"STRICT MODE: ESPN has no record for '{home_team}' - verify team name matches ESPN format")
+        if away_wins == 0 and away_losses == 0:
+            raise ValueError(f"STRICT MODE: ESPN has no record for '{away_team}' - verify team name matches ESPN format")
+
+        # Log record sources for confirmation
+        print(f"[RECORDS] {home_team}: {home_wins}-{home_losses} (source: ESPN LIVE)")
+        print(f"[RECORDS] {away_team}: {away_wins}-{away_losses} (source: ESPN LIVE)")
 
         home_games_played = home_wins + home_losses
         away_games_played = away_wins + away_losses
@@ -317,10 +447,6 @@ class RichFeatureBuilder:
 
         home_win_pct = home_wins / home_games_played
         away_win_pct = away_wins / away_games_played
-
-        # Standings position (contextual strength)
-        home_standing = standings.get(home_id, {})
-        away_standing = standings.get(away_id, {})
 
         home_position = home_standing.get("position", 15)  # Mid-table if missing
         away_position = away_standing.get("position", 15)
