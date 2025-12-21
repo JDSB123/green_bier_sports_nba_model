@@ -59,10 +59,12 @@ class TestJSONFormatter:
 class TestSetupLogger:
     """Tests for logger setup."""
 
-    def test_setup_logger_default(self):
+    def test_setup_logger_default(self, monkeypatch):
         """Test default logger setup."""
-        logger = setup_logger("test_logger_1")
-        assert logger.name == "test_logger_1"
+        # Override LOG_LEVEL for this test
+        monkeypatch.setenv("LOG_LEVEL", "INFO")
+        logger = setup_logger("test_logger_default_1")
+        assert logger.name == "test_logger_default_1"
         assert logger.level == logging.INFO
         assert len(logger.handlers) > 0
 

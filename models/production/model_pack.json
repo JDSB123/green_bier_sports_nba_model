@@ -123,9 +123,10 @@
       "model_file": "1h_total_model.pkl"
     },
     "1h_moneyline": {
-      "status": "pending",
-      "model_file": null,
-      "note": "Needs training - run: python scripts/train_models.py --market 1h_moneyline"
+      "status": "ready",
+      "model_file": "1h_moneyline_model.pkl",
+      "features_file": "1h_moneyline_features.pkl",
+      "note": "Uses FG moneyline features - 1H-specific features unavailable in training data"
     },
     "q1_spread": {
       "status": "ready",
@@ -136,17 +137,13 @@
       "model_file": "q1_total_model.joblib"
     },
     "q1_moneyline": {
-      "status": "pending",
-      "model_file": null,
-      "model_class": "FirstQuarterMoneylineModel",
-      "label_col": "home_q1_win",
-      "expected_accuracy_overall": 0.53,
-      "expected_accuracy_high_conf": 0.588,
-      "expected_roi_high_conf": 0.123,
-      "filter_class": "FirstQuarterMoneylineFilter",
-      "min_confidence": 0.6,
-      "train_command": "python scripts/train_models.py --market q1_moneyline",
-      "note": "CRITICAL: Use FirstQuarterMoneylineFilter with 60% min confidence for profitability"
+      "status": "ready",
+      "model_file": "q1_moneyline_model.joblib",
+      "accuracy": 0.56,
+      "roi": 0.068,
+      "high_conf_accuracy": 0.619,
+      "high_conf_roi": 0.182,
+      "note": "Use 60% min confidence filter for profitability"
     }
   }
 }
