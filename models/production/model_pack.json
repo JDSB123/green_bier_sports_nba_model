@@ -1,7 +1,8 @@
 {
-  "version": "1.0.0",
-  "created_at": "2025-12-18T00:00:00Z",
-  "git_commit": "3ea352ddf6e9e2224f095108239878c69f2af29a",
+  "version": "6.0.0",
+  "created_at": "2025-12-20T00:00:00Z",
+  "git_commit": "pending",
+  "release_notes": "v6.0 Production Hardened - All ingestion modules hardened with circuit breakers, API key validation, zero fallback to invalid data",
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-16",
@@ -82,5 +83,32 @@
     "date_range": "2024-10-02 to 2025-12-16",
     "note": "Walk-forward validation used in backtest"
   },
-  "notes": "This model pack contains the backtested and validated logistic models with isotonic calibration. All models are required for the UnifiedPredictionEngine to function. Moneyline predictions are derived from the spread model, so no separate moneyline model file is included."
+  "notes": "This model pack contains the backtested and validated logistic models with isotonic calibration. All models are required for the UnifiedPredictionEngine to function. Moneyline predictions are derived from the spread model, so no separate moneyline model file is included.",
+  "ingestion_modules": {
+    "version": "6.0.0",
+    "hardening_status": "production",
+    "the_odds_api": {
+      "file": "src/ingestion/the_odds.py",
+      "endpoints": 11,
+      "hardened": true,
+      "features": ["circuit_breaker", "api_key_validation", "zero_fallback", "mandatory_standardization"]
+    },
+    "api_basketball": {
+      "file": "src/ingestion/api_basketball.py",
+      "endpoints": 10,
+      "hardened": true,
+      "features": ["circuit_breaker", "api_key_validation", "logger_only"]
+    },
+    "betting_splits": {
+      "file": "src/ingestion/betting_splits.py",
+      "sources": ["action_network", "the_odds_api", "sbro", "covers"],
+      "hardened": true,
+      "features": ["credential_validation", "graceful_degradation", "logger_only"]
+    },
+    "standardize": {
+      "file": "src/ingestion/standardize.py",
+      "canonical_format": "ESPN",
+      "validation_flags": ["_data_valid", "_home_team_valid", "_away_team_valid"]
+    }
+  }
 }
