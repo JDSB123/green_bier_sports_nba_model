@@ -22,29 +22,31 @@ async def fetch_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
     markets: str = "h2h,spreads,totals",
-    standardize: bool = True,  # Always True - standardization is mandatory
 ) -> list[Dict[str, Any]]:
     """
     Fetch odds from The Odds API and standardize to ESPN format.
-    
+
     Team name standardization is MANDATORY and always performed to ensure
     data consistency across sources.
-    
+
     Args:
         sport: Sport identifier
         regions: Regions to fetch odds for
         markets: Markets to fetch
-        standardize: Always True - team names are always standardized (kept for API compatibility)
-    
+
     Returns:
         List of game dictionaries with standardized team names in ESPN format
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the API request fails
     """
     logger.info(f"Fetching odds for {sport} with markets: {markets}")
-    
+
     # Validate API key
     if not settings.the_odds_api_key:
         raise ValueError("THE_ODDS_API_KEY is not set")
-    
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "regions": regions,
@@ -52,10 +54,10 @@ async def fetch_odds(
         "oddsFormat": "american",
         "dateFormat": "iso",
     }
-    
+
     # Use circuit breaker to prevent cascading failures
     breaker = get_odds_api_breaker()
-    
+
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
@@ -63,7 +65,7 @@ async def fetch_odds(
             )
             resp.raise_for_status()
             return resp.json()
-    
+
     try:
         data = await breaker.call_async(_fetch_with_client)
         logger.info(f"Successfully fetched {len(data)} games with odds")
@@ -72,36 +74,34 @@ async def fetch_odds(
         raise
 
     # ALWAYS standardize team names to ESPN format (mandatory)
+    # NO FALLBACK to unstandardized data - skip invalid entries
     standardized_data = []
     invalid_count = 0
     for game in data:
         try:
             standardized = standardize_game_data(game, source="the_odds")
-            # Only include games with valid team names (prevent fake data)
             if standardized.get("_data_valid", False):
                 standardized_data.append(standardized)
             else:
                 invalid_count += 1
                 logger.warning(
-                    "Skipping game with invalid team names: "
+                    f"Skipping game with invalid team names: "
                     f"home='{standardized.get('home_team', 'N/A')}', "
                     f"away='{standardized.get('away_team', 'N/A')}'"
                 )
         except Exception as e:
             logger.error(
-                "Error standardizing game data: "
-                f"{e}. Game: {game.get('home_team', 'N/A')} vs {game.get('away_team', 'N/A')}"
+                f"Error standardizing game data: {e}. "
+                f"Game: {game.get('home_team', 'N/A')} vs {game.get('away_team', 'N/A')}"
             )
-            # Do NOT add invalid data - skip it entirely
             invalid_count += 1
 
-    logger.info(
-        f"Standardized {len(standardized_data)} valid games (skipped {invalid_count} invalid games)"
-    )
     if invalid_count > 0:
-        logger.warning(
-            f"⚠️  {invalid_count} games were skipped due to invalid/unstandardized team names"
+        logger.info(
+            f"Standardized {len(standardized_data)} valid games "
+            f"(skipped {invalid_count} invalid)"
         )
+
     return standardized_data
 
 
@@ -133,7 +133,6 @@ async def fetch_event_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
     markets: str = ALL_PERIOD_MARKETS,
-    standardize: bool = True,
 ) -> Dict[str, Any]:
     """
     Fetch odds for a specific event from The Odds API.
@@ -144,17 +143,27 @@ async def fetch_event_odds(
     - Alternate lines: spreads, totals
     - Player props: points, rebounds, assists
 
+    Team name standardization is MANDATORY and always performed.
+
     Args:
         event_id: The event ID from The Odds API
         sport: Sport identifier
         regions: Regions to fetch odds for
         markets: Markets to fetch (default: ALL available markets)
-        standardize: If True, standardize team names to ESPN format
 
     Returns:
-        Event dictionary with odds data including all period markets
+        Event dictionary with odds data including all period markets (standardized)
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set or event has invalid team names
+        httpx.HTTPStatusError: If the API request fails
     """
     logger.info(f"Fetching event odds for {event_id} with markets: {markets}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "regions": regions,
@@ -162,23 +171,39 @@ async def fetch_event_odds(
         "oddsFormat": "american",
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(
-            f"{settings.the_odds_base_url}/sports/{sport}/events/{event_id}/odds",
-            params=params
-        )
-        resp.raise_for_status()
-        data = resp.json()
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/sports/{sport}/events/{event_id}/odds",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         logger.info(f"Successfully fetched event odds for {event_id}")
-        
-        # Standardize team names to ESPN format
-        if standardize:
-            try:
-                data = standardize_game_data(data, source="the_odds")
-            except Exception as e:
-                logger.warning(f"Error standardizing event odds: {e}")
-        
-        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch event odds from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    try:
+        standardized = standardize_game_data(data, source="the_odds")
+        if not standardized.get("_data_valid", False):
+            raise ValueError(
+                f"Event {event_id} has invalid team names: "
+                f"home='{standardized.get('home_team', 'N/A')}', "
+                f"away='{standardized.get('away_team', 'N/A')}'"
+            )
+        return standardized
+    except Exception as e:
+        logger.error(f"Error standardizing event odds for {event_id}: {e}")
+        raise
 
 
 @retry(
@@ -187,48 +212,85 @@ async def fetch_event_odds(
 )
 async def fetch_events(
     sport: str = "basketball_nba",
-    standardize: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Fetch all upcoming events (games) with their IDs.
-    
+
     Use this to get event IDs for fetching event-specific odds
     (e.g., first half markets, alternate lines).
-    
+
+    Team name standardization is MANDATORY and always performed.
+
     Args:
         sport: Sport identifier
-        standardize: If True, standardize team names to ESPN format
-    
+
     Returns:
-        List of event dictionaries with IDs, teams, and commence times
+        List of event dictionaries with IDs, teams, and commence times (standardized)
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the API request fails
     """
     logger.info(f"Fetching events for {sport}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(
-            f"{settings.the_odds_base_url}/sports/{sport}/events",
-            params=params
-        )
-        resp.raise_for_status()
-        data = resp.json()
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/sports/{sport}/events",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         logger.info(f"Successfully fetched {len(data)} events")
-        
-        # Standardize team names to ESPN format
-        if standardize:
-            standardized_data = []
-            for event in data:
-                try:
-                    standardized = standardize_game_data(event, source="the_odds")
-                    standardized_data.append(standardized)
-                except Exception as e:
-                    logger.warning(f"Error standardizing event data: {e}")
-                    standardized_data.append(event)
-            return standardized_data
-        
-        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch events from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    # NO FALLBACK to unstandardized data - skip invalid entries
+    standardized_data = []
+    invalid_count = 0
+    for event in data:
+        try:
+            standardized = standardize_game_data(event, source="the_odds")
+            if standardized.get("_data_valid", False):
+                standardized_data.append(standardized)
+            else:
+                invalid_count += 1
+                logger.warning(
+                    f"Skipping event with invalid team names: "
+                    f"home='{standardized.get('home_team', 'N/A')}', "
+                    f"away='{standardized.get('away_team', 'N/A')}'"
+                )
+        except Exception as e:
+            logger.error(
+                f"Error standardizing event data: {e}. "
+                f"Event: {event.get('home_team', 'N/A')} vs {event.get('away_team', 'N/A')}"
+            )
+            invalid_count += 1
+
+    if invalid_count > 0:
+        logger.info(
+            f"Standardized {len(standardized_data)} valid events "
+            f"(skipped {invalid_count} invalid)"
+        )
+
+    return standardized_data
 
 
 @retry(
@@ -238,47 +300,84 @@ async def fetch_events(
 async def fetch_scores(
     sport: str = "basketball_nba",
     days_from: int = 1,
-    standardize: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Fetch recent game scores for result verification.
-    
+
+    Team name standardization is MANDATORY and always performed.
+
     Args:
         sport: Sport identifier
         days_from: Number of days in the past to fetch scores for (1-3)
-        standardize: If True, standardize team names to ESPN format
-    
+
     Returns:
-        List of games with scores (completed and in-progress)
+        List of games with scores (completed and in-progress), standardized
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the API request fails
     """
     logger.info(f"Fetching scores for {sport}, days_from={days_from}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "daysFrom": str(days_from),
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(
-            f"{settings.the_odds_base_url}/sports/{sport}/scores",
-            params=params
-        )
-        resp.raise_for_status()
-        data = resp.json()
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/sports/{sport}/scores",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         logger.info(f"Successfully fetched scores for {len(data)} games")
-        
-        # Standardize team names to ESPN format
-        if standardize:
-            standardized_data = []
-            for game in data:
-                try:
-                    standardized = standardize_game_data(game, source="the_odds")
-                    standardized_data.append(standardized)
-                except Exception as e:
-                    logger.warning(f"Error standardizing score data: {e}")
-                    standardized_data.append(game)
-            return standardized_data
-        
-        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch scores from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    # NO FALLBACK to unstandardized data - skip invalid entries
+    standardized_data = []
+    invalid_count = 0
+    for game in data:
+        try:
+            standardized = standardize_game_data(game, source="the_odds")
+            if standardized.get("_data_valid", False):
+                standardized_data.append(standardized)
+            else:
+                invalid_count += 1
+                logger.warning(
+                    f"Skipping score with invalid team names: "
+                    f"home='{standardized.get('home_team', 'N/A')}', "
+                    f"away='{standardized.get('away_team', 'N/A')}'"
+                )
+        except Exception as e:
+            logger.error(
+                f"Error standardizing score data: {e}. "
+                f"Game: {game.get('home_team', 'N/A')} vs {game.get('away_team', 'N/A')}"
+            )
+            invalid_count += 1
+
+    if invalid_count > 0:
+        logger.info(
+            f"Standardized {len(standardized_data)} valid scores "
+            f"(skipped {invalid_count} invalid)"
+        )
+
+    return standardized_data
 
 
 @retry(
@@ -290,31 +389,37 @@ async def fetch_historical_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
     markets: str = "h2h,spreads,totals",
-    standardize: bool = True,
 ) -> Dict[str, Any]:
     """
     Fetch historical odds snapshot for backtesting.
-    
+
     NOTE: This endpoint may require a paid plan. Returns 403 if not enabled.
-    
+
+    Team name standardization is MANDATORY and always performed.
+
     Args:
         date: ISO format date string (e.g., "2025-12-01T12:00:00Z")
         sport: Sport identifier
         regions: Regions to fetch odds for
         markets: Markets to fetch
-        standardize: If True, standardize team names to ESPN format
-    
+
     Returns:
         Dictionary with historical odds data including:
         - timestamp: The snapshot timestamp
         - previous_timestamp: Previous available snapshot
         - next_timestamp: Next available snapshot
-        - data: List of events with odds
-    
+        - data: List of events with odds (only those with valid team names)
+
     Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
         httpx.HTTPStatusError: If the request fails (403 = not enabled)
     """
     logger.info(f"Fetching historical odds for {sport} at {date}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "regions": regions,
@@ -323,30 +428,56 @@ async def fetch_historical_odds(
         "oddsFormat": "american",
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(
-            f"{settings.the_odds_base_url}/historical/sports/{sport}/odds",
-            params=params
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/historical/sports/{sport}/odds",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         events = data.get("data", [])
         logger.info(f"Successfully fetched historical odds: {len(events)} events")
-        
-        # Standardize team names to ESPN format
-        if standardize and events:
-            standardized_events = []
-            for event in events:
-                try:
-                    standardized = standardize_game_data(event, source="the_odds")
+    except Exception as e:
+        logger.error(f"Failed to fetch historical odds from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    # NO FALLBACK to unstandardized data - skip invalid entries
+    if events:
+        standardized_events = []
+        invalid_count = 0
+        for event in events:
+            try:
+                standardized = standardize_game_data(event, source="the_odds")
+                if standardized.get("_data_valid", False):
                     standardized_events.append(standardized)
-                except Exception as e:
-                    logger.warning(f"Error standardizing historical event: {e}")
-                    standardized_events.append(event)
-            data["data"] = standardized_events
-        
-        return data
+                else:
+                    invalid_count += 1
+                    logger.warning(
+                        f"Skipping historical event with invalid team names: "
+                        f"home='{standardized.get('home_team', 'N/A')}', "
+                        f"away='{standardized.get('away_team', 'N/A')}'"
+                    )
+            except Exception as e:
+                logger.error(f"Error standardizing historical event: {e}")
+                invalid_count += 1
+
+        data["data"] = standardized_events
+        if invalid_count > 0:
+            logger.info(
+                f"Standardized {len(standardized_events)} valid events "
+                f"(skipped {invalid_count} invalid)"
+            )
+
+    return data
 
 
 @retry(
@@ -356,51 +487,86 @@ async def fetch_historical_odds(
 async def fetch_historical_events(
     date: str,
     sport: str = "basketball_nba",
-    standardize: bool = True,
 ) -> Dict[str, Any]:
     """
     Fetch historical events list for backtesting.
-    
+
     NOTE: This endpoint may require a paid plan. Returns 403 if not enabled.
-    
+
+    Team name standardization is MANDATORY and always performed.
+
     Args:
         date: ISO format date string (e.g., "2025-12-01T12:00:00Z")
         sport: Sport identifier
-        standardize: If True, standardize team names to ESPN format
-    
+
     Returns:
-        Dictionary with historical events data
+        Dictionary with historical events data (only events with valid team names)
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the request fails (403 = not enabled)
     """
     logger.info(f"Fetching historical events for {sport} at {date}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "date": date,
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(
-            f"{settings.the_odds_base_url}/historical/sports/{sport}/events",
-            params=params
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(
+                f"{settings.the_odds_base_url}/historical/sports/{sport}/events",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         events = data.get("data", [])
         logger.info(f"Successfully fetched historical events: {len(events)} events")
-        
-        # Standardize team names
-        if standardize and events:
-            standardized_events = []
-            for event in events:
-                try:
-                    standardized = standardize_game_data(event, source="the_odds")
+    except Exception as e:
+        logger.error(f"Failed to fetch historical events from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    # NO FALLBACK to unstandardized data - skip invalid entries
+    if events:
+        standardized_events = []
+        invalid_count = 0
+        for event in events:
+            try:
+                standardized = standardize_game_data(event, source="the_odds")
+                if standardized.get("_data_valid", False):
                     standardized_events.append(standardized)
-                except Exception as e:
-                    logger.warning(f"Error standardizing historical event: {e}")
-                    standardized_events.append(event)
-            data["data"] = standardized_events
-        
-        return data
+                else:
+                    invalid_count += 1
+                    logger.warning(
+                        f"Skipping historical event with invalid team names: "
+                        f"home='{standardized.get('home_team', 'N/A')}', "
+                        f"away='{standardized.get('away_team', 'N/A')}'"
+                    )
+            except Exception as e:
+                logger.error(f"Error standardizing historical event: {e}")
+                invalid_count += 1
+
+        data["data"] = standardized_events
+        if invalid_count > 0:
+            logger.info(
+                f"Standardized {len(standardized_events)} valid events "
+                f"(skipped {invalid_count} invalid)"
+            )
+
+    return data
 
 
 async def save_odds(
@@ -409,12 +575,12 @@ async def save_odds(
     prefix: str = "odds",
 ) -> str:
     """Save odds data to a timestamped JSON file.
-    
+
     Args:
         data: Data to save
         out_dir: Output directory (defaults to data/raw/the_odds)
         prefix: Filename prefix (e.g., "odds", "events", "scores")
-    
+
     Returns:
         Path to saved file
     """
@@ -422,7 +588,6 @@ async def save_odds(
     os.makedirs(out_dir, exist_ok=True)
     ts = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_path = os.path.join(out_dir, f"{prefix}_{ts}.json")
-    # Write minimal JSON without external deps
     import json
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -440,33 +605,87 @@ async def fetch_betting_splits(
 ) -> list[Dict[str, Any]]:
     """
     Fetch betting splits (public percentages) from The Odds API.
-    
+
     NOTE: This endpoint requires a paid plan (Group 2 or higher).
-    Returns 403 if not enabled for your API key.
-    
+    Returns empty list if 403 (not enabled for your API key).
+
+    Team name standardization is MANDATORY and always performed.
+
+    Args:
+        sport: Sport identifier
+        regions: Regions to fetch splits for
+
     Returns:
-        List of game dictionaries with betting splits data
+        List of game dictionaries with betting splits data (only valid team names)
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the request fails (except 403)
     """
     logger.info(f"Fetching betting splits for {sport}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "regions": regions,
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        url = f"{settings.the_odds_base_url}/sports/{sport}/betting-splits"
-        resp = await client.get(url, params=params)
-        
-        if resp.status_code == 403:
-            logger.warning("Betting splits endpoint not enabled for this API key.")
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            url = f"{settings.the_odds_base_url}/sports/{sport}/betting-splits"
+            resp = await client.get(url, params=params)
+
+            # 403 = paid plan not enabled - graceful degradation
+            if resp.status_code == 403:
+                logger.warning("Betting splits endpoint not enabled for this API key.")
+                return {"data": [], "_not_enabled": True}
+
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
+        if data.get("_not_enabled"):
             return []
-            
-        resp.raise_for_status()
-        data = resp.json()
-        
-        # Structure is usually {"data": [...]}
         splits = data.get("data", [])
         logger.info(f"Successfully fetched betting splits for {len(splits)} games")
-        return splits
+    except Exception as e:
+        logger.error(f"Failed to fetch betting splits from The Odds API: {e}")
+        raise
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    # NO FALLBACK to unstandardized data - skip invalid entries
+    standardized_splits = []
+    invalid_count = 0
+    for split in splits:
+        try:
+            standardized = standardize_game_data(split, source="the_odds")
+            if standardized.get("_data_valid", False):
+                standardized_splits.append(standardized)
+            else:
+                invalid_count += 1
+                logger.warning(
+                    f"Skipping betting split with invalid team names: "
+                    f"home='{standardized.get('home_team', 'N/A')}', "
+                    f"away='{standardized.get('away_team', 'N/A')}'"
+                )
+        except Exception as e:
+            logger.error(f"Error standardizing betting split: {e}")
+            invalid_count += 1
+
+    if invalid_count > 0:
+        logger.info(
+            f"Standardized {len(standardized_splits)} valid splits "
+            f"(skipped {invalid_count} invalid)"
+        )
+
+    return standardized_splits
 
 
 @retry(
@@ -475,53 +694,86 @@ async def fetch_betting_splits(
 )
 async def fetch_participants(
     sport: str = "basketball_nba",
-    standardize: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Fetch participants (teams) from The Odds API.
-    
-    This endpoint provides a reference list of all participants (teams) 
+
+    This endpoint provides a reference list of all participants (teams)
     in the sport, useful for team name standardization and validation.
-    
+
+    Team name standardization is MANDATORY and always performed.
+    Only participants with valid NBA team names are returned.
+
     Args:
         sport: Sport identifier
-        standardize: If True, standardize team names to ESPN format
-    
+
     Returns:
-        List of participant dictionaries with team information
+        List of participant dictionaries with standardized team names
+
+    Raises:
+        ValueError: If THE_ODDS_API_KEY is not set
+        httpx.HTTPStatusError: If the request fails
     """
     logger.info(f"Fetching participants for {sport}")
+
+    # Validate API key
+    if not settings.the_odds_api_key:
+        raise ValueError("THE_ODDS_API_KEY is not set")
+
     params = {
         "apiKey": settings.the_odds_api_key,
         "dateFormat": "iso",
     }
-    async with httpx.AsyncClient(timeout=30) as client:
-        url = f"{settings.the_odds_base_url}/sports/{sport}/participants"
-        resp = await client.get(url, params=params)
-        resp.raise_for_status()
-        data = resp.json()
-        
+
+    # Use circuit breaker to prevent cascading failures
+    breaker = get_odds_api_breaker()
+
+    async def _fetch_with_client():
+        async with httpx.AsyncClient(timeout=30) as client:
+            url = f"{settings.the_odds_base_url}/sports/{sport}/participants"
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        data = await breaker.call_async(_fetch_with_client)
         participants = data if isinstance(data, list) else data.get("data", [])
         logger.info(f"Successfully fetched {len(participants)} participants")
-        
-        # Standardize team names if requested
-        if standardize:
-            standardized_participants = []
-            for participant in participants:
-                try:
-                    name = participant.get("name") or participant.get("team") or participant.get("id")
-                    if name:
-                        from src.ingestion.standardize import normalize_team_to_espn
-                        standardized_name, is_valid = normalize_team_to_espn(str(name), source="the_odds")
-                        if is_valid:
-                            participant["name"] = standardized_name
-                            participant["name_standardized"] = True
-                        else:
-                            participant["name_standardized"] = False
+    except Exception as e:
+        logger.error(f"Failed to fetch participants from The Odds API: {e}")
+        raise
+
+    # Import here to avoid circular imports
+    from src.ingestion.standardize import normalize_team_to_espn
+
+    # ALWAYS standardize team names to ESPN format (mandatory)
+    # Only include participants with valid NBA team names
+    standardized_participants = []
+    invalid_count = 0
+    for participant in participants:
+        try:
+            name = participant.get("name") or participant.get("team") or participant.get("id")
+            if name:
+                standardized_name, is_valid = normalize_team_to_espn(str(name), source="the_odds")
+                if is_valid:
+                    participant["name"] = standardized_name
+                    participant["name_standardized"] = True
+                    participant["_data_valid"] = True
                     standardized_participants.append(participant)
-                except Exception as e:
-                    logger.warning(f"Error standardizing participant {participant.get('name', 'N/A')}: {e}")
-                    standardized_participants.append(participant)
-            return standardized_participants
-        
-        return participants
+                else:
+                    invalid_count += 1
+                    logger.warning(f"Skipping participant with invalid team name: '{name}'")
+            else:
+                invalid_count += 1
+                logger.warning("Skipping participant with no name field")
+        except Exception as e:
+            logger.error(f"Error standardizing participant {participant.get('name', 'N/A')}: {e}")
+            invalid_count += 1
+
+    if invalid_count > 0:
+        logger.info(
+            f"Standardized {len(standardized_participants)} valid participants "
+            f"(skipped {invalid_count} invalid)"
+        )
+
+    return standardized_participants
