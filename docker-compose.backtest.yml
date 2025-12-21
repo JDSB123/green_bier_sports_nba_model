@@ -1,4 +1,4 @@
-# NBA Basketball Prediction System v5.0 BETA
+# NBA Basketball Prediction System v6.0
 # Backtest Environment - Docker Compose
 #
 # This is the SINGLE SOURCE OF TRUTH for running backtests.
@@ -31,7 +31,7 @@ services:
     environment:
       - THE_ODDS_API_KEY=${THE_ODDS_API_KEY}
       - API_BASKETBALL_KEY=${API_BASKETBALL_KEY}
-      - SEASONS=${SEASONS:-202
+      - SEASONS=${SEASONS:-2022-2023,2023-2024,2024-2025,2025-2026}
       - MARKETS=${MARKETS:-all}
       - MIN_TRAINING=${MIN_TRAINING:-80}
     volumes:
