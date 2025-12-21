@@ -2,7 +2,13 @@
 Spread prediction logic (Full Game + First Half).
 
 NBA v6.0: All 9 markets with independent models.
-STRICT MODE: No fallbacks. Each market requires its own trained model.
+
+FEATURE VALIDATION:
+    Uses unified validation from src/prediction/feature_validation.py
+    Controlled by PREDICTION_FEATURE_MODE environment variable:
+    - "strict" (default): Raise error on missing features
+    - "warn": Log warning, zero-fill missing features
+    - "silent": Zero-fill without logging
 """
 from typing import Dict, Any, List
 import logging
@@ -13,6 +19,7 @@ from src.prediction.spreads.filters import (
     FirstHalfSpreadFilter,
 )
 from src.prediction.confidence import calculate_confidence_from_probabilities
+from src.prediction.feature_validation import validate_and_prepare_features
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +89,13 @@ class SpreadPredictor:
         if "predicted_margin" not in features:
             raise ValueError("predicted_margin is REQUIRED in features for FG spread predictions")
 
-        # Prepare features
+        # Prepare features using unified validation
         feature_df = pd.DataFrame([features])
-        missing = set(self.fg_feature_columns) - set(feature_df.columns)
-        if missing:
-            logger.warning(f"[fg_spread] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.fg_feature_columns]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.fg_feature_columns,
+            market="fg_spread",
+        )
 
         # Get prediction
         spread_proba = self.fg_model.predict_proba(X)[0]
@@ -132,25 +138,27 @@ class SpreadPredictor:
         Returns:
             Prediction dictionary
         """
-        # Validate required inputs
+        # Validate required inputs - NO FALLBACK CALCULATIONS
         if "predicted_margin_1h" not in features:
-            raise ValueError("predicted_margin_1h is REQUIRED in features for 1H spread predictions")
+            raise ValueError(
+                "predicted_margin_1h is REQUIRED in features for 1H spread predictions. "
+                "Do not use full-game margin with arbitrary multipliers."
+            )
 
         # Use 1H model ONLY - no fallbacks
         feature_df = pd.DataFrame([features])
-        missing = set(self.fh_feature_columns) - set(feature_df.columns)
-        if missing:
-            logger.warning(f"[1h_spread] Zero-filling {len(missing)} missing features: {sorted(missing)[:5]}...")
-        for col in missing:
-            feature_df[col] = 0
-        X = feature_df[self.fh_feature_columns]
+        X, missing = validate_and_prepare_features(
+            feature_df,
+            self.fh_feature_columns,
+            market="1h_spread",
+        )
         spread_proba = self.fh_model.predict_proba(X)[0]
 
         home_cover_prob = float(spread_proba[1])
         away_cover_prob = float(spread_proba[0])
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
-        predicted_margin_1h = features.get("predicted_margin_1h", features.get("predicted_margin", 0) * 0.48)
+        predicted_margin_1h = features["predicted_margin_1h"]  # No fallback - already validated
         edge = predicted_margin_1h - spread_line
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(
