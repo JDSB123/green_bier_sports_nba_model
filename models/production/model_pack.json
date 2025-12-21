@@ -138,7 +138,15 @@
     "q1_moneyline": {
       "status": "pending",
       "model_file": null,
-      "note": "Needs training - run: python scripts/train_models.py --market q1_moneyline"
+      "model_class": "FirstQuarterMoneylineModel",
+      "label_col": "home_q1_win",
+      "expected_accuracy_overall": 0.53,
+      "expected_accuracy_high_conf": 0.588,
+      "expected_roi_high_conf": 0.123,
+      "filter_class": "FirstQuarterMoneylineFilter",
+      "min_confidence": 0.6,
+      "train_command": "python scripts/train_models.py --market q1_moneyline",
+      "note": "CRITICAL: Use FirstQuarterMoneylineFilter with 60% min confidence for profitability"
     }
   }
 }
