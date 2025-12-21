@@ -99,42 +99,54 @@ class PeriodPredictor:
             market=f"{self.period}_spread",
         )
 
-        # Get prediction probabilities from classifier
+        # =====================================================================
+        # SIGNAL 1: CLASSIFIER (ML model trained on historical patterns)
+        # =====================================================================
         spread_proba = self.spread_model.predict_proba(X)[0]
         home_cover_prob = float(spread_proba[1])
         away_cover_prob = float(spread_proba[0])
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
+        classifier_side = "home" if home_cover_prob > 0.5 else "away"
 
-        # Get predicted margin from features
+        # =====================================================================
+        # SIGNAL 2: POINT PREDICTION (model's predicted margin vs market line)
+        # =====================================================================
         margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
         predicted_margin = features.get(margin_key, 0)
 
-        # EDGE CALCULATION (v6.5 FIX):
+        # EDGE CALCULATION:
         # spread_line is the HOME spread from sportsbooks (negative = home favored)
-        # predicted_margin is positive when home wins
+        # predicted_margin is positive when home wins by X points
         #
         # Example: home -3.5 (spread_line = -3.5), model predicts home +5
-        # Market implies home wins by ~3.5, model says home wins by 5
-        # Edge = how much better home does vs market = 5 - 3.5 = 1.5
-        # Formula: edge = predicted_margin - (-spread_line) = predicted_margin + spread_line
+        # - Market implies home wins by ~3.5 points
+        # - Model says home wins by 5 points
+        # - Home beats the spread by: 5 - 3.5 = 1.5 points
+        # Formula: edge = predicted_margin + spread_line
         edge = predicted_margin + spread_line
+        prediction_side = "home" if edge > 0 else "away"
 
-        # BET SIDE DETERMINATION (v6.5 FIX):
-        # Use edge sign, not just classifier probability
-        # Positive edge = model says home covers → bet HOME
-        # Negative edge = model says away covers → bet AWAY
-        bet_side = "home" if edge > 0 else "away"
+        # =====================================================================
+        # DUAL-SIGNAL AGREEMENT (v6.5): Both signals must agree
+        # =====================================================================
+        signals_agree = (classifier_side == prediction_side)
+
+        # Use the agreed-upon side, or prediction side if disagreement
+        bet_side = prediction_side if signals_agree else prediction_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
-        # Filter logic using configurable thresholds
+        # Filter logic: BOTH signals must agree AND pass thresholds
         min_conf = filter_thresholds.spread_min_confidence
         min_edge = filter_thresholds.spread_min_edge
-        passes_filter = confidence >= min_conf and edge_abs >= min_edge
+        passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
+
         filter_reason = None
         if not passes_filter:
-            if confidence < min_conf:
+            if not signals_agree:
+                filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
+            elif confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
                 filter_reason = f"Low edge: {edge_abs:.1f}"
@@ -143,10 +155,14 @@ class PeriodPredictor:
             "home_cover_prob": home_cover_prob,
             "away_cover_prob": away_cover_prob,
             "predicted_margin": predicted_margin,
+            "spread_line": spread_line,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge_abs,  # Always positive for the recommended side
             "raw_edge": edge,  # Signed edge for diagnostics
+            "classifier_side": classifier_side,  # What the ML classifier says
+            "prediction_side": prediction_side,  # What the point prediction says
+            "signals_agree": signals_agree,  # True if both signals agree
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
@@ -172,37 +188,53 @@ class PeriodPredictor:
             market=f"{self.period}_total",
         )
 
-        # Get prediction probabilities from classifier
+        # =====================================================================
+        # SIGNAL 1: CLASSIFIER (ML model trained on historical patterns)
+        # =====================================================================
         total_proba = self.total_model.predict_proba(X)[0]
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
+        classifier_side = "over" if over_prob > 0.5 else "under"
 
-        # Get predicted total from features
+        # =====================================================================
+        # SIGNAL 2: POINT PREDICTION (model's predicted total vs market line)
+        # =====================================================================
         total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
         predicted_total = features.get(total_key, total_line)
 
-        # EDGE CALCULATION (v6.5 FIX):
+        # EDGE CALCULATION:
         # Compare model's predicted total to market line
         # Positive = model predicts OVER the line
         # Negative = model predicts UNDER the line
+        #
+        # Example: predicted_total = 230, total_line = 225
+        # - Model says 230 points, market says 225
+        # - Edge = 230 - 225 = +5 (OVER by 5 points)
         edge = predicted_total - total_line
+        prediction_side = "over" if edge > 0 else "under"
 
-        # BET SIDE DETERMINATION (v6.5 FIX):
-        # Use model prediction vs line, not just classifier probability
-        # This ensures bet_side is CONSISTENT with the edge sign
-        bet_side = "over" if edge > 0 else "under"
+        # =====================================================================
+        # DUAL-SIGNAL AGREEMENT (v6.5): Both signals must agree
+        # =====================================================================
+        signals_agree = (classifier_side == prediction_side)
+
+        # Use the agreed-upon side
+        bet_side = prediction_side if signals_agree else prediction_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
-        # Filter logic using configurable thresholds
+        # Filter logic: BOTH signals must agree AND pass thresholds
         min_conf = filter_thresholds.total_min_confidence
         min_edge = filter_thresholds.total_min_edge
-        passes_filter = confidence >= min_conf and edge_abs >= min_edge
+        passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
+
         filter_reason = None
         if not passes_filter:
-            if confidence < min_conf:
+            if not signals_agree:
+                filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
+            elif confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
                 filter_reason = f"Low edge: {edge_abs:.1f}"
@@ -211,10 +243,14 @@ class PeriodPredictor:
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total,
+            "total_line": total_line,
             "confidence": confidence,
             "bet_side": bet_side,
             "edge": edge_abs,  # Always positive for the recommended side
             "raw_edge": edge,  # Signed edge for diagnostics
+            "classifier_side": classifier_side,  # What the ML classifier says
+            "prediction_side": prediction_side,  # What the point prediction says
+            "signals_agree": signals_agree,  # True if both signals agree
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
