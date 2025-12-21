@@ -1,7 +1,7 @@
 # Data Ingestion Methodology
 
-**Last Updated:** 2025-12-17  
-**Version:** 5.0 BETA
+**Last Updated:** 2025-12-20
+**Version:** 6.0 - Production Hardened
 
 ---
 
@@ -93,27 +93,50 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 
 **Purpose:** Live betting odds and lines
 
-**Endpoints Used:**
-- `/sports/basketball_nba/odds` - Live odds for upcoming games
-- `/sports/basketball_nba/events/{eventId}/odds` - First-half + quarter markets
-- `/sports/basketball_nba/scores` - Recent game scores
-- `/historical/sports/basketball_nba/odds` - Backfill FG/1H/Q1 markets for completed games
+**Production Status:** ✅ HARDENED (v6.0)
+
+**All 11 Endpoints (fully hardened):**
+
+| Function | API Endpoint | Purpose | Cost |
+|----------|--------------|---------|------|
+| `fetch_sports` | `/sports` | List all available sports | FREE |
+| `fetch_odds` | `/sports/{sport}/odds` | Live odds for upcoming games | 1 credit |
+| `fetch_event_odds` | `/events/{id}/odds` | All markets for single event | 1 credit |
+| `fetch_event_markets` | `/events/{id}/markets` | Available markets per bookmaker | 1 credit |
+| `fetch_events` | `/sports/{sport}/events` | List of upcoming events | FREE |
+| `fetch_scores` | `/sports/{sport}/scores` | Live and recent scores | 1-2 credits |
+| `fetch_historical_odds` | `/historical/.../odds` | Historical odds snapshot | 10 credits |
+| `fetch_historical_events` | `/historical/.../events` | Historical events list | 1 credit |
+| `fetch_historical_event_odds` | `/historical/.../events/{id}/odds` | Historical odds for single event | 10 credits |
+| `fetch_betting_splits` | `/betting-splits` | Public betting percentages | ⚠️ UNDOCUMENTED |
+| `fetch_participants` | `/participants` | List teams in sport | 1 credit |
+
+**Hardening Applied to ALL Endpoints:**
+- ✅ API key validation (raises `ValueError` if missing)
+- ✅ Circuit breaker pattern (prevents cascading failures)
+- ✅ Mandatory team name standardization to ESPN format
+- ✅ **ZERO FALLBACK** - Invalid/unstandardized data is SKIPPED, never appended
+- ✅ Retry with exponential backoff (3 attempts)
+- ✅ Proper logging (no print statements)
 
 **Data Collected:**
 - Full-game spread/total lines + moneylines
 - First-half spreads/totals/moneylines
 - First-quarter spreads/totals/moneylines
+- Player props and alternate lines (via fetch_event_odds)
+- Available markets per bookmaker (via fetch_event_markets)
 - Sportsbook metadata + snapshot timestamps
 
 **Standardization:**
 - Team names normalized to ESPN format
-- Invalid games filtered out (returns empty string on failure)
+- Invalid games filtered out (returns empty list)
 - Validation flags added (`_data_valid`, `_home_team_valid`, `_away_team_valid`)
 
 **Error Handling:**
 - Retry with exponential backoff (3 attempts)
+- Circuit breaker opens after repeated failures
 - Invalid team names logged at ERROR level
-- Skipped games tracked and reported
+- Skipped games tracked and reported in logs
 
 **Historical Line Capture:**
 - `scripts/collect_historical_lines.py` captures daily snapshots (FG/1H/Q1 markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
@@ -124,6 +147,15 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 ### 2. API-Basketball (`src/ingestion/api_basketball.py`)
 
 **Purpose:** Game outcomes, statistics, and team data
+
+**Production Status:** ✅ HARDENED (v6.0)
+
+**Hardening Applied:**
+- ✅ API key validation in `__init__` (raises `ValueError` if missing)
+- ✅ Circuit breaker pattern in `_fetch` method
+- ✅ All `print()` statements replaced with proper `logger` calls
+- ✅ Team name standardization in `fetch_games` (mandatory)
+- ✅ Invalid games skipped, not appended
 
 **Endpoint Tiers:**
 
@@ -176,15 +208,26 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 
 **Purpose:** Public betting percentages and reverse line movement
 
+**Production Status:** ✅ HARDENED (v6.0)
+
+**Hardening Applied:**
+- ✅ All `print()` statements replaced with `logger.warning()` calls
+- ✅ Credential validation before Action Network auth attempt
+- ✅ Team name standardization (mandatory)
+- ✅ Invalid splits return `None` (skipped)
+- ✅ Graceful degradation when sources unavailable
+
 **Sources:**
 - Action Network (if credentials provided)
-- The Odds API splits
+- The Odds API splits (via `fetch_betting_splits`)
 - SBRO (if available)
+- Covers.com (if available)
 
 **Data Collected:**
 - Public betting percentages (% of bets on each side)
 - Reverse line movement (RLM) signals
 - Sharp vs. public money indicators
+- Ticket vs. money divergence
 
 **Standardization:**
 - Team names normalized to ESPN format
