@@ -213,8 +213,13 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 if os.getenv("REQUIRE_API_AUTH", "false").lower() == "true":
     app.add_middleware(APIKeyMiddleware, require_auth=True)
 
-# CORS configuration - production safe
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8090").split(",")
+# CORS configuration - STRICT: Must be explicitly configured for production
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+if not allowed_origins_str:
+    logger.warning("ALLOWED_ORIGINS not set - CORS will reject all cross-origin requests")
+    allowed_origins = []
+else:
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -587,16 +592,16 @@ def format_american_odds(odds: int) -> str:
 def get_fire_rating(confidence: float, edge: float) -> str:
     """
     Get fire rating based on confidence and edge.
-    🔥🔥🔥 = Elite (conf >= 70% AND edge >= 5)
-    🔥🔥 = Strong (conf >= 60% AND edge >= 3)
-    🔥 = Good (passes filters)
+    ELITE = conf >= 70% AND edge >= 5
+    STRONG = conf >= 60% AND edge >= 3
+    GOOD = passes filters
     """
     if confidence >= 0.70 and abs(edge) >= 5:
-        return "🔥🔥🔥"
+        return "ELITE"
     elif confidence >= 0.60 and abs(edge) >= 3:
-        return "🔥🔥"
+        return "STRONG"
     else:
-        return "🔥"
+        return "GOOD"
 
 
 @app.get("/slate/{date}/executive")
@@ -953,7 +958,7 @@ async def get_executive_summary(
             continue
     
     # Sort by time, then by fire rating (descending), then by edge (descending)
-    fire_order = {"🔥🔥🔥": 3, "🔥🔥": 2, "🔥": 1}
+    fire_order = {"ELITE": 3, "STRONG": 2, "GOOD": 1}
     all_plays.sort(key=lambda x: (x["sort_time"], -fire_order.get(x["fire_rating"], 0), -x["edge_raw"]))
     
     # Format for output - remove internal fields
@@ -981,9 +986,9 @@ async def get_executive_summary(
         "plays": formatted_plays,
         "legend": {
             "fire_rating": {
-                "🔥🔥🔥": "ELITE - 70%+ confidence AND 5+ pt edge",
-                "🔥🔥": "STRONG - 60%+ confidence AND 3+ pt edge",
-                "🔥": "GOOD - Passes all filters"
+                "ELITE": "70%+ confidence AND 5+ pt edge",
+                "STRONG": "60%+ confidence AND 3+ pt edge",
+                "GOOD": "Passes all filters"
             },
             "periods": {"FG": "Full Game", "1H": "First Half", "Q1": "First Quarter"},
             "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}
