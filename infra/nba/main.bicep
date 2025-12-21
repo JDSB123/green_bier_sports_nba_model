@@ -203,7 +203,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'NBA_MODEL_VERSION'
-              value: '6.4-STRICT'
+              value: '6.5-STRICT'
             }
             {
               name: 'NBA_MARKETS'
