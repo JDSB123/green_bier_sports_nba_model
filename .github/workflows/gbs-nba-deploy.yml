@@ -44,8 +44,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
 
       - name: Log in to Azure
         uses: azure/login@v2
@@ -69,8 +67,7 @@ jobs:
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:v6.4
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          provenance: false
 
       - name: Deploy to Container Apps
         uses: azure/container-apps-deploy-action@v1
