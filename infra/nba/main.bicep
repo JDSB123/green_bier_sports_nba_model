@@ -3,7 +3,8 @@
 //
 // SINGLE SOURCE OF TRUTH - All NBA resources in NBAGBSVMODEL
 // Container App: nba-picks-api
-// ACR: greenbieracr
+// ACR: nbagbsacr (in NBAGBSVMODEL, NOT shared)
+// Key Vault: nbagbs-keyvault
 //
 // Usage:
 //   az deployment group create -g NBAGBSVMODEL -f infra/nba/main.bicep
@@ -17,11 +18,8 @@ param location string = resourceGroup().location
 @allowed(['dev', 'staging', 'prod'])
 param environment string = 'prod'
 
-@description('Shared resource group name (ACR/KeyVault live here)')
-param sharedResourceGroup string = 'greenbier-enterprise-rg'
-
 @description('Container image tag')
-param imageTag string = 'latest'
+param imageTag string = 'v6.10'
 
 // =============================================================================
 // API KEYS - Required for the NBA Picks API to function
@@ -34,35 +32,14 @@ param theOddsApiKey string
 @secure()
 param apiBasketballKey string
 
-@description('PostgreSQL admin password (must match shared infrastructure)')
-@secure()
-param postgresAdminPassword string
-
-// Get Container Apps Environment - ACTUAL: greenbier-env
+// Get Container Apps Environment - nbagbsvmodel-env (NOT greenbier-nba-env)
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
-  name: 'greenbier-env'
-  scope: resourceGroup(sharedResourceGroup)
+  name: 'nbagbsvmodel-env'
 }
 
-// Get shared Container Registry - greenbieracr in greenbier-enterprise-rg
+// Get Container Registry - nbagbsacr (in same resource group)
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: 'greenbieracr'
-  scope: resourceGroup(sharedResourceGroup)
-}
-
-// Get shared PostgreSQL server - SINGLE SOURCE OF TRUTH
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' existing = {
-  name: 'greenbier-postgres-${environment}'
-  scope: resourceGroup(sharedResourceGroup)
-}
-
-// Construct DATABASE_URL from shared PostgreSQL server
-var databaseUrl = 'postgresql://gbsadmin:${postgresAdminPassword}@${postgresServer.properties.fullyQualifiedDomainName}:5432/gbs_picks?sslmode=require'
-
-// Get shared App Insights
-resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: 'gbs-insights-${environment}'
-  scope: resourceGroup(sharedResourceGroup)
+  name: 'nbagbsacr'
 }
 
 // Naming

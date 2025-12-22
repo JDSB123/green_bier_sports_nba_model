@@ -1,10 +1,10 @@
 # Green Bier Sports - NBA Model CI/CD
 # Triggers on push to main/master, deploys to Azure Container Apps
 #
-# SINGLE SOURCE OF TRUTH - See AZURE_CONFIG.md
-#   Resource Group: greenbier-enterprise-rg
+# SINGLE SOURCE OF TRUTH - See docs/AZURE_CONFIG.md
+#   Resource Group: NBAGBSVMODEL
 #   Container App:  nba-picks-api
-#   ACR:            greenbieracr
+#   ACR:            nbagbsacr
 
 name: GBS NBA - Build & Deploy
 
@@ -28,10 +28,10 @@ on:
           - prod
 
 env:
-  AZURE_CONTAINER_REGISTRY: greenbieracr
+  AZURE_CONTAINER_REGISTRY: nbagbsacr
   RESOURCE_GROUP: NBAGBSVMODEL
   CONTAINER_APP_NAME: nba-picks-api
-  IMAGE_NAME: nba-model
+  IMAGE_NAME: nba-picks-api
 
 jobs:
   build-and-deploy:
@@ -61,12 +61,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.combined
           push: true
           tags: |
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
-            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:v6.4
           provenance: false
 
       - name: Deploy to Container Apps

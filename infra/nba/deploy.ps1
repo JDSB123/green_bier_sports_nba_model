@@ -4,7 +4,7 @@ Param(
     [string]$ContainerAppName = "nba-picks-api",
     [string]$AcrName = "nbagbsacr",
     [string]$ImageName = "nba-picks-api",
-    [string]$Tag = "v6.5",
+    [string]$Tag = "v6.10",
     [string]$DockerFile = "Dockerfile.combined"
 )
 

@@ -1,32 +1,35 @@
 # Azure Configuration - SINGLE SOURCE OF TRUTH
 
-**Last Updated:** 2025-12-19
+**Last Updated:** 2025-12-22
 
 ## Actual Azure Architecture
 
 ```
 NBAGBSVMODEL                               <-- Resource Group
-├── greenbieracr                           <-- Container Registry
-├── greenbier-nba-env                      <-- Container Apps Environment
-│   └── nba-picks-api                      <-- Container App
-│       ├── Image: nba-model:v5.1
-│       ├── Registry: greenbieracr.azurecr.io
+├── nbagbsacr                              <-- Container Registry (PRODUCTION)
+├── nbagbs-keyvault                        <-- Key Vault
+├── nbagbsvmodel-env                       <-- Container Apps Environment
+│   └── nba-picks-api                      <-- Container App (PRODUCTION)
+│       ├── Image: nba-picks-api:v6.10
+│       ├── Registry: nbagbsacr.azurecr.io
+│       ├── Port: 8090
 │       ├── Scaling: 1-3 replicas
 │       └── Environment Variables
-│           ├── NBA_MODEL_VERSION
-│           └── NBA_MARKETS
-└── nba-picks-trigger                      <-- Function App (optional)
+│           ├── THE_ODDS_API_KEY
+│           ├── API_BASKETBALL_KEY
+│           └── SEASONS_TO_PROCESS=2025-2026
+└── (DECOMMISSIONED: nbagbsvmodel-api, nbagbsvmodelacr - to be deleted)
 ```
 
 ## Resource Names (NEVER CHANGES)
 
-| Resource | Name |
-|----------|------|
-| **Resource Group** | `NBAGBSVMODEL` |
-| **Container Apps Environment** | `greenbier-nba-env` |
-| **Container App** | `nba-picks-api` |
-| **Container Registry** | `greenbieracr` |
-| **Function App** | `nba-picks-trigger` |
+| Resource | Name | Status |
+|----------|------|--------|
+| **Resource Group** | `NBAGBSVMODEL` | Active |
+| **Container Apps Environment** | `nbagbsvmodel-env` | Active |
+| **Container App** | `nba-picks-api` | Active |
+| **Container Registry** | `nbagbsacr` | Active |
+| **Key Vault** | `nbagbs-keyvault` | Active |
 
 ## Get Current API URL (DYNAMICALLY)
 
@@ -58,20 +61,20 @@ All scripts use these environment variables (no hardcoded values):
 ## Quick Commands
 
 ```bash
-# Migrate NBA to NBAGBSVMODEL (clone ACR & Key Vault; no downtime)
-pwsh infra/nba/migrate-to-nbagbsvmodel.ps1 -DestResourceGroup NBAGBSVMODEL -DestAcrName nbagbsacr -DestKeyVaultName nbagbs-keyvault -Environment prod -Location eastus
+# Deploy new version (recommended way)
+pwsh infra/nba/deploy.ps1 -Tag v6.10
 
 # View container app logs
 az containerapp logs show -n nba-picks-api -g NBAGBSVMODEL --follow
 
 # Update container app with new image
 az containerapp update -n nba-picks-api -g NBAGBSVMODEL \
-  --image greenbieracr.azurecr.io/nba-model:latest
+  --image nbagbsacr.azurecr.io/nba-picks-api:v6.10
 
 # Build and push new image
-docker build -t greenbieracr.azurecr.io/nba-model:latest .
-az acr login -n greenbieracr
-docker push greenbieracr.azurecr.io/nba-model:latest
+docker build -t nbagbsacr.azurecr.io/nba-picks-api:v6.10 -f Dockerfile.combined .
+az acr login -n nbagbsacr
+docker push nbagbsacr.azurecr.io/nba-picks-api:v6.10
 
 # Run locally with custom port (avoids conflicts)
 NBA_API_PORT=9000 docker compose up -d
@@ -85,13 +88,22 @@ az containerapp show -n nba-picks-api -g NBAGBSVMODEL \
 
 GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 1. Builds Docker image on push to `main`/`master`
-2. Pushes to `greenbieracr.azurecr.io`
+2. Pushes to `nbagbsacr.azurecr.io`
 3. Deploys to `nba-picks-api` in `NBAGBSVMODEL`
 
 ## Model Version
 
-- **Current Deployed:** v6.0 (9 markets: Q1 + 1H + FG)
+- **Current Deployed:** v6.10 (9 markets: Q1 + 1H + FG)
 - **Markets:** q1_spread, q1_total, q1_moneyline, 1h_spread, 1h_total, 1h_moneyline, fg_spread, fg_total, fg_moneyline
+- **Dockerfile:** `Dockerfile.combined`
+
+## API Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/health` | Health check, model count, version |
+| `/slate/{date}` | Get picks for a date (YYYY-MM-DD) |
+| `/picks/html` | Interactive HTML page with picks |
 
 ## Important Files
 

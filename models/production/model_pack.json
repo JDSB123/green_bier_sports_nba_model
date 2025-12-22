@@ -155,7 +155,7 @@
   "deployment": {
     "container_app": "nba-picks-api",
     "resource_group": "NBAGBSVMODEL",
-    "acr": "greenbieracr.azurecr.io/nba-model:v6.4",
+    "acr": "nbagbsacr.azurecr.io/nba-picks-api:v6.10",
     "health_endpoint": "/health",
     "markets_required": 9
   },

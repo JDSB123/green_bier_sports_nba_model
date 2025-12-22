@@ -14,12 +14,10 @@ Purpose: give an AI coding agent the exact, discoverable facts it needs to make 
 - **Azure Resource → GitHub Source Code Mapping (NBAGBSVMODEL)**
   | Azure Resource | Type | GitHub Repo | Branch | Image |
   |----------------|------|-------------|--------|-------|
-  | `nba-picks-api` | Container App | `JDSB123/green_bier_sports_nba_v5.1_model` | `master` | `greenbieracr.azurecr.io/nba-model:v6.0` |
-  | `ncaam-prediction` | Container App | `JDSB123/green_bier_sports_ncaam_model` | `master` | `greenbieracr.azurecr.io/ncaam-prediction:latest` |
-  | `ncaam-postgres` | Container App | (standard postgres image) | — | `postgres:15` |
-  | `ncaam-redis` | Container App | (standard redis image) | — | `redis:7` |
-  | `greenbier-keyvault` | Key Vault | — | — | Stores: THE-ODDS-API-KEY, API-BASKETBALL-KEY |
-  | `greenbieracr` | Container Registry | — | — | Hosts all model images |
+  | `nba-picks-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-picks-api:v6.10` |
+  | `nbagbsacr` | Container Registry | — | — | Hosts NBA model images |
+  | `nbagbs-keyvault` | Key Vault | — | — | Stores: THE-ODDS-API-KEY, API-BASKETBALL-KEY |
+  | `nbagbsvmodel-env` | Container Apps Environment | — | — | Hosts nba-picks-api |
 
 - **Where secrets & config live**
   - `Chat_JBt/config/chatjbt.env` — single source of keys for the chat API when running locally. When deployed, secrets are stored in Azure Key Vault (see `Chat_JBt/README.md`).
@@ -60,17 +58,19 @@ Purpose: give an AI coding agent the exact, discoverable facts it needs to make 
   - For Python/model changes: run small sample scripts in `nfl_v8.0_BETA/` (e.g., `run_model.py`) and keep results deterministic by using pinned `requirements.txt`.
 
 - **Deploying Model Changes to Azure Container Apps**
-  1. **Build locally:** `cd <model_folder> && docker build -t greenbieracr.azurecr.io/<image>:<tag> .`
-  2. **Push to ACR:** `az acr login -n greenbieracr && docker push greenbieracr.azurecr.io/<image>:<tag>`
-  3. **Update Container App:** `az containerapp update -n <app-name> -g NBAGBSVMODEL --image greenbieracr.azurecr.io/<image>:<tag>`
-  4. **Restart if needed:** `az containerapp revision restart -n <app-name> -g NBAGBSVMODEL --revision <revision-name>`
-  5. **Verify:** `curl -s https://<app-fqdn>/health`
+  1. **Build locally:** `docker build -t nbagbsacr.azurecr.io/nba-picks-api:<tag> -f Dockerfile.combined .`
+  2. **Push to ACR:** `az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-picks-api:<tag>`
+  3. **Update Container App:** `az containerapp update -n nba-picks-api -g NBAGBSVMODEL --image nbagbsacr.azurecr.io/nba-picks-api:<tag>`
+  4. **Restart if needed:** `az containerapp revision restart -n nba-picks-api -g NBAGBSVMODEL --revision <revision-name>`
+  5. **Verify:** `curl -s https://nba-picks-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
+  6. **Recommended:** Use deploy script: `pwsh infra/nba/deploy.ps1 -Tag v6.10`
 
 - **Common Pitfalls to Avoid**
   - **Empty workspace folders:** If a model folder (e.g., `nba_v5.1_model_FINAL/`) is empty, clone from GitHub: `git clone https://github.com/JDSB123/<repo>.git <folder> --branch master`
-  - **Wrong branch:** Most model repos use `master` as the active branch, NOT `main`. Always check.
+  - **Wrong branch:** This repo uses `main` as the active branch. Some legacy repos may use `master`.
   - **Stale images:** After pushing code to GitHub, you MUST rebuild and push the Docker image to ACR. GitHub pushes do NOT auto-deploy.
-  - **Secrets for Docker builds:** NBA model requires `secrets/THE_ODDS_API_KEY` and `secrets/API_BASKETBALL_KEY` files before building. Get from Key Vault: `az keyvault secret show --vault-name greenbier-keyvault --name <secret-name> --query value -o tsv`
+  - **Secrets for Docker builds:** NBA model requires `secrets/THE_ODDS_API_KEY` and `secrets/API_BASKETBALL_KEY` files before building. Get from Key Vault: `az keyvault secret show --vault-name nbagbs-keyvault --name <secret-name> --query value -o tsv`
+  - **Wrong registry:** Use `nbagbsacr` (NOT greenbieracr) for NBAGBSVMODEL deployments.
 
 - **Editing rules for AI agents**
   - Never add or expose secrets in code or committed env files. If a change requires new secrets, add clear instructions in the PR and update the appropriate `deploy-*.ps1` to accept them via Key Vault.
