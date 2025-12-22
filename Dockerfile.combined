@@ -1,0 +1,96 @@
+# NBA v6.5 - Combined Model API + Bot - Production Container
+# Single container with:
+# - Port 8090: ML Model Prediction API (uvicorn)
+# - Port 8080: Azure Functions Bot / Teams Integration (func host)
+#
+# Build: docker build -f Dockerfile.combined -t nba-picks-api:v6.5 .
+
+# =============================================================================
+# Stage 1: Builder
+# =============================================================================
+FROM python:3.11.11-slim AS builder
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt pyproject.toml ./
+COPY ./azure/function_app/requirements.txt ./requirements-func.txt
+
+RUN pip install --no-cache-dir --user -r requirements.txt && \
+    pip install --no-cache-dir --user -r requirements-func.txt
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+FROM python:3.11.11-slim
+
+LABEL maintainer="Green Bier Ventures" version="6.5"
+
+WORKDIR /app
+
+RUN useradd -m -u 1000 -s /bin/bash appuser && \
+    mkdir -p /app/data/processed/models /app/outputs /app/function_host && \
+    chown -R appuser:appuser /app
+
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+
+# Copy application code
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser scripts/ ./scripts/
+COPY --chown=appuser:appuser ./azure/function_app/ ./function_host/
+COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
+
+# Environment
+ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV DATA_RAW_DIR=data/raw
+ENV DATA_PROCESSED_DIR=/app/data/processed
+ENV THE_ODDS_BASE_URL=https://api.the-odds-api.com/v4
+ENV API_BASKETBALL_BASE_URL=https://v1.basketball.api-sports.io
+ENV CURRENT_SEASON=2025-2026
+ENV FILTER_SPREAD_MIN_CONFIDENCE=0.55
+ENV FILTER_SPREAD_MIN_EDGE=1.0
+ENV FILTER_TOTAL_MIN_CONFIDENCE=0.55
+ENV FILTER_TOTAL_MIN_EDGE=1.5
+ENV FILTER_MONEYLINE_MIN_CONFIDENCE=0.55
+ENV FILTER_MONEYLINE_MIN_EDGE_PCT=0.03
+ENV FILTER_Q1_MIN_CONFIDENCE=0.60
+ENV FILTER_Q1_MIN_EDGE_PCT=0.05
+ENV ALLOWED_ORIGINS=*
+ENV NBA_MODEL_VERSION=6.5-STRICT
+ENV NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+ENV FUNCTIONS_WORKER_RUNTIME=python
+ENV FUNCTIONS_EXTENSION_VERSION=~4
+
+# Verify models
+RUN echo "=== NBA v6.5 Models ===" && \
+    test -f /app/data/processed/models/q1_spread_model.joblib && echo "✓ q1_spread" && \
+    test -f /app/data/processed/models/1h_spread_model.pkl && echo "✓ 1h_spread" && \
+    test -f /app/data/processed/models/fg_spread_model.joblib && echo "✓ fg_spread"
+
+# Entrypoint script
+RUN cat > /app/start.sh << 'EOF'
+#!/bin/bash
+echo "[Startup] Starting NBA Container (Model API + Bot)..."
+
+python -m uvicorn src.serving.app:app --host 0.0.0.0 --port 8090 --workers 2 &
+MODEL_PID=$!
+
+cd /app/function_host
+func host start --port 8080 &
+BOT_PID=$!
+
+trap 'kill $MODEL_PID $BOT_PID' EXIT
+wait
+EOF
+RUN chmod +x /app/start.sh
+
+USER appuser
+EXPOSE 8090 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -s http://localhost:8090/health || exit 1
+ENTRYPOINT ["/app/start.sh"]

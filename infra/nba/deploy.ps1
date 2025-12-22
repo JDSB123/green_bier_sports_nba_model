@@ -2,9 +2,10 @@ Param(
     [string]$Subscription = "",
     [string]$ResourceGroup = "NBAGBSVMODEL",
     [string]$ContainerAppName = "nba-picks-api",
-    [string]$AcrName = "greenbieracr",
-    [string]$ImageName = "nba-model",
-    [string]$Tag = "v6.4"
+    [string]$AcrName = "nbagbsacr",
+    [string]$ImageName = "nba-picks-api",
+    [string]$Tag = "v6.5",
+    [string]$DockerFile = "Dockerfile.combined"
 )
 
 Write-Host "Starting NBA deployment to Azure Container Apps..."
@@ -23,8 +24,9 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to login to ACR: $AcrName"; exit 1
 }
 
-$fullImage = "$AcrName.azurecr.io/$ImageName:$Tag"
+$fullImage = "${AcrName}.azurecr.io/${ImageName}:${Tag}"
 Write-Host "Building Docker image: $fullImage"
+Write-Host "Using Dockerfile: $DockerFile"
 
 # Determine repo root (deploy.ps1 is expected in infra/nba/, Dockerfile at repo root)
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -33,7 +35,7 @@ Write-Host "Repository root: $RepoRoot"
 
 Push-Location $RepoRoot
 try {
-    docker build -t $fullImage .
+    docker build -f $DockerFile -t $fullImage .
     if ($LASTEXITCODE -ne 0) { Write-Error "Docker build failed"; exit 1 }
 } finally {
     Pop-Location
@@ -50,7 +52,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Updating Container App: $ContainerAppName in RG: $ResourceGroup"
+Write-Host "Exposing ports: 8090 (Model API) and 8080 (Bot Functions)"
 az containerapp update -n $ContainerAppName -g $ResourceGroup --image $fullImage
 if ($LASTEXITCODE -ne 0) { Write-Error "Container App update failed"; exit 1 }
 
-Write-Host "Deployment complete. Optionally verify health endpoint."
+Write-Host "Deployment complete!"
+Write-Host "Model API endpoint: https://$ContainerAppName.*.azurecontainerapps.io/health (port 8090)"
+Write-Host "Bot endpoint: https://$ContainerAppName.*.azurecontainerapps.io/api/bot (port 8080)"

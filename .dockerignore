@@ -43,8 +43,8 @@ data/processed/*.pkl
 data/processed/*.joblib
 # But keep models/production/ (it's explicitly copied)
 
-# Azure deployment (legacy)
-azure/
+# Azure deployment (legacy - but keep function_app for combined builds)
+azure/teams-app/
 
 # Backtest files (not needed in production container)
 # NOTE: docker-entrypoint-backtest.sh is NOT excluded because Dockerfile.backtest needs it
