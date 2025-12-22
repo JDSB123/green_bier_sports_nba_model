@@ -11,7 +11,7 @@ Purpose: give an AI coding agent the exact, discoverable facts it needs to make 
   - `nba_v5.1_model_FINAL/` — **NBA prediction model v6.0**. Python. GitHub: `JDSB123/green_bier_sports_nba_v5.1_model` (branch: `master`, NOT main). 7 markets: Q1/1H/FG spread, total, moneyline.
   - Small utilities / trackers at repo root (`live_picks_tracker.py`, `pick_tracker_beta_v1.0/`) — mainly Python scripts, keep changes minimal and test locally.
 
-- **Azure Resource → GitHub Source Code Mapping (greenbier-enterprise-rg)**
+- **Azure Resource → GitHub Source Code Mapping (NBAGBSVMODEL)**
   | Azure Resource | Type | GitHub Repo | Branch | Image |
   |----------------|------|-------------|--------|-------|
   | `nba-picks-api` | Container App | `JDSB123/green_bier_sports_nba_v5.1_model` | `master` | `greenbieracr.azurecr.io/nba-model:v6.0` |
@@ -62,8 +62,8 @@ Purpose: give an AI coding agent the exact, discoverable facts it needs to make 
 - **Deploying Model Changes to Azure Container Apps**
   1. **Build locally:** `cd <model_folder> && docker build -t greenbieracr.azurecr.io/<image>:<tag> .`
   2. **Push to ACR:** `az acr login -n greenbieracr && docker push greenbieracr.azurecr.io/<image>:<tag>`
-  3. **Update Container App:** `az containerapp update -n <app-name> -g greenbier-enterprise-rg --image greenbieracr.azurecr.io/<image>:<tag>`
-  4. **Restart if needed:** `az containerapp revision restart -n <app-name> -g greenbier-enterprise-rg --revision <revision-name>`
+  3. **Update Container App:** `az containerapp update -n <app-name> -g NBAGBSVMODEL --image greenbieracr.azurecr.io/<image>:<tag>`
+  4. **Restart if needed:** `az containerapp revision restart -n <app-name> -g NBAGBSVMODEL --revision <revision-name>`
   5. **Verify:** `curl -s https://<app-fqdn>/health`
 
 - **Common Pitfalls to Avoid**

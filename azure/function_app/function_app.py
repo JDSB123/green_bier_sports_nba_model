@@ -32,17 +32,17 @@ from urllib.request import Request, urlopen
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 # Configuration - SINGLE SOURCE OF TRUTH
-# Resource Group: greenbier-enterprise-rg
+# Resource Group: NBAGBSVMODEL
 # Container App: nba-picks-api
 # FQDN changes when environment is recreated - always get dynamically:
-#   az containerapp show -n nba-picks-api -g greenbier-enterprise-rg --query properties.configuration.ingress.fqdn -o tsv
+#   az containerapp show -n nba-picks-api -g NBAGBSVMODEL --query properties.configuration.ingress.fqdn -o tsv
 
 
 def _get_nba_api_url() -> str:
     """Resolve NBA API URL from env each request (no restart required).
 
     REQUIRES: NBA_API_URL set in Azure Function App Settings.
-    Get current FQDN: az containerapp show -n nba-picks-api -g greenbier-enterprise-rg --query properties.configuration.ingress.fqdn -o tsv
+    Get current FQDN: az containerapp show -n nba-picks-api -g NBAGBSVMODEL --query properties.configuration.ingress.fqdn -o tsv
     """
     url = os.environ.get("NBA_API_URL", "").strip()
     if not url:

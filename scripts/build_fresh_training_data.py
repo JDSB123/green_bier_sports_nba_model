@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Build Fresh Training Data Pipeline.
 
@@ -244,7 +245,6 @@ class FreshDataPipeline:
         
         # Import here to avoid circular imports
         from src.ingestion.the_odds import (
-            fetch_historical_odds,
             fetch_odds,
             fetch_events,
             fetch_event_odds,
@@ -254,110 +254,18 @@ class FreshDataPipeline:
         
         all_lines: List[Dict[str, Any]] = []
         
-        # Try historical endpoint first (requires paid plan)
-        historical_available = False
+        # Use unified fetch_odds() endpoint (handles both historical and current)
+        # This ensures consistent data structure and format across training/prediction
+        logger.info("  Fetching odds data via unified source (fetch_odds)...")
         
-        for date_str in game_dates[:1]:  # Test with first date
-            try:
-                # Format date for API
-                dt = datetime.strptime(date_str, "%Y-%m-%d")
-                iso_date = dt.strftime("%Y-%m-%dT12:00:00Z")
-                
-                data = await fetch_historical_odds(
-                    date=iso_date,
-                    markets="spreads,totals,h2h",
-                )
-                
-                if data.get("data"):
-                    historical_available = True
-                    logger.info("✓ Historical odds endpoint available")
-                    break
-                    
-            except Exception as e:
-                if "403" in str(e) or "Forbidden" in str(e):
-                    logger.warning("Historical odds endpoint not available (requires paid plan)")
-                else:
-                    logger.warning(f"Error testing historical endpoint: {e}")
-        
-        if historical_available:
-            # Use historical endpoint - OPTIMIZED to fetch ALL markets including 1H/Q1
-            for i, date_str in enumerate(game_dates):
-                if i % 10 == 0:
-                    logger.info(f"  Processing date {i+1}/{len(game_dates)}...")
-                
-                try:
-                    dt = datetime.strptime(date_str, "%Y-%m-%d")
-                    iso_date = dt.strftime("%Y-%m-%dT12:00:00Z")
-                    
-                    # Fetch FG markets from historical odds
-                    data = await fetch_historical_odds(
-                        date=iso_date,
-                        markets="spreads,totals,h2h",
-                    )
-                    
-                    events = data.get("data", [])
-                    
-                    # For each event, fetch event-specific odds for 1H/Q1 markets
-                    # OPTIMIZATION: Use asyncio.gather with semaphore to speed up fetching
-                    sem = asyncio.Semaphore(5)
-                    
-                    async def process_historical_event(event):
-                        event_id = event.get("id")
-                        if not event_id:
-                            return event
-                            
-                        async with sem:
-                            try:
-                                # Fetch 1H and Q1 markets (not available in historical endpoint)
-                                # Note: Event-specific odds may not be available for historical dates
-                                # This is best-effort
-                                event_odds = await fetch_event_odds(
-                                    event_id,
-                                    markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1",
-                                )
-                                # Merge 1H/Q1 markets into event data
-                                if event_odds.get("bookmakers"):
-                                    existing_bms = {bm["key"]: bm for bm in event.get("bookmakers", [])}
-                                    for bm in event_odds.get("bookmakers", []):
-                                        if bm["key"] in existing_bms:
-                                            existing_bms[bm["key"]]["markets"].extend(bm.get("markets", []))
-                                        else:
-                                            existing_bms[bm["key"]] = bm
-                                    event["bookmakers"] = list(existing_bms.values())
-                            except Exception as e:
-                                logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
-                                # Continue with FG markets only
-                        return event
-
-                    tasks = [process_historical_event(event) for event in events]
-                    enriched_events = await asyncio.gather(*tasks)
-                    
-                    lines = self._extract_lines_from_events(enriched_events, date_str)
-                    all_lines.extend(lines)
-                    
-                except Exception as e:
-                    logger.debug(f"  No lines for {date_str}: {e}")
-        else:
-            # Historical not available - warn user
-            logger.warning(
-                "⚠️  Historical odds not available. For full backtesting:\n"
-                "   1. Upgrade to The Odds API Group 2+ plan\n"
-                "   2. Or collect odds going forward with regular data collection"
-            )
+        try:
+            # Fetch main odds (FG markets) - fetch_odds handles routing internally
+            current_odds = await fetch_odds(markets="spreads,totals,h2h")
+            logger.info(f"  Fetched FG odds for {len(current_odds)} events")
             
-            # Try to get current/recent odds and ALL markets
-            try:
-                # Fetch events list first to get event IDs
-                events = await fetch_events()
-                logger.info(f"  Fetched {len(events)} events for current date")
-                
-                # Fetch main odds (FG markets)
-                current_odds = await fetch_odds(markets="spreads,totals,h2h")
-                logger.info(f"  Fetched FG odds for {len(current_odds)} events")
-                
-                # Enrich each event with 1H/Q1 markets
-                # OPTIMIZATION: Use asyncio.gather with semaphore
-                sem = asyncio.Semaphore(5)
+            # Enrich each event with 1H/Q1 markets
+            # OPTIMIZATION: Use asyncio.gather with semaphore
+            sem = asyncio.Semaphore(5)
                 
                 async def process_current_event(event):
                     event_id = event.get("id")

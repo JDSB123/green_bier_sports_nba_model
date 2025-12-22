@@ -24,7 +24,7 @@ if not TEAMS_WEBHOOK_URL:
     sys.exit(1)
 
 # API URL - defaults to localhost, override with NBA_API_URL env var
-# For Azure: export NBA_API_URL=$(az containerapp show -n nba-picks-api -g greenbier-enterprise-rg --query properties.configuration.ingress.fqdn -o tsv | xargs -I{} echo "https://{}")
+# For Azure: export NBA_API_URL=$(az containerapp show -n nba-picks-api -g NBAGBSVMODEL --query properties.configuration.ingress.fqdn -o tsv | xargs -I{} echo "https://{}")
 API_PORT = os.getenv("NBA_API_PORT", "8090")
 API_BASE = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
 

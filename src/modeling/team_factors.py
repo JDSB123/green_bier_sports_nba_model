@@ -16,70 +16,13 @@ from __future__ import annotations
 
 import math
 from typing import Dict, Optional, Tuple
+from src.utils.team_names import normalize_team_name
 
-# Canonical team aliases (handles shorthand names from various data sources)
-TEAM_ALIASES: Dict[str, str] = {
-    # Eastern Conference
-    "hawks": "Atlanta Hawks",
-    "celtics": "Boston Celtics",
-    "net": "Brooklyn Nets",
-    "nets": "Brooklyn Nets",
-    "hornets": "Charlotte Hornets",
-    "bulls": "Chicago Bulls",
-    "cavaliers": "Cleveland Cavaliers",
-    "cavs": "Cleveland Cavaliers",
-    "pistons": "Detroit Pistons",
-    "pacers": "Indiana Pacers",
-    "heat": "Miami Heat",
-    "bucks": "Milwaukee Bucks",
-    "knicks": "New York Knicks",
-    "magic": "Orlando Magic",
-    "sixers": "Philadelphia 76ers",
-    "76ers": "Philadelphia 76ers",
-    "raptors": "Toronto Raptors",
-    "wizards": "Washington Wizards",
-    # Western Conference
-    "mavericks": "Dallas Mavericks",
-    "nuggets": "Denver Nuggets",
-    "warriors": "Golden State Warriors",
-    "rockets": "Houston Rockets",
-    "clippers": "Los Angeles Clippers",
-    "lakers": "Los Angeles Lakers",
-    "grizzlies": "Memphis Grizzlies",
-    "timberwolves": "Minnesota Timberwolves",
-    "wolves": "Minnesota Timberwolves",
-    "pelicans": "New Orleans Pelicans",
-    "thunder": "Oklahoma City Thunder",
-    "suns": "Phoenix Suns",
-    "trail blazers": "Portland Trail Blazers",
-    "trailblazers": "Portland Trail Blazers",
-    "blazers": "Portland Trail Blazers",
-    "kings": "Sacramento Kings",
-    "spurs": "San Antonio Spurs",
-    "sonics": "Seattle SuperSonics",  # Historical fallback
-    "jazz": "Utah Jazz",
-}
-
-
-def normalize_team_name(team_name: str) -> str:
-    """
-    Normalize shorthand team names (e.g., \"Bucks\", \"Trailblazers\") to canonical forms.
-    """
-    if not team_name:
-        return team_name
-
-    clean = team_name.strip()
-    lowered = clean.lower()
-
-    if lowered in TEAM_ALIASES:
-        return TEAM_ALIASES[lowered]
-
-    collapsed = lowered.replace(" ", "")
-    for alias, canonical in TEAM_ALIASES.items():
-        if alias.replace(" ", "") == collapsed:
-            return canonical
-
-    return clean
+# Team name normalization is now provided by single source:
+# src.utils.team_names.normalize_team_name (line 63)
+#
+# This ensures consistent handling of team shorthand names across
+# all modules in the pipeline.
 
 # =============================================================================
 # TEAM-SPECIFIC HOME COURT ADVANTAGE (HCA)
@@ -149,11 +92,13 @@ def get_home_court_advantage(team_name: str) -> float:
     Returns:
         Points of home court advantage for this team
     """
-    team_name = normalize_team_name(team_name)
+    team_name_normalized = normalize_team_name(team_name)
+    from src.utils.team_names import get_canonical_name
+    team_canonical = get_canonical_name(team_name_normalized)
 
     # Try exact match first
-    if team_name in TEAM_HOME_COURT_ADVANTAGE:
-        return TEAM_HOME_COURT_ADVANTAGE[team_name]
+    if team_canonical in TEAM_HOME_COURT_ADVANTAGE:
+        return TEAM_HOME_COURT_ADVANTAGE[team_canonical]
     
     # Try partial match (for variations like "LA Lakers")
     team_lower = team_name.lower()
@@ -273,9 +218,14 @@ def get_travel_distance(from_team: str, to_team: str) -> Optional[float]:
     """
     from_normalized = normalize_team_name(from_team)
     to_normalized = normalize_team_name(to_team)
+    
+    # Convert team IDs to full canonical names for lookup
+    from src.utils.team_names import get_canonical_name
+    from_canonical = get_canonical_name(from_normalized)
+    to_canonical = get_canonical_name(to_normalized)
 
-    from_loc = ARENA_LOCATIONS.get(from_normalized)
-    to_loc = ARENA_LOCATIONS.get(to_normalized)
+    from_loc = ARENA_LOCATIONS.get(from_canonical)
+    to_loc = ARENA_LOCATIONS.get(to_canonical)
     
     # Find from location
     for team_name, coords in ARENA_LOCATIONS.items():
@@ -305,8 +255,12 @@ def get_timezone_difference(team1: str, team2: str) -> int:
     team1_normalized = normalize_team_name(team1)
     team2_normalized = normalize_team_name(team2)
 
-    tz1 = TEAM_TIMEZONE_OFFSET.get(team1_normalized, 0)
-    tz2 = TEAM_TIMEZONE_OFFSET.get(team2_normalized, 0)
+    from src.utils.team_names import get_canonical_name
+    team1_canonical = get_canonical_name(team1_normalized)
+    team2_canonical = get_canonical_name(team2_normalized)
+    
+    tz1 = TEAM_TIMEZONE_OFFSET.get(team1_canonical, 0)
+    tz2 = TEAM_TIMEZONE_OFFSET.get(team2_canonical, 0)
     
     if tz1 == 0:
         for team_name, offset in TEAM_TIMEZONE_OFFSET.items():

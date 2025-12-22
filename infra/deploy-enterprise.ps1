@@ -116,16 +116,16 @@ if ($SharedOnly) {
 }
 
 # ============================================================================
-# STEP 4: Deploy NBA Infrastructure (into greenbier-enterprise-rg)
+# STEP 4: Deploy NBA Infrastructure (into specified NBA RG)
 # ============================================================================
 Write-Host "[4/6] Deploying NBA infrastructure..." -ForegroundColor Yellow
-Write-Host "  → Resource Group: greenbier-enterprise-rg" -ForegroundColor Cyan
+Write-Host "  → Resource Group: NBAGBSVMODEL" -ForegroundColor Cyan
 
 # Resource group already exists from shared deployment or pre-existing
-az group create --name "greenbier-enterprise-rg" --location $Location --output none 2>$null
+az group create --name "NBAGBSVMODEL" --location $Location --output none 2>$null
 
 $nbaResult = az deployment group create `
-    --resource-group "greenbier-enterprise-rg" `
+    --resource-group "NBAGBSVMODEL" `
     --name "gbs-nba-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
     --template-file "$ScriptDir\nba\main.bicep" `
     --parameters environment=$Environment location=$Location sharedResourceGroup="greenbier-enterprise-rg" `
@@ -170,7 +170,7 @@ Write-Host "[6/6] Updating Container App with new image..." -ForegroundColor Yel
 
 az containerapp update `
     --name "nba-picks-api" `
-    --resource-group "greenbier-enterprise-rg" `
+    --resource-group "NBAGBSVMODEL" `
     --image $imageName `
     --output none
 
@@ -194,7 +194,7 @@ Write-Host "  curl $nbaApiUrl/health" -ForegroundColor White
 Write-Host "  curl $nbaApiUrl/slate/today" -ForegroundColor White
 Write-Host ""
 Write-Host "AZURE RESOURCES:" -ForegroundColor Yellow
-Write-Host "  Resource Group:  greenbier-enterprise-rg" -ForegroundColor White
+Write-Host "  Resource Group:  NBAGBSVMODEL" -ForegroundColor White
 Write-Host "  Container App:   nba-picks-api" -ForegroundColor White
 Write-Host "  ACR:             greenbieracr.azurecr.io" -ForegroundColor White
 Write-Host ""

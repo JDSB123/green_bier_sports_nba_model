@@ -1,6 +1,7 @@
 Param(
   [string]$Subscription = "",
-  [string]$ResourceGroup = "greenbier-enterprise-rg",
+  [string]$ResourceGroup = "NBAGBSVMODEL",
+  [string]$SharedResourceGroup = "greenbier-enterprise-rg",
   [string]$EnvironmentName = "greenbier-nba-env",
   [string]$AppName = "nba-picks-api",
   [string]$AcrName = "greenbieracr",
@@ -33,7 +34,8 @@ $principalId = az containerapp show -n $AppName -g $ResourceGroup --query identi
 
 Write-Host "Granting AcrPull to app identity..."
 $subId = az account show --query id -o tsv
-$acrScope = "/subscriptions/$subId/resourceGroups/$ResourceGroup/providers/Microsoft.ContainerRegistry/registries/$AcrName"
+# ACR lives in shared RG; use SharedResourceGroup for scope
+$acrScope = "/subscriptions/$subId/resourceGroups/$SharedResourceGroup/providers/Microsoft.ContainerRegistry/registries/$AcrName"
 az role assignment create --assignee $principalId --scope $acrScope --role "AcrPull" 2>$null | Out-Null
 
 Write-Host "Fetching secret values from Key Vault '$KeyVaultName'..."

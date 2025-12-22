@@ -10,9 +10,8 @@ from src.modeling.team_factors import (
     get_home_court_advantage,
     get_timezone_difference,
     get_travel_distance,
-    normalize_team_name,
 )
-
+from src.utils.team_names import normalize_team_name
 TRAVEL_FEATURE_COLUMNS: Iterable[str] = (
     "away_travel_distance",
     "away_timezone_change",

@@ -11,6 +11,7 @@ import numpy as np
 
 from src.config import settings
 from src.modeling.features import FeatureEngineer
+from src.utils.team_names import normalize_team_name
 
 
 class DatasetBuilder:
@@ -22,43 +23,13 @@ class DatasetBuilder:
     - Totals: Did the game go over the total?
     """
 
-    # Team name mappings for matching between sources
-    TEAM_NAME_MAP = {
-        # The Odds API format -> Standard format
-        "Philadelphia 76ers": "Philadelphia 76ers",
-        "Phi 76ers": "Philadelphia 76ers",
-        "Phoenix Suns": "Phoenix Suns",
-        "PHX Suns": "Phoenix Suns",
-        "Los Angeles Lakers": "Los Angeles Lakers",
-        "LA Lakers": "Los Angeles Lakers",
-        "Los Angeles Clippers": "Los Angeles Clippers",
-        "LA Clippers": "Los Angeles Clippers",
-        "Golden State Warriors": "Golden State Warriors",
-        "GS Warriors": "Golden State Warriors",
-        "New York Knicks": "New York Knicks",
-        "NY Knicks": "New York Knicks",
-        "Brooklyn Nets": "Brooklyn Nets",
-        "BKN Nets": "Brooklyn Nets",
-        "San Antonio Spurs": "San Antonio Spurs",
-        "SA Spurs": "San Antonio Spurs",
-        "New Orleans Pelicans": "New Orleans Pelicans",
-        "NO Pelicans": "New Orleans Pelicans",
-        "Oklahoma City Thunder": "Oklahoma City Thunder",
-        "OKC Thunder": "Oklahoma City Thunder",
-        "Portland Trail Blazers": "Portland Trail Blazers",
-        "POR Trail Blazers": "Portland Trail Blazers",
-        "Toronto Raptors": "Toronto Raptors",
-        "TOR Raptors": "Toronto Raptors",
-        "Washington Wizards": "Washington Wizards",
-        "WAS Wizards": "Washington Wizards",
-    }
+    # Team name normalization is now provided by single source:
+    # src.utils.team_names.normalize_team_name (line 63)
+    #
+    # This ensures consistent handling of team names across all modules.
 
     def __init__(self, feature_engineer: Optional[FeatureEngineer] = None):
         self.feature_engineer = feature_engineer or FeatureEngineer()
-
-    def _normalize_team_name(self, name: str) -> str:
-        """Normalize team name for matching."""
-        return self.TEAM_NAME_MAP.get(name, name)
 
     def load_odds_data(self, path: Optional[str] = None) -> pd.DataFrame:
         """Load and normalize odds data."""
@@ -67,8 +38,8 @@ class DatasetBuilder:
             return pd.DataFrame()
 
         df = pd.read_csv(path)
-        df["home_team"] = df["home_team"].apply(self._normalize_team_name)
-        df["away_team"] = df["away_team"].apply(self._normalize_team_name)
+        df["home_team"] = df["home_team"].apply(normalize_team_name)
+        df["away_team"] = df["away_team"].apply(normalize_team_name)
         df["start_time"] = pd.to_datetime(df["start_time"], errors="coerce")
         return df
 
@@ -84,8 +55,8 @@ class DatasetBuilder:
         for p in paths_to_try:
             if p and os.path.exists(p):
                 df = pd.read_csv(p)
-                df["home_team"] = df["home_team"].apply(self._normalize_team_name)
-                df["away_team"] = df["away_team"].apply(self._normalize_team_name)
+                df["home_team"] = df["home_team"].apply(normalize_team_name)
+                df["away_team"] = df["away_team"].apply(normalize_team_name)
                 df["date"] = pd.to_datetime(df["date"], errors="coerce")
                 return df
 

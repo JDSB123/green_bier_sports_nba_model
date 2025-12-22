@@ -17,6 +17,15 @@ param location string = resourceGroup().location
 @allowed(['dev', 'staging', 'prod'])
 param environment string = 'prod'
 
+@description('Container Registry name (override to clone/shared per RG)')
+param containerRegistryName string = 'greenbieracr'
+
+@description('Key Vault name override (defaults to unique computed name when empty)')
+param keyVaultName string = ''
+
+@description('Container Apps Environment name')
+param containerAppEnvName string = 'greenbier-nba-env'
+
 // Naming
 var prefix = 'gbs'
 var tags = {
@@ -29,7 +38,7 @@ var tags = {
 // Container Registry (shared across all sports) - ACTUAL: greenbieracr
 // ============================================================================
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: 'greenbieracr'
+  name: containerRegistryName
   location: location
   tags: tags
   sku: {
@@ -43,8 +52,10 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 // ============================================================================
 // Key Vault (centralized secrets for all sports)
 // ============================================================================
+var resolvedKeyVaultName = empty(keyVaultName) ? '${prefix}-keyvault-${uniqueString(resourceGroup().id)}' : keyVaultName
+
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${prefix}-keyvault-${uniqueString(resourceGroup().id)}'
+  name: resolvedKeyVaultName
   location: location
   tags: tags
   properties: {
@@ -56,7 +67,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
-    enablePurgeProtection: false // Set to true for production
+    enablePurgeProtection: true
   }
 }
 
@@ -93,7 +104,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 // Container Apps Environment - ACTUAL: greenbier-nba-env
 // ============================================================================
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
-  name: 'greenbier-nba-env'
+  name: containerAppEnvName
   location: location
   tags: tags
   properties: {

@@ -1,6 +1,6 @@
 Param(
     [string]$Subscription = "",
-    [string]$ResourceGroup = "greenbier-enterprise-rg",
+    [string]$ResourceGroup = "NBAGBSVMODEL",
     [string]$ContainerAppName = "nba-picks-api",
     [string]$AcrName = "greenbieracr",
     [string]$ImageName = "nba-model",

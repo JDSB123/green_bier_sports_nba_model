@@ -608,26 +608,37 @@ class ComprehensiveIngestion:
         self._record_result("espn", "/scoreboard", True, event_count)
         return data
 
-    async def fetch_espn_injuries(self) -> List[Dict]:
-        """Fetch injuries from ESPN (FREE, unlimited).
+    async def fetch_injuries(self) -> List[Dict]:
+        """Fetch injuries from all configured sources (ESPN + API-Basketball).
 
+        Aggregates injury data from multiple sources for redundancy.
+        ESPN: FREE, unlimited. API-Basketball: If API key configured.
+        
         TTL: 2 hours
         """
-        from src.ingestion.injuries import fetch_injuries_espn
+        from src.ingestion.injuries import fetch_all_injuries
 
-        key = f"espn_injuries_{date.today().isoformat()}"
+        key = f"injuries_{date.today().isoformat()}"
 
         data = await api_cache.get_or_fetch(
             key=key,
-            fetch_fn=fetch_injuries_espn,
+            fetch_fn=fetch_all_injuries,
             ttl_hours=APICache.TTL_FREQUENT,
-            source="espn",
+            source="injuries",
             endpoint="/injuries",
             force_refresh=self.force_refresh,
         )
 
-        self._record_result("espn", "/injuries", True, len(data))
-        return data
+        # fetch_all_injuries returns InjuryReport objects, convert to dict if needed
+        result_list = []
+        for injury in data:
+            if hasattr(injury, '__dict__'):
+                result_list.append(injury.__dict__)
+            else:
+                result_list.append(injury)
+
+        self._record_result("injuries", "/injuries", True, len(result_list))
+        return result_list
 
     # =========================================================================
     # COMPOSITE OPERATIONS

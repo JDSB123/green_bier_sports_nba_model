@@ -5,7 +5,7 @@
 ## Actual Azure Architecture
 
 ```
-greenbier-enterprise-rg                    <-- Resource Group
+NBAGBSVMODEL                               <-- Resource Group
 ├── greenbieracr                           <-- Container Registry
 ├── greenbier-nba-env                      <-- Container Apps Environment
 │   └── nba-picks-api                      <-- Container App
@@ -22,7 +22,7 @@ greenbier-enterprise-rg                    <-- Resource Group
 
 | Resource | Name |
 |----------|------|
-| **Resource Group** | `greenbier-enterprise-rg` |
+| **Resource Group** | `NBAGBSVMODEL` |
 | **Container Apps Environment** | `greenbier-nba-env` |
 | **Container App** | `nba-picks-api` |
 | **Container Registry** | `greenbieracr` |
@@ -34,11 +34,11 @@ The FQDN can change when Azure recreates the environment. Always get it dynamica
 
 ```bash
 # Get current API FQDN
-az containerapp show -n nba-picks-api -g greenbier-enterprise-rg \
+az containerapp show -n nba-picks-api -g NBAGBSVMODEL \
   --query properties.configuration.ingress.fqdn -o tsv
 
 # Set as environment variable
-export NBA_API_URL="https://$(az containerapp show -n nba-picks-api -g greenbier-enterprise-rg --query properties.configuration.ingress.fqdn -o tsv)"
+export NBA_API_URL="https://$(az containerapp show -n nba-picks-api -g NBAGBSVMODEL --query properties.configuration.ingress.fqdn -o tsv)"
 
 # Test health
 curl "$NBA_API_URL/health"
@@ -58,11 +58,14 @@ All scripts use these environment variables (no hardcoded values):
 ## Quick Commands
 
 ```bash
+# Migrate NBA to NBAGBSVMODEL (clone ACR & Key Vault; no downtime)
+pwsh infra/nba/migrate-to-nbagbsvmodel.ps1 -DestResourceGroup NBAGBSVMODEL -DestAcrName nbagbsacr -DestKeyVaultName nbagbs-keyvault -Environment prod -Location eastus
+
 # View container app logs
-az containerapp logs show -n nba-picks-api -g greenbier-enterprise-rg --follow
+az containerapp logs show -n nba-picks-api -g NBAGBSVMODEL --follow
 
 # Update container app with new image
-az containerapp update -n nba-picks-api -g greenbier-enterprise-rg \
+az containerapp update -n nba-picks-api -g NBAGBSVMODEL \
   --image greenbieracr.azurecr.io/nba-model:latest
 
 # Build and push new image
@@ -74,7 +77,7 @@ docker push greenbieracr.azurecr.io/nba-model:latest
 NBA_API_PORT=9000 docker compose up -d
 
 # Check current scaling
-az containerapp show -n nba-picks-api -g greenbier-enterprise-rg \
+az containerapp show -n nba-picks-api -g NBAGBSVMODEL \
   --query properties.template.scale
 ```
 
@@ -83,7 +86,7 @@ az containerapp show -n nba-picks-api -g greenbier-enterprise-rg \
 GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 1. Builds Docker image on push to `main`/`master`
 2. Pushes to `greenbieracr.azurecr.io`
-3. Deploys to `nba-picks-api` in `greenbier-enterprise-rg`
+3. Deploys to `nba-picks-api` in `NBAGBSVMODEL`
 
 ## Model Version
 

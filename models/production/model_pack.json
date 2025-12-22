@@ -154,7 +154,7 @@
   },
   "deployment": {
     "container_app": "nba-picks-api",
-    "resource_group": "greenbier-enterprise-rg",
+    "resource_group": "NBAGBSVMODEL",
     "acr": "greenbieracr.azurecr.io/nba-model:v6.4",
     "health_endpoint": "/health",
     "markets_required": 9

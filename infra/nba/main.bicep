@@ -1,12 +1,12 @@
 // Green Bier Sports - NBA Model Infrastructure
 // Deploys NBA-specific resources (Container App, Function, Storage)
 //
-// SINGLE SOURCE OF TRUTH - All NBA resources in greenbier-enterprise-rg
+// SINGLE SOURCE OF TRUTH - All NBA resources in NBAGBSVMODEL
 // Container App: nba-picks-api
 // ACR: greenbieracr
 //
 // Usage:
-//   az deployment group create -g greenbier-enterprise-rg -f infra/nba/main.bicep
+//   az deployment group create -g NBAGBSVMODEL -f infra/nba/main.bicep
 
 targetScope = 'resourceGroup'
 
@@ -17,7 +17,7 @@ param location string = resourceGroup().location
 @allowed(['dev', 'staging', 'prod'])
 param environment string = 'prod'
 
-@description('Shared resource group name - same as NBA for simplicity')
+@description('Shared resource group name (ACR/KeyVault live here)')
 param sharedResourceGroup string = 'greenbier-enterprise-rg'
 
 @description('Container image tag')

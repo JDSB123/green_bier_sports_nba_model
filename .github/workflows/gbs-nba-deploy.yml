@@ -29,7 +29,7 @@ on:
 
 env:
   AZURE_CONTAINER_REGISTRY: greenbieracr
-  RESOURCE_GROUP: greenbier-enterprise-rg
+  RESOURCE_GROUP: NBAGBSVMODEL
   CONTAINER_APP_NAME: nba-picks-api
   IMAGE_NAME: nba-model
 
