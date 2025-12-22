@@ -129,7 +129,7 @@ def mock_engine():
     }
     # Mock get_model_info for health endpoint
     engine.get_model_info.return_value = {
-        "version": "6.0",
+        "version": "6.5",
         "architecture": "9-model independent",
         "markets": 9,
         "markets_list": [
@@ -183,7 +183,7 @@ def test_health_endpoint_with_engine(app_with_engine):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["version"] == "6.0"
+    assert data["version"] == "6.5"
     assert data["architecture"] == "9-model independent"
     assert data["markets"] == 9
     assert data["engine_loaded"] is True
@@ -207,7 +207,7 @@ def test_health_endpoint_without_engine():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["version"] == "6.0"
+    assert data["version"] == "6.5"
     assert data["architecture"] == "9-model independent"
     assert data["engine_loaded"] is False
 

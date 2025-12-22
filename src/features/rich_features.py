@@ -723,16 +723,18 @@ class RichFeatureBuilder:
             # Calculate injury impact on margin
             # Negative home_out_ppg hurts home team (subtracts from margin)
             # Positive away_out_ppg helps home team (adds to margin)
-            # 80% replacement efficiency = 20% of PPG is lost
-            injury_margin_adj = (-home_out_ppg + away_out_ppg) * 0.8
+            # 80% replacement efficiency = only 20% of star's PPG is lost
+            # (replacement player contributes ~80% of what the star would)
+            REPLACEMENT_LOSS_FACTOR = 0.2  # 20% of PPG lost when player is out
+            injury_margin_adj = (-home_out_ppg + away_out_ppg) * REPLACEMENT_LOSS_FACTOR
 
             # v6.5 FIX: ADD injury adjustment to existing margin
             # (preserves HOME_COURT_ADV and form_margin_adj)
             predicted_margin_nba += injury_margin_adj
 
             # Adjust expected points for total calculation
-            home_expected_pts -= home_out_ppg * 0.8
-            away_expected_pts -= away_out_ppg * 0.8
+            home_expected_pts -= home_out_ppg * REPLACEMENT_LOSS_FACTOR
+            away_expected_pts -= away_out_ppg * REPLACEMENT_LOSS_FACTOR
             predicted_total_nba = home_expected_pts + away_expected_pts
 
             # Count star players out (players with 15+ PPG)

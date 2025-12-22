@@ -196,7 +196,7 @@ class TestUnifiedPredictionEngine:
         info = engine.get_model_info()
 
         assert "version" in info
-        assert info["version"] == "6.0"
+        assert info["version"] == "6.5"
         assert "markets" in info
         assert info["markets"] == 9
         assert "markets_list" in info

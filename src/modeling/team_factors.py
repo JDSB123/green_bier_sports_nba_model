@@ -368,15 +368,16 @@ def calculate_travel_fatigue(
     elif timezone_change > 0:  # Traveling east
         fatigue -= abs(timezone_change) * 0.2
     
-    # Back-to-back compounding
-    if is_back_to_back:
-        # B2B already has -2.5 penalty, travel adds to it
-        fatigue *= 1.5  # 50% more impactful when B2B
-    
-    # Rest can mitigate travel
+    # NOTE: B2B penalty is already handled in rest_adjustment() (-2.5 pts)
+    # We do NOT multiply travel fatigue by B2B factor to avoid double-counting
+    # The rest_adjustment and travel_fatigue are separate, additive factors:
+    # - rest_adjustment: handles game frequency (B2B = -2.5 pts)
+    # - travel_fatigue: handles distance/timezone only
+
+    # Rest can mitigate travel fatigue
     if rest_days >= 2:
         fatigue *= 0.5  # Well-rested team handles travel better
-    
+
     return fatigue
 
 

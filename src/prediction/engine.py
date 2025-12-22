@@ -131,8 +131,10 @@ class PeriodPredictor:
         # =====================================================================
         signals_agree = (classifier_side == prediction_side)
 
-        # Use the agreed-upon side, or prediction side if disagreement
-        bet_side = prediction_side if signals_agree else prediction_side
+        # Bet side is always based on point prediction (the quantitative signal)
+        # When signals disagree, the bet is filtered out anyway (passes_filter=False)
+        # but we still report which side the point prediction favored
+        bet_side = prediction_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
@@ -219,8 +221,10 @@ class PeriodPredictor:
         # =====================================================================
         signals_agree = (classifier_side == prediction_side)
 
-        # Use the agreed-upon side
-        bet_side = prediction_side if signals_agree else prediction_side
+        # Bet side is always based on point prediction (the quantitative signal)
+        # When signals disagree, the bet is filtered out anyway (passes_filter=False)
+        # but we still report which side the point prediction favored
+        bet_side = prediction_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)

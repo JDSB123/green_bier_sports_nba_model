@@ -258,8 +258,12 @@ def parse_command(text: str) -> dict:
         date_match = re.search(r'(\d{1,2})/(\d{1,2})', text)
         if date_match:
             month, day = int(date_match.group(1)), int(date_match.group(2))
-            year = datetime.now().year
-            result["date"] = f"{year}-{month:02d}-{day:02d}"
+            # Validate month and day ranges
+            if 1 <= month <= 12 and 1 <= day <= 31:
+                year = datetime.now().year
+                result["date"] = f"{year}-{month:02d}-{day:02d}"
+            else:
+                logging.warning(f"Invalid date format: {month}/{day}")
 
     # Check for team names (common abbreviations and full names)
     teams = {
@@ -822,6 +826,28 @@ def get_bot_token() -> str:
 
 def send_bot_reply(service_url: str, conversation_id: str, activity_id: str, reply_activity: dict) -> bool:
     """Send a reply through the Bot Connector API."""
+    # SECURITY: Validate service_url to prevent SSRF attacks
+    # Only allow known Microsoft Bot Framework domains
+    ALLOWED_SERVICE_URL_PATTERNS = [
+        "smba.trafficmanager.net",
+        "api.botframework.com",
+        "botframework.com",
+        "servicebus.windows.net"
+    ]
+
+    if not service_url:
+        logging.error("No service URL provided")
+        return False
+
+    # Ensure HTTPS and validate domain
+    if not service_url.startswith("https://"):
+        logging.error(f"SECURITY: Rejecting non-HTTPS service URL: {service_url[:50]}")
+        return False
+
+    if not any(pattern in service_url.lower() for pattern in ALLOWED_SERVICE_URL_PATTERNS):
+        logging.error(f"SECURITY: Rejecting unknown service URL domain: {service_url[:50]}")
+        return False
+
     token = get_bot_token()
     if not token:
         logging.error("No bot token available")
@@ -906,15 +932,18 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
                 computed_signature = base64.b64encode(computed_hash.digest()).decode('utf-8')
 
                 if not hmac.compare_digest(provided_signature, computed_signature):
-                    logging.warning("HMAC validation failed - signature mismatch")
+                    logging.error("HMAC validation failed - signature mismatch (possible unauthorized request)")
                     return func.HttpResponse("Unauthorized", status_code=401)
 
                 logging.info("HMAC validation successful")
             except Exception as e:
-                logging.error(f"HMAC validation error: {e}")
-                # Continue anyway - don't block on validation errors
+                # SECURITY FIX: Reject requests that fail HMAC validation
+                logging.error(f"HMAC validation error - rejecting request: {e}")
+                return func.HttpResponse("Unauthorized - HMAC validation failed", status_code=401)
         elif webhook_secret:
-            logging.warning("No Authorization header for outgoing webhook")
+            # Secret configured but no HMAC header - reject
+            logging.error("No Authorization header for outgoing webhook - rejecting request")
+            return func.HttpResponse("Unauthorized - missing HMAC signature", status_code=401)
 
     # Remove the @mention tag from the text
     # Teams sends: "<at>Bot Name</at> actual command"

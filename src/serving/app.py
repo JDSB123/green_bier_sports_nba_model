@@ -1318,9 +1318,8 @@ async def get_tracking_summary(
     Provides accuracy, ROI, and win/loss breakdown for live tracked predictions.
     Only includes picks that passed the betting filter.
     """
-    from src.tracking import PickTracker
-    
-    tracker = PickTracker()
+    # Use app.state.tracker for consistency with slate endpoint
+    tracker = app.state.tracker
     summary = tracker.get_roi_summary(
         date=date,
         period=period,
@@ -1351,9 +1350,8 @@ async def get_tracked_picks(
     """
     Get list of tracked picks with optional filters.
     """
-    from src.tracking import PickTracker
-    
-    tracker = PickTracker()
+    # Use app.state.tracker for consistency with slate endpoint
+    tracker = app.state.tracker
     picks = tracker.get_picks(date=date, status=status, passes_filter_only=True)
     
     # Sort by creation time, newest first
@@ -1373,13 +1371,12 @@ async def validate_pick_outcomes(
 ):
     """
     Validate pending picks against game outcomes.
-    
+
     Fetches completed game results and updates pick statuses.
     Only processes games that are confirmed complete.
     """
-    from src.tracking import PickTracker
-    
-    tracker = PickTracker()
+    # Use app.state.tracker for consistency with slate endpoint
+    tracker = app.state.tracker
     results = await tracker.validate_outcomes(date=date)
     
     return {
