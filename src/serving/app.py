@@ -38,7 +38,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -1386,3 +1386,333 @@ async def validate_pick_outcomes(
         "pushes": results["pushes"],
         "details": results.get("details", [])
     }
+
+
+@app.get("/picks/html", response_class=HTMLResponse, tags=["Display"])
+@limiter.limit("20/minute")
+async def get_picks_html(
+    request: Request,
+    date: Optional[str] = Query(None, description="Date (YYYY-MM-DD), defaults to today")
+):
+    """
+    Render NBA picks as an interactive Adaptive Card HTML page.
+    
+    Perfect for Teams card preview or standalone viewing.
+    """
+    try:
+        # Use date from query or default to today
+        from datetime import datetime as dt
+        if not date:
+            date = dt.now().strftime("%Y-%m-%d")
+        
+        # Fetch predictions for the date
+        slate = await get_slate_predictions(request, date=date)
+        
+        if not slate.picks:
+            return """
+            <html>
+            <head>
+                <title>NBA Picks - No Games</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; min-height: 100vh; }
+                    .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+                    h1 { color: #333; margin: 0 0 10px 0; }
+                    p { color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>🏀 NBA Picks</h1>
+                    <p>No games scheduled for """ + date + """</p>
+                </div>
+            </body>
+            </html>
+            """
+        
+        # Build picks array for card
+        picks_data = []
+        for pick in slate.picks:
+            market_line = "N/A"
+            if hasattr(pick, 'market_line') and pick.market_line:
+                market_line = pick.market_line
+            
+            edge = "N/A"
+            if hasattr(pick, 'edge') and pick.edge:
+                edge = pick.edge
+            
+            confidence = getattr(pick, 'confidence', 0.5)
+            confidence_pct = int(confidence * 100) if confidence else 0
+            
+            fire_emoji = "🔥"
+            if confidence >= 0.75:
+                fire_emoji = "🔥🔥🔥"
+            elif confidence >= 0.65:
+                fire_emoji = "🔥🔥"
+            
+            picks_data.append({
+                "period": pick.period if hasattr(pick, 'period') else "FG",
+                "matchup": pick.matchup if hasattr(pick, 'matchup') else f"{pick.away_team} @ {pick.home_team}",
+                "pick": pick.pick if hasattr(pick, 'pick') else "N/A",
+                "confidence": confidence_pct,
+                "market_line": market_line,
+                "edge": edge,
+                "fire": fire_emoji
+            })
+        
+        # Generate card JSON
+        card = {
+            "type": "AdaptiveCard",
+            "version": "1.4",
+            "body": [
+                {
+                    "type": "Container",
+                    "style": "accent",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "🏀 NBA PICKS - " + date.upper(),
+                            "weight": "bolder",
+                            "size": "large",
+                            "color": "light"
+                        }
+                    ]
+                },
+                {
+                    "type": "Table",
+                    "gridStyle": "accent",
+                    "firstRowAsHeaders": True,
+                    "columns": [
+                        {"width": "15%"},
+                        {"width": "20%"},
+                        {"width": "25%"},
+                        {"width": "20%"},
+                        {"width": "20%"}
+                    ],
+                    "rows": [
+                        {
+                            "cells": [
+                                {"text": "Period"},
+                                {"text": "Matchup"},
+                                {"text": "Pick (Confidence)"},
+                                {"text": "Market"},
+                                {"text": "Edge"}
+                            ]
+                        }
+                    ] + [
+                        {
+                            "cells": [
+                                {"text": p["period"]},
+                                {"text": p["matchup"]},
+                                {"text": p["pick"] + " (" + str(p["confidence"]) + "%)"},
+                                {"text": p["market_line"]},
+                                {"text": p["edge"] + " " + p["fire"]}
+                            ]
+                        }
+                        for p in picks_data
+                    ]
+                }
+            ],
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+        }
+        
+        card_json_str = json.dumps(card)
+        
+        html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Picks - """ + date + """</title>
+    <script src="https://cdn.jsdelivr.net/npm/adaptivecards@1.4.7/dist/adaptive-cards.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .content {
+            padding: 25px;
+        }
+        #cardContainer {
+            margin-bottom: 20px;
+        }
+        .adaptive-card {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .section h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .json-viewer {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 NBA Picks</h1>
+            <p>""" + date + """</p>
+        </div>
+        <div class="content">
+            <div id="cardContainer"></div>
+            
+            <div class="section">
+                <h2>📋 Card Data</h2>
+                <div class="json-viewer" id="jsonViewer"></div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="downloadJSON()">⬇️ Download JSON</button>
+                    <button class="btn-secondary" onclick="copyJSON()">📋 Copy JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const cardData = """ + card_json_str + """;
+        
+        // Render Adaptive Card
+        AdaptiveCards.AdaptiveCard.onProcessMarkdown = function(text, result) {
+            result.outputHtml = text;
+            result.didProcess = true;
+        };
+        
+        const adaptiveCard = new AdaptiveCards.AdaptiveCard();
+        adaptiveCard.parse(cardData);
+        
+        const renderedCard = adaptiveCard.render();
+        document.getElementById('cardContainer').appendChild(renderedCard);
+        
+        // Display JSON
+        document.getElementById('jsonViewer').textContent = JSON.stringify(cardData, null, 2);
+        
+        function downloadJSON() {
+            const dataStr = JSON.stringify(cardData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'nba_picks_""" + date + """.json';
+            link.click();
+            showToast('JSON downloaded!');
+        }
+        
+        function copyJSON() {
+            navigator.clipboard.writeText(JSON.stringify(cardData, null, 2));
+            showToast('JSON copied to clipboard!');
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>"""
+        
+        return html_content
+        
+    except Exception as e:
+        logger.error(f"Error rendering picks HTML: {str(e)}", exc_info=True)
+        return f"""
+        <html>
+        <head>
+            <title>Error</title>
+            <style>
+                body {{ font-family: sans-serif; background: #f5f5f5; padding: 20px; }}
+                .error {{ background: #fee; padding: 20px; border-radius: 8px; color: #c00; }}
+            </style>
+        </head>
+        <body>
+            <div class="error">
+                <h2>Error rendering picks</h2>
+                <p>{str(e)}</p>
+            </div>
+        </body>
+        </html>
+        """
