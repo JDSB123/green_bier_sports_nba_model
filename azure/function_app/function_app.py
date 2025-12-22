@@ -782,23 +782,36 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
 
 def get_bot_token() -> str:
     """Get access token for Bot Framework Connector API."""
+    from urllib.parse import quote
+
     app_id = os.environ.get("MICROSOFT_APP_ID", "").strip()
     app_password = os.environ.get("MICROSOFT_APP_PASSWORD", "").strip()
     tenant_id = os.environ.get("MICROSOFT_APP_TENANT_ID", "").strip()
 
     if not all([app_id, app_password]):
-        logging.error("Bot credentials not configured")
+        logging.error("Bot credentials not configured (MICROSOFT_APP_ID or MICROSOFT_APP_PASSWORD missing)")
+        return None
+
+    if not tenant_id:
+        logging.error("MICROSOFT_APP_TENANT_ID not configured")
         return None
 
     # Use tenant-specific endpoint for SingleTenant bot
     token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-    data = f"grant_type=client_credentials&client_id={app_id}&client_secret={app_password}&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
+    # URL-encode the password in case it contains special characters
+    encoded_password = quote(app_password, safe='')
+    data = f"grant_type=client_credentials&client_id={app_id}&client_secret={encoded_password}&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
 
     try:
         req = Request(token_url, data=data.encode(), headers={"Content-Type": "application/x-www-form-urlencoded"})
         with urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode())
-            return result.get("access_token")
+            token = result.get("access_token")
+            if token:
+                logging.info("Successfully obtained bot token")
+            else:
+                logging.error(f"Token response missing access_token: {result}")
+            return token
     except Exception as e:
         logging.error(f"Failed to get bot token: {e}")
         return None
@@ -864,8 +877,13 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     raw_text = body.get("text", "")
 
     # Detect mode: Outgoing Webhook vs Azure Bot
-    # Outgoing Webhook has no serviceUrl or has simple format
-    is_outgoing_webhook = not service_url or "api.botframework.com" not in service_url
+    # Azure Bot Framework uses serviceUrls like:
+    #   - https://smba.trafficmanager.net/amer/
+    #   - https://smba.trafficmanager.net/emea/
+    #   - https://api.botframework.com/
+    # Outgoing Webhook has no serviceUrl or basic URL without these patterns
+    azure_bot_patterns = ["smba.trafficmanager.net", "api.botframework.com", "botframework"]
+    is_outgoing_webhook = not service_url or not any(pattern in service_url for pattern in azure_bot_patterns)
     logging.info(f"Mode: {'Outgoing Webhook' if is_outgoing_webhook else 'Azure Bot'}, Service URL: {service_url}")
 
     # Remove the @mention tag from the text
@@ -882,9 +900,15 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
             # Outgoing Webhook: Return directly as HTTP response
             return func.HttpResponse(json.dumps(reply), status_code=200, mimetype="application/json")
         else:
-            # Azure Bot: Send via Bot Connector API
-            send_bot_reply(service_url, conversation_id, activity_id, reply)
-            return func.HttpResponse(status_code=200)
+            # Azure Bot: Try Bot Connector API first, fallback to direct response if it fails
+            success = send_bot_reply(service_url, conversation_id, activity_id, reply)
+            if success:
+                logging.info("Bot reply sent successfully via Bot Connector")
+                return func.HttpResponse(status_code=200)
+            else:
+                # Fallback: Return direct response (works for some Teams configurations)
+                logging.warning("Bot Connector failed, trying direct response fallback")
+                return func.HttpResponse(json.dumps(reply), status_code=200, mimetype="application/json")
 
     # Handle menu/help
     if parsed["show_menu"] or not command_text or command_text.lower() in ["", "hi", "hello"]:
