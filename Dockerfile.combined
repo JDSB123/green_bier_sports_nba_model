@@ -30,6 +30,8 @@ LABEL maintainer="Green Bier Ventures" version="6.5"
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl bash && rm -rf /var/lib/apt/lists/*
+
 RUN useradd -m -u 1000 -s /bin/bash appuser && \
     mkdir -p /app/data/processed/models /app/outputs /app/function_host && \
     chown -R appuser:appuser /app
@@ -65,6 +67,7 @@ ENV NBA_MODEL_VERSION=6.5-STRICT
 ENV NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
 ENV FUNCTIONS_WORKER_RUNTIME=python
 ENV FUNCTIONS_EXTENSION_VERSION=~4
+ENV SEASONS_TO_PROCESS=2025-2026
 
 # Verify models
 RUN echo "=== NBA v6.5 Models ===" && \
@@ -72,22 +75,8 @@ RUN echo "=== NBA v6.5 Models ===" && \
     test -f /app/data/processed/models/1h_spread_model.pkl && echo "✓ 1h_spread" && \
     test -f /app/data/processed/models/fg_spread_model.joblib && echo "✓ fg_spread"
 
-# Entrypoint script
-RUN cat > /app/start.sh << 'EOF'
-#!/bin/bash
-echo "[Startup] Starting NBA Container (Model API + Bot)..."
-
-python -m uvicorn src.serving.app:app --host 0.0.0.0 --port 8090 --workers 2 &
-MODEL_PID=$!
-
-cd /app/function_host
-func host start --port 8080 &
-BOT_PID=$!
-
-trap 'kill $MODEL_PID $BOT_PID' EXIT
-wait
-EOF
-RUN chmod +x /app/start.sh
+# Entrypoint script - using printf to avoid heredoc issues
+RUN printf '#!/bin/sh\nset -e\necho "[Startup] Starting NBA Container (Model API + Bot)..."\npython -m uvicorn src.serving.app:app --host 0.0.0.0 --port 8090 --workers 2 &\nMODEL_PID=$!\ncd /app/function_host\nfunc host start --port 8080 &\nBOT_PID=$!\ntrap "kill $MODEL_PID $BOT_PID 2>/dev/null" EXIT\nwait\n' > /app/start.sh && chmod +x /app/start.sh
 
 USER appuser
 EXPOSE 8090 8080
