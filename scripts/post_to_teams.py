@@ -29,9 +29,11 @@ API_PORT = os.getenv("NBA_API_PORT", "8090")
 API_BASE = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
 
 
-def fetch_executive_data(date: str = "today") -> dict:
-    """Fetch executive summary from the local API."""
-    url = f"{API_BASE}/slate/{date}/executive"
+def fetch_executive_data(date: str = "today", api_base: str = None) -> dict:
+    """Fetch executive summary from the API."""
+    if api_base is None:
+        api_base = API_BASE
+    url = f"{api_base}/slate/{date}/executive"
     try:
         req = Request(url, headers={"Accept": "application/json"})
         with urlopen(req, timeout=60) as resp:
@@ -189,17 +191,17 @@ def main():
     parser.add_argument("--local", action="store_true", help="Use local Docker API instead of Azure")
     args = parser.parse_args()
     
-    # Set API source
-    global API_BASE
+    # Set API source based on flag (or use environment variable)
     if args.local:
-        API_BASE = LOCAL_API
-        print(f"[CONFIG] Using LOCAL API: {API_BASE}")
+        api_base = f"http://localhost:{API_PORT}"
+        print(f"[CONFIG] Using LOCAL API: {api_base}")
     else:
-        API_BASE = AZURE_API
-        print(f"[CONFIG] Using AZURE API: {API_BASE}")
+        # Use environment variable or default to localhost
+        api_base = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
+        print(f"[CONFIG] Using API: {api_base}")
     
     print(f"[FETCH] Fetching predictions for {args.date}...")
-    data = fetch_executive_data(args.date)
+    data = fetch_executive_data(args.date, api_base)
     
     plays = data.get("plays", [])
     if not plays:
