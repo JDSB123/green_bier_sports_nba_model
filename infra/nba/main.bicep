@@ -34,19 +34,13 @@ param theOddsApiKey string
 @secure()
 param apiBasketballKey string
 
-@description('Teams Webhook URL (optional)')
+@description('PostgreSQL admin password (must match shared infrastructure)')
 @secure()
-param teamsWebhookUrl string = ''
+param postgresAdminPassword string
 
-// Reference shared resources
-resource sharedRg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
-  name: sharedResourceGroup
-  scope: subscription()
-}
-
-// Get Container Apps Environment - ACTUAL: greenbier-nba-env
+// Get Container Apps Environment - ACTUAL: greenbier-env
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
-  name: 'greenbier-nba-env'
+  name: 'greenbier-env'
   scope: resourceGroup(sharedResourceGroup)
 }
 
@@ -56,11 +50,14 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   scope: resourceGroup(sharedResourceGroup)
 }
 
-// Get shared Key Vault
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: 'gbs-keyvault-${uniqueString(sharedRg.id)}'
+// Get shared PostgreSQL server - SINGLE SOURCE OF TRUTH
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' existing = {
+  name: 'greenbier-postgres-${environment}'
   scope: resourceGroup(sharedResourceGroup)
 }
+
+// Construct DATABASE_URL from shared PostgreSQL server
+var databaseUrl = 'postgresql://gbsadmin:${postgresAdminPassword}@${postgresServer.properties.fullyQualifiedDomainName}:5432/gbs_picks?sslmode=require'
 
 // Get shared App Insights
 resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
@@ -171,6 +168,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'api-basketball-key'
           value: apiBasketballKey
         }
+        {
+          name: 'database-url'
+          value: databaseUrl
+        }
       ]
     }
     template: {
@@ -193,6 +194,10 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'API_BASKETBALL_KEY'
               secretRef: 'api-basketball-key'
+            }
+            {
+              name: 'DATABASE_URL'
+              secretRef: 'database-url'
             }
             // ================================================================
             // NBA v6.4 Configuration
@@ -265,112 +270,12 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
-// ============================================================================
-// Function App - NBA Picks Trigger
-// ============================================================================
-resource functionStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: 'gbs${sport}func${uniqueString(resourceGroup().id)}'
-  location: location
-  tags: tags
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  properties: {
-    supportsHttpsTrafficOnly: true
-    minimumTlsVersion: 'TLS1_2'
-  }
-}
-
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
-  name: 'gbs-${sport}-plan-${environment}'
-  location: location
-  tags: tags
-  sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
-  }
-  properties: {
-    reserved: true
-  }
-}
-
-resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
-  name: 'gbs-${sport}-trigger-${environment}'
-  location: location
-  tags: tags
-  kind: 'functionapp,linux'
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    serverFarmId: appServicePlan.id
-    siteConfig: {
-      pythonVersion: '3.11'
-      linuxFxVersion: 'Python|3.11'
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccount.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${functionStorageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'python'
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: appInsights.properties.ConnectionString
-        }
-        {
-          name: 'GBS_SPORT'
-          value: 'nba'
-        }
-        {
-          name: 'NBA_API_URL'
-          value: 'https://${containerApp.properties.configuration.ingress.fqdn}'
-        }
-        // TEAMS_WEBHOOK_URL should be set manually or via Key Vault reference
-      ]
-    }
-    httpsOnly: true
-  }
-}
-
-// ============================================================================
-// Key Vault Access for Container App
-// ============================================================================
-resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
-  name: 'add'
-  parent: keyVault
-  properties: {
-    accessPolicies: [
-      {
-        tenantId: subscription().tenantId
-        objectId: containerApp.identity.principalId
-        permissions: {
-          secrets: ['get', 'list']
-        }
-      }
-      {
-        tenantId: subscription().tenantId
-        objectId: functionApp.identity.principalId
-        permissions: {
-          secrets: ['get', 'list']
-        }
-      }
-    ]
-  }
-}
 
 // ============================================================================
 // Outputs
 // ============================================================================
 output containerAppFqdn string = containerApp.properties.configuration.ingress.fqdn
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
-output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
-output functionAppName string = functionApp.name
 output storageAccountName string = storageAccount.name
+output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
+output databaseName string = 'gbs_picks'
