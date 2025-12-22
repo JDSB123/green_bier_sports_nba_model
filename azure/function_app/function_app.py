@@ -771,6 +771,190 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(html, status_code=200, mimetype="text/html")
 
 
+@app.route(route="bot", methods=["POST"])
+def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Teams Outgoing Webhook endpoint - receive commands directly from Teams.
+
+    Setup in Teams:
+    1. Go to Teams > Apps > Manage your apps > Create an outgoing webhook
+    2. Name: NBAPicksBot (or whatever you want to @mention)
+    3. Callback URL: https://nba-picks-trigger.azurewebsites.net/api/bot
+    4. Copy the security token (optional: store in TEAMS_BOT_SECRET for HMAC validation)
+
+    Commands:
+      @NBAPicksBot run slate         → Get all today's picks
+      @NBAPicksBot elite             → Elite picks only
+      @NBAPicksBot lakers            → Filter by team
+      @NBAPicksBot LAL vs BOS        → Specific matchup
+      @NBAPicksBot help              → Show commands
+    """
+    logging.info("Teams bot command received")
+
+    try:
+        body = req.get_json()
+        logging.info(f"Bot request body: {json.dumps(body)[:500]}")
+    except Exception as e:
+        logging.error(f"Failed to parse bot request: {e}")
+        return func.HttpResponse(
+            json.dumps({"type": "message", "text": "Failed to parse request"}),
+            status_code=200,
+            mimetype="application/json"
+        )
+
+    # Extract message text from Teams webhook format
+    # Format: {"type": "message", "text": "<at>NBAPicksBot</at> run slate", ...}
+    raw_text = body.get("text", "")
+
+    # Remove the @mention tag from the text
+    # Teams sends: "<at>BotName</at> actual command"
+    import re
+    command_text = re.sub(r'<at>.*?</at>\s*', '', raw_text).strip()
+    logging.info(f"Parsed command: {command_text}")
+
+    # Parse the command
+    parsed = parse_command(command_text)
+
+    # Handle menu/help
+    if parsed["show_menu"] or not command_text or command_text.lower() in ["", "hi", "hello"]:
+        return func.HttpResponse(
+            json.dumps({
+                "type": "message",
+                "attachments": [{
+                    "contentType": "application/vnd.microsoft.card.adaptive",
+                    "content": {
+                        "type": "AdaptiveCard",
+                        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                        "version": "1.2",
+                        "body": [
+                            {"type": "TextBlock", "text": "GREEN BIER NBA PICKS", "weight": "Bolder", "size": "Large", "color": "Good"},
+                            {"type": "TextBlock", "text": "Available Commands:", "weight": "Bolder", "spacing": "Medium"},
+                            {"type": "FactSet", "facts": [
+                                {"title": "run slate", "value": "Get all today's picks"},
+                                {"title": "elite", "value": "Elite picks only (3+ fires)"},
+                                {"title": "lakers", "value": "Filter by team name"},
+                                {"title": "LAL vs BOS", "value": "Specific matchup"},
+                                {"title": "tomorrow", "value": "Tomorrow's picks"},
+                                {"title": "12/25", "value": "Picks for specific date"}
+                            ]},
+                            {"type": "TextBlock", "text": "v6.5 STRICT MODE - Fresh data always", "size": "Small", "isSubtle": True, "spacing": "Medium"}
+                        ]
+                    }
+                }]
+            }),
+            status_code=200,
+            mimetype="application/json"
+        )
+
+    # Fetch predictions
+    date = parsed["date"]
+    matchup_filter = parsed["matchup"]
+    elite_only = parsed["elite_only"]
+
+    logging.info(f"Fetching picks: date={date}, matchup={matchup_filter}, elite={elite_only}")
+    data = fetch_predictions(date)
+
+    if not data or not data.get("plays"):
+        return func.HttpResponse(
+            json.dumps({
+                "type": "message",
+                "text": f"No picks available for {date}. Check back closer to game time."
+            }),
+            status_code=200,
+            mimetype="application/json"
+        )
+
+    plays = data.get("plays", [])
+
+    # Apply filters
+    if elite_only:
+        plays = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
+    if matchup_filter:
+        mf = matchup_filter.upper()
+        plays = [p for p in plays if mf in p.get("matchup", "").upper()]
+
+    if not plays:
+        filter_msg = f"elite " if elite_only else ""
+        filter_msg += f"for {matchup_filter}" if matchup_filter else ""
+        return func.HttpResponse(
+            json.dumps({
+                "type": "message",
+                "text": f"No {filter_msg}picks found. Try different filters."
+            }),
+            status_code=200,
+            mimetype="application/json"
+        )
+
+    # Sort and limit (Teams has payload limits)
+    sorted_plays = sorted(plays, key=lambda p: (
+        -p.get("fire_rating", "").count("\U0001F525"),
+        -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
+    ))[:5]
+
+    # Build response card body
+    generated_at = data.get("generated_at", datetime.now().strftime("%m/%d/%Y %I:%M %p CST"))
+    filter_label = ""
+    if elite_only:
+        filter_label = " (ELITE)"
+    elif matchup_filter:
+        filter_label = f" ({matchup_filter.upper()})"
+
+    card_body = [
+        {"type": "TextBlock", "text": "GREEN BIER NBA PICKS", "weight": "Bolder", "size": "Large", "color": "Good"},
+        {"type": "TextBlock", "text": f"{generated_at}{filter_label}", "size": "Small", "isSubtle": True},
+        {"type": "TextBlock", "text": f"Showing top {len(sorted_plays)} of {len(plays)} picks", "size": "Small", "spacing": "Small"}
+    ]
+
+    # Add picks as facts (more compact for Teams)
+    for p in sorted_plays:
+        fire_rating = p.get("fire_rating", "")
+        fire_count = fire_rating.count("\U0001F525") if isinstance(fire_rating, str) else 0
+        if fire_count == 0 and fire_rating in ["ELITE", "STRONG", "GOOD"]:
+            fire_count = {"ELITE": 3, "STRONG": 2, "GOOD": 1}.get(fire_rating, 0)
+        fire_display = "\U0001F525" * fire_count if fire_count else "-"
+
+        matchup_short = p.get("matchup", "").split(" @ ")[0][:15] + " @ " + p.get("matchup", "").split(" @ ")[-1].split(" (")[0][:15] if " @ " in p.get("matchup", "") else p.get("matchup", "")[:30]
+
+        card_body.append({
+            "type": "ColumnSet",
+            "spacing": "Small",
+            "columns": [
+                {"type": "Column", "width": "stretch", "items": [
+                    {"type": "TextBlock", "text": matchup_short, "size": "Small", "wrap": True}
+                ]},
+                {"type": "Column", "width": "auto", "items": [
+                    {"type": "TextBlock", "text": p.get("pick", ""), "size": "Small", "weight": "Bolder", "color": "Good"}
+                ]},
+                {"type": "Column", "width": "auto", "items": [
+                    {"type": "TextBlock", "text": p.get("edge", ""), "size": "Small"}
+                ]},
+                {"type": "Column", "width": "auto", "items": [
+                    {"type": "TextBlock", "text": fire_display, "size": "Small"}
+                ]}
+            ]
+        })
+
+    response_card = {
+        "type": "message",
+        "attachments": [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "type": "AdaptiveCard",
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "version": "1.2",
+                "body": card_body
+            }
+        }]
+    }
+
+    logging.info(f"Returning {len(sorted_plays)} picks to Teams bot")
+    return func.HttpResponse(
+        json.dumps(response_card),
+        status_code=200,
+        mimetype="application/json"
+    )
+
+
 @app.route(route="csv", methods=["GET"])
 def csv_download(req: func.HttpRequest) -> func.HttpResponse:
     """Generate CSV file for Excel download."""
