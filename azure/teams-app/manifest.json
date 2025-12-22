@@ -1,0 +1,48 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "6b65ab9e-df1c-48fc-9dd7-b57344e3a886",
+  "packageName": "com.greenbier.nbapicks",
+  "developer": {
+    "name": "Green Bier Sport Ventures",
+    "websiteUrl": "https://nba-picks-trigger.azurewebsites.net",
+    "privacyUrl": "https://nba-picks-trigger.azurewebsites.net/privacy",
+    "termsOfUseUrl": "https://nba-picks-trigger.azurewebsites.net/terms"
+  },
+  "name": {
+    "short": "NBA Picks",
+    "full": "Green Bier NBA Picks Bot"
+  },
+  "description": {
+    "short": "Get NBA betting picks with edge analysis",
+    "full": "Get NBA betting picks powered by machine learning. Commands: run slate, elite, lakers, help"
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#00d4aa",
+  "bots": [
+    {
+      "botId": "6b65ab9e-df1c-48fc-9dd7-b57344e3a886",
+      "scopes": ["team", "personal", "groupchat"],
+      "supportsFiles": false,
+      "isNotificationOnly": false,
+      "commandLists": [
+        {
+          "scopes": ["team", "personal", "groupchat"],
+          "commands": [
+            {"title": "run slate", "description": "Get all today's NBA picks"},
+            {"title": "elite", "description": "Get elite picks only (3+ fires)"},
+            {"title": "lakers", "description": "Filter picks by team name"},
+            {"title": "tomorrow", "description": "Get tomorrow's picks"},
+            {"title": "help", "description": "Show available commands"}
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["nba-picks-trigger.azurewebsites.net"]
+}
