@@ -720,14 +720,20 @@ class RichFeatureBuilder:
             home_out_ppg = out_injuries[out_injuries['team'].str.contains(home_team, case=False, na=False)]['ppg'].sum()
             away_out_ppg = out_injuries[out_injuries['team'].str.contains(away_team, case=False, na=False)]['ppg'].sum()
 
-            # Adjust expected points - 80% replacement efficiency
+            # Calculate injury impact on margin
+            # Negative home_out_ppg hurts home team (subtracts from margin)
+            # Positive away_out_ppg helps home team (adds to margin)
+            # 80% replacement efficiency = 20% of PPG is lost
+            injury_margin_adj = (-home_out_ppg + away_out_ppg) * 0.8
+
+            # v6.5 FIX: ADD injury adjustment to existing margin
+            # (preserves HOME_COURT_ADV and form_margin_adj)
+            predicted_margin_nba += injury_margin_adj
+
+            # Adjust expected points for total calculation
             home_expected_pts -= home_out_ppg * 0.8
             away_expected_pts -= away_out_ppg * 0.8
-
             predicted_total_nba = home_expected_pts + away_expected_pts
-            predicted_margin_nba = home_expected_pts - away_expected_pts  # Re-calc margin after adjustment
-
-            injury_margin_adj = -home_out_ppg * 0.8 + away_out_ppg * 0.8
 
             # Count star players out (players with 15+ PPG)
             home_star_out = len(out_injuries[
