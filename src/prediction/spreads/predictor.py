@@ -104,7 +104,13 @@ class SpreadPredictor:
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
         predicted_margin = features["predicted_margin"]
-        edge = predicted_margin - spread_line
+        # EDGE CALCULATION (v6.5 fix):
+        # spread_line is HOME spread (negative = home favored)
+        # predicted_margin is positive when home wins
+        # edge = predicted_margin + spread_line
+        # Example: spread_line = -7.5, predicted_margin = 2.1
+        #   edge = 2.1 + (-7.5) = -5.4 → bet AWAY (they cover)
+        edge = predicted_margin + spread_line
 
         passes_filter, filter_reason = self.fg_filter.should_bet(
             spread_line=spread_line,
@@ -159,7 +165,8 @@ class SpreadPredictor:
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
         predicted_margin_1h = features["predicted_margin_1h"]  # No fallback - already validated
-        edge = predicted_margin_1h - spread_line
+        # EDGE CALCULATION (v6.5 fix): edge = predicted_margin + spread_line
+        edge = predicted_margin_1h + spread_line
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(
             spread_line=spread_line,

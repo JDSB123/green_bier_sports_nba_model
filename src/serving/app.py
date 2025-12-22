@@ -802,7 +802,10 @@ async def get_executive_summary(
                 pick_line = fg_spread if bet_side == "home" else -fg_spread
                 pick_price = odds.get("home_spread_price", -110)
                 model_margin = features.get("predicted_margin", 0)
-                
+                # Format model prediction with team name (positive = home wins by X)
+                margin_team = home_team if model_margin >= 0 else away_team
+                margin_display = f"{margin_team} by {abs(model_margin):.1f}"
+
                 all_plays.append({
                     "time_cst": time_cst_str,
                     "sort_time": game_cst.isoformat() if game_cst else "",
@@ -811,7 +814,7 @@ async def get_executive_summary(
                     "market": "SPREAD",
                     "pick": f"{pick_team} {pick_line:+.1f}",
                     "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": f"{model_margin:+.1f} pts",
+                    "model_prediction": margin_display,
                     "market_line": f"{fg_spread:+.1f}",
                     "edge": f"{fg_spread_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(fg_spread_pred.get('edge', 0)),
@@ -880,7 +883,10 @@ async def get_executive_summary(
                 pick_line = fh_spread if bet_side == "home" else -fh_spread
                 pick_price = odds.get("fh_home_spread_price", -110)
                 model_margin_1h = features.get("predicted_margin_1h", 0)
-                
+                # Format model prediction with team name
+                margin_team_1h = home_team if model_margin_1h >= 0 else away_team
+                margin_display_1h = f"{margin_team_1h} by {abs(model_margin_1h):.1f}"
+
                 all_plays.append({
                     "time_cst": time_cst_str,
                     "sort_time": game_cst.isoformat() if game_cst else "",
@@ -889,7 +895,7 @@ async def get_executive_summary(
                     "market": "SPREAD",
                     "pick": f"{pick_team} {pick_line:+.1f}",
                     "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": f"{model_margin_1h:+.1f} pts",
+                    "model_prediction": margin_display_1h,
                     "market_line": f"{fh_spread:+.1f}",
                     "edge": f"{fh_spread_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(fh_spread_pred.get('edge', 0)),
@@ -958,7 +964,10 @@ async def get_executive_summary(
                 pick_line = q1_spread if bet_side == "home" else -q1_spread
                 pick_price = odds.get("q1_home_spread_price", -110)
                 model_margin_q1 = features.get("predicted_margin_q1", 0)
-                
+                # Format model prediction with team name
+                margin_team_q1 = home_team if model_margin_q1 >= 0 else away_team
+                margin_display_q1 = f"{margin_team_q1} by {abs(model_margin_q1):.1f}"
+
                 all_plays.append({
                     "time_cst": time_cst_str,
                     "sort_time": game_cst.isoformat() if game_cst else "",
@@ -967,7 +976,7 @@ async def get_executive_summary(
                     "market": "SPREAD",
                     "pick": f"{pick_team} {pick_line:+.1f}",
                     "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": f"{model_margin_q1:+.1f} pts",
+                    "model_prediction": margin_display_q1,
                     "market_line": f"{q1_spread:+.1f}",
                     "edge": f"{q1_spread_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(q1_spread_pred.get('edge', 0)),

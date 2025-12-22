@@ -158,7 +158,16 @@ def upload_to_sharepoint(filename: str, content: str) -> bool:
 
 
 def get_fire_tier(rating: str) -> str:
-    """Convert fire emoji rating to tier name."""
+    """Convert fire rating to tier name. Handles both emoji and string formats."""
+    if not rating:
+        return "NONE"
+
+    # Handle string format from API (GOOD, STRONG, ELITE)
+    rating_upper = rating.upper().strip()
+    if rating_upper in ["ELITE", "STRONG", "GOOD"]:
+        return rating_upper
+
+    # Handle emoji format (legacy)
     fire_count = rating.count("\U0001F525")
     if fire_count >= 3:
         return "ELITE"
@@ -771,23 +780,73 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(html, status_code=200, mimetype="text/html")
 
 
+def get_bot_token() -> str:
+    """Get access token for Bot Framework Connector API."""
+    app_id = os.environ.get("MICROSOFT_APP_ID", "").strip()
+    app_password = os.environ.get("MICROSOFT_APP_PASSWORD", "").strip()
+    tenant_id = os.environ.get("MICROSOFT_APP_TENANT_ID", "").strip()
+
+    if not all([app_id, app_password]):
+        logging.error("Bot credentials not configured")
+        return None
+
+    # Use tenant-specific endpoint for SingleTenant bot
+    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+    data = f"grant_type=client_credentials&client_id={app_id}&client_secret={app_password}&scope=https%3A%2F%2Fapi.botframework.com%2F.default"
+
+    try:
+        req = Request(token_url, data=data.encode(), headers={"Content-Type": "application/x-www-form-urlencoded"})
+        with urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            return result.get("access_token")
+    except Exception as e:
+        logging.error(f"Failed to get bot token: {e}")
+        return None
+
+
+def send_bot_reply(service_url: str, conversation_id: str, activity_id: str, reply_activity: dict) -> bool:
+    """Send a reply through the Bot Connector API."""
+    token = get_bot_token()
+    if not token:
+        logging.error("No bot token available")
+        return False
+
+    # Ensure service URL ends without trailing slash
+    service_url = service_url.rstrip('/')
+    reply_url = f"{service_url}/v3/conversations/{conversation_id}/activities/{activity_id}"
+
+    try:
+        data = json.dumps(reply_activity).encode('utf-8')
+        req = Request(
+            reply_url,
+            data=data,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        with urlopen(req, timeout=60) as resp:
+            logging.info(f"Bot reply sent successfully: {resp.status}")
+            return True
+    except Exception as e:
+        logging.error(f"Failed to send bot reply: {e}")
+        return False
+
+
 @app.route(route="bot", methods=["POST"])
 def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Teams Outgoing Webhook endpoint - receive commands directly from Teams.
+    Teams bot endpoint - supports BOTH Outgoing Webhook AND Azure Bot Framework.
 
-    Setup in Teams:
-    1. Go to Teams > Apps > Manage your apps > Create an outgoing webhook
-    2. Name: NBAPicksBot (or whatever you want to @mention)
-    3. Callback URL: https://nba-picks-trigger.azurewebsites.net/api/bot
-    4. Copy the security token (optional: store in TEAMS_BOT_SECRET for HMAC validation)
+    Outgoing Webhook: Returns response directly as HTTP response
+    Azure Bot: Sends response via Bot Connector API
 
     Commands:
-      @NBAPicksBot run slate         → Get all today's picks
-      @NBAPicksBot elite             → Elite picks only
-      @NBAPicksBot lakers            → Filter by team
-      @NBAPicksBot LAL vs BOS        → Specific matchup
-      @NBAPicksBot help              → Show commands
+      @NBA Picks run slate         → Get all today's picks
+      @NBA Picks elite             → Elite picks only
+      @NBA Picks lakers            → Filter by team
+      @NBA Picks help              → Show commands
     """
     logging.info("Teams bot command received")
 
@@ -796,55 +855,64 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f"Bot request body: {json.dumps(body)[:500]}")
     except Exception as e:
         logging.error(f"Failed to parse bot request: {e}")
-        return func.HttpResponse(
-            json.dumps({"type": "message", "text": "Failed to parse request"}),
-            status_code=200,
-            mimetype="application/json"
-        )
+        return func.HttpResponse(status_code=200)
 
-    # Extract message text from Teams webhook format
-    # Format: {"type": "message", "text": "<at>NBAPicksBot</at> run slate", ...}
+    # Extract Bot Framework activity details
+    service_url = body.get("serviceUrl", "")
+    conversation_id = body.get("conversation", {}).get("id", "")
+    activity_id = body.get("id", "")
     raw_text = body.get("text", "")
 
+    # Detect mode: Outgoing Webhook vs Azure Bot
+    # Outgoing Webhook has no serviceUrl or has simple format
+    is_outgoing_webhook = not service_url or "api.botframework.com" not in service_url
+    logging.info(f"Mode: {'Outgoing Webhook' if is_outgoing_webhook else 'Azure Bot'}, Service URL: {service_url}")
+
     # Remove the @mention tag from the text
-    # Teams sends: "<at>BotName</at> actual command"
-    import re
+    # Teams sends: "<at>Bot Name</at> actual command"
     command_text = re.sub(r'<at>.*?</at>\s*', '', raw_text).strip()
     logging.info(f"Parsed command: {command_text}")
 
     # Parse the command
     parsed = parse_command(command_text)
 
+    # Helper to send response (works for both modes)
+    def send_response(reply: dict) -> func.HttpResponse:
+        if is_outgoing_webhook:
+            # Outgoing Webhook: Return directly as HTTP response
+            return func.HttpResponse(json.dumps(reply), status_code=200, mimetype="application/json")
+        else:
+            # Azure Bot: Send via Bot Connector API
+            send_bot_reply(service_url, conversation_id, activity_id, reply)
+            return func.HttpResponse(status_code=200)
+
     # Handle menu/help
     if parsed["show_menu"] or not command_text or command_text.lower() in ["", "hi", "hello"]:
-        return func.HttpResponse(
-            json.dumps({
-                "type": "message",
-                "attachments": [{
-                    "contentType": "application/vnd.microsoft.card.adaptive",
-                    "content": {
-                        "type": "AdaptiveCard",
-                        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                        "version": "1.2",
-                        "body": [
-                            {"type": "TextBlock", "text": "GREEN BIER NBA PICKS", "weight": "Bolder", "size": "Large", "color": "Good"},
-                            {"type": "TextBlock", "text": "Available Commands:", "weight": "Bolder", "spacing": "Medium"},
-                            {"type": "FactSet", "facts": [
-                                {"title": "run slate", "value": "Get all today's picks"},
-                                {"title": "elite", "value": "Elite picks only (3+ fires)"},
-                                {"title": "lakers", "value": "Filter by team name"},
-                                {"title": "LAL vs BOS", "value": "Specific matchup"},
-                                {"title": "tomorrow", "value": "Tomorrow's picks"},
-                                {"title": "12/25", "value": "Picks for specific date"}
-                            ]},
-                            {"type": "TextBlock", "text": "v6.5 STRICT MODE - Fresh data always", "size": "Small", "isSubtle": True, "spacing": "Medium"}
-                        ]
-                    }
-                }]
-            }),
-            status_code=200,
-            mimetype="application/json"
-        )
+        help_reply = {
+            "type": "message",
+            "attachments": [{
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "version": "1.2",
+                    "body": [
+                        {"type": "TextBlock", "text": "GREEN BIER NBA PICKS", "weight": "Bolder", "size": "Large", "color": "Good"},
+                        {"type": "TextBlock", "text": "Available Commands:", "weight": "Bolder", "spacing": "Medium"},
+                        {"type": "FactSet", "facts": [
+                            {"title": "run slate", "value": "Get all today's picks"},
+                            {"title": "elite", "value": "Elite picks only (3+ fires)"},
+                            {"title": "lakers", "value": "Filter by team name"},
+                            {"title": "LAL vs BOS", "value": "Specific matchup"},
+                            {"title": "tomorrow", "value": "Tomorrow's picks"},
+                            {"title": "12/25", "value": "Picks for specific date"}
+                        ]},
+                        {"type": "TextBlock", "text": "v6.5 STRICT MODE - Fresh data always", "size": "Small", "isSubtle": True, "spacing": "Medium"}
+                    ]
+                }
+            }]
+        }
+        return send_response(help_reply)
 
     # Fetch predictions
     date = parsed["date"]
@@ -855,14 +923,8 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     data = fetch_predictions(date)
 
     if not data or not data.get("plays"):
-        return func.HttpResponse(
-            json.dumps({
-                "type": "message",
-                "text": f"No picks available for {date}. Check back closer to game time."
-            }),
-            status_code=200,
-            mimetype="application/json"
-        )
+        no_picks_reply = {"type": "message", "text": f"No picks available for {date}. Check back closer to game time."}
+        return send_response(no_picks_reply)
 
     plays = data.get("plays", [])
 
@@ -876,20 +938,14 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     if not plays:
         filter_msg = f"elite " if elite_only else ""
         filter_msg += f"for {matchup_filter}" if matchup_filter else ""
-        return func.HttpResponse(
-            json.dumps({
-                "type": "message",
-                "text": f"No {filter_msg}picks found. Try different filters."
-            }),
-            status_code=200,
-            mimetype="application/json"
-        )
+        no_filter_reply = {"type": "message", "text": f"No {filter_msg}picks found. Try different filters."}
+        return send_response(no_filter_reply)
 
-    # Sort and limit (Teams has payload limits)
+    # Sort by edge (no limit - show all picks)
     sorted_plays = sorted(plays, key=lambda p: (
         -p.get("fire_rating", "").count("\U0001F525"),
         -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
-    ))[:5]
+    ))
 
     # Build response card body
     generated_at = data.get("generated_at", datetime.now().strftime("%m/%d/%Y %I:%M %p CST"))
@@ -899,60 +955,47 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     elif matchup_filter:
         filter_label = f" ({matchup_filter.upper()})"
 
-    card_body = [
-        {"type": "TextBlock", "text": "GREEN BIER NBA PICKS", "weight": "Bolder", "size": "Large", "color": "Good"},
-        {"type": "TextBlock", "text": f"{generated_at}{filter_label}", "size": "Small", "isSubtle": True},
-        {"type": "TextBlock", "text": f"Showing top {len(sorted_plays)} of {len(plays)} picks", "size": "Small", "spacing": "Small"}
-    ]
+    # Build plain text table for cleaner output
+    lines = []
+    lines.append(f"**GREEN BIER NBA PICKS**")
+    lines.append(f"{generated_at}{filter_label} | {len(sorted_plays)} picks")
+    lines.append("")
+    lines.append("```")
+    lines.append(f"{'Time':<12} | {'Matchup':<35} | {'Seg':<3} | {'Pick':<20} | {'Model':<7} | {'Mkt':<7} | {'Edge':<8} | Fire")
+    lines.append("-" * 120)
 
-    # Add picks as facts (more compact for Teams)
     for p in sorted_plays:
         fire_rating = p.get("fire_rating", "")
-        fire_count = fire_rating.count("\U0001F525") if isinstance(fire_rating, str) else 0
-        if fire_count == 0 and fire_rating in ["ELITE", "STRONG", "GOOD"]:
-            fire_count = {"ELITE": 3, "STRONG": 2, "GOOD": 1}.get(fire_rating, 0)
+        fire_count = 0
+        if isinstance(fire_rating, str):
+            fire_count = fire_rating.count("\U0001F525")
+            if fire_count == 0 and fire_rating.upper() in ["ELITE", "STRONG", "GOOD"]:
+                fire_count = {"ELITE": 3, "STRONG": 2, "GOOD": 1}.get(fire_rating.upper(), 0)
         fire_display = "\U0001F525" * fire_count if fire_count else "-"
 
-        matchup_short = p.get("matchup", "").split(" @ ")[0][:15] + " @ " + p.get("matchup", "").split(" @ ")[-1].split(" (")[0][:15] if " @ " in p.get("matchup", "") else p.get("matchup", "")[:30]
+        time_cst = p.get("time_cst", "")[:12]
+        matchup = p.get("matchup", "")[:35]
+        segment = p.get("period", "FG")[:3]
+        pick = p.get("pick", "")
+        pick_odds = p.get("pick_odds", p.get("odds", ""))
+        pick_with_odds = f"{pick} ({pick_odds})"[:20] if pick_odds else pick[:20]
+        model_pred = str(p.get("model_prediction", ""))[:7]
+        market_line = str(p.get("market_line", ""))[:7]
+        edge = p.get("edge", "")[:8]
 
-        card_body.append({
-            "type": "ColumnSet",
-            "spacing": "Small",
-            "columns": [
-                {"type": "Column", "width": "stretch", "items": [
-                    {"type": "TextBlock", "text": matchup_short, "size": "Small", "wrap": True}
-                ]},
-                {"type": "Column", "width": "auto", "items": [
-                    {"type": "TextBlock", "text": p.get("pick", ""), "size": "Small", "weight": "Bolder", "color": "Good"}
-                ]},
-                {"type": "Column", "width": "auto", "items": [
-                    {"type": "TextBlock", "text": p.get("edge", ""), "size": "Small"}
-                ]},
-                {"type": "Column", "width": "auto", "items": [
-                    {"type": "TextBlock", "text": fire_display, "size": "Small"}
-                ]}
-            ]
-        })
+        lines.append(f"{time_cst:<12} | {matchup:<35} | {segment:<3} | {pick_with_odds:<20} | {model_pred:<7} | {market_line:<7} | {edge:<8} | {fire_display}")
 
-    response_card = {
+    lines.append("```")
+
+    text_response = "\n".join(lines)
+
+    response_msg = {
         "type": "message",
-        "attachments": [{
-            "contentType": "application/vnd.microsoft.card.adaptive",
-            "content": {
-                "type": "AdaptiveCard",
-                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                "version": "1.2",
-                "body": card_body
-            }
-        }]
+        "text": text_response
     }
 
-    logging.info(f"Returning {len(sorted_plays)} picks to Teams bot")
-    return func.HttpResponse(
-        json.dumps(response_card),
-        status_code=200,
-        mimetype="application/json"
-    )
+    logging.info(f"Sending {len(sorted_plays)} picks to Teams")
+    return send_response(response_msg)
 
 
 @app.route(route="csv", methods=["GET"])
