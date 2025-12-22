@@ -961,8 +961,8 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     lines.append(f"{generated_at}{filter_label} | {len(sorted_plays)} picks")
     lines.append("")
     lines.append("```")
-    lines.append(f"{'Time':<10} | {'Matchup':<30} | {'Seg':<3} | {'Pick':<18} | {'Model Prediction':<22} | {'Mkt':<6} | {'Edge':<8} | Fire")
-    lines.append("-" * 130)
+    lines.append(f"{'Time':<12} | {'Matchup':<50} | {'Seg':<3} | {'Pick':<28} | {'Model':<24} | {'Mkt':<8} | {'Edge':<9} | Fire")
+    lines.append("-" * 155)
 
     for p in sorted_plays:
         fire_rating = p.get("fire_rating", "")
@@ -973,17 +973,17 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
                 fire_count = {"ELITE": 3, "STRONG": 2, "GOOD": 1}.get(fire_rating.upper(), 0)
         fire_display = "\U0001F525" * fire_count if fire_count else "-"
 
-        time_cst = p.get("time_cst", "")[:10]
-        matchup = p.get("matchup", "")[:30]
-        segment = p.get("period", "FG")[:3]
+        time_cst = p.get("time_cst", "")
+        matchup = p.get("matchup", "")
+        segment = p.get("period", "FG")
         pick = p.get("pick", "")
         pick_odds = p.get("pick_odds", p.get("odds", ""))
-        pick_with_odds = f"{pick} ({pick_odds})"[:18] if pick_odds else pick[:18]
-        model_pred = str(p.get("model_prediction", ""))[:22]
-        market_line = str(p.get("market_line", ""))[:6]
-        edge = p.get("edge", "")[:8]
+        pick_with_odds = f"{pick} ({pick_odds})" if pick_odds else pick
+        model_pred = str(p.get("model_prediction", ""))
+        market_line = str(p.get("market_line", ""))
+        edge = p.get("edge", "")
 
-        lines.append(f"{time_cst:<10} | {matchup:<30} | {segment:<3} | {pick_with_odds:<18} | {model_pred:<22} | {market_line:<6} | {edge:<8} | {fire_display}")
+        lines.append(f"{time_cst:<12} | {matchup:<50} | {segment:<3} | {pick_with_odds:<28} | {model_pred:<24} | {market_line:<8} | {edge:<9} | {fire_display}")
 
     lines.append("```")
 

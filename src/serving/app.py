@@ -802,12 +802,15 @@ async def get_executive_summary(
                 pick_line = fg_spread if bet_side == "home" else -fg_spread
                 pick_price = odds.get("home_spread_price", -110)
                 model_margin = features.get("predicted_margin", 0)
-                # Format model prediction like the pick (Team +/- X.X)
-                # model_margin positive = home wins by X, so home spread is -X
-                if model_margin >= 0:
-                    margin_display = f"{home_team} {-model_margin:+.1f}"
+                # Format model prediction for BET SIDE team (same team as pick)
+                # model_margin positive = home wins by X
+                # home spread = -model_margin, away spread = +model_margin
+                if bet_side == "home":
+                    model_spread = -model_margin
+                    margin_display = f"{home_team} {model_spread:+.1f}"
                 else:
-                    margin_display = f"{away_team} {model_margin:+.1f}"
+                    model_spread = model_margin
+                    margin_display = f"{away_team} {model_spread:+.1f}"
 
                 all_plays.append({
                     "time_cst": time_cst_str,
@@ -886,12 +889,15 @@ async def get_executive_summary(
                 pick_line = fh_spread if bet_side == "home" else -fh_spread
                 pick_price = odds.get("fh_home_spread_price", -110)
                 model_margin_1h = features.get("predicted_margin_1h", 0)
-                # Format model prediction like the pick (Team +/- X.X)
-                # model_margin positive = home wins by X, so home spread is -X
-                if model_margin_1h >= 0:
-                    margin_display_1h = f"{home_team} {-model_margin_1h:+.1f}"
+                # Format model prediction for BET SIDE team (same team as pick)
+                # model_margin positive = home wins by X
+                # home spread = -model_margin, away spread = +model_margin
+                if bet_side == "home":
+                    model_spread_1h = -model_margin_1h
+                    margin_display_1h = f"{home_team} {model_spread_1h:+.1f}"
                 else:
-                    margin_display_1h = f"{away_team} {model_margin_1h:+.1f}"
+                    model_spread_1h = model_margin_1h
+                    margin_display_1h = f"{away_team} {model_spread_1h:+.1f}"
 
                 all_plays.append({
                     "time_cst": time_cst_str,
@@ -970,12 +976,15 @@ async def get_executive_summary(
                 pick_line = q1_spread if bet_side == "home" else -q1_spread
                 pick_price = odds.get("q1_home_spread_price", -110)
                 model_margin_q1 = features.get("predicted_margin_q1", 0)
-                # Format model prediction like the pick (Team +/- X.X)
-                # model_margin positive = home wins by X, so home spread is -X
-                if model_margin_q1 >= 0:
-                    margin_display_q1 = f"{home_team} {-model_margin_q1:+.1f}"
+                # Format model prediction for BET SIDE team (same team as pick)
+                # model_margin positive = home wins by X
+                # home spread = -model_margin, away spread = +model_margin
+                if bet_side == "home":
+                    model_spread_q1 = -model_margin_q1
+                    margin_display_q1 = f"{home_team} {model_spread_q1:+.1f}"
                 else:
-                    margin_display_q1 = f"{away_team} {model_margin_q1:+.1f}"
+                    model_spread_q1 = model_margin_q1
+                    margin_display_q1 = f"{away_team} {model_spread_q1:+.1f}"
 
                 all_plays.append({
                     "time_cst": time_cst_str,
