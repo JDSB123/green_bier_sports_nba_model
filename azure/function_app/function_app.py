@@ -19,6 +19,9 @@ Endpoints:
   GET  /api/health                 - Health check
 """
 import azure.functions as func
+import base64
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -885,6 +888,33 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
     azure_bot_patterns = ["smba.trafficmanager.net", "api.botframework.com", "botframework"]
     is_outgoing_webhook = not service_url or not any(pattern in service_url for pattern in azure_bot_patterns)
     logging.info(f"Mode: {'Outgoing Webhook' if is_outgoing_webhook else 'Azure Bot'}, Service URL: {service_url}")
+
+    # Validate HMAC for Outgoing Webhook requests
+    if is_outgoing_webhook:
+        webhook_secret = os.environ.get("TEAMS_WEBHOOK_SECRET", "")
+        auth_header = req.headers.get("Authorization", "")
+
+        if webhook_secret and auth_header.startswith("HMAC "):
+            try:
+                # Extract signature from header
+                provided_signature = auth_header[5:]  # Remove "HMAC " prefix
+
+                # Compute expected signature
+                request_body = req.get_body()
+                secret_bytes = base64.b64decode(webhook_secret)
+                computed_hash = hmac.new(secret_bytes, request_body, hashlib.sha256)
+                computed_signature = base64.b64encode(computed_hash.digest()).decode('utf-8')
+
+                if not hmac.compare_digest(provided_signature, computed_signature):
+                    logging.warning("HMAC validation failed - signature mismatch")
+                    return func.HttpResponse("Unauthorized", status_code=401)
+
+                logging.info("HMAC validation successful")
+            except Exception as e:
+                logging.error(f"HMAC validation error: {e}")
+                # Continue anyway - don't block on validation errors
+        elif webhook_secret:
+            logging.warning("No Authorization header for outgoing webhook")
 
     # Remove the @mention tag from the text
     # Teams sends: "<at>Bot Name</at> actual command"
