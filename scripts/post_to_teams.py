@@ -61,7 +61,7 @@ def format_teams_message(data: dict) -> dict:
     
     # Generate title with CST timestamp
     now_cst = datetime.now(ZoneInfo("America/Chicago"))
-    title = f"NBA Picks - {now_cst.strftime('%m/%d/%Y')} as of {now_cst.strftime('%I:%M %p').lower()} cst"
+    title = f"🏀 NBA PICKS - {now_cst.strftime('%m/%d/%Y')} @ {now_cst.strftime('%I:%M %p').lower()} CST"
     
     # Count by tier
     elite = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
@@ -74,13 +74,13 @@ def format_teams_message(data: dict) -> dict:
         -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
     ))
     
-    # Build Adaptive Card
+    # Build Adaptive Card with improved formatting
     card = {
         "type": "AdaptiveCard",
         "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
         "version": "1.4",
         "body": [
-            # Header
+            # Header with summary
             {
                 "type": "Container",
                 "style": "emphasis",
@@ -94,9 +94,10 @@ def format_teams_message(data: dict) -> dict:
                     },
                     {
                         "type": "TextBlock",
-                        "text": f"{len(plays)} Picks: {len(elite)} ELITE | {len(strong)} STRONG | {len(good)} GOOD",
-                        "spacing": "None",
-                        "color": "Light"
+                        "text": f"📊 {len(plays)} Total | 🔥🔥🔥 {len(elite)} ELITE | 🔥🔥 {len(strong)} STRONG | 🔥 {len(good)} GOOD",
+                        "spacing": "Small",
+                        "color": "Light",
+                        "size": "Medium"
                     }
                 ],
                 "bleed": True
@@ -105,46 +106,82 @@ def format_teams_message(data: dict) -> dict:
             {
                 "type": "ColumnSet",
                 "columns": [
+                    {"type": "Column", "width": "40", "items": [{"type": "TextBlock", "text": "PERIOD", "weight": "Bolder", "size": "Small"}]},
                     {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "MATCHUP", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "PER", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "PICK", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "ODDS", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "EDGE", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": "TIER", "weight": "Bolder", "size": "Small"}]}
+                    {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "PICK | MODEL", "weight": "Bolder", "size": "Small"}]},
+                    {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": "MARKET", "weight": "Bolder", "size": "Small"}]},
+                    {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": "EDGE", "weight": "Bolder", "size": "Small"}]}
                 ],
-                "separator": True
+                "separator": True,
+                "spacing": "Small"
             }
         ]
     }
     
-    # Add rows
+    # Add rows - one per pick
     for p in sorted_plays:
-        # Extract short matchup (team abbreviations)
-        matchup_raw = p.get("matchup", "")
-        # Try to shorten: "Miami Heat (15-17) @ Boston Celtics (18-12)" -> "MIA @ BOS"
-        matchup = matchup_raw[:28]
+        # Extract data
+        matchup_raw = p.get("matchup", "").strip()
+        # Clean up: "Miami Heat (15-17) @ Boston Celtics (18-12)" -> "MIA @ BOS"
+        teams = matchup_raw.split(" @ ") if " @ " in matchup_raw else ["", ""]
+        away = teams[0].split("(")[0].strip()[:10] if len(teams) > 0 else ""
+        home = teams[1].split("(")[0].strip()[:10] if len(teams) > 1 else ""
         
-        period = p.get("period", "FG")
-        market = p.get("market", "")[:3]
-        pick = p.get("pick", "")[:20]
-        odds = p.get("pick_odds", "N/A")
-        edge = p.get("edge", "N/A")
-        tier = get_fire_tier(p.get("fire_rating", ""))
+        period = p.get("period", "FG").upper()
+        pick = p.get("pick", "").strip()
+        confidence = p.get("model_confidence", p.get("confidence", ""))
+        
+        # Extract confidence percentage
+        conf_pct = ""
+        if confidence:
+            if isinstance(confidence, str):
+                # Extract number from string like "55.2%"
+                import re
+                match = re.search(r'(\d+\.?\d*)', str(confidence))
+                if match:
+                    conf_pct = f"{float(match.group(1)):.0f}%"
+            elif isinstance(confidence, (int, float)):
+                conf_pct = f"{float(confidence):.0f}%"
+        
+        market = p.get("market", "").strip()
+        market_line = p.get("pick_odds", p.get("market_line", "N/A"))
+        
+        # Edge calculation: model line vs market line
+        edge_str = p.get("edge", "")
+        # Standardize edge to points: extract numeric value
+        import re
+        edge_match = re.search(r'([+-]?\d+\.?\d*)', str(edge_str))
+        if edge_match:
+            edge_val = float(edge_match.group(1))
+            if "%" in str(edge_str):
+                # If it's a percentage, convert (rough estimate: divide by 10)
+                edge_pts = f"+{edge_val/10:.1f}pts" if edge_val > 0 else f"{edge_val/10:.1f}pts"
+            else:
+                edge_pts = f"+{edge_val:.1f}pts" if edge_val > 0 else f"{edge_val:.1f}pts"
+        else:
+            edge_pts = "N/A"
+        
+        fire_rating = p.get("fire_rating", "")
+        tier = get_fire_tier(fire_rating)
         
         # Tier color
         tier_color = "Attention" if tier == "ELITE" else "Warning" if tier == "STRONG" else "Good"
+        tier_emoji = "🔥🔥🔥" if tier == "ELITE" else "🔥🔥" if tier == "STRONG" else "🔥"
+        
+        # Combine pick + confidence
+        pick_with_conf = f"{pick}" + (f"\n({conf_pct})" if conf_pct else "")
         
         row = {
             "type": "ColumnSet",
             "columns": [
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": matchup, "size": "Small", "wrap": True}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": period, "size": "Small"}]},
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": f"{pick}", "size": "Small", "weight": "Bolder"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": odds, "size": "Small", "weight": "Bolder"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": edge, "size": "Small"}]},
-                {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": tier, "size": "Small", "weight": "Bolder", "color": tier_color}]}
+                {"type": "Column", "width": "40", "items": [{"type": "TextBlock", "text": period, "size": "Small", "weight": "Bolder"}]},
+                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": f"{away}\n@\n{home}", "size": "Small", "weight": "Bolder", "wrap": True}]},
+                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": pick_with_conf, "size": "Small", "weight": "Bolder", "color": "Accent", "wrap": True}]},
+                {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": str(market_line)[:15], "size": "Small", "wrap": True}]},
+                {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": f"{edge_pts}\n{tier_emoji}", "size": "Small", "weight": "Bolder", "color": tier_color, "wrap": True}]}
             ],
-            "spacing": "Small"
+            "spacing": "Small",
+            "separator": True
         }
         card["body"].append(row)
     
