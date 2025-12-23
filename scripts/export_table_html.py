@@ -43,6 +43,20 @@ def get_fire_rating(edge: float, win_prob: float, market_type: str = "spread") -
         elif edge >= 8 and win_prob >= 0.65: fires = 3
         elif edge >= 6 and win_prob >= 0.60: fires = 2
         elif edge >= 4: fires = 1
+    elif market_type == "total_1h":
+        # 1H totals are roughly half of full game, so scale thresholds down (~50%)
+        if edge >= 6 and win_prob >= 0.75: fires = 5
+        elif edge >= 5 and win_prob >= 0.70: fires = 4
+        elif edge >= 4 and win_prob >= 0.65: fires = 3
+        elif edge >= 3 and win_prob >= 0.60: fires = 2
+        elif edge >= 2: fires = 1
+    elif market_type == "spread_1h":
+        # 1H spreads are roughly half of full game, so scale thresholds down (~50%)
+        if edge >= 5 and win_prob >= 0.75: fires = 5
+        elif edge >= 4 and win_prob >= 0.70: fires = 4
+        elif edge >= 3 and win_prob >= 0.65: fires = 3
+        elif edge >= 2 and win_prob >= 0.60: fires = 2
+        elif edge >= 1: fires = 1
     elif market_type == "moneyline":
         # Excluded per user request, but keeping logic just in case
         if edge >= 25: fires = 5
@@ -50,7 +64,7 @@ def get_fire_rating(edge: float, win_prob: float, market_type: str = "spread") -
         elif edge >= 15: fires = 3
         elif edge >= 10: fires = 2
         elif edge >= 5: fires = 1
-    else:  # spread
+    else:  # spread (full game)
         if edge >= 10 and win_prob >= 0.75: fires = 5
         elif edge >= 8 and win_prob >= 0.70: fires = 4
         elif edge >= 6 and win_prob >= 0.65: fires = 3
@@ -133,9 +147,12 @@ def generate_table_html(data: dict, output_path: str):
             font-size: 0.75em;
             font-weight: 600;
             margin-right: 8px;
+            min-width: 80px;
+            text-align: center;
         }}
         .type-spread {{ background: rgba(0, 212, 255, 0.15); color: #00d4ff; }}
         .type-total {{ background: rgba(255, 149, 0, 0.15); color: #ff9500; }}
+        .type-1h {{ border: 1px solid rgba(255, 255, 255, 0.2); }}
         .footer {{
             text-align: center;
             padding: 20px;
@@ -173,40 +190,29 @@ def generate_table_html(data: dict, output_path: str):
         time_cst = game.get("time_cst", "")
         features = game.get("features", {})
         odds = game.get("odds", {})
-        edge_data = game.get("comprehensive_edge", {}).get("full_game", {})
         
-        # Model Scores
-        home_score = round(features.get("home_expected_pts", 0), 1)
-        away_score = round(features.get("away_expected_pts", 0), 1)
-        model_total = round(features.get("predicted_total", 0), 1)
-        model_margin = round(features.get("predicted_margin", 0), 1)
+        edge_fg = game.get("comprehensive_edge", {}).get("full_game", {})
+        edge_1h = game.get("comprehensive_edge", {}).get("first_half", {})
         
-        # --- SPREAD ROW ---
-        spread_data = edge_data.get("spread", {})
+        # --- FULL GAME SPREAD ---
+        spread_data = edge_fg.get("spread", {})
         spread_edge = abs(spread_data.get("edge", 0))
         spread_fire = get_fire_rating(spread_edge, spread_data.get("win_probability", 0), "spread")
         
-        pick_team = spread_data.get('pick', '—')
-        pick_line = spread_data.get('pick_line', '')
+        pick_team = spread_data.get('pick')
+        pick_line = spread_data.get('pick_line')
         pick_odds = spread_data.get('pick_odds', -110)
         
-        # Format Pick
-        if pick_team != '—':
-            if pick_line is not None:
-                line_str = f"+{pick_line}" if pick_line > 0 else str(pick_line)
-            else:
-                line_str = ""
+        if pick_team and pick_team != '—':
+            line_str = f"+{pick_line}" if pick_line is not None and pick_line > 0 else str(pick_line) if pick_line is not None else ""
             spread_pick_display = f"{pick_team} {line_str} ({pick_odds})"
         else:
             spread_pick_display = "—"
             
-        # Format Model
-        margin_str = f"+{abs(model_margin)}" if model_margin > 0 else str(model_margin) # This is raw margin, usually negative means home favored? 
-        # Actually predicted_margin is usually Home - Away or Away - Home? 
-        # Let's use the scores for clarity
+        home_score = round(features.get("home_expected_pts", 0), 1)
+        away_score = round(features.get("away_expected_pts", 0), 1)
         model_pred_display = f"{away} {away_score} - {home} {home_score}"
         
-        # Format Market
         home_spread = odds.get('home_spread', '')
         market_display = f"{home} {home_spread} ({spread_data.get('market_odds', '')})"
         
@@ -214,7 +220,7 @@ def generate_table_html(data: dict, output_path: str):
                 <tr class="game-separator">
                     <td class="time">{time_cst}</td>
                     <td class="matchup">{away} @ {home}</td>
-                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> {spread_pick_display}</td>
+                    <td class="pick"><span class="type-badge type-spread">FG SPREAD</span> {spread_pick_display}</td>
                     <td class="model">{model_pred_display}</td>
                     <td class="market">{market_display}</td>
                     <td class="edge">{round(spread_edge, 1)} pts</td>
@@ -222,20 +228,21 @@ def generate_table_html(data: dict, output_path: str):
                 </tr>
         """
         
-        # --- TOTAL ROW ---
-        total_data = edge_data.get("total", {})
+        # --- FULL GAME TOTAL ---
+        total_data = edge_fg.get("total", {})
         total_edge = abs(total_data.get("edge", 0))
         total_fire = get_fire_rating(total_edge, total_data.get("win_probability", 0), "total")
         
-        pick_type = total_data.get('pick', '—')
-        pick_line = total_data.get('pick_line', '')
+        pick_type = total_data.get('pick')
+        pick_line = total_data.get('pick_line')
         pick_odds = total_data.get('pick_odds', -110)
         
-        if pick_type != '—':
+        if pick_type and pick_type != '—':
             total_pick_display = f"{pick_type} {pick_line} ({pick_odds})"
         else:
             total_pick_display = "—"
             
+        model_total = round(features.get("predicted_total", 0), 1)
         model_total_display = f"Total: {model_total}"
         market_total_display = f"{odds.get('total', '')} ({total_data.get('market_odds', '')})"
         
@@ -243,11 +250,82 @@ def generate_table_html(data: dict, output_path: str):
                 <tr>
                     <td class="time"></td>
                     <td class="matchup"></td>
-                    <td class="pick"><span class="type-badge type-total">TOTAL</span> {total_pick_display}</td>
+                    <td class="pick"><span class="type-badge type-total">FG TOTAL</span> {total_pick_display}</td>
                     <td class="model">{model_total_display}</td>
                     <td class="market">{market_total_display}</td>
                     <td class="edge">{round(total_edge, 1)} pts</td>
                     <td class="fire">{total_fire}</td>
+                </tr>
+        """
+
+        # --- 1H SPREAD ---
+        spread_1h = edge_1h.get("spread", {})
+        spread_1h_edge = abs(spread_1h.get("edge", 0))
+        spread_1h_fire = get_fire_rating(spread_1h_edge, spread_1h.get("win_probability", 0), "spread_1h")
+        
+        pick_team = spread_1h.get('pick')
+        pick_line = spread_1h.get('pick_line')
+        pick_odds = spread_1h.get('pick_odds', -110)
+        
+        if pick_team and pick_team != '—':
+            line_str = f"+{pick_line}" if pick_line is not None and pick_line > 0 else str(pick_line) if pick_line is not None else ""
+            spread_1h_pick_display = f"{pick_team} {line_str} ({pick_odds})"
+        else:
+            spread_1h_pick_display = "—"
+            
+        # Try to get 1H scores if available, else just show margin
+        fh_home_score = features.get("fh_home_expected_pts")
+        fh_away_score = features.get("fh_away_expected_pts")
+        
+        if fh_home_score and fh_away_score:
+             model_1h_display = f"{away} {round(fh_away_score, 1)} - {home} {round(fh_home_score, 1)}"
+        else:
+             # Fallback if specific scores aren't in features (though they should be)
+             model_1h_display = "—"
+
+        fh_home_spread = odds.get('fh_home_spread', '')
+        market_1h_display = f"{home} {fh_home_spread} ({spread_1h.get('market_odds', '')})"
+        
+        html += f"""
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-spread type-1h">1H SPREAD</span> {spread_1h_pick_display}</td>
+                    <td class="model">{model_1h_display}</td>
+                    <td class="market">{market_1h_display}</td>
+                    <td class="edge">{round(spread_1h_edge, 1)} pts</td>
+                    <td class="fire">{spread_1h_fire}</td>
+                </tr>
+        """
+
+        # --- 1H TOTAL ---
+        total_1h = edge_1h.get("total", {})
+        total_1h_edge = abs(total_1h.get("edge", 0))
+        total_1h_fire = get_fire_rating(total_1h_edge, total_1h.get("win_probability", 0), "total_1h")
+        
+        pick_type = total_1h.get('pick')
+        pick_line = total_1h.get('pick_line')
+        pick_odds = total_1h.get('pick_odds', -110)
+        
+        if pick_type and pick_type != '—':
+            total_1h_pick_display = f"{pick_type} {pick_line} ({pick_odds})"
+        else:
+            total_1h_pick_display = "—"
+            
+        fh_model_total = features.get("fh_predicted_total")
+        model_1h_total_display = f"Total: {round(fh_model_total, 1)}" if fh_model_total else "—"
+        
+        market_1h_total_display = f"{odds.get('fh_total', '')} ({total_1h.get('market_odds', '')})"
+        
+        html += f"""
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total type-1h">1H TOTAL</span> {total_1h_pick_display}</td>
+                    <td class="model">{model_1h_total_display}</td>
+                    <td class="market">{market_1h_total_display}</td>
+                    <td class="edge">{round(total_1h_edge, 1)} pts</td>
+                    <td class="fire">{total_1h_fire}</td>
                 </tr>
         """
 

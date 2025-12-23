@@ -41,12 +41,12 @@ def verify_model_files(models_dir: Path) -> dict:
     }
     
     required_models = {
-        "spreads_model.joblib": "Full Game Spread",
-        "totals_model.joblib": "Full Game Total",
-        "first_half_spread_model.pkl": "First Half Spread",
-        "first_half_spread_features.pkl": "First Half Spread Features",
-        "first_half_total_model.pkl": "First Half Total",
-        "first_half_total_features.pkl": "First Half Total Features",
+        "fg_spread_model.joblib": "Full Game Spread",
+        "fg_total_model.joblib": "Full Game Total",
+        "1h_spread_model.pkl": "First Half Spread",
+        "1h_spread_features.pkl": "First Half Spread Features",
+        "1h_total_model.pkl": "First Half Total",
+        "1h_total_features.pkl": "First Half Total Features",
     }
     
     for filename, description in required_models.items():
@@ -154,6 +154,25 @@ def verify_prediction_pipeline(models_dir: Path) -> dict:
             "dynamic_hca": 3.0,
             "h2h_win_pct": 0.5,
             "h2h_avg_margin": 0.0,
+            # Added missing features for verification
+            "away_ats_pct": 0.5,
+            "away_elo": 1500,
+            "away_injury_spread_impact": 0.0,
+            "away_star_out": 0,
+            "elo_diff": 0,
+            "home_ats_pct": 0.5,
+            "home_elo": 1500,
+            "home_injury_spread_impact": 0.0,
+            "home_star_out": 0,
+            "injury_spread_diff": 0.0,
+            "home_last_10_avg_margin": 2.0,
+            "away_last_10_avg_margin": -1.0,
+            "home_last_10_win_pct": 0.6,
+            "away_last_10_win_pct": 0.4,
+            "home_home_win_pct": 0.7,
+            "away_away_win_pct": 0.3,
+            "home_home_avg_margin": 4.0,
+            "away_away_avg_margin": -3.0,
         }
         
         # Test full game predictions
@@ -247,7 +266,7 @@ def main():
     print("=" * 80)
     print()
     
-    models_dir = PROJECT_ROOT / "data" / "processed" / "models"
+    models_dir = PROJECT_ROOT / "models" / "production"
     
     if not models_dir.exists():
         print(f"❌ Models directory not found: {models_dir}")

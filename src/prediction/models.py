@@ -39,9 +39,7 @@ def load_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     # Fallback to standard names
     if model_path is None:
-        model_path = models_dir / "spreads_model.joblib"
-        if not model_path.exists():
-            model_path = models_dir / "spreads_model.pkl"
+        model_path = models_dir / "fg_spread_model.joblib"
 
     if not model_path.exists():
         raise FileNotFoundError(f"Spreads model not found in {models_dir}")
@@ -82,9 +80,7 @@ def load_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     # Fallback to standard names
     if model_path is None:
-        model_path = models_dir / "totals_model.joblib"
-        if not model_path.exists():
-            model_path = models_dir / "totals_model.pkl"
+        model_path = models_dir / "fg_total_model.joblib"
 
     if not model_path.exists():
         raise FileNotFoundError(f"Totals model not found in {models_dir}")
@@ -111,8 +107,8 @@ def load_first_half_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
     Raises:
         FileNotFoundError: If model not found
     """
-    model_path = models_dir / "first_half_spread_model.pkl"
-    features_path = models_dir / "first_half_spread_features.pkl"
+    model_path = models_dir / "1h_spread_model.pkl"
+    features_path = models_dir / "1h_spread_features.pkl"
 
     if not model_path.exists():
         raise FileNotFoundError(
@@ -139,8 +135,8 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
     Raises:
         FileNotFoundError: If model not found
     """
-    model_path = models_dir / "first_half_total_model.pkl"
-    features_path = models_dir / "first_half_total_features.pkl"
+    model_path = models_dir / "1h_total_model.pkl"
+    features_path = models_dir / "1h_total_features.pkl"
 
     if not model_path.exists():
         raise FileNotFoundError(
@@ -183,9 +179,7 @@ def load_moneyline_model(models_dir: Path) -> Tuple[Any, List[str]]:
     
     # Fallback to standard names
     if model_path is None:
-        model_path = models_dir / "moneyline_model.joblib"
-        if not model_path.exists():
-            model_path = models_dir / "moneyline_model.pkl"
+        model_path = models_dir / "fg_moneyline_model.joblib"
     
     if not model_path.exists():
         raise FileNotFoundError(f"Moneyline model not found in {models_dir}")
