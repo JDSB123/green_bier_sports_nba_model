@@ -270,7 +270,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - NBA_v33.0.1.0 with 6 markets."""
+    """Check API health - NBA_v33.0.2.0 with 6 markets."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 

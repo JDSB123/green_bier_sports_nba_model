@@ -1,9 +1,9 @@
-# NBA NBA_v33.0.1.0 - Combined Model API + Bot - Production Container
+# NBA NBA_v33.0.2.0 - Combined Model API + Bot - Production Container
 # Single container with:
 # - Port 8090: ML Model Prediction API (uvicorn)
 # - Port 8080: Azure Functions Bot / Teams Integration (func host)
 #
-# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.1.0 .
+# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.2.0 .
 
 # =============================================================================
 # Stage 1: Builder
@@ -26,7 +26,7 @@ RUN pip install --no-cache-dir --user -r requirements.txt && \
 # =============================================================================
 FROM python:3.11.11-slim
 
-LABEL maintainer="Green Bier Ventures" version="NBA_v33.0.1.0"
+LABEL maintainer="Green Bier Ventures" version="NBA_v33.0.2.0"
 
 WORKDIR /app
 
