@@ -615,11 +615,11 @@ def menu(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="health", methods=["GET"])
 def health(req: func.HttpRequest) -> func.HttpResponse:
-    """Health check endpoint - v6.5 STRICT MODE."""
+    """Health check endpoint - v6.6 STRICT MODE (Q1 disabled)."""
     return func.HttpResponse(
         json.dumps({
             "status": "ok",
-            "version": "6.5",
+            "version": "6.6",
             "mode": "STRICT",
             "service": "nba-picks-trigger",
             "api_url": _get_nba_api_url(),

@@ -504,16 +504,16 @@ class UnifiedPredictionEngine:
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
 
-        # Verify loaded models
-        loaded_count = sum(1 for v in self.loaded_models.values() if v)
-        if loaded_count < 9:
-            missing = [k for k, v in self.loaded_models.items() if not v]
+        # Verify loaded models (v6.6 expects 6 total: 1H + FG)
+        loaded_count = sum(1 for k, v in self.loaded_models.items() if v and (k.startswith("1h_") or k.startswith("fg_")))
+        if loaded_count < 6:
+            missing = [k for k, v in self.loaded_models.items() if (k.startswith("1h_") or k.startswith("fg_")) and not v]
             logger.warning(
-                f"PARTIAL LOAD: Only {loaded_count}/9 models loaded. Missing: {missing}\n"
-                f"Some predictions will be skipped."
+                f"PARTIAL LOAD: Only {loaded_count}/6 models loaded (1H+FG). Missing: {missing}\n"
+                f"Some predictions may be skipped."
             )
         else:
-            logger.info(f"SUCCESS: All 9/9 models loaded")
+            logger.info("SUCCESS: All 6/6 models loaded (1H + FG)")
 
     def _load_period_models(
         self,
@@ -548,7 +548,7 @@ class UnifiedPredictionEngine:
             self.loaded_models[ml_key] = False
             ml_model, ml_features = None, []
 
-        # v6.5 STRICT MODE: All models required - raise on missing
+        # v6.6 STRICT MODE: All models for the period required - raise on missing
         missing_models = []
         if spread_model is None:
             missing_models.append(f"{period}_spread")
@@ -560,7 +560,7 @@ class UnifiedPredictionEngine:
         if missing_models:
             raise ModelNotFoundError(
                 f"STRICT MODE: Missing models for {period}: {missing_models}. "
-                f"All 9 models required. Run: python scripts/train_all_models.py"
+                f"All 3 models for the period are required (spread/total/moneyline)."
             )
 
         return (

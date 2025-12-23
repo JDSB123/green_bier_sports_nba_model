@@ -1,14 +1,9 @@
 """
-NBA v6.5 - FastAPI Prediction Server - STRICT MODE
+NBA v6.6 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks.
 
-PRODUCTION: 9 INDEPENDENT Markets (Q1 + 1H + FG)
-
-First Quarter (Q1):
-- Q1 Spread
-- Q1 Total
-- Q1 Moneyline
+PRODUCTION: 6 INDEPENDENT Markets (Q1 DISABLED)
 
 First Half (1H):
 - 1H Spread
@@ -20,8 +15,7 @@ Full Game (FG):
 - FG Total
 - FG Moneyline
 
-All periods use INDEPENDENT models trained on period-specific features.
-No cross-period dependencies. No fallbacks. No silent failures.
+Models are independent and period-specific. Q1 models are disabled in v6.6.
 
 STRICT MODE: Every request fetches fresh data from APIs.
 """
@@ -57,6 +51,9 @@ from src.utils.api_auth import get_api_key, APIKeyMiddleware
 from src.tracking import PickTracker
 
 logger = get_logger(__name__)
+
+# Centralized release/version identifier for API surfaces
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0")
 
 
 def convert_numpy_types(obj):
@@ -170,7 +167,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"v6.5 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"v6.6 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -182,14 +179,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.error(f"Models directory does not exist: {models_dir}")
 
-    # STRICT MODE: Load engine - ALL 9 models required, NO FALLBACKS
-    logger.info("STRICT MODE: Requiring all 9 models (Q1/1H/FG × Spread/Total/ML)")
+    # STRICT MODE: v6.6 Q1 disabled. Require 1H + FG models (6 total). No fallbacks.
+    logger.info("STRICT MODE v6.6: Q1 disabled — using 1H/FG only (6 models)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
-    # v6.5: NO FILE CACHING - all data fetched fresh from APIs per request
+    # v6.6: NO FILE CACHING - all data fetched fresh from APIs per request
     # Legacy joblib cache files are no longer used
-    logger.info("v6.5 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    logger.info("v6.6 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -199,7 +196,7 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"NBA v6.0 initialized - {model_info['markets']}/9 markets loaded: {model_info['markets_list']}")
+    logger.info(f"NBA v6.6 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
@@ -208,9 +205,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="NBA v6.5 - STRICT MODE Production Picks",
-    description="9 INDEPENDENT Markets: Q1+1H+FG for Spread, Total, Moneyline. FRESH DATA ONLY - No caching, no fallbacks.",
-    version="6.5.0",
+    title="NBA NBA_v33.0 - STRICT MODE Production Picks",
+    description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline (Q1 disabled). FRESH DATA ONLY - No caching, no fallbacks.",
+    version=RELEASE_VERSION,
     lifespan=lifespan
 )
 
@@ -291,7 +288,7 @@ def health(request: Request):
 
     return {
         "status": "ok",
-        "version": "6.6",
+        "version": RELEASE_VERSION,
         "mode": "STRICT",
         "architecture": "6-model independent (Q1 disabled)",
         "caching": "DISABLED - fresh data every request",
@@ -329,7 +326,7 @@ def get_monitoring_stats(request: Request):
     """
     stats = {
         "timestamp": datetime.now().isoformat(),
-        "version": "6.5",
+        "version": RELEASE_VERSION,
     }
 
     # Signal agreement tracking
