@@ -1,4 +1,4 @@
-# NBA v6.4 - Docker Compose Production Configuration (9 Independent Markets)
+# NBA v33.0 - Docker Compose Production Configuration (9 Independent Markets)
 #
 # CONFIGURATION (via .env file or environment):
 #   NBA_API_PORT - External port (default: 8090)
@@ -14,20 +14,20 @@
 #   Build:   docker compose build
 #   Run:     docker compose up -d
 #   Run with custom port: NBA_API_PORT=9000 docker compose up -d
-#   Export:  docker save nba-v64:latest | gzip > nba_v6.4_model.tar.gz
+#   Export:  docker save nba-v33:latest | gzip > nba_v33.0_model.tar.gz
 
 version: "3.8"
 
 services:
   # ==========================================================================
-  # NBA v6.4 - Production API (9 Independent Markets)
+  # NBA v33.0 - Production API (9 Independent Markets)
   # ==========================================================================
-  nba-v64-api:
+  nba-v33-api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: nba-v64:latest
-    container_name: nba-v64
+    image: nba-v33:latest
+    container_name: nba-v33
     
     # Security: Read-only root filesystem
     read_only: true

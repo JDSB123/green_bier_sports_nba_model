@@ -19,7 +19,7 @@ param location string = resourceGroup().location
 param environment string = 'prod'
 
 @description('Container image tag')
-param imageTag string = 'v6.10'
+param imageTag string = 'NBA_v33.0.2.0'
 
 // =============================================================================
 // API KEYS - Required for the NBA Picks API to function
@@ -230,7 +230,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         maxReplicas: 3
         rules: [
           {
