@@ -240,9 +240,41 @@ def generate_table_html(data: dict, output_path: str):
         fire_count = max(spread_fire.count("🔥"), total_fire.count("🔥"), ml_fire.count("🔥"))
         row_class = "elite" if fire_count >= 3 else "strong" if fire_count >= 2 else ""
         
-        spread_pick = f"{spread_data.get('pick', '')} {spread_data.get('pick_line', '')}" if spread_data.get('pick') else "—"
+        # Format spread pick with clear +/- indicator
+        spread_pick_team = spread_data.get('pick', '')
+        spread_pick_line = spread_data.get('pick_line', '')
+        if spread_pick_team and spread_pick_line:
+            # Determine if line is positive or negative
+            line_val = float(spread_pick_line) if spread_pick_line else 0
+            sign = '+' if line_val > 0 else ''
+            spread_pick = f"{spread_pick_team} {sign}{spread_pick_line}"
+        else:
+            spread_pick = "—"
+        
+        # Format total pick
         total_pick = f"{total_data.get('pick', '')} {total_data.get('pick_line', '')}" if total_data.get('pick') else "—"
-        ml_pick = ml_data.get('pick', '—')
+        
+        # Format moneyline pick with odds
+        ml_pick_team = ml_data.get('pick', '')
+        if ml_pick_team:
+            # Determine which odds to show based on pick
+            if ml_pick_team == away:
+                ml_odds = odds.get('away_ml', '')
+                ml_pick = f"{ml_pick_team} ({ml_odds})"
+            elif ml_pick_team == home:
+                ml_odds = odds.get('home_ml', '')
+                ml_pick = f"{ml_pick_team} ({ml_odds})"
+            else:
+                ml_pick = ml_pick_team
+        else:
+            ml_pick = "—"
+        
+        # Format market spread to include team name
+        home_spread = odds.get('home_spread', '')
+        if home_spread:
+            market_spread = f"{home} {home_spread} @ {spread_data.get('market_odds', '')}"
+        else:
+            market_spread = f"{spread_data.get('market_odds', '')}"
         
         html += f"""
                 <tr class="{row_class}">
@@ -252,7 +284,7 @@ def generate_table_html(data: dict, output_path: str):
                         <div class="records">({away_record}) @ ({home_record})</div>
                     </td>
                     <td class="pick">{spread_pick}</td>
-                    <td class="odds">{odds.get('home_spread', '')} @ {spread_data.get('market_odds', '')}</td>
+                    <td class="odds">{market_spread}</td>
                     <td class="edge">{round(spread_edge, 1)} pts</td>
                     <td class="fire">{spread_fire}</td>
                     <td class="pick">{total_pick}</td>
@@ -261,7 +293,7 @@ def generate_table_html(data: dict, output_path: str):
                     <td class="fire">{total_fire}</td>
                     <td class="pick">{ml_pick}</td>
                     <td class="odds">Home {odds.get('home_ml', '')} / Away {odds.get('away_ml', '')}</td>
-                    <td class="edge">{round(ml_edge, 1)}%</td>
+                    <td class="edge">{round(ml_edge, 1)} pts</td>
                     <td class="fire">{ml_fire}</td>
                 </tr>
 """
