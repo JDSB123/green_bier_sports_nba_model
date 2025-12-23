@@ -31,5 +31,6 @@
   "containers.containers.label": "ContainerName",
   "containers.images.label": "Tag",
   "containers.networks.label": "Name",
-  "containers.volumes.label": "Name"
+  "containers.volumes.label": "Name",
+  "liveServer.settings.port": 5501
 }
