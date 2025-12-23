@@ -33,33 +33,35 @@ def fetch_comprehensive_data(date: str = "today", api_base: str = None) -> dict:
 
 
 def get_fire_rating(edge: float, win_prob: float, market_type: str = "spread") -> str:
-    """Calculate fire rating."""
+    """Calculate fire rating on 1-5 scale."""
+    # Base fire rating on edge and probability
+    fires = 0
+    
     if market_type == "total":
-        if edge >= 10 and win_prob >= 0.70:
-            return "🔥🔥🔥"
-        elif edge >= 7 and win_prob >= 0.60:
-            return "🔥🔥"
-        elif edge >= 5:
-            return "🔥"
+        if edge >= 12 and win_prob >= 0.75: fires = 5
+        elif edge >= 10 and win_prob >= 0.70: fires = 4
+        elif edge >= 8 and win_prob >= 0.65: fires = 3
+        elif edge >= 6 and win_prob >= 0.60: fires = 2
+        elif edge >= 4: fires = 1
     elif market_type == "moneyline":
-        if edge >= 20:
-            return "🔥🔥🔥"
-        elif edge >= 15:
-            return "🔥🔥"
-        elif edge >= 10:
-            return "🔥"
+        # Excluded per user request, but keeping logic just in case
+        if edge >= 25: fires = 5
+        elif edge >= 20: fires = 4
+        elif edge >= 15: fires = 3
+        elif edge >= 10: fires = 2
+        elif edge >= 5: fires = 1
     else:  # spread
-        if edge >= 7 and win_prob >= 0.70:
-            return "🔥🔥🔥"
-        elif edge >= 5 and win_prob >= 0.60:
-            return "🔥🔥"
-        elif edge >= 3:
-            return "🔥"
-    return ""
+        if edge >= 10 and win_prob >= 0.75: fires = 5
+        elif edge >= 8 and win_prob >= 0.70: fires = 4
+        elif edge >= 6 and win_prob >= 0.65: fires = 3
+        elif edge >= 4 and win_prob >= 0.60: fires = 2
+        elif edge >= 2: fires = 1
+        
+    return "🔥" * fires
 
 
 def generate_table_html(data: dict, output_path: str):
-    """Generate clean table HTML."""
+    """Generate clean table HTML with requested columns."""
     games = data.get("analysis", [])
     date_str = data.get("date", "")
     version = data.get("version", "")
@@ -74,38 +76,24 @@ def generate_table_html(data: dict, output_path: str):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NBA Picks - {date_str}</title>
     <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0e27;
             color: #e0e0e0;
             padding: 20px;
         }}
-        .container {{
-            max-width: 1600px;
-            margin: 0 auto;
-        }}
+        .container {{ max-width: 1400px; margin: 0 auto; }}
         .header {{
             text-align: center;
-            padding: 25px;
+            padding: 20px;
             background: linear-gradient(135deg, #1a1f3a 0%, #0f1419 100%);
             border-radius: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border: 1px solid #2a2f4a;
         }}
-        .header h1 {{
-            font-size: 2em;
-            margin-bottom: 8px;
-            color: #00d4ff;
-        }}
-        .header .meta {{
-            color: #888;
-            font-size: 0.9em;
-        }}
+        .header h1 {{ font-size: 1.8em; margin-bottom: 5px; color: #00d4ff; }}
+        .header .meta {{ color: #888; font-size: 0.9em; }}
         table {{
             width: 100%;
             border-collapse: collapse;
@@ -114,107 +102,72 @@ def generate_table_html(data: dict, output_path: str):
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }}
-        thead {{
-            background: #1a2035;
-        }}
+        thead {{ background: #1a2035; }}
         th {{
-            padding: 15px 10px;
+            padding: 12px;
             text-align: left;
             font-weight: 600;
             color: #00d4ff;
             border-bottom: 2px solid #2a2f4a;
-            font-size: 0.9em;
+            font-size: 0.85em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }}
         td {{
-            padding: 12px 10px;
+            padding: 12px;
             border-bottom: 1px solid #1f2437;
             font-size: 0.9em;
+            vertical-align: middle;
         }}
-        tr:hover {{
-            background: rgba(0,212,255,0.05);
-        }}
-        .time {{
-            color: #00d4ff;
-            white-space: nowrap;
-        }}
-        .matchup {{
+        tr.game-separator {{ border-top: 2px solid #2a2f4a; }}
+        .time {{ color: #888; font-size: 0.85em; }}
+        .matchup {{ font-weight: 600; color: #fff; }}
+        .pick {{ font-weight: 700; color: #00ff88; }}
+        .model {{ color: #ccc; font-size: 0.9em; }}
+        .market {{ color: #888; font-size: 0.9em; }}
+        .edge {{ font-weight: bold; color: #00ff88; }}
+        .fire {{ font-size: 1.2em; letter-spacing: 2px; }}
+        .type-badge {{
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
             font-weight: 600;
-            color: #fff;
+            margin-right: 8px;
         }}
-        .records {{
-            color: #888;
-            font-size: 0.85em;
-        }}
-        .pick {{
-            font-weight: 600;
-            color: #00ff88;
-        }}
-        .odds {{
-            color: #ccc;
-            font-size: 0.85em;
-        }}
-        .edge {{
-            font-weight: bold;
-            color: #00ff88;
-        }}
-        .fire {{
-            font-size: 1.1em;
-        }}
-        .elite {{
-            background: rgba(255,56,56,0.1);
-        }}
-        .strong {{
-            background: rgba(255,149,0,0.1);
-        }}
+        .type-spread {{ background: rgba(0, 212, 255, 0.15); color: #00d4ff; }}
+        .type-total {{ background: rgba(255, 149, 0, 0.15); color: #ff9500; }}
         .footer {{
             text-align: center;
             padding: 20px;
             color: #666;
-            font-size: 0.85em;
-            margin-top: 30px;
-        }}
-        @media (max-width: 1200px) {{
-            table {{
-                font-size: 0.85em;
-            }}
-            th, td {{
-                padding: 10px 6px;
-            }}
+            font-size: 0.8em;
+            margin-top: 20px;
         }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏀 NBA PREDICTIONS TABLE</h1>
+            <h1>🏀 NBA PREDICTIONS</h1>
             <div class="meta">{timestamp} | {version} | {len(games)} Games</div>
         </div>
         
         <table>
             <thead>
                 <tr>
-                    <th>Time (CST)</th>
+                    <th>Date & Time (CST)</th>
                     <th>Matchup</th>
-                    <th>Spread Pick</th>
-                    <th>Market</th>
+                    <th>Recommended Pick</th>
+                    <th>Model Prediction</th>
+                    <th>Market Pricing</th>
                     <th>Edge</th>
-                    <th>🔥</th>
-                    <th>Total Pick</th>
-                    <th>Market</th>
-                    <th>Edge</th>
-                    <th>🔥</th>
-                    <th>ML Pick</th>
-                    <th>Market</th>
-                    <th>Edge</th>
-                    <th>🔥</th>
+                    <th>Fire Rating</th>
                 </tr>
             </thead>
             <tbody>
 """
     
-    for game in games:
+    for i, game in enumerate(games):
         away = game.get("away_team", "")
         home = game.get("home_team", "")
         time_cst = game.get("time_cst", "")
@@ -222,89 +175,89 @@ def generate_table_html(data: dict, output_path: str):
         odds = game.get("odds", {})
         edge_data = game.get("comprehensive_edge", {}).get("full_game", {})
         
-        away_record = f"{features.get('away_wins', 0)}-{features.get('away_losses', 0)}"
-        home_record = f"{features.get('home_wins', 0)}-{features.get('home_losses', 0)}"
+        # Model Scores
+        home_score = round(features.get("home_expected_pts", 0), 1)
+        away_score = round(features.get("away_expected_pts", 0), 1)
+        model_total = round(features.get("predicted_total", 0), 1)
+        model_margin = round(features.get("predicted_margin", 0), 1)
         
+        # --- SPREAD ROW ---
         spread_data = edge_data.get("spread", {})
-        total_data = edge_data.get("total", {})
-        ml_data = edge_data.get("moneyline", {})
-        
         spread_edge = abs(spread_data.get("edge", 0))
-        total_edge = abs(total_data.get("edge", 0))
-        ml_edge = abs(ml_data.get("edge_away", 0) * 100)
-        
         spread_fire = get_fire_rating(spread_edge, spread_data.get("win_probability", 0), "spread")
-        total_fire = get_fire_rating(total_edge, total_data.get("win_probability", 0), "total")
-        ml_fire = get_fire_rating(ml_edge, ml_data.get("model_away_prob", 0), "moneyline")
         
-        fire_count = max(spread_fire.count("🔥"), total_fire.count("🔥"), ml_fire.count("🔥"))
-        row_class = "elite" if fire_count >= 3 else "strong" if fire_count >= 2 else ""
+        pick_team = spread_data.get('pick', '—')
+        pick_line = spread_data.get('pick_line', '')
+        pick_odds = spread_data.get('pick_odds', -110)
         
-        # Format spread pick with clear +/- indicator
-        spread_pick_team = spread_data.get('pick', '')
-        spread_pick_line = spread_data.get('pick_line', '')
-        if spread_pick_team and spread_pick_line:
-            # Determine if line is positive or negative
-            line_val = float(spread_pick_line) if spread_pick_line else 0
-            sign = '+' if line_val > 0 else ''
-            spread_pick = f"{spread_pick_team} {sign}{spread_pick_line}"
-        else:
-            spread_pick = "—"
-        
-        # Format total pick
-        total_pick = f"{total_data.get('pick', '')} {total_data.get('pick_line', '')}" if total_data.get('pick') else "—"
-        
-        # Format moneyline pick with odds
-        ml_pick_team = ml_data.get('pick', '')
-        if ml_pick_team:
-            # Determine which odds to show based on pick
-            if ml_pick_team == away:
-                ml_odds = odds.get('away_ml', '')
-                ml_pick = f"{ml_pick_team} ({ml_odds})"
-            elif ml_pick_team == home:
-                ml_odds = odds.get('home_ml', '')
-                ml_pick = f"{ml_pick_team} ({ml_odds})"
+        # Format Pick
+        if pick_team != '—':
+            if pick_line is not None:
+                line_str = f"+{pick_line}" if pick_line > 0 else str(pick_line)
             else:
-                ml_pick = ml_pick_team
+                line_str = ""
+            spread_pick_display = f"{pick_team} {line_str} ({pick_odds})"
         else:
-            ml_pick = "—"
+            spread_pick_display = "—"
+            
+        # Format Model
+        margin_str = f"+{abs(model_margin)}" if model_margin > 0 else str(model_margin) # This is raw margin, usually negative means home favored? 
+        # Actually predicted_margin is usually Home - Away or Away - Home? 
+        # Let's use the scores for clarity
+        model_pred_display = f"{away} {away_score} - {home} {home_score}"
         
-        # Format market spread to include team name
+        # Format Market
         home_spread = odds.get('home_spread', '')
-        if home_spread:
-            market_spread = f"{home} {home_spread} @ {spread_data.get('market_odds', '')}"
-        else:
-            market_spread = f"{spread_data.get('market_odds', '')}"
+        market_display = f"{home} {home_spread} ({spread_data.get('market_odds', '')})"
         
         html += f"""
-                <tr class="{row_class}">
+                <tr class="game-separator">
                     <td class="time">{time_cst}</td>
-                    <td>
-                        <div class="matchup">{away} @ {home}</div>
-                        <div class="records">({away_record}) @ ({home_record})</div>
-                    </td>
-                    <td class="pick">{spread_pick}</td>
-                    <td class="odds">{market_spread}</td>
+                    <td class="matchup">{away} @ {home}</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> {spread_pick_display}</td>
+                    <td class="model">{model_pred_display}</td>
+                    <td class="market">{market_display}</td>
                     <td class="edge">{round(spread_edge, 1)} pts</td>
                     <td class="fire">{spread_fire}</td>
-                    <td class="pick">{total_pick}</td>
-                    <td class="odds">{odds.get('total', '')} @ {total_data.get('market_odds', '')}</td>
+                </tr>
+        """
+        
+        # --- TOTAL ROW ---
+        total_data = edge_data.get("total", {})
+        total_edge = abs(total_data.get("edge", 0))
+        total_fire = get_fire_rating(total_edge, total_data.get("win_probability", 0), "total")
+        
+        pick_type = total_data.get('pick', '—')
+        pick_line = total_data.get('pick_line', '')
+        pick_odds = total_data.get('pick_odds', -110)
+        
+        if pick_type != '—':
+            total_pick_display = f"{pick_type} {pick_line} ({pick_odds})"
+        else:
+            total_pick_display = "—"
+            
+        model_total_display = f"Total: {model_total}"
+        market_total_display = f"{odds.get('total', '')} ({total_data.get('market_odds', '')})"
+        
+        html += f"""
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> {total_pick_display}</td>
+                    <td class="model">{model_total_display}</td>
+                    <td class="market">{market_total_display}</td>
                     <td class="edge">{round(total_edge, 1)} pts</td>
                     <td class="fire">{total_fire}</td>
-                    <td class="pick">{ml_pick}</td>
-                    <td class="odds">Home {odds.get('home_ml', '')} / Away {odds.get('away_ml', '')}</td>
-                    <td class="edge">{round(ml_edge, 1)} pts</td>
-                    <td class="fire">{ml_fire}</td>
                 </tr>
-"""
-    
+        """
+
     html += f"""
             </tbody>
         </table>
         
         <div class="footer">
             NBA Prediction System {version} | {timestamp}<br>
-            🔥🔥🔥 Elite | 🔥🔥 Strong | 🔥 Good
+            Fire Rating: 🔥 (Good) to 🔥🔥🔥🔥🔥 (Elite)
         </div>
     </div>
 </body>

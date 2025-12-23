@@ -5,38 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NBA Picks - 2025-12-23</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0e27;
             color: #e0e0e0;
             padding: 20px;
         }
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1400px; margin: 0 auto; }
         .header {
             text-align: center;
-            padding: 25px;
+            padding: 20px;
             background: linear-gradient(135deg, #1a1f3a 0%, #0f1419 100%);
             border-radius: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border: 1px solid #2a2f4a;
         }
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 8px;
-            color: #00d4ff;
-        }
-        .header .meta {
-            color: #888;
-            font-size: 0.9em;
-        }
+        .header h1 { font-size: 1.8em; margin-bottom: 5px; color: #00d4ff; }
+        .header .meta { color: #888; font-size: 0.9em; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -45,391 +31,356 @@
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
-        thead {
-            background: #1a2035;
-        }
+        thead { background: #1a2035; }
         th {
-            padding: 15px 10px;
+            padding: 12px;
             text-align: left;
             font-weight: 600;
             color: #00d4ff;
             border-bottom: 2px solid #2a2f4a;
-            font-size: 0.9em;
+            font-size: 0.85em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         td {
-            padding: 12px 10px;
+            padding: 12px;
             border-bottom: 1px solid #1f2437;
             font-size: 0.9em;
+            vertical-align: middle;
         }
-        tr:hover {
-            background: rgba(0,212,255,0.05);
-        }
-        .time {
-            color: #00d4ff;
-            white-space: nowrap;
-        }
-        .matchup {
+        tr.game-separator { border-top: 2px solid #2a2f4a; }
+        .time { color: #888; font-size: 0.85em; }
+        .matchup { font-weight: 600; color: #fff; }
+        .pick { font-weight: 700; color: #00ff88; }
+        .model { color: #ccc; font-size: 0.9em; }
+        .market { color: #888; font-size: 0.9em; }
+        .edge { font-weight: bold; color: #00ff88; }
+        .fire { font-size: 1.2em; letter-spacing: 2px; }
+        .type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
             font-weight: 600;
-            color: #fff;
+            margin-right: 8px;
         }
-        .records {
-            color: #888;
-            font-size: 0.85em;
-        }
-        .pick {
-            font-weight: 600;
-            color: #00ff88;
-        }
-        .odds {
-            color: #ccc;
-            font-size: 0.85em;
-        }
-        .edge {
-            font-weight: bold;
-            color: #00ff88;
-        }
-        .fire {
-            font-size: 1.1em;
-        }
-        .elite {
-            background: rgba(255,56,56,0.1);
-        }
-        .strong {
-            background: rgba(255,149,0,0.1);
-        }
+        .type-spread { background: rgba(0, 212, 255, 0.15); color: #00d4ff; }
+        .type-total { background: rgba(255, 149, 0, 0.15); color: #ff9500; }
         .footer {
             text-align: center;
             padding: 20px;
             color: #666;
-            font-size: 0.85em;
-            margin-top: 30px;
-        }
-        @media (max-width: 1200px) {
-            table {
-                font-size: 0.85em;
-            }
-            th, td {
-                padding: 10px 6px;
-            }
+            font-size: 0.8em;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏀 NBA PREDICTIONS TABLE</h1>
-            <div class="meta">December 23, 2025 @ 03:53 PM CST | NBA_v33.0.2.0 | 14 Games</div>
+            <h1>🏀 NBA PREDICTIONS</h1>
+            <div class="meta">December 23, 2025 @ 04:01 PM CST | NBA_v33.0.2.0 | 14 Games</div>
         </div>
         
         <table>
             <thead>
                 <tr>
-                    <th>Time (CST)</th>
+                    <th>Date & Time (CST)</th>
                     <th>Matchup</th>
-                    <th>Spread Pick</th>
-                    <th>Market</th>
+                    <th>Recommended Pick</th>
+                    <th>Model Prediction</th>
+                    <th>Market Pricing</th>
                     <th>Edge</th>
-                    <th>🔥</th>
-                    <th>Total Pick</th>
-                    <th>Market</th>
-                    <th>Edge</th>
-                    <th>🔥</th>
-                    <th>ML Pick</th>
-                    <th>Market</th>
-                    <th>Edge</th>
-                    <th>🔥</th>
+                    <th>Fire Rating</th>
                 </tr>
             </thead>
             <tbody>
 
-                <tr class="strong">
+                <tr class="game-separator">
                     <td class="time">06:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Brooklyn Nets @ Philadelphia 76ers</div>
-                        <div class="records">(8-19) @ (16-11)</div>
-                    </td>
-                    <td class="pick">Brooklyn Nets +10.0</td>
-                    <td class="odds">Philadelphia 76ers -10.0 @ -110</td>
+                    <td class="matchup">Brooklyn Nets @ Philadelphia 76ers</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Brooklyn Nets +10.0 (-110)</td>
+                    <td class="model">Brooklyn Nets 110.0 - Philadelphia 76ers 115.0</td>
+                    <td class="market">Philadelphia 76ers -10.0 (-110)</td>
                     <td class="edge">4.9 pts</td>
-                    <td class="fire">🔥</td>
-                    <td class="pick">OVER 218.5</td>
-                    <td class="odds">218.5 @ -110</td>
-                    <td class="edge">6.5 pts</td>
-                    <td class="fire">🔥</td>
-                    <td class="pick">Brooklyn Nets (340)</td>
-                    <td class="odds">Home -439 / Away 340</td>
-                    <td class="edge">17.0 pts</td>
                     <td class="fire">🔥🔥</td>
                 </tr>
-
-                <tr class="strong">
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> OVER 218.5 (-110)</td>
+                    <td class="model">Total: 225.0</td>
+                    <td class="market">218.5 (-110)</td>
+                    <td class="edge">6.5 pts</td>
+                    <td class="fire">🔥🔥</td>
+                </tr>
+        
+                <tr class="game-separator">
                     <td class="time">06:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Washington Wizards @ Charlotte Hornets</div>
-                        <div class="records">(5-22) @ (9-20)</div>
-                    </td>
-                    <td class="pick">Washington Wizards +6.5</td>
-                    <td class="odds">Charlotte Hornets -6.5 @ -110</td>
+                    <td class="matchup">Washington Wizards @ Charlotte Hornets</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Washington Wizards +6.5 (-110)</td>
+                    <td class="model">Washington Wizards 113.5 - Charlotte Hornets 117.8</td>
+                    <td class="market">Charlotte Hornets -6.5 (-110)</td>
                     <td class="edge">2.6 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">UNDER 239.0</td>
-                    <td class="odds">239.0 @ -110</td>
+                    <td class="fire">🔥</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 239.0 (-110)</td>
+                    <td class="model">Total: 231.2</td>
+                    <td class="market">239.0 (-110)</td>
                     <td class="edge">7.8 pts</td>
                     <td class="fire">🔥🔥</td>
-                    <td class="pick">Washington Wizards (207)</td>
-                    <td class="odds">Home -250 / Away 207</td>
-                    <td class="edge">9.7 pts</td>
-                    <td class="fire"></td>
                 </tr>
-
-                <tr class="elite">
+        
+                <tr class="game-separator">
                     <td class="time">06:40 PM CST</td>
-                    <td>
-                        <div class="matchup">Chicago Bulls @ Atlanta Hawks</div>
-                        <div class="records">(13-15) @ (15-15)</div>
-                    </td>
-                    <td class="pick">Chicago Bulls +4.0</td>
-                    <td class="odds">Atlanta Hawks -4.0 @ -110</td>
+                    <td class="matchup">Chicago Bulls @ Atlanta Hawks</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Chicago Bulls +4.0 (-110)</td>
+                    <td class="model">Chicago Bulls 119.7 - Atlanta Hawks 120.5</td>
+                    <td class="market">Atlanta Hawks -4.0 (-110)</td>
                     <td class="edge">4.5 pts</td>
-                    <td class="fire">🔥</td>
-                    <td class="pick">UNDER 254.25</td>
-                    <td class="odds">254.25 @ -110</td>
-                    <td class="edge">14.1 pts</td>
-                    <td class="fire">🔥🔥🔥</td>
-                    <td class="pick">Chicago Bulls (138)</td>
-                    <td class="odds">Home -164 / Away 138</td>
-                    <td class="edge">9.0 pts</td>
-                    <td class="fire"></td>
+                    <td class="fire">🔥🔥</td>
                 </tr>
-
-                <tr class="elite">
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 254.5 (-110)</td>
+                    <td class="model">Total: 240.2</td>
+                    <td class="market">254.5 (-110)</td>
+                    <td class="edge">14.3 pts</td>
+                    <td class="fire">🔥🔥🔥🔥🔥</td>
+                </tr>
+        
+                <tr class="game-separator">
                     <td class="time">06:40 PM CST</td>
-                    <td>
-                        <div class="matchup">New Orleans Pelicans @ Cleveland Cavaliers</div>
-                        <div class="records">(8-22) @ (16-14)</div>
-                    </td>
-                    <td class="pick">New Orleans Pelicans +9.0</td>
-                    <td class="odds">Cleveland Cavaliers -9.0 @ -110</td>
+                    <td class="matchup">New Orleans Pelicans @ Cleveland Cavaliers</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> New Orleans Pelicans +9.0 (-110)</td>
+                    <td class="model">New Orleans Pelicans 114.4 - Cleveland Cavaliers 118.2</td>
+                    <td class="market">Cleveland Cavaliers -9.0 (-110)</td>
                     <td class="edge">7.2 pts</td>
                     <td class="fire">🔥🔥🔥</td>
-                    <td class="pick">UNDER 248.25</td>
-                    <td class="odds">248.25 @ -110</td>
-                    <td class="edge">15.7 pts</td>
-                    <td class="fire">🔥🔥🔥</td>
-                    <td class="pick">New Orleans Pelicans (300)</td>
-                    <td class="odds">Home -375 / Away 300</td>
-                    <td class="edge">21.3 pts</td>
-                    <td class="fire">🔥🔥🔥</td>
                 </tr>
-
-                <tr class="">
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 248.25 (-110)</td>
+                    <td class="model">Total: 232.5</td>
+                    <td class="market">248.25 (-110)</td>
+                    <td class="edge">15.7 pts</td>
+                    <td class="fire">🔥🔥🔥🔥🔥</td>
+                </tr>
+        
+                <tr class="game-separator">
                     <td class="time">06:40 PM CST</td>
-                    <td>
-                        <div class="matchup">Milwaukee Bucks @ Indiana Pacers</div>
-                        <div class="records">(11-18) @ (6-23)</div>
-                    </td>
-                    <td class="pick">Indiana Pacers +1.5</td>
-                    <td class="odds">Indiana Pacers 1.5 @ -110</td>
+                    <td class="matchup">Milwaukee Bucks @ Indiana Pacers</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Indiana Pacers +1.5 (-110)</td>
+                    <td class="model">Milwaukee Bucks 113.4 - Indiana Pacers 110.7</td>
+                    <td class="market">Indiana Pacers 1.5 (-110)</td>
                     <td class="edge">2.2 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">OVER 218.5</td>
-                    <td class="odds">218.5 @ -110</td>
+                    <td class="fire">🔥</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> OVER 218.5 (-110)</td>
+                    <td class="model">Total: 224.1</td>
+                    <td class="market">218.5 (-110)</td>
                     <td class="edge">5.6 pts</td>
                     <td class="fire">🔥</td>
-                    <td class="pick">—</td>
-                    <td class="odds">Home 100 / Away -120</td>
-                    <td class="edge">5.9 pts</td>
-                    <td class="fire"></td>
                 </tr>
-
-                <tr class="">
+        
+                <tr class="game-separator">
                     <td class="time">06:40 PM CST</td>
-                    <td>
-                        <div class="matchup">Toronto Raptors @ Miami Heat</div>
-                        <div class="records">(17-13) @ (15-14)</div>
-                    </td>
-                    <td class="pick">Toronto Raptors +5.5</td>
-                    <td class="odds">Miami Heat -5.5 @ -110</td>
+                    <td class="matchup">Toronto Raptors @ Miami Heat</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Toronto Raptors +5.5 (-112)</td>
+                    <td class="model">Toronto Raptors 113.6 - Miami Heat 113.0</td>
+                    <td class="market">Miami Heat -5.5 (-112)</td>
                     <td class="edge">3.1 pts</td>
                     <td class="fire">🔥</td>
-                    <td class="pick">—</td>
-                    <td class="odds">227.5 @ -110</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> None None (None)</td>
+                    <td class="model">Total: 226.6</td>
+                    <td class="market">227.5 (-110)</td>
                     <td class="edge">0.9 pts</td>
                     <td class="fire"></td>
-                    <td class="pick">Toronto Raptors (185)</td>
-                    <td class="odds">Home -225 / Away 185</td>
-                    <td class="edge">10.2 pts</td>
-                    <td class="fire">🔥</td>
                 </tr>
-
-                <tr class="strong">
+        
+                <tr class="game-separator">
                     <td class="time">07:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Denver Nuggets @ Dallas Mavericks</div>
-                        <div class="records">(21-7) @ (11-19)</div>
-                    </td>
-                    <td class="pick">Dallas Mavericks +6.5</td>
-                    <td class="odds">Dallas Mavericks 6.5 @ -110</td>
+                    <td class="matchup">Denver Nuggets @ Dallas Mavericks</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Dallas Mavericks +6.5 (-110)</td>
+                    <td class="model">Denver Nuggets 116.3 - Dallas Mavericks 111.5</td>
+                    <td class="market">Dallas Mavericks 6.5 (-110)</td>
                     <td class="edge">3.3 pts</td>
                     <td class="fire">🔥</td>
-                    <td class="pick">UNDER 236.5</td>
-                    <td class="odds">236.5 @ -110</td>
-                    <td class="edge">8.7 pts</td>
-                    <td class="fire">🔥🔥</td>
-                    <td class="pick">Dallas Mavericks (200)</td>
-                    <td class="odds">Home 200 / Away -250</td>
-                    <td class="edge">15.0 pts</td>
-                    <td class="fire">🔥🔥</td>
                 </tr>
-
-                <tr class="strong">
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 236.5 (-110)</td>
+                    <td class="model">Total: 227.8</td>
+                    <td class="market">236.5 (-110)</td>
+                    <td class="edge">8.7 pts</td>
+                    <td class="fire">🔥🔥🔥</td>
+                </tr>
+        
+                <tr class="game-separator">
                     <td class="time">07:10 PM CST</td>
-                    <td>
-                        <div class="matchup">New York Knicks @ Minnesota Timberwolves</div>
-                        <div class="records">(20-8) @ (19-10)</div>
-                    </td>
-                    <td class="pick">New York Knicks +7.5</td>
-                    <td class="odds">Minnesota Timberwolves -7.5 @ -110</td>
-                    <td class="edge">6.5 pts</td>
-                    <td class="fire">🔥🔥</td>
-                    <td class="pick">UNDER 229.75</td>
-                    <td class="odds">229.75 @ -110</td>
+                    <td class="matchup">New York Knicks @ Minnesota Timberwolves</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> New York Knicks +7.0 (-110)</td>
+                    <td class="model">New York Knicks 113.9 - Minnesota Timberwolves 112.3</td>
+                    <td class="market">Minnesota Timberwolves -7.0 (-110)</td>
+                    <td class="edge">6.0 pts</td>
+                    <td class="fire">🔥🔥🔥</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 229.75 (-110)</td>
+                    <td class="model">Total: 226.2</td>
+                    <td class="market">229.75 (-110)</td>
                     <td class="edge">3.5 pts</td>
                     <td class="fire"></td>
-                    <td class="pick">New York Knicks (225)</td>
-                    <td class="odds">Home -275 / Away 225</td>
-                    <td class="edge">17.3 pts</td>
-                    <td class="fire">🔥🔥</td>
                 </tr>
-
-                <tr class="elite">
+        
+                <tr class="game-separator">
                     <td class="time">07:40 PM CST</td>
-                    <td>
-                        <div class="matchup">Oklahoma City Thunder @ San Antonio Spurs</div>
-                        <div class="records">(26-3) @ (21-7)</div>
-                    </td>
-                    <td class="pick">San Antonio Spurs +7.0</td>
-                    <td class="odds">San Antonio Spurs 7.0 @ -110</td>
+                    <td class="matchup">Oklahoma City Thunder @ San Antonio Spurs</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> San Antonio Spurs +7.0 (-110)</td>
+                    <td class="model">Oklahoma City Thunder 114.3 - San Antonio Spurs 111.4</td>
+                    <td class="market">San Antonio Spurs 7.0 (-110)</td>
                     <td class="edge">6.5 pts</td>
-                    <td class="fire">🔥🔥</td>
-                    <td class="pick">UNDER 233.5</td>
-                    <td class="odds">233.5 @ -110</td>
+                    <td class="fire">🔥🔥🔥</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 233.5 (-110)</td>
+                    <td class="model">Total: 225.6</td>
+                    <td class="market">233.5 (-110)</td>
                     <td class="edge">7.9 pts</td>
                     <td class="fire">🔥🔥</td>
-                    <td class="pick">San Antonio Spurs (205)</td>
-                    <td class="odds">Home 205 / Away -250</td>
-                    <td class="edge">20.5 pts</td>
-                    <td class="fire">🔥🔥🔥</td>
                 </tr>
-
-                <tr class="">
+        
+                <tr class="game-separator">
                     <td class="time">08:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Los Angeles Lakers @ Phoenix Suns</div>
-                        <div class="records">(19-8) @ (15-13)</div>
-                    </td>
-                    <td class="pick">—</td>
-                    <td class="odds">Phoenix Suns -4.0 @ -110</td>
+                    <td class="matchup">Los Angeles Lakers @ Phoenix Suns</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> None  (None)</td>
+                    <td class="model">Los Angeles Lakers 113.8 - Phoenix Suns 115.5</td>
+                    <td class="market">Phoenix Suns -4.0 (-110)</td>
                     <td class="edge">0.1 pts</td>
                     <td class="fire"></td>
-                    <td class="pick">—</td>
-                    <td class="odds">228.0 @ -110</td>
-                    <td class="edge">1.2 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">—</td>
-                    <td class="odds">Home -167 / Away 145</td>
-                    <td class="edge">1.0 pts</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> None None (None)</td>
+                    <td class="model">Total: 229.2</td>
+                    <td class="market">227.5 (-110)</td>
+                    <td class="edge">1.7 pts</td>
                     <td class="fire"></td>
                 </tr>
-
-                <tr class="strong">
+        
+                <tr class="game-separator">
                     <td class="time">08:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Memphis Grizzlies @ Utah Jazz</div>
-                        <div class="records">(13-16) @ (10-18)</div>
-                    </td>
-                    <td class="pick">Utah Jazz +4.0</td>
-                    <td class="odds">Utah Jazz 4.0 @ -110</td>
+                    <td class="matchup">Memphis Grizzlies @ Utah Jazz</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Utah Jazz +4.0 (-110)</td>
+                    <td class="model">Memphis Grizzlies 118.5 - Utah Jazz 116.3</td>
+                    <td class="market">Utah Jazz 4.0 (-110)</td>
                     <td class="edge">3.0 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">UNDER 242.5</td>
-                    <td class="odds">242.5 @ -110</td>
+                    <td class="fire">🔥</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> UNDER 242.5 (-110)</td>
+                    <td class="model">Total: 234.8</td>
+                    <td class="market">242.5 (-110)</td>
                     <td class="edge">7.7 pts</td>
                     <td class="fire">🔥🔥</td>
-                    <td class="pick">Utah Jazz (142)</td>
-                    <td class="odds">Home 142 / Away -170</td>
-                    <td class="edge">10.9 pts</td>
-                    <td class="fire">🔥</td>
                 </tr>
-
-                <tr class="elite">
+        
+                <tr class="game-separator">
                     <td class="time">09:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Detroit Pistons @ Sacramento Kings</div>
-                        <div class="records">(23-6) @ (7-22)</div>
-                    </td>
-                    <td class="pick">Sacramento Kings +9.0</td>
-                    <td class="odds">Sacramento Kings 9.0 @ -110</td>
+                    <td class="matchup">Detroit Pistons @ Sacramento Kings</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Sacramento Kings +9.0 (-110)</td>
+                    <td class="model">Detroit Pistons 117.4 - Sacramento Kings 111.7</td>
+                    <td class="market">Sacramento Kings 9.0 (-110)</td>
                     <td class="edge">4.1 pts</td>
-                    <td class="fire">🔥</td>
-                    <td class="pick">—</td>
-                    <td class="odds">227.5 @ -110</td>
-                    <td class="edge">1.6 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">Sacramento Kings (316)</td>
-                    <td class="odds">Home 316 / Away -400</td>
-                    <td class="edge">20.1 pts</td>
-                    <td class="fire">🔥🔥🔥</td>
-                </tr>
-
-                <tr class="">
-                    <td class="time">09:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Orlando Magic @ Portland Trail Blazers</div>
-                        <div class="records">(16-13) @ (12-17)</div>
-                    </td>
-                    <td class="pick">—</td>
-                    <td class="odds">Portland Trail Blazers 1.5 @ -110</td>
-                    <td class="edge">1.8 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">—</td>
-                    <td class="odds">231.5 @ -110</td>
-                    <td class="edge">0.4 pts</td>
-                    <td class="fire"></td>
-                    <td class="pick">—</td>
-                    <td class="odds">Home 100 / Away -120</td>
-                    <td class="edge">5.0 pts</td>
-                    <td class="fire"></td>
-                </tr>
-
-                <tr class="elite">
-                    <td class="time">10:10 PM CST</td>
-                    <td>
-                        <div class="matchup">Houston Rockets @ Los Angeles Clippers</div>
-                        <div class="records">(17-9) @ (7-21)</div>
-                    </td>
-                    <td class="pick">Los Angeles Clippers +8.0</td>
-                    <td class="odds">Los Angeles Clippers 8.0 @ -110</td>
-                    <td class="edge">3.2 pts</td>
-                    <td class="fire">🔥</td>
-                    <td class="pick">OVER 219.0</td>
-                    <td class="odds">219.0 @ -110</td>
-                    <td class="edge">10.9 pts</td>
-                    <td class="fire">🔥🔥🔥</td>
-                    <td class="pick">Los Angeles Clippers (245)</td>
-                    <td class="odds">Home 245 / Away -300</td>
-                    <td class="edge">15.4 pts</td>
                     <td class="fire">🔥🔥</td>
                 </tr>
-
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> None None (None)</td>
+                    <td class="model">Total: 229.1</td>
+                    <td class="market">227.5 (-110)</td>
+                    <td class="edge">1.6 pts</td>
+                    <td class="fire"></td>
+                </tr>
+        
+                <tr class="game-separator">
+                    <td class="time">09:10 PM CST</td>
+                    <td class="matchup">Orlando Magic @ Portland Trail Blazers</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> None  (None)</td>
+                    <td class="model">Orlando Magic 117.4 - Portland Trail Blazers 113.6</td>
+                    <td class="market">Portland Trail Blazers 1.5 (-110)</td>
+                    <td class="edge">1.8 pts</td>
+                    <td class="fire"></td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> None None (None)</td>
+                    <td class="model">Total: 231.1</td>
+                    <td class="market">231.5 (-110)</td>
+                    <td class="edge">0.4 pts</td>
+                    <td class="fire"></td>
+                </tr>
+        
+                <tr class="game-separator">
+                    <td class="time">10:10 PM CST</td>
+                    <td class="matchup">Houston Rockets @ Los Angeles Clippers</td>
+                    <td class="pick"><span class="type-badge type-spread">SPREAD</span> Los Angeles Clippers +8.0 (-110)</td>
+                    <td class="model">Houston Rockets 118.8 - Los Angeles Clippers 111.6</td>
+                    <td class="market">Los Angeles Clippers 8.0 (-110)</td>
+                    <td class="edge">2.7 pts</td>
+                    <td class="fire">🔥</td>
+                </tr>
+        
+                <tr>
+                    <td class="time"></td>
+                    <td class="matchup"></td>
+                    <td class="pick"><span class="type-badge type-total">TOTAL</span> OVER 219.0 (-110)</td>
+                    <td class="model">Total: 230.4</td>
+                    <td class="market">219.0 (-110)</td>
+                    <td class="edge">11.4 pts</td>
+                    <td class="fire">🔥🔥🔥🔥</td>
+                </tr>
+        
             </tbody>
         </table>
         
         <div class="footer">
-            NBA Prediction System NBA_v33.0.2.0 | December 23, 2025 @ 03:53 PM CST<br>
-            🔥🔥🔥 Elite | 🔥🔥 Strong | 🔥 Good
+            NBA Prediction System NBA_v33.0.2.0 | December 23, 2025 @ 04:01 PM CST<br>
+            Fire Rating: 🔥 (Good) to 🔥🔥🔥🔥🔥 (Elite)
         </div>
     </div>
 </body>
