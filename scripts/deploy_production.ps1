@@ -57,11 +57,11 @@ docker push $LatestTag
 # 6. Azure Deployment
 Write-Host "`n🚀 STEP 4: Azure Deployment" -ForegroundColor Yellow
 Write-Host "  Updating Container App to $ImageTag..." -ForegroundColor Gray
-az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image $ImageTag
+az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image $ImageTag --set-env-vars NBA_MODEL_VERSION=$Version
 
 # 7. Verification
 Write-Host "`n✅ STEP 5: Verification" -ForegroundColor Yellow
-$healthUrl = "https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health"
+$healthUrl = "https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io/health"
 Write-Host "  Checking health at $healthUrl..." -ForegroundColor Gray
 try {
     $response = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 30
