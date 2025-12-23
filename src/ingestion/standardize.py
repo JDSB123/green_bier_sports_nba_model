@@ -121,70 +121,246 @@ ESPN_TEAM_NAMES = {
 }
 
 # Mapping from other sources to ESPN team names
+# COMPREHENSIVE: Includes all known variants from The Odds API, API-Basketball, Action Network, etc.
 TEAM_NAME_MAPPING = {
-    # The Odds API -> ESPN
-    "Philadelphia 76ers": "Philadelphia 76ers",
-    "Phi 76ers": "Philadelphia 76ers",
-    "Phoenix Suns": "Phoenix Suns",
-    "PHX Suns": "Phoenix Suns",
-    "Los Angeles Lakers": "Los Angeles Lakers",
-    "LA Lakers": "Los Angeles Lakers",
-    "Los Angeles Clippers": "LA Clippers",
-    "LA Clippers": "LA Clippers",
-    "Golden State Warriors": "Golden State Warriors",
-    "GS Warriors": "Golden State Warriors",
-    "New York Knicks": "New York Knicks",
-    "NY Knicks": "New York Knicks",
+    # === ATLANTA HAWKS ===
+    "Atlanta Hawks": "Atlanta Hawks",
+    "ATL Hawks": "Atlanta Hawks",
+    "Hawks": "Atlanta Hawks",
+    "ATL": "Atlanta Hawks",
+    "Atlanta": "Atlanta Hawks",
+
+    # === BOSTON CELTICS ===
+    "Boston Celtics": "Boston Celtics",
+    "BOS Celtics": "Boston Celtics",
+    "Celtics": "Boston Celtics",
+    "BOS": "Boston Celtics",
+    "Boston": "Boston Celtics",
+
+    # === BROOKLYN NETS ===
     "Brooklyn Nets": "Brooklyn Nets",
     "BKN Nets": "Brooklyn Nets",
-    "San Antonio Spurs": "San Antonio Spurs",
-    "SA Spurs": "San Antonio Spurs",
-    "New Orleans Pelicans": "New Orleans Pelicans",
-    "NO Pelicans": "New Orleans Pelicans",
-    "Oklahoma City Thunder": "Oklahoma City Thunder",
-    "OKC Thunder": "Oklahoma City Thunder",
-    "Portland Trail Blazers": "Portland Trail Blazers",
-    "POR Trail Blazers": "Portland Trail Blazers",
-    "Toronto Raptors": "Toronto Raptors",
-    "TOR Raptors": "Toronto Raptors",
-    "Washington Wizards": "Washington Wizards",
-    "WAS Wizards": "Washington Wizards",
-    # API-Basketball -> ESPN (common variations)
-    "Lakers": "Los Angeles Lakers",
-    "Celtics": "Boston Celtics",
-    "Knicks": "New York Knicks",
-    "Warriors": "Golden State Warriors",
+    "BK Nets": "Brooklyn Nets",
     "Nets": "Brooklyn Nets",
-    "Heat": "Miami Heat",
-    "76ers": "Philadelphia 76ers",
-    "Sixers": "Philadelphia 76ers",
-    "Clippers": "LA Clippers",
-    "Nuggets": "Denver Nuggets",
-    "Thunder": "Oklahoma City Thunder",
-    "Pelicans": "New Orleans Pelicans",
-    "Spurs": "San Antonio Spurs",
-    "Trail Blazers": "Portland Trail Blazers",
-    "Blazers": "Portland Trail Blazers",
-    "Suns": "Phoenix Suns",
-    "Hawks": "Atlanta Hawks",
-    "Pistons": "Detroit Pistons",
+    "BKN": "Brooklyn Nets",
+    "Brooklyn": "Brooklyn Nets",
+
+    # === CHARLOTTE HORNETS ===
+    "Charlotte Hornets": "Charlotte Hornets",
+    "CHA Hornets": "Charlotte Hornets",
+    "Hornets": "Charlotte Hornets",
+    "CHA": "Charlotte Hornets",
+    "Charlotte": "Charlotte Hornets",
+
+    # === CHICAGO BULLS ===
+    "Chicago Bulls": "Chicago Bulls",
+    "CHI Bulls": "Chicago Bulls",
+    "Bulls": "Chicago Bulls",
+    "CHI": "Chicago Bulls",
+    "Chicago": "Chicago Bulls",
+
+    # === CLEVELAND CAVALIERS ===
+    "Cleveland Cavaliers": "Cleveland Cavaliers",
+    "CLE Cavaliers": "Cleveland Cavaliers",
     "Cavaliers": "Cleveland Cavaliers",
     "Cavs": "Cleveland Cavaliers",
-    "Bulls": "Chicago Bulls",
-    "Pacers": "Indiana Pacers",
+    "CLE": "Cleveland Cavaliers",
+    "Cleveland": "Cleveland Cavaliers",
+
+    # === DALLAS MAVERICKS ===
+    "Dallas Mavericks": "Dallas Mavericks",
+    "DAL Mavericks": "Dallas Mavericks",
     "Mavericks": "Dallas Mavericks",
     "Mavs": "Dallas Mavericks",
+    "DAL": "Dallas Mavericks",
+    "Dallas": "Dallas Mavericks",
+
+    # === DENVER NUGGETS ===
+    "Denver Nuggets": "Denver Nuggets",
+    "DEN Nuggets": "Denver Nuggets",
+    "Nuggets": "Denver Nuggets",
+    "DEN": "Denver Nuggets",
+    "Denver": "Denver Nuggets",
+
+    # === DETROIT PISTONS ===
+    "Detroit Pistons": "Detroit Pistons",
+    "DET Pistons": "Detroit Pistons",
+    "Pistons": "Detroit Pistons",
+    "DET": "Detroit Pistons",
+    "Detroit": "Detroit Pistons",
+
+    # === GOLDEN STATE WARRIORS ===
+    "Golden State Warriors": "Golden State Warriors",
+    "GS Warriors": "Golden State Warriors",
+    "GSW Warriors": "Golden State Warriors",
+    "Warriors": "Golden State Warriors",
+    "GSW": "Golden State Warriors",
+    "GS": "Golden State Warriors",
+    "Golden State": "Golden State Warriors",
+
+    # === HOUSTON ROCKETS ===
+    "Houston Rockets": "Houston Rockets",
+    "HOU Rockets": "Houston Rockets",
+    "Rockets": "Houston Rockets",
+    "HOU": "Houston Rockets",
+    "Houston": "Houston Rockets",
+
+    # === INDIANA PACERS ===
+    "Indiana Pacers": "Indiana Pacers",
+    "IND Pacers": "Indiana Pacers",
+    "Pacers": "Indiana Pacers",
+    "IND": "Indiana Pacers",
+    "Indiana": "Indiana Pacers",
+
+    # === LA CLIPPERS ===
+    "LA Clippers": "LA Clippers",
+    "Los Angeles Clippers": "LA Clippers",
+    "LAC Clippers": "LA Clippers",
+    "L.A. Clippers": "LA Clippers",
+    "Clippers": "LA Clippers",
+    "LAC": "LA Clippers",
+
+    # === LOS ANGELES LAKERS ===
+    "Los Angeles Lakers": "Los Angeles Lakers",
+    "LA Lakers": "Los Angeles Lakers",
+    "LAL Lakers": "Los Angeles Lakers",
+    "L.A. Lakers": "Los Angeles Lakers",
+    "Lakers": "Los Angeles Lakers",
+    "LAL": "Los Angeles Lakers",
+
+    # === MEMPHIS GRIZZLIES ===
+    "Memphis Grizzlies": "Memphis Grizzlies",
+    "MEM Grizzlies": "Memphis Grizzlies",
+    "Grizzlies": "Memphis Grizzlies",
+    "Grizz": "Memphis Grizzlies",
+    "MEM": "Memphis Grizzlies",
+    "Memphis": "Memphis Grizzlies",
+
+    # === MIAMI HEAT ===
+    "Miami Heat": "Miami Heat",
+    "MIA Heat": "Miami Heat",
+    "Heat": "Miami Heat",
+    "MIA": "Miami Heat",
+    "Miami": "Miami Heat",
+
+    # === MILWAUKEE BUCKS ===
+    "Milwaukee Bucks": "Milwaukee Bucks",
+    "MIL Bucks": "Milwaukee Bucks",
+    "Bucks": "Milwaukee Bucks",
+    "MIL": "Milwaukee Bucks",
+    "Milwaukee": "Milwaukee Bucks",
+
+    # === MINNESOTA TIMBERWOLVES ===
+    "Minnesota Timberwolves": "Minnesota Timberwolves",
+    "MIN Timberwolves": "Minnesota Timberwolves",
     "Timberwolves": "Minnesota Timberwolves",
     "Twolves": "Minnesota Timberwolves",
-    "Jazz": "Utah Jazz",
-    "Kings": "Sacramento Kings",
+    "T-Wolves": "Minnesota Timberwolves",
+    "Wolves": "Minnesota Timberwolves",
+    "MIN": "Minnesota Timberwolves",
+    "Minnesota": "Minnesota Timberwolves",
+
+    # === NEW ORLEANS PELICANS ===
+    "New Orleans Pelicans": "New Orleans Pelicans",
+    "NO Pelicans": "New Orleans Pelicans",
+    "NOP Pelicans": "New Orleans Pelicans",
+    "Pelicans": "New Orleans Pelicans",
+    "Pels": "New Orleans Pelicans",
+    "NOP": "New Orleans Pelicans",
+    "NO": "New Orleans Pelicans",
+    "New Orleans": "New Orleans Pelicans",
+
+    # === NEW YORK KNICKS ===
+    "New York Knicks": "New York Knicks",
+    "NY Knicks": "New York Knicks",
+    "NYK Knicks": "New York Knicks",
+    "Knicks": "New York Knicks",
+    "NYK": "New York Knicks",
+    "NY": "New York Knicks",
+    "New York": "New York Knicks",
+
+    # === OKLAHOMA CITY THUNDER ===
+    "Oklahoma City Thunder": "Oklahoma City Thunder",
+    "OKC Thunder": "Oklahoma City Thunder",
+    "Thunder": "Oklahoma City Thunder",
+    "OKC": "Oklahoma City Thunder",
+    "Oklahoma City": "Oklahoma City Thunder",
+    "Oklahoma": "Oklahoma City Thunder",
+
+    # === ORLANDO MAGIC ===
+    "Orlando Magic": "Orlando Magic",
+    "ORL Magic": "Orlando Magic",
     "Magic": "Orlando Magic",
+    "ORL": "Orlando Magic",
+    "Orlando": "Orlando Magic",
+
+    # === PHILADELPHIA 76ERS ===
+    "Philadelphia 76ers": "Philadelphia 76ers",
+    "PHI 76ers": "Philadelphia 76ers",
+    "Phi 76ers": "Philadelphia 76ers",
+    "76ers": "Philadelphia 76ers",
+    "Sixers": "Philadelphia 76ers",
+    "PHI": "Philadelphia 76ers",
+    "Philadelphia": "Philadelphia 76ers",
+    "Philly": "Philadelphia 76ers",
+
+    # === PHOENIX SUNS ===
+    "Phoenix Suns": "Phoenix Suns",
+    "PHX Suns": "Phoenix Suns",
+    "PHO Suns": "Phoenix Suns",
+    "Suns": "Phoenix Suns",
+    "PHX": "Phoenix Suns",
+    "PHO": "Phoenix Suns",
+    "Phoenix": "Phoenix Suns",
+
+    # === PORTLAND TRAIL BLAZERS ===
+    "Portland Trail Blazers": "Portland Trail Blazers",
+    "POR Trail Blazers": "Portland Trail Blazers",
+    "Trail Blazers": "Portland Trail Blazers",
+    "Blazers": "Portland Trail Blazers",
+    "POR": "Portland Trail Blazers",
+    "Portland": "Portland Trail Blazers",
+
+    # === SACRAMENTO KINGS ===
+    "Sacramento Kings": "Sacramento Kings",
+    "SAC Kings": "Sacramento Kings",
+    "Kings": "Sacramento Kings",
+    "SAC": "Sacramento Kings",
+    "Sacramento": "Sacramento Kings",
+
+    # === SAN ANTONIO SPURS ===
+    "San Antonio Spurs": "San Antonio Spurs",
+    "SA Spurs": "San Antonio Spurs",
+    "SAS Spurs": "San Antonio Spurs",
+    "Spurs": "San Antonio Spurs",
+    "SAS": "San Antonio Spurs",
+    "SA": "San Antonio Spurs",
+    "San Antonio": "San Antonio Spurs",
+
+    # === TORONTO RAPTORS ===
+    "Toronto Raptors": "Toronto Raptors",
+    "TOR Raptors": "Toronto Raptors",
     "Raptors": "Toronto Raptors",
-    "Rockets": "Houston Rockets",
+    "Raps": "Toronto Raptors",
+    "TOR": "Toronto Raptors",
+    "Toronto": "Toronto Raptors",
+
+    # === UTAH JAZZ ===
+    "Utah Jazz": "Utah Jazz",
+    "UTA Jazz": "Utah Jazz",
+    "Jazz": "Utah Jazz",
+    "UTA": "Utah Jazz",
+    "Utah": "Utah Jazz",
+
+    # === WASHINGTON WIZARDS ===
+    "Washington Wizards": "Washington Wizards",
+    "WAS Wizards": "Washington Wizards",
+    "WSH Wizards": "Washington Wizards",
     "Wizards": "Washington Wizards",
-    "Grizzlies": "Memphis Grizzlies",
-    "Bucks": "Milwaukee Bucks",
-    "Hornets": "Charlotte Hornets",
+    "Wiz": "Washington Wizards",
+    "WAS": "Washington Wizards",
+    "WSH": "Washington Wizards",
+    "Washington": "Washington Wizards",
 }
 
 # Reverse mapping: ESPN -> common abbreviations (for fuzzy matching)

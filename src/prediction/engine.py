@@ -45,6 +45,32 @@ from src.prediction.feature_validation import (
 from src.modeling.period_features import MODEL_CONFIGS
 from src.config import filter_thresholds
 
+# Import monitoring components (lazy loaded to avoid circular imports)
+_signal_tracker = None
+_feature_tracker = None
+
+def _get_signal_tracker():
+    """Lazy load signal tracker to avoid circular imports."""
+    global _signal_tracker
+    if _signal_tracker is None:
+        try:
+            from src.monitoring.signal_tracker import get_signal_tracker
+            _signal_tracker = get_signal_tracker()
+        except ImportError:
+            pass
+    return _signal_tracker
+
+def _get_feature_tracker():
+    """Lazy load feature tracker to avoid circular imports."""
+    global _feature_tracker
+    if _feature_tracker is None:
+        try:
+            from src.monitoring.feature_completeness import get_feature_tracker
+            _feature_tracker = get_feature_tracker()
+        except ImportError:
+            pass
+    return _feature_tracker
+
 logger = logging.getLogger(__name__)
 
 
@@ -112,7 +138,19 @@ class PeriodPredictor:
         # SIGNAL 2: POINT PREDICTION (model's predicted margin vs market line)
         # =====================================================================
         margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
-        predicted_margin = features.get(margin_key, 0)
+        predicted_margin = features.get(margin_key)
+
+        # CRITICAL: Log and warn when predicted margin is missing
+        if predicted_margin is None:
+            logger.warning(
+                f"[{self.period}_spread] MISSING predicted_margin feature (key: {margin_key}). "
+                f"Defaulting to 0. This may affect edge calculation accuracy. "
+                f"Available features with 'margin': {[k for k in features.keys() if 'margin' in k.lower()]}"
+            )
+            predicted_margin = 0
+        elif predicted_margin == 0:
+            # Log when margin is exactly 0 (might be intentional or might indicate issue)
+            logger.debug(f"[{self.period}_spread] predicted_margin is exactly 0 (may be intentional)")
 
         # EDGE CALCULATION:
         # spread_line is the HOME spread from sportsbooks (negative = home favored)
@@ -203,7 +241,19 @@ class PeriodPredictor:
         # SIGNAL 2: POINT PREDICTION (model's predicted total vs market line)
         # =====================================================================
         total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
-        predicted_total = features.get(total_key, total_line)
+        predicted_total = features.get(total_key)
+
+        # CRITICAL: Log and warn when predicted total is missing
+        if predicted_total is None:
+            logger.warning(
+                f"[{self.period}_total] MISSING predicted_total feature (key: {total_key}). "
+                f"Defaulting to market line ({total_line}). This may affect edge calculation. "
+                f"Available features with 'total': {[k for k in features.keys() if 'total' in k.lower()]}"
+            )
+            predicted_total = total_line
+        elif predicted_total == total_line:
+            # Log when predicted exactly matches line (edge will be 0)
+            logger.debug(f"[{self.period}_total] predicted_total equals market line ({total_line})")
 
         # EDGE CALCULATION:
         # Compare model's predicted total to market line

@@ -316,6 +316,121 @@ def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
+@app.get("/admin/monitoring")
+@limiter.limit("30/minute")
+def get_monitoring_stats(request: Request):
+    """
+    Get comprehensive monitoring statistics.
+
+    Returns:
+    - Signal agreement rates (classifier vs point prediction)
+    - Feature completeness rates
+    - Model drift detection status
+    - Recent alerts and warnings
+    """
+    stats = {
+        "timestamp": datetime.now().isoformat(),
+        "version": "6.5",
+    }
+
+    # Signal agreement tracking
+    try:
+        from src.monitoring.signal_tracker import get_signal_tracker
+        signal_tracker = get_signal_tracker()
+        stats["signal_agreement"] = signal_tracker.get_stats()
+        stats["signal_agreement"]["market_rates"] = signal_tracker.get_market_rates()
+        stats["signal_agreement"]["recent_disagreements"] = signal_tracker.get_recent_disagreements(5)
+    except Exception as e:
+        stats["signal_agreement"] = {"error": str(e)}
+
+    # Feature completeness tracking
+    try:
+        from src.monitoring.feature_completeness import get_feature_tracker
+        feature_tracker = get_feature_tracker()
+        stats["feature_completeness"] = feature_tracker.get_stats()
+        stats["feature_completeness"]["market_rates"] = feature_tracker.get_market_completeness()
+        stats["feature_completeness"]["top_missing"] = feature_tracker.get_most_missing_features(10)
+    except Exception as e:
+        stats["feature_completeness"] = {"error": str(e)}
+
+    # Model drift detection
+    try:
+        from src.monitoring.drift_detection import get_drift_detector
+        drift_detector = get_drift_detector()
+        stats["drift_detection"] = {
+            "market_stats": drift_detector.get_all_stats(),
+            "recent_alerts": drift_detector.get_recent_alerts(5),
+            "drifting_markets": [
+                market for market in drift_detector.metrics
+                if drift_detector.is_drifting(market)[0]
+            ],
+        }
+    except Exception as e:
+        stats["drift_detection"] = {"error": str(e)}
+
+    # Rate limiter stats
+    try:
+        from src.utils.rate_limiter import get_odds_api_limiter, get_api_basketball_limiter
+        stats["rate_limiters"] = {
+            "the_odds_api": get_odds_api_limiter().get_stats(),
+            "api_basketball": get_api_basketball_limiter().get_stats(),
+        }
+    except Exception as e:
+        stats["rate_limiters"] = {"error": str(e)}
+
+    # Circuit breaker stats
+    try:
+        from src.utils.circuit_breaker import get_odds_api_breaker, get_api_basketball_breaker
+        stats["circuit_breakers"] = {
+            "the_odds_api": get_odds_api_breaker().get_stats(),
+            "api_basketball": get_api_basketball_breaker().get_stats(),
+        }
+    except Exception as e:
+        stats["circuit_breakers"] = {"error": str(e)}
+
+    return stats
+
+
+@app.post("/admin/monitoring/reset")
+@limiter.limit("5/minute")
+def reset_monitoring_stats(request: Request):
+    """
+    Reset all monitoring statistics.
+
+    Use this at the start of a new tracking period.
+    """
+    reset_results = {}
+
+    try:
+        from src.monitoring.signal_tracker import get_signal_tracker
+        get_signal_tracker().reset()
+        reset_results["signal_tracker"] = "reset"
+    except Exception as e:
+        reset_results["signal_tracker"] = f"error: {e}"
+
+    try:
+        from src.monitoring.feature_completeness import get_feature_tracker
+        get_feature_tracker().reset()
+        reset_results["feature_tracker"] = "reset"
+    except Exception as e:
+        reset_results["feature_tracker"] = f"error: {e}"
+
+    try:
+        from src.monitoring.drift_detection import get_drift_detector
+        get_drift_detector().reset()
+        reset_results["drift_detector"] = "reset"
+    except Exception as e:
+        reset_results["drift_detector"] = f"error: {e}"
+
+    logger.info(f"Monitoring stats reset: {reset_results}")
+
+    return {
+        "status": "success",
+        "reset_results": reset_results,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+
 @app.post("/admin/cache/clear")
 @limiter.limit("5/minute")
 async def clear_cache(request: Request):
