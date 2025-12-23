@@ -1,32 +1,28 @@
-# NBA v6.5 - Production Container - STRICT MODE
+# NBA_v33.0.1.0 - Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
 #
-# v6.5 STRICT MODE: FRESH DATA ONLY
+# STRICT MODE: FRESH DATA ONLY
 # - NO file caching - all data fetched fresh from APIs
 # - NO silent fallbacks - errors are raised, not swallowed
+# - NO placeholders - all data must be explicitly provided
 # - ESPN is the ONLY source for team records
 # - Every request clears session cache before fetching
 #
-# 9 INDEPENDENT MARKETS (Q1 + 1H + FG × Spread/Total/Moneyline):
-#
-# First Quarter (3):
-# - Spread: q1_spread_model.joblib
-# - Total: q1_total_model.joblib
-# - Moneyline: q1_moneyline_model.joblib
+# 6 INDEPENDENT MARKETS (1H + FG × Spread/Total/Moneyline):
 #
 # First Half (3):
 # - Spread: 1h_spread_model.pkl (55.9% accuracy, +8.2% ROI)
 # - Total: 1h_total_model.pkl (58.1% accuracy, +11.4% ROI)
-# - Moneyline: 1h_moneyline_model.pkl
+# - Moneyline: 1h_moneyline_model.pkl (62.5% accuracy, +19.3% ROI)
 #
 # Full Game (3):
 # - Spread: fg_spread_model.joblib (60.6% accuracy, +15.7% ROI)
 # - Total: fg_total_model.joblib (59.2% accuracy, +13.1% ROI)
-# - Moneyline: fg_moneyline_model.joblib (65.5% accuracy, +25.1% ROI)
+# - Moneyline: fg_moneyline_model.joblib (68.1% accuracy, +30.0% ROI)
 #
-# Build: docker build -f Dockerfile -t nba-v65:latest .
+# Build: docker build -f Dockerfile -t nba-v33:latest .
 # Run:   docker compose up -d  (uses docker-compose.yml with read-only and secrets)
-# Export: docker save nba-v65:latest | gzip > nba_v6.5_model.tar.gz
+# Export: docker save nba-v33:latest | gzip > nba_v33.0.1.0_model.tar.gz
 
 # =============================================================================
 # Stage 1: Builder - Install dependencies
@@ -51,8 +47,8 @@ FROM python:3.11.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="6.5"
-LABEL description="NBA Production Picks Model - STRICT MODE - 9 Independent Markets (Q1+1H+FG) - FRESH DATA ONLY"
+LABEL version="NBA_v33.0.1.0"
+LABEL description="NBA Production Picks Model - STRICT MODE - 6 Independent Markets (1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app
 
@@ -156,10 +152,10 @@ ENV FILTER_Q1_MIN_EDGE_PCT=0.05
 # CORS Configuration
 ENV ALLOWED_ORIGINS=*
 
-# v6.5 STRICT MODE - All 9 markets required, FRESH DATA ONLY (baked-in env defaults)
-ENV NBA_MODEL_VERSION=6.5-STRICT
-ENV NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
-ENV NBA_PERIODS=first_quarter,first_half,full_game
+# STRICT MODE - All 6 markets required, FRESH DATA ONLY (baked-in env defaults)
+ENV NBA_MODEL_VERSION=NBA_v33.0.1.0
+ENV NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+ENV NBA_PERIODS=first_half,full_game
 ENV NBA_STRICT_MODE=true
 ENV NBA_CACHE_DISABLED=true
 

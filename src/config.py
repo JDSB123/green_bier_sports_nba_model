@@ -81,9 +81,7 @@ class FilterThresholds:
     - FILTER_MONEYLINE_MIN_CONFIDENCE
     - FILTER_MONEYLINE_MIN_EDGE_PCT
 
-    Q1 thresholds (DEPRECATED in v6.6 - Q1 markets disabled):
-    - FILTER_Q1_MIN_CONFIDENCE (optional, no longer used)
-    - FILTER_Q1_MIN_EDGE_PCT (optional, no longer used)
+    NBA_v33.0.1.0: 6 markets only (1H + FG). No Q1 markets.
     """
     # Spread thresholds
     spread_min_confidence: float = field(
@@ -107,15 +105,6 @@ class FilterThresholds:
     )
     moneyline_min_edge_pct: float = field(
         default_factory=lambda: float(_env_required("FILTER_MONEYLINE_MIN_EDGE_PCT"))
-    )
-
-    # Q1-specific thresholds (DISABLED in v6.6 - Q1 markets removed)
-    # Kept for backward compatibility with .env but not used
-    q1_min_confidence: float = field(
-        default_factory=lambda: float(os.getenv("FILTER_Q1_MIN_CONFIDENCE", "0.65"))
-    )
-    q1_min_edge_pct: float = field(
-        default_factory=lambda: float(os.getenv("FILTER_Q1_MIN_EDGE_PCT", "15.0"))
     )
 
 

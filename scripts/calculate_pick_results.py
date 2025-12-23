@@ -246,118 +246,30 @@ def calculate_result(pick_type: str, segment: str, pick_team: str, line: float,
     return "Unknown", "TBD"
 
 
-def load_picks(picks_file: Optional[Path] = None) -> List[Dict]:
+def load_picks(picks_file: Path) -> List[Dict]:
     """
-    Load picks from JSON file or return default picks.
-    
+    Load picks from JSON file. REQUIRED - no default picks.
+
     Picks file should be a JSON array of pick dictionaries with keys:
     - league, matchup, segment, pick, odds, stake, pick_type, pick_team, line
+
+    Raises:
+        FileNotFoundError: If picks file does not exist
+        ValueError: If picks file is not provided
     """
-    if picks_file and picks_file.exists():
-        with open(picks_file, 'r') as f:
-            return json.load(f)
-    
-    # Return empty list if no picks file provided
-    # User should provide picks via --picks-file argument
-    return []
+    if not picks_file:
+        raise ValueError("--picks-file is REQUIRED. No default picks allowed.")
 
+    if not picks_file.exists():
+        raise FileNotFoundError(f"Picks file not found: {picks_file}")
 
-# Default picks (can be overridden with --picks-file)
-DEFAULT_PICKS = [
-    # NBA
-    {"league": "NBA", "matchup": "New York Knicks @ Orlando Magic", "segment": "FG Total", 
-     "pick": "Over 224.5", "odds": -110, "stake": 33, "pick_type": "Total", "pick_team": "Over", "line": 224.5},
-    {"league": "NBA", "matchup": "New York Knicks @ Orlando Magic", "segment": "FG Spread", 
-     "pick": "Orlando Magic +4.5", "odds": -112, "stake": 33, "pick_type": "Spread", "pick_team": "Orlando Magic", "line": 4.5},
-    {"league": "NBA", "matchup": "New York Knicks @ Orlando Magic", "segment": "Moneyline", 
-     "pick": "Orlando Magic ML", "odds": 160, "stake": 33, "pick_type": "Moneyline", "pick_team": "Orlando Magic", "line": None},
-    {"league": "NBA", "matchup": "New York Knicks @ Orlando Magic", "segment": "1H Spread", 
-     "pick": "Orlando Magic +2.5", "odds": -115, "stake": 33, "pick_type": "Spread", "pick_team": "Orlando Magic", "line": 2.5},
-    {"league": "NBA", "matchup": "San Antonio Spurs @ Oklahoma City Thunder", "segment": "FG Spread", 
-     "pick": "San Antonio Spurs +11", "odds": -110, "stake": 33, "pick_type": "Spread", "pick_team": "San Antonio Spurs", "line": 11},
-    {"league": "NBA", "matchup": "San Antonio Spurs @ Oklahoma City Thunder", "segment": "FG Total", 
-     "pick": "Under 232", "odds": -110, "stake": 33, "pick_type": "Total", "pick_team": "Under", "line": 232},
-    {"league": "NBA", "matchup": "San Antonio Spurs @ Oklahoma City Thunder", "segment": "1H Spread", 
-     "pick": "San Antonio Spurs +6", "odds": -105, "stake": 33, "pick_type": "Spread", "pick_team": "San Antonio Spurs", "line": 6},
-    {"league": "NBA", "matchup": "San Antonio Spurs @ Oklahoma City Thunder", "segment": "Moneyline", 
-     "pick": "San Antonio Spurs ML", "odds": 380, "stake": 33, "pick_type": "Moneyline", "pick_team": "San Antonio Spurs", "line": None},
-    
-    # NCAAM
-    {"league": "NCAAM", "matchup": "Memphis @ Louisville", "segment": "FG Spread", 
-     "pick": "Memphis +17", "odds": -110, "stake": 50, "pick_type": "Spread", "pick_team": "Memphis", "line": 17},
-    {"league": "NCAAM", "matchup": "Memphis @ Louisville", "segment": "1H Spread", 
-     "pick": "Memphis +10", "odds": -110, "stake": 50, "pick_type": "Spread", "pick_team": "Memphis", "line": 10},
-    {"league": "NCAAM", "matchup": "Memphis @ Louisville", "segment": "1H Total", 
-     "pick": "Over 77", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 77},
-    {"league": "NCAAM", "matchup": "West Virginia @ Ohio State", "segment": "FG Spread", 
-     "pick": "Ohio State -3.5", "odds": -107, "stake": 50, "pick_type": "Spread", "pick_team": "Ohio State", "line": -3.5},
-    {"league": "NCAAM", "matchup": "West Virginia @ Ohio State", "segment": "FG Total", 
-     "pick": "Over 145", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 145},
-    {"league": "NCAAM", "matchup": "West Virginia @ Ohio State", "segment": "1H Total", 
-     "pick": "Over 68.5", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 68.5},
-    {"league": "NCAAM", "matchup": "Coastal Carolina @ Grand Canyon", "segment": "FG Total", 
-     "pick": "Over 143", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 143},
-    {"league": "NCAAM", "matchup": "Coastal Carolina @ Grand Canyon", "segment": "FG Spread", 
-     "pick": "Coastal Carolina +17.5", "odds": -110, "stake": 50, "pick_type": "Spread", "pick_team": "Coastal Carolina", "line": 17.5},
-    {"league": "NCAAM", "matchup": "Coastal Carolina @ Grand Canyon", "segment": "1H Total", 
-     "pick": "Over 67.5", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 67.5},
-    {"league": "NCAAM", "matchup": "Coastal Carolina @ Grand Canyon", "segment": "1H Spread", 
-     "pick": "Coastal Carolina +9.5", "odds": -110, "stake": 50, "pick_type": "Spread", "pick_team": "Coastal Carolina", "line": 9.5},
-    {"league": "NCAAM", "matchup": "SMU @ LSU", "segment": "FG Total", 
-     "pick": "Over 158.5", "odds": -115, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 158.5},
-    {"league": "NCAAM", "matchup": "SMU @ LSU", "segment": "1H Total", 
-     "pick": "Over 75", "odds": -111, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 75},
-    {"league": "NCAAM", "matchup": "SMU @ LSU", "segment": "2H Total", 
-     "pick": "Under 83", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Under", "line": 83},
-    {"league": "NCAAM", "matchup": "UC Riverside @ BYU", "segment": "FG Spread", 
-     "pick": "UC Riverside +34", "odds": -110, "stake": 50, "pick_type": "Spread", "pick_team": "UC Riverside", "line": 34},
-    {"league": "NCAAM", "matchup": "UC Riverside @ BYU", "segment": "FG Total", 
-     "pick": "Over 155", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 155},
-    {"league": "NCAAM", "matchup": "Mississippi State @ Utah", "segment": "FG Total", 
-     "pick": "Over 153.5", "odds": -115, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 153.5},
-    {"league": "NCAAM", "matchup": "Mississippi State @ Utah", "segment": "1H Total", 
-     "pick": "Over 71.5", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 71.5},
-    {"league": "NCAAM", "matchup": "Arizona @ Alabama", "segment": "FG Spread", 
-     "pick": "Alabama +3", "odds": -118, "stake": 50, "pick_type": "Spread", "pick_team": "Alabama", "line": 3},
-    {"league": "NCAAM", "matchup": "Arizona @ Alabama", "segment": "Moneyline", 
-     "pick": "Alabama ML", "odds": 131, "stake": 50, "pick_type": "Moneyline", "pick_team": "Alabama", "line": None},
-    {"league": "NCAAM", "matchup": "Arizona @ Alabama", "segment": "1H Spread", 
-     "pick": "Alabama +1.5", "odds": -114, "stake": 50, "pick_type": "Spread", "pick_team": "Alabama", "line": 1.5},
-    {"league": "NCAAM", "matchup": "Arizona @ Alabama", "segment": "2H Total", 
-     "pick": "Under 92.5", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Under", "line": 92.5},
-    {"league": "NCAAM", "matchup": "Arizona @ Alabama", "segment": "2H Spread", 
-     "pick": "Alabama +3", "odds": -110, "stake": 50, "pick_type": "Spread", "pick_team": "Alabama", "line": 3},
-    {"league": "NCAAM", "matchup": "Pepperdine @ Cal State Bakersfield", "segment": "FG Total", 
-     "pick": "Over 148", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 148},
-    {"league": "NCAAM", "matchup": "Pepperdine @ Cal State Bakersfield", "segment": "1H Total", 
-     "pick": "Over 69.5", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 69.5},
-    {"league": "NCAAM", "matchup": "Tennessee State @ UNLV", "segment": "FG Total", 
-     "pick": "Over 161", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 161},
-    {"league": "NCAAM", "matchup": "Tennessee State @ UNLV", "segment": "1H Total", 
-     "pick": "Over 76", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 76},
-    {"league": "NCAAM", "matchup": "Tennessee State @ UNLV", "segment": "2H Total", 
-     "pick": "Over 83.5", "odds": -110, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 83.5},
-    {"league": "NCAAM", "matchup": "UCLA @ Gonzaga", "segment": "2H Spread", 
-     "pick": "Gonzaga -5", "odds": -105, "stake": 50, "pick_type": "Spread", "pick_team": "Gonzaga", "line": -5},
-    {"league": "NCAAM", "matchup": "UCLA @ Gonzaga", "segment": "2H Total", 
-     "pick": "Over 79", "odds": -106, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 79},
-    
-    # NCAAF - no scores available
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "Team Total", 
-     "pick": "Army Over 16", "odds": -122, "stake": 50, "pick_type": "Team Total", "pick_team": "Army", "line": 16},
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "FG Total", 
-     "pick": "Over 37.5", "odds": -115, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 37.5},
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "1H Spread", 
-     "pick": "Army +3", "odds": -105, "stake": 50, "pick_type": "Spread", "pick_team": "Army", "line": 3},
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "1H Moneyline", 
-     "pick": "Army ML", "odds": 160, "stake": 50, "pick_type": "Moneyline", "pick_team": "Army", "line": None},
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "1H Total", 
-     "pick": "Over 17.5", "odds": -105, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 17.5},
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "2H Spread", 
-     "pick": "Army +3", "odds": -120, "stake": 50, "pick_type": "Spread", "pick_team": "Army", "line": 3},
-    {"league": "NCAAF", "matchup": "Army @ Navy", "segment": "2H Total", 
-     "pick": "Over 29", "odds": -125, "stake": 50, "pick_type": "Total", "pick_team": "Over", "line": 29},
-]
+    with open(picks_file, 'r') as f:
+        picks = json.load(f)
+
+    if not picks:
+        raise ValueError(f"Picks file is empty: {picks_file}")
+
+    return picks
 
 
 def calculate_risk_to_win(odds: int, stake: int) -> Tuple[float, float]:
@@ -389,8 +301,8 @@ def main():
     parser.add_argument(
         "--picks-file",
         type=Path,
-        default=None,
-        help="Path to JSON file containing picks array (if not provided, uses hardcoded DEFAULT_PICKS)",
+        required=True,
+        help="Path to JSON file containing picks array (REQUIRED - no defaults)",
     )
     parser.add_argument(
         "--date",
@@ -423,15 +335,11 @@ def main():
         print(f"   Please provide a valid scoreboard file with --scoreboard")
         sys.exit(1)
 
-    # Load picks
-    if args.picks_file:
+    # Load picks - REQUIRED, no defaults
+    try:
         all_picks = load_picks(args.picks_file)
-    else:
-        all_picks = DEFAULT_PICKS
-        print("⚠️  Using hardcoded DEFAULT_PICKS. Consider using --picks-file for custom picks.")
-
-    if not all_picks:
-        print("❌ No picks provided. Use --picks-file to specify a picks JSON file.")
+    except (FileNotFoundError, ValueError) as e:
+        print(f"❌ {e}")
         sys.exit(1)
 
     # NBA scores (from previous data - can be removed if scoreboard has all data)

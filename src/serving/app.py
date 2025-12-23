@@ -1,9 +1,9 @@
 """
-NBA v6.6 - FastAPI Prediction Server - STRICT MODE
+NBA_v33.0.1.0 - FastAPI Prediction Server - STRICT MODE
 
-FRESH DATA ONLY: No file caching, no silent fallbacks.
+FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
-PRODUCTION: 6 INDEPENDENT Markets (Q1 DISABLED)
+PRODUCTION: 6 INDEPENDENT Markets
 
 First Half (1H):
 - 1H Spread
@@ -15,9 +15,8 @@ Full Game (FG):
 - FG Total
 - FG Moneyline
 
-Models are independent and period-specific. Q1 models are disabled in v6.6.
-
 STRICT MODE: Every request fetches fresh data from APIs.
+No assumptions, no defaults - all data must be explicitly provided.
 """
 import os
 import json
@@ -90,10 +89,10 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - v6.0 ---
+# --- Request/Response Models - NBA_v33.0.1.0 ---
 
 class GamePredictionRequest(BaseModel):
-    """Request for single game prediction - v6.0 all 9 markets."""
+    """Request for single game prediction - 6 markets (1H + FG)."""
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
     # Full game lines - REQUIRED
@@ -102,16 +101,11 @@ class GamePredictionRequest(BaseModel):
     # First half lines - optional but recommended
     fh_spread_line: Optional[float] = None
     fh_total_line: Optional[float] = None
-    # First quarter lines - optional
-    q1_spread_line: Optional[float] = None
-    q1_total_line: Optional[float] = None
     # Moneyline odds - optional but recommended
     home_ml_odds: Optional[int] = Field(None, example=-150)
     away_ml_odds: Optional[int] = Field(None, example=130)
     fh_home_ml_odds: Optional[int] = None
     fh_away_ml_odds: Optional[int] = None
-    q1_home_ml_odds: Optional[int] = None
-    q1_away_ml_odds: Optional[int] = None
 
 
 class MarketPrediction(BaseModel):
@@ -123,7 +117,6 @@ class MarketPrediction(BaseModel):
 
 
 class GamePredictions(BaseModel):
-    first_quarter: Dict[str, Any] = {}
     first_half: Dict[str, Any] = {}
     full_game: Dict[str, Any] = {}
 
@@ -134,7 +127,7 @@ class SlateResponse(BaseModel):
     total_plays: int
 
 
-# --- API Setup - v6.0 ---
+# --- API Setup - NBA_v33.0.1.0 ---
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
@@ -146,7 +139,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    v6.0: 9 INDEPENDENT markets (Q1+1H+FG for Spread, Total, Moneyline)
+    NBA_v33.0.1.0: 6 INDEPENDENT markets (1H+FG for Spread, Total, Moneyline)
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -167,7 +160,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"v6.6 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"NBA_v33.0.1.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -179,14 +172,13 @@ async def lifespan(app: FastAPI):
     else:
         logger.error(f"Models directory does not exist: {models_dir}")
 
-    # STRICT MODE: v6.6 Q1 disabled. Require 1H + FG models (6 total). No fallbacks.
-    logger.info("STRICT MODE v6.6: Q1 disabled — using 1H/FG only (6 models)")
+    # STRICT MODE: 1H + FG models (6 total). No fallbacks.
+    logger.info("STRICT MODE NBA_v33.0.1.0: Using 1H/FG only (6 models)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
-    # v6.6: NO FILE CACHING - all data fetched fresh from APIs per request
-    # Legacy joblib cache files are no longer used
-    logger.info("v6.6 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    # NO FILE CACHING - all data fetched fresh from APIs per request
+    logger.info("NBA_v33.0.1.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -196,17 +188,17 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"NBA v6.6 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
+    logger.info(f"NBA_v33.0.1.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
     # === SHUTDOWN ===
-    logger.info("NBA v6.0 shutting down")
+    logger.info("NBA_v33.0.1.0 shutting down")
 
 
 app = FastAPI(
     title="NBA NBA_v33.0.1.0 - STRICT MODE Production Picks",
-    description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline (Q1 disabled). FRESH DATA ONLY - No caching, no fallbacks.",
+    description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan
 )
@@ -278,7 +270,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v6.6 with 6 markets (Q1 disabled)."""
+    """Check API health - NBA_v33.0.1.0 with 6 markets."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -290,7 +282,7 @@ def health(request: Request):
         "status": "ok",
         "version": RELEASE_VERSION,
         "mode": "STRICT",
-        "architecture": "6-model independent (Q1 disabled)",
+        "architecture": "6-model independent (1H + FG)",
         "caching": "DISABLED - fresh data every request",
         "markets": model_info.get("markets", 0),
         "markets_list": [

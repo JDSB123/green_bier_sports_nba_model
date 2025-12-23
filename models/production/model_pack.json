@@ -1,13 +1,13 @@
 {
-  "version": "6.4.0",
-  "created_at": "2025-12-21T00:00:00Z",
-  "git_commit": "876fafe19716ceea23dbf06a5933f383b82679cd",
-  "git_tag": "v6.4",
-  "release_notes": "v6.4 Production - Single source of truth for secrets and config, all 9 markets deployed",
+  "version": "NBA_v33.0.1.0",
+  "created_at": "2025-12-23T00:00:00Z",
+  "git_commit": "9ac348a",
+  "git_tag": "NBA_v33.0.1.0",
+  "release_notes": "NBA_v33.0.1.0 Production - 6 markets (1H+FG), strict mode, no placeholders, no silent fallbacks",
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-20",
-    "total_predictions": 696,
+    "total_predictions": 464,
     "source": "docs/BACKTEST_STATUS.md"
   },
   "backtest_results": {
@@ -46,29 +46,6 @@
       "roi": 0.193,
       "predictions": 232,
       "status": "production"
-    },
-    "q1_spread": {
-      "accuracy": 0.545,
-      "roi": 0.040,
-      "predictions": 232,
-      "status": "production",
-      "filter_required": true
-    },
-    "q1_total": {
-      "accuracy": 0.538,
-      "roi": 0.025,
-      "predictions": 232,
-      "status": "production",
-      "filter_required": true
-    },
-    "q1_moneyline": {
-      "accuracy": 0.530,
-      "roi": 0.012,
-      "predictions": 232,
-      "status": "production",
-      "filter_required": true,
-      "high_conf_accuracy": 0.588,
-      "high_conf_roi": 0.123
     }
   },
   "model_algorithm": {
@@ -114,24 +91,6 @@
       "model_file": "1h_moneyline_model.pkl",
       "features_file": "1h_moneyline_features.pkl",
       "features": 10
-    },
-    "q1_spread": {
-      "status": "production",
-      "model_file": "q1_spread_model.joblib",
-      "features": 9,
-      "note": "Use 60% min confidence filter"
-    },
-    "q1_total": {
-      "status": "production",
-      "model_file": "q1_total_model.joblib",
-      "features": 9,
-      "note": "Use 60% min confidence filter"
-    },
-    "q1_moneyline": {
-      "status": "production",
-      "model_file": "q1_moneyline_model.joblib",
-      "features": 9,
-      "note": "Use 60% min confidence filter"
     }
   },
   "filter_thresholds": {
@@ -146,18 +105,14 @@
     "moneyline": {
       "min_confidence": 0.55,
       "min_edge_pct": 0.03
-    },
-    "q1": {
-      "min_confidence": 0.60,
-      "min_edge_pct": 0.05
     }
   },
   "deployment": {
     "container_app": "nba-gbsv-api",
     "resource_group": "nba-gbsv-model-rg",
-    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:v6.10",
+    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.1.0",
     "health_endpoint": "/health",
-    "markets_required": 9
+    "markets_required": 6
   },
   "performance_history": []
 }

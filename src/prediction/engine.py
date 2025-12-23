@@ -866,17 +866,15 @@ class UnifiedPredictionEngine:
 
     def get_model_info(self) -> Dict[str, Any]:
         """Return info about loaded models."""
-        # Updated to v6.6 (Q1 disabled)
         return {
-            "version": "6.6",
-            "architecture": "6-model independent (Q1 disabled)",
+            "version": "NBA_v33.0.1.0",
+            "architecture": "6-model independent (1H + FG)",
             "markets": sum(1 for v in self.loaded_models.values() if v),
             "markets_list": [k for k, v in self.loaded_models.items() if v],
-            "periods": ["first_half", "full_game"],  # Q1 removed
+            "periods": ["first_half", "full_game"],
             "models_dir": str(self.models_dir),
             "loaded_models": self.loaded_models,
             "predictors": {
-                "q1": False,  # Always disabled in v6.6
                 "1h": self.h1_predictor is not None,
                 "fg": self.fg_predictor is not None,
             },

@@ -557,29 +557,42 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     if not home_valid or not away_valid:
                         continue
                     
-                    # Extract betting percentages
-                    # Action Network structure varies - handle different formats
-                    betting_info = game.get("betting_info", {}) or game.get("odds", {}) or {}
-                    
-                    # Spread data
-                    spread_data = betting_info.get("spread", {}) or {}
-                    spread_line = spread_data.get("home_spread") or spread_data.get("line") or 0
-                    spread_home_pct = spread_data.get("home_tickets") or spread_data.get("home_pct") or 50
-                    spread_home_money = spread_data.get("home_money") or spread_data.get("home_money_pct") or 50
+                    # Extract betting percentages - STRICT: raise on missing critical data
+                    betting_info = game.get("betting_info") or game.get("odds")
+                    if not betting_info:
+                        logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - no betting_info")
+                        continue
+
+                    # Spread data - REQUIRED for spreads market
+                    spread_data = betting_info.get("spread", {})
+                    spread_line = spread_data.get("home_spread") or spread_data.get("line")
+                    if spread_line is None:
+                        logger.warning(f"STRICT MODE: No spread line for {home_team} vs {away_team}")
+                        spread_line = None  # Will be None, not 0
+                    spread_home_pct = spread_data.get("home_tickets") or spread_data.get("home_pct")
+                    spread_home_money = spread_data.get("home_money") or spread_data.get("home_money_pct")
                     spread_open = spread_data.get("opening") or spread_data.get("open") or spread_line
-                    
-                    # Total data
-                    total_data = betting_info.get("total", {}) or {}
-                    total_line = total_data.get("line") or total_data.get("total") or 0
-                    over_pct = total_data.get("over_tickets") or total_data.get("over_pct") or 50
-                    over_money = total_data.get("over_money") or total_data.get("over_money_pct") or 50
+
+                    # Total data - REQUIRED for totals market
+                    total_data = betting_info.get("total", {})
+                    total_line = total_data.get("line") or total_data.get("total")
+                    if total_line is None:
+                        logger.warning(f"STRICT MODE: No total line for {home_team} vs {away_team}")
+                        total_line = None  # Will be None, not 0
+                    over_pct = total_data.get("over_tickets") or total_data.get("over_pct")
+                    over_money = total_data.get("over_money") or total_data.get("over_money_pct")
                     total_open = total_data.get("opening") or total_data.get("open") or total_line
-                    
+
                     # Moneyline data
-                    ml_data = betting_info.get("moneyline", {}) or betting_info.get("ml", {}) or {}
-                    ml_home_pct = ml_data.get("home_tickets") or ml_data.get("home_pct") or 50
-                    ml_home_money = ml_data.get("home_money") or ml_data.get("home_money_pct") or 50
+                    ml_data = betting_info.get("moneyline", {}) or betting_info.get("ml", {})
+                    ml_home_pct = ml_data.get("home_tickets") or ml_data.get("home_pct")
+                    ml_home_money = ml_data.get("home_money") or ml_data.get("home_money_pct")
                     
+                    # Skip game if no betting lines at all
+                    if spread_line is None and total_line is None:
+                        logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - no lines available")
+                        continue
+
                     splits = GameSplits(
                         event_id=str(game.get("id", "")),
                         home_team=home_team,
@@ -588,24 +601,24 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             game.get("start_time", datetime.now().isoformat()).replace("Z", "+00:00")
                         ),
                         source="action_network",
-                        spread_line=float(spread_line) if spread_line else 0.0,
-                        spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct else 50.0,
-                        spread_away_ticket_pct=100 - float(spread_home_pct) if spread_home_pct else 50.0,
-                        spread_home_money_pct=float(spread_home_money) if spread_home_money else 50.0,
-                        spread_away_money_pct=100 - float(spread_home_money) if spread_home_money else 50.0,
-                        spread_open=float(spread_open) if spread_open else 0.0,
-                        spread_current=float(spread_line) if spread_line else 0.0,
-                        total_line=float(total_line) if total_line else 0.0,
-                        over_ticket_pct=float(over_pct) if over_pct else 50.0,
-                        under_ticket_pct=100 - float(over_pct) if over_pct else 50.0,
-                        over_money_pct=float(over_money) if over_money else 50.0,
-                        under_money_pct=100 - float(over_money) if over_money else 50.0,
-                        total_open=float(total_open) if total_open else 0.0,
-                        total_current=float(total_line) if total_line else 0.0,
-                        ml_home_ticket_pct=float(ml_home_pct) if ml_home_pct else 50.0,
-                        ml_away_ticket_pct=100 - float(ml_home_pct) if ml_home_pct else 50.0,
-                        ml_home_money_pct=float(ml_home_money) if ml_home_money else 50.0,
-                        ml_away_money_pct=100 - float(ml_home_money) if ml_home_money else 50.0,
+                        spread_line=float(spread_line) if spread_line is not None else None,
+                        spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct is not None else None,
+                        spread_away_ticket_pct=100 - float(spread_home_pct) if spread_home_pct is not None else None,
+                        spread_home_money_pct=float(spread_home_money) if spread_home_money is not None else None,
+                        spread_away_money_pct=100 - float(spread_home_money) if spread_home_money is not None else None,
+                        spread_open=float(spread_open) if spread_open is not None else None,
+                        spread_current=float(spread_line) if spread_line is not None else None,
+                        total_line=float(total_line) if total_line is not None else None,
+                        over_ticket_pct=float(over_pct) if over_pct is not None else None,
+                        under_ticket_pct=100 - float(over_pct) if over_pct is not None else None,
+                        over_money_pct=float(over_money) if over_money is not None else None,
+                        under_money_pct=100 - float(over_money) if over_money is not None else None,
+                        total_open=float(total_open) if total_open is not None else None,
+                        total_current=float(total_line) if total_line is not None else None,
+                        ml_home_ticket_pct=float(ml_home_pct) if ml_home_pct is not None else None,
+                        ml_away_ticket_pct=100 - float(ml_home_pct) if ml_home_pct is not None else None,
+                        ml_home_money_pct=float(ml_home_money) if ml_home_money is not None else None,
+                        ml_away_money_pct=100 - float(ml_home_money) if ml_home_money is not None else None,
                         updated_at=dt.datetime.now(),
                     )
                     

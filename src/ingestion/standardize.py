@@ -38,35 +38,56 @@ from src.config import settings
 
 logger = get_logger(__name__)
 
-# Best-effort read-through cache (does NOT replace team_mapping.json as source of truth)
+# Best-effort read-through cache with TTL (does NOT replace team_mapping.json as source of truth)
 _VARIANT_OVERRIDE_CACHE_PATH = Path(settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
 _VARIANT_OVERRIDE_CACHE: dict[str, str] | None = None
+_VARIANT_OVERRIDE_CACHE_LOADED_AT: float | None = None
+_VARIANT_OVERRIDE_CACHE_TTL_HOURS = 4  # NBA_v33.0.1.0: Cache expires after 4 hours
 
 
 def _load_variant_override_cache() -> dict[str, str]:
-    global _VARIANT_OVERRIDE_CACHE
-    if _VARIANT_OVERRIDE_CACHE is not None:
-        return _VARIANT_OVERRIDE_CACHE
+    """Load variant override cache with TTL check.
+
+    NBA_v33.0.1.0: Added TTL to prevent stale cache issues.
+    """
+    global _VARIANT_OVERRIDE_CACHE, _VARIANT_OVERRIDE_CACHE_LOADED_AT
+    import time
+
+    current_time = time.time()
+
+    # Check if cache is still fresh
+    if _VARIANT_OVERRIDE_CACHE is not None and _VARIANT_OVERRIDE_CACHE_LOADED_AT is not None:
+        age_hours = (current_time - _VARIANT_OVERRIDE_CACHE_LOADED_AT) / 3600
+        if age_hours < _VARIANT_OVERRIDE_CACHE_TTL_HOURS:
+            return _VARIANT_OVERRIDE_CACHE
+        else:
+            logger.info(f"Team variant cache expired (age: {age_hours:.1f}h), reloading")
+            _VARIANT_OVERRIDE_CACHE = None
+
     try:
         if _VARIANT_OVERRIDE_CACHE_PATH.exists():
             with open(_VARIANT_OVERRIDE_CACHE_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict):
                     _VARIANT_OVERRIDE_CACHE = {str(k).lower(): str(v) for k, v in data.items()}
+                    _VARIANT_OVERRIDE_CACHE_LOADED_AT = current_time
                     return _VARIANT_OVERRIDE_CACHE
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Failed to load variant override cache: {e}")
+
     _VARIANT_OVERRIDE_CACHE = {}
+    _VARIANT_OVERRIDE_CACHE_LOADED_AT = current_time
     return _VARIANT_OVERRIDE_CACHE
 
 
 def _persist_variant_override_cache(cache: dict[str, str]) -> None:
+    """Persist variant override cache to disk."""
     try:
         _VARIANT_OVERRIDE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(_VARIANT_OVERRIDE_CACHE_PATH, "w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False, indent=2, sort_keys=True)
-    except Exception:
-        return
+    except Exception as e:
+        logger.warning(f"Failed to persist variant override cache: {e}")
 
 
 def _cache_variant_override(*, raw: str, normalized: str) -> None:
@@ -82,8 +103,8 @@ def _cache_variant_override(*, raw: str, normalized: str) -> None:
             return
         cache[key] = normalized
         _persist_variant_override_cache(cache)
-    except Exception:
-        return
+    except Exception as e:
+        logger.warning(f"Failed to cache variant override: {e}")
 
 # ESPN team names (canonical format)
 ESPN_TEAM_NAMES = {

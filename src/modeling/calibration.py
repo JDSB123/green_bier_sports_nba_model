@@ -204,18 +204,21 @@ def validate_calibration_assumption(
 ) -> Dict[str, Any]:
     """
     Validate the assumption that X points of edge = Y% probability.
-    
-    The model uses hardcoded: 1 pt edge ≈ 2.5% probability shift.
-    This function validates that assumption against historical data.
-    
+
+    NBA_v33.0.1.0: This function CALCULATES the optimal edge-to-probability
+    conversion from actual historical data rather than using hardcoded values.
+    The result should be used to configure the edge_per_point parameter.
+
     Args:
-        edge_per_point: The assumed probability shift per point of edge
+        edge_per_point: The assumed probability shift per point of edge to validate
         historical_results: DataFrame with edge and outcome columns
         edge_column: Name of edge column
         outcome_column: Name of outcome column (0/1)
-        
+
     Returns:
-        Dict with validation metrics
+        Dict with validation metrics including:
+        - optimal_edge_per_point: Data-derived conversion factor
+        - recommendation: Whether to adjust the assumption
     """
     df = historical_results.dropna(subset=[edge_column, outcome_column]).copy()
     
