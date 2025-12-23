@@ -761,6 +761,34 @@ class RichFeatureBuilder:
             injury_margin_adj = 0.0
             home_star_out = away_star_out = 0
 
+        # ============================================================
+        # 1H / Q1 MODELING (Heuristic based on recent form tendencies)
+        # ============================================================
+        # Instead of flat 50%, we adjust based on "Fast Starter" tendencies
+        # Tendency = Actual 1H performance - Expected (50% of FG)
+        
+        # Calculate 1H tendencies (L5 samples)
+        # If positive, team performs better in 1H than their average game flow implies
+        home_1h_margin_tendency = home_form["l5_margin_1h"] - (home_form["l5_margin"] * 0.5)
+        away_1h_margin_tendency = away_form["l5_margin_1h"] - (away_form["l5_margin"] * 0.5)
+        
+        home_1h_scoring_tendency = home_form["l5_ppg_1h"] - (home_form["l5_ppg"] * 0.5)
+        away_1h_scoring_tendency = away_form["l5_ppg_1h"] - (away_form["l5_ppg"] * 0.5)
+        
+        # Weighting: How much to trust recent 1H form vs general team strength?
+        # 0.4 = Conservative blend (trusts long-term FG model more, but nudges for tendency)
+        TENDENCY_WEIGHT = 0.4
+        
+        # Adjust margins
+        # If home tends to win 1H by MORE than half their game margin, boost 1H prediction
+        margin_adjustment_1h = (home_1h_margin_tendency - away_1h_margin_tendency) * TENDENCY_WEIGHT
+        predicted_margin_1h = (predicted_margin_nba * 0.5) + margin_adjustment_1h
+        
+        # Adjust totals
+        # If teams tend to score MORE in 1H than half their game total, boost 1H total
+        total_adjustment_1h = (home_1h_scoring_tendency + away_1h_scoring_tendency) * TENDENCY_WEIGHT
+        predicted_total_1h = (predicted_total_nba * 0.5) + total_adjustment_1h
+
         # Build feature dict
         features = {
             # Team averages (raw)
@@ -852,34 +880,6 @@ class RichFeatureBuilder:
             "away_losses": away_losses,
             "ppg_diff_fg": home_ppg - away_ppg,
             "papg_diff_fg": home_papg - away_papg,
-
-            # ============================================================
-            # 1H / Q1 MODELING (Heuristic based on recent form tendencies)
-            # ============================================================
-            # Instead of flat 50%, we adjust based on "Fast Starter" tendencies
-            # Tendency = Actual 1H performance - Expected (50% of FG)
-            
-            # Calculate 1H tendencies (L5 samples)
-            # If positive, team performs better in 1H than their average game flow implies
-            home_1h_margin_tendency = home_form["l5_margin_1h"] - (home_form["l5_margin"] * 0.5)
-            away_1h_margin_tendency = away_form["l5_margin_1h"] - (away_form["l5_margin"] * 0.5)
-            
-            home_1h_scoring_tendency = home_form["l5_ppg_1h"] - (home_form["l5_ppg"] * 0.5)
-            away_1h_scoring_tendency = away_form["l5_ppg_1h"] - (away_form["l5_ppg"] * 0.5)
-            
-            # Weighting: How much to trust recent 1H form vs general team strength?
-            # 0.4 = Conservative blend (trusts long-term FG model more, but nudges for tendency)
-            TENDENCY_WEIGHT = 0.4
-            
-            # Adjust margins
-            # If home tends to win 1H by MORE than half their game margin, boost 1H prediction
-            margin_adjustment_1h = (home_1h_margin_tendency - away_1h_margin_tendency) * TENDENCY_WEIGHT
-            predicted_margin_1h = (predicted_margin_nba * 0.5) + margin_adjustment_1h
-            
-            # Adjust totals
-            # If teams tend to score MORE in 1H than half their game total, boost 1H total
-            total_adjustment_1h = (home_1h_scoring_tendency + away_1h_scoring_tendency) * TENDENCY_WEIGHT
-            predicted_total_1h = (predicted_total_nba * 0.5) + total_adjustment_1h
 
             # Predicted values for Q1 model (baseline scaling: ~50% of 1H)
             "predicted_margin_q1": predicted_margin_1h * 0.5,

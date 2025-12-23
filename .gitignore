@@ -100,10 +100,7 @@ export/
 
 # Temporary output files
 nba_betting_card_*.txt
+nba_picks_*.html
 *.tmp
 temp/
 .claude/
-
-# Testing branch (local development only)
-# Note: The 'testing' branch should not be pushed to remote
-nba_picks_preview.html

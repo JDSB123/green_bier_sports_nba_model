@@ -60,17 +60,15 @@ ENV FILTER_TOTAL_MIN_CONFIDENCE=0.55
 ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV FILTER_MONEYLINE_MIN_CONFIDENCE=0.55
 ENV FILTER_MONEYLINE_MIN_EDGE_PCT=0.03
-ENV FILTER_Q1_MIN_CONFIDENCE=0.60
-ENV FILTER_Q1_MIN_EDGE_PCT=0.05
 ENV ALLOWED_ORIGINS=*
-ENV NBA_MODEL_VERSION=NBA_v33.0.1.0
+ENV NBA_MODEL_VERSION=NBA_v33.0.2.0
 ENV NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
 ENV FUNCTIONS_WORKER_RUNTIME=python
 ENV FUNCTIONS_EXTENSION_VERSION=~4
 ENV SEASONS_TO_PROCESS=2025-2026
 
-# Verify models
-RUN echo "=== NBA_v33.0.1.0 Models ===" && \
+# Verify models (6 markets: 1H + FG only, Q1 disabled)
+RUN echo "=== NBA_v33.0.2.0 Models ===" && \
     test -f /app/data/processed/models/1h_spread_model.pkl && echo "✓ 1h_spread" && \
     test -f /app/data/processed/models/fg_spread_model.joblib && echo "✓ fg_spread"
 
