@@ -673,7 +673,7 @@ class ComprehensiveIngestion:
 
             # ESPN - FREE
             self.fetch_espn_schedule(),
-            self.fetch_espn_injuries(),
+            self.fetch_injuries(),
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)

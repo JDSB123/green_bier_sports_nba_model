@@ -852,8 +852,8 @@ class RichFeatureBuilder:
             "predicted_total_1h": predicted_total_nba * 0.5,
 
             # Rest/fatigue
-            "home_days_rest": home_form["days_rest"],
-            "away_days_rest": away_form["days_rest"],
+            "home_rest_days": home_form["days_rest"],
+            "away_rest_days": away_form["days_rest"],
             "home_rest_adj": home_rest_adj,
             "away_rest_adj": away_rest_adj,
             "rest_margin_adj": rest_margin_adj,
@@ -899,6 +899,9 @@ class RichFeatureBuilder:
 
         away_is_b2b = away_form["days_rest"] <= 1
         home_is_b2b = home_form["days_rest"] <= 1
+
+        features["home_b2b"] = 1 if home_is_b2b else 0
+        features["away_b2b"] = 1 if away_is_b2b else 0
 
         # Calculate travel fatigue adjustment
         away_travel_fatigue = calculate_travel_fatigue(

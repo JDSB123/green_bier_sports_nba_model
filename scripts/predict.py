@@ -36,7 +36,7 @@ MODELS_DIR = PROJECT_ROOT / "models" / "production"
 from src.config import settings
 from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits
-from scripts.build_rich_features import RichFeatureBuilder
+from src.features.rich_features import RichFeatureBuilder
 from src.prediction import UnifiedPredictionEngine
 
 # Central Standard Time

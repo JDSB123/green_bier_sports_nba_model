@@ -137,7 +137,10 @@ async def main_comprehensive(force_refresh: bool = False, slate_only: bool = Fal
 
     # Show cache stats before
     stats_before = api_cache.get_stats()
-    print(f"Cache Status: {stats_before['file_count']} cached entries ({stats_before['total_size_mb']} MB)")
+    if stats_before.get("mode") == "STRICT":
+        print(f"Cache Status: STRICT MODE (Memory only: {stats_before.get('memory_count', 0)} entries)")
+    else:
+        print(f"Cache Status: {stats_before.get('file_count', 0)} cached entries ({stats_before.get('total_size_mb', 0)} MB)")
     print()
 
     ingestion = ComprehensiveIngestion(force_refresh=force_refresh)
