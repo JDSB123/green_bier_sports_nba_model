@@ -53,7 +53,7 @@ from src.tracking import PickTracker
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0")
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.1.0")
 
 
 def convert_numpy_types(obj):
@@ -205,7 +205,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="NBA NBA_v33.0 - STRICT MODE Production Picks",
+    title="NBA NBA_v33.0.1.0 - STRICT MODE Production Picks",
     description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline (Q1 disabled). FRESH DATA ONLY - No caching, no fallbacks.",
     version=RELEASE_VERSION,
     lifespan=lifespan
