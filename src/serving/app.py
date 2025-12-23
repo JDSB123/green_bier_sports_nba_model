@@ -1,5 +1,5 @@
 """
-NBA_v33.0.1.0 - FastAPI Prediction Server - STRICT MODE
+NBA_v33.0.2.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
@@ -52,7 +52,7 @@ from src.tracking import PickTracker
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.1.0")
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.2.0")
 
 
 def convert_numpy_types(obj):
