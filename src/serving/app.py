@@ -281,7 +281,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v6.5 STRICT MODE with 9 independent markets."""
+    """Check API health - v6.6 with 6 markets (Q1 disabled)."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -291,17 +291,16 @@ def health(request: Request):
 
     return {
         "status": "ok",
-        "version": "6.5",
+        "version": "6.6",
         "mode": "STRICT",
-        "architecture": "9-model independent",
+        "architecture": "6-model independent (Q1 disabled)",
         "caching": "DISABLED - fresh data every request",
         "markets": model_info.get("markets", 0),
         "markets_list": [
-            "q1_spread", "q1_total", "q1_moneyline",
             "1h_spread", "1h_total", "1h_moneyline",
             "fg_spread", "fg_total", "fg_moneyline",
         ],
-        "periods": ["first_quarter", "first_half", "full_game"],
+        "periods": ["first_half", "full_game"],
         "engine_loaded": engine_loaded,
         "model_info": model_info,
         "season": settings.current_season,
@@ -615,15 +614,15 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v6.5 STRICT MODE: Fetches fresh data from all APIs.
-    Returns all 9 markets (Q1+1H+FG for Spread, Total, Moneyline).
+    v6.6: 6 markets (1H + FG only). Q1 disabled due to low ROI.
+    Returns all 6 markets (1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v6.5 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v6.6: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
-    logger.info("v6.5 STRICT MODE: Session cache cleared - fetching fresh data")
+    logger.info("v6.6: Session cache cleared - fetching fresh data")
 
     # Resolve date
     from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
@@ -680,12 +679,16 @@ async def get_slate_predictions(
             q1_home_ml = odds.get("q1_home_ml")
             q1_away_ml = odds.get("q1_away_ml")
             
-            # Validate required lines (FG at minimum)
-            if fg_spread is None or fg_total is None:
-                logger.warning(f"v6.0: Skipping {home_team} vs {away_team} - missing FG lines")
+            # v6.6: Allow games with ANY betting lines (moneyline, spread, or total)
+            # No longer require both spread AND total
+            has_fg_lines = fg_spread is not None or fg_total is not None or (home_ml is not None and away_ml is not None)
+            has_fh_lines = fh_spread is not None or fh_total is not None or (fh_home_ml is not None and fh_away_ml is not None)
+            
+            if not has_fg_lines and not has_fh_lines:
+                logger.warning(f"v6.6: Skipping {home_team} vs {away_team} - no betting lines available")
                 continue
 
-            # Predict all 9 markets
+            # Predict markets (Q1 disabled in v6.6)
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
@@ -702,10 +705,10 @@ async def get_slate_predictions(
                 q1_away_ml_odds=q1_away_ml,
             )
 
-            # Count plays (all 9 markets) and record picks
+            # Count plays (6 markets: 1H + FG only, Q1 disabled) and record picks
             game_plays = 0
             game_date = target_date.strftime("%Y-%m-%d")
-            for period in ["first_quarter", "first_half", "full_game"]:
+            for period in ["first_half", "full_game"]:  # Q1 removed in v6.6
                 period_preds = preds.get(period, {})
                 for market in ["spread", "total", "moneyline"]:
                     pred_data = period_preds.get(market, {})

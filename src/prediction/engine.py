@@ -1,12 +1,9 @@
 """
-NBA v6.0 - Unified Prediction Engine
+NBA v6.6 - Unified Prediction Engine
 
-PRODUCTION: 9 INDEPENDENT Markets (Q1 + 1H + FG)
+PRODUCTION: 6 INDEPENDENT Markets (1H + FG ONLY)
 
-First Quarter:
-- Q1 Spread
-- Q1 Total
-- Q1 Moneyline
+**Q1 MARKETS DISABLED** (low ROI, unreliable lines)
 
 First Half:
 - 1H Spread
@@ -437,14 +434,11 @@ class PeriodPredictor:
 
 class UnifiedPredictionEngine:
     """
-    NBA v6.0 - Production Prediction Engine
+    NBA v6.6 - Production Prediction Engine
 
-    9 INDEPENDENT Markets:
+    6 INDEPENDENT Markets (Q1 DISABLED):
 
-    First Quarter (Q1):
-    - Q1 Spread
-    - Q1 Total
-    - Q1 Moneyline
+    **Q1 Markets DISABLED** (53% accuracy, +1.2% ROI insufficient)
 
     First Half (1H):
     - 1H Spread
@@ -459,23 +453,23 @@ class UnifiedPredictionEngine:
     ARCHITECTURE:
     - Each period has independent models trained on period-specific features
     - No cross-period dependencies
-    - All 9 models required for full functionality
+    - Only 1H and FG models required (6 total)
     """
 
     def __init__(self, models_dir: Path, require_all: bool = True):
         """
         Initialize unified prediction engine.
 
-        STRICT MODE (v6.0): All 9 models REQUIRED. No fallbacks.
+        v6.6: 6 models REQUIRED (1H + FG only). Q1 models optional/ignored.
 
         Args:
             models_dir: Path to models directory
-            require_all: DEPRECATED - always True. All 9 models required.
+            require_all: DEPRECATED - always True for 1H/FG models.
         """
         if not require_all:
             raise ValueError(
                 "STRICT MODE ENFORCED: require_all=False is no longer supported. "
-                "All 9 models must be present. No silent fallbacks."
+                "All 6 models (1H + FG) must be present. No silent fallbacks."
             )
         self.models_dir = Path(models_dir)
         self.loaded_models: Dict[str, bool] = {}
@@ -486,17 +480,14 @@ class UnifiedPredictionEngine:
                 f"Run: python scripts/train_all_models.py"
             )
 
-        # STRICT MODE: All 9 models MUST be loaded - NO FALLBACKS
+        # v6.6: Only load 1H and FG models (Q1 DISABLED)
         # Initialize period predictors
-        self.q1_predictor: Optional[PeriodPredictor] = None
+        self.q1_predictor: Optional[PeriodPredictor] = None  # Always None in v6.6
         self.h1_predictor: Optional[PeriodPredictor] = None
         self.fg_predictor: Optional[PeriodPredictor] = None
 
-        # Load Q1 models - WILL RAISE if any missing
-        logger.info("Loading Q1 models (spread, total, moneyline)...")
-        q1_models = self._load_period_models("q1")
-        self.q1_predictor = PeriodPredictor("q1", *q1_models)
-        logger.info("Q1 predictor initialized (3/3 models)")
+        # Q1 DISABLED - Skip loading
+        logger.info("[v6.6] Q1 markets DISABLED (low ROI). Only loading 1H + FG.")
 
         # Load 1H models - WILL RAISE if any missing
         logger.info("Loading 1H models (spread, total, moneyline)...")
@@ -842,18 +833,8 @@ class UnifiedPredictionEngine:
             "full_game": {},
         }
 
-        # Q1 predictions
-        if self.q1_predictor and (q1_spread_line is not None or q1_total_line is not None):
-            try:
-                result["first_quarter"] = self.predict_quarter(
-                    features,
-                    spread_line=q1_spread_line,
-                    total_line=q1_total_line,
-                    home_ml_odds=q1_home_ml_odds,
-                    away_ml_odds=q1_away_ml_odds,
-                )
-            except Exception as e:
-                logger.warning(f"Q1 prediction failed: {e}")
+        # Q1 DISABLED in v6.6 (low ROI: 53% accuracy, +1.2%)
+        # result["first_quarter"] = {}  # Always empty
 
         # 1H predictions
         if self.h1_predictor and (fh_spread_line is not None or fh_total_line is not None):
@@ -885,17 +866,17 @@ class UnifiedPredictionEngine:
 
     def get_model_info(self) -> Dict[str, Any]:
         """Return info about loaded models."""
-        # Updated to v6.5
+        # Updated to v6.6 (Q1 disabled)
         return {
-            "version": "6.5",
-            "architecture": "9-model independent",
+            "version": "6.6",
+            "architecture": "6-model independent (Q1 disabled)",
             "markets": sum(1 for v in self.loaded_models.values() if v),
             "markets_list": [k for k, v in self.loaded_models.items() if v],
-            "periods": ["first_quarter", "first_half", "full_game"],
+            "periods": ["first_half", "full_game"],  # Q1 removed
             "models_dir": str(self.models_dir),
             "loaded_models": self.loaded_models,
             "predictors": {
-                "q1": self.q1_predictor is not None,
+                "q1": False,  # Always disabled in v6.6
                 "1h": self.h1_predictor is not None,
                 "fg": self.fg_predictor is not None,
             },
