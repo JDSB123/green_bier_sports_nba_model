@@ -525,6 +525,8 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
                 "date": date_cst,
                 "home_team": home_team,
                 "away_team": away_team,
+                "home_record": f"{features.get('home_wins', 0)}-{features.get('home_losses', 0)}",
+                "away_record": f"{features.get('away_wins', 0)}-{features.get('away_losses', 0)}",
             }
 
             # Add FG predictions
@@ -625,36 +627,9 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
     else:
         print(f"  [TOTAL] Model not loaded")
 
-    # Moneyline
-    if "moneyline" in preds:
-        ml_pred = preds["moneyline"]
-        if not ml_pred:
-             print(f"  [ML] Prediction failed")
-        else:
-            predicted_winner = ml_pred.get('predicted_winner', 'Unknown')
-            confidence = ml_pred.get('confidence', 0)
-            
-            print(f"  [ML] Predicted winner: {predicted_winner} ({confidence:.1%})")
-            print(f"       Home odds: {lines[f'{prefix}_home_ml'] or 'N/A'}, Away odds: {lines[f'{prefix}_away_ml'] or 'N/A'}")
-            
-            recommended_bet = ml_pred.get('recommended_bet')
-            if recommended_bet:
-                print(f"       Bet: {recommended_bet}")
-                edge = ml_pred.get('home_edge') if recommended_bet == 'home' else ml_pred.get('away_edge')
-                if edge is not None:
-                    print(f"       Value edge: {edge:+.1%}")
-                    rat = f"[MODEL] Model assigns {confidence:.1%} to {predicted_winner}."
-                    if edge >= 0.05:
-                        rat += f" High value edge of {edge:+.1%} found at market odds."
-                    ml_pred['rationale'] = rat
-                    print(f"       Rationale: {rat}")
-
-            passes_filter = ml_pred.get('passes_filter', False)
-            filter_reason = ml_pred.get('filter_reason', 'Unknown')
-            print(f"       {'[PLAY]' if passes_filter else '[SKIP]'}"
-                  f"{'' if passes_filter else ': ' + str(filter_reason)}")
-    else:
-        print(f"  [ML] Model not loaded")
+    # Moneyline - DISABLED
+    # if "moneyline" in preds:
+    #     pass
 
 
 def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
@@ -697,584 +672,120 @@ def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
 
 
 def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date) -> str:
-    """Generate formatted text report similar to slate_analysis format."""
+    """Generate formatted text report in table format as requested."""
     lines = []
     
     # Header
     date_str = target_date.strftime("%A, %B %d, %Y")
-    lines.append("=" * 100)
-    lines.append(f"NBA COMPREHENSIVE SLATE ANALYSIS - {date_str}")
-    lines.append("=" * 100)
+    lines.append("=" * 120)
+    lines.append(f"NBA BETTING CARD - {date_str}")
+    lines.append("=" * 120)
     lines.append("")
     
-    def calculate_fire_rating(confidence: float, edge: float, edge_type: str) -> int:
+    # Table Header
+    # DATE | MATCHUP | TYPE | PICK | MODEL | VEGAS | EDGE | FIRE
+    header = f"{'DATE/TIME (CST)':<20} | {'MATCHUP':<30} | {'TYPE':<4} | {'PICK':<25} | {'MODEL':<8} | {'VEGAS':<8} | {'EDGE':<6} | {'FIRE':<5}"
+    lines.append(header)
+    lines.append("-" * len(header))
+    
+    def calculate_fire_rating(confidence: float, edge: float) -> int:
         """Calculate fire rating (1-5) based on confidence and edge."""
-        # Normalize edge to 0-1 scale for comparison
-        if pd.isna(edge):
-            edge_norm = 0.0
-        elif edge_type == "pct":
-            edge_norm = min(abs(edge) / 0.20, 1.0)  # 20% edge = max
-        else:  # pts
-            edge_norm = min(abs(edge) / 10.0, 1.0)  # 10 pts = max
-        
-        # Combine confidence and edge (weighted average)
+        # Normalize edge (pts) to 0-1 scale (10 pts = max)
+        edge_norm = min(abs(edge) / 10.0, 1.0)
+        # Combine confidence and edge
         combined_score = (confidence * 0.6) + (edge_norm * 0.4)
         
-        # Map to 1-5 fires
-        if combined_score >= 0.85:
-            return 5
-        elif combined_score >= 0.70:
-            return 4
-        elif combined_score >= 0.60:
-            return 3
-        elif combined_score >= 0.52:
-            return 2
-        else:
-            return 1
-    
-    def american_odds_to_implied_prob(odds: int) -> float:
-        """Convert American odds to implied probability."""
-        if odds < 0:
-            return abs(odds) / (abs(odds) + 100)
-        else:
-            return 100 / (odds + 100)
-    
-    # Collect all plays first for executive summary
-    all_plays_summary = []
+        if combined_score >= 0.85: return 5
+        elif combined_score >= 0.70: return 4
+        elif combined_score >= 0.60: return 3
+        elif combined_score >= 0.52: return 2
+        else: return 1
+
+    # Process each play
     for _, row in df.iterrows():
+        # Construct Matchup with Records
+        home_rec = row.get('home_record', '')
+        away_rec = row.get('away_record', '')
+        # Shorten matchup string to fit
         matchup = f"{row['away_team']} @ {row['home_team']}"
         
+        date_time = row['date'].replace(" CST", "") # Shorten slightly
+        
+        # Helper to add row
+        def add_row(market_type, pick, odds, model_val, market_val, edge, conf, passes):
+            if not passes: return
+            
+            fire = calculate_fire_rating(conf, edge)
+            fire_str = "🔥" * fire
+            
+            # Determine Type (FG, 1H, Q1)
+            if "FG" in market_type: type_str = "FG"
+            elif "1H" in market_type: type_str = "1H"
+            elif "Q1" in market_type: type_str = "Q1"
+            else: type_str = "??"
+
+            # Format Pick
+            # market_val is the line (usually home line for spread)
+            if "Spread" in market_type:
+                if pick.lower() == "home":
+                    team_name = row['home_team']
+                    line_val = market_val
+                else: # away
+                    team_name = row['away_team']
+                    line_val = -market_val
+                
+                # Format line with + sign if positive
+                line_str = f"{line_val:+.1f}"
+                pick_str = f"{team_name} {line_str}"
+                
+                # Handle near-zero margin display (avoid "-0.0")
+                if abs(model_val) < 0.05:
+                    model_str = "0.0"
+                else:
+                    model_str = f"{model_val:+.1f}"
+                market_str = f"{market_val:+.1f}"
+
+            else: # Total
+                pick_str = f"{pick.upper()} {market_val:.1f}"
+                model_str = f"{model_val:.1f}"
+                market_str = f"{market_val:.1f}"
+            
+            # Add odds
+            pick_str += f" ({odds})"
+                
+            edge_str = f"{edge:+.1f}"
+            
+            line = f"{date_time:<20} | {matchup:<30} | {type_str:<4} | {pick_str:<25} | {model_str:<8} | {market_str:<8} | {edge_str:<6} | {fire_str:<5}"
+            lines.append(line)
+
         # FG Spread
-        if row.get("fg_spread_passes_filter") and pd.notna(row.get('fg_spread_line')):
-            edge = row.get('fg_spread_edge')
-            conf = row['fg_spread_confidence']
-            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
-            model_prob = conf
-            market_prob = 0.524  # -110 odds
-            model_pred = row.get('fg_spread_pred_margin')
-            market_line = row.get('fg_spread_line')
-            all_plays_summary.append({
-                "matchup": matchup,
-                "market": "FG Spread",
-                "pick": f"{row['fg_spread_bet_side']} {row['fg_spread_line']:+.1f}",
-                "edge": edge,
-                "confidence": conf,
-                "edge_type": "pts",
-                "fire_rating": fire,
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "model_pred": model_pred,  # Predicted margin
-                "market_line": market_line,  # Market spread line
-                "pred_type": "margin",
-                "odds": -110,
-            })
-        
+        if pd.notna(row.get('fg_spread_line')):
+            add_row("FG Spread", row['fg_spread_bet_side'], -110, row['fg_spread_pred_margin'], row['fg_spread_line'], row['fg_spread_edge'], row['fg_spread_confidence'], row['fg_spread_passes_filter'])
+
         # FG Total
-        if row.get("fg_total_passes_filter") and pd.notna(row.get('fg_total_line')):
-            edge = row.get('fg_total_edge')
-            conf = row['fg_total_confidence']
-            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
-            model_prob = conf
-            market_prob = 0.524  # -110 odds
-            model_pred = row.get('fg_total_pred')  # Predicted total points
-            market_line = row.get('fg_total_line')  # Market total line
-            all_plays_summary.append({
-                "matchup": matchup,
-                "market": "FG Total",
-                "pick": f"{row['fg_total_bet_side']} {row['fg_total_line']:.1f}",
-                "edge": edge,
-                "confidence": conf,
-                "edge_type": "pts",
-                "fire_rating": fire,
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "model_pred": model_pred,
-                "market_line": market_line,
-                "pred_type": "total",
-                "odds": -110,
-            })
-        
-        # FG Moneyline
-        if row.get("fg_ml_passes_filter") and row.get("fg_ml_recommended_bet"):
-            bet = row['fg_ml_recommended_bet']
-            # Only use odds that match the bet side - don't fallback to opposite side
-            if bet == 'home':
-                odds = int(row['fg_ml_home_odds']) if pd.notna(row.get('fg_ml_home_odds')) else None
-            elif bet == 'away':
-                odds = int(row['fg_ml_away_odds']) if pd.notna(row.get('fg_ml_away_odds')) else None
-            else:
-                odds = None
-            if pd.notna(odds) and odds is not None:
-                edge = row['fg_ml_home_edge'] if bet == 'home' else row['fg_ml_away_edge']
-                conf = row['fg_ml_confidence']
-                fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pct")
-                model_prob = conf  # Win probability
-                market_prob = american_odds_to_implied_prob(odds)
-                all_plays_summary.append({
-                    "matchup": matchup,
-                    "market": "FG Moneyline",
-                    "pick": f"{bet.capitalize()}",
-                    "edge": edge,
-                    "confidence": conf,
-                    "edge_type": "pct",
-                    "fire_rating": fire,
-                    "model_prob": model_prob,
-                    "market_prob": market_prob,
-                    "odds": odds,
-                })
-        
+        if pd.notna(row.get('fg_total_line')):
+            add_row("FG Total", row['fg_total_bet_side'], -110, row['fg_total_pred'], row['fg_total_line'], row['fg_total_edge'], row['fg_total_confidence'], row['fg_total_passes_filter'])
+
         # 1H Spread
-        if row.get("fh_spread_passes_filter") and pd.notna(row.get('fh_spread_line')):
-            edge = row.get('fh_spread_edge')
-            conf = row['fh_spread_confidence']
-            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
-            model_prob = conf
-            market_prob = 0.524  # -110 odds
-            model_pred = row.get('fh_spread_pred_margin')
-            market_line = row.get('fh_spread_line')
-            all_plays_summary.append({
-                "matchup": matchup,
-                "market": "1H Spread",
-                "pick": f"{row['fh_spread_bet_side']} {row['fh_spread_line']:+.1f}",
-                "edge": edge,
-                "confidence": conf,
-                "edge_type": "pts",
-                "fire_rating": fire,
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "model_pred": model_pred,
-                "market_line": market_line,
-                "pred_type": "margin",
-                "odds": -110,
-            })
-        
+        if pd.notna(row.get('fh_spread_line')):
+             add_row("1H Spread", row['fh_spread_bet_side'], -110, row['fh_spread_pred_margin'], row['fh_spread_line'], row['fh_spread_edge'], row['fh_spread_confidence'], row['fh_spread_passes_filter'])
+
         # 1H Total
-        if row.get("fh_total_passes_filter") and pd.notna(row.get('fh_total_line')):
-            edge = row.get('fh_total_edge')
-            conf = row['fh_total_confidence']
-            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
-            model_prob = conf
-            market_prob = 0.524  # -110 odds
-            model_pred = row.get('fh_total_pred')
-            market_line = row.get('fh_total_line')
-            all_plays_summary.append({
-                "matchup": matchup,
-                "market": "1H Total",
-                "pick": f"{row['fh_total_bet_side']} {row['fh_total_line']:.1f}",
-                "edge": edge,
-                "confidence": conf,
-                "edge_type": "pts",
-                "fire_rating": fire,
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "model_pred": model_pred,
-                "market_line": market_line,
-                "pred_type": "total",
-                "odds": -110,
-            })
-        
-        # 1H Moneyline
-        if row.get("fh_ml_passes_filter") and row.get("fh_ml_recommended_bet"):
-            bet = row['fh_ml_recommended_bet']
-            # Only use odds that match the bet side - don't fallback to opposite side
-            if bet == 'home':
-                odds = int(row['fh_ml_home_odds']) if pd.notna(row.get('fh_ml_home_odds')) else None
-            elif bet == 'away':
-                odds = int(row['fh_ml_away_odds']) if pd.notna(row.get('fh_ml_away_odds')) else None
-            else:
-                odds = None
-            if pd.notna(odds) and odds is not None:
-                edge = row['fh_ml_home_edge'] if bet == 'home' else row['fh_ml_away_edge']
-                conf = row['fh_ml_confidence']
-                fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pct")
-                model_prob = conf
-                market_prob = american_odds_to_implied_prob(odds)
-                all_plays_summary.append({
-                    "matchup": matchup,
-                    "market": "1H Moneyline",
-                    "pick": f"{bet.capitalize()}",
-                    "edge": edge,
-                    "confidence": conf,
-                    "edge_type": "pct",
-                    "fire_rating": fire,
-                    "model_prob": model_prob,
-                    "market_prob": market_prob,
-                    "odds": odds,
-                })
+        if pd.notna(row.get('fh_total_line')):
+             add_row("1H Total", row['fh_total_bet_side'], -110, row['fh_total_pred'], row['fh_total_line'], row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
 
         # Q1 Spread
-        if row.get("q1_spread_passes_filter") and pd.notna(row.get('q1_spread_line')):
-            edge = row.get('q1_spread_edge')
-            conf = row['q1_spread_confidence']
-            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
-            model_prob = conf
-            market_prob = 0.524
-            model_pred = row.get('q1_spread_pred_margin')
-            market_line = row.get('q1_spread_line')
-            all_plays_summary.append({
-                "matchup": matchup,
-                "market": "Q1 Spread",
-                "pick": f"{row['q1_spread_bet_side']} {row['q1_spread_line']:+.1f}",
-                "edge": edge,
-                "confidence": conf,
-                "edge_type": "pts",
-                "fire_rating": fire,
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "model_pred": model_pred,
-                "market_line": market_line,
-                "pred_type": "margin",
-                "odds": -110,
-            })
+        if pd.notna(row.get('q1_spread_line')):
+             add_row("Q1 Spread", row['q1_spread_bet_side'], -110, row['q1_spread_pred_margin'], row['q1_spread_line'], row['q1_spread_edge'], row['q1_spread_confidence'], row['q1_spread_passes_filter'])
 
         # Q1 Total
-        if row.get("q1_total_passes_filter") and pd.notna(row.get('q1_total_line')):
-            edge = row.get('q1_total_edge')
-            conf = row['q1_total_confidence']
-            fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pts")
-            model_prob = conf
-            market_prob = 0.524
-            model_pred = row.get('q1_total_pred')
-            market_line = row.get('q1_total_line')
-            all_plays_summary.append({
-                "matchup": matchup,
-                "market": "Q1 Total",
-                "pick": f"{row['q1_total_bet_side']} {row['q1_total_line']:.1f}",
-                "edge": edge,
-                "confidence": conf,
-                "edge_type": "pts",
-                "fire_rating": fire,
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "model_pred": model_pred,
-                "market_line": market_line,
-                "pred_type": "total",
-                "odds": -110,
-            })
+        if pd.notna(row.get('q1_total_line')):
+             add_row("Q1 Total", row['q1_total_bet_side'], -110, row['q1_total_pred'], row['q1_total_line'], row['q1_total_edge'], row['q1_total_confidence'], row['q1_total_passes_filter'])
 
-        # Q1 Moneyline
-        if row.get("q1_ml_passes_filter") and row.get("q1_ml_recommended_bet"):
-            bet = row['q1_ml_recommended_bet']
-            if bet == 'home':
-                odds = int(row['q1_ml_home_odds']) if pd.notna(row.get('q1_ml_home_odds')) else None
-            elif bet == 'away':
-                odds = int(row['q1_ml_away_odds']) if pd.notna(row.get('q1_ml_away_odds')) else None
-            else:
-                odds = None
-            if pd.notna(odds) and odds is not None:
-                edge = row['q1_ml_home_edge'] if bet == 'home' else row['q1_ml_away_edge']
-                conf = row['q1_ml_confidence']
-                fire = calculate_fire_rating(conf, edge if pd.notna(edge) else 0, "pct")
-                model_prob = conf
-                market_prob = american_odds_to_implied_prob(odds)
-                all_plays_summary.append({
-                    "matchup": matchup,
-                    "market": "Q1 Moneyline",
-                    "pick": f"{bet.capitalize()}",
-                    "edge": edge,
-                    "confidence": conf,
-                    "edge_type": "pct",
-                    "fire_rating": fire,
-                    "model_prob": model_prob,
-                    "market_prob": market_prob,
-                    "odds": odds,
-                })
-    
-    # EXECUTIVE SUMMARY (Bottom Line Up Front)
-    lines.append("=" * 100)
-    lines.append("EXECUTIVE SUMMARY - BOTTOM LINE UP FRONT")
-    lines.append("=" * 100)
     lines.append("")
-    
-    lines.append(f"TOTAL GAMES: {len(df)}")
-    lines.append(f"TOTAL PLAYS: {len(all_plays_summary)}")
-    lines.append("")
-    
-    if all_plays_summary:
-        # Sort by confidence (descending)
-        sorted_plays = sorted(all_plays_summary, key=lambda x: x['confidence'], reverse=True)
-        
-        # Count by market
-        fg_count = sum(1 for p in all_plays_summary if p['market'].startswith('FG'))
-        fh_count = sum(1 for p in all_plays_summary if p['market'].startswith('1H'))
-        q1_count = sum(1 for p in all_plays_summary if p['market'].startswith('Q1'))
-        spread_count = sum(1 for p in all_plays_summary if 'Spread' in p['market'])
-        total_count = sum(1 for p in all_plays_summary if 'Total' in p['market'])
-        ml_count = sum(1 for p in all_plays_summary if 'Moneyline' in p['market'])
-        
-        lines.append(f"BREAKDOWN:")
-        lines.append(f"  Full Game: {fg_count} | First Half: {fh_count} | First Quarter: {q1_count}")
-        lines.append(f"  Spreads: {spread_count} | Totals: {total_count} | Moneyline: {ml_count}")
-        lines.append("")
-        lines.append("TOP RECOMMENDED PLAYS (sorted by fire rating, then confidence):")
-        lines.append("")
-        
-        # Sort by fire rating (desc) then confidence (desc)
-        sorted_plays = sorted(all_plays_summary, key=lambda x: (x['fire_rating'], x['confidence']), reverse=True)
-        
-        # Show top 10 plays
-        for idx, play in enumerate(sorted_plays[:10], 1):
-            # Fire rating (1-5 fires)
-            fire_display = "🔥" * play['fire_rating'] + " " * (5 - play['fire_rating'])
-            
-            # Edge
-            edge_str = ""
-            if pd.notna(play['edge']):
-                if play['edge_type'] == 'pct':
-                    edge_str = f"{play['edge']:+.1%}"
-                else:
-                    edge_str = f"{play['edge']:+.1f} pts"
-            else:
-                edge_str = "N/A"
-            
-            # Odds display
-            if play.get('odds'):
-                if play['odds'] == -110:
-                    odds_str = "-110"
-                else:
-                    odds_str = f"{play['odds']:+d}"
-            else:
-                odds_str = "N/A"
-            
-            # Model prediction vs Market line
-            model_pred_str = ""
-            if play.get('pred_type') == 'margin' and pd.notna(play.get('model_pred')) and pd.notna(play.get('market_line')):
-                model_pred_str = f"Model predicts {play['model_pred']:+.1f} margin | Market line: {play['market_line']:+.1f}"
-            elif play.get('pred_type') == 'total' and pd.notna(play.get('model_pred')) and pd.notna(play.get('market_line')):
-                # For totals, show both regression prediction and classifier recommendation
-                model_pred_val = play['model_pred']
-                market_val = play['market_line']
-                pick_bet = play['pick'].split()[0].upper()  # Extract "OVER" or "UNDER" from pick
-                
-                # Check if regression prediction aligns with classifier recommendation
-                if (pick_bet == 'OVER' and model_pred_val > market_val) or \
-                   (pick_bet == 'UNDER' and model_pred_val < market_val):
-                    # Regression and classifier agree
-                    model_pred_str = f"Model regression: {model_pred_val:.1f} pts | Market: {market_val:.1f} | Classifier: {pick_bet} {play['confidence']:.0%}"
-                else:
-                    # Regression and classifier disagree - show both
-                    reg_recommendation = "OVER" if model_pred_val > market_val else "UNDER"
-                    model_pred_str = f"Model regression: {model_pred_val:.1f} pts → suggests {reg_recommendation} | Market: {market_val:.1f} | Model classifier: {pick_bet} {play['confidence']:.0%}"
-            else:
-                # Moneyline or missing data - use probability comparison
-                model_vs_market = play['model_prob'] - play['market_prob']
-                prob_diff_str = f"{model_vs_market:+.1%}"
-                model_pred_str = f"Model: {play['model_prob']:.1%} win prob | Market: {play['market_prob']:.1%} | Diff: {prob_diff_str}"
-            
-            lines.append(f"  {idx}. [{fire_display}] {play['matchup']}")
-            lines.append(f"     {play['market']}: {play['pick']} | Odds: {odds_str}")
-            lines.append(f"     {model_pred_str}")
-            lines.append(f"     Confidence: {play['confidence']:.1%} | Edge: {edge_str}")
-            lines.append("")
-    else:
-        lines.append("NO PLAYS TODAY - All games filtered out")
-        lines.append("")
-    
-    lines.append("=" * 100)
-    lines.append("DETAILED GAME-BY-GAME ANALYSIS")
-    lines.append("=" * 100)
-    lines.append("")
-    
-    # Process each game
-    for game_idx, (_, row) in enumerate(df.iterrows(), 1):
-        matchup = f"{row['away_team']} @ {row['home_team']}"
-        game_time = row['date']
-        
-        lines.append("-" * 100)
-        lines.append(f"GAME {game_idx}: {matchup}")
-        lines.append(f"Time: {game_time}")
-        lines.append("")
-        
-        # Collect top plays for this game
-        top_plays = []
-        
-        # FG Spread
-        if row.get("fg_spread_passes_filter") and pd.notna(row.get('fg_spread_line')):
-            top_plays.append({
-                "market": "FG Spread",
-                "pick": f"{row['fg_spread_bet_side']} {row['fg_spread_line']}",
-                "edge": row.get('fg_spread_edge'),
-                "confidence": row['fg_spread_confidence'],
-                "rationale": row.get('fg_spread_rationale', ''),
-            })
-        
-        # FG Total
-        if row.get("fg_total_passes_filter") and pd.notna(row.get('fg_total_line')):
-            top_plays.append({
-                "market": "FG Total",
-                "pick": f"{row['fg_total_bet_side']} {row['fg_total_line']:.1f}",
-                "edge": row.get('fg_total_edge'),
-                "confidence": row['fg_total_confidence'],
-                "rationale": row.get('fg_total_rationale', ''),
-            })
-        
-        # FG Moneyline
-        if row.get("fg_ml_passes_filter") and row.get("fg_ml_recommended_bet"):
-            bet = row['fg_ml_recommended_bet']
-            # Only use odds that match the bet side
-            if bet == 'home':
-                odds = row['fg_ml_home_odds'] if pd.notna(row.get('fg_ml_home_odds')) else None
-            elif bet == 'away':
-                odds = row['fg_ml_away_odds'] if pd.notna(row.get('fg_ml_away_odds')) else None
-            else:
-                odds = None
-            if pd.notna(odds):
-                edge = row['fg_ml_home_edge'] if bet == 'home' else row['fg_ml_away_edge']
-                top_plays.append({
-                    "market": "FG Moneyline",
-                    "pick": f"{bet} ({int(odds):+d})",
-                    "edge": edge,
-                    "confidence": row['fg_ml_confidence'],
-                    "rationale": row.get('fg_ml_rationale', ''),
-                })
-        
-        # Display top plays
-        if top_plays:
-            lines.append("[TOP PLAYS] (All confidence levels):")
-            for idx, play in enumerate(top_plays[:3], 1):  # Top 3 plays
-                edge_str = f"{play['edge']:+.1f} pts" if pd.notna(play['edge']) else "N/A"
-                lines.append(f"   {idx}. {play['market']}: {play['pick']}")
-                lines.append(f"      Edge: {edge_str} | Confidence: {play['confidence']:.1%}")
-                if play['rationale']:
-                    lines.append(f"      {play['rationale']}")
-            lines.append("")
-        
-        # FULL GAME ANALYSIS
-        lines.append("FULL GAME ANALYSIS:")
-        lines.append("")
-        
-        # Spread
-        lines.append("   SPREAD:")
-        if pd.notna(row.get('fg_spread_line')):
-            lines.append(f"      Market Line: {row['home_team']} {row['fg_spread_line']:+.1f} (-110)")
-            if pd.notna(row.get('fg_spread_pred_margin')):
-                lines.append(f"      Model Projects: {row['fg_spread_pred_margin']:+.1f} margin (home)")
-            if pd.notna(row.get('fg_spread_edge')):
-                lines.append(f"      Edge: {row['fg_spread_edge']:+.1f} pts")
-            if row.get("fg_spread_passes_filter"):
-                lines.append(f"      [PLAY] {row['fg_spread_bet_side']} {row['fg_spread_line']:+.1f} (-110)")
-            else:
-                lines.append(f"      [SKIP] {row.get('fg_spread_filter_reason', 'Filtered')}")
-            if pd.notna(row.get('fg_spread_confidence')):
-                lines.append(f"      Win Probability: {row['fg_spread_confidence']:.1%} | Confidence: {row['fg_spread_confidence']:.1%}")
-            if row.get('fg_spread_rationale'):
-                lines.append(f"      Rationale: {row['fg_spread_rationale']}")
-        else:
-            lines.append("      Market Line: N/A")
-        lines.append("")
-        
-        # Total
-        lines.append("   TOTAL:")
-        if pd.notna(row.get('fg_total_line')):
-            lines.append(f"      Market Line: O/U {row['fg_total_line']:.1f} (-110)")
-            if pd.notna(row.get('fg_total_pred')):
-                lines.append(f"      Model Projects: {row['fg_total_pred']:.1f} total points")
-            if pd.notna(row.get('fg_total_edge')):
-                lines.append(f"      Edge: {row['fg_total_edge']:+.1f} pts")
-            if row.get("fg_total_passes_filter"):
-                lines.append(f"      [PLAY] {row['fg_total_bet_side']} {row['fg_total_line']:.1f} (-110)")
-            else:
-                lines.append(f"      [SKIP] {row.get('fg_total_filter_reason', 'Filtered')}")
-            if pd.notna(row.get('fg_total_confidence')):
-                lines.append(f"      Probability: {row['fg_total_confidence']:.1%}")
-            if row.get('fg_total_rationale'):
-                lines.append(f"      Rationale: {row['fg_total_rationale']}")
-        else:
-            lines.append("      Market Line: N/A")
-        lines.append("")
-        
-        # Moneyline
-        lines.append("   MONEYLINE:")
-        if pd.notna(row.get('fg_ml_home_odds')):
-            home_odds = int(row['fg_ml_home_odds'])
-            away_odds = int(row['fg_ml_away_odds']) if pd.notna(row.get('fg_ml_away_odds')) else None
-            away_odds_str = f"{away_odds:+d}" if away_odds is not None else "N/A"
-            lines.append(f"      Market Odds: {row['home_team']} ({home_odds:+d}) | {row['away_team']} ({away_odds_str})")
-            if row.get("fg_ml_recommended_bet") and row.get("fg_ml_passes_filter"):
-                bet = row['fg_ml_recommended_bet']
-                edge = row['fg_ml_home_edge'] if bet == 'home' else row['fg_ml_away_edge']
-                lines.append(f"      [PLAY] {bet.capitalize()} ({home_odds if bet == 'home' else away_odds:+d})")
-                if pd.notna(edge):
-                    lines.append(f"      Value Edge: {edge:+.1%}")
-            if pd.notna(row.get('fg_ml_confidence')):
-                lines.append(f"      Confidence: {row['fg_ml_confidence']:.1%}")
-            if row.get('fg_ml_rationale'):
-                lines.append(f"      Rationale: {row['fg_ml_rationale']}")
-        else:
-            lines.append("      Market Odds: N/A")
-        lines.append("")
-        
-        # FIRST HALF ANALYSIS
-        lines.append("FIRST HALF ANALYSIS:")
-        lines.append("")
-        
-        # 1H Spread
-        lines.append("   1H SPREAD:")
-        if pd.notna(row.get('fh_spread_line')):
-            lines.append(f"      Market Line: {row['home_team']} {row['fh_spread_line']:+.1f} (-110)")
-            if pd.notna(row.get('fh_spread_pred_margin')):
-                lines.append(f"      Model Projects: {row['fh_spread_pred_margin']:+.1f} margin (home)")
-            if pd.notna(row.get('fh_spread_edge')):
-                lines.append(f"      Edge: {row['fh_spread_edge']:+.1f} pts")
-            if row.get("fh_spread_passes_filter"):
-                lines.append(f"      [PLAY] {row['fh_spread_bet_side']} {row['fh_spread_line']:+.1f} (-110)")
-            else:
-                lines.append(f"      [SKIP] {row.get('fh_spread_filter_reason', 'Filtered')}")
-            if row.get('fh_spread_rationale'):
-                lines.append(f"      Rationale: {row['fh_spread_rationale']}")
-        else:
-            lines.append("      Market Line: N/A")
-        lines.append("")
-        
-        # 1H Total
-        lines.append("   1H TOTAL:")
-        if pd.notna(row.get('fh_total_line')):
-            lines.append(f"      Market Line: O/U {row['fh_total_line']:.1f} (-110)")
-            if pd.notna(row.get('fh_total_pred')):
-                lines.append(f"      Model Projects: {row['fh_total_pred']:.1f} total points at half")
-            if pd.notna(row.get('fh_total_edge')):
-                lines.append(f"      Edge: {row['fh_total_edge']:+.1f} pts")
-            if row.get("fh_total_passes_filter"):
-                lines.append(f"      [PLAY] {row['fh_total_bet_side']} {row['fh_total_line']:.1f} (-110)")
-            else:
-                lines.append(f"      [SKIP] {row.get('fh_total_filter_reason', 'Filtered')}")
-            if row.get('fh_total_rationale'):
-                lines.append(f"      Rationale: {row['fh_total_rationale']}")
-        else:
-            lines.append("      Market Line: N/A")
-        lines.append("")
-        
-        # 1H Moneyline
-        lines.append("   1H MONEYLINE:")
-        if pd.notna(row.get('fh_ml_home_odds')):
-            home_odds = int(row['fh_ml_home_odds'])
-            away_odds = int(row['fh_ml_away_odds']) if pd.notna(row.get('fh_ml_away_odds')) else None
-            away_odds_str = f"{away_odds:+d}" if away_odds is not None else "N/A"
-            lines.append(f"      Market Odds: {row['home_team']} ({home_odds:+d}) | {row['away_team']} ({away_odds_str})")
-            if row.get("fh_ml_recommended_bet") and row.get("fh_ml_passes_filter"):
-                bet = row['fh_ml_recommended_bet']
-                edge = row['fh_ml_home_edge'] if bet == 'home' else row['fh_ml_away_edge']
-                lines.append(f"      [PLAY] {bet.capitalize()} ({home_odds if bet == 'home' else away_odds:+d})")
-                if pd.notna(edge):
-                    lines.append(f"      Value Edge: {edge:+.1%}")
-            if row.get('fh_ml_rationale'):
-                lines.append(f"      Rationale: {row['fh_ml_rationale']}")
-        else:
-            lines.append("      Market Odds: N/A")
-        lines.append("")
-    
-    # Footer
-    lines.append("=" * 100)
-    now_str = datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST")
-    lines.append(f"Generated: {now_str}")
-    lines.append("")
-    lines.append("Legend:")
-    lines.append("  [PLAY] = Passes model filters (recommended bet)")
-    lines.append("  [SKIP] = Filtered out (low confidence or insufficient edge)")
-    lines.append("  Edge = Model projection vs market line (positive = betting opportunity)")
-    lines.append("  Confidence = Model confidence level (accounts for uncertainty)")
-    lines.append("  FG = Full Game | 1H = First Half")
-    lines.append("")
+    lines.append("=" * 120)
+    lines.append("END OF CARD")
+    lines.append("=" * 120)
     
     return "\n".join(lines)
 
@@ -1321,28 +832,9 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "rationale": row.get('fg_total_rationale', ""),
             })
 
-        # FG Moneyline
-        if row.get("fg_ml_passes_filter") and row.get("fg_ml_recommended_bet"):
-            bet = row['fg_ml_recommended_bet']
-            # Only use odds that match the bet side
-            if bet == 'home':
-                odds = row['fg_ml_home_odds'] if pd.notna(row.get('fg_ml_home_odds')) else None
-            elif bet == 'away':
-                odds = row['fg_ml_away_odds'] if pd.notna(row.get('fg_ml_away_odds')) else None
-            else:
-                odds = None
-            if pd.notna(odds):
-                edge = row['fg_ml_home_edge'] if bet == 'home' else row['fg_ml_away_edge']
-                all_plays.append({
-                    "matchup": matchup,
-                    "date": date,
-                    "period": "FG",
-                    "market": "ML",
-                    "pick": f"{bet} ({int(odds):+d})",
-                    "confidence": row['fg_ml_confidence'],
-                    "edge": edge,
-                    "rationale": row.get('fg_ml_rationale', ""),
-                })
+        # FG Moneyline - DISABLED
+        # if row.get("fg_ml_passes_filter") and row.get("fg_ml_recommended_bet"):
+        #     pass
 
         # 1H Spreads
         if row.get("fh_spread_passes_filter") and pd.notna(row.get('fh_spread_line')):
@@ -1370,78 +862,28 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "rationale": row.get('fh_total_rationale', ""),
             })
 
-        # 1H Moneyline
-        if row.get("fh_ml_passes_filter") and row.get("fh_ml_recommended_bet"):
-            bet = row['fh_ml_recommended_bet']
-            # Only use odds that match the bet side
-            if bet == 'home':
-                odds = row['fh_ml_home_odds'] if pd.notna(row.get('fh_ml_home_odds')) else None
-            elif bet == 'away':
-                odds = row['fh_ml_away_odds'] if pd.notna(row.get('fh_ml_away_odds')) else None
-            else:
-                odds = None
-            if pd.notna(odds):
-                edge = row['fh_ml_home_edge'] if bet == 'home' else row['fh_ml_away_edge']
-                all_plays.append({
-                    "matchup": matchup,
-                    "date": date,
-                    "period": "1H",
-                    "market": "ML",
-                    "pick": f"{bet} ({int(odds):+d})",
-                    "confidence": row['fh_ml_confidence'],
-                    "edge": edge,
-                    "rationale": row.get('fh_ml_rationale', ""),
-                })
+        # 1H Moneyline - DISABLED
+        # if row.get("fh_ml_passes_filter") and row.get("fh_ml_recommended_bet"):
+        #     pass
 
-    print("\n" + "=" * 80)
-    print("BETTING CARD - ALL MARKETS (FG + 1H)")
-    print("=" * 80)
+    # Generate formatted text report
+    text_report = generate_formatted_text_report(df, target_date)
+    
+    # Print to console
+    print(text_report)
+
+    # Save report to file
+    report_path = DATA_DIR / "processed" / f"slate_analysis_{target_date.strftime('%Y%m%d') if target_date else 'latest'}.txt"
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write(text_report)
+    print(f"[OK] Saved formatted text report to {report_path}")
 
     if all_plays:
-        # Sort by confidence descending
-        all_plays = sorted(all_plays, key=lambda x: x['confidence'], reverse=True)
-
-        for play in all_plays:
-            print(f"\n{play['matchup']}")
-            print(f"  Game Time: {play['date']}")
-            print(f"  Period: {play['period']} | Market: {play['market']}")
-            print(f"  Pick: {play['pick']} ({play['confidence']:.1%})")
-            if play['edge'] is not None:
-                if play['market'] == 'ML':
-                    print(f"  Value Edge: {play['edge']:+.1%}")
-                else:
-                    print(f"  Edge: {play['edge']:+.1f} pts")
-            if play['rationale']:
-                print(f"  Rationale: {play['rationale']}")
-
-        print("\n" + "=" * 80)
-        print(f"TOTAL PLAYS: {len(all_plays)}")
-
-        # Count by market
-        fg_count = sum(1 for p in all_plays if p['period'] == 'FG')
-        fh_count = sum(1 for p in all_plays if p['period'] == '1H')
-        spread_count = sum(1 for p in all_plays if p['market'] == 'SPREAD')
-        total_count = sum(1 for p in all_plays if p['market'] == 'TOTAL')
-        ml_count = sum(1 for p in all_plays if p['market'] == 'ML')
-
-        print(f"  FG: {fg_count}, 1H: {fh_count}")
-        print(f"  Spreads: {spread_count}, Totals: {total_count}, ML: {ml_count}")
-        print("=" * 80)
-
-        # Save betting card
+        # Save betting card CSV
         betting_card_df = pd.DataFrame(all_plays)
         betting_card_path = DATA_DIR / "processed" / "betting_card_v3.csv"
         betting_card_df.to_csv(betting_card_path, index=False)
         print(f"[OK] Saved betting card to {betting_card_path}")
-        
-        # Generate and save formatted text report
-        if target_date:
-            text_report = generate_formatted_text_report(df, target_date)
-            text_path = DATA_DIR / "processed" / f"slate_analysis_{target_date.strftime('%Y%m%d')}.txt"
-            with open(text_path, "w", encoding="utf-8") as f:
-                f.write(text_report)
-            print(f"[OK] Saved formatted text report to {text_path}")
-
     else:
         print("\nNO PLAYS TODAY")
         print("All games filtered out - no bets meet criteria")

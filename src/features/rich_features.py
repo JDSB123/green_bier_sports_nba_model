@@ -421,8 +421,16 @@ class RichFeatureBuilder:
 
         # STRICT MODE: ESPN is the ONLY source for team records
         # NO FALLBACKS - ESPN is free, real-time, and accurate
-        home_espn = espn_standings.get(home_team, {})
-        away_espn = espn_standings.get(away_team, {})
+        
+        # Normalize team names for ESPN lookup
+        espn_name_map = {
+            "Los Angeles Clippers": "LA Clippers",
+        }
+        home_team_espn_name = espn_name_map.get(home_team, home_team)
+        away_team_espn_name = espn_name_map.get(away_team, away_team)
+
+        home_espn = espn_standings.get(home_team_espn_name, {})
+        away_espn = espn_standings.get(away_team_espn_name, {})
 
         home_wins = home_espn.get("wins", 0)
         home_losses = home_espn.get("losses", 0)
@@ -487,7 +495,7 @@ class RichFeatureBuilder:
             """Calculate recent form metrics from game history (Q1, 1H, FG)."""
             if not recent_games:
                 return {"l5_win_pct": 0.5, "l10_win_pct": 0.5, "l5_margin": 0, "l10_margin": 0,
-                        "l5_ppg": 0, "l5_papg": 0, "days_rest": 3, "prev_game_location": None,
+                        "l5_ppg": 0, "l5_papg": 0, "rest_days": 3, "prev_game_location": None,
                         "l5_ppg_q1": 0, "l5_papg_q1": 0, "l5_margin_q1": 0,
                         "l5_ppg_1h": 0, "l5_papg_1h": 0, "l5_margin_1h": 0}
 
@@ -595,7 +603,7 @@ class RichFeatureBuilder:
                 "l5_ppg_1h": pts_l5_1h / games_l5 if games_l5 > 0 else 0,
                 "l5_papg_1h": pts_allowed_l5_1h / games_l5 if games_l5 > 0 else 0,
                 "l5_margin_1h": margin_l5_1h / games_l5 if games_l5 > 0 else 0,
-                "days_rest": days_rest,
+                "rest_days": days_rest,
                 "prev_game_location": prev_game_location,
             }
 
@@ -635,8 +643,8 @@ class RichFeatureBuilder:
             else:  # Very long rest (8+ days, rust factor)
                 return 0.0  # Rust cancels out rest benefit
 
-        home_rest_adj = rest_adjustment(home_form["days_rest"])
-        away_rest_adj = rest_adjustment(away_form["days_rest"])
+        home_rest_adj = rest_adjustment(home_form["rest_days"])
+        away_rest_adj = rest_adjustment(away_form["rest_days"])
 
         # ============================================================
         # NBA EFFICIENCY MODEL (Torvik-inspired, NBA-calibrated)
@@ -852,8 +860,8 @@ class RichFeatureBuilder:
             "predicted_total_1h": predicted_total_nba * 0.5,
 
             # Rest/fatigue
-            "home_rest_days": home_form["days_rest"],
-            "away_rest_days": away_form["days_rest"],
+            "home_rest_days": home_form["rest_days"],
+            "away_rest_days": away_form["rest_days"],
             "home_rest_adj": home_rest_adj,
             "away_rest_adj": away_rest_adj,
             "rest_margin_adj": rest_margin_adj,
@@ -897,8 +905,8 @@ class RichFeatureBuilder:
             away_travel_distance = get_travel_distance(away_team, home_team) or 0
             away_tz_change = get_timezone_difference(away_team, home_team)
 
-        away_is_b2b = away_form["days_rest"] <= 1
-        home_is_b2b = home_form["days_rest"] <= 1
+        away_is_b2b = away_form["rest_days"] <= 1
+        home_is_b2b = home_form["rest_days"] <= 1
 
         features["home_b2b"] = 1 if home_is_b2b else 0
         features["away_b2b"] = 1 if away_is_b2b else 0
@@ -906,7 +914,7 @@ class RichFeatureBuilder:
         # Calculate travel fatigue adjustment
         away_travel_fatigue = calculate_travel_fatigue(
             distance_miles=away_travel_distance,
-            rest_days=away_form["days_rest"],
+            rest_days=away_form["rest_days"],
             timezone_change=away_tz_change,
             is_back_to_back=away_is_b2b,
         )
