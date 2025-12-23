@@ -40,6 +40,15 @@ AZURE CONTAINER APP (nba-picks-api) ← PRODUCTION
 | `nbagbs-keyvault` | Key Vault | — | — | Stores: THE-ODDS-API-KEY, API-BASKETBALL-KEY |
 | `greenbier-nba-env` | Container Apps Environment | — | — | Hosts nba-picks-api |
 
+## **Resource Group Organization (CLEANED UP)**
+| Resource Group | Purpose | Contains |
+|---|---|---|
+| **`nbagbsvmodel`** (PRODUCTION) | NBA Picks API production | nba-picks-api (v6.11), Key Vault, Container Registry |
+| `greenbier-enterprise-rg` | NCAAF/NCAAM sports models | ncaaf-prediction, ncaam services, databases, storage |
+| `chat-jb-t-...` | Chat API | chat-jb-t-app |
+
+**⚠️ CRITICAL:** `nbagbsvmodel` is the ONLY resource group for NBA picks production. Legacy nba-picks-api container app has been removed from `greenbier-enterprise-rg`.
+
 ## **Where Secrets & Config Live**
 - Secrets are stored in **Azure Key Vault** (`nbagbs-keyvault`), NOT in the repo or `.env` files
 - Production deployment reads secrets directly from Key Vault via Container App environment variables
