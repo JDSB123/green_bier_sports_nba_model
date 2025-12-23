@@ -1,15 +1,15 @@
-# 🏀 NBA Model Production Review - NBAGBSVMODEL
+# 🏀 NBA Model Production Review - nba-gbsv-model-rg
 
 **Review Date:** December 22, 2025  
 **Reviewer:** GitHub Copilot  
-**Scope:** Complete production audit of main repo + Azure NBAGBSVMODEL resource group  
+**Scope:** Complete production audit of main repo + Azure nba-gbsv-model-rg resource group  
 **Status:** ✅ **PRODUCTION READY** with recommendations
 
 ---
 
 ## Executive Summary
 
-Your NBA v6.0 prediction system is **production-ready** and operating correctly in Azure NBAGBSVMODEL. The system demonstrates:
+Your NBA v6.0 prediction system is **production-ready** and operating correctly in Azure nba-gbsv-model-rg. The system demonstrates:
 
 - ✅ 9 independent ML models deployed and functioning
 - ✅ Live API serving predictions at 99%+ uptime
@@ -23,14 +23,14 @@ Your NBA v6.0 prediction system is **production-ready** and operating correctly 
 
 ---
 
-## 1. Azure Infrastructure - NBAGBSVMODEL ✅
+## 1. Azure Infrastructure - nba-gbsv-model-rg ✅
 
 ### Current Configuration
 
 | Resource | Name | Status | Notes |
 |----------|------|--------|-------|
-| Resource Group | `NBAGBSVMODEL` | ✅ Active | Single source of truth |
-| Container App | `nba-picks-api` | ✅ Running | v6.5 deployed |
+| Resource Group | `nba-gbsv-model-rg` | ✅ Active | Single source of truth |
+| Container App | `nba-gbsv-api` | ✅ Running | v6.5 deployed |
 | ACR | `nbagbsacr` | ✅ Active | Correct registry |
 | Key Vault | `nbagbs-keyvault` | ✅ Active | Secrets stored |
 | Container Apps Env | `nbagbsvmodel-env` | ✅ Active | Shared environment |
@@ -53,7 +53,7 @@ Your NBA v6.0 prediction system is **production-ready** and operating correctly 
 }
 ```
 
-**FQDN:** `nba-picks-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io`
+**FQDN:** `nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io`
 
 ### Scaling Configuration
 
@@ -69,7 +69,7 @@ Your NBA v6.0 prediction system is **production-ready** and operating correctly 
 **⚠️ ACTION REQUIRED:** Set `minReplicas: 1` to avoid cold starts
 
 ```bash
-az containerapp update -n nba-picks-api -g NBAGBSVMODEL \
+az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
   --min-replicas 1 --max-replicas 10
 ```
 
@@ -184,7 +184,7 @@ PREDICTION_FEATURE_MODE = "strict"  # ✅ Correct for production
 # ✅ Filter thresholds configured
 ```
 
-**Image:** `nbagbsacr.azurecr.io/nba-picks-api:v6.10`
+**Image:** `nbagbsacr.azurecr.io/nba-gbsv-api:v6.10`
 
 ### CI/CD Pipeline ✅
 
@@ -193,7 +193,7 @@ PREDICTION_FEATURE_MODE = "strict"  # ✅ Correct for production
 - ✅ Triggers on push to `main`/`master`
 - ✅ Builds Docker image with proper tags
 - ✅ Pushes to correct ACR (`nbagbsacr`)
-- ✅ Deploys to correct Container App (`nba-picks-api`)
+- ✅ Deploys to correct Container App (`nba-gbsv-api`)
 - ✅ Health check after deployment
 
 **Last Deployment:** Automatic on git commit
@@ -364,7 +364,7 @@ cp .env.example .env
 ### 1. Set Minimum Replicas (High Priority)
 
 ```bash
-az containerapp update -n nba-picks-api -g NBAGBSVMODEL \
+az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
   --min-replicas 1 --max-replicas 10
 ```
 
@@ -401,8 +401,8 @@ Configure Azure Monitor alerts for `/health` endpoint failures:
 # Alert if health check fails for 5 minutes
 az monitor metrics alert create \
   --name nba-api-health-alert \
-  --resource-group NBAGBSVMODEL \
-  --scopes /subscriptions/.../nba-picks-api \
+  --resource-group nba-gbsv-model-rg \
+  --scopes /subscriptions/.../nba-gbsv-api \
   --condition "avg ContainerAppHttpResponseCodes >= 500" \
   --window-size 5m
 ```
@@ -573,7 +573,7 @@ Your system is **production ready** with these strengths:
 
 **Grade: A- (Production Ready)**
 
-Your NBA v6.0 model system is **production-grade** and operating correctly in Azure NBAGBSVMODEL. The architecture is sound, models are validated, and the API is live and functional.
+Your NBA v6.0 model system is **production-grade** and operating correctly in Azure nba-gbsv-model-rg. The architecture is sound, models are validated, and the API is live and functional.
 
 **Key Strengths:**
 - Excellent model accuracy (68% FG moneyline)

@@ -1,9 +1,9 @@
 Param(
   [string]$Subscription = "",
-  [string]$ResourceGroup = "NBAGBSVMODEL",
+  [string]$ResourceGroup = "nba-gbsv-model-rg",
   [string]$SharedResourceGroup = "greenbier-enterprise-rg",
   [string]$EnvironmentName = "greenbier-nba-env",
-  [string]$AppName = "nba-picks-api",
+  [string]$AppName = "nba-gbsv-api",
   [string]$AcrName = "greenbieracr",
   [string]$Image = "greenbieracr.azurecr.io/nba-model:v6.4",
   [string]$Location = "eastus",

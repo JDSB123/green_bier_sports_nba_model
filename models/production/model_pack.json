@@ -153,9 +153,9 @@
     }
   },
   "deployment": {
-    "container_app": "nba-picks-api",
-    "resource_group": "NBAGBSVMODEL",
-    "acr": "nbagbsacr.azurecr.io/nba-picks-api:v6.10",
+    "container_app": "nba-gbsv-api",
+    "resource_group": "nba-gbsv-model-rg",
+    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:v6.10",
     "health_endpoint": "/health",
     "markets_required": 9
   },

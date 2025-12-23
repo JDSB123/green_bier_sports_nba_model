@@ -3,7 +3,7 @@
 # - Port 8090: ML Model Prediction API (uvicorn)
 # - Port 8080: Azure Functions Bot / Teams Integration (func host)
 #
-# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-picks-api:NBA_v33.0.1.0 .
+# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.1.0 .
 
 # =============================================================================
 # Stage 1: Builder

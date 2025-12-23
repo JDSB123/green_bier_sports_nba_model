@@ -1,16 +1,16 @@
 # Azure Configuration - SINGLE SOURCE OF TRUTH
 
-**Last Updated:** 2025-12-22
+**Last Updated:** 2025-12-23
 
 ## Actual Azure Architecture
 
 ```
-NBAGBSVMODEL                               <-- Resource Group
+nba-gbsv-model-rg                          <-- Resource Group (PRODUCTION)
 ├── nbagbsacr                              <-- Container Registry (PRODUCTION)
 ├── nbagbs-keyvault                        <-- Key Vault
-├── nbagbsvmodel-env                       <-- Container Apps Environment
-│   └── nba-picks-api                      <-- Container App (PRODUCTION)
-│       ├── Image: nba-picks-api:v6.10
+├── nba-gbsv-model-env                     <-- Container Apps Environment
+│   └── nba-gbsv-api                      <-- Container App (PRODUCTION)
+│       ├── Image: nba-gbsv-api:v6.10
 │       ├── Registry: nbagbsacr.azurecr.io
 │       ├── Port: 8090
 │       ├── Scaling: 1-3 replicas
@@ -18,16 +18,15 @@ NBAGBSVMODEL                               <-- Resource Group
 │           ├── THE_ODDS_API_KEY
 │           ├── API_BASKETBALL_KEY
 │           └── SEASONS_TO_PROCESS=2025-2026
-└── (DECOMMISSIONED: nbagbsvmodel-api, nbagbsvmodelacr - to be deleted)
 ```
 
-## Resource Names (NEVER CHANGES)
+## Resource Names
 
 | Resource | Name | Status |
 |----------|------|--------|
-| **Resource Group** | `NBAGBSVMODEL` | Active |
-| **Container Apps Environment** | `nbagbsvmodel-env` | Active |
-| **Container App** | `nba-picks-api` | Active |
+| **Resource Group** | `nba-gbsv-model-rg` | Active |
+| **Container Apps Environment** | `nba-gbsv-model-env` | Active |
+| **Container App** | `nba-gbsv-api` | Active |
 | **Container Registry** | `nbagbsacr` | Active |
 | **Key Vault** | `nbagbs-keyvault` | Active |
 
@@ -37,11 +36,11 @@ The FQDN can change when Azure recreates the environment. Always get it dynamica
 
 ```bash
 # Get current API FQDN
-az containerapp show -n nba-picks-api -g NBAGBSVMODEL \
+az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
   --query properties.configuration.ingress.fqdn -o tsv
 
 # Set as environment variable
-export NBA_API_URL="https://$(az containerapp show -n nba-picks-api -g NBAGBSVMODEL --query properties.configuration.ingress.fqdn -o tsv)"
+export NBA_API_URL="https://$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)"
 
 # Test health
 curl "$NBA_API_URL/health"
@@ -65,22 +64,22 @@ All scripts use these environment variables (no hardcoded values):
 pwsh infra/nba/deploy.ps1 -Tag v6.10
 
 # View container app logs
-az containerapp logs show -n nba-picks-api -g NBAGBSVMODEL --follow
+az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --follow
 
 # Update container app with new image
-az containerapp update -n nba-picks-api -g NBAGBSVMODEL \
-  --image nbagbsacr.azurecr.io/nba-picks-api:v6.10
+az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
+  --image nbagbsacr.azurecr.io/nba-gbsv-api:v6.10
 
 # Build and push new image
-docker build -t nbagbsacr.azurecr.io/nba-picks-api:v6.10 -f Dockerfile.combined .
+docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:v6.10 -f Dockerfile.combined .
 az acr login -n nbagbsacr
-docker push nbagbsacr.azurecr.io/nba-picks-api:v6.10
+docker push nbagbsacr.azurecr.io/nba-gbsv-api:v6.10
 
 # Run locally with custom port (avoids conflicts)
 NBA_API_PORT=9000 docker compose up -d
 
 # Check current scaling
-az containerapp show -n nba-picks-api -g NBAGBSVMODEL \
+az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
   --query properties.template.scale
 ```
 
@@ -89,7 +88,7 @@ az containerapp show -n nba-picks-api -g NBAGBSVMODEL \
 GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
 1. Builds Docker image on push to `main`/`master`
 2. Pushes to `nbagbsacr.azurecr.io`
-3. Deploys to `nba-picks-api` in `NBAGBSVMODEL`
+3. Deploys to `nba-gbsv-api` in `nba-gbsv-model-rg`
 
 ## Model Version
 

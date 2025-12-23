@@ -2,8 +2,8 @@
 # Triggers on push to main/master, deploys to Azure Container Apps
 #
 # SINGLE SOURCE OF TRUTH - See docs/AZURE_CONFIG.md
-#   Resource Group: NBAGBSVMODEL
-#   Container App:  nba-picks-api
+#   Resource Group: nba-gbsv-model-rg
+#   Container App:  nba-gbsv-api
 #   ACR:            nbagbsacr
 
 name: GBS NBA - Build & Deploy
@@ -29,9 +29,9 @@ on:
 
 env:
   AZURE_CONTAINER_REGISTRY: nbagbsacr
-  RESOURCE_GROUP: NBAGBSVMODEL
-  CONTAINER_APP_NAME: nba-picks-api
-  IMAGE_NAME: nba-picks-api
+  RESOURCE_GROUP: nba-gbsv-model-rg
+  CONTAINER_APP_NAME: nba-gbsv-api
+  IMAGE_NAME: nba-gbsv-api
 
 jobs:
   build-and-deploy:

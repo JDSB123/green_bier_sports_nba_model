@@ -1,13 +1,13 @@
 // Green Bier Sports - NBA Model Infrastructure
 // Deploys NBA-specific resources (Container App, Function, Storage)
 //
-// SINGLE SOURCE OF TRUTH - All NBA resources in NBAGBSVMODEL
-// Container App: nba-picks-api
-// ACR: nbagbsacr (in NBAGBSVMODEL, NOT shared)
+// SINGLE SOURCE OF TRUTH - All NBA resources in nba-gbsv-model-rg
+// Container App: nba-gbsv-api
+// ACR: nbagbsacr (in nba-gbsv-model-rg, NOT shared)
 // Key Vault: nbagbs-keyvault
 //
 // Usage:
-//   az deployment group create -g NBAGBSVMODEL -f infra/nba/main.bicep
+//   az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep
 
 targetScope = 'resourceGroup'
 
@@ -99,10 +99,10 @@ resource resultsContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
 }
 
 // ============================================================================
-// Container App - NBA Picks API (ACTUAL NAME: nba-picks-api)
+// Container App - NBA Picks API (ACTUAL NAME: nba-gbsv-api)
 // ============================================================================
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
-  name: 'nba-picks-api'
+  name: 'nba-gbsv-api'
   location: location
   tags: tags
   identity: {

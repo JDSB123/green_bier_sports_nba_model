@@ -76,8 +76,8 @@ az resource list --resource-group greenbier-enterprise-rg --query "[?contains(na
 
 $response = Read-Host "`nDelete duplicate NBA resources from greenbier-enterprise-rg? (y/n)"
 if ($response -eq 'y') {
-    Write-Host "Deleting duplicate nba-picks-api..." -ForegroundColor Cyan
-    az containerapp delete --name nba-picks-api --resource-group greenbier-enterprise-rg --yes 2>&1 | Out-Null
+    Write-Host "Deleting duplicate nba-gbsv-api..." -ForegroundColor Cyan
+    az containerapp delete --name nba-gbsv-api --resource-group greenbier-enterprise-rg --yes 2>&1 | Out-Null
     
     Write-Host "Deleting greenbier-nba-env..." -ForegroundColor Cyan
     az containerapp env delete --name greenbier-nba-env --resource-group greenbier-enterprise-rg --yes 2>&1 | Out-Null
@@ -94,9 +94,9 @@ if ($response -eq 'y') {
 
 # ===== SUMMARY =====
 Write-Host "`n=== Cleanup Summary ===" -ForegroundColor Cyan
-Write-Host "✅ Active Resource Group: NBAGBSVMODEL" -ForegroundColor Green
+Write-Host "✅ Active Resource Group: nba-gbsv-model-rg" -ForegroundColor Green
 Write-Host "✅ Active Registry: nbagbsacr.azurecr.io" -ForegroundColor Green
-Write-Host "✅ Active Image: nba-picks-api:v6.10" -ForegroundColor Green
-Write-Host "✅ Active Container App: nba-picks-api (NBAGBSVMODEL)" -ForegroundColor Green
+Write-Host "✅ Active Image: nba-gbsv-api:v6.10" -ForegroundColor Green
+Write-Host "✅ Active Container App: nba-gbsv-api (nba-gbsv-model-rg)" -ForegroundColor Green
 
 Write-Host "`n🎉 Cleanup complete!" -ForegroundColor Green

@@ -1,5 +1,5 @@
 <!-- Purpose: concise, actionable repo-specific guidance for AI coding agents -->
-# Repo AI assistant notes — NBA Basketball Prediction System (NBAGBSVMODEL)
+# Repo AI assistant notes — NBA Basketball Prediction System (nba-gbsv-model-rg)
 
 **⚠️ SINGLE SOURCE OF TRUTH:** This repo (`JDSB123/green_bier_sports_nba_model`, branch `main`) is **THE** production source code for the NBA picks system. All deployments originate from GitHub main → Docker image → Azure Container App.
 
@@ -14,40 +14,40 @@ LOCAL WORKSPACE (c:\Users\JB\green-bier-ventures\NBA_main)
 GITHUB (JDSB123/green_bier_sports_nba_model:main) ← SOURCE OF TRUTH
     ↓ (manual Docker build)
 DOCKER IMAGE BUILD
-    ↓ docker build -t nbagbsacr.azurecr.io/nba-picks-api:vX.X
+    ↓ docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:vX.X
     ↓ docker push
 AZURE CONTAINER REGISTRY (nbagbsacr)
     ↓ az containerapp update
-AZURE CONTAINER APP (nba-picks-api) ← PRODUCTION
+AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 ```
 
 **STEPS TO DEPLOY (DO NOT SKIP):**
 1. Commit and push to GitHub: `git push origin main` ✅ **ALWAYS do this first**
-2. Build Docker image: `docker build -t nbagbsacr.azurecr.io/nba-picks-api:v6.XX -f Dockerfile.combined .`
-3. Push to ACR: `az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-picks-api:v6.XX`
-4. Deploy to Azure: `az containerapp update -n nba-picks-api -g NBAGBSVMODEL --image nbagbsacr.azurecr.io/nba-picks-api:v6.XX`
-5. Verify: `curl https://nba-picks-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
+2. Build Docker image: `docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:v6.XX -f Dockerfile.combined .`
+3. Push to ACR: `az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-gbsv-api:v6.XX`
+4. Deploy to Azure: `az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:v6.XX`
+5. Verify: `curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
 
 **⚠️ CRITICAL RULE:** Never let the local workspace drift more than one commit ahead of GitHub. Always push before building Docker images.
 
 ---
 
-## **Azure Resource → GitHub Source Code Mapping (NBAGBSVMODEL)**
+## **Azure Resource → GitHub Source Code Mapping (nba-gbsv-model-rg)**
 | Azure Resource | Type | GitHub Repo | Branch | Current Image |
 |----------------|------|-------------|--------|-------|
-| `nba-picks-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-picks-api:v6.11` |
+| `nba-gbsv-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-gbsv-api:v6.11` |
 | `nbagbsacr` | Container Registry | — | — | Hosts NBA model images |
 | `nbagbs-keyvault` | Key Vault | — | — | Stores: THE-ODDS-API-KEY, API-BASKETBALL-KEY |
-| `greenbier-nba-env` | Container Apps Environment | — | — | Hosts nba-picks-api |
+| `nba-gbsv-model-env` | Container Apps Environment | — | — | Hosts nba-gbsv-api |
 
-## **Resource Group Organization (CLEANED UP)**
+## **Resource Group Organization**
 | Resource Group | Purpose | Contains |
 |---|---|---|
-| **`nbagbsvmodel`** (PRODUCTION) | NBA Picks API production | nba-picks-api (v6.11), Key Vault, Container Registry |
+| **`nba-gbsv-model-rg`** (PRODUCTION) | NBA Picks API production | nba-gbsv-api, Key Vault, Container Registry |
 | `greenbier-enterprise-rg` | NCAAF/NCAAM sports models | ncaaf-prediction, ncaam services, databases, storage |
 | `chat-jb-t-...` | Chat API | chat-jb-t-app |
 
-**⚠️ CRITICAL:** `nbagbsvmodel` is the ONLY resource group for NBA picks production. Legacy nba-picks-api container app has been removed from `greenbier-enterprise-rg`.
+**⚠️ CRITICAL:** `nba-gbsv-model-rg` is the ONLY resource group for NBA picks production.
 
 ## **Where Secrets & Config Live**
 - Secrets are stored in **Azure Key Vault** (`nbagbs-keyvault`), NOT in the repo or `.env` files
@@ -92,14 +92,14 @@ AZURE CONTAINER APP (nba-picks-api) ← PRODUCTION
 ## **Testing & Verification**
 - Local: run `pytest tests -v` or use VS Code task "Run Tests"
 - Container health: `curl http://localhost:8090/health`
-- Production health: `curl https://nba-picks-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
-- Logs: `docker compose logs -f nba-v60-api` (local) or `az containerapp logs -n nba-picks-api -g NBAGBSVMODEL` (Azure)
+- Production health: `curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
+- Logs: `docker compose logs -f nba-v60-api` (local) or `az containerapp logs -n nba-gbsv-api -g nba-gbsv-model-rg` (Azure)
 
 ## **Common Pitfalls to Avoid**
 - ⚠️ **Drifting from GitHub:** Always `git push origin main` BEFORE building Docker images. Local commits must not drift more than 1 commit ahead.
 - ⚠️ **Stale Docker images:** Pushing code to GitHub does NOT auto-deploy. You must manually build/push/update.
 - ⚠️ **Secrets in code:** Never hardcode API keys. Use `.env.example` as template; actual keys go in Azure Key Vault.
-- ⚠️ **Wrong registry:** Use `nbagbsacr` (not `greenbieracr`) for NBAGBSVMODEL deployments.
+- ⚠️ **Wrong registry:** Use `nbagbsacr` (not `greenbieracr`) for nba-gbsv-model-rg deployments.
 - ⚠️ **Missing credentials:** Docker builds need `secrets/THE_ODDS_API_KEY` and `secrets/API_BASKETBALL_KEY` files. Fetch from Key Vault if missing: `az keyvault secret show --vault-name nbagbs-keyvault --name THE-ODDS-API-KEY --query value -o tsv > secrets/THE_ODDS_API_KEY`
 
 ## **Editing Rules for AI Agents**

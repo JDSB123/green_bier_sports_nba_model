@@ -1,7 +1,7 @@
 Param(
   [string]$Subscription = "",
   [string]$SourceResourceGroup = "greenbier-enterprise-rg",
-  [string]$DestResourceGroup = "NBAGBSVMODEL",
+  [string]$DestResourceGroup = "nba-gbsv-model-rg",
   [string]$Location = "eastus",
   [string]$Environment = "prod",
   [string]$SourceAcrName = "greenbieracr",
@@ -9,7 +9,7 @@ Param(
   [string]$SourceKeyVaultName = "greenbier-keyvault",
   [string]$DestKeyVaultName = "nbagbs-keyvault",
   [string]$ContainerAppEnvName = "greenbier-nba-env",
-  [string]$ContainerAppName = "nba-picks-api",
+  [string]$ContainerAppName = "nba-gbsv-api",
   [string]$ImageName = "nba-model",
   [string]$Tag = "v6.4"
 )

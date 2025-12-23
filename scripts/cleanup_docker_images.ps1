@@ -1,11 +1,11 @@
 #!/usr/bin/env pwsh
 # NBA Model Docker Image Cleanup Script
-# Removes all images except nbagbsacr.azurecr.io/nba-picks-api:v6.10
+# Removes all images except nbagbsacr.azurecr.io/nba-gbsv-api:v6.10
 
 Write-Host "=== NBA Docker Image Cleanup ===" -ForegroundColor Cyan
 
 # The image we want to KEEP
-$keepImage = "nbagbsacr.azurecr.io/nba-picks-api:v6.10"
+$keepImage = "nbagbsacr.azurecr.io/nba-gbsv-api:v6.10"
 
 Write-Host "`nCurrent NBA-related images:" -ForegroundColor Yellow
 docker images | Select-String "nba"

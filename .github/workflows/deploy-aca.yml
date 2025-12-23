@@ -10,9 +10,9 @@ on:
 
 env:
   ACR_LOGIN_SERVER: nbagbsacr.azurecr.io
-  IMAGE_NAME: nba-picks-api
-  CONTAINER_APP: nba-picks-api
-  RESOURCE_GROUP: NBAGBSVMODEL
+  IMAGE_NAME: nba-gbsv-api
+  CONTAINER_APP: nba-gbsv-api
+  RESOURCE_GROUP: nba-gbsv-model-rg
 
 permissions:
   id-token: write

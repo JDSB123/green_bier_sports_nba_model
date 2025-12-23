@@ -7,7 +7,7 @@ on:
 
 env:
   ACR_NAME: nbagbsacr
-  REPOSITORY: nba-picks-api
+  REPOSITORY: nba-gbsv-api
   KEEP: 12 # keep most recent 12 git-* tags
 
 permissions:

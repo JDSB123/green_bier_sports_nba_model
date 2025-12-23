@@ -1,9 +1,9 @@
 Param(
     [string]$Subscription = "",
-    [string]$ResourceGroup = "NBAGBSVMODEL",
-    [string]$ContainerAppName = "nba-picks-api",
+    [string]$ResourceGroup = "nba-gbsv-model-rg",
+    [string]$ContainerAppName = "nba-gbsv-api",
     [string]$AcrName = "nbagbsacr",
-    [string]$ImageName = "nba-picks-api",
+    [string]$ImageName = "nba-gbsv-api",
     [string]$Tag = "v6.10",
     [string]$DockerFile = "Dockerfile.combined"
 )

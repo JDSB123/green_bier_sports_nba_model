@@ -66,14 +66,14 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
    - Requires repo secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
 - Manual deploy to Azure Container Apps: see [.github/workflows/deploy-aca.yml](.github/workflows/deploy-aca.yml)
    - Input: tag to deploy (`NBA_v33.0` or `git-<sha>`)
-   - Targets Container App `nba-picks-api` in Resource Group `NBAGBSVMODEL`
+   - Targets Container App `nba-gbsv-api` in Resource Group `nba-gbsv-model-rg`
 - ACR retention (optional): see [.github/workflows/acr-retention.yml](.github/workflows/acr-retention.yml)
    - Weekly prune of old `git-*` tags, keeps latest N and preserves `NBA_v33.0`
 
 Quick verify (production):
 
 ```bash
-curl https://nba-picks-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health
+curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health
 ```
 
 

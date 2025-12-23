@@ -131,7 +131,7 @@
     {
       "type": "Microsoft.App/containerApps",
       "apiVersion": "2023-05-01",
-      "name": "nba-picks-api",
+      "name": "nba-gbsv-api",
       "location": "[parameters('location')]",
       "tags": "[variables('tags')]",
       "identity": {
@@ -279,11 +279,11 @@
   "outputs": {
     "containerAppFqdn": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.App/containerApps', 'nba-picks-api'), '2023-05-01').configuration.ingress.fqdn]"
+      "value": "[reference(resourceId('Microsoft.App/containerApps', 'nba-gbsv-api'), '2023-05-01').configuration.ingress.fqdn]"
     },
     "containerAppUrl": {
       "type": "string",
-      "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', 'nba-picks-api'), '2023-05-01').configuration.ingress.fqdn)]"
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', 'nba-gbsv-api'), '2023-05-01').configuration.ingress.fqdn)]"
     },
     "storageAccountName": {
       "type": "string",

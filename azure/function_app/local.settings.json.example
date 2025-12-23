@@ -7,7 +7,7 @@
     "TEAMS_WEBHOOK_URL": "SET_VIA_AZURE_PORTAL_OR_CLI"
   },
   "_comments": {
-    "NBA_API_URL": "Get current FQDN: az containerapp show -n nba-picks-api -g NBAGBSVMODEL --query properties.configuration.ingress.fqdn -o tsv",
+    "NBA_API_URL": "Get current FQDN: az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv",
     "TEAMS_WEBHOOK_URL": "Get from Teams channel > Connectors > Incoming Webhook"
   }
 }

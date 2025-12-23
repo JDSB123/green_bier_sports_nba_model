@@ -8,12 +8,12 @@
 #
 # Prerequisites:
 #   - Azure CLI installed and logged in (az login)
-#   - Access to NBAGBSVMODEL resource group
+#   - Access to nba-gbsv-model-rg resource group
 
 set -e
 
-RESOURCE_GROUP="NBAGBSVMODEL"
-APP_NAME="nba-picks-api"
+RESOURCE_GROUP="nba-gbsv-model-rg"
+APP_NAME="nba-gbsv-api"
 
 echo "=== Azure Container App Cold Start Fix ==="
 echo "Resource Group: $RESOURCE_GROUP"

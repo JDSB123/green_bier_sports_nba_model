@@ -14,7 +14,7 @@ on:
 env:
   ACR_NAME: nbagbsacr
   ACR_LOGIN_SERVER: nbagbsacr.azurecr.io
-  IMAGE_NAME: nba-picks-api
+  IMAGE_NAME: nba-gbsv-api
   VERSION_TAG: NBA_v33.0.1.0
 
 permissions:
