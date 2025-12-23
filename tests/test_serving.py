@@ -129,15 +129,14 @@ def mock_engine():
     }
     # Mock get_model_info for health endpoint
     engine.get_model_info.return_value = {
-        "version": "6.5",
-        "architecture": "9-model independent",
-        "markets": 9,
+        "version": "6.6",
+        "architecture": "6-model independent (Q1 disabled)",
+        "markets": 6,
         "markets_list": [
-            "q1_spread", "q1_total", "q1_moneyline",
             "1h_spread", "1h_total", "1h_moneyline",
             "fg_spread", "fg_total", "fg_moneyline",
         ],
-        "periods": ["first_quarter", "first_half", "full_game"],
+        "periods": ["first_half", "full_game"],
     }
     return engine
 
@@ -183,14 +182,15 @@ def test_health_endpoint_with_engine(app_with_engine):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["version"] == "6.5"
-    assert data["architecture"] == "9-model independent"
-    assert data["markets"] == 9
+    from src.serving.app import app as fastapi_app
+    assert data["version"] == fastapi_app.version
+    assert data["architecture"] == "6-model independent (Q1 disabled)"
+    assert data["markets"] == 6
     assert data["engine_loaded"] is True
-    # Verify all 9 markets are listed
-    assert "q1_spread" in data["markets_list"]
+    # Verify only active 6 markets are listed (Q1 disabled)
     assert "1h_spread" in data["markets_list"]
     assert "fg_spread" in data["markets_list"]
+    assert "q1_spread" not in data["markets_list"]
 
 
 def test_health_endpoint_without_engine():
@@ -207,8 +207,9 @@ def test_health_endpoint_without_engine():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["version"] == "6.5"
-    assert data["architecture"] == "9-model independent"
+    from src.serving.app import app as fastapi_app
+    assert data["version"] == fastapi_app.version
+    assert data["architecture"] == "6-model independent (Q1 disabled)"
     assert data["engine_loaded"] is False
 
 

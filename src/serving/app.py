@@ -471,7 +471,7 @@ def verify_integrity(request: Request):
     """
     results = {
         "status": "pass",
-        "version": "6.0",
+        "version": RELEASE_VERSION,
         "markets": {
             "q1": ["spread", "total", "moneyline"],
             "1h": ["spread", "total", "moneyline"],
@@ -1195,7 +1195,7 @@ async def get_executive_summary(
     return convert_numpy_types({
         "date": str(target_date),
         "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
-        "version": "6.0",
+        "version": RELEASE_VERSION,
         "total_plays": len(formatted_plays),
         "plays": formatted_plays,
         "legend": {
@@ -1348,7 +1348,7 @@ async def get_comprehensive_slate_analysis(
     
     return convert_numpy_types({
         "date": str(target_date),
-        "version": "6.0",
+        "version": RELEASE_VERSION,
         "markets": [
             "q1_spread", "q1_total", "q1_moneyline",
             "1h_spread", "1h_total", "1h_moneyline",
@@ -1363,8 +1363,11 @@ async def get_comprehensive_slate_analysis(
 async def get_meta_info():
     """Get metadata about the running service."""
     return {
-        "version": os.getenv("NBA_MODEL_VERSION", "6.4-STRICT"),
-        "markets": os.getenv("NBA_MARKETS", "").split(","),
+        "version": RELEASE_VERSION,
+        "markets": [
+            "1h_spread", "1h_total", "1h_moneyline",
+            "fg_spread", "fg_total", "fg_moneyline",
+        ],
         "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
         "server_time": datetime.now().isoformat(),
         "python_version": sys.version

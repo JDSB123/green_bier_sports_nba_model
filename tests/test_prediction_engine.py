@@ -197,13 +197,13 @@ class TestUnifiedPredictionEngine:
         info = engine.get_model_info()
 
         assert "version" in info
-        assert info["version"] == "6.5"
+        assert info["version"] == "6.6"
         assert "markets" in info
         assert info["markets"] == 9
         assert "markets_list" in info
 
-    def test_predict_all_markets_returns_all_periods(self):
-        """Test predict_all_markets returns all 3 periods with 3 markets each."""
+    def test_predict_all_markets_returns_expected_periods(self):
+        """Test predict_all_markets returns active periods with 3 markets each (Q1 optional)."""
         from src.prediction.engine import UnifiedPredictionEngine
 
         # Create mock engine with mock predictors
@@ -242,11 +242,11 @@ class TestUnifiedPredictionEngine:
                 away_ml_odds=130,
             )
 
-            assert "first_quarter" in result
+            # Q1 is disabled in current architecture; 1H and FG must exist
             assert "first_half" in result
             assert "full_game" in result
 
-            for period in ["first_quarter", "first_half", "full_game"]:
+            for period in ["first_half", "full_game"]:
                 assert "spread" in result[period]
                 assert "total" in result[period]
                 assert "moneyline" in result[period]
