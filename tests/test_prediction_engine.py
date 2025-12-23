@@ -93,8 +93,9 @@ class TestPeriodPredictor:
         assert result["home_cover_prob"] == 0.60
         assert result["away_cover_prob"] == 0.40
         assert result["bet_side"] == "home"
-        # Edge = predicted_margin - spread_line = 5.0 - (-3.5) = 8.5
-        assert result["edge"] == pytest.approx(8.5, rel=0.01)
+        # Edge = predicted_margin + spread_line = 5.0 + (-3.5) = 1.5
+        # (Home favored by 3.5, model predicts +5, so home beats spread by 1.5)
+        assert result["edge"] == pytest.approx(1.5, rel=0.01)
 
     def test_predict_spread_missing_features_raises(self, mock_spread_model, mock_total_model, mock_moneyline_model):
         """Test that missing features raises ValueError in STRICT MODE."""

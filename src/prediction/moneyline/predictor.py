@@ -231,30 +231,45 @@ class MoneylinePredictor:
             market="1h_moneyline",
         )
 
+        # v6.5 WARNING: 1H moneyline uses spread model - this is a derived probability
+        # TODO: Train dedicated 1H moneyline model for better accuracy
+        # Using spread model for now with improved conversion
+        logger.warning(
+            "[1H_ML] Using spread model for 1H moneyline - derived probability may be less accurate. "
+            "Consider training dedicated 1H moneyline model."
+        )
+
         # Get spread cover probabilities (NOT win probabilities)
         spread_proba = self.fh_model.predict_proba(X)[0]
         home_cover_prob = float(spread_proba[1])
         away_cover_prob = float(spread_proba[0])
-        
+
         # Convert spread cover probabilities to actual win probabilities
-        # Use predicted margin for first half
+        # Use predicted margin for first half as primary signal
         predicted_margin_1h = features.get("predicted_margin_1h", 0.0)
-        k = 0.16  # NBA-specific constant
-        
-        if predicted_margin_1h != 0:
-            # Use logistic function to convert margin to win probability
-            home_win_prob_raw = 1.0 / (1.0 + math.exp(-k * predicted_margin_1h))
-            home_win_prob = max(0.05, min(0.95, home_win_prob_raw))
-            away_win_prob = 1.0 - home_win_prob
+
+        # v6.5 FIX: Improved conversion using margin-based logistic function
+        # k = 0.14 is calibrated for 1H (lower variance than FG)
+        # Formula: P(win) = 1 / (1 + exp(-k * margin))
+        k = 0.14  # NBA 1H-specific constant (recalibrated)
+
+        # Combine margin-based probability with classifier signal
+        # Margin-based (quantitative signal)
+        if abs(predicted_margin_1h) > 0.1:  # Meaningful margin
+            margin_win_prob = 1.0 / (1.0 + math.exp(-k * predicted_margin_1h))
         else:
-            # Fallback: adjust cover prob to win prob
-            if home_cover_prob > 0.5:
-                home_win_prob = 0.5 + (home_cover_prob - 0.5) * 1.3
-                home_win_prob = min(0.95, home_win_prob)
-            else:
-                home_win_prob = 0.5 - (0.5 - home_cover_prob) * 1.3
-                home_win_prob = max(0.05, home_win_prob)
-            away_win_prob = 1.0 - home_win_prob
+            margin_win_prob = 0.5
+
+        # Classifier-based (pattern signal) - scale cover prob to win prob
+        # Cover prob is correlated but not equal to win prob
+        # Use conservative scaling: 0.8x the deviation from 0.5
+        classifier_win_prob = 0.5 + (home_cover_prob - 0.5) * 0.8
+
+        # Weighted average: 60% margin-based, 40% classifier-based
+        # (Margin is more reliable for win probability)
+        home_win_prob_raw = 0.6 * margin_win_prob + 0.4 * classifier_win_prob
+        home_win_prob = max(0.05, min(0.95, home_win_prob_raw))
+        away_win_prob = 1.0 - home_win_prob
         
         confidence = calculate_confidence_from_probabilities(home_win_prob, away_win_prob)
         predicted_winner = "home" if home_win_prob > 0.5 else "away"

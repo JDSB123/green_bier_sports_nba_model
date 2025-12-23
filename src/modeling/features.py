@@ -849,11 +849,17 @@ class FeatureEngineer:
         # Win probability based on win percentage
         home_win_pct = home_stats.get("win_pct", 0.5)
         away_win_pct = away_stats.get("win_pct", 0.5)
-        
-        # Simple Elo approximation (based on margin)
-        # Each point of margin = ~25 Elo points
-        home_elo = 1500 + home_stats.get("margin", 0) * 25
-        away_elo = 1500 + away_stats.get("margin", 0) * 25
+
+        # v6.5 FIX: Standardized Elo formula (matches rich_features.py)
+        # Combines win%, PPG differential for more accurate strength estimate
+        # Formula: 1500 + (win_pct - 0.5) * 400 + (ppg - papg) * 10
+        home_ppg = home_stats.get("ppg", 110)
+        home_papg = home_stats.get("papg", 110)
+        away_ppg = away_stats.get("ppg", 110)
+        away_papg = away_stats.get("papg", 110)
+
+        home_elo = 1500 + (home_win_pct - 0.5) * 400 + (home_ppg - home_papg) * 10
+        away_elo = 1500 + (away_win_pct - 0.5) * 400 + (away_ppg - away_papg) * 10
         elo_diff = home_elo - away_elo
         
         # Pythagorean expectation (Bill James formula adapted for basketball)
@@ -1037,27 +1043,34 @@ class FeatureEngineer:
         features.update(ml_features)
 
         # === UPDATED: Enhanced predicted margin ===
+        # v6.5 FIX: Removed explicit rest term - rest is already accounted for in:
+        # 1. compute_dynamic_hca() adjusts HCA for home B2B and rest differential
+        # 2. calculate_travel_fatigue() mitigates fatigue when rest >= 2 days
         features["predicted_margin"] = (
             (home_stats["margin"] - away_stats["margin"]) / 2
-            + hca  # Dynamic home court advantage
-            + (home_rest - away_rest) * 0.5  # Rest advantage
-            - away_travel["travel_fatigue"]  # Away team fatigue
+            + hca  # Dynamic home court advantage (already includes rest adjustments)
+            - away_travel["travel_fatigue"]  # Away team fatigue (already has rest mitigation)
             + features.get("clutch_diff", 0) * 0.3  # Clutch factor
             + features.get("net_rating_diff", 0) * 0.2  # Net rating
         )
 
-        # Predicted total
-        features["predicted_total"] = (home_stats["pace"] + away_stats["pace"]) / 2
+        # v6.5 FIX: Predicted total using matchup-based formula
+        # Home expected points = average of (home's offense, away's defense allowed)
+        # Away expected points = average of (away's offense, home's defense allowed)
+        # This properly accounts for the matchup instead of just averaging pace
+        home_expected_pts = (home_stats["ppg"] + away_stats["papg"]) / 2
+        away_expected_pts = (away_stats["ppg"] + home_stats["papg"]) / 2
+        features["predicted_total"] = home_expected_pts + away_expected_pts
 
         # === FIRST HALF PREDICTIONS ===
         # 1H margin is approximately 45-50% of full game margin (adjusted for pace)
         # Scale down home court advantage for 1H (~1.5 pts vs 3 pts for FG)
         hca_1h = hca * 0.5  # Half the HCA for first half
+        # v6.5 FIX: Removed explicit rest term (already in HCA + travel_fatigue)
         features["predicted_margin_1h"] = (
             (home_stats["margin"] - away_stats["margin"]) / 2 * 0.48  # ~48% of FG margin
-            + hca_1h  # Scaled HCA
-            + (home_rest - away_rest) * 0.25  # Rest advantage (half impact)
-            - away_travel["travel_fatigue"] * 0.5  # Travel fatigue (half impact for 1H)
+            + hca_1h  # Scaled HCA (already includes rest adjustments)
+            - away_travel["travel_fatigue"] * 0.5  # Travel fatigue (already has rest mitigation)
         )
         
         # 1H total is approximately 48-50% of full game total

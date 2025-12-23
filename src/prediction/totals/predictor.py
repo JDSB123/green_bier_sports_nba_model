@@ -105,21 +105,35 @@ class TotalPredictor:
         bet_side = "over" if over_prob > 0.5 else "under"
         predicted_total = features["predicted_total"]
 
-        # Calculate edge
-        if bet_side == "over":
-            edge = predicted_total - total_line
-        else:
-            edge = total_line - predicted_total
+        # Calculate edge - ALWAYS use consistent formula
+        # Positive edge = model predicts OVER the line
+        # Negative edge = model predicts UNDER the line
+        # v6.5 FIX: Don't flip sign based on bet_side - maintain signed edge
+        raw_edge = predicted_total - total_line
+        prediction_side = "over" if raw_edge > 0 else "under"
+        edge = abs(raw_edge)  # Use absolute value for display/filtering
+
+        # Check dual-signal agreement
+        signals_agree = (bet_side == prediction_side)
 
         passes_filter, filter_reason = self.fg_filter.should_bet(confidence=confidence)
+
+        # Override filter if signals don't agree
+        if not signals_agree:
+            passes_filter = False
+            filter_reason = f"Signal conflict: classifier={bet_side}, prediction={prediction_side}"
 
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total,
             "confidence": confidence,
-            "bet_side": bet_side,
+            "bet_side": prediction_side,  # Use prediction_side (from edge) as authoritative
             "edge": edge,
+            "raw_edge": raw_edge,  # Signed edge for diagnostics
+            "classifier_side": bet_side,  # What the ML classifier said
+            "prediction_side": prediction_side,  # What the point prediction said
+            "signals_agree": signals_agree,
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
@@ -162,21 +176,33 @@ class TotalPredictor:
         bet_side = "over" if over_prob > 0.5 else "under"
         predicted_total_1h = features["predicted_total_1h"]  # No fallback - already validated
 
-        # Calculate edge
-        if bet_side == "over":
-            edge = predicted_total_1h - total_line
-        else:
-            edge = total_line - predicted_total_1h
+        # Calculate edge - ALWAYS use consistent formula
+        # v6.5 FIX: Don't flip sign based on bet_side - maintain signed edge
+        raw_edge = predicted_total_1h - total_line
+        prediction_side = "over" if raw_edge > 0 else "under"
+        edge = abs(raw_edge)  # Use absolute value for display/filtering
+
+        # Check dual-signal agreement
+        signals_agree = (bet_side == prediction_side)
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(confidence=confidence)
+
+        # Override filter if signals don't agree
+        if not signals_agree:
+            passes_filter = False
+            filter_reason = f"Signal conflict: classifier={bet_side}, prediction={prediction_side}"
 
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total_1h,
             "confidence": confidence,
-            "bet_side": bet_side,
+            "bet_side": prediction_side,  # Use prediction_side (from edge) as authoritative
             "edge": edge,
+            "raw_edge": raw_edge,  # Signed edge for diagnostics
+            "classifier_side": bet_side,  # What the ML classifier said
+            "prediction_side": prediction_side,  # What the point prediction said
+            "signals_agree": signals_agree,
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,

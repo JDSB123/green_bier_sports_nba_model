@@ -178,8 +178,15 @@ class PeriodPredictor:
         edge_abs = abs(edge)
 
         # Filter logic: BOTH signals must agree AND pass thresholds
-        min_conf = filter_thresholds.spread_min_confidence
-        min_edge = filter_thresholds.spread_min_edge
+        # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
+        if self.period == "q1":
+            min_conf = filter_thresholds.q1_min_confidence
+            # Q1 edge threshold: convert percentage to points (~2.5 pts for 5%)
+            # Q1 games average ~50 pts total, so 5% edge ≈ 2.5 pts
+            min_edge = filter_thresholds.q1_min_edge_pct * 50  # Scale percentage to points
+        else:
+            min_conf = filter_thresholds.spread_min_confidence
+            min_edge = filter_thresholds.spread_min_edge
         passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
 
         filter_reason = None
@@ -280,8 +287,14 @@ class PeriodPredictor:
         edge_abs = abs(edge)
 
         # Filter logic: BOTH signals must agree AND pass thresholds
-        min_conf = filter_thresholds.total_min_confidence
-        min_edge = filter_thresholds.total_min_edge
+        # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
+        if self.period == "q1":
+            min_conf = filter_thresholds.q1_min_confidence
+            # Q1 total edge threshold: scale percentage to points (~2.5 pts for 5%)
+            min_edge = filter_thresholds.q1_min_edge_pct * 50  # Scale percentage to points
+        else:
+            min_conf = filter_thresholds.total_min_confidence
+            min_edge = filter_thresholds.total_min_edge
         passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
 
         filter_reason = None
@@ -358,8 +371,13 @@ class PeriodPredictor:
         away_edge = away_win_prob - away_implied
 
         # Determine recommended bet using configurable thresholds
-        min_edge_pct = filter_thresholds.moneyline_min_edge_pct
-        min_conf = filter_thresholds.moneyline_min_confidence
+        # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
+        if self.period == "q1":
+            min_edge_pct = filter_thresholds.q1_min_edge_pct
+            min_conf = filter_thresholds.q1_min_confidence
+        else:
+            min_edge_pct = filter_thresholds.moneyline_min_edge_pct
+            min_conf = filter_thresholds.moneyline_min_confidence
         if home_edge > away_edge and home_edge > min_edge_pct:
             recommended_bet = "home"
             edge = home_edge
@@ -536,13 +554,20 @@ class UnifiedPredictionEngine:
             self.loaded_models[ml_key] = False
             ml_model, ml_features = None, []
 
-        # STRICT MODE DISABLED: Allow partial loading
+        # v6.5 STRICT MODE: All models required - raise on missing
+        missing_models = []
         if spread_model is None:
-            logger.warning(f"[{period}] MISSING spread model. Predictions for this market will fail.")
+            missing_models.append(f"{period}_spread")
         if total_model is None:
-            logger.warning(f"[{period}] MISSING total model. Predictions for this market will fail.")
+            missing_models.append(f"{period}_total")
         if ml_model is None:
-            logger.warning(f"[{period}] MISSING moneyline model. Predictions for this market will fail.")
+            missing_models.append(f"{period}_moneyline")
+
+        if missing_models:
+            raise ModelNotFoundError(
+                f"STRICT MODE: Missing models for {period}: {missing_models}. "
+                f"All 9 models required. Run: python scripts/train_all_models.py"
+            )
 
         return (
             spread_model, spread_features,
@@ -625,6 +650,22 @@ class UnifiedPredictionEngine:
             features = model_features
 
         logger.info(f"Loaded {model_key} with {len(features)} features")
+
+        # v6.5 FIX: Verify model class indices match our assumptions
+        # Expected: class 0 = away/under, class 1 = home/over
+        if hasattr(model, "classes_"):
+            classes = model.classes_.tolist() if hasattr(model.classes_, "tolist") else list(model.classes_)
+            if len(classes) == 2:
+                logger.info(f"[{model_key}] Model classes: {classes} (expected [0, 1] or [False, True])")
+                # Check if classes are in expected order
+                if classes not in [[0, 1], [False, True], [0.0, 1.0]]:
+                    logger.warning(
+                        f"[{model_key}] UNEXPECTED CLASS ORDER: {classes}. "
+                        f"Predictions may be inverted! Expected [0, 1] where 0=away/under, 1=home/over."
+                    )
+            else:
+                logger.warning(f"[{model_key}] Model has {len(classes)} classes (expected 2): {classes}")
+
         return model, features
 
     def _init_legacy_predictors(self):
