@@ -181,9 +181,10 @@ class PeriodPredictor:
         # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
         if self.period == "q1":
             min_conf = filter_thresholds.q1_min_confidence
-            # Q1 edge threshold: convert percentage to points (~2.5 pts for 5%)
-            # Q1 games average ~50 pts total, so 5% edge ≈ 2.5 pts
-            min_edge = filter_thresholds.q1_min_edge_pct * 50  # Scale percentage to points
+            # Q1 edge threshold: convert percentage to points using actual Q1 total
+            # Use predicted Q1 total if available, otherwise use spread line as proxy
+            q1_total_estimate = features.get("predicted_total_q1", 52.0)  # Default ~52 pts
+            min_edge = filter_thresholds.q1_min_edge_pct / 100.0 * q1_total_estimate
         else:
             min_conf = filter_thresholds.spread_min_confidence
             min_edge = filter_thresholds.spread_min_edge
@@ -290,8 +291,10 @@ class PeriodPredictor:
         # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
         if self.period == "q1":
             min_conf = filter_thresholds.q1_min_confidence
-            # Q1 total edge threshold: scale percentage to points (~2.5 pts for 5%)
-            min_edge = filter_thresholds.q1_min_edge_pct * 50  # Scale percentage to points
+            # Q1 total edge threshold: convert percentage to points using actual line
+            # Use the total_line we're betting on as the reference
+            q1_total_ref = total_line if total_line and total_line > 0 else 52.0
+            min_edge = filter_thresholds.q1_min_edge_pct / 100.0 * q1_total_ref
         else:
             min_conf = filter_thresholds.total_min_confidence
             min_edge = filter_thresholds.total_min_edge

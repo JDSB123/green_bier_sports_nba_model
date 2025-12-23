@@ -862,17 +862,19 @@ class FeatureEngineer:
         away_elo = 1500 + (away_win_pct - 0.5) * 400 + (away_ppg - away_papg) * 10
         elo_diff = home_elo - away_elo
         
-        # Pythagorean expectation (Bill James formula adapted for basketball)
-        # Expected Win% = Points^13.91 / (Points^13.91 + Points Allowed^13.91)
+        # Pythagorean expectation (NBA-calibrated formula)
+        # Expected Win% = Points^exp / (Points^exp + Points Allowed^exp)
+        # NBA standard exponent is 16.5 (Hollinger), range 14-17 commonly used
+        # 13.91 is for baseball - NBA scoring is more predictive of wins
         home_ppg = home_stats.get("ppg", 110)
         home_papg = home_stats.get("papg", 110)
         away_ppg = away_stats.get("ppg", 110)
         away_papg = away_stats.get("papg", 110)
-        
+
         # Pythagorean expectation using numerically stable formula
         # Instead of: ppg^exp / (ppg^exp + papg^exp)
         # Use: 1 / (1 + (papg/ppg)^exp) to avoid overflow
-        exponent = 13.91
+        exponent = 16.5  # NBA-calibrated (Hollinger)
         if home_ppg > 0 and home_papg > 0:
             home_pyth = 1.0 / (1.0 + (home_papg / home_ppg) ** exponent)
         else:
