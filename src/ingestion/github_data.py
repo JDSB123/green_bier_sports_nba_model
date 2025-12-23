@@ -85,21 +85,20 @@ class GitHubDataFetcher:
         safe_name = safe_name.replace("/", "_").replace(":", "_")
         return self.cache_dir / safe_name
 
-    def _is_cached(self, url: str, max_age_hours: int = 2) -> bool:
+    def _is_cached(self, url: str, max_age_hours: int = 12) -> bool:
         """Check if URL is cached and still fresh.
 
-        NBA_v33.0.1.0: Reduced TTL from 24h to 2h to ensure fresher data.
+        NBA_v33.0.1.0: TTL 12h - historical ELO/stats updated once daily max.
         """
         cache_path = self._get_cache_path(url)
         if not cache_path.exists():
             return False
 
-        # Check file age - max 2 hours to ensure fresh data
         import time
         age_seconds = time.time() - cache_path.stat().st_mtime
         is_fresh = age_seconds < (max_age_hours * 3600)
         if not is_fresh:
-            logger.info(f"Cache expired for {url} (age: {age_seconds/3600:.1f}h > {max_age_hours}h)")
+            logger.info(f"GitHub cache expired for {url} (age: {age_seconds/3600:.1f}h)")
         return is_fresh
 
     @retry(

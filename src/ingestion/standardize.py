@@ -42,7 +42,7 @@ logger = get_logger(__name__)
 _VARIANT_OVERRIDE_CACHE_PATH = Path(settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
 _VARIANT_OVERRIDE_CACHE: dict[str, str] | None = None
 _VARIANT_OVERRIDE_CACHE_LOADED_AT: float | None = None
-_VARIANT_OVERRIDE_CACHE_TTL_HOURS = 4  # NBA_v33.0.1.0: Cache expires after 4 hours
+_VARIANT_OVERRIDE_CACHE_TTL_HOURS = 24  # NBA_v33.0.1.0: Team names rarely change, 24h TTL
 
 
 def _load_variant_override_cache() -> dict[str, str]:
