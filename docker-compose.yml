@@ -52,8 +52,8 @@ services:
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
 
-      # v6.4 configuration (9 independent markets)
-      - NBA_MODEL_VERSION=6.4-STRICT
+      # v33.0 configuration (9 independent markets)
+      - NBA_MODEL_VERSION=NBA_v33.0.2.0
       - NBA_MARKETS=q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
       - NBA_PERIODS=first_quarter,first_half,full_game
 

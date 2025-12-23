@@ -36,59 +36,65 @@ $removedCount = 0
 # Clean up containers
 if ($All -or $Containers) {
     Write-Host "`nCleaning up containers..." -ForegroundColor Yellow
-    $containers = docker ps -a --filter "name=nba" --format "{{.Names}}"
-    if ($containers) {
-        foreach ($container in $containers) {
-            Write-Host "  Removing container: $container" -ForegroundColor Gray
-            docker rm -f $container 2>$null | Out-Null
-            if ($LASTEXITCODE -eq 0) {
+    try {
+        $containers = @(docker.exe ps -a --filter "name=nba" --format "{{.Names}}")
+        if ($containers -and $containers.Count -gt 0 -and $containers[0] -ne "") {
+            foreach ($container in $containers) {
+                if ([string]::IsNullOrWhiteSpace($container)) { continue }
+                Write-Host "  Removing container: $container" -ForegroundColor Gray
+                docker.exe rm -f $container 2>$null | Out-Null
                 $removedCount++
             }
+            Write-Host "  ✓ Removed containers" -ForegroundColor Green
+        } else {
+            Write-Host "  No NBA containers found" -ForegroundColor Gray
         }
-        Write-Host "  ✓ Removed $removedCount container(s)" -ForegroundColor Green
-    } else {
-        Write-Host "  No NBA containers found" -ForegroundColor Gray
+    } catch {
+        Write-Warning "Error listing containers: $_"
     }
 }
 
 # Clean up images
 if ($All -or $Images) {
     Write-Host "`nCleaning up images..." -ForegroundColor Yellow
-    $images = docker images --filter "reference=*nba*" --format "{{.Repository}}:{{.Tag}}"
-    if ($images) {
-        foreach ($image in $images) {
-            Write-Host "  Removing image: $image" -ForegroundColor Gray
-            docker rmi -f $image 2>$null | Out-Null
-            if ($LASTEXITCODE -eq 0) {
+    try {
+        $images = @(docker.exe images --filter "reference=*nba*" --format "{{.Repository}}:{{.Tag}}")
+        if ($images -and $images.Count -gt 0 -and $images[0] -ne "") {
+            foreach ($image in $images) {
+                if ([string]::IsNullOrWhiteSpace($image)) { continue }
+                Write-Host "  Removing image: $image" -ForegroundColor Gray
+                docker.exe rmi -f $image 2>$null | Out-Null
                 $removedCount++
             }
+            Write-Host "  ✓ Removed images" -ForegroundColor Green
+        } else {
+            Write-Host "  No NBA images found" -ForegroundColor Gray
         }
-        Write-Host "  ✓ Removed $removedCount image(s)" -ForegroundColor Green
-    } else {
-        Write-Host "  No NBA images found" -ForegroundColor Gray
+    } catch {
+        Write-Warning "Error listing images: $_"
     }
 }
 
 # Clean up volumes
 if ($All -or $Volumes) {
     Write-Host "`nCleaning up volumes..." -ForegroundColor Yellow
-    $volumes = docker volume ls --filter "name=nba" --format "{{.Name}}"
-    if ($volumes) {
-        foreach ($volume in $volumes) {
-            Write-Host "  Removing volume: $volume" -ForegroundColor Gray
-            docker volume rm $volume 2>$null | Out-Null
-            if ($LASTEXITCODE -eq 0) {
+    try {
+        $volumes = @(docker.exe volume ls --filter "name=nba" --format "{{.Name}}")
+        if ($volumes -and $volumes.Count -gt 0 -and $volumes[0] -ne "") {
+            foreach ($volume in $volumes) {
+                if ([string]::IsNullOrWhiteSpace($volume)) { continue }
+                Write-Host "  Removing volume: $volume" -ForegroundColor Gray
+                docker.exe volume rm $volume 2>$null | Out-Null
                 $removedCount++
             }
+            Write-Host "  ✓ Removed volumes" -ForegroundColor Green
+        } else {
+            Write-Host "  No NBA volumes found" -ForegroundColor Gray
         }
-        Write-Host "  ✓ Removed $removedCount volume(s)" -ForegroundColor Green
-    } else {
-        Write-Host "  No NBA volumes found" -ForegroundColor Gray
+    } catch {
+        Write-Warning "Error listing volumes: $_"
     }
 }
 
 Write-Host ""
 Write-Host "Cleanup complete!" -ForegroundColor Green
-Write-Host ""
-Write-Host "To rebuild and start fresh:" -ForegroundColor Cyan
-Write-Host "  ./run.ps1" -ForegroundColor White
