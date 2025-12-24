@@ -892,6 +892,9 @@ class RichFeatureBuilder:
             # Rest/fatigue
             "home_rest_days": home_form["rest_days"],
             "away_rest_days": away_form["rest_days"],
+            # Aliases for model compatibility (some models use days_rest instead of rest_days)
+            "home_days_rest": home_form["rest_days"],
+            "away_days_rest": away_form["rest_days"],
             "home_rest_adj": home_rest_adj,
             "away_rest_adj": away_rest_adj,
             "rest_margin_adj": rest_margin_adj,
@@ -995,5 +998,24 @@ class RichFeatureBuilder:
             features["sharp_side_total"] = 0
             features["spread_ticket_money_diff"] = 0.0
             features["total_ticket_money_diff"] = 0.0
+
+        # ATS (against the spread) cover rates - estimate from margin performance
+        # Teams that consistently outperform their expected margin tend to cover more often
+        # Formula: base 50% + adjustment based on how team performs vs expected scoring
+        home_margin_performance = (home_ppg - home_papg) / 10  # Net rating scaled
+        away_margin_performance = (away_ppg - away_papg) / 10
+        features["home_ats_pct"] = max(0.35, min(0.65, 0.50 + home_margin_performance * 0.05))
+        features["away_ats_pct"] = max(0.35, min(0.65, 0.50 + away_margin_performance * 0.05))
+        features["home_ats_pct_1h"] = features["home_ats_pct"]  # Use same for 1H
+        features["away_ats_pct_1h"] = features["away_ats_pct"]
+
+        # Injury spread impact - calculated from actual injury PPG data
+        # Losing scorers directly impacts expected margin
+        features["home_injury_spread_impact"] = -home_out_ppg  # Negative = hurts spread
+        features["away_injury_spread_impact"] = -away_out_ppg
+        features["injury_spread_diff"] = features["home_injury_spread_impact"] - features["away_injury_spread_impact"]
+
+        # Rest advantage for spread betting (home rest - away rest)
+        features["rest_advantage"] = home_form["rest_days"] - away_form["rest_days"]
 
         return features
