@@ -21,6 +21,22 @@ if sys.platform == "win32":
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Set required environment variables for config loading
+import os
+os.environ.setdefault('FILTER_SPREAD_MIN_CONFIDENCE', '0.55')
+os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '1.0')
+os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.55')
+os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '1.5')
+os.environ.setdefault('FILTER_MONEYLINE_MIN_CONFIDENCE', '0.55')
+os.environ.setdefault('FILTER_MONEYLINE_MIN_EDGE_PCT', '0.03')
+os.environ.setdefault('THE_ODDS_BASE_URL', 'https://api.the-odds-api.com/v4')
+os.environ.setdefault('API_BASKETBALL_BASE_URL', 'https://v1.basketball.api-sports.io')
+os.environ.setdefault('DATA_RAW_DIR', 'data/raw')
+os.environ.setdefault('DATA_PROCESSED_DIR', 'data/processed')
+os.environ.setdefault('CURRENT_SEASON', '2025-2026')
+os.environ.setdefault('SEASONS_TO_PROCESS', '2025-2026')
+os.environ.setdefault('NBA_MARKETS', '1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline')
+
 from src.prediction.engine import UnifiedPredictionEngine
 from src.prediction.models import (
     load_spread_model,
@@ -173,6 +189,23 @@ def verify_prediction_pipeline(models_dir: Path) -> dict:
             "away_away_win_pct": 0.3,
             "home_home_avg_margin": 4.0,
             "away_away_avg_margin": -3.0,
+            # FG spread additional features
+            "ppg_diff": 3.0,
+            "win_pct_diff": 0.2,
+            "rest_advantage": 1,
+            "is_rlm_spread": 0,
+            "sharp_side_spread": 0,
+            "spread_movement": 0.0,
+            "spread_public_home_pct": 50.0,
+            "spread_ticket_money_diff": 0.0,
+            # FG total additional features
+            "home_total_ppg": 225.0,
+            "away_total_ppg": 227.0,
+            "is_rlm_total": 0,
+            "sharp_side_total": 0,
+            # Rest day aliases
+            "home_days_rest": 2,
+            "away_days_rest": 1,
         }
         
         # Test full game predictions
@@ -212,6 +245,119 @@ def verify_prediction_pipeline(models_dir: Path) -> dict:
         results["status"] = "fail"
         results["errors"].append(f"Pipeline test: {str(e)}")
     
+    return results
+
+
+def verify_feature_alignment(models_dir: Path) -> dict:
+    """
+    CRITICAL: Verify feature builder produces all features required by models.
+
+    This prevents the bug where models expect 'home_days_rest' but builder
+    produces 'home_rest_days' (or similar naming mismatches).
+    """
+    results = {
+        "status": "pass",
+        "models_checked": [],
+        "missing_features": {},
+        "errors": []
+    }
+
+    import pickle
+    import asyncio
+
+    # Load model feature requirements
+    model_features = {}
+
+    feature_files = [
+        ("1h_spread", "1h_spread_features.pkl"),
+        ("1h_total", "1h_total_features.pkl"),
+    ]
+
+    for model_name, filename in feature_files:
+        filepath = models_dir / filename
+        if filepath.exists():
+            try:
+                with open(filepath, 'rb') as f:
+                    features = pickle.load(f)
+                model_features[model_name] = set(features)
+                results["models_checked"].append(model_name)
+            except Exception as e:
+                results["errors"].append(f"Failed to load {filename}: {e}")
+
+    # FG models stored differently - get from model dict
+    import joblib
+    fg_files = [
+        ("fg_spread", "fg_spread_model.joblib"),
+        ("fg_total", "fg_total_model.joblib"),
+    ]
+
+    for model_name, filename in fg_files:
+        filepath = models_dir / filename
+        if filepath.exists():
+            try:
+                model_dict = joblib.load(filepath)
+                if isinstance(model_dict, dict) and 'feature_columns' in model_dict:
+                    model_features[model_name] = set(model_dict['feature_columns'])
+                    results["models_checked"].append(model_name)
+            except Exception as e:
+                results["errors"].append(f"Failed to load {filename}: {e}")
+
+    if not model_features:
+        results["status"] = "fail"
+        results["errors"].append("No model feature lists found")
+        return results
+
+    # Get feature builder output (using mock data)
+    try:
+        # Import here to avoid circular imports
+        import os
+        os.environ.setdefault('FILTER_SPREAD_MIN_CONFIDENCE', '0.55')
+        os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '1.0')
+        os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.55')
+        os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '1.5')
+        os.environ.setdefault('FILTER_MONEYLINE_MIN_CONFIDENCE', '0.55')
+        os.environ.setdefault('FILTER_MONEYLINE_MIN_EDGE_PCT', '0.03')
+        os.environ.setdefault('THE_ODDS_BASE_URL', 'https://api.the-odds-api.com/v4')
+        os.environ.setdefault('API_BASKETBALL_BASE_URL', 'https://v1.basketball.api-sports.io')
+        os.environ.setdefault('DATA_RAW_DIR', 'data/raw')
+        os.environ.setdefault('DATA_PROCESSED_DIR', 'data/processed')
+        os.environ.setdefault('CURRENT_SEASON', '2025-2026')
+        os.environ.setdefault('SEASONS_TO_PROCESS', '2025-2026')
+
+        # Check feature names statically from the return dict in rich_features.py
+        # This is a static check that doesn't require API calls
+        from src.features.rich_features import RichFeatureBuilder
+        import inspect
+
+        # Get the source of build_game_features to find all feature keys
+        source = inspect.getsource(RichFeatureBuilder.build_game_features)
+
+        # Extract feature names from source (look for "feature_name": patterns)
+        import re
+        builder_features = set()
+
+        # Pattern 1: "feature_name": value
+        pattern1 = re.findall(r'"([a-z_0-9]+)":', source)
+        builder_features.update(pattern1)
+
+        # Pattern 2: features["feature_name"] = value
+        pattern2 = re.findall(r'features\["([a-z_0-9]+)"\]', source)
+        builder_features.update(pattern2)
+
+        # Check each model's required features against builder output
+        for model_name, required_features in model_features.items():
+            missing = required_features - builder_features
+            if missing:
+                results["missing_features"][model_name] = list(sorted(missing))
+                results["status"] = "fail"
+                results["errors"].append(
+                    f"{model_name}: Missing {len(missing)} features: {sorted(missing)[:5]}..."
+                )
+
+    except Exception as e:
+        results["status"] = "warn"
+        results["errors"].append(f"Could not verify feature builder: {e}")
+
     return results
 
 
@@ -342,6 +488,26 @@ def main():
         print(f"   [FAIL] Comprehensive edge errors:")
         for error in edge_results["errors"]:
             print(f"      - {error}")
+    print()
+
+    # 6. CRITICAL: Verify feature alignment between models and feature builder
+    print("6. Verifying feature alignment (model requirements vs feature builder)...")
+    align_results = verify_feature_alignment(models_dir)
+    all_results["feature_alignment"] = align_results
+    if align_results["status"] == "pass":
+        print(f"   [PASS] Feature alignment verified for {len(align_results['models_checked'])} models")
+    elif align_results["status"] == "warn":
+        print(f"   [WARN] Could not fully verify feature alignment:")
+        for error in align_results["errors"]:
+            print(f"      - {error}")
+    else:
+        print(f"   [FAIL] FEATURE MISMATCH DETECTED:")
+        for model, missing in align_results.get("missing_features", {}).items():
+            print(f"      {model}: missing {len(missing)} features")
+            for feat in missing[:5]:
+                print(f"         - {feat}")
+            if len(missing) > 5:
+                print(f"         ... and {len(missing) - 5} more")
     print()
     
     # Summary
