@@ -40,6 +40,14 @@ from src.modeling.team_factors import (
     get_timezone_difference,
 )
 
+# Lazy persistent cache for frequently accessed reference data
+_REFERENCE_CACHE = {
+    'teams': {},  # team_name -> team_id mappings
+    'leagues': {},  # league info
+    'seasons': {},  # season validation cache
+    'last_updated': {}  # cache timestamps
+}
+
 
 class RichFeatureBuilder:
     """
@@ -64,6 +72,26 @@ class RichFeatureBuilder:
         self._injuries_cache: Optional[pd.DataFrame] = None
         self._injuries_fetched: bool = False
 
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get statistics about cache usage and performance."""
+        return {
+            'session_cache': {
+                'teams': len(self._team_cache),
+                'stats': len(self._stats_cache),
+                'games_cached': self._games_cache is not None,
+                'standings_cached': self._standings_cache is not None,
+                'espn_standings_cached': self._espn_standings_cache is not None,
+                'injuries_cached': self._injuries_cache is not None,
+            },
+            'persistent_cache': {
+                'teams': len(_REFERENCE_CACHE['teams']),
+                'leagues': len(_REFERENCE_CACHE['leagues']),
+                'seasons': len(_REFERENCE_CACHE['seasons']),
+                'total_entries': len(_REFERENCE_CACHE['teams']) + len(_REFERENCE_CACHE['leagues']) + len(_REFERENCE_CACHE['seasons']),
+                'last_updated': {k: v.isoformat() for k, v in _REFERENCE_CACHE['last_updated'].items()},
+            }
+        }
+
     def clear_session_cache(self):
         """Clear all in-memory session caches to force fresh data."""
         self._team_cache.clear()
@@ -75,12 +103,45 @@ class RichFeatureBuilder:
         self._injuries_fetched = False
         print("[CACHE] Session cache cleared - next calls will fetch fresh data")
 
+    @staticmethod
+    def _is_cache_valid(cache_key: str, max_age_hours: int = 24) -> bool:
+        """Check if cached data is still valid based on age."""
+        if cache_key not in _REFERENCE_CACHE['last_updated']:
+            return False
+
+        cache_time = _REFERENCE_CACHE['last_updated'][cache_key]
+        age_hours = (datetime.now() - cache_time).total_seconds() / 3600
+        return age_hours < max_age_hours
+
+    @staticmethod
+    def _update_cache_timestamp(cache_key: str):
+        """Update the last updated timestamp for a cache key."""
+        _REFERENCE_CACHE['last_updated'][cache_key] = datetime.now()
+
+    @staticmethod
+    def clear_persistent_cache():
+        """Clear all persistent reference caches (admin function)."""
+        _REFERENCE_CACHE['teams'].clear()
+        _REFERENCE_CACHE['leagues'].clear()
+        _REFERENCE_CACHE['seasons'].clear()
+        _REFERENCE_CACHE['last_updated'].clear()
+        print("[CACHE] Persistent reference cache cleared")
+
     async def get_team_id(self, team_name: str) -> int:
-        """Get team ID from name, with caching."""
+        """Get team ID from name, with lazy persistent caching."""
+        # Check session cache first (fastest)
         if team_name in self._team_cache:
             return self._team_cache[team_name]
 
-        # Search for team with season parameter
+        # Check persistent cache (lazy-loaded, survives across requests)
+        cache_key = f"{self.league_id}_{self.season}_{team_name}"
+        if cache_key in _REFERENCE_CACHE['teams'] and self._is_cache_valid(cache_key):
+            team_id = _REFERENCE_CACHE['teams'][cache_key]
+            # Still populate session cache for this request
+            self._team_cache[team_name] = team_id
+            return team_id
+
+        # Fetch fresh data from API
         result = await api_basketball.fetch_teams(search=team_name, league=self.league_id, season=self.season)
         teams = result.get("response", [])
 
@@ -88,8 +149,58 @@ class RichFeatureBuilder:
             raise ValueError(f"Team not found: {team_name}")
 
         team_id = teams[0]["id"]
+
+        # Cache in both session and persistent caches
         self._team_cache[team_name] = team_id
+        _REFERENCE_CACHE['teams'][cache_key] = team_id
+        self._update_cache_timestamp(cache_key)
+
+        print(f"[CACHE] Team ID cached: {team_name} -> {team_id}")
         return team_id
+
+    async def get_league_info(self) -> Dict[str, Any]:
+        """Get league information with lazy persistent caching."""
+        cache_key = f"league_{self.league_id}"
+
+        # Check persistent cache
+        if cache_key in _REFERENCE_CACHE['leagues'] and self._is_cache_valid(cache_key):
+            return _REFERENCE_CACHE['leagues'][cache_key]
+
+        # Fetch fresh league data
+        result = await api_basketball.fetch_leagues(league_id=self.league_id)
+        leagues = result.get("response", [])
+
+        if not leagues:
+            raise ValueError(f"League not found: {self.league_id}")
+
+        league_info = leagues[0]
+
+        # Cache persistently
+        _REFERENCE_CACHE['leagues'][cache_key] = league_info
+        self._update_cache_timestamp(cache_key)
+
+        print(f"[CACHE] League info cached: {league_info.get('name', 'Unknown')}")
+        return league_info
+
+    async def validate_season(self, season: str) -> bool:
+        """Validate season exists with lazy persistent caching."""
+        cache_key = f"season_{self.league_id}_{season}"
+
+        # Check persistent cache
+        if cache_key in _REFERENCE_CACHE['seasons'] and self._is_cache_valid(cache_key, max_age_hours=168):  # 1 week
+            return _REFERENCE_CACHE['seasons'][cache_key]
+
+        # Fetch seasons to validate
+        result = await api_basketball.fetch_seasons(league=self.league_id)
+        seasons = result.get("response", [])
+        season_exists = season in seasons
+
+        # Cache result
+        _REFERENCE_CACHE['seasons'][cache_key] = season_exists
+        self._update_cache_timestamp(cache_key)
+
+        print(f"[CACHE] Season validation cached: {season} -> {'valid' if season_exists else 'invalid'}")
+        return season_exists
 
     async def get_team_stats(self, team_id: int) -> Dict[str, Any]:
         """

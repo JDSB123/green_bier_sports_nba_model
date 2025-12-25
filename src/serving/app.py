@@ -453,6 +453,38 @@ async def clear_cache(request: Request):
     }
 
 
+@app.get("/admin/cache/stats")
+@limiter.limit("10/minute")
+async def get_cache_stats(request: Request):
+    """
+    Get comprehensive cache statistics and performance metrics.
+
+    Shows both session caches (cleared between requests) and persistent
+    reference caches (lazy-loaded, survive across requests).
+    """
+    stats = {"session_cache": {}, "persistent_cache": {}}
+
+    # Get feature builder cache stats
+    if hasattr(app.state, 'feature_builder'):
+        stats.update(app.state.feature_builder.get_cache_stats())
+
+    # Get API cache stats if available
+    try:
+        from src.utils.api_cache import api_cache
+        api_stats = api_cache.get_stats()
+        stats["api_cache"] = api_stats
+    except Exception:
+        stats["api_cache"] = {"status": "not_configured"}
+
+    return {
+        "status": "success",
+        "timestamp": datetime.now().isoformat(),
+        "caching_strategy": "LAZY_PERSISTENT",
+        "description": "Session caches clear between requests. Persistent caches lazy-load on first use.",
+        "stats": stats
+    }
+
+
 @app.get("/verify")
 @limiter.limit("10/minute")
 def verify_integrity(request: Request):
