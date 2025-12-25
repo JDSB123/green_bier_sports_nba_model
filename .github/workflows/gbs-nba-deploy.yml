@@ -8,6 +8,10 @@
 
 name: GBS NBA - Build & Deploy
 
+permissions:
+  id-token: write
+  contents: read
+
 on:
   push:
     branches: [main, master]
