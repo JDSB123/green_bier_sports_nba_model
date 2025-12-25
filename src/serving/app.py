@@ -1,5 +1,5 @@
 """
-NBA_v33.0.2.0 - FastAPI Prediction Server - STRICT MODE
+NBA_v33.0.6.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
@@ -52,7 +52,7 @@ from src.tracking import PickTracker
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.2.0")
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.6.0")
 
 
 def convert_numpy_types(obj):
@@ -89,7 +89,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - NBA_v33.0.2.0 ---
+# --- Request/Response Models - NBA_v33.0.6.0 ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 6 markets (1H + FG)."""
@@ -127,7 +127,7 @@ class SlateResponse(BaseModel):
     total_plays: int
 
 
-# --- API Setup - NBA_v33.0.2.0 ---
+# --- API Setup - NBA_v33.0.6.0 ---
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
@@ -139,7 +139,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.2.0: 6 INDEPENDENT markets (1H+FG for Spread, Total, Moneyline)
+    NBA_v33.0.6.0: 6 INDEPENDENT markets (1H+FG for Spread, Total, Moneyline)
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -160,7 +160,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"NBA_v33.0.2.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"NBA_v33.0.6.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -173,12 +173,12 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("STRICT MODE NBA_v33.0.2.0: Using 1H/FG only (6 models)")
+    logger.info("STRICT MODE NBA_v33.0.6.0: Using 1H/FG only (6 models)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
     # NO FILE CACHING - all data fetched fresh from APIs per request
-    logger.info("NBA_v33.0.2.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    logger.info("NBA_v33.0.6.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -188,16 +188,16 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"NBA_v33.0.2.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
+    logger.info(f"NBA_v33.0.6.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
     # === SHUTDOWN ===
-    logger.info("NBA_v33.0.2.0 shutting down")
+    logger.info("NBA_v33.0.6.0 shutting down")
 
 
 app = FastAPI(
-    title="NBA NBA_v33.0.2.0 - STRICT MODE Production Picks",
+    title="NBA NBA_v33.0.6.0 - STRICT MODE Production Picks",
     description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan
@@ -270,7 +270,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - NBA_v33.0.2.0 with 6 markets."""
+    """Check API health - NBA_v33.0.6.0 with 6 markets."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -1548,9 +1548,9 @@ async def get_picks_html(
             date = dt.now().strftime("%Y-%m-%d")
         
         # Fetch predictions for the date
-        slate = await get_slate_predictions(request, date=date)
+        summary = await get_executive_summary(request, date=date)
         
-        if not slate.picks:
+        if not summary.get("plays"):
             return """
             <html>
             <head>
@@ -1573,34 +1573,30 @@ async def get_picks_html(
         
         # Build picks array for card
         picks_data = []
-        for pick in slate.picks:
-            market_line = "N/A"
-            if hasattr(pick, 'market_line') and pick.market_line:
-                market_line = pick.market_line
-            
-            edge = "N/A"
-            if hasattr(pick, 'edge') and pick.edge:
-                edge = pick.edge
-            
-            confidence = getattr(pick, 'confidence', 0.5)
-            confidence_pct = int(confidence * 100) if confidence else 0
-            
-            fire_emoji = "🔥"
-            if confidence >= 0.75:
-                fire_emoji = "🔥🔥🔥"
-            elif confidence >= 0.65:
-                fire_emoji = "🔥🔥"
-            
+        for pick in summary.get("plays", []):
+            market_line = pick.get("market_line", "N/A")
+            edge = pick.get("edge", "N/A")
+            confidence = pick.get("confidence", "50%")
+            # Handle confidence as string percentage like "91%"
+            if isinstance(confidence, str) and confidence.endswith('%'):
+                confidence_pct = int(confidence.rstrip('%'))
+            else:
+                confidence_pct = int(float(confidence) * 100) if confidence else 50
+            fire_rating = pick.get("fire_rating", 0)
+            # Ensure fire_rating is an int
+            if isinstance(fire_rating, str):
+                fire_rating = int(fire_rating) if fire_rating.isdigit() else 0
+            fire_emoji = "🔥" * int(fire_rating) if fire_rating else ""
             picks_data.append({
-                "period": pick.period if hasattr(pick, 'period') else "FG",
-                "matchup": pick.matchup if hasattr(pick, 'matchup') else f"{pick.away_team} @ {pick.home_team}",
-                "pick": pick.pick if hasattr(pick, 'pick') else "N/A",
+                "period": pick.get("period", "FG"),
+                "matchup": pick.get("matchup", "TBD"),
+                "pick": pick.get("pick", "N/A"),
                 "confidence": confidence_pct,
                 "market_line": market_line,
                 "edge": edge,
                 "fire": fire_emoji
             })
-        
+
         # Generate card JSON
         card = {
             "type": "AdaptiveCard",
