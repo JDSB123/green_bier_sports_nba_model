@@ -98,6 +98,8 @@ echo "📊 Deployment status: $DEPLOYMENT_STATUS"
 # Test the deployment
 echo ""
 echo "🧪 Testing deployed application..."
+
+# Get the application URL
 APP_URL=$(az containerapp show \
   --name "$CONTAINER_APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
@@ -107,20 +109,30 @@ APP_URL=$(az containerapp show \
 if [ -n "$APP_URL" ]; then
     echo "🌐 Application URL: https://$APP_URL"
 
-    # Test health endpoint
-    if curl -s "https://$APP_URL/health" > /dev/null 2>&1; then
-        echo "✅ Health check passed!"
-        echo ""
-        echo "🎉 DEPLOYMENT SUCCESSFUL!"
-        echo "   • Application is running at: https://$APP_URL"
-        echo "   • Health endpoint: https://$APP_URL/health"
-        echo "   • API documentation: https://$APP_URL/docs"
-    else
-        echo "⚠️ Health check failed - deployment may still be in progress"
-        echo "   Monitor the application at: https://$APP_URL/health"
-    fi
+    # Wait for deployment to be ready
+    echo "⏳ Waiting for application to be ready..."
+    for i in {1..30}; do
+        if curl -s --max-time 10 "https://$APP_URL/health" > /dev/null 2>&1; then
+            echo "✅ Health check passed!"
+            echo ""
+            echo "🎉 DEPLOYMENT SUCCESSFUL!"
+            echo "   • Application is running at: https://$APP_URL"
+            echo "   • Health endpoint: https://$APP_URL/health"
+            echo "   • API documentation: https://$APP_URL/docs"
+            echo "   • Cache stats: https://$APP_URL/admin/cache/stats"
+            exit 0
+        fi
+        echo "   Attempt $i/30 - still waiting..."
+        sleep 10
+    done
+
+    echo "⚠️ Health check failed after 5 minutes"
+    echo "   The application may still be starting up"
+    echo "   Try accessing manually: https://$APP_URL/health"
 else
     echo "❌ Could not retrieve application URL"
+    echo "   Check if ingress is enabled:"
+    echo "   az containerapp ingress show -n $CONTAINER_APP_NAME -g $RESOURCE_GROUP"
 fi
 
 echo ""
