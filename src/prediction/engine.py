@@ -492,13 +492,13 @@ class UnifiedPredictionEngine:
         logger.info("Loading 1H models (spread, total, moneyline)...")
         h1_models = self._load_period_models("1h")
         self.h1_predictor = PeriodPredictor("1h", *h1_models)
-        logger.info("1H predictor initialized (3/3 models)")
+        logger.info("1H predictor initialized (2/2 models - Moneyline disabled)")
 
         # Load FG models - WILL RAISE if any missing
         logger.info("Loading FG models (spread, total, moneyline)...")
         fg_models = self._load_period_models("fg")
         self.fg_predictor = PeriodPredictor("fg", *fg_models)
-        logger.info("FG predictor initialized (3/3 models)")
+        logger.info("FG predictor initialized (2/2 models - Moneyline disabled)")
 
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
@@ -550,19 +550,18 @@ class UnifiedPredictionEngine:
         ml_model, ml_features = None, []
         self.loaded_models[ml_key] = False # Mark as not loaded (or ignored)
 
-        # v33.0.6.0 STRICT MODE: All models for the period required - raise on missing
+        # v33.0.6.0 STRICT MODE: Spread and Total required (Moneyline DISABLED)
         missing_models = []
         if spread_model is None:
             missing_models.append(f"{period}_spread")
         if total_model is None:
             missing_models.append(f"{period}_total")
-        if ml_model is None:
-            missing_models.append(f"{period}_moneyline")
+        # v33.0.6.0: Moneyline intentionally disabled - do NOT check for it
 
         if missing_models:
             raise ModelNotFoundError(
                 f"STRICT MODE: Missing models for {period}: {missing_models}. "
-                f"All 3 models for the period are required (spread/total/moneyline)."
+                f"Spread and Total models are required (Moneyline is disabled in v33.0.6.0)."
             )
 
         return (
