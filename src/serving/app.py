@@ -3,17 +3,15 @@ NBA_v33.0.6.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
-PRODUCTION: 6 INDEPENDENT Markets
+PRODUCTION: 4 INDEPENDENT Markets (Moneyline DISABLED)
 
 First Half (1H):
 - 1H Spread
 - 1H Total
-- 1H Moneyline
 
 Full Game (FG):
 - FG Spread
 - FG Total
-- FG Moneyline
 
 STRICT MODE: Every request fetches fresh data from APIs.
 No assumptions, no defaults - all data must be explicitly provided.
@@ -139,7 +137,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.6.0: 6 INDEPENDENT markets (1H+FG for Spread, Total, Moneyline)
+    NBA_v33.0.6.0: 4 INDEPENDENT markets (1H+FG for Spread, Total). Moneyline DISABLED.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===

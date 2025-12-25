@@ -1,5 +1,5 @@
 """
-NBA v6.6 - Unified Prediction Engine
+NBA v33.0.6.0 - Unified Prediction Engine
 
 PRODUCTION: 6 INDEPENDENT Markets (1H + FG ONLY)
 
@@ -30,7 +30,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 # Single source of truth for version - read from environment variable
-MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.2.0")
+MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.6.0")
 
 import logging
 import joblib
@@ -170,10 +170,8 @@ class PeriodPredictor:
         # =====================================================================
         signals_agree = (classifier_side == prediction_side)
 
-        # Bet side is always based on point prediction (the quantitative signal)
-        # When signals disagree, the bet is filtered out anyway (passes_filter=False)
-        # but we still report which side the point prediction favored
-        bet_side = prediction_side
+        # v33.0.6.0 FIX: Bet side is based on the CLASSIFIER (ML Model), not the heuristic.
+        bet_side = classifier_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
@@ -189,16 +187,16 @@ class PeriodPredictor:
         else:
             min_conf = filter_thresholds.spread_min_confidence
             min_edge = filter_thresholds.spread_min_edge
-        passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
+        # v33.0.6.0 FIX: Removed signals_agree from filter. Classifier is the primary signal.
+        # Also removed edge_abs check because edge is based on heuristic.
+        passes_filter = confidence >= min_conf
 
         filter_reason = None
         if not passes_filter:
-            if not signals_agree:
-                filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
-            elif confidence < min_conf:
+            if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
-            else:
-                filter_reason = f"Low edge: {edge_abs:.1f}"
+            # else:
+            #     filter_reason = f"Low edge: {edge_abs:.1f}"
 
         return {
             "home_cover_prob": home_cover_prob,
@@ -280,10 +278,8 @@ class PeriodPredictor:
         # =====================================================================
         signals_agree = (classifier_side == prediction_side)
 
-        # Bet side is always based on point prediction (the quantitative signal)
-        # When signals disagree, the bet is filtered out anyway (passes_filter=False)
-        # but we still report which side the point prediction favored
-        bet_side = prediction_side
+        # v33.0.6.0 FIX: Bet side is based on the CLASSIFIER (ML Model), not the heuristic.
+        bet_side = classifier_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
@@ -299,16 +295,16 @@ class PeriodPredictor:
         else:
             min_conf = filter_thresholds.total_min_confidence
             min_edge = filter_thresholds.total_min_edge
-        passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
+        # v33.0.6.0 FIX: Removed signals_agree from filter. Classifier is the primary signal.
+        # Also removed edge_abs check because edge is based on heuristic.
+        passes_filter = confidence >= min_conf
 
         filter_reason = None
         if not passes_filter:
-            if not signals_agree:
-                filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
-            elif confidence < min_conf:
+            if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
-            else:
-                filter_reason = f"Low edge: {edge_abs:.1f}"
+            # else:
+            #     filter_reason = f"Low edge: {edge_abs:.1f}"
 
         return {
             "over_prob": over_prob,
@@ -430,15 +426,16 @@ class PeriodPredictor:
         if total_line is not None:
             result["total"] = self.predict_total(features, total_line)
 
-        if home_ml_odds is not None and away_ml_odds is not None:
-            result["moneyline"] = self.predict_moneyline(features, home_ml_odds, away_ml_odds)
+        # v33.0.6.0 FIX: Moneyline DISABLED per user request
+        # if home_ml_odds is not None and away_ml_odds is not None:
+        #     result["moneyline"] = self.predict_moneyline(features, home_ml_odds, away_ml_odds)
 
         return result
 
 
 class UnifiedPredictionEngine:
     """
-    NBA v6.6 - Production Prediction Engine
+    NBA v33.0.6.0 - Production Prediction Engine
 
     6 INDEPENDENT Markets (Q1 DISABLED):
 
@@ -447,24 +444,22 @@ class UnifiedPredictionEngine:
     First Half (1H):
     - 1H Spread
     - 1H Total
-    - 1H Moneyline
 
     Full Game (FG):
     - FG Spread
     - FG Total
-    - FG Moneyline
 
     ARCHITECTURE:
     - Each period has independent models trained on period-specific features
     - No cross-period dependencies
-    - Only 1H and FG models required (6 total)
+    - Only 1H and FG models required (4 total)
     """
 
     def __init__(self, models_dir: Path, require_all: bool = True):
         """
         Initialize unified prediction engine.
 
-        v6.6: 6 models REQUIRED (1H + FG only). Q1 models optional/ignored.
+        v33.0.6.0: 6 models REQUIRED (1H + FG only). Q1 models optional/ignored.
 
         Args:
             models_dir: Path to models directory
@@ -484,14 +479,14 @@ class UnifiedPredictionEngine:
                 f"Run: python scripts/train_all_models.py"
             )
 
-        # v6.6: Only load 1H and FG models (Q1 DISABLED)
+        # v33.0.6.0: Only load 1H and FG models (Q1 DISABLED)
         # Initialize period predictors
-        self.q1_predictor: Optional[PeriodPredictor] = None  # Always None in v6.6
+        self.q1_predictor: Optional[PeriodPredictor] = None  # Always None in v33.0.6.0
         self.h1_predictor: Optional[PeriodPredictor] = None
         self.fg_predictor: Optional[PeriodPredictor] = None
 
         # Q1 DISABLED - Skip loading
-        logger.info("[v6.6] Q1 markets DISABLED (low ROI). Only loading 1H + FG.")
+        logger.info("[v33.0.6.0] Q1 markets DISABLED (low ROI). Only loading 1H + FG.")
 
         # Load 1H models - WILL RAISE if any missing
         logger.info("Loading 1H models (spread, total, moneyline)...")
@@ -508,16 +503,17 @@ class UnifiedPredictionEngine:
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
 
-        # Verify loaded models (v6.6 expects 6 total: 1H + FG)
-        loaded_count = sum(1 for k, v in self.loaded_models.items() if v and (k.startswith("1h_") or k.startswith("fg_")))
-        if loaded_count < 6:
-            missing = [k for k, v in self.loaded_models.items() if (k.startswith("1h_") or k.startswith("fg_")) and not v]
+        # Verify loaded models (v33.0.6.0 expects 4 total: 1H + FG Spreads/Totals)
+        # Moneyline is disabled, so we filter those out from the count check
+        loaded_count = sum(1 for k, v in self.loaded_models.items() if v and (k.startswith("1h_") or k.startswith("fg_")) and "moneyline" not in k)
+        if loaded_count < 4:
+            missing = [k for k, v in self.loaded_models.items() if (k.startswith("1h_") or k.startswith("fg_")) and not v and "moneyline" not in k]
             logger.warning(
-                f"PARTIAL LOAD: Only {loaded_count}/6 models loaded (1H+FG). Missing: {missing}\n"
+                f"PARTIAL LOAD: Only {loaded_count}/4 models loaded (1H+FG Spreads/Totals). Missing: {missing}\n"
                 f"Some predictions may be skipped."
             )
         else:
-            logger.info("SUCCESS: All 6/6 models loaded (1H + FG)")
+            logger.info("SUCCESS: All 4/4 models loaded (1H + FG Spreads/Totals)")
 
     def _load_period_models(
         self,
@@ -544,15 +540,17 @@ class UnifiedPredictionEngine:
             self.loaded_models[total_key] = False
             total_model, total_features = None, []
 
-        try:
-            ml_model, ml_features = self._load_model(ml_key)
-            self.loaded_models[ml_key] = True
-        except Exception as e:
-            logger.warning(f"Could not load {ml_key}: {e}")
-            self.loaded_models[ml_key] = False
-            ml_model, ml_features = None, []
+        # v33.0.6.0 FIX: Moneyline DISABLED per user request
+        # try:
+        #     ml_model, ml_features = self._load_model(ml_key)
+        #     self.loaded_models[ml_key] = True
+        # except Exception as e:
+        #     logger.warning(f"Could not load {ml_key}: {e}")
+        #     self.loaded_models[ml_key] = False
+        ml_model, ml_features = None, []
+        self.loaded_models[ml_key] = False # Mark as not loaded (or ignored)
 
-        # v6.6 STRICT MODE: All models for the period required - raise on missing
+        # v33.0.6.0 STRICT MODE: All models for the period required - raise on missing
         missing_models = []
         if spread_model is None:
             missing_models.append(f"{period}_spread")
@@ -837,7 +835,7 @@ class UnifiedPredictionEngine:
             "full_game": {},
         }
 
-        # Q1 DISABLED in v6.6 (low ROI: 53% accuracy, +1.2%)
+        # Q1 DISABLED in v33.0.6.0 (low ROI: 53% accuracy, +1.2%)
         # result["first_quarter"] = {}  # Always empty
 
         # 1H predictions

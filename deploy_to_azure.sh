@@ -75,7 +75,7 @@ az containerapp update \
   --name "$CONTAINER_APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
   --image "$FULL_IMAGE_NAME" \
-  --set-env-vars "NBA_MODEL_VERSION=NBA_v33.0.2.0"
+  --set-env-vars "NBA_MODEL_VERSION=NBA_v33.0.6.0"
 
 echo "✅ Deployment initiated"
 
