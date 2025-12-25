@@ -89,7 +89,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - NBA_v33.0.1.0 ---
+# --- Request/Response Models - NBA_v33.0.2.0 ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 6 markets (1H + FG)."""
@@ -127,7 +127,7 @@ class SlateResponse(BaseModel):
     total_plays: int
 
 
-# --- API Setup - NBA_v33.0.1.0 ---
+# --- API Setup - NBA_v33.0.2.0 ---
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
@@ -139,7 +139,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.1.0: 6 INDEPENDENT markets (1H+FG for Spread, Total, Moneyline)
+    NBA_v33.0.2.0: 6 INDEPENDENT markets (1H+FG for Spread, Total, Moneyline)
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -160,7 +160,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"NBA_v33.0.1.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"NBA_v33.0.2.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -173,12 +173,12 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("STRICT MODE NBA_v33.0.1.0: Using 1H/FG only (6 models)")
+    logger.info("STRICT MODE NBA_v33.0.2.0: Using 1H/FG only (6 models)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
     # NO FILE CACHING - all data fetched fresh from APIs per request
-    logger.info("NBA_v33.0.1.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    logger.info("NBA_v33.0.2.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -188,16 +188,16 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"NBA_v33.0.1.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
+    logger.info(f"NBA_v33.0.2.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
     # === SHUTDOWN ===
-    logger.info("NBA_v33.0.1.0 shutting down")
+    logger.info("NBA_v33.0.2.0 shutting down")
 
 
 app = FastAPI(
-    title="NBA NBA_v33.0.1.0 - STRICT MODE Production Picks",
+    title="NBA NBA_v33.0.2.0 - STRICT MODE Production Picks",
     description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan

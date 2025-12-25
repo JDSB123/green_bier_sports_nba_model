@@ -26,8 +26,12 @@ FEATURE VALIDATION:
 
     See src/prediction/feature_validation.py for details.
 """
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
+# Single source of truth for version - read from environment variable
+MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.2.0")
+
 import logging
 import joblib
 
@@ -867,7 +871,7 @@ class UnifiedPredictionEngine:
     def get_model_info(self) -> Dict[str, Any]:
         """Return info about loaded models."""
         return {
-            "version": "NBA_v33.0.1.0",
+            "version": MODEL_VERSION,
             "architecture": "6-model independent (1H + FG)",
             "markets": sum(1 for v in self.loaded_models.values() if v),
             "markets_list": [k for k, v in self.loaded_models.items() if v],
