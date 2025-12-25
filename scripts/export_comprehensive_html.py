@@ -251,6 +251,9 @@ def generate_html(data: dict, output_path: str):
         total_data = edge_data.get("total", {})
         ml_data = edge_data.get("moneyline", {})
         
+        # Format pick_line with +/- sign for spreads
+        spread_pick_line = spread_data.get("pick_line")
+        spread_pick_line_str = f"{spread_pick_line:+.1f}" if spread_pick_line is not None else ""
         spread_edge = abs(spread_data.get("edge", 0))
         total_edge = abs(total_data.get("edge", 0))
         ml_edge = abs(ml_data.get("edge_away", 0) * 100)
@@ -280,7 +283,7 @@ def generate_html(data: dict, output_path: str):
                     </div>
                     <div class="market-row">
                         <span class="label">Model Pick:</span>
-                        <span class="value pick">{spread_data.get('pick', '')} {spread_data.get('pick_line', '')}</span>
+                        <span class="value pick">{spread_data.get('pick', '')} {spread_pick_line_str}</span>
                     </div>
                     <div class="market-row">
                         <span class="label">Win Prob:</span>

@@ -66,12 +66,6 @@ This directory contains operational scripts for the NBA v6.5 prediction system.
 | `post_to_teams.py` | Post predictions to Microsoft Teams |
 | `update_pick_tracker.py` | Update live pick tracking |
 
-### Azure Deployment
-| Script | Description |
-|--------|-------------|
-| `run_azure_nba.ps1` | **Quick deploy** - Deploy/update Azure NBA setup |
-| `copy_azure_nba.ps1` | **Export/backup** - Copy Azure configuration and optionally deploy |
-
 ### Utilities
 | Script | Description |
 |--------|-------------|
@@ -119,26 +113,3 @@ docker compose up -d
 # Run predictions via Docker
 python scripts/run_slate.py
 ```
-
-## Azure Deployment
-
-Deploy your NBA prediction system to Azure Container Apps:
-
-```powershell
-# Quick deploy/update (uses existing resource group)
-pwsh scripts/run_azure_nba.ps1
-
-# Deploy specific version
-pwsh scripts/run_azure_nba.ps1 -Tag v6.10
-
-# Deploy to new environment
-pwsh scripts/run_azure_nba.ps1 -NewEnvironment
-
-# Export/backup current Azure configuration
-pwsh scripts/copy_azure_nba.ps1 -Backup
-
-# Copy configuration and deploy to new resource group
-pwsh scripts/copy_azure_nba.ps1 -Deploy -TargetResourceGroup "nba-gbsv-model-rg-copy"
-```
-
-See `docs/AZURE_CONFIG.md` for full Azure architecture details.
