@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA AI Picks</title>
+    <style>
+        .nba-picks-container {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+        .fetch-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .fetch-btn:hover { background: #45a049; }
+        .fetch-btn:disabled { background: #cccccc; }
+        .game-card {
+            background: white;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+        .market { margin: 8px 0; }
+        .confidence-high { color: #4CAF50; font-weight: bold; }
+        .confidence-medium { color: #FF9800; font-weight: bold; }
+        .confidence-low { color: #f44336; font-weight: bold; }
+        .loading { text-align: center; color: #666; }
+        .error { color: #f44336; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="nba-picks-container">
+    <h2>🏀 NBA AI-Powered Picks</h2>
+    <p>Get real-time analysis for today's key NBA games</p>
+
+    <button id="fetchBtn" class="fetch-btn">🚀 Fetch NBA Picks</button>
+
+    <div id="loading" class="loading" style="display: none;">
+        <p>Analyzing games with AI... Please wait...</p>
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+        <p>Error loading picks. Please try again.</p>
+    </div>
+
+    <div id="results"></div>
+</div>
+
+<script>
+    const API_BASE = 'https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io';
+
+    document.getElementById('fetchBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('fetchBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+
+        btn.disabled = true;
+        loading.style.display = 'block';
+        error.style.display = 'none';
+        results.innerHTML = '';
+
+        try {
+            // Get today's slate for current odds
+            const slateResponse = await fetch(`${API_BASE}/slate/today`);
+            const slateData = await slateResponse.json();
+
+            // Target games
+            const targetGames = [
+                { home: 'Golden State Warriors', away: 'Dallas Mavericks', name: 'Mavericks @ Warriors' },
+                { home: 'Los Angeles Lakers', away: 'Houston Rockets', name: 'Rockets @ Lakers' }
+            ];
+
+            let html = '';
+
+            for (const game of targetGames) {
+                try {
+                    // Find game in slate data
+                    const slateGame = slateData.games?.find(g =>
+                        g.home_team === game.home && g.away_team === game.away
+                    );
+
+                    let predictionHtml = `<h3>${game.name}</h3>`;
+
+                    if (slateGame) {
+                        // Get prediction with real odds
+                        const predictResponse = await fetch(`${API_BASE}/predict/game`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                home_team: game.home,
+                                away_team: game.away,
+                                fg_spread_line: slateGame.fg_spread_line || 0,
+                                fg_total_line: slateGame.fg_total_line || 220,
+                                fg_home_ml: slateGame.fg_home_ml || -110,
+                                fg_away_ml: slateGame.fg_away_ml || -110
+                            })
+                        });
+
+                        const predictionData = await predictResponse.json();
+
+                        if (predictionData.markets) {
+                            const markets = predictionData.markets;
+
+                            predictionHtml += '<div class="markets">';
+
+                            // Spread
+                            if (markets.fg_spread) {
+                                const spread = markets.fg_spread;
+                                const confidenceClass = spread.confidence >= 70 ? 'confidence-high' :
+                                                      spread.confidence >= 60 ? 'confidence-medium' : 'confidence-low';
+                                predictionHtml += `<div class="market">Spread: ${spread.pick} ${spread.market_line || ''} (${spread.market_odds || ''}) <span class="${confidenceClass}">${spread.confidence || 0}%</span></div>`;
+                            }
+
+                            // Total
+                            if (markets.fg_total) {
+                                const total = markets.fg_total;
+                                const confidenceClass = total.confidence >= 70 ? 'confidence-high' :
+                                                      total.confidence >= 60 ? 'confidence-medium' : 'confidence-low';
+                                predictionHtml += `<div class="market">Total: ${total.market_line || ''} ${total.pick} <span class="${confidenceClass}">${total.confidence || 0}%</span></div>`;
+                            }
+
+                            predictionHtml += '</div>';
+                        } else {
+                            predictionHtml += '<p>Analysis not available</p>';
+                        }
+                    } else {
+                        predictionHtml += '<p>Game not found in current slate</p>';
+                    }
+
+                    html += `<div class="game-card">${predictionHtml}</div>`;
+
+                } catch (gameError) {
+                    html += `<div class="game-card"><h3>${game.name}</h3><p>Error loading analysis</p></div>`;
+                }
+            }
+
+            results.innerHTML = html;
+
+        } catch (err) {
+            error.style.display = 'block';
+            console.error('Error:', err);
+        } finally {
+            btn.disabled = false;
+            loading.style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>
