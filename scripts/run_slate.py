@@ -400,7 +400,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 spread = fg.get("spread", {})
                 if spread.get("pick"):
                     pick_team = spread["pick"]
-                    line = spread.get("market_line", 0)
+                    market_line = spread.get("market_line", 0)
+                    # Use pick_line for display (correct sign for picked team)
+                    pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
                     market_odds_val = spread.get("market_odds")
                     edge = spread.get("edge", 0) or 0
                     conf = spread.get("confidence", 0)
@@ -409,9 +411,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
 
                     proj_margin = model_margin if pick_team == home else -model_margin
 
-                    log(f"    SPREAD: {pick_team} {line:+.1f} ({format_odds(market_odds_val)})")
+                    log(f"    SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
                     log(f"       Model: {pick_team} {proj_margin:+.1f}")
-                    log(f"       Market: {line:+.1f} ({format_odds(market_odds_val)})")
+                    log(f"       Market: {pick_line:+.1f} ({format_odds(market_odds_val)})")
                     log(f"       Edge: {edge:+.1f} pts  |  {fire}")
 
                 # Total
@@ -459,7 +461,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     spread = fh.get("spread", {})
                     if spread.get("pick"):
                         pick_team = spread["pick"]
-                        line = spread.get("market_line", 0)
+                        market_line = spread.get("market_line", 0)
+                        # Use pick_line for display (correct sign for picked team)
+                        pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
                         market_odds_val = spread.get("market_odds")
                         edge = spread.get("edge", 0) or 0
                         conf = spread.get("confidence", 0)
@@ -468,9 +472,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
 
                         proj_margin = model_margin if pick_team == home else -model_margin
 
-                        log(f"    1H SPREAD: {pick_team} {line:+.1f} ({format_odds(market_odds_val)})")
+                        log(f"    1H SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
                         log(f"       Model: {pick_team} {proj_margin:+.1f}")
-                        log(f"       Market: {line:+.1f} ({format_odds(market_odds_val)})")
+                        log(f"       Market: {pick_line:+.1f} ({format_odds(market_odds_val)})")
                         log(f"       Edge: {edge:+.1f} pts  |  {fire}")
 
                     total = fh.get("total", {})
