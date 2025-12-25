@@ -22,7 +22,6 @@
     "**/.git": true,
     "**/.DS_Store": true
   },
-  "azureFunctions.deploySubpath": "azure\\function_app",
   "azureFunctions.scmDoBuildDuringDeployment": true,
   "azureFunctions.pythonVenv": ".venv",
   "azureFunctions.projectLanguage": "Python",
@@ -32,5 +31,6 @@
   "containers.images.label": "Tag",
   "containers.networks.label": "Name",
   "containers.volumes.label": "Name",
-  "liveServer.settings.port": 5501
+  "liveServer.settings.port": 5501,
+  "azureFunctions.projectSubpath": "azure\\function_app"
 }
