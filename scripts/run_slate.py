@@ -294,6 +294,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
 
                 pick_team = p_data.get("pick")
                 market_line = p_data.get("market_line", 0)
+                # Use pick_line (the spread for the picked team) if available
+                pick_line = p_data.get("pick_line") if p_data.get("pick_line") is not None else market_line
                 market_odds_val = p_data.get("market_odds")
                 conf = p_data.get("confidence", 0)
 
@@ -320,11 +322,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     model_val = f"{p_data.get('model_total', 0):.1f}"
                     market_val = f"{market_line:.1f}"
                 else:  # spread
-                    pick_str = f"{pick_team} {market_line:+.1f}"
+                    pick_str = f"{pick_team} {pick_line:+.1f}"
                     model_margin = p_data.get("model_margin", 0)
                     proj = model_margin if pick_team == home else -model_margin
                     model_val = f"{proj:+.1f}"
-                    market_val = f"{market_line:+.1f}"
+                    market_val = f"{pick_line:+.1f}"
 
                 picks.append({
                     "market": market_name,
