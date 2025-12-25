@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA TEMP Picks - Green Bier Sports Ventures</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .fetch-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .fetch-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .fetch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .fetch-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6b6b;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .games-container {
+            display: none;
+        }
+
+        .game-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .game-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .game-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .game-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .status-live {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-upcoming {
+            background: #f39c12;
+            color: white;
+        }
+
+        .markets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .market {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .market-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .market-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pick {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .odds {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .edge {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        .edge-positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .edge-negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .confidence {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .confidence-high {
+            background: #28a745;
+            color: white;
+        }
+
+        .confidence-medium {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .confidence-low {
+            background: #dc3545;
+            color: white;
+        }
+
+        .insights {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .insights h4 {
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .insights ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insights li {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+
+        .error {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 NBA TEMP Picks</h1>
+            <p>AI-Powered Basketball Predictions - Live Analysis</p>
+        </div>
+
+        <div class="content">
+            <div class="fetch-section">
+                <button id="fetchBtn" class="fetch-btn">
+                    🚀 Fetch NBA Picks
+                </button>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing games with AI... This may take a moment</p>
+                </div>
+            </div>
+
+            <div class="error" id="error">
+                <p>❌ Error loading picks. Please try again later.</p>
+            </div>
+
+            <div class="games-container" id="gamesContainer">
+                <!-- Games will be populated here -->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="https://www.greenbiersportventures.com" target="_blank">Green Bier Sports Ventures</a> | AI-Driven Sports Analytics</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io';
+        const fetchBtn = document.getElementById('fetchBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const gamesContainer = document.getElementById('gamesContainer');
+
+        // Target games for analysis
+        const targetGames = [
+            { home: 'Golden State Warriors', away: 'Dallas Mavericks' },
+            { home: 'Los Angeles Lakers', away: 'Houston Rockets' }
+        ];
+
+        fetchBtn.addEventListener('click', async () => {
+            fetchBtn.disabled = true;
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            gamesContainer.style.display = 'none';
+            gamesContainer.innerHTML = '';
+
+            try {
+                // First get today's slate to get current odds
+                const slateResponse = await fetch(`${API_BASE}/slate/today`);
+                const slateData = await slateResponse.json();
+
+                // Then get predictions for target games
+                const predictions = [];
+
+                for (const game of targetGames) {
+                    try {
+                        // Find the game in slate data to get current odds
+                        const slateGame = slateData.games?.find(g =>
+                            g.home_team === game.home && g.away_team === game.away
+                        );
+
+                        let predictionData;
+                        if (slateGame) {
+                            // Use real odds from slate
+                            const predictResponse = await fetch(`${API_BASE}/predict/game`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    home_team: game.home,
+                                    away_team: game.away,
+                                    fg_spread_line: slateGame.fg_spread_line || 0,
+                                    fg_total_line: slateGame.fg_total_line || 200,
+                                    fg_home_ml: slateGame.fg_home_ml || -110,
+                                    fg_away_ml: slateGame.fg_away_ml || -110
+                                })
+                            });
+                            predictionData = await predictResponse.json();
+                        } else {
+                            // Fallback with default odds
+                            const predictResponse = await fetch(`${API_BASE}/predict/game`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    home_team: game.home,
+                                    away_team: game.away,
+                                    fg_spread_line: 0,
+                                    fg_total_line: 220,
+                                    fg_home_ml: -110,
+                                    fg_away_ml: -110
+                                })
+                            });
+                            predictionData = await predictResponse.json();
+                        }
+
+                        predictions.push({
+                            game: game,
+                            data: predictionData
+                        });
+
+                    } catch (gameError) {
+                        console.error(`Error fetching prediction for ${game.home} vs ${game.away}:`, gameError);
+                        predictions.push({
+                            game: game,
+                            error: true
+                        });
+                    }
+                }
+
+                displayPredictions(predictions);
+
+            } catch (err) {
+                console.error('Error fetching picks:', err);
+                error.style.display = 'block';
+            } finally {
+                fetchBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        function displayPredictions(predictions) {
+            gamesContainer.innerHTML = '';
+
+            predictions.forEach(prediction => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+
+                if (prediction.error) {
+                    gameCard.innerHTML = `
+                        <div class="game-header">
+                            <div class="game-title">${prediction.game.away} @ ${prediction.game.home}</div>
+                            <div class="game-status status-upcoming">Error Loading</div>
+                        </div>
+                        <p>Unable to load prediction data for this game.</p>
+                    `;
+                } else {
+                    const data = prediction.data;
+                    const markets = data.markets || {};
+
+                    gameCard.innerHTML = `
+                        <div class="game-header">
+                            <div class="game-title">${prediction.game.away} @ ${prediction.game.home}</div>
+                            <div class="game-status status-live">LIVE PICKS</div>
+                        </div>
+
+                        <div class="markets">
+                            ${renderMarket('Full Game Spread', markets.fg_spread)}
+                            ${renderMarket('Full Game Total', markets.fg_total)}
+                            ${renderMarket('Full Game Moneyline', markets.fg_moneyline)}
+                            ${renderMarket('First Half Spread', markets.fh_spread)}
+                            ${renderMarket('First Half Total', markets.fh_total)}
+                            ${renderMarket('First Half Moneyline', markets.fh_moneyline)}
+                        </div>
+
+                        ${renderInsights(data)}
+                    `;
+                }
+
+                gamesContainer.appendChild(gameCard);
+            });
+
+            gamesContainer.style.display = 'block';
+        }
+
+        function renderMarket(title, marketData) {
+            if (!marketData || !marketData.pick) return '';
+
+            const edge = marketData.edge || 0;
+            const confidence = marketData.confidence || 0;
+
+            let confidenceClass = 'confidence-low';
+            let confidenceText = 'LOW';
+
+            if (confidence >= 70) {
+                confidenceClass = 'confidence-high';
+                confidenceText = 'HIGH';
+            } else if (confidence >= 60) {
+                confidenceClass = 'confidence-medium';
+                confidenceText = 'MEDIUM';
+            }
+
+            let edgeClass = edge > 0 ? 'edge-positive' : 'edge-negative';
+            let edgeText = edge > 0 ? `+${edge.toFixed(1)}` : edge.toFixed(1);
+
+            const pick = marketData.pick;
+            const line = marketData.market_line || '';
+            const odds = marketData.market_odds || '';
+
+            return `
+                <div class="market">
+                    <div class="market-title">${title}</div>
+                    <div class="market-content">
+                        <div>
+                            <span class="pick">${pick}</span>
+                            ${line ? `<span class="odds">${line}</span>` : ''}
+                            ${odds ? `<span class="odds">(${odds})</span>` : ''}
+                        </div>
+                        <div>
+                            <span class="edge ${edgeClass}">${edgeText} pts</span>
+                            <span class="confidence ${confidenceClass}">${confidenceText}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInsights(data) {
+            // This would include team stats, form, etc. if available in API response
+            return `
+                <div class="insights">
+                    <h4>💡 AI Analysis</h4>
+                    <ul>
+                        <li>Model prediction vs current betting market</li>
+                        <li>Edge calculation shows value opportunity</li>
+                        <li>Confidence based on historical performance</li>
+                        <li>Real-time odds integration</li>
+                    </ul>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
