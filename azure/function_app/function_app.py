@@ -1,7 +1,7 @@
 """
 Azure Function: NBA Picks Trigger - Green Bier Sport Ventures
 
-v6.5 STRICT MODE: Always fetches FRESH data before predictions.
+v33.0.7.0 STRICT MODE: Always fetches FRESH data before predictions.
 
 Triggers the NBA prediction API and posts results to Teams.
 Supports interactive commands via Teams messages or direct HTTP calls.
@@ -17,6 +17,10 @@ Endpoints:
   POST /api/nba-picks              - Process Teams command (from Power Automate)
   GET  /api/menu                   - Post interactive menu card to Teams
   GET  /api/health                 - Health check
+
+Website Integration (for greenbiersportventures.com/weekly-lineup):
+  GET  /api/weekly-lineup/nba      - NBA picks for website dashboard
+  GET  /api/weekly-lineup/nba?tier=elite  - Filter by tier (elite/strong/good/all)
 """
 import azure.functions as func
 import base64
@@ -615,11 +619,11 @@ def menu(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="health", methods=["GET"])
 def health(req: func.HttpRequest) -> func.HttpResponse:
-    """Health check endpoint - v6.6 STRICT MODE (Q1 disabled)."""
+    """Health check endpoint - v33.0.7.0 STRICT MODE."""
     return func.HttpResponse(
         json.dumps({
             "status": "ok",
-            "version": "6.6",
+            "version": "v33.0.7.0",
             "mode": "STRICT",
             "service": "nba-picks-trigger",
             "api_url": _get_nba_api_url(),
@@ -628,6 +632,125 @@ def health(req: func.HttpRequest) -> func.HttpResponse:
         }),
         status_code=200,
         mimetype="application/json"
+    )
+
+
+# =============================================================================
+# WEBSITE INTEGRATION - Weekly Lineup Dashboard
+# =============================================================================
+@app.route(route="weekly-lineup/nba", methods=["GET", "OPTIONS"])
+def weekly_lineup_nba(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Website integration endpoint for greenbiersportventures.com/weekly-lineup.
+
+    Returns NBA picks in a format optimized for the website dashboard.
+    Supports CORS for cross-origin requests from the website.
+
+    Query params:
+      - date: YYYY-MM-DD, 'today', or 'tomorrow' (default: today)
+      - tier: 'elite', 'strong', 'good', or 'all' (default: all)
+
+    Response format:
+    {
+        "sport": "NBA",
+        "date": "2025-12-25",
+        "generated_at": "2025-12-25T10:30:00Z",
+        "version": "v33.0.7.0",
+        "summary": {"total": 12, "elite": 3, "strong": 5, "good": 4},
+        "picks": [...]
+    }
+    """
+    # Handle CORS preflight
+    if req.method == "OPTIONS":
+        return func.HttpResponse(
+            "",
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Max-Age": "86400"
+            }
+        )
+
+    logging.info("Weekly-lineup NBA endpoint called")
+
+    # Parse parameters
+    date = req.params.get("date", "today")
+    if date == "tomorrow":
+        tomorrow = datetime.now() + timedelta(days=1)
+        date = tomorrow.strftime("%Y-%m-%d")
+    tier_filter = req.params.get("tier", "all").lower()
+
+    # Fetch predictions from NBA API
+    data = fetch_predictions(date)
+
+    if not data:
+        return func.HttpResponse(
+            json.dumps({
+                "sport": "NBA",
+                "error": "Failed to fetch predictions",
+                "date": date
+            }),
+            status_code=500,
+            mimetype="application/json",
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+    plays = data.get("plays", [])
+
+    # Apply tier filter
+    if tier_filter == "elite":
+        plays = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
+    elif tier_filter == "strong":
+        plays = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG"]]
+    elif tier_filter == "good":
+        plays = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG", "GOOD"]]
+
+    # Count tiers
+    all_plays = data.get("plays", [])
+    elite_count = len([p for p in all_plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
+    strong_count = len([p for p in all_plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
+    good_count = len([p for p in all_plays if get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
+
+    # Format picks for website
+    formatted_picks = []
+    for p in plays:
+        formatted_picks.append({
+            "time": p.get("time_cst", ""),
+            "matchup": p.get("matchup", ""),
+            "period": p.get("period", "FG"),
+            "market": p.get("market", ""),
+            "pick": p.get("pick", ""),
+            "odds": p.get("pick_odds", "N/A"),
+            "model_prediction": p.get("model_prediction", ""),
+            "market_line": p.get("market_line", ""),
+            "edge": p.get("edge", "N/A"),
+            "confidence": p.get("confidence", ""),
+            "tier": get_fire_tier(p.get("fire_rating", "")),
+            "fire_rating": p.get("fire_rating", "")
+        })
+
+    result = {
+        "sport": "NBA",
+        "date": date,
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "version": "v33.0.7.0",
+        "summary": {
+            "total": len(all_plays),
+            "elite": elite_count,
+            "strong": strong_count,
+            "good": good_count,
+            "filtered": len(formatted_picks)
+        },
+        "picks": formatted_picks
+    }
+
+    return func.HttpResponse(
+        json.dumps(result, indent=2),
+        status_code=200,
+        mimetype="application/json",
+        headers={"Access-Control-Allow-Origin": "*"}
     )
 
 

@@ -32,6 +32,9 @@ param theOddsApiKey string
 @secure()
 param apiBasketballKey string
 
+@description('Website domain for CORS (e.g., greenbiersportventures.com)')
+param websiteDomain string = 'greenbiersportventures.com'
+
 // Get Container Apps Environment - nbagbsvmodel-env (NOT greenbier-nba-env)
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
   name: 'nbagbsvmodel-env'
@@ -120,6 +123,8 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
             'http://localhost:3000'
             'https://*.azurewebsites.net'
             'https://*.greenbier.com'
+            'https://${websiteDomain}'
+            'https://www.${websiteDomain}'
           ]
           allowedMethods: ['GET', 'POST', 'OPTIONS']
           allowedHeaders: ['*']
