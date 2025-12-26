@@ -415,17 +415,25 @@ class FeatureEngineer:
             period_hca = base_hca * scaling["hca_factor"]
             features[f"dynamic_hca{suffix}"] = period_hca
 
-            # Predicted margin for this period
-            home_margin = home_period_stats.get(margin_key, 0)
-            away_margin = away_period_stats.get(margin_key, 0)
+            # Predicted margin for this period (using actual period margin stats)
+            home_margin = home_period_stats[margin_key]
+            away_margin = away_period_stats[margin_key]
             features[f"predicted_margin{suffix}"] = (
                 (home_margin - away_margin) / 2 + period_hca
             )
 
-            # Predicted total for this period
-            home_pace = home_period_stats.get(pace_key, 50)
-            away_pace = away_period_stats.get(pace_key, 50)
-            features[f"predicted_total{suffix}"] = (home_pace + away_pace) / 2
+            # Predicted total for this period using MATCHUP formula (v33.0.7.0 fix)
+            # Home expected = avg(home's offense, away's defense allowed)
+            # Away expected = avg(away's offense, home's defense allowed)
+            papg_key = f"papg{suffix}"
+            home_ppg = home_period_stats[ppg_key]
+            home_papg = home_period_stats[papg_key]
+            away_ppg = away_period_stats[ppg_key]
+            away_papg = away_period_stats[papg_key]
+
+            home_expected = (home_ppg + away_papg) / 2
+            away_expected = (away_ppg + home_papg) / 2
+            features[f"predicted_total{suffix}"] = home_expected + away_expected
 
         return features
 
