@@ -603,19 +603,15 @@ class RichFeatureBuilder:
         def calc_recent_form(
             recent_games: List[Dict], team_id: int, game_dt: Optional[datetime]
         ) -> Dict:
-            """Calculate recent form metrics from game history (Q1, 1H, FG)."""
+            """Calculate recent form metrics from game history (1H, FG). v33.0.7.0: Q1 removed."""
             if not recent_games:
                 return {"l5_win_pct": 0.5, "l10_win_pct": 0.5, "l5_margin": 0, "l10_margin": 0,
                         "l5_ppg": 0, "l5_papg": 0, "rest_days": 3, "prev_game_location": None,
-                        "l5_ppg_q1": 0, "l5_papg_q1": 0, "l5_margin_q1": 0,
                         "l5_ppg_1h": 0, "l5_papg_1h": 0, "l5_margin_1h": 0}
 
             wins_l5 = wins_l10 = 0
             margin_l5 = margin_l10 = 0
             pts_l5 = pts_allowed_l5 = 0
-            # Q1 stats
-            pts_l5_q1 = pts_allowed_l5_q1 = 0
-            margin_l5_q1 = 0
             # 1H stats
             pts_l5_1h = pts_allowed_l5_1h = 0
             margin_l5_1h = 0
@@ -626,25 +622,20 @@ class RichFeatureBuilder:
                     home_score = g.get("scores", {}).get("home", {}).get("total", 0) or 0
                     away_score = g.get("scores", {}).get("away", {}).get("total", 0) or 0
 
-                    # First quarter scores
+                    # First half scores (Q1 + Q2)
                     home_q1 = g.get("scores", {}).get("home", {}).get("quarter_1", 0) or 0
                     away_q1 = g.get("scores", {}).get("away", {}).get("quarter_1", 0) or 0
-
-                    # First half scores
                     home_1h = home_q1 + (g.get("scores", {}).get("home", {}).get("quarter_2", 0) or 0)
                     away_1h = away_q1 + (g.get("scores", {}).get("away", {}).get("quarter_2", 0) or 0)
 
                     if is_home:
                         team_score, opp_score = home_score, away_score
-                        team_q1, opp_q1 = home_q1, away_q1
                         team_1h, opp_1h = home_1h, away_1h
                     else:
                         team_score, opp_score = away_score, home_score
-                        team_q1, opp_q1 = away_q1, home_q1
                         team_1h, opp_1h = away_1h, home_1h
 
                     margin = team_score - opp_score
-                    margin_q1 = team_q1 - opp_q1
                     margin_1h = team_1h - opp_1h
                     won = 1 if margin > 0 else 0
 
@@ -653,10 +644,6 @@ class RichFeatureBuilder:
                         margin_l5 += margin
                         pts_l5 += team_score
                         pts_allowed_l5 += opp_score
-                        # Q1
-                        pts_l5_q1 += team_q1
-                        pts_allowed_l5_q1 += opp_q1
-                        margin_l5_q1 += margin_q1
                         # 1H
                         pts_l5_1h += team_1h
                         pts_allowed_l5_1h += opp_1h
@@ -706,10 +693,6 @@ class RichFeatureBuilder:
                 "l10_margin": margin_l10 / games_l10 if games_l10 > 0 else 0,
                 "l5_ppg": pts_l5 / games_l5 if games_l5 > 0 else 0,
                 "l5_papg": pts_allowed_l5 / games_l5 if games_l5 > 0 else 0,
-                # Q1 features
-                "l5_ppg_q1": pts_l5_q1 / games_l5 if games_l5 > 0 else 0,
-                "l5_papg_q1": pts_allowed_l5_q1 / games_l5 if games_l5 > 0 else 0,
-                "l5_margin_q1": margin_l5_q1 / games_l5 if games_l5 > 0 else 0,
                 # 1H features
                 "l5_ppg_1h": pts_l5_1h / games_l5 if games_l5 > 0 else 0,
                 "l5_papg_1h": pts_allowed_l5_1h / games_l5 if games_l5 > 0 else 0,
@@ -953,18 +936,7 @@ class RichFeatureBuilder:
             "home_l10_margin": home_form["l10_margin"],
             "away_l10_margin": away_form["l10_margin"],
 
-            # 1H specific rolling stats
-            # Q1-specific features (first quarter stats from recent form)
-            "home_ppg_q1": home_form["l5_ppg_q1"],
-            "home_papg_q1": home_form["l5_papg_q1"],
-            "home_spread_margin_q1": home_form["l5_margin_q1"],
-            "away_ppg_q1": away_form["l5_ppg_q1"],
-            "away_papg_q1": away_form["l5_papg_q1"],
-            "away_spread_margin_q1": away_form["l5_margin_q1"],
-            "ppg_diff_q1": home_form["l5_ppg_q1"] - away_form["l5_ppg_q1"],
-            "papg_diff_q1": home_form["l5_papg_q1"] - away_form["l5_papg_q1"],
-
-            # 1H-specific features (first half stats from recent form)
+            # 1H-specific features (first half stats from recent form) - v33.0.7.0: Q1 removed
             "home_ppg_1h": home_form["l5_ppg_1h"],
             "home_papg_1h": home_form["l5_papg_1h"],
             "home_spread_margin_1h": home_form["l5_margin_1h"],

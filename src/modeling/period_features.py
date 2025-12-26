@@ -1,12 +1,16 @@
 """
-Period-specific feature definitions for Q1, 1H, and FG markets.
+Period-specific feature definitions for 1H and FG markets.
 
-NBA v6.0: Each period (Q1, 1H, FG) has INDEPENDENT features computed from
+v33.0.7.0: Q1 markets removed. Only 1H + FG are active.
+
+Each period (1H, FG) has INDEPENDENT features computed from
 historical data for that specific period. No cross-period dependencies.
 
-Key Principle: Features for Q1 predictions come from Q1 historical stats,
-features for 1H come from 1H historical stats, and FG from FG stats.
-This prevents leakage and allows each model to learn period-specific patterns.
+Key Principle: Features for 1H predictions come from 1H historical stats,
+and FG from FG stats. This prevents leakage and allows each model to learn
+period-specific patterns.
+
+Note: Q1_FEATURES is kept for backwards compatibility but is DEPRECATED.
 """
 from __future__ import annotations
 from typing import Dict, List

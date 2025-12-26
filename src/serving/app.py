@@ -423,7 +423,7 @@ async def clear_cache(request: Request):
     """
     Clear all session caches to force fresh API data.
 
-    v6.5 STRICT MODE: No file caching exists - only clears session memory caches.
+    v33.0.7.0 STRICT MODE: No file caching exists - only clears session memory caches.
     Use this before fetching new predictions to ensure fresh data.
     """
     cleared = {"session_cache": False, "api_cache": 0}
@@ -440,7 +440,7 @@ async def clear_cache(request: Request):
     except Exception:
         pass  # API cache may not be configured
 
-    logger.info(f"v6.5 STRICT MODE: Session cache cleared")
+    logger.info(f"v33.0.7.0 STRICT MODE: Session cache cleared")
 
     return {
         "status": "success",
@@ -609,11 +609,11 @@ async def get_slate_predictions(
     Returns all 6 markets (1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v6.6: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v33.0.7.0: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
-    logger.info("v6.6: Session cache cleared - fetching fresh data")
+    logger.info("v33.0.7.0: Session cache cleared - fetching fresh data")
 
     # Resolve date
     from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
@@ -726,7 +726,7 @@ async def get_slate_predictions(
             })
 
         except ValueError as e:
-            logger.warning(f"v6.0: Skipping {home_team} vs {away_team} - {e}")
+            logger.warning(f"v33.0.7.0: Skipping {home_team} vs {away_team} - {e}")
             continue
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
@@ -771,16 +771,16 @@ async def get_executive_summary(
     """
     BLUF (Bottom Line Up Front) Executive Summary.
 
-    v6.5 STRICT MODE: Fetches fresh data from all APIs.
+    v33.0.7.0 STRICT MODE: Fetches fresh data from all APIs.
     Returns a clean actionable betting card with all picks that pass filters.
     Sorted by game time, then fire rating.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v6.5 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v33.0.7.0 STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
-    logger.info("v6.5 STRICT MODE: Executive summary - fetching fresh data")
+    logger.info("v33.0.7.0 STRICT MODE: Executive summary - fetching fresh data")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -1100,15 +1100,15 @@ async def get_comprehensive_slate_analysis(
     """
     Get comprehensive slate analysis with full edge calculations.
 
-    v6.5 STRICT MODE: Fetches fresh data from all APIs.
+    v33.0.7.0 STRICT MODE: Fetches fresh data from all APIs.
     Full analysis for all 9 markets.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v6.5 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v33.0.7.0 STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
-    logger.info("v6.5 STRICT MODE: Comprehensive analysis - fetching fresh data")
+    logger.info("v33.0.7.0 STRICT MODE: Comprehensive analysis - fetching fresh data")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -1263,7 +1263,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     6 markets (1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v6.5 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail="v33.0.7.0 STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
@@ -1288,13 +1288,13 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         )
         return preds
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"v6.0: {e}")
+        raise HTTPException(status_code=400, detail=f"v33.0.7.0: {e}")
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # =============================================================================
-# LIVE PICK TRACKING ENDPOINTS - v6.0
+# LIVE PICK TRACKING ENDPOINTS - v33.0.7.0
 # =============================================================================
 
 @app.get("/tracking/summary")
