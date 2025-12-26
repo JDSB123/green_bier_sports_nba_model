@@ -1,9 +1,7 @@
 """
-NBA v33.0.6.0 - Unified Prediction Engine
+NBA v33.0.7.0 - Unified Prediction Engine
 
-PRODUCTION: 6 INDEPENDENT Markets (1H + FG ONLY)
-
-**Q1 MARKETS DISABLED** (low ROI, unreliable lines)
+PRODUCTION: 6 INDEPENDENT Markets (1H + FG)
 
 First Half:
 - 1H Spread
@@ -16,7 +14,8 @@ Full Game:
 - FG Moneyline
 
 ARCHITECTURE: Each period has INDEPENDENT models trained on period-specific
-features. No cross-period dependencies.
+features. No cross-period dependencies. Uses matchup-based formulas for
+predicted totals (not scaled from FG).
 
 FEATURE VALIDATION:
     Controlled by PREDICTION_FEATURE_MODE environment variable:
@@ -30,7 +29,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 # Single source of truth for version - read from environment variable
-MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.6.0")
+MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.7.0")
 
 import logging
 import joblib
@@ -82,7 +81,7 @@ class ModelNotFoundError(Exception):
 
 class PeriodPredictor:
     """
-    Predictor for a single period (Q1, 1H, or FG).
+    Predictor for a single period (1H or FG).
 
     Each period predictor has its own independent models for
     spread, total, and moneyline.
@@ -176,17 +175,8 @@ class PeriodPredictor:
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
-        # Filter logic: BOTH signals must agree AND pass thresholds
-        # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
-        if self.period == "q1":
-            min_conf = filter_thresholds.q1_min_confidence
-            # Q1 edge threshold: convert percentage to points using actual Q1 total
-            # Use predicted Q1 total if available, otherwise use spread line as proxy
-            q1_total_estimate = features.get("predicted_total_q1", 52.0)  # Default ~52 pts
-            min_edge = filter_thresholds.q1_min_edge_pct / 100.0 * q1_total_estimate
-        else:
-            min_conf = filter_thresholds.spread_min_confidence
-            min_edge = filter_thresholds.spread_min_edge
+        # Filter logic: confidence must pass threshold
+        min_conf = filter_thresholds.spread_min_confidence
         # v33.0.6.0 FIX: Removed signals_agree from filter. Classifier is the primary signal.
         # Also removed edge_abs check because edge is based on heuristic.
         passes_filter = confidence >= min_conf
@@ -284,17 +274,8 @@ class PeriodPredictor:
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
-        # Filter logic: BOTH signals must agree AND pass thresholds
-        # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
-        if self.period == "q1":
-            min_conf = filter_thresholds.q1_min_confidence
-            # Q1 total edge threshold: convert percentage to points using actual line
-            # Use the total_line we're betting on as the reference
-            q1_total_ref = total_line if total_line and total_line > 0 else 52.0
-            min_edge = filter_thresholds.q1_min_edge_pct / 100.0 * q1_total_ref
-        else:
-            min_conf = filter_thresholds.total_min_confidence
-            min_edge = filter_thresholds.total_min_edge
+        # Filter logic: confidence must pass threshold
+        min_conf = filter_thresholds.total_min_confidence
         # v33.0.6.0 FIX: Removed signals_agree from filter. Classifier is the primary signal.
         # Also removed edge_abs check because edge is based on heuristic.
         passes_filter = confidence >= min_conf
@@ -371,13 +352,8 @@ class PeriodPredictor:
         away_edge = away_win_prob - away_implied
 
         # Determine recommended bet using configurable thresholds
-        # v6.5 FIX: Use period-specific thresholds for Q1 (stricter)
-        if self.period == "q1":
-            min_edge_pct = filter_thresholds.q1_min_edge_pct
-            min_conf = filter_thresholds.q1_min_confidence
-        else:
-            min_edge_pct = filter_thresholds.moneyline_min_edge_pct
-            min_conf = filter_thresholds.moneyline_min_confidence
+        min_edge_pct = filter_thresholds.moneyline_min_edge_pct
+        min_conf = filter_thresholds.moneyline_min_confidence
         if home_edge > away_edge and home_edge > min_edge_pct:
             recommended_bet = "home"
             edge = home_edge
@@ -435,31 +411,29 @@ class PeriodPredictor:
 
 class UnifiedPredictionEngine:
     """
-    NBA v33.0.6.0 - Production Prediction Engine
+    NBA v33.0.7.0 - Production Prediction Engine
 
-    6 INDEPENDENT Markets (Q1 DISABLED):
-
-    **Q1 Markets DISABLED** (53% accuracy, +1.2% ROI insufficient)
+    6 INDEPENDENT Markets (1H + FG):
 
     First Half (1H):
     - 1H Spread
     - 1H Total
+    - 1H Moneyline
 
     Full Game (FG):
     - FG Spread
     - FG Total
+    - FG Moneyline
 
     ARCHITECTURE:
     - Each period has independent models trained on period-specific features
     - No cross-period dependencies
-    - Only 1H and FG models required (4 total)
+    - Uses matchup-based formulas for predicted totals
     """
 
     def __init__(self, models_dir: Path, require_all: bool = True):
         """
         Initialize unified prediction engine.
-
-        v33.0.6.0: 6 models REQUIRED (1H + FG only). Q1 models optional/ignored.
 
         Args:
             models_dir: Path to models directory
@@ -479,14 +453,11 @@ class UnifiedPredictionEngine:
                 f"Run: python scripts/train_all_models.py"
             )
 
-        # v33.0.6.0: Only load 1H and FG models (Q1 DISABLED)
-        # Initialize period predictors
-        self.q1_predictor: Optional[PeriodPredictor] = None  # Always None in v33.0.6.0
+        # Initialize period predictors (1H + FG only)
         self.h1_predictor: Optional[PeriodPredictor] = None
         self.fg_predictor: Optional[PeriodPredictor] = None
 
-        # Q1 DISABLED - Skip loading
-        logger.info("[v33.0.6.0] Q1 markets DISABLED (low ROI). Only loading 1H + FG.")
+        logger.info("[v33.0.7.0] Loading 1H + FG models...")
 
         # Load 1H models - WILL RAISE if any missing
         logger.info("Loading 1H models (spread, total, moneyline)...")
@@ -703,34 +674,6 @@ class UnifiedPredictionEngine:
                 except Exception as e:
                     logger.warning(f"Failed to init legacy MoneylinePredictor: {e}")
 
-    def predict_quarter(
-        self,
-        features: Dict[str, float],
-        spread_line: Optional[float] = None,
-        total_line: Optional[float] = None,
-        home_ml_odds: Optional[int] = None,
-        away_ml_odds: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """
-        Generate predictions for Q1 markets.
-
-        Args:
-            features: Feature dictionary with Q1-specific features
-            spread_line: Q1 spread line
-            total_line: Q1 total line
-            home_ml_odds: Q1 home moneyline odds
-            away_ml_odds: Q1 away moneyline odds
-
-        Returns:
-            Predictions for Q1 Spread, Total, and Moneyline
-        """
-        if self.q1_predictor is None:
-            raise ModelNotFoundError("Q1 models not loaded")
-
-        return self.q1_predictor.predict_all(
-            features, spread_line, total_line, home_ml_odds, away_ml_odds
-        )
-
     def predict_first_half(
         self,
         features: Dict[str, float],
@@ -796,19 +739,14 @@ class UnifiedPredictionEngine:
         # First half lines
         fh_spread_line: Optional[float] = None,
         fh_total_line: Optional[float] = None,
-        # First quarter lines
-        q1_spread_line: Optional[float] = None,
-        q1_total_line: Optional[float] = None,
         # Moneyline odds
         home_ml_odds: Optional[int] = None,
         away_ml_odds: Optional[int] = None,
         fh_home_ml_odds: Optional[int] = None,
         fh_away_ml_odds: Optional[int] = None,
-        q1_home_ml_odds: Optional[int] = None,
-        q1_away_ml_odds: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        Generate predictions for ALL 9 markets.
+        Generate predictions for all 6 markets (1H + FG).
 
         Args:
             features: Feature dictionary with all period features
@@ -816,26 +754,18 @@ class UnifiedPredictionEngine:
             fg_total_line: FG total line
             fh_spread_line: 1H spread line
             fh_total_line: 1H total line
-            q1_spread_line: Q1 spread line
-            q1_total_line: Q1 total line
             home_ml_odds: FG home moneyline odds
             away_ml_odds: FG away moneyline odds
             fh_home_ml_odds: 1H home moneyline odds
             fh_away_ml_odds: 1H away moneyline odds
-            q1_home_ml_odds: Q1 home moneyline odds
-            q1_away_ml_odds: Q1 away moneyline odds
 
         Returns:
-            Predictions for all 9 markets grouped by period
+            Predictions for all 6 markets grouped by period
         """
         result = {
-            "first_quarter": {},
             "first_half": {},
             "full_game": {},
         }
-
-        # Q1 DISABLED in v33.0.6.0 (low ROI: 53% accuracy, +1.2%)
-        # result["first_quarter"] = {}  # Always empty
 
         # 1H predictions
         if self.h1_predictor and (fh_spread_line is not None or fh_total_line is not None):

@@ -1,5 +1,5 @@
 """
-NBA_v33.0.6.0 - FastAPI Prediction Server - STRICT MODE
+NBA_v33.0.7.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
@@ -50,7 +50,7 @@ from src.tracking import PickTracker
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.6.0")
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.7.0")
 
 
 def convert_numpy_types(obj):
@@ -87,7 +87,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - NBA_v33.0.6.0 ---
+# --- Request/Response Models - NBA_v33.0.7.0 ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 6 markets (1H + FG)."""
@@ -125,7 +125,7 @@ class SlateResponse(BaseModel):
     total_plays: int
 
 
-# --- API Setup - NBA_v33.0.6.0 ---
+# --- API Setup - NBA_v33.0.7.0 ---
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
@@ -137,7 +137,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.6.0: 4 INDEPENDENT markets (1H+FG for Spread, Total). Moneyline DISABLED.
+    NBA_v33.0.7.0: 6 markets (1H+FG for Spread, Total, Moneyline). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -158,7 +158,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"NBA_v33.0.6.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"v33.0.7.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -171,12 +171,12 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("STRICT MODE NBA_v33.0.6.0: Using 1H/FG only (6 models)")
+    logger.info("v33.0.7.0 STRICT MODE: Using 1H/FG only (6 markets)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
     # NO FILE CACHING - all data fetched fresh from APIs per request
-    logger.info("NBA_v33.0.6.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    logger.info("v33.0.7.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -186,16 +186,16 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"NBA_v33.0.6.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
+    logger.info(f"v33.0.7.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
     # === SHUTDOWN ===
-    logger.info("NBA_v33.0.6.0 shutting down")
+    logger.info("v33.0.7.0 shutting down")
 
 
 app = FastAPI(
-    title="NBA NBA_v33.0.6.0 - STRICT MODE Production Picks",
+    title="NBA v33.0.7.0 - STRICT MODE Production Picks",
     description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan
@@ -268,7 +268,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - NBA_v33.0.6.0 with 6 markets."""
+    """Check API health - v33.0.7.0 with 6 markets."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -488,21 +488,20 @@ async def get_cache_stats(request: Request):
 def verify_integrity(request: Request):
     """
     Verify model integrity and component usage.
-    
-    v6.0: Verifies all 9 independent models (Q1, 1H, FG for spread, total, moneyline)
+
+    v33.0.7.0: Verifies 6 independent models (1H + FG for spread, total, moneyline)
     """
     results = {
         "status": "pass",
         "version": RELEASE_VERSION,
         "markets": {
-            "q1": ["spread", "total", "moneyline"],
             "1h": ["spread", "total", "moneyline"],
             "fg": ["spread", "total", "moneyline"],
         },
         "checks": {},
         "errors": []
     }
-    
+
     # Check 1: Engine loaded
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         results["status"] = "fail"
@@ -510,76 +509,49 @@ def verify_integrity(request: Request):
         results["checks"]["engine_loaded"] = False
     else:
         results["checks"]["engine_loaded"] = True
-        
-        # Check 2: Period predictors exist
+
+        # Check 2: Period predictors exist (1H + FG only)
         has_fg = hasattr(app.state.engine, 'fg_predictor')
         has_1h = hasattr(app.state.engine, 'h1_predictor')
-        has_q1 = hasattr(app.state.engine, 'q1_predictor')
-        
+
         results["checks"]["period_predictors"] = {
             "full_game": has_fg,
             "first_half": has_1h,
-            "first_quarter": has_q1,
         }
-        
+
         # Also check legacy predictors if present
         has_spread = hasattr(app.state.engine, 'spread_predictor')
         has_total = hasattr(app.state.engine, 'total_predictor')
         has_moneyline = hasattr(app.state.engine, 'moneyline_predictor')
-        
+
         results["checks"]["legacy_predictors"] = {
             "spread": has_spread,
             "total": has_total,
             "moneyline": has_moneyline,
         }
-        
+
         if not (has_fg or (has_spread and has_total)):
             results["status"] = "fail"
             results["errors"].append("Missing period predictors")
-        
+
         # Test features for predictions
         test_features = {
             "home_ppg": 115.0, "away_ppg": 112.0,
             "home_papg": 110.0, "away_papg": 115.0,
             "predicted_margin": 3.0, "predicted_total": 227.0,
             "predicted_margin_1h": 1.5, "predicted_total_1h": 113.5,
-            "predicted_margin_q1": 0.8, "predicted_total_q1": 56.5,
             "home_win_pct": 0.6, "away_win_pct": 0.4,
             "home_avg_margin": 2.0, "away_avg_margin": -1.0,
             "home_rest_days": 2, "away_rest_days": 1,
             "home_b2b": 0, "away_b2b": 0,
             "dynamic_hca": 3.0, "h2h_win_pct": 0.5, "h2h_avg_margin": 0.0,
-            # Q1-specific features
-            "home_q1_ppg": 28.5, "away_q1_ppg": 27.8,
-            "home_q1_papg": 27.2, "away_q1_papg": 28.0,
-            "home_q1_avg_margin": 0.5, "away_q1_avg_margin": -0.3,
             # 1H-specific features
             "home_1h_ppg": 56.2, "away_1h_ppg": 55.0,
             "home_1h_papg": 54.8, "away_1h_papg": 55.5,
             "home_1h_avg_margin": 1.2, "away_1h_avg_margin": -0.5,
         }
-        
-        # Check 3: Test Q1 prediction
-        try:
-            test_pred_q1 = app.state.engine.predict_quarter(
-                features=test_features,
-                spread_line=-0.5,
-                total_line=56.5,
-                home_ml_odds=-110,
-                away_ml_odds=-110,
-            )
-            
-            results["checks"]["q1_prediction_works"] = True
-            results["checks"]["q1_has_spread"] = "spread" in test_pred_q1
-            results["checks"]["q1_has_total"] = "total" in test_pred_q1
-            results["checks"]["q1_has_moneyline"] = "moneyline" in test_pred_q1
-            
-        except Exception as e:
-            results["status"] = "warn"  # Q1 is newer, warn instead of fail
-            results["errors"].append(f"Q1 test prediction failed: {str(e)}")
-            results["checks"]["q1_prediction_works"] = False
-        
-        # Check 4: Test 1H prediction
+
+        # Check 3: Test 1H prediction
         try:
             test_pred_1h = app.state.engine.predict_first_half(
                 features=test_features,
@@ -633,7 +605,7 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v6.6: 6 markets (1H + FG only). Q1 disabled due to low ROI.
+    v33.0.7.0: 6 markets (1H + FG only). Q1 removed entirely.
     Returns all 6 markets (1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
@@ -689,68 +661,49 @@ async def get_slate_predictions(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            q1_spread = odds.get("q1_home_spread")
-            q1_total = odds.get("q1_total")
             home_ml = odds.get("home_ml")
             away_ml = odds.get("away_ml")
             fh_home_ml = odds.get("fh_home_ml")
             fh_away_ml = odds.get("fh_away_ml")
-            q1_home_ml = odds.get("q1_home_ml")
-            q1_away_ml = odds.get("q1_away_ml")
-            
-            # v6.6: Allow games with ANY betting lines (moneyline, spread, or total)
-            # No longer require both spread AND total
+
+            # Allow games with ANY betting lines (moneyline, spread, or total)
             has_fg_lines = fg_spread is not None or fg_total is not None or (home_ml is not None and away_ml is not None)
             has_fh_lines = fh_spread is not None or fh_total is not None or (fh_home_ml is not None and fh_away_ml is not None)
-            
+
             if not has_fg_lines and not has_fh_lines:
-                logger.warning(f"v6.6: Skipping {home_team} vs {away_team} - no betting lines available")
+                logger.warning(f"Skipping {home_team} vs {away_team} - no betting lines available")
                 continue
 
-            # Predict markets (Q1 disabled in v6.6)
+            # Predict markets (1H + FG)
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
                 fg_total_line=fg_total,
                 fh_spread_line=fh_spread,
                 fh_total_line=fh_total,
-                q1_spread_line=q1_spread,
-                q1_total_line=q1_total,
                 home_ml_odds=home_ml,
                 away_ml_odds=away_ml,
                 fh_home_ml_odds=fh_home_ml,
                 fh_away_ml_odds=fh_away_ml,
-                q1_home_ml_odds=q1_home_ml,
-                q1_away_ml_odds=q1_away_ml,
             )
 
-            # Count plays (6 markets: 1H + FG only, Q1 disabled) and record picks
+            # Count plays (6 markets: 1H + FG)
             game_plays = 0
             game_date = target_date.strftime("%Y-%m-%d")
-            for period in ["first_half", "full_game"]:  # Q1 removed in v6.6
+            for period in ["first_half", "full_game"]:
                 period_preds = preds.get(period, {})
                 for market in ["spread", "total", "moneyline"]:
                     pred_data = period_preds.get(market, {})
                     if pred_data.get("passes_filter"):
                         game_plays += 1
                         # Record the pick for live tracking
-                        market_key = f"{period.replace('first_quarter', 'q1').replace('first_half', '1h').replace('full_game', 'fg')}_{market}"
+                        market_key = f"{period.replace('first_half', '1h').replace('full_game', 'fg')}_{market}"
                         line = None
                         if market == "spread":
-                            if period == "first_quarter":
-                                line = q1_spread
-                            elif period == "first_half":
-                                line = fh_spread
-                            else:
-                                line = fg_spread
+                            line = fh_spread if period == "first_half" else fg_spread
                         elif market == "total":
-                            if period == "first_quarter":
-                                line = q1_total
-                            elif period == "first_half":
-                                line = fh_total
-                            else:
-                                line = fg_total
-                        
+                            line = fh_total if period == "first_half" else fg_total
+
                         app.state.tracker.record_pick(
                             game_date=game_date,
                             home_team=home_team,
@@ -899,33 +852,25 @@ async def get_executive_summary(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            q1_spread = odds.get("q1_home_spread")
-            q1_total = odds.get("q1_total")
             home_ml = odds.get("home_ml")
             away_ml = odds.get("away_ml")
             fh_home_ml = odds.get("fh_home_ml")
             fh_away_ml = odds.get("fh_away_ml")
-            q1_home_ml = odds.get("q1_home_ml")
-            q1_away_ml = odds.get("q1_away_ml")
-            
+
             if fg_spread is None or fg_total is None:
                 continue
-            
-            # Get predictions for all 9 markets
+
+            # Get predictions for 6 markets (1H + FG)
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
                 fg_total_line=fg_total,
                 fh_spread_line=fh_spread,
                 fh_total_line=fh_total,
-                q1_spread_line=q1_spread,
-                q1_total_line=q1_total,
                 home_ml_odds=home_ml,
                 away_ml_odds=away_ml,
                 fh_home_ml_odds=fh_home_ml,
                 fh_away_ml_odds=fh_away_ml,
-                q1_home_ml_odds=q1_home_ml,
-                q1_away_ml_odds=q1_away_ml,
             )
             
             # Process Full Game markets
@@ -1101,94 +1046,7 @@ async def get_executive_summary(
                         "confidence": fh_ml_pred.get("confidence", 0),
                         "fire_rating": get_fire_rating(fh_ml_pred.get("confidence", 0), edge_pct * 100)
                     })
-            
-            # Process First Quarter markets
-            q1 = preds.get("first_quarter", {})
-            
-            # Q1 Spread
-            q1_spread_pred = q1.get("spread", {})
-            if q1_spread_pred.get("passes_filter") and q1_spread is not None:
-                bet_side = q1_spread_pred.get("bet_side", "home")
-                pick_team = home_team if bet_side == "home" else away_team
-                pick_line = q1_spread if bet_side == "home" else -q1_spread
-                pick_price = odds.get("q1_home_spread_price", -110)
-                model_margin_q1 = features.get("predicted_margin_q1", 0)
-                # Format model prediction for BET SIDE team (same team as pick)
-                # model_margin positive = home wins by X
-                # home spread = -model_margin, away spread = +model_margin
-                if bet_side == "home":
-                    model_spread_q1 = -model_margin_q1
-                    margin_display_q1 = f"{home_team} {model_spread_q1:+.1f}"
-                else:
-                    model_spread_q1 = model_margin_q1
-                    margin_display_q1 = f"{away_team} {model_spread_q1:+.1f}"
 
-                all_plays.append({
-                    "time_cst": time_cst_str,
-                    "sort_time": game_cst.isoformat() if game_cst else "",
-                    "matchup": matchup_display,
-                    "period": "Q1",
-                    "market": "SPREAD",
-                    "pick": f"{pick_team} {pick_line:+.1f}",
-                    "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": margin_display_q1,
-                    "market_line": f"{q1_spread:+.1f}",
-                    "edge": f"{q1_spread_pred.get('edge', 0):+.1f} pts",
-                    "edge_raw": abs(q1_spread_pred.get('edge', 0)),
-                    "confidence": q1_spread_pred.get("confidence", 0),
-                    "fire_rating": get_fire_rating(q1_spread_pred.get("confidence", 0), q1_spread_pred.get("edge", 0))
-                })
-            
-            # Q1 Total
-            q1_total_pred = q1.get("total", {})
-            if q1_total_pred.get("passes_filter") and q1_total is not None:
-                bet_side = q1_total_pred.get("bet_side", "over")
-                model_total_q1 = features.get("predicted_total_q1", 0)
-                pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {q1_total}"
-                
-                all_plays.append({
-                    "time_cst": time_cst_str,
-                    "sort_time": game_cst.isoformat() if game_cst else "",
-                    "matchup": matchup_display,
-                    "period": "Q1",
-                    "market": "TOTAL",
-                    "pick": pick_display,
-                    "pick_odds": format_american_odds(odds.get("q1_total_price", -110)),
-                    "model_prediction": f"{model_total_q1:.1f}",
-                    "market_line": f"{q1_total}",
-                    "edge": f"{q1_total_pred.get('edge', 0):+.1f} pts",
-                    "edge_raw": abs(q1_total_pred.get('edge', 0)),
-                    "confidence": q1_total_pred.get("confidence", 0),
-                    "fire_rating": get_fire_rating(q1_total_pred.get("confidence", 0), q1_total_pred.get("edge", 0))
-                })
-            
-            # Q1 Moneyline
-            q1_ml_pred = q1.get("moneyline", {})
-            if q1_ml_pred.get("passes_filter") and q1_home_ml is not None:
-                rec_bet = q1_ml_pred.get("recommended_bet")
-                if rec_bet:
-                    pick_team = home_team if rec_bet == "home" else away_team
-                    pick_odds_val = q1_home_ml if rec_bet == "home" else q1_away_ml
-                    model_prob = q1_ml_pred.get("home_win_prob", 0.5) if rec_bet == "home" else q1_ml_pred.get("away_win_prob", 0.5)
-                    market_prob = odds.get("q1_home_implied_prob", 0.5) if rec_bet == "home" else odds.get("q1_away_implied_prob", 0.5)
-                    edge_pct = q1_ml_pred.get("home_edge", 0) if rec_bet == "home" else q1_ml_pred.get("away_edge", 0)
-                    
-                    all_plays.append({
-                        "time_cst": time_cst_str,
-                        "sort_time": game_cst.isoformat() if game_cst else "",
-                        "matchup": matchup_display,
-                        "period": "Q1",
-                        "market": "ML",
-                        "pick": pick_team,
-                        "pick_odds": format_american_odds(pick_odds_val),
-                        "model_prediction": f"{model_prob*100:.1f}%",
-                        "market_line": f"{market_prob*100:.1f}%",
-                        "edge": f"{edge_pct*100:+.1f}%",
-                        "edge_raw": abs(edge_pct * 100),
-                        "confidence": q1_ml_pred.get("confidence", 0),
-                        "fire_rating": get_fire_rating(q1_ml_pred.get("confidence", 0), edge_pct * 100)
-                    })
-            
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
             continue
@@ -1226,7 +1084,7 @@ async def get_executive_summary(
                 "STRONG": "60%+ confidence AND 3+ pt edge",
                 "GOOD": "Passes all filters"
             },
-            "periods": {"FG": "Full Game", "1H": "First Half", "Q1": "First Quarter"},
+            "periods": {"FG": "Full Game", "1H": "First Half"},
             "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}
         }
     })
@@ -1372,7 +1230,6 @@ async def get_comprehensive_slate_analysis(
         "date": str(target_date),
         "version": RELEASE_VERSION,
         "markets": [
-            "q1_spread", "q1_total", "q1_moneyline",
             "1h_spread", "1h_total", "1h_moneyline",
             "fg_spread", "fg_total", "fg_moneyline"
         ],
@@ -1402,8 +1259,8 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     """
     Generate predictions for a specific matchup.
 
-    v6.5 STRICT MODE: Fetches fresh data from all APIs.
-    All 9 markets (Q1+1H+FG for Spread, Total, Moneyline).
+    v33.0.7.0: STRICT MODE - Fetches fresh data from all APIs.
+    6 markets (1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v6.5 STRICT MODE: Engine not loaded - models missing")
@@ -1417,21 +1274,17 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             req.home_team, req.away_team
         )
 
-        # Predict all 9 markets
+        # Predict all 6 markets (1H + FG)
         preds = app.state.engine.predict_all_markets(
             features,
             fg_spread_line=req.fg_spread_line,
             fg_total_line=req.fg_total_line,
             fh_spread_line=req.fh_spread_line,
             fh_total_line=req.fh_total_line,
-            q1_spread_line=req.q1_spread_line,
-            q1_total_line=req.q1_total_line,
             home_ml_odds=req.home_ml_odds,
             away_ml_odds=req.away_ml_odds,
             fh_home_ml_odds=req.fh_home_ml_odds,
             fh_away_ml_odds=req.fh_away_ml_odds,
-            q1_home_ml_odds=req.q1_home_ml_odds,
-            q1_away_ml_odds=req.q1_away_ml_odds,
         )
         return preds
     except ValueError as e:
@@ -1449,7 +1302,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
 async def get_tracking_summary(
     request: Request,
     date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
-    period: Optional[str] = Query(None, description="Filter by period (q1, 1h, fg)"),
+    period: Optional[str] = Query(None, description="Filter by period (1h, fg)"),
     market_type: Optional[str] = Query(None, description="Filter by market (spread, total, moneyline)")
 ):
     """
