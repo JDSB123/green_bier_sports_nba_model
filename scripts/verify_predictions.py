@@ -157,7 +157,7 @@ def verify():
     print("=" * 80)
     print()
     print("Data Source: Live API (Azure Container App)")
-    print("Model Version: NBA_v33.0.2.0")
+    print("Model Version: NBA_v33.0.7.0")
     print()
     print("Edge Calculation:")
     print("  - Spread Edge = Model Predicted Margin - Market Line")

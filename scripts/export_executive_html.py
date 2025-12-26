@@ -55,7 +55,7 @@ def generate_html(data: dict, output_path: str):
     plays = data.get("plays", [])
     date_str = data.get("date", "Unknown")
     generated_at = data.get("generated_at", datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"))
-    version = data.get("version", "NBA_v33.0.2.0")
+    version = data.get("version", "NBA_v33.0.7.0")
     
     # Categorize plays
     elite_plays = [p for p in plays if get_fire_tier(p.get('fire_rating', '')) >= 3]
