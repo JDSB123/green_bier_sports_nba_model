@@ -102,26 +102,33 @@ class TotalPredictor:
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
         confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
-        bet_side = "over" if over_prob > 0.5 else "under"
+        classifier_side = "over" if over_prob > 0.5 else "under"
         predicted_total = features["predicted_total"]
 
         # Calculate edge - ALWAYS use consistent formula
         # Positive edge = model predicts OVER the line
         # Negative edge = model predicts UNDER the line
-        # v6.5 FIX: Don't flip sign based on bet_side - maintain signed edge
         raw_edge = predicted_total - total_line
         prediction_side = "over" if raw_edge > 0 else "under"
         edge = abs(raw_edge)  # Use absolute value for display/filtering
 
         # Check dual-signal agreement
-        signals_agree = (bet_side == prediction_side)
+        signals_agree = (classifier_side == prediction_side)
+
+        # v33.0.8.0: Classifier sanity check - detect broken/drifted models
+        classifier_extreme = (over_prob > 0.99 or over_prob < 0.01)
 
         passes_filter, filter_reason = self.fg_filter.should_bet(confidence=confidence)
 
-        # Override filter if signals don't agree
-        if not signals_agree:
+        # Override filter if signals don't agree (unless classifier is broken)
+        if not signals_agree and not classifier_extreme:
             passes_filter = False
-            filter_reason = f"Signal conflict: classifier={bet_side}, prediction={prediction_side}"
+            filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
+        elif classifier_extreme:
+            # Classifier is unreliable, use edge-only filtering
+            passes_filter = edge >= 1.5  # Minimum edge threshold
+            if not passes_filter:
+                filter_reason = f"Classifier unreliable (extreme prob: {over_prob:.1%}), low edge"
 
         return {
             "over_prob": over_prob,
@@ -131,9 +138,10 @@ class TotalPredictor:
             "bet_side": prediction_side,  # Use prediction_side (from edge) as authoritative
             "edge": edge,
             "raw_edge": raw_edge,  # Signed edge for diagnostics
-            "classifier_side": bet_side,  # What the ML classifier said
+            "classifier_side": classifier_side,  # What the ML classifier said
             "prediction_side": prediction_side,  # What the point prediction said
             "signals_agree": signals_agree,
+            "classifier_extreme": classifier_extreme,  # v33.0.8.0: True if classifier unreliable
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,

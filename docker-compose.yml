@@ -53,7 +53,7 @@ services:
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
 
       # v33.0.7.0 configuration (6 independent markets - Q1 disabled)
-      - NBA_MODEL_VERSION=NBA_v33.0.7.0
+      - NBA_MODEL_VERSION=NBA_v33.0.8.0
       - NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
       - NBA_PERIODS=first_half,full_game
 

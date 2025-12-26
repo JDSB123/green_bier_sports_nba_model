@@ -19,7 +19,7 @@ param location string = resourceGroup().location
 param environment string = 'prod'
 
 @description('Container image tag')
-param imageTag string = 'NBA_v33.0.7.0'
+param imageTag string = 'NBA_v33.0.8.0'
 
 // =============================================================================
 // API KEYS - Required for the NBA Picks API to function

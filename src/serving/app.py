@@ -1,5 +1,5 @@
 """
-NBA_v33.0.7.0 - FastAPI Prediction Server - STRICT MODE
+NBA_v33.0.8.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
@@ -50,7 +50,7 @@ from src.tracking import PickTracker
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.7.0")
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.8.0")
 
 
 def convert_numpy_types(obj):
@@ -87,7 +87,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - NBA_v33.0.7.0 ---
+# --- Request/Response Models - NBA_v33.0.8.0 ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 6 markets (1H + FG)."""
@@ -125,7 +125,7 @@ class SlateResponse(BaseModel):
     total_plays: int
 
 
-# --- API Setup - NBA_v33.0.7.0 ---
+# --- API Setup - NBA_v33.0.8.0 ---
 
 def _models_dir() -> PathLib:
     return PathLib(settings.data_processed_dir) / "models"
@@ -137,7 +137,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.7.0: 6 markets (1H+FG for Spread, Total, Moneyline). Q1 removed.
+    NBA_v33.0.8.0: 6 markets (1H+FG for Spread, Total, Moneyline). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
