@@ -18,11 +18,9 @@ features. No cross-period dependencies. Uses matchup-based formulas for
 predicted totals (not scaled from FG).
 
 v33.0.8.0 FIXES:
-    - Restored dual-signal agreement check (classifier AND edge must agree)
     - bet_side now based on EDGE calculation, not classifier
     - Added classifier sanity check to detect data drift (extreme probabilities)
-    - When classifier is unreliable (>99% or <1%), use edge-only filtering
-    - Restored minimum edge requirement for bets to pass filter
+    - Simple filter: confidence + edge thresholds (NO dual-signal requirement)
 
 FEATURE VALIDATION:
     Controlled by PREDICTION_FEATURE_MODE environment variable:
@@ -171,47 +169,32 @@ class PeriodPredictor:
         edge = predicted_margin + spread_line
         prediction_side = "home" if edge > 0 else "away"
 
-        # =====================================================================
-        # DUAL-SIGNAL AGREEMENT (v33.0.8.0): Both signals should agree
-        # =====================================================================
-        signals_agree = (classifier_side == prediction_side)
-
         # v33.0.8.0 FIX: Classifier sanity check - detect broken/drifted models
         # If classifier outputs extreme probability (>99% or <1%), it's unreliable
         classifier_extreme = (home_cover_prob > 0.99 or home_cover_prob < 0.01)
         if classifier_extreme:
             logger.warning(
                 f"[{self.period}_spread] EXTREME classifier probability: {home_cover_prob:.4f}. "
-                f"Model may have data drift. Using edge-based prediction as fallback."
+                f"Model may have data drift."
             )
 
-        # v33.0.8.0 FIX: Use EDGE-BASED prediction (prediction_side) as authoritative
+        # v33.0.8.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
         # The edge calculation is more robust than a potentially drifted classifier
         bet_side = prediction_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
-        # Filter logic: require BOTH confidence AND signal agreement
+        # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
         min_conf = filter_thresholds.spread_min_confidence
         min_edge = filter_thresholds.spread_min_edge
 
-        # v33.0.8.0: Restore signal agreement check - both signals must agree
-        # Also require minimum edge for the bet to pass
-        passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
-
-        # If classifier is extreme (broken), only trust edge-based prediction
-        if classifier_extreme and edge_abs >= min_edge:
-            passes_filter = edge_abs >= min_edge  # Trust edge only
-            logger.info(f"[{self.period}_spread] Classifier extreme - using edge-only filter: {edge_abs:.1f} pts")
+        # Simple filter: just need confidence and edge to pass
+        passes_filter = confidence >= min_conf and edge_abs >= min_edge
 
         filter_reason = None
         if not passes_filter:
-            if classifier_extreme:
-                filter_reason = f"Classifier unreliable (extreme prob: {home_cover_prob:.1%})"
-            elif not signals_agree:
-                filter_reason = f"Signal conflict: classifier={classifier_side}, edge={prediction_side}"
-            elif confidence < min_conf:
+            if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
                 filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
@@ -227,7 +210,6 @@ class PeriodPredictor:
             "raw_edge": edge,  # Signed edge for diagnostics
             "classifier_side": classifier_side,  # What the ML classifier says
             "prediction_side": prediction_side,  # What the point prediction says
-            "signals_agree": signals_agree,  # True if both signals agree
             "classifier_extreme": classifier_extreme,  # True if classifier is unreliable
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
@@ -292,11 +274,6 @@ class PeriodPredictor:
         edge = predicted_total - total_line
         prediction_side = "over" if edge > 0 else "under"
 
-        # =====================================================================
-        # DUAL-SIGNAL AGREEMENT (v33.0.8.0): Both signals should agree
-        # =====================================================================
-        signals_agree = (classifier_side == prediction_side)
-
         # v33.0.8.0 FIX: Classifier sanity check - detect broken/drifted models
         # If classifier outputs extreme probability (>99% or <1%), it's unreliable
         # This catches the FG Total model data drift issue (always outputs 100% over)
@@ -304,36 +281,26 @@ class PeriodPredictor:
         if classifier_extreme:
             logger.warning(
                 f"[{self.period}_total] EXTREME classifier probability: over={over_prob:.4f}. "
-                f"Model may have data drift. Using edge-based prediction as fallback."
+                f"Model may have data drift."
             )
 
-        # v33.0.8.0 FIX: Use EDGE-BASED prediction (prediction_side) as authoritative
+        # v33.0.8.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
         # The edge calculation is more robust than a potentially drifted classifier
         bet_side = prediction_side
 
         # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
-        # Filter logic: require BOTH confidence AND signal agreement
+        # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
         min_conf = filter_thresholds.total_min_confidence
         min_edge = filter_thresholds.total_min_edge
 
-        # v33.0.8.0: Restore signal agreement check - both signals must agree
-        # Also require minimum edge for the bet to pass
-        passes_filter = signals_agree and confidence >= min_conf and edge_abs >= min_edge
-
-        # If classifier is extreme (broken), only trust edge-based prediction
-        if classifier_extreme and edge_abs >= min_edge:
-            passes_filter = edge_abs >= min_edge  # Trust edge only
-            logger.info(f"[{self.period}_total] Classifier extreme - using edge-only filter: {edge_abs:.1f} pts")
+        # Simple filter: just need confidence and edge to pass
+        passes_filter = confidence >= min_conf and edge_abs >= min_edge
 
         filter_reason = None
         if not passes_filter:
-            if classifier_extreme:
-                filter_reason = f"Classifier unreliable (extreme prob: {over_prob:.1%})"
-            elif not signals_agree:
-                filter_reason = f"Signal conflict: classifier={classifier_side}, edge={prediction_side}"
-            elif confidence < min_conf:
+            if confidence < min_conf:
                 filter_reason = f"Low confidence: {confidence:.1%}"
             else:
                 filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
@@ -349,7 +316,6 @@ class PeriodPredictor:
             "raw_edge": edge,  # Signed edge for diagnostics
             "classifier_side": classifier_side,  # What the ML classifier says
             "prediction_side": prediction_side,  # What the point prediction says
-            "signals_agree": signals_agree,  # True if both signals agree
             "classifier_extreme": classifier_extreme,  # True if classifier is unreliable
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
