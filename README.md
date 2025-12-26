@@ -1,12 +1,13 @@
 # NBA Basketball Prediction System v6.0
 
-Production-grade containerized system for NBA betting predictions with **9 independent markets**.
+Production-grade containerized system for NBA betting predictions with **6 independent markets**.
 
-## Markets (9 Independent Models)
+## Markets (6 Independent Models)
+
+**Status:** Q1 markets disabled as of v33.0.1.0+
 
 | Period | Spread | Total | Moneyline |
 |--------|--------|-------|-----------|
-| **Q1** (First Quarter) | q1_spread | q1_total | q1_moneyline |
 | **1H** (First Half) | 1h_spread | 1h_total | 1h_moneyline |
 | **FG** (Full Game) | fg_spread | fg_total | fg_moneyline |
 

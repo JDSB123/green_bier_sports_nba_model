@@ -1,21 +1,15 @@
 """
-Train NBA prediction models for all 9 markets.
+Train NBA prediction models for all 6 active markets.
 
-NBA v6.0: 9 INDEPENDENT Markets Training Script
+NBA v6.0: 6 INDEPENDENT Markets Training Script (Q1 Disabled)
 
 Usage:
-    python scripts/train_models.py                          # Train all 9 markets
+    python scripts/train_models.py                          # Train all 6 markets
     python scripts/train_models.py --market fg              # Train FG only (3 models)
     python scripts/train_models.py --market 1h              # Train 1H only (3 models)
-    python scripts/train_models.py --market q1              # Train Q1 only (3 models)
     python scripts/train_models.py --model-type gradient_boosting
 
-Markets (All INDEPENDENT models):
-    Q1 (First Quarter):
-        q1_spread    - First Quarter Spreads
-        q1_total     - First Quarter Totals
-        q1_moneyline - First Quarter Moneyline
-
+Markets (All INDEPENDENT models - Q1 DISABLED):
     1H (First Half):
         1h_spread    - First Half Spreads
         1h_total     - First Half Totals

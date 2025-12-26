@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 """
-Unified backtest for all 9 NBA betting markets.
+Unified backtest for all 6 active NBA betting markets.
 
-NBA v6.0: 9 INDEPENDENT Markets Architecture
+NBA v6.0: 6 INDEPENDENT Markets Architecture (Q1 Disabled)
 STRICT MODE: No silent failures, no placeholder data.
 
-Markets (All INDEPENDENT models):
-    Q1 (First Quarter):
-        q1_spread    - First Quarter Spreads
-        q1_total     - First Quarter Totals
-        q1_moneyline - First Quarter Moneyline
-
+Markets (All INDEPENDENT models - Q1 DISABLED):
     1H (First Half):
         1h_spread    - First Half Spreads
         1h_total     - First Half Totals
