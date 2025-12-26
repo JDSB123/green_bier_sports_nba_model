@@ -200,10 +200,13 @@ def calculate_comprehensive_edge(
     logger.debug(f"[1H DEBUG] fh_engine.get('spread'): {fh_engine.get('spread') is not None}")
     logger.debug(f"[1H DEBUG] fh_market_spread: {fh_market_spread}")
 
-    # 1H Spread - use actual model prediction
+    # 1H Spread - use actual model prediction only (v33.0.7.0: NO FALLBACKS)
     if fh_engine.get("spread") and fh_market_spread is not None:
         fh_spread_pred = fh_engine["spread"]
-        fh_predicted_margin = fh_spread_pred.get("predicted_margin", fg_predicted_margin * 0.5)
+        # Require actual prediction - no fallback to scaled FG
+        if "predicted_margin" not in fh_spread_pred:
+            raise ValueError("1H spread prediction missing predicted_margin - no fallbacks allowed")
+        fh_predicted_margin = fh_spread_pred["predicted_margin"]
         logger.info(f"[1H SUCCESS] Using engine 1H spread prediction: margin={fh_predicted_margin}")
         # Model returns home_cover_prob (probability home covers the spread)
         fh_cover_prob = fh_spread_pred.get("home_cover_prob", 0.5)
@@ -232,43 +235,21 @@ def calculate_comprehensive_edge(
             "win_probability": fh_spread_win_prob,
             "rationale": f"Model projects {fh_spread_pick} with {fh_spread_edge:+.1f} pt edge (1H)"
         }
-    elif fh_market_spread is not None and fh_spread_odds is not None:
-        # Fallback to scaled FG prediction
-        logger.warning(f"[1H FALLBACK] Using scaled FG prediction for 1H spread (no engine data)")
-        fh_predicted_margin = fg_predicted_margin * 0.5
-        fh_market_expected_margin = -fh_market_spread
-        fh_spread_edge = fh_predicted_margin - fh_market_expected_margin
-        fh_spread_pick = home_team if fh_spread_edge > 0 else away_team
-        fh_spread_confidence = min(abs(fh_spread_edge) / 6.0, 0.70) if abs(fh_spread_edge) >= 1.5 else 0
-        fh_spread_win_prob = 0.5 + (abs(fh_spread_edge) * 0.02)
-        fh_spread_win_prob = max(0.51, min(0.65, fh_spread_win_prob)) if abs(fh_spread_edge) >= 0.5 else 0.5
-
-        fh_spread_threshold = edge_thresholds.get("1h_spread", 1.5)
-        fh_pick_line = fh_market_spread if fh_spread_pick == home_team else -fh_market_spread
-
-        result["first_half"]["spread"] = {
-            "model_margin": fh_predicted_margin,
-            "market_line": fh_market_spread,
-            "market_odds": fh_spread_odds,
-            "edge": fh_spread_edge,
-            "pick": fh_spread_pick if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "pick_line": fh_pick_line if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "pick_odds": fh_spread_odds if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "confidence": fh_spread_confidence,
-            "win_probability": fh_spread_win_prob if abs(fh_spread_edge) >= fh_spread_threshold else 0.5,
-            "rationale": f"Model projects {fh_spread_pick} with {fh_spread_edge:+.1f} pt edge (1H)"
-        }
     else:
+        # No engine data or no market - skip 1H spread (no fallback to scaled FG)
         result["first_half"]["spread"] = {
             "edge": None,
             "pick": None,
-            "rationale": "First half spread market not available"
+            "rationale": "First half spread: no model prediction available (no fallbacks)"
         }
 
-    # 1H Total - use actual model prediction
+    # 1H Total - use actual model prediction only (v33.0.7.0: NO FALLBACKS)
     if fh_engine.get("total") and fh_market_total is not None:
         fh_total_pred = fh_engine["total"]
-        fh_predicted_total = fh_total_pred.get("predicted_total", fg_predicted_total * 0.5)
+        # Require actual prediction - no fallback to scaled FG
+        if "predicted_total" not in fh_total_pred:
+            raise ValueError("1H total prediction missing predicted_total - no fallbacks allowed")
+        fh_predicted_total = fh_total_pred["predicted_total"]
         # Model returns over_prob (probability game goes over)
         fh_over_prob = fh_total_pred.get("over_prob", 0.5)
 
@@ -294,33 +275,12 @@ def calculate_comprehensive_edge(
             "win_probability": fh_total_win_prob,
             "rationale": f"Model projects {fh_total_pick} with {fh_total_edge:+.1f} pt edge (1H)"
         }
-    elif fh_market_total is not None and fh_total_odds is not None:
-        # Fallback to scaled FG prediction
-        fh_predicted_total = fg_predicted_total * 0.5
-        fh_total_edge = fh_predicted_total - fh_market_total
-        fh_total_pick = "OVER" if fh_total_edge > 0 else "UNDER"
-        fh_total_threshold = edge_thresholds.get("1h_total", 2.0)
-        fh_total_confidence = min(abs(fh_total_edge) / 8.0, 0.70) if abs(fh_total_edge) >= fh_total_threshold else 0
-        fh_total_win_prob = 0.5 + (abs(fh_total_edge) * 0.035)
-        fh_total_win_prob = max(0.51, min(0.70, fh_total_win_prob)) if abs(fh_total_edge) >= 1.0 else 0.5
-
-        result["first_half"]["total"] = {
-            "model_total": fh_predicted_total,
-            "market_line": fh_market_total,
-            "market_odds": fh_total_odds,
-            "edge": fh_total_edge,
-            "pick": fh_total_pick if abs(fh_total_edge) >= fh_total_threshold else None,
-            "pick_line": fh_market_total if abs(fh_total_edge) >= fh_total_threshold else None,
-            "pick_odds": fh_total_odds if abs(fh_total_edge) >= fh_total_threshold else None,
-            "confidence": fh_total_confidence,
-            "win_probability": fh_total_win_prob if abs(fh_total_edge) >= fh_total_threshold else 0.5,
-            "rationale": f"Model projects {fh_total_pick} with {fh_total_edge:+.1f} pt edge (1H)"
-        }
     else:
+        # No engine data or no market - skip 1H total (no fallback to scaled FG)
         result["first_half"]["total"] = {
             "edge": None,
             "pick": None,
-            "rationale": "First half total market not available"
+            "rationale": "First half total: no model prediction available (no fallbacks)"
         }
 
     # 1H Moneyline - use actual model prediction if available
