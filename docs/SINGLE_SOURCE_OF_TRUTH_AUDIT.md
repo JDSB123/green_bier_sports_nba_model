@@ -1,203 +1,109 @@
 # Single Source of Truth Audit - NBA v6.0 Model
 
 **Audit Date:** December 22, 2025  
-**Status:** ⚠️ **CRITICAL VIOLATIONS FOUND**  
-**Severity:** High - Compromises data integrity and consistency
+**Last Updated:** December 26, 2025  
+**Status:** ✅ **ALL VIOLATIONS FIXED**  
+**Severity:** Resolved
 
 ---
 
 ## Executive Summary
 
-Your model has **3 major violations** of the single source of truth principle that you documented in [DATA_SOURCE_OF_TRUTH.md](DATA_SOURCE_OF_TRUTH.md). These violations create:
+All **3 major violations** of the single source of truth principle documented in [DATA_SOURCE_OF_TRUTH.md](DATA_SOURCE_OF_TRUTH.md) have been **successfully remediated**. The system now enforces:
 
-1. **Data duplication** - Multiple code paths fetch the same data
-2. **Inconsistency** - Same data normalized different ways depending on which module uses it
-3. **Maintenance burden** - Changes to one implementation don't sync with others
-4. **Testing complexity** - Bugs can exist in one path but not another
+1. **Single data source** - One authoritative path for each data type
+2. **Consistent normalization** - Unified team name handling via `src.utils.team_names`
+3. **Reduced maintenance burden** - Changes propagate consistently across modules
+4. **Improved testing** - No duplicate code paths to test and maintain
 
 ---
 
-## VIOLATION #1: Injury Data Aggregation Bypass
+## VIOLATION #1: Injury Data Aggregation Bypass ✅ FIXED
 
 ### Location
-[src/ingestion/comprehensive.py](../src/ingestion/comprehensive.py#L616)
+[src/ingestion/comprehensive.py](../src/ingestion/comprehensive.py#L612)
 
-### The Issue
+### Status
+✅ **RESOLVED** - Code now correctly uses `fetch_all_injuries()` aggregator
+
+### Previous Issue
 ```python
-# ❌ WRONG - Line 616
+# ❌ WRONG - Was calling directly
 async def fetch_espn_injuries(self) -> List[Dict]:
-    """Fetch injuries from ESPN (FREE, unlimited)."""
-    from src.ingestion.injuries import fetch_injuries_espn  # ← Direct import!
-    
-    # This BYPASSES fetch_all_injuries() which aggregates ESPN + API-Basketball
+    from src.ingestion.injuries import fetch_injuries_espn  # Direct import
 ```
 
-### Why It's a Violation
-Your documentation states ([DATA_SOURCE_OF_TRUTH.md:105-106](DATA_SOURCE_OF_TRUTH.md#L105-L106)):
-- ❌ **DO NOT** call `fetch_injuries_espn()` directly
-- ❌ **DO NOT** call `fetch_injuries_api_basketball()` directly
-- ✅ **ALWAYS** use `fetch_all_injuries()` in production code
-
-### The Correct Way
+### Current Implementation (CORRECT)
 ```python
-# ✅ RIGHT - Aggregates ESPN + API-Basketball
-async def fetch_injuries(self) -> List[InjuryReport]:
+# ✅ CORRECT - Uses single source aggregator
+async def fetch_injuries(self) -> List[Dict]:
     from src.ingestion.injuries import fetch_all_injuries
     
-    injuries = await fetch_all_injuries()
-    # Already handles merging duplicates, returning standardized format
+    data = await api_cache.get_or_fetch(
+        key=key,
+        fetch_fn=fetch_all_injuries,  # ← Single source
+        ttl_hours=APICache.TTL_FREQUENT,
+        ...
+    )
 ```
 
-### Impact
-- If ESPN data fails, `comprehensive.py` returns nothing instead of falling back to API-Basketball
-- `comprehensive.py` and other modules (e.g., `build_rich_features.py`) may have different injury data
-- Inconsistent injury enrichment across the model
+### Fix Details
+- Updated [src/ingestion/comprehensive.py](../src/ingestion/comprehensive.py#L612) to use `fetch_all_injuries()`
+- Maintains redundancy (ESPN + API-Basketball fallback)
+- Consistent data aggregation and standardization
+- Proper TTL caching via `api_cache`
 
-### Files Affected
-- ✅ [src/ingestion/injuries.py](../src/ingestion/injuries.py#L274) - Implements `fetch_all_injuries()` (single source)
-- ❌ [src/ingestion/comprehensive.py](../src/ingestion/comprehensive.py#L616) - **VIOLATES** single source
-- ✅ [src/features/rich_features.py](../src/features/rich_features.py#L339) - Uses correct `fetch_all_injuries()`
-- ✅ [scripts/build_rich_features.py](../scripts/build_rich_features.py#L220) - Uses correct `fetch_all_injuries()`
+### Files Updated
+- ✅ [src/ingestion/comprehensive.py](../src/ingestion/comprehensive.py#L612) - Fixed to use single source
 
 ---
 
-## VIOLATION #2: Team Name Normalization Duplication
+## VIOLATION #2: Team Name Normalization Duplication ✅ FIXED
 
-### Location
-Three separate implementations:
+### Status
+✅ **RESOLVED** - Consolidated to single source: [src/utils/team_names.py](../src/utils/team_names.py#L63)
 
-| File | Function | Returns | Used For |
-|------|----------|---------|----------|
-| [src/utils/team_names.py](../src/utils/team_names.py#L63) | `normalize_team_name()` | Canonical ID (`"nba_lal"`) | General standardization, travel features |
-| [src/modeling/team_factors.py](../src/modeling/team_factors.py#L64) | `normalize_team_name()` | Full name (`"Denver Nuggets"`) | HCA (home court advantage) lookup |
-| [src/modeling/dataset.py](../src/modeling/dataset.py#L26) | `_normalize_team_name()` | Mapped name (from TEAM_NAME_MAP) | Dataset loading |
+### Previous Issue
+Three separate implementations existed. Now using single source of truth.
 
-### The Issue
-```python
-# ❌ DUPLICATION - Three different implementations!
+### Current Implementation (CORRECT)
+All modules now import from single source: `src.utils.team_names.normalize_team_name`
 
-# Version 1: utils/team_names.py
-normalize_team_name("Los Angeles Lakers") -> "nba_lal"
-
-# Version 2: modeling/team_factors.py
-normalize_team_name("lakers") -> "Los Angeles Lakers"
-
-# Version 3: modeling/dataset.py
-_normalize_team_name("LA Lakers") -> "Los Angeles Lakers"
-```
-
-### Why It's a Violation
-- No single source of truth for team name standardization
-- Each module has its own mapping logic
-- If you add a new team variant (e.g., "Lakers (LA)"), must update all 3 places
-- Different parts of the model may disagree on canonical team names
-
-### The Problem Scenario
-```python
-# In rich_features.py (uses travel.py which uses utils/team_names.py)
-injuries = await fetch_all_injuries()  # Returns "Los Angeles Lakers"
-normalized = normalize_team_name("Los Angeles Lakers")  # -> "nba_lal"
-
-# In dataset loading (uses modeling/dataset.py)
-df_team = "Los Angeles Lakers"
-normalized = dataset._normalize_team_name(df_team)  # -> "Los Angeles Lakers"
-
-# Now we have TWO different representations!
-# "nba_lal" vs "Los Angeles Lakers" -> MISMATCH in features
-```
-
-### Impact
-- Travel calculation may use different team name than HCA calculation
-- Dataset loading normalizes differently than feature engineering
-- Feature mismatch between training and prediction time
-- Maintenance nightmare - changes to team lists must happen in 3 places
-
-### Files Affected
-**Duplicate definitions:**
-- ❌ [src/utils/team_names.py](../src/utils/team_names.py#L63) - Returns canonical ID
-- ❌ [src/modeling/team_factors.py](../src/modeling/team_factors.py#L64) - Returns full name
-- ❌ [src/modeling/dataset.py](../src/modeling/dataset.py#L26) - Has TEAM_NAME_MAP dict
-
-**Users of duplication:**
-- [src/modeling/travel.py](../src/modeling/travel.py#L13) - Uses utils version
-- [src/modeling/team_factors.py](../src/modeling/team_factors.py#L152) - Uses local version (self-reference)
-- [src/modeling/dataset.py](../src/modeling/dataset.py#L59) - Uses local version (self-reference)
-
-### Recommended Single Source
-Use **[src/utils/team_names.py](../src/utils/team_names.py)** as the source of truth because:
-1. Already has comprehensive mapping via `team_mapping.json`
-2. Uses canonical IDs that avoid collisions
-3. Has fuzzy matching for typos
-4. Centralized, easy to maintain
-5. Already used by `travel.py` and ingestion modules
+### Files Updated
+- ✅ [src/modeling/team_factors.py](../src/modeling/team_factors.py#L17) - Imports single source
+- ✅ [src/modeling/travel.py](../src/modeling/travel.py#L13) - Uses imported single source
+- ✅ [src/modeling/dataset.py](../src/modeling/dataset.py) - Uses unified normalization
 
 ---
 
-## VIOLATION #3: Odds Data Collection Has Multiple Paths
+## VIOLATION #3: Odds Data Collection Has Multiple Paths ✅ FIXED
 
-### Location
-[scripts/build_fresh_training_data.py](../scripts/build_fresh_training_data.py#L247)
+### Status
+✅ **RESOLVED** - Unified to single source: [src/ingestion/the_odds.py](../src/ingestion/the_odds.py) `fetch_odds()`
 
-### The Issue
+### Current Implementation (CORRECT)
 ```python
-# Lines 247-248 - Dual import
+# ✅ CORRECT - Single unified source
 from src.ingestion.the_odds import (
-    fetch_historical_odds,  # ← Path A
-    fetch_odds,             # ← Path B
+    fetch_odds,           # ← Single source with smart routing
+    fetch_events,         # Helper for event details
+    fetch_event_odds,     # Helper for 1H/Q1 markets  
+    fetch_participants,   # Team reference
 )
 
-# Lines 266-293: Uses historical_odds (Path A)
-data = await fetch_historical_odds(...)
-
-# Lines 355: Uses fetch_odds (Path B)
+# Single call with smart internal routing
 current_odds = await fetch_odds(markets="spreads,totals,h2h")
 ```
 
-### Why It's a Violation
-Your documentation states ([DATA_SOURCE_OF_TRUTH.md:151](DATA_SOURCE_OF_TRUTH.md#L151)):
-- **Single Source:** `the_odds.fetch_odds()`
-- Not `fetch_historical_odds()` + `fetch_odds()` separately
+### Fix Details
+- [scripts/build_fresh_training_data.py](../scripts/build_fresh_training_data.py#L245) now calls `fetch_odds()` directly
+- `fetch_odds()` internally handles routing: tries historical if available, falls back to live odds
+- Consistent data structure returned regardless of source
+- No data duplication or duplicate calls
 
-The two functions return different data structures:
-- `fetch_historical_odds()` - returns historical snapshot data
-- `fetch_odds()` - returns current live odds
-
-### The Architectural Problem
-```
-Expected Flow (Single Source):
-┌─────────────────────────────┐
-│   the_odds.fetch_odds()     │ ← Single aggregator
-│   (smart routing)           │
-├─────────────────────────────┤
-│ If historical available:    │
-│  → fetch_historical_odds    │
-│ Else:                       │
-│  → fetch_current odds       │
-└─────────────────────────────┘
-         ↓
-    Clean data
-
-Actual Flow (Multiple Paths):
-┌─────────────────────────────┐
-│ fetch_historical_odds()     │ ← Direct call in training_data.py
-└─────────────────────────────┘
-┌─────────────────────────────┐
-│ fetch_odds()                │ ← Direct call elsewhere
-└─────────────────────────────┘
-         ↓
-    Inconsistent data
-```
-
-### Impact
-- Training data may use different odds source than predictions
-- If `fetch_historical_odds` fails, training data is incomplete
-- No fallback mechanism - both paths are required to succeed
-- Inconsistent odds standardization between training and prediction time
-
-### Files Affected
-- ❌ [scripts/build_fresh_training_data.py](../scripts/build_fresh_training_data.py#L247) - **VIOLATES** by calling both functions
-- ✅ [src/ingestion/the_odds.py](../src/ingestion/the_odds.py#L91) - Implements `fetch_odds()` single source
-- ✅ [scripts/predict.py](../scripts/predict.py#L275) - Uses correct single source `fetch_odds()`
+### Files Updated
+- ✅ [scripts/build_fresh_training_data.py](../scripts/build_fresh_training_data.py#L245) - Uses single source aggregator
+- ✅ [scripts/predict.py](../scripts/predict.py#L275) - Consistent with training data flow
 
 ---
 
