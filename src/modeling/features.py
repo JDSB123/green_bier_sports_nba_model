@@ -1064,19 +1064,62 @@ class FeatureEngineer:
         away_expected_pts = (away_stats["ppg"] + home_stats["papg"]) / 2
         features["predicted_total"] = home_expected_pts + away_expected_pts
 
-        # === FIRST HALF PREDICTIONS ===
-        # 1H margin is approximately 45-50% of full game margin (adjusted for pace)
-        # Scale down home court advantage for 1H (~1.5 pts vs 3 pts for FG)
-        hca_1h = hca * 0.5  # Half the HCA for first half
-        # v6.5 FIX: Removed explicit rest term (already in HCA + travel_fatigue)
-        features["predicted_margin_1h"] = (
-            (home_stats["margin"] - away_stats["margin"]) / 2 * 0.48  # ~48% of FG margin
-            + hca_1h  # Scaled HCA (already includes rest adjustments)
-            - away_travel["travel_fatigue"] * 0.5  # Travel fatigue (already has rest mitigation)
+        # === FIRST HALF PREDICTIONS (v33.0.7.0: Independent 1H Stats) ===
+        # Compute 1H-specific stats using actual historical 1H data
+        home_1h_stats = self.compute_period_rolling_stats(
+            historical_df, home_team, game_date, period="1h"
         )
-        
-        # 1H total is approximately 48-50% of full game total
-        features["predicted_total_1h"] = features["predicted_total"] * 0.49
+        away_1h_stats = self.compute_period_rolling_stats(
+            historical_df, away_team, game_date, period="1h"
+        )
+
+        # Scale HCA for 1H (~1.5 pts vs 3 pts for FG)
+        hca_1h = hca * 0.5
+
+        # v33.0.7.0: Require actual 1H data - NO FALLBACKS
+        if not home_1h_stats:
+            raise ValueError(
+                f"Insufficient 1H historical data for {home_team}. "
+                f"Cannot compute 1H predictions without actual 1H stats. "
+                f"Ensure historical_df contains quarter columns (home_q1, home_q2, etc.) "
+                f"and team has at least 3 games with 1H data."
+            )
+        if not away_1h_stats:
+            raise ValueError(
+                f"Insufficient 1H historical data for {away_team}. "
+                f"Cannot compute 1H predictions without actual 1H stats. "
+                f"Ensure historical_df contains quarter columns (away_q1, away_q2, etc.) "
+                f"and team has at least 3 games with 1H data."
+            )
+
+        # 1H Margin: Use actual 1H margin stats (not scaled FG)
+        home_1h_margin = home_1h_stats["margin_1h"]
+        away_1h_margin = away_1h_stats["margin_1h"]
+        features["predicted_margin_1h"] = (
+            (home_1h_margin - away_1h_margin) / 2
+            + hca_1h
+            - away_travel["travel_fatigue"] * 0.5
+        )
+
+        # 1H Total: Matchup-based formula (same logic as FG)
+        # Home 1H expected = avg of (home's 1H offense, away's 1H defense allowed)
+        # Away 1H expected = avg of (away's 1H offense, home's 1H defense allowed)
+        home_1h_ppg = home_1h_stats["ppg_1h"]
+        home_1h_papg = home_1h_stats["papg_1h"]
+        away_1h_ppg = away_1h_stats["ppg_1h"]
+        away_1h_papg = away_1h_stats["papg_1h"]
+
+        home_1h_expected = (home_1h_ppg + away_1h_papg) / 2
+        away_1h_expected = (away_1h_ppg + home_1h_papg) / 2
+        features["predicted_total_1h"] = home_1h_expected + away_1h_expected
+
+        # Store 1H stats for model features
+        features["home_ppg_1h"] = home_1h_ppg
+        features["home_papg_1h"] = home_1h_papg
+        features["away_ppg_1h"] = away_1h_ppg
+        features["away_papg_1h"] = away_1h_papg
+        features["home_margin_1h"] = home_1h_margin
+        features["away_margin_1h"] = away_1h_margin
 
         # Form features
         if "form_trend" in home_stats and "form_trend" in away_stats:
