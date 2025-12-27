@@ -30,25 +30,20 @@ def validate_splits_sources_configured() -> Dict[str, bool]:
     Validate which betting splits sources are configured.
 
     Returns dict mapping source name to whether it's configured.
-    CRITICAL: At least one source should be configured for real data.
+
+    Note: Action Network scoreboard API is PUBLIC and always available.
     """
     from src.config import settings
 
     sources = {
-        "action_network": bool(settings.action_network_username and settings.action_network_password),
-        "the_odds_splits": bool(settings.the_odds_api_key),  # Needs Group 2+ plan
+        # Action Network scoreboard API is PUBLIC - no credentials needed!
+        "action_network": True,  # Always available via public scoreboard API
+        "the_odds_splits": bool(settings.the_odds_api_key),  # Available but endpoint may not exist
         "betsapi": bool(getattr(settings, "betsapi_key", None)),
     }
 
     configured = [s for s, v in sources.items() if v]
-    if not configured:
-        logger.warning(
-            "WARNING: No betting splits sources configured! "
-            "Features will be missing sharp money signals. "
-            "Configure ACTION_NETWORK_USERNAME/PASSWORD or upgrade The Odds API plan."
-        )
-    else:
-        logger.info(f"Betting splits sources configured: {configured}")
+    logger.info(f"Betting splits sources configured: {configured}")
 
     return sources
 
@@ -444,153 +439,115 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
     """
     Fetch betting splits from Action Network.
 
-    Uses web scraping with authentication since Action Network
-    doesn't have a public API for splits data.
-
-    Requires:
-        ACTION_NETWORK_USERNAME and ACTION_NETWORK_PASSWORD env variables
+    Uses the PUBLIC scoreboard API endpoint - NO authentication required.
+    Endpoint: https://api.actionnetwork.com/web/v1/scoreboard/nba
 
     Returns:
         List of GameSplits with public betting percentages
-
-    Raises:
-        ValueError: If credentials are not configured
     """
     import httpx
     from datetime import datetime
 
-    username = settings.action_network_username
-    password = settings.action_network_password
-
-    # Validate credentials are configured
-    if not username or not password:
-        logger.warning("Action Network credentials not configured - skipping")
-        return []
-
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            # Action Network requires session-based auth
-            # First, get a session by logging in
-            login_url = "https://api.actionnetwork.com/web/v1/auth/login"
-            
-            login_response = await client.post(
-                login_url,
-                json={
-                    "email": username,
-                    "password": password,
-                },
-                headers={
-                    "Content-Type": "application/json",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                    "Origin": "https://www.actionnetwork.com",
-                    "Referer": "https://www.actionnetwork.com/",
-                }
-            )
-            
-            if login_response.status_code != 200:
-                logger.warning(f"Action Network login failed: {login_response.status_code}")
-                return []
-            
-            # Extract auth token from response
-            auth_data = login_response.json()
-            token = auth_data.get("token") or auth_data.get("access_token")
-            
-            if not token:
-                # Try cookies-based session
-                cookies = login_response.cookies
-                logger.info("Using cookie-based session for Action Network")
-            else:
-                cookies = None
-            
-            # Fetch NBA games with betting splits
-            target_date = date or datetime.now().strftime("%Y-%m-%d")
-            
-            games_url = f"https://api.actionnetwork.com/web/v1/games/nba"
-            
+            # Action Network scoreboard API is PUBLIC - no auth needed!
+            scoreboard_url = "https://api.actionnetwork.com/web/v1/scoreboard/nba"
+
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Accept": "application/json",
                 "Origin": "https://www.actionnetwork.com",
-                "Referer": "https://www.actionnetwork.com/nba/odds",
+                "Referer": "https://www.actionnetwork.com/nba/public-betting",
             }
-            
-            if token:
-                headers["Authorization"] = f"Bearer {token}"
-            
-            games_response = await client.get(
-                games_url,
-                params={"date": target_date},
-                headers=headers,
-                cookies=cookies,
-            )
-            
-            if games_response.status_code != 200:
-                logger.warning(f"Action Network games fetch failed: {games_response.status_code}")
+
+            response = await client.get(scoreboard_url, headers=headers)
+
+            if response.status_code != 200:
+                logger.error(f"Action Network scoreboard API failed: {response.status_code}")
+                raise ValueError(f"Action Network API returned {response.status_code}")
+
+            data = response.json()
+            games = data.get("games", [])
+
+            if not games:
+                logger.warning("Action Network returned no games")
                 return []
-            
-            games_data = games_response.json()
-            games = games_data.get("games", []) or games_data.get("data", [])
-            
-            logger.info(f"Fetched {len(games)} games from Action Network")
-            
+
+            logger.info(f"Fetched {len(games)} games from Action Network scoreboard API")
+
             # Parse into GameSplits
             splits_list = []
             from src.ingestion.standardize import normalize_team_to_espn
-            
+
             for game in games:
                 try:
-                    # Extract team names
-                    home_team_raw = (
-                        game.get("home_team", {}).get("full_name", "") 
-                        if isinstance(game.get("home_team"), dict) 
-                        else game.get("home_team", "")
-                    )
-                    away_team_raw = (
-                        game.get("away_team", {}).get("full_name", "")
-                        if isinstance(game.get("away_team"), dict)
-                        else game.get("away_team", "")
-                    )
-                    
+                    # Extract team info
+                    teams = game.get("teams", [])
+                    if len(teams) < 2:
+                        continue
+
+                    # Find home and away teams
+                    home_team_data = None
+                    away_team_data = None
+                    for team in teams:
+                        team_id = team.get("id")
+                        if team_id == game.get("home_team_id"):
+                            home_team_data = team
+                        elif team_id == game.get("away_team_id"):
+                            away_team_data = team
+
+                    if not home_team_data or not away_team_data:
+                        continue
+
+                    home_team_raw = home_team_data.get("full_name", "")
+                    away_team_raw = away_team_data.get("full_name", "")
+
                     home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="action_network")
                     away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="action_network")
-                    
+
                     if not home_valid or not away_valid:
-                        continue
-                    
-                    # Extract betting percentages - STRICT: raise on missing critical data
-                    betting_info = game.get("betting_info") or game.get("odds")
-                    if not betting_info:
-                        logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - no betting_info")
+                        logger.debug(f"Skipping game with invalid team names: {home_team_raw} vs {away_team_raw}")
                         continue
 
-                    # Spread data - REQUIRED for spreads market
-                    spread_data = betting_info.get("spread", {})
-                    spread_line = spread_data.get("home_spread") or spread_data.get("line")
-                    if spread_line is None:
-                        logger.warning(f"STRICT MODE: No spread line for {home_team} vs {away_team}")
-                        spread_line = None  # Will be None, not 0
-                    spread_home_pct = spread_data.get("home_tickets") or spread_data.get("home_pct")
-                    spread_home_money = spread_data.get("home_money") or spread_data.get("home_money_pct")
-                    spread_open = spread_data.get("opening") or spread_data.get("open") or spread_line
+                    # Get odds data - find "game" type odds with public percentages
+                    odds_list = game.get("odds", [])
+                    game_odds = None
+                    for odds in odds_list:
+                        if odds.get("type") == "game" and odds.get("spread_home_public") is not None:
+                            game_odds = odds
+                            break
 
-                    # Total data - REQUIRED for totals market
-                    total_data = betting_info.get("total", {})
-                    total_line = total_data.get("line") or total_data.get("total")
-                    if total_line is None:
-                        logger.warning(f"STRICT MODE: No total line for {home_team} vs {away_team}")
-                        total_line = None  # Will be None, not 0
-                    over_pct = total_data.get("over_tickets") or total_data.get("over_pct")
-                    over_money = total_data.get("over_money") or total_data.get("over_money_pct")
-                    total_open = total_data.get("opening") or total_data.get("open") or total_line
+                    if not game_odds:
+                        # Try any odds with public data
+                        for odds in odds_list:
+                            if odds.get("spread_home_public") is not None:
+                                game_odds = odds
+                                break
 
-                    # Moneyline data
-                    ml_data = betting_info.get("moneyline", {}) or betting_info.get("ml", {})
-                    ml_home_pct = ml_data.get("home_tickets") or ml_data.get("home_pct")
-                    ml_home_money = ml_data.get("home_money") or ml_data.get("home_money_pct")
-                    
-                    # Skip game if no betting lines at all
-                    if spread_line is None and total_line is None:
-                        logger.warning(f"STRICT MODE: Skipping {home_team} vs {away_team} - no lines available")
+                    if not game_odds:
+                        logger.debug(f"No public betting data for {away_team} @ {home_team}")
+                        continue
+
+                    # Extract betting percentages from odds
+                    spread_line = game_odds.get("spread_home")
+                    spread_home_pct = game_odds.get("spread_home_public")
+                    spread_away_pct = game_odds.get("spread_away_public")
+                    spread_home_money = game_odds.get("spread_home_money")
+                    spread_away_money = game_odds.get("spread_away_money")
+
+                    total_line = game_odds.get("total")
+                    over_pct = game_odds.get("total_over_public")
+                    under_pct = game_odds.get("total_under_public")
+                    over_money = game_odds.get("total_over_money")
+                    under_money = game_odds.get("total_under_money")
+
+                    ml_home_pct = game_odds.get("ml_home_public")
+                    ml_away_pct = game_odds.get("ml_away_public")
+                    ml_home_money = game_odds.get("ml_home_money")
+                    ml_away_money = game_odds.get("ml_away_money")
+
+                    # Skip if no public data at all
+                    if spread_home_pct is None and over_pct is None:
                         continue
 
                     splits = GameSplits(
@@ -601,39 +558,42 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             game.get("start_time", datetime.now().isoformat()).replace("Z", "+00:00")
                         ),
                         source="action_network",
-                        spread_line=float(spread_line) if spread_line is not None else None,
-                        spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct is not None else None,
-                        spread_away_ticket_pct=100 - float(spread_home_pct) if spread_home_pct is not None else None,
-                        spread_home_money_pct=float(spread_home_money) if spread_home_money is not None else None,
-                        spread_away_money_pct=100 - float(spread_home_money) if spread_home_money is not None else None,
-                        spread_open=float(spread_open) if spread_open is not None else None,
-                        spread_current=float(spread_line) if spread_line is not None else None,
-                        total_line=float(total_line) if total_line is not None else None,
-                        over_ticket_pct=float(over_pct) if over_pct is not None else None,
-                        under_ticket_pct=100 - float(over_pct) if over_pct is not None else None,
-                        over_money_pct=float(over_money) if over_money is not None else None,
-                        under_money_pct=100 - float(over_money) if over_money is not None else None,
-                        total_open=float(total_open) if total_open is not None else None,
-                        total_current=float(total_line) if total_line is not None else None,
-                        ml_home_ticket_pct=float(ml_home_pct) if ml_home_pct is not None else None,
-                        ml_away_ticket_pct=100 - float(ml_home_pct) if ml_home_pct is not None else None,
-                        ml_home_money_pct=float(ml_home_money) if ml_home_money is not None else None,
-                        ml_away_money_pct=100 - float(ml_home_money) if ml_home_money is not None else None,
+                        spread_line=float(spread_line) if spread_line is not None else 0.0,
+                        spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct is not None else 50.0,
+                        spread_away_ticket_pct=float(spread_away_pct) if spread_away_pct is not None else 50.0,
+                        spread_home_money_pct=float(spread_home_money) if spread_home_money is not None else 50.0,
+                        spread_away_money_pct=float(spread_away_money) if spread_away_money is not None else 50.0,
+                        spread_open=float(spread_line) if spread_line is not None else 0.0,
+                        spread_current=float(spread_line) if spread_line is not None else 0.0,
+                        total_line=float(total_line) if total_line is not None else 0.0,
+                        over_ticket_pct=float(over_pct) if over_pct is not None else 50.0,
+                        under_ticket_pct=float(under_pct) if under_pct is not None else 50.0,
+                        over_money_pct=float(over_money) if over_money is not None else 50.0,
+                        under_money_pct=float(under_money) if under_money is not None else 50.0,
+                        total_open=float(total_line) if total_line is not None else 0.0,
+                        total_current=float(total_line) if total_line is not None else 0.0,
+                        ml_home_ticket_pct=float(ml_home_pct) if ml_home_pct is not None else 50.0,
+                        ml_away_ticket_pct=float(ml_away_pct) if ml_away_pct is not None else 50.0,
+                        ml_home_money_pct=float(ml_home_money) if ml_home_money is not None else 50.0,
+                        ml_away_money_pct=float(ml_away_money) if ml_away_money is not None else 50.0,
                         updated_at=dt.datetime.now(),
                     )
-                    
+
                     splits_list.append(detect_reverse_line_movement(splits))
-                    
+                    logger.debug(f"✓ Parsed betting splits for {away_team} @ {home_team}: "
+                                f"spread={spread_home_pct}/{spread_away_pct}, "
+                                f"total={over_pct}/{under_pct}")
+
                 except Exception as e:
                     logger.debug(f"Failed to parse Action Network game: {e}")
                     continue
-            
-            logger.info(f"Parsed {len(splits_list)} games with betting splits from Action Network")
+
+            logger.info(f"✓ Parsed {len(splits_list)} games with betting splits from Action Network")
             return splits_list
-            
+
     except Exception as e:
-        logger.warning(f"Action Network fetch failed: {e}")
-        return []
+        logger.error(f"Action Network fetch failed: {e}")
+        raise  # Don't silently fail - raise the error
 
 
 async def scrape_splits_covers(date: Optional[str] = None) -> List[GameSplits]:
