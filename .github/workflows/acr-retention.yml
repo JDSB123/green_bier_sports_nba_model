@@ -35,11 +35,10 @@ jobs:
           creds = os.environ.get("AZURE_CREDENTIALS_JSON", "").strip()
           if creds:
               try:
-                  json.loads(creds)
+                  resolved = json.dumps(json.loads(creds))
               except json.JSONDecodeError as exc:
                   sys.stderr.write(f"AZURE_CREDENTIALS is not valid JSON: {exc}\n")
                   sys.exit(1)
-              resolved = creds
           else:
               client_secret = os.environ.get("AZURE_CLIENT_SECRET", "").strip()
               if not client_secret:
