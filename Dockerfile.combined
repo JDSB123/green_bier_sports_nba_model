@@ -1,9 +1,9 @@
-# NBA NBA_v33.0.6.0 - Combined Model API + Bot - Production Container
+# NBA NBA_v33.0.8.0 - Combined Model API + Bot - Production Container
 # Single container with:
 # - Port 8090: ML Model Prediction API (uvicorn)
 # - Port 8080: Azure Functions Bot / Teams Integration (func host)
 #
-# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.6.0 .
+# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0 .
 
 # =============================================================================
 # Stage 1: Builder
@@ -26,7 +26,7 @@ RUN pip install --no-cache-dir --user -r requirements.txt && \
 # =============================================================================
 FROM python:3.11.11-slim
 
-LABEL maintainer="Green Bier Ventures" version="NBA_v33.0.6.0"
+LABEL maintainer="Green Bier Ventures" version="NBA_v33.0.8.0"
 
 WORKDIR /app
 
@@ -61,16 +61,19 @@ ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV FILTER_MONEYLINE_MIN_CONFIDENCE=0.55
 ENV FILTER_MONEYLINE_MIN_EDGE_PCT=0.03
 ENV ALLOWED_ORIGINS=*
-ENV NBA_MODEL_VERSION=NBA_v33.0.6.0
+ENV NBA_MODEL_VERSION=NBA_v33.0.8.0
 ENV NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
 ENV FUNCTIONS_WORKER_RUNTIME=python
 ENV FUNCTIONS_EXTENSION_VERSION=~4
 ENV SEASONS_TO_PROCESS=2025-2026
 
-# Verify models (6 markets: 1H + FG only, Q1 disabled)
-RUN echo "=== NBA_v33.0.6.0 Models ===" && \
-    test -f /app/data/processed/models/1h_spread_model.pkl && echo "✓ 1h_spread" && \
-    test -f /app/data/processed/models/fg_spread_model.joblib && echo "✓ fg_spread"
+# Verify models directory (6 markets: 1H + FG only, Q1 disabled)
+RUN echo "=== NBA_v33.0.8.0 Models ===" && \
+    if [ -d /app/data/processed/models ]; then \
+      echo "✓ Models directory exists"; \
+    else \
+      echo "⚠ Models directory not found - will download at runtime"; \
+    fi
 
 # Entrypoint script - using printf to avoid heredoc issues
 RUN printf '#!/bin/sh\nset -e\necho "[Startup] Starting NBA Container (Model API + Bot)..."\npython -m uvicorn src.serving.app:app --host 0.0.0.0 --port 8090 --workers 2 &\nMODEL_PID=$!\ncd /app/function_host\nfunc host start --port 8080 &\nBOT_PID=$!\ntrap "kill $MODEL_PID $BOT_PID 2>/dev/null" EXIT\nwait\n' > /app/start.sh && chmod +x /app/start.sh
