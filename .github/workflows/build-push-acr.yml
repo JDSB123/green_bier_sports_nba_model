@@ -28,6 +28,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify build files
+        run: |
+          echo "Checking required files for Docker build..."
+          test -f requirements.txt && echo "✓ requirements.txt" || echo "✗ requirements.txt missing!"
+          test -f pyproject.toml && echo "✓ pyproject.toml" || echo "✗ pyproject.toml missing!"
+          test -f azure/function_app/requirements.txt && echo "✓ azure/function_app/requirements.txt" || echo "✗ azure/function_app/requirements.txt missing!"
+          test -f Dockerfile.combined && echo "✓ Dockerfile.combined" || echo "✗ Dockerfile.combined missing!"
+          test -d models/production && echo "✓ models/production directory" || echo "✗ models/production directory missing!"
+          test -d src && echo "✓ src directory" || echo "✗ src directory missing!"
+          test -d scripts && echo "✓ scripts directory" || echo "✗ scripts directory missing!"
+          test -d azure/function_app && echo "✓ azure/function_app directory" || echo "✗ azure/function_app directory missing!"
+
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
@@ -59,13 +71,39 @@ jobs:
 
       - name: Build image (Dockerfile.combined)
         run: |
+          echo "Building Docker image with tags:"
+          echo "  - ${{ steps.tags.outputs.TAG_SHA }}"
+          echo "  - ${{ steps.tags.outputs.TAG_VERSION }}"
           docker build \
             -f Dockerfile.combined \
+            --progress=plain \
             -t ${{ steps.tags.outputs.TAG_SHA }} \
             -t ${{ steps.tags.outputs.TAG_VERSION }} \
-            .
+            . || {
+              echo "❌ Docker build failed"
+              echo "Checking Docker and disk space..."
+              docker version
+              docker system df
+              exit 1
+            }
+          echo "✅ Docker image built successfully"
+          docker images | grep nba-gbsv-api
 
       - name: Push image (both tags)
         run: |
-          docker push ${{ steps.tags.outputs.TAG_SHA }}
-          docker push ${{ steps.tags.outputs.TAG_VERSION }}
+          echo "Pushing Docker images to ACR..."
+          echo "Repository: $ACR_LOGIN_SERVER/$IMAGE_NAME"
+          
+          echo "Pushing SHA tag: ${{ steps.tags.outputs.TAG_SHA }}"
+          docker push ${{ steps.tags.outputs.TAG_SHA }} || {
+            echo "❌ Failed to push SHA tag"
+            exit 1
+          }
+          
+          echo "Pushing VERSION tag: ${{ steps.tags.outputs.TAG_VERSION }}"
+          docker push ${{ steps.tags.outputs.TAG_VERSION }} || {
+            echo "❌ Failed to push VERSION tag"
+            exit 1
+          }
+          
+          echo "✅ All images pushed successfully"
