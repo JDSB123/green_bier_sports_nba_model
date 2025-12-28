@@ -23,7 +23,7 @@ Updated the following secrets in GitHub with fresh Azure credentials:
 - `AZURE_SUBSCRIPTION_ID` → `3a1a4a94-45a5-4f7c-8ada-97978221052c`
 - `AZURE_TENANT_ID` → `18ee0910-417d-4a81-a3f5-7945bdbd5a78`
 - `AZURE_CLIENT_ID` → `971db985-be14-4352-bb1d-144d8e8b198c` (Service Principal: `gbs-nba-github`)
-- `AZURE_CLIENT_SECRET` → freshly generated client secret for the `gbs-nba-github` app (GitHub Actions now uses this when present)
+- `AZURE_CLIENT_SECRET` → freshly generated client secret for the `gbs-nba-github` app (GitHub Actions now requires this for azure/login)
 
 **Command:**
 ```powershell
