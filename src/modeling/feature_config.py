@@ -17,15 +17,15 @@ logger = logging.getLogger(__name__)
 
 # Core team performance stats
 CORE_TEAM_FEATURES = [
-    "home_ppg", "home_papg", "home_avg_margin",
-    "away_ppg", "away_papg", "away_avg_margin",
-    "home_elo", "away_elo", "elo_diff",
+    "home_ppg", "home_papg", "home_margin",
+    "away_ppg", "away_papg", "away_margin",
+    "home_win_pct", "away_win_pct",
     "predicted_margin", "win_pct_diff", "ppg_diff",
 ]
 
 # Rest and scheduling features
 REST_FEATURES = [
-    "home_rest_days", "away_rest_days", "rest_advantage",
+    "home_rest", "away_rest", "rest_diff",
     "home_b2b", "away_b2b",
 ]
 
@@ -88,15 +88,33 @@ def get_spreads_features() -> List[str]:
 
 
 def get_totals_features() -> List[str]:
-    """Get all features for totals prediction model."""
-    return (
-        ["home_ppg", "home_papg", "away_ppg", "away_papg", "home_elo", "away_elo"] +
-        TOTALS_FEATURES +
-        ["home_rest_days", "away_rest_days", "home_b2b", "away_b2b"] +
-        ["away_travel_fatigue", "travel_advantage"] +  # NEW: Travel impacts pace
-        [f for f in INJURY_FEATURES if "total" in f] +
-        [f for f in RLM_FEATURES if "total" in f or "over" in f]
-    )
+    """
+    Get all features for totals prediction model.
+
+    Uses features that directly impact game pace and scoring:
+    - Team offensive/defensive efficiency (PPG, PAPG)
+    - Pace indicators
+    - Rest/fatigue factors
+    - Historical totals performance
+    """
+    return [
+        # Core scoring efficiency
+        "home_ppg", "home_papg", "away_ppg", "away_papg",
+        "home_pace", "away_pace",
+        "predicted_total",
+        # Scoring variance (high variance = less predictable)
+        "home_score_std", "away_score_std",
+        "home_margin_std", "away_margin_std",
+        # Rest and fatigue (tired teams = lower scores)
+        "home_rest", "away_rest", "home_b2b", "away_b2b",
+        "away_travel_fatigue", "travel_advantage",
+        # Net rating (offensive - defensive efficiency)
+        "home_net_rating", "away_net_rating",
+        # Situational scoring
+        "home_away_ppg", "away_away_ppg",  # Away team's road scoring
+        # RLM signals
+        "is_rlm_total", "sharp_side_total",
+    ]
 
 
 def get_moneyline_features() -> List[str]:
@@ -105,15 +123,16 @@ def get_moneyline_features() -> List[str]:
 
     v34.0: Enhanced with market signals and injury data for accurate
     independent moneyline predictions.
+
+    NOTE: Feature names must match what FeatureEngineer computes.
     """
     return [
-        # Core team performance
-        "home_ppg", "away_ppg", "home_avg_margin", "away_avg_margin",
-        "home_elo", "away_elo", "elo_diff",
+        # Core team performance (names match FeatureEngineer output)
+        "home_ppg", "away_ppg", "home_margin", "away_margin",
         "home_win_pct", "away_win_pct", "win_pct_diff",
-        "predicted_margin", "predicted_total",
+        "predicted_margin", "predicted_total", "ppg_diff",
         # Moneyline-specific computed features (from compute_moneyline_features)
-        "ml_win_prob_diff", "ml_elo_diff", "ml_pythagorean_diff",
+        "ml_win_prob_diff", "ml_pythagorean_diff",
         "ml_momentum_diff", "ml_estimated_home_prob", "ml_h2h_factor",
         "ml_home_win_rate", "ml_away_win_rate",
         # v34.0: Market signal features
@@ -128,14 +147,11 @@ def get_moneyline_features() -> List[str]:
         "ml_injury_adjusted_prob",  # Win prob adjusted for injuries
         "ml_home_injury_impact",  # Home team injury PPG loss
         "ml_away_injury_impact",  # Away team injury PPG loss
-        # Context features
-        "home_rest_days", "away_rest_days", "rest_diff",
+        # Context features (names match FeatureEngineer output)
+        "home_rest", "away_rest", "rest_diff",
         "home_b2b", "away_b2b",
-        "dynamic_hca",
         # H2H features
-        "h2h_margin", "h2h_home_win_pct", "h2h_games",
-        # SOS features
-        "home_sos_rating", "away_sos_rating", "sos_diff",
+        "h2h_margin", "h2h_win_rate", "h2h_games",
     ]
 
 

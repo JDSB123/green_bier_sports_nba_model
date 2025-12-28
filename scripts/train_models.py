@@ -329,8 +329,25 @@ def train_single_market(
     except Exception as e:
         print(f"  [WARN] Could not get features: {e}")
         features = get_spreads_features() if "spread" in market_key else get_totals_features()
-    
-    available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=0.3)
+
+    # For 1H/Q1 models, use lower threshold and fallback to FG features if needed
+    min_pct = 0.3
+    if period in ("1h", "q1"):
+        min_pct = 0.15  # Lower threshold for period-specific models
+
+    try:
+        available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=min_pct)
+    except ValueError:
+        # Fallback: use FG features for 1H/Q1 models
+        print(f"  [INFO] Using FG features for {market_key} (period features unavailable)")
+        if "spread" in market_key:
+            features = get_spreads_features()
+        elif "total" in market_key:
+            features = get_totals_features()
+        else:
+            features = get_moneyline_features()
+        available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=0.3)
+
     print(f"  Using {len(available_features)} of {len(features)} possible features")
     
     if len(available_features) < 5:
