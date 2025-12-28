@@ -35,8 +35,21 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Set Azure subscription context
+        run: |
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          echo "Current subscription:"
+          az account show
+
       - name: Azure CLI - ACR Login
-        run: az acr login -n $ACR_NAME
+        run: |
+          echo "Logging into ACR registry: $ACR_LOGIN_SERVER"
+          az acr login --name $ACR_NAME --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} || {
+            echo "⚠️ az acr login failed, retrying with admin credentials from ACR..."
+            REGISTRY_USERNAME=$(az acr credential show --name $ACR_NAME --query "username" -o tsv)
+            REGISTRY_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
+            echo $REGISTRY_PASSWORD | docker login -u $REGISTRY_USERNAME --password-stdin $ACR_LOGIN_SERVER
+          }
 
       - name: Compute tags
         id: tags
