@@ -48,6 +48,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Ensure ACR admin enabled (best-effort)
+        shell: bash
+        run: |
+          set +e
+          echo "Ensuring admin user enabled for ${{ env.AZURE_CONTAINER_REGISTRY }}..."
+          az acr update --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --admin-enabled true && echo "✓ ACR admin enabled" || echo "⚠️ Could not enable ACR admin (insufficient perms or already enabled)"
+
       - name: Log in to Azure
         uses: azure/login@v2
         with:
