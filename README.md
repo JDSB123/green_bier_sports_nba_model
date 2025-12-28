@@ -59,32 +59,26 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ### Prerequisites
 ## CI/CD
 
-### Current Workflow Architecture
+### CI/CD Workflows
 
-| Workflow | Trigger | Purpose | Status |
-|----------|---------|---------|--------|
-| **GBS NBA - Build & Deploy** | Auto on `push` to main | Build Docker image + deploy to Container Apps | ✅ **PRIMARY** |
-| **GBS NBA - Deploy Function** | Auto on changes to `azure/function_app/**` | Deploy Function App | ✅ **ACTIVE** |
-| Build and Push NBA Image to ACR | ⚠️ Deprecated | Redundant (GBS NBA - Build & Deploy does this) | ⚠️ Semi-deprecated |
-| Deploy NBA Image to ACA | Manual (`workflow_dispatch`) | Manual rollback only | ⚠️ Fallback only |
-| ACR Retention | Weekly schedule + manual | Clean up old `git-*` tags | ✅ Active |
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **GBS NBA - Build & Deploy** | Auto on `push` to main | Build Docker image + deploy to Container Apps |
+| **GBS NBA - Deploy Function** | Auto on `azure/function_app/**` changes | Deploy Function App |
+| **ACR Retention** | Weekly schedule + manual | Clean up old image tags |
 
-**Recommended Flow:**
-1. **Push code** → `GBS NBA - Build & Deploy` automatically builds + deploys to Azure Container Apps
-2. **Function changes** → `GBS NBA - Deploy Function` automatically deploys to Azure Functions
-
-**For manual rollback:**
-```bash
-gh workflow run "Deploy NBA Image to Azure Container Apps" \
-  -f tag=NBA_v33.0.8.0
-```
+**Standard Flow:**
+1. **Push code** → `GBS NBA - Build & Deploy` auto-triggers → builds + deploys
+2. **Function updates** → `GBS NBA - Deploy Function` auto-triggers → deploys Function App
 
 Quick verify (production):
 
 ```bash
-# Get current API URL
+# Get current API FQDN
 FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
-curl "https://$FQDN/health"
+
+# Test health endpoint
+curl "https://$FQDN/health" | jq .
 ```
 
 
