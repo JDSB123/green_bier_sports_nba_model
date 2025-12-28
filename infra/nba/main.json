@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "10273754172021861894"
+      "templateHash": "9153181311192432550"
     }
   },
   "parameters": {
@@ -28,18 +28,25 @@
         "description": "Environment"
       }
     },
-    "sharedResourceGroup": {
-      "type": "string",
-      "defaultValue": "greenbier-enterprise-rg",
-      "metadata": {
-        "description": "Shared resource group name - same as NBA for simplicity"
-      }
-    },
     "imageTag": {
       "type": "string",
-      "defaultValue": "latest",
+      "defaultValue": "NBA_v33.0.8.0",
       "metadata": {
         "description": "Container image tag"
+      }
+    },
+    "databaseUrl": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Database URL (optional)"
+      }
+    },
+    "appInsightsConnectionString": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Application Insights connection string (optional)"
       }
     },
     "theOddsApiKey": {
@@ -54,10 +61,11 @@
         "description": "API-Basketball Key (required)"
       }
     },
-    "postgresAdminPassword": {
-      "type": "securestring",
+    "websiteDomain": {
+      "type": "string",
+      "defaultValue": "greenbiersportventures.com",
       "metadata": {
-        "description": "PostgreSQL admin password (must match shared infrastructure)"
+        "description": "Website domain for CORS (e.g., greenbiersportventures.com)"
       }
     }
   },
@@ -138,7 +146,7 @@
         "type": "SystemAssigned"
       },
       "properties": {
-        "managedEnvironmentId": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.App/managedEnvironments', 'greenbier-env')]",
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', 'nbagbsvmodel-env')]",
         "configuration": {
           "ingress": {
             "external": true,
@@ -148,7 +156,9 @@
               "allowedOrigins": [
                 "http://localhost:3000",
                 "https://*.azurewebsites.net",
-                "https://*.greenbier.com"
+                "https://*.greenbier.com",
+                "[format('https://{0}', parameters('websiteDomain'))]",
+                "[format('https://www.{0}', parameters('websiteDomain'))]"
               ],
               "allowedMethods": [
                 "GET",
@@ -162,77 +172,23 @@
           },
           "registries": [
             {
-              "server": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.ContainerRegistry/registries', 'greenbieracr'), '2023-07-01').loginServer]",
-              "username": "[listCredentials(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.ContainerRegistry/registries', 'greenbieracr'), '2023-07-01').username]",
+              "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').loginServer]",
+              "username": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').username]",
               "passwordSecretRef": "acr-password"
             }
           ],
-          "secrets": [
-            {
-              "name": "acr-password",
-              "value": "[listCredentials(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.ContainerRegistry/registries', 'greenbieracr'), '2023-07-01').passwords[0].value]"
-            },
-            {
-              "name": "the-odds-api-key",
-              "value": "[parameters('theOddsApiKey')]"
-            },
-            {
-              "name": "api-basketball-key",
-              "value": "[parameters('apiBasketballKey')]"
-            },
-            {
-              "name": "database-url",
-              "value": "[format('postgresql://gbsadmin:{0}@{1}:5432/gbs_picks?sslmode=require', parameters('postgresAdminPassword'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.DBforPostgreSQL/flexibleServers', format('greenbier-postgres-{0}', parameters('environment'))), '2023-03-01-preview').fullyQualifiedDomainName)]"
-            }
-          ]
+          "secrets": "[concat(createArray(createObject('name', 'acr-password', 'value', listCredentials(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').passwords[0].value), createObject('name', 'the-odds-api-key', 'value', parameters('theOddsApiKey')), createObject('name', 'api-basketball-key', 'value', parameters('apiBasketballKey'))), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'database-url', 'value', parameters('databaseUrl')))), if(equals(parameters('appInsightsConnectionString'), ''), createArray(), createArray(createObject('name', 'app-insights-connection-string', 'value', parameters('appInsightsConnectionString')))))]"
         },
         "template": {
           "containers": [
             {
               "name": "gbs-nba-api",
-              "image": "[format('{0}/nba-model:{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.ContainerRegistry/registries', 'greenbieracr'), '2023-07-01').loginServer, parameters('imageTag'))]",
+              "image": "[format('{0}/nba-gbsv-api:{1}', reference(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').loginServer, parameters('imageTag'))]",
               "resources": {
                 "cpu": "[json('0.5')]",
                 "memory": "1Gi"
               },
-              "env": [
-                {
-                  "name": "THE_ODDS_API_KEY",
-                  "secretRef": "the-odds-api-key"
-                },
-                {
-                  "name": "API_BASKETBALL_KEY",
-                  "secretRef": "api-basketball-key"
-                },
-                {
-                  "name": "DATABASE_URL",
-                  "secretRef": "database-url"
-                },
-                {
-                  "name": "GBS_SPORT",
-                  "value": "nba"
-                },
-                {
-                  "name": "NBA_MODEL_VERSION",
-                  "value": "6.5-STRICT"
-                },
-                {
-                  "name": "NBA_MARKETS",
-                  "value": "q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline"
-                },
-                {
-                  "name": "NBA_PERIODS",
-                  "value": "first_quarter,first_half,full_game"
-                },
-                {
-                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-                  "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment'))), '2020-02-02').ConnectionString]"
-                },
-                {
-                  "name": "AZURE_STORAGE_CONNECTION_STRING",
-                  "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id))), '2023-01-01').keys[0].value)]"
-                }
-              ],
+              "env": "[concat(createArray(createObject('name', 'THE_ODDS_API_KEY', 'secretRef', 'the-odds-api-key'), createObject('name', 'API_BASKETBALL_KEY', 'secretRef', 'api-basketball-key'), createObject('name', 'GBS_SPORT', 'value', 'nba'), createObject('name', 'NBA_MODEL_VERSION', 'value', 'NBA_v33.0.8.0'), createObject('name', 'NBA_MARKETS', 'value', '1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline'), createObject('name', 'NBA_PERIODS', 'value', 'first_half,full_game'), createObject('name', 'AZURE_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id))), '2023-01-01').keys[0].value))), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'DATABASE_URL', 'secretRef', 'database-url'))), if(equals(parameters('appInsightsConnectionString'), ''), createArray(), createArray(createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'))))]",
               "probes": [
                 {
                   "type": "Liveness",
@@ -288,14 +244,6 @@
     "storageAccountName": {
       "type": "string",
       "value": "[format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id))]"
-    },
-    "postgresServerFqdn": {
-      "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroup')), 'Microsoft.DBforPostgreSQL/flexibleServers', format('greenbier-postgres-{0}', parameters('environment'))), '2023-03-01-preview').fullyQualifiedDomainName]"
-    },
-    "databaseName": {
-      "type": "string",
-      "value": "gbs_picks"
     }
   }
 }

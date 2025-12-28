@@ -1,81 +1,73 @@
-# Azure Configuration - SINGLE SOURCE OF TRUTH
+# Azure Configuration - Single Source of Truth
 
-**Last Updated:** 2025-12-23
+**Last Updated:** 2025-12-28
 
-## Actual Azure Architecture
+## Actual Azure Architecture (Production)
 
 ```
-nba-gbsv-model-rg                          <-- Resource Group (PRODUCTION)
-├── nbagbsacr                              <-- Container Registry (PRODUCTION)
-├── nbagbs-keyvault                        <-- Key Vault
-├── nba-gbsv-model-env                     <-- Container Apps Environment
-│   └── nba-gbsv-api                      <-- Container App (PRODUCTION)
-│       ├── Image: nba-gbsv-api:v6.10
-│       ├── Registry: nbagbsacr.azurecr.io
-│       ├── Port: 8090
-│       ├── Scaling: 1-3 replicas
-│       └── Environment Variables
-│           ├── THE_ODDS_API_KEY
-│           ├── API_BASKETBALL_KEY
-│           └── SEASONS_TO_PROCESS=2025-2026
+Resource Group: nba-gbsv-model-rg
+  ├─ Container Registry: nbagbsacr.azurecr.io
+  ├─ Key Vault: nbagbs-keyvault
+  ├─ Container Apps Environment: nba-gbsv-model-env
+  │   └─ Container App: nba-gbsv-api
+  │       ├─ Image: nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0 (semantic) + :<git-sha> (CI)
+  │       ├─ Port: 8090
+  │       ├─ Scaling: 1-3 replicas
+  │       └─ Environment Variables:
+  │           ├─ THE_ODDS_API_KEY
+  │           ├─ API_BASKETBALL_KEY
+  │           ├─ SEASONS_TO_PROCESS=2025-2026
+  │           └─ NBA_MODEL_VERSION=NBA_v33.0.8.0
 ```
 
 ## Resource Names
 
-| Resource | Name | Status |
-|----------|------|--------|
-| **Resource Group** | `nba-gbsv-model-rg` | Active |
-| **Container Apps Environment** | `nba-gbsv-model-env` | Active |
-| **Container App** | `nba-gbsv-api` | Active |
-| **Container Registry** | `nbagbsacr` | Active |
-| **Key Vault** | `nbagbs-keyvault` | Active |
+| Resource | Name |
+|----------|------|
+| Resource Group | `nba-gbsv-model-rg` |
+| Container Apps Environment | `nba-gbsv-model-env` |
+| Container App | `nba-gbsv-api` |
+| Container Registry | `nbagbsacr` |
+| Key Vault | `nbagbs-keyvault` |
 
-## Get Current API URL (DYNAMICALLY)
-
-The FQDN can change when Azure recreates the environment. Always get it dynamically:
+## Get Current API URL (dynamic)
 
 ```bash
-# Get current API FQDN
 az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
   --query properties.configuration.ingress.fqdn -o tsv
 
-# Set as environment variable
 export NBA_API_URL="https://$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)"
-
-# Test health
 curl "$NBA_API_URL/health"
 ```
 
-## Environment Variables
-
-All scripts use these environment variables (no hardcoded values):
+## Environment Variables (common)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NBA_API_URL` | `http://localhost:${NBA_API_PORT}` | Full API URL |
 | `NBA_API_PORT` | `8090` | Local container port |
-| `TEAMS_WEBHOOK_URL` | (required) | Teams webhook URL |
 | `ALLOWED_ORIGINS` | `*` | CORS origins |
+| `TEAMS_WEBHOOK_URL` | (required for Teams bot) | Webhook URL |
 
 ## Quick Commands
 
 ```bash
-# Deploy new version (recommended way)
-pwsh infra/nba/deploy.ps1 -Tag v6.10
+# Deploy new version (semantic tag)
+pwsh infra/nba/deploy.ps1 -Tag NBA_v33.0.8.0
 
 # View container app logs
 az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --follow
 
-# Update container app with new image
+# Update container app image
 az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
-  --image nbagbsacr.azurecr.io/nba-gbsv-api:v6.10
+  --image nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0
 
 # Build and push new image
-docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:v6.10 -f Dockerfile.combined .
+docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0 -f Dockerfile.combined .
 az acr login -n nbagbsacr
-docker push nbagbsacr.azurecr.io/nba-gbsv-api:v6.10
+docker push nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0
 
-# Run locally with custom port (avoids conflicts)
+# Run locally with custom port
 NBA_API_PORT=9000 docker compose up -d
 
 # Check current scaling
@@ -85,33 +77,29 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 
 ## CI/CD
 
-GitHub Actions workflow (`.github/workflows/gbs-nba-deploy.yml`) automatically:
-1. Builds Docker image on push to `main`/`master`
-2. Pushes to `nbagbsacr.azurecr.io`
-3. Deploys to `nba-gbsv-api` in `nba-gbsv-model-rg`
+`.github/workflows/gbs-nba-deploy.yml` builds from `Dockerfile.combined`, pushes to `nbagbsacr.azurecr.io/nba-gbsv-api:<sha>` and deploys that SHA to `nba-gbsv-api` in `nba-gbsv-model-rg`. Semantic tag `NBA_v33.0.8.0` should be pushed for releases (manual or scripted).
 
 ## Model Version
 
-- **Current Deployed:** v6.10 (9 markets: Q1 + 1H + FG)
-- **Markets:** q1_spread, q1_total, q1_moneyline, 1h_spread, 1h_total, 1h_moneyline, fg_spread, fg_total, fg_moneyline
+- **Target:** NBA_v33.0.8.0 (6 markets: 1H + FG spreads/totals/moneylines)
+- **Markets:** 1h_spread, 1h_total, 1h_moneyline, fg_spread, fg_total, fg_moneyline
 - **Dockerfile:** `Dockerfile.combined`
 
-## API Endpoints
+## API Endpoints (core)
 
 | Endpoint | Description |
 |----------|-------------|
 | `/health` | Health check, model count, version |
-| `/slate/{date}` | Get picks for a date (YYYY-MM-DD) |
-| `/picks/html` | Interactive HTML page with picks |
+| `/slate/{date}` | Picks for date (YYYY-MM-DD, today, tomorrow) |
+| `/slate/{date}/comprehensive` | Full edge analysis |
+| `/predict/game` | Single-game predictions |
 
 ## Important Files
 
 | File | Purpose |
 |------|---------|
-| `azure/function_app/function_app.py` | Azure Function trigger + Teams webhook |
+| `infra/nba/main.bicep` | Infrastructure as Code for container app + storage |
+| `Dockerfile.combined` | Combined API + Function image |
 | `.github/workflows/gbs-nba-deploy.yml` | CI/CD pipeline |
-| `infra/nba/main.bicep` | Infrastructure as Code |
-| `infra/shared/main.bicep` | Shared resources (ACR, Environment) |
-| `Dockerfile` | Container definition |
+| `azure/function_app/function_app.py` | Azure Function / Teams integration |
 | `.env.example` | Environment variable template |
-

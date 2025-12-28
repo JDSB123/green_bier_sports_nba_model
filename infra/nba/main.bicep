@@ -21,6 +21,14 @@ param environment string = 'prod'
 @description('Container image tag')
 param imageTag string = 'NBA_v33.0.8.0'
 
+@description('Database URL (optional)')
+@secure()
+param databaseUrl string = ''
+
+@description('Application Insights connection string (optional)')
+@secure()
+param appInsightsConnectionString string = ''
+
 // =============================================================================
 // API KEYS - Required for the NBA Picks API to function
 // =============================================================================
@@ -53,6 +61,85 @@ var tags = {
   environment: environment
   managedBy: 'bicep'
 }
+
+// Secrets list (optional entries appended)
+var apiSecrets = concat(
+  [
+    {
+      name: 'acr-password'
+      value: acr.listCredentials().passwords[0].value
+    }
+    {
+      name: 'the-odds-api-key'
+      value: theOddsApiKey
+    }
+    {
+      name: 'api-basketball-key'
+      value: apiBasketballKey
+    }
+  ],
+  databaseUrl == '' ? [] : [
+    {
+      name: 'database-url'
+      value: databaseUrl
+    }
+  ],
+  appInsightsConnectionString == '' ? [] : [
+    {
+      name: 'app-insights-connection-string'
+      value: appInsightsConnectionString
+    }
+  ]
+)
+
+// Environment variables (optional entries appended)
+var appEnvVars = concat(
+  [
+    // Required API keys via secrets
+    {
+      name: 'THE_ODDS_API_KEY'
+      secretRef: 'the-odds-api-key'
+    }
+    {
+      name: 'API_BASKETBALL_KEY'
+      secretRef: 'api-basketball-key'
+    }
+    // NBA v33.0.8.0 configuration
+    {
+      name: 'GBS_SPORT'
+      value: 'nba'
+    }
+    {
+      name: 'NBA_MODEL_VERSION'
+      value: 'NBA_v33.0.8.0'
+    }
+    {
+      name: 'NBA_MARKETS'
+      value: '1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline'
+    }
+    {
+      name: 'NBA_PERIODS'
+      value: 'first_half,full_game'
+    }
+    // Azure storage (inline connection string)
+    {
+      name: 'AZURE_STORAGE_CONNECTION_STRING'
+      value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+    }
+  ],
+  databaseUrl == '' ? [] : [
+    {
+      name: 'DATABASE_URL'
+      secretRef: 'database-url'
+    }
+  ],
+  appInsightsConnectionString == '' ? [] : [
+    {
+      name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+      secretRef: 'app-insights-connection-string'
+    }
+  ]
+)
 
 // ============================================================================
 // Storage Account (NBA predictions archive)
@@ -137,81 +224,18 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           passwordSecretRef: 'acr-password'
         }
       ]
-      secrets: [
-        {
-          name: 'acr-password'
-          value: acr.listCredentials().passwords[0].value
-        }
-        {
-          name: 'the-odds-api-key'
-          value: theOddsApiKey
-        }
-        {
-          name: 'api-basketball-key'
-          value: apiBasketballKey
-        }
-        {
-          name: 'database-url'
-          value: databaseUrl
-        }
-      ]
+      secrets: apiSecrets
     }
     template: {
       containers: [
         {
           name: 'gbs-nba-api'
-          image: '${acr.properties.loginServer}/nba-model:${imageTag}'
+          image: '${acr.properties.loginServer}/nba-gbsv-api:${imageTag}'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
           }
-          env: [
-            // ================================================================
-            // REQUIRED API KEYS - Referenced from secrets
-            // ================================================================
-            {
-              name: 'THE_ODDS_API_KEY'
-              secretRef: 'the-odds-api-key'
-            }
-            {
-              name: 'API_BASKETBALL_KEY'
-              secretRef: 'api-basketball-key'
-            }
-            {
-              name: 'DATABASE_URL'
-              secretRef: 'database-url'
-            }
-            // ================================================================
-            // NBA v6.4 Configuration
-            // ================================================================
-            {
-              name: 'GBS_SPORT'
-              value: 'nba'
-            }
-            {
-              name: 'NBA_MODEL_VERSION'
-              value: '6.5-STRICT'
-            }
-            {
-              name: 'NBA_MARKETS'
-              value: 'q1_spread,q1_total,q1_moneyline,1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline'
-            }
-            {
-              name: 'NBA_PERIODS'
-              value: 'first_quarter,first_half,full_game'
-            }
-            // ================================================================
-            // Azure Integration
-            // ================================================================
-            {
-              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-              value: appInsights.properties.ConnectionString
-            }
-            {
-              name: 'AZURE_STORAGE_CONNECTION_STRING'
-              value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
-            }
-          ]
+          env: appEnvVars
           probes: [
             {
               type: 'Liveness'
@@ -259,5 +283,3 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
 output containerAppFqdn string = containerApp.properties.configuration.ingress.fqdn
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output storageAccountName string = storageAccount.name
-output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
-output databaseName string = 'gbs_picks'
