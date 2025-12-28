@@ -56,12 +56,8 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           allow-no-subscriptions: true
 
-      - name: Log in to ACR
-        uses: azure/docker-login@v2
-        with:
-          login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
+      - name: Log in to ACR (az acr login via OIDC)
+        run: az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
