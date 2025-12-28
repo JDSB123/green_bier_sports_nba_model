@@ -48,20 +48,31 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Ensure ACR admin enabled (best-effort)
-        shell: bash
-        run: |
-          set +e
-          echo "Ensuring admin user enabled for ${{ env.AZURE_CONTAINER_REGISTRY }}..."
-          az acr update --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --admin-enabled true && echo "✓ ACR admin enabled" || echo "⚠️ Could not enable ACR admin (insufficient perms or already enabled)"
+      - name: Log in to Azure (client secret)
+        if: secrets.AZURE_CLIENT_SECRET != ''
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          allow-no-subscriptions: true
 
-      - name: Log in to Azure
+      - name: Log in to Azure (OIDC fallback)
+        if: secrets.AZURE_CLIENT_SECRET == ''
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           allow-no-subscriptions: true
+
+      - name: Ensure ACR admin enabled (best-effort)
+        shell: bash
+        run: |
+          set +e
+          echo "Ensuring admin user enabled for ${{ env.AZURE_CONTAINER_REGISTRY }}..."
+          az acr update --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --admin-enabled true && echo "✓ ACR admin enabled" || echo "⚠️ Could not enable ACR admin (insufficient perms or already enabled)"
 
       - name: Log in to ACR (robust)
         shell: bash

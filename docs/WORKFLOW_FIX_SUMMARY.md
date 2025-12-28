@@ -23,6 +23,7 @@ Updated the following secrets in GitHub with fresh Azure credentials:
 - `AZURE_SUBSCRIPTION_ID` → `3a1a4a94-45a5-4f7c-8ada-97978221052c`
 - `AZURE_TENANT_ID` → `18ee0910-417d-4a81-a3f5-7945bdbd5a78`
 - `AZURE_CLIENT_ID` → `971db985-be14-4352-bb1d-144d8e8b198c` (Service Principal: `gbs-nba-github`)
+- `AZURE_CLIENT_SECRET` → freshly generated client secret for the `gbs-nba-github` app (GitHub Actions now uses this when present)
 
 **Command:**
 ```powershell
@@ -53,15 +54,17 @@ az role assignment create \
 
 ### Current Workflow Strategy (Dec 2025)
 
-You have **5 workflows** in the repository. Here's which ones are active:
+You have **3 active workflows** in the repository:
 
 | Workflow File | Trigger | Purpose | Status |
 |----|----|----|----|
 | **`gbs-nba-deploy.yml`** | Auto on `push` to main | **PRIMARY**: Build Docker image + auto-deploy to Container Apps | ✅ **ACTIVE** |
 | **`gbs-nba-function.yml`** | Auto on changes in `azure/function_app/**` | Deploy Azure Function App | ✅ **ACTIVE** |
-| **`build-push-acr.yml`** | Auto on `push` to main (code changes) | Build and push to ACR only | ⚠️ **Semi-deprecated** |
-| **`deploy-aca.yml`** | Manual (`workflow_dispatch`) | Manual deploy for rollbacks | ⚠️ **Fallback only** |
 | **`acr-retention.yml`** | Weekly schedule + manual | Cleanup old image tags | ✅ **ACTIVE** |
+
+**Removed (deprecated):**
+- ~~`build-push-acr.yml`~~ (redundant - gbs-nba-deploy now handles build + push + deploy)
+- ~~`deploy-aca.yml`~~ (manual rollback no longer needed)
 
 ### Recommended Usage
 
@@ -181,20 +184,21 @@ gh workflow run "Deploy NBA Image to Azure Container Apps" \
 
 ---
 
-## Cleanup: Optional Removal of Deprecated Workflows
+## Cleanup: Deprecated Workflows Removed
 
-If you want to remove the semi-deprecated workflows to reduce confusion:
+The following redundant/fallback workflows have been **removed** from the repository:
 
 ```bash
-# Remove if not needed
-git rm .github/workflows/build-push-acr.yml
-git rm .github/workflows/deploy-aca.yml
-
-git commit -m "Remove deprecated CI/CD workflows (gbs-nba-deploy.yml is now primary)"
-git push origin main
+# Removed files:
+✓ .github/workflows/build-push-acr.yml
+✓ .github/workflows/deploy-aca.yml
 ```
 
-**Decision:** I recommend **keeping them** for now as fallback/emergency options.
+**Why removed:**
+- `build-push-acr.yml` was redundant (gbs-nba-deploy.yml now does build + push + deploy in one)
+- `deploy-aca.yml` was fallback-only (manual rollbacks rarely needed with proper automation)
+
+**Result:** Cleaner workflow management with **only 3 active workflows**
 
 ---
 
