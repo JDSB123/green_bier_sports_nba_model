@@ -107,3 +107,8 @@ jobs:
           }
           
           echo "✅ All images pushed successfully"
+
+      - name: Verify ACR image
+        run: |
+          echo "Verifying images in ACR..."
+          az acr repository show-tags --name $ACR_NAME --repository $IMAGE_NAME --orderby time_desc --output table || true
