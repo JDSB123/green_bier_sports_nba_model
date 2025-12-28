@@ -841,18 +841,35 @@ class FeatureEngineer:
         home_rest: int,
         away_rest: int,
         dynamic_hca: float,
+        # v34.0: Market signal inputs
+        home_ml_odds: Optional[int] = None,
+        away_ml_odds: Optional[int] = None,
+        ml_splits: Optional[Dict[str, float]] = None,
+        # v34.0: Injury inputs
+        home_injury_impact: float = 0.0,
+        away_injury_impact: float = 0.0,
     ) -> Dict[str, float]:
         """
         Compute features optimized for moneyline prediction.
-        
+
+        v34.0: Enhanced with market signals and injury data.
+
+        Args:
+            home_stats: Home team rolling stats
+            away_stats: Away team rolling stats
+            h2h_stats: Head-to-head stats
+            home_rest: Home team rest days
+            away_rest: Away team rest days
+            dynamic_hca: Dynamic home court advantage
+            home_ml_odds: Current home team moneyline odds (American, e.g., -150)
+            away_ml_odds: Current away team moneyline odds (American, e.g., +130)
+            ml_splits: Moneyline market splits dict from splits_to_features()
+            home_injury_impact: Home team injury PPG impact (negative = bad)
+            away_injury_impact: Away team injury PPG impact (negative = bad)
+
         Returns:
-            Dictionary with moneyline-specific features:
-            - win_prob_diff: Difference in win probabilities
-            - elo_diff: Simple Elo rating difference
-            - pythagorean_diff: Pythagorean expectation difference
-            - momentum_diff: Recent form momentum difference
-            - home_win_rate: Home team's home record
-            - away_win_rate: Away team's road record
+            Dictionary with moneyline-specific features including market signals
+            and injury-adjusted probabilities.
         """
         # Win probability based on win percentage
         home_win_pct = home_stats.get("win_pct", 0.5)
@@ -912,8 +929,9 @@ class FeatureEngineer:
         # Final estimated probability
         estimated_home_prob = base_prob + elo_adjustment * 0.3 + (dynamic_hca / 10) * 0.1
         estimated_home_prob = max(0.1, min(0.9, estimated_home_prob))  # Clamp to reasonable range
-        
-        return {
+
+        # Base features (existing)
+        features = {
             "ml_win_prob_diff": home_win_pct - away_win_pct,
             "ml_elo_diff": elo_diff,
             "ml_pythagorean_diff": pythagorean_diff,
@@ -923,6 +941,54 @@ class FeatureEngineer:
             "ml_estimated_home_prob": estimated_home_prob,
             "ml_h2h_factor": h2h_stats.get("h2h_margin", 0) / 10 if h2h_stats.get("h2h_games", 0) > 0 else 0,
         }
+
+        # v34.0: Market signal features
+        if home_ml_odds is not None and away_ml_odds is not None and home_ml_odds != 0 and away_ml_odds != 0:
+            # Convert American odds to implied probability
+            def american_to_implied(odds: int) -> float:
+                if odds < 0:
+                    return abs(odds) / (abs(odds) + 100)
+                return 100 / (odds + 100)
+
+            home_implied = american_to_implied(home_ml_odds)
+            away_implied = american_to_implied(away_ml_odds)
+
+            # Remove vig to get fair probabilities
+            total_implied = home_implied + away_implied
+            fair_home_prob = home_implied / total_implied if total_implied > 0 else 0.5
+
+            features["ml_market_implied_home"] = fair_home_prob
+            features["ml_model_vs_market"] = estimated_home_prob - fair_home_prob
+        else:
+            features["ml_market_implied_home"] = 0.5
+            features["ml_model_vs_market"] = 0.0
+
+        # v34.0: Market splits features (from betting_splits.py)
+        if ml_splits:
+            features["ml_public_home_pct"] = ml_splits.get("ml_public_home_pct", 50.0)
+            features["ml_is_rlm"] = ml_splits.get("is_rlm_ml", 0)
+            features["ml_sharp_side"] = ml_splits.get("sharp_side_ml", 0)
+            features["ml_ticket_money_diff"] = ml_splits.get("ml_ticket_money_diff", 0.0)
+            features["ml_line_movement"] = ml_splits.get("ml_movement", 0.0)
+        else:
+            features["ml_public_home_pct"] = 50.0
+            features["ml_is_rlm"] = 0
+            features["ml_sharp_side"] = 0
+            features["ml_ticket_money_diff"] = 0.0
+            features["ml_line_movement"] = 0.0
+
+        # v34.0: Injury-adjusted features
+        # Injury impact is negative PPG (e.g., -5.0 = 5 PPG lost)
+        # Convert to probability adjustment: ~0.5% per PPG difference
+        injury_diff = home_injury_impact - away_injury_impact  # Positive = home hurt more
+        injury_prob_adj = injury_diff * 0.005  # 0.5% per PPG
+        injury_adjusted_prob = max(0.1, min(0.9, estimated_home_prob - injury_prob_adj))
+
+        features["ml_injury_adjusted_prob"] = injury_adjusted_prob
+        features["ml_home_injury_impact"] = home_injury_impact
+        features["ml_away_injury_impact"] = away_injury_impact
+
+        return features
 
     def build_game_features(
         self,

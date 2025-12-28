@@ -422,29 +422,33 @@ class PeriodPredictor:
         if total_line is not None:
             result["total"] = self.predict_total(features, total_line)
 
-        # v33.0.6.0 FIX: Moneyline DISABLED per user request
-        # if home_ml_odds is not None and away_ml_odds is not None:
-        #     result["moneyline"] = self.predict_moneyline(features, home_ml_odds, away_ml_odds)
+        # v34.0: Moneyline RE-ENABLED with enhanced features
+        if home_ml_odds is not None and away_ml_odds is not None:
+            result["moneyline"] = self.predict_moneyline(features, home_ml_odds, away_ml_odds)
 
         return result
 
 
 class UnifiedPredictionEngine:
     """
-    NBA v33.0.7.0 - Production Prediction Engine
+    NBA v34.0 - Production Prediction Engine
 
-    4 ACTIVE Markets (1H + FG spreads/totals; moneyline disabled):
+    6 ACTIVE Markets (1H + FG spreads/totals/moneylines):
 
     First Half (1H):
     - 1H Spread
     - 1H Total
+    - 1H Moneyline (v34.0: dedicated model with market signals)
 
     Full Game (FG):
     - FG Spread
     - FG Total
+    - FG Moneyline (v34.0: enhanced with market signals + injury data)
 
     ARCHITECTURE:
     - Each period has independent models trained on period-specific features
+    - Moneyline models include market signals (RLM, public %, sharp money)
+    - Moneyline models include injury-adjusted win probabilities
     - No cross-period dependencies
     - Uses matchup-based formulas for predicted totals
     """
@@ -529,28 +533,33 @@ class UnifiedPredictionEngine:
             self.loaded_models[total_key] = False
             total_model, total_features = None, []
 
-        # v33.0.6.0 FIX: Moneyline DISABLED per user request
-        # try:
-        #     ml_model, ml_features = self._load_model(ml_key)
-        #     self.loaded_models[ml_key] = True
-        # except Exception as e:
-        #     logger.warning(f"Could not load {ml_key}: {e}")
-        #     self.loaded_models[ml_key] = False
-        ml_model, ml_features = None, []
-        self.loaded_models[ml_key] = False # Mark as not loaded (or ignored)
+        # v34.0: Moneyline RE-ENABLED with enhanced features
+        try:
+            ml_model, ml_features = self._load_model(ml_key)
+            self.loaded_models[ml_key] = True
+            logger.info(f"Loaded {ml_key} with {len(ml_features)} features")
+        except Exception as e:
+            logger.warning(f"Could not load {ml_key}: {e}")
+            self.loaded_models[ml_key] = False
+            ml_model, ml_features = None, []
 
-        # v33.0.6.0 STRICT MODE: Spread and Total required (Moneyline DISABLED)
+        # v34.0: Spread and Total required, Moneyline optional but recommended
         missing_models = []
         if spread_model is None:
             missing_models.append(f"{period}_spread")
         if total_model is None:
             missing_models.append(f"{period}_total")
-        # v33.0.6.0: Moneyline intentionally disabled - do NOT check for it
 
         if missing_models:
             raise ModelNotFoundError(
                 f"STRICT MODE: Missing models for {period}: {missing_models}. "
-                f"Spread and Total models are required (Moneyline is disabled in v33.0.6.0)."
+                f"Spread and Total models are required."
+            )
+
+        if ml_model is None:
+            logger.warning(
+                f"{period}_moneyline model not loaded - moneyline predictions disabled for {period}. "
+                f"Train with: python scripts/train_models.py --market {period}"
             )
 
         return (

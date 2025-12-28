@@ -40,6 +40,7 @@ from src.config import settings
 from src.ingestion.api_basketball import APIBasketballClient
 from src.ingestion.standardize import normalize_team_to_espn
 from src.utils.logging import get_logger
+from src.modeling.features import FeatureEngineer
 
 logger = get_logger(__name__)
 
@@ -266,48 +267,48 @@ class FreshDataPipeline:
             # Enrich each event with 1H/Q1 markets
             # OPTIMIZATION: Use asyncio.gather with semaphore
             sem = asyncio.Semaphore(5)
-                
-                async def process_current_event(event):
-                    event_id = event.get("id")
-                    if not event_id:
-                        return event
-                        
-                    async with sem:
-                        try:
-                            # Fetch 1H and Q1 markets for this event
-                            event_odds = await fetch_event_odds(
-                                event_id,
-                                markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1",
-                            )
-                            # Merge markets
-                            existing_bms = {bm["key"]: bm for bm in event.get("bookmakers", [])}
-                            for bm in event_odds.get("bookmakers", []):
-                                if bm["key"] in existing_bms:
-                                    existing_bms[bm["key"]]["markets"].extend(bm.get("markets", []))
-                                else:
-                                    existing_bms[bm["key"]] = bm
-                            event["bookmakers"] = list(existing_bms.values())
-                        except Exception as e:
-                            logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
+
+            async def process_current_event(event):
+                event_id = event.get("id")
+                if not event_id:
                     return event
 
-                tasks = [process_current_event(event) for event in current_odds]
-                enriched_odds = await asyncio.gather(*tasks)
-                
-                lines = self._extract_lines_from_events(enriched_odds, datetime.now().strftime("%Y-%m-%d"))
-                all_lines.extend(lines)
-                logger.info(f"✓ Fetched current odds with 1H/Q1 markets for {len(enriched_odds)} events")
-                
-                # OPTIMIZATION: Fetch betting splits if available (paid plan)
-                try:
-                    splits = await fetch_betting_splits()
-                    logger.info(f"✓ Fetched betting splits for {len(splits)} games")
-                    # Note: Splits will be merged later in enrich_with_betting_splits()
-                except Exception as e:
-                    logger.debug(f"Betting splits not available: {e}")
-                    
+                async with sem:
+                    try:
+                        # Fetch 1H and Q1 markets for this event
+                        event_odds = await fetch_event_odds(
+                            event_id,
+                            markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1",
+                        )
+                        # Merge markets
+                        existing_bms = {bm["key"]: bm for bm in event.get("bookmakers", [])}
+                        for bm in event_odds.get("bookmakers", []):
+                            if bm["key"] in existing_bms:
+                                existing_bms[bm["key"]]["markets"].extend(bm.get("markets", []))
+                            else:
+                                existing_bms[bm["key"]] = bm
+                        event["bookmakers"] = list(existing_bms.values())
+                    except Exception as e:
+                        logger.debug(f"  Could not fetch 1H/Q1 odds for event {event_id}: {e}")
+                return event
+
+            tasks = [process_current_event(event) for event in current_odds]
+            enriched_odds = await asyncio.gather(*tasks)
+
+            lines = self._extract_lines_from_events(enriched_odds, datetime.now().strftime("%Y-%m-%d"))
+            all_lines.extend(lines)
+            logger.info(f"✓ Fetched current odds with 1H/Q1 markets for {len(enriched_odds)} events")
+
+            # OPTIMIZATION: Fetch betting splits if available (paid plan)
+            try:
+                splits = await fetch_betting_splits()
+                logger.info(f"✓ Fetched betting splits for {len(splits)} games")
+                # Note: Splits will be merged later in enrich_with_betting_splits()
             except Exception as e:
-                logger.warning(f"Could not fetch current odds: {e}")
+                logger.debug(f"Betting splits not available: {e}")
+
+        except Exception as e:
+            logger.warning(f"Could not fetch current odds: {e}")
         
         if not all_lines:
             logger.warning("No betting lines fetched - backtest will be limited to moneyline")
@@ -788,7 +789,86 @@ class FreshDataPipeline:
         except Exception as e:
             logger.warning(f"Failed to enrich with betting splits from any source: {e}")
             return df
-    
+
+    def compute_engineered_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute engineered features for training using FeatureEngineer.
+
+        This step is CRITICAL for training - without engineered features,
+        models will fail due to insufficient features.
+
+        Features computed:
+        - Team rolling stats (PPG, PAPG, margin, win%)
+        - ELO ratings
+        - Rest days / back-to-back detection
+        - Head-to-head history
+        - Travel/fatigue features
+        - Dynamic home court advantage
+        - Period-specific stats (Q1, 1H)
+        """
+        logger.info("Computing engineered features...")
+
+        # Need date column for lookback
+        if "date" not in df.columns:
+            logger.error("Cannot compute features: 'date' column missing")
+            return df
+
+        # Sort by date for proper rolling calculations
+        df = df.copy()
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.sort_values("date").reset_index(drop=True)
+
+        # Initialize feature engineer with lookback window
+        fe = FeatureEngineer(lookback=10)
+
+        # Build features for each game using historical data up to that point
+        all_features = []
+        total_games = len(df)
+
+        for idx, game in df.iterrows():
+            game_date = pd.to_datetime(game["date"])
+
+            # Historical games are all games BEFORE this game
+            historical_df = df[df["date"] < game_date].copy()
+
+            # Need at least 10 games of history for reliable stats
+            if len(historical_df) < 10:
+                # Skip early-season games with insufficient history
+                all_features.append({})
+                continue
+
+            try:
+                features = fe.build_game_features(game, historical_df)
+                all_features.append(features if features else {})
+            except Exception as e:
+                logger.debug(f"Could not compute features for game {idx}: {e}")
+                all_features.append({})
+
+            # Progress indicator
+            if (idx + 1) % 200 == 0:
+                logger.info(f"  Processed {idx + 1}/{total_games} games...")
+
+        # Merge features back into dataframe
+        if all_features:
+            features_df = pd.DataFrame(all_features)
+
+            # Drop columns that would conflict
+            overlap_cols = [c for c in features_df.columns if c in df.columns]
+            if overlap_cols:
+                features_df = features_df.drop(columns=overlap_cols, errors="ignore")
+
+            # Merge by index
+            df = pd.concat([df.reset_index(drop=True), features_df.reset_index(drop=True)], axis=1)
+
+            # Count how many features were added
+            new_feature_count = len(features_df.columns)
+            games_with_features = features_df.notna().any(axis=1).sum()
+            logger.info(f"✓ Computed {new_feature_count} engineered features for {games_with_features}/{total_games} games")
+        else:
+            logger.warning("No features computed")
+
+        return df
+
     def validate_dataset(self, df: pd.DataFrame) -> None:
         """
         Validate dataset integrity.
@@ -854,7 +934,15 @@ class FreshDataPipeline:
         date_min = df["date"].min()
         date_max = df["date"].max()
         logger.info(f"  ✓ Date range: {date_min.date()} to {date_max.date()}")
-        
+
+        # Check engineered features
+        feature_cols = ["home_ppg", "away_ppg", "home_elo", "away_elo", "ppg_diff", "elo_diff"]
+        existing_features = [c for c in feature_cols if c in df.columns]
+        if existing_features:
+            logger.info(f"  ✓ Engineered features present: {len(existing_features)}/{len(feature_cols)}")
+        else:
+            warnings.append("No engineered features found - model training may fail")
+
         # Report warnings
         for w in warnings:
             logger.warning(f"  ⚠️  {w}")
@@ -919,11 +1007,14 @@ class FreshDataPipeline:
         
         # Step 4.5: Fetch betting splits (tries The Odds API first, falls back to Action Network)
         labeled_df = await self.enrich_with_betting_splits(labeled_df)
-        
-        # Step 5: Validate
+
+        # Step 5: Compute engineered features (CRITICAL for training)
+        labeled_df = self.compute_engineered_features(labeled_df)
+
+        # Step 6: Validate
         self.validate_dataset(labeled_df)
-        
-        # Step 6: Save
+
+        # Step 7: Save
         output_path = self.output_dir / output_file
         labeled_df.to_csv(output_path, index=False)
         logger.info(f"✓ Training data saved to {output_path}")

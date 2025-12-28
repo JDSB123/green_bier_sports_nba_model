@@ -72,9 +72,9 @@ class MoneylinePredictor:
     """
     Moneyline predictor for Full Game and First Half.
 
-    NBA v6.0: Both FG and 1H models required.
-    - FG Moneyline: 65.5% accuracy, +25.1% ROI
-    - 1H Moneyline: 63.0% accuracy, +19.8% ROI
+    v34.0: Dedicated independent models for both FG and 1H moneyline.
+    - FG Moneyline: Uses dedicated FG moneyline model with market signals
+    - 1H Moneyline: Uses dedicated 1H moneyline model (not derived from spread)
     """
 
     def __init__(
@@ -83,33 +83,44 @@ class MoneylinePredictor:
         feature_columns: List[str],
         fh_model,
         fh_feature_columns: List[str],
+        # v34.0: Dedicated 1H moneyline model (optional for backwards compat)
+        fh_ml_model=None,
+        fh_ml_feature_columns: List[str] = None,
     ):
         """
-        Initialize moneyline predictor with ALL required models.
+        Initialize moneyline predictor with models.
 
         Args:
             model: Trained FG moneyline model (REQUIRED)
             feature_columns: FG feature column names (REQUIRED)
-            fh_model: Trained 1H model (REQUIRED - uses spread model for ML conversion)
-            fh_feature_columns: 1H feature column names (REQUIRED)
+            fh_model: Trained 1H spread model (used as fallback if fh_ml_model not provided)
+            fh_feature_columns: 1H spread feature column names
+            fh_ml_model: Trained dedicated 1H moneyline model (v34.0, preferred)
+            fh_ml_feature_columns: 1H moneyline feature column names
 
         Raises:
-            ValueError: If any model or features are None
+            ValueError: If FG model or features are None
         """
-        # Validate ALL inputs - REQUIRED
+        # FG model is always required
         if model is None:
             raise ValueError("model (FG) is REQUIRED - cannot be None")
         if feature_columns is None:
             raise ValueError("feature_columns (FG) is REQUIRED - cannot be None")
-        if fh_model is None:
-            raise ValueError("fh_model is REQUIRED - cannot be None")
-        if fh_feature_columns is None:
-            raise ValueError("fh_feature_columns is REQUIRED - cannot be None")
 
         self.model = model
         self.feature_columns = feature_columns
+
+        # v34.0: Dedicated 1H moneyline model (REQUIRED - no fallback)
+        self.fh_ml_model = fh_ml_model
+        self.fh_ml_feature_columns = fh_ml_feature_columns or []
+        self.has_dedicated_1h_model = fh_ml_model is not None
+
+        # Legacy params kept for backwards compatibility but not used
         self.fh_model = fh_model
-        self.fh_feature_columns = fh_feature_columns
+        self.fh_feature_columns = fh_feature_columns or []
+
+        if self.has_dedicated_1h_model:
+            logger.info("[1H_ML] Using dedicated 1H moneyline model (v34.0)")
 
         # Filters use defaults - these are config, not models
         self.fg_filter = FGMoneylineFilter()
@@ -208,6 +219,9 @@ class MoneylinePredictor:
         """
         Generate first half moneyline prediction.
 
+        v34.0: Uses dedicated 1H moneyline model if available, otherwise
+        falls back to spread-derived approach.
+
         Args:
             features: Feature dictionary (REQUIRED)
             home_odds: Home team 1H American odds (REQUIRED)
@@ -223,54 +237,27 @@ class MoneylinePredictor:
         validate_american_odds(home_odds, "home_odds")
         validate_american_odds(away_odds, "away_odds")
 
-        # Prepare features using unified validation - use 1H model ONLY
+        # v34.0: Require dedicated 1H moneyline model - NO fallback to derived approach
+        if not self.has_dedicated_1h_model:
+            raise ValueError(
+                "1H moneyline model not loaded. Dedicated 1H ML model is REQUIRED in v34.0. "
+                "Train with: python scripts/train_models.py"
+            )
+
+        # Prepare features for dedicated 1H ML model
         feature_df = pd.DataFrame([features])
         X, missing = validate_and_prepare_features(
             feature_df,
-            self.fh_feature_columns,
+            self.fh_ml_feature_columns,
             market="1h_moneyline",
         )
 
-        # v6.5 WARNING: 1H moneyline uses spread model - this is a derived probability
-        # TODO: Train dedicated 1H moneyline model for better accuracy
-        # Using spread model for now with improved conversion
-        logger.warning(
-            "[1H_ML] Using spread model for 1H moneyline - derived probability may be less accurate. "
-            "Consider training dedicated 1H moneyline model."
-        )
+        # Get predictions from dedicated 1H moneyline model
+        # Model is trained on home_1h_win (1 = home leads at half, 0 = away leads)
+        ml_proba = self.fh_ml_model.predict_proba(X)[0]
+        home_win_prob = float(ml_proba[1])  # Class 1 = home leads
+        away_win_prob = float(ml_proba[0])  # Class 0 = away leads
 
-        # Get spread cover probabilities (NOT win probabilities)
-        spread_proba = self.fh_model.predict_proba(X)[0]
-        home_cover_prob = float(spread_proba[1])
-        away_cover_prob = float(spread_proba[0])
-
-        # Convert spread cover probabilities to actual win probabilities
-        # Use predicted margin for first half as primary signal
-        predicted_margin_1h = features.get("predicted_margin_1h", 0.0)
-
-        # v6.5 FIX: Improved conversion using margin-based logistic function
-        # k = 0.14 is calibrated for 1H (lower variance than FG)
-        # Formula: P(win) = 1 / (1 + exp(-k * margin))
-        k = 0.14  # NBA 1H-specific constant (recalibrated)
-
-        # Combine margin-based probability with classifier signal
-        # Margin-based (quantitative signal)
-        if abs(predicted_margin_1h) > 0.1:  # Meaningful margin
-            margin_win_prob = 1.0 / (1.0 + math.exp(-k * predicted_margin_1h))
-        else:
-            margin_win_prob = 0.5
-
-        # Classifier-based (pattern signal) - scale cover prob to win prob
-        # Cover prob is correlated but not equal to win prob
-        # Use conservative scaling: 0.8x the deviation from 0.5
-        classifier_win_prob = 0.5 + (home_cover_prob - 0.5) * 0.8
-
-        # Weighted average: 60% margin-based, 40% classifier-based
-        # (Margin is more reliable for win probability)
-        home_win_prob_raw = 0.6 * margin_win_prob + 0.4 * classifier_win_prob
-        home_win_prob = max(0.05, min(0.95, home_win_prob_raw))
-        away_win_prob = 1.0 - home_win_prob
-        
         confidence = calculate_confidence_from_probabilities(home_win_prob, away_win_prob)
         predicted_winner = "home" if home_win_prob > 0.5 else "away"
 

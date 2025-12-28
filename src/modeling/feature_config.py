@@ -100,10 +100,42 @@ def get_totals_features() -> List[str]:
 
 
 def get_moneyline_features() -> List[str]:
-    """Get all features for moneyline prediction model."""
+    """
+    Get all features for moneyline prediction model.
+
+    v34.0: Enhanced with market signals and injury data for accurate
+    independent moneyline predictions.
+    """
     return [
+        # Core team performance
         "home_ppg", "away_ppg", "home_avg_margin", "away_avg_margin",
-        "home_elo", "away_elo", "elo_diff", "predicted_margin", "predicted_total",
+        "home_elo", "away_elo", "elo_diff",
+        "home_win_pct", "away_win_pct", "win_pct_diff",
+        "predicted_margin", "predicted_total",
+        # Moneyline-specific computed features (from compute_moneyline_features)
+        "ml_win_prob_diff", "ml_elo_diff", "ml_pythagorean_diff",
+        "ml_momentum_diff", "ml_estimated_home_prob", "ml_h2h_factor",
+        "ml_home_win_rate", "ml_away_win_rate",
+        # v34.0: Market signal features
+        "ml_market_implied_home",  # Fair market probability (vig removed)
+        "ml_model_vs_market",  # Model disagreement with market
+        "ml_public_home_pct",  # Public betting % on home ML
+        "ml_is_rlm",  # Reverse line movement flag
+        "ml_sharp_side",  # Sharp money indicator (-1/0/1)
+        "ml_ticket_money_diff",  # Ticket vs money divergence
+        "ml_line_movement",  # Implied prob change from open
+        # v34.0: Injury features
+        "ml_injury_adjusted_prob",  # Win prob adjusted for injuries
+        "ml_home_injury_impact",  # Home team injury PPG loss
+        "ml_away_injury_impact",  # Away team injury PPG loss
+        # Context features
+        "home_rest_days", "away_rest_days", "rest_diff",
+        "home_b2b", "away_b2b",
+        "dynamic_hca",
+        # H2H features
+        "h2h_margin", "h2h_home_win_pct", "h2h_games",
+        # SOS features
+        "home_sos_rating", "away_sos_rating", "sos_diff",
     ]
 
 

@@ -214,17 +214,21 @@ def enrich_with_injury_features(df: pd.DataFrame, injuries_df: pd.DataFrame) -> 
     from src.modeling.features import FeatureEngineer
     fe = FeatureEngineer()
 
-    # Create injury impact columns if not present
+    # Create injury impact columns if not present (spread + moneyline)
     injury_cols = [
+        # Spread injury features
         "home_injury_spread_impact", "away_injury_spread_impact",
-        "injury_spread_diff", "home_star_out", "away_star_out"
+        "injury_spread_diff", "home_star_out", "away_star_out",
+        # v34.0: Moneyline injury features
+        "ml_home_injury_impact", "ml_away_injury_impact",
+        "ml_injury_adjusted_prob",
     ]
 
     for col in injury_cols:
         if col not in df.columns:
             df[col] = 0.0
 
-    print(f"  [OK] Added injury feature columns")
+    print(f"  [OK] Added injury feature columns (spread + moneyline)")
     return df
 
 
@@ -233,19 +237,25 @@ def enrich_with_rlm_features(df: pd.DataFrame, splits_df: pd.DataFrame) -> pd.Da
     if splits_df is None or splits_df.empty:
         return df
 
-    # RLM feature columns
+    # RLM feature columns (spread + total + moneyline)
     rlm_cols = [
-        "is_rlm_spread", "is_rlm_total",
-        "sharp_side_spread", "sharp_side_total",
+        # Spread RLM features
+        "is_rlm_spread", "sharp_side_spread",
         "spread_public_home_pct", "spread_ticket_money_diff",
-        "spread_movement"
+        "spread_movement",
+        # Total RLM features
+        "is_rlm_total", "sharp_side_total",
+        # v34.0: Moneyline RLM features
+        "ml_public_home_pct", "ml_is_rlm", "ml_sharp_side",
+        "ml_ticket_money_diff", "ml_line_movement",
+        "ml_model_vs_market", "ml_market_implied_home",
     ]
 
     for col in rlm_cols:
         if col not in df.columns:
             df[col] = 0.0
 
-    print(f"  [OK] Added RLM feature columns")
+    print(f"  [OK] Added RLM feature columns (spread + total + moneyline)")
     return df
 
 

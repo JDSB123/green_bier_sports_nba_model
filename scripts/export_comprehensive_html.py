@@ -254,9 +254,9 @@ def generate_html(data: dict, output_path: str):
         # Format pick_line with +/- sign for spreads
         spread_pick_line = spread_data.get("pick_line")
         spread_pick_line_str = f"{spread_pick_line:+.1f}" if spread_pick_line is not None else ""
-        spread_edge = abs(spread_data.get("edge", 0))
-        total_edge = abs(total_data.get("edge", 0))
-        ml_edge = abs(ml_data.get("edge_away", 0) * 100)
+        spread_edge = abs(spread_data.get("edge") or 0)
+        total_edge = abs(total_data.get("edge") or 0)
+        ml_edge = abs((ml_data.get("edge_away") or 0) * 100)
         
         spread_fire = get_fire_rating(spread_edge, spread_data.get("win_probability", 0), "spread")
         total_fire = get_fire_rating(total_edge, total_data.get("win_probability", 0), "total")

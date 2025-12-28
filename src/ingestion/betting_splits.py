@@ -84,13 +84,21 @@ class GameSplits:
     spread_current: float = 0.0
     total_open: float = 0.0
     total_current: float = 0.0
-    
+
+    # Moneyline line movement (American odds)
+    ml_home_open: int = 0  # Opening ML odds for home (e.g., -150)
+    ml_away_open: int = 0  # Opening ML odds for away (e.g., +130)
+    ml_home_current: int = 0  # Current ML odds for home
+    ml_away_current: int = 0  # Current ML odds for away
+
     # Derived signals
     spread_rlm: bool = False  # Reverse line movement detected
     total_rlm: bool = False
+    ml_rlm: bool = False  # Moneyline reverse line movement
     sharp_spread_side: Optional[str] = None  # "home" or "away"
     sharp_total_side: Optional[str] = None   # "over" or "under"
-    
+    sharp_ml_side: Optional[str] = None  # "home" or "away" for moneyline
+
     updated_at: Optional[dt.datetime] = None
 
 
@@ -151,7 +159,78 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
             splits.sharp_total_side = "under"
         else:
             splits.sharp_total_side = "over"
-    
+
+    # Detect moneyline RLM
+    splits = detect_moneyline_rlm(splits)
+
+    return splits
+
+
+def _american_to_implied(odds: int) -> float:
+    """Convert American odds to implied probability (0-1)."""
+    if odds == 0:
+        return 0.5
+    if odds < 0:
+        return abs(odds) / (abs(odds) + 100)
+    return 100 / (odds + 100)
+
+
+def detect_moneyline_rlm(splits: GameSplits) -> GameSplits:
+    """
+    Detect RLM (Reverse Line Movement) for moneyline market.
+
+    ML RLM occurs when:
+    - Public heavily on one side (>60% tickets)
+    - But odds move to make that side CHEAPER (unusual)
+    - Suggests sharp money on the opposite side
+
+    Example:
+    - Public 65% on home at -150, line moves to -170: NORMAL (books want less home action)
+    - Public 65% on home at -150, line moves to -130: RLM (sharps on away, book moving toward public)
+
+    Also detects ticket vs money divergence (>10% = sharp signal).
+    """
+    # Need opening and current odds to detect movement
+    if splits.ml_home_open == 0 or splits.ml_home_current == 0:
+        # No line movement data - check ticket vs money divergence only
+        ml_ticket_money_diff = splits.ml_home_ticket_pct - splits.ml_home_money_pct
+        if abs(ml_ticket_money_diff) > 10:
+            if ml_ticket_money_diff > 0:
+                # More tickets on home than money -> sharps on away
+                splits.sharp_ml_side = "away"
+            else:
+                splits.sharp_ml_side = "home"
+        return splits
+
+    # Calculate implied probability change
+    home_open_prob = _american_to_implied(splits.ml_home_open)
+    home_current_prob = _american_to_implied(splits.ml_home_current)
+    prob_movement = home_current_prob - home_open_prob  # Positive = home became MORE likely
+
+    # RLM Detection:
+    # If public on home (>60%) and home implied prob DECREASED, that's RLM (sharps on away)
+    # If public on away (>60%) and home implied prob INCREASED, that's RLM (sharps on home)
+
+    if splits.ml_home_ticket_pct > 60:
+        # Public on home
+        if prob_movement < -0.03:  # Home became 3%+ LESS likely
+            splits.ml_rlm = True
+            splits.sharp_ml_side = "away"
+    elif splits.ml_away_ticket_pct > 60:
+        # Public on away
+        if prob_movement > 0.03:  # Home became 3%+ MORE likely
+            splits.ml_rlm = True
+            splits.sharp_ml_side = "home"
+
+    # Ticket vs money divergence (overrides RLM if stronger signal)
+    ml_ticket_money_diff = splits.ml_home_ticket_pct - splits.ml_home_money_pct
+    if abs(ml_ticket_money_diff) > 10:
+        if ml_ticket_money_diff > 0:
+            # More tickets on home than money -> sharps on away
+            splits.sharp_ml_side = "away"
+        else:
+            splits.sharp_ml_side = "home"
+
     return splits
 
 
@@ -337,6 +416,29 @@ def splits_to_features(splits: GameSplits) -> Dict[str, float]:
         ),
         "total_ticket_money_diff": (
             splits.over_ticket_pct - splits.over_money_pct
+        ),
+        # Moneyline market features
+        "ml_public_home_pct": splits.ml_home_ticket_pct,
+        "ml_public_away_pct": splits.ml_away_ticket_pct,
+        "ml_money_home_pct": splits.ml_home_money_pct,
+        "ml_money_away_pct": splits.ml_away_money_pct,
+        # Moneyline line movement
+        "ml_home_open": splits.ml_home_open,
+        "ml_home_current": splits.ml_home_current,
+        "ml_away_open": splits.ml_away_open,
+        "ml_away_current": splits.ml_away_current,
+        "ml_movement": (
+            _american_to_implied(splits.ml_home_current) - _american_to_implied(splits.ml_home_open)
+            if splits.ml_home_open != 0 else 0.0
+        ),
+        # Moneyline RLM signals
+        "is_rlm_ml": 1 if splits.ml_rlm else 0,
+        "sharp_side_ml": (
+            1 if splits.sharp_ml_side == "home"
+            else (-1 if splits.sharp_ml_side == "away" else 0)
+        ),
+        "ml_ticket_money_diff": (
+            splits.ml_home_ticket_pct - splits.ml_home_money_pct
         ),
     }
 
