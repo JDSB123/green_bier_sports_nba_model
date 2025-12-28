@@ -48,47 +48,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Resolve Azure credentials
-        id: azure-creds
-        shell: bash
-        env:
-          AZURE_CREDENTIALS_JSON: ${{ secrets.AZURE_CREDENTIALS }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json, os, sys
-          output_path = os.environ["GITHUB_OUTPUT"]
-          creds = os.environ.get("AZURE_CREDENTIALS_JSON", "").strip()
-          if creds:
-              try:
-                  resolved = json.dumps(json.loads(creds))
-              except json.JSONDecodeError as exc:
-                  sys.stderr.write(f"AZURE_CREDENTIALS is not valid JSON: {exc}\n")
-                  sys.exit(1)
-          else:
-              client_secret = os.environ.get("AZURE_CLIENT_SECRET", "").strip()
-              if not client_secret:
-                  sys.stderr.write("AZURE_CLIENT_SECRET is not configured. Provide AZURE_CREDENTIALS or AZURE_CLIENT_SECRET.\n")
-                  sys.exit(1)
-              resolved = json.dumps({
-                  "clientId": os.environ.get("AZURE_CLIENT_ID", "").strip(),
-                  "clientSecret": client_secret,
-                  "subscriptionId": os.environ.get("AZURE_SUBSCRIPTION_ID", "").strip(),
-                  "tenantId": os.environ.get("AZURE_TENANT_ID", "").strip(),
-              })
-          with open(output_path, "a", encoding="utf-8") as handle:
-              handle.write(f"creds={resolved}\n")
-          PY
-
       - name: Log in to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ steps.azure-creds.outputs.creds }}
-          allow-no-subscriptions: true
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Validate Azure context
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Azure subscription:" "$(az account show --query id -o tsv)"
+          echo "Verifying ACR visibility..."
+          az acr show -n "${{ env.AZURE_CONTAINER_REGISTRY }}" -o none
 
       - name: Ensure ACR admin enabled (best-effort)
         shell: bash
@@ -102,25 +75,21 @@ jobs:
         run: |
           set -e
           REG="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io"
-          echo "Attempting docker login to $REG with ACR secrets..."
-          if docker login "$REG" -u "${{ secrets.ACR_USERNAME }}" -p "${{ secrets.ACR_PASSWORD }}"; then
-            echo "✓ Logged in to ACR using repository secrets"
+          echo "Trying az acr login to $REG..."
+          if az acr login --name "${{ env.AZURE_CONTAINER_REGISTRY }}"; then
+            echo "[ACR] Logged in via az acr login (OIDC)"
+            exit 0
+          fi
+
+          echo "[ACR] az acr login failed; attempting admin credential fallback"
+          USER=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query username -o tsv)
+          PASS=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query "passwords[0].value" -o tsv)
+          if [ -n "$USER" ] && [ -n "$PASS" ]; then
+            echo "$PASS" | docker login "$REG" -u "$USER" --password-stdin
+            echo "[ACR] Logged in with admin credentials"
           else
-            echo "⚠️ ACR secret login failed, trying az acr login"
-            if az acr login --name "${{ env.AZURE_CONTAINER_REGISTRY }}"; then
-              echo "✓ Logged in to ACR using az acr login"
-            else
-              echo "⚠️ az acr login failed, fetching admin credentials via Azure CLI"
-              USER=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query username -o tsv)
-              PASS=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query 'passwords[0].value' -o tsv)
-              if [ -n "$USER" ] && [ -n "$PASS" ]; then
-                echo "$PASS" | docker login "$REG" -u "$USER" --password-stdin
-                echo "✓ Logged in to ACR using admin credentials"
-              else
-                echo "❌ Could not retrieve ACR admin credentials. Check Azure login and permissions."
-                exit 1
-              fi
-            fi
+            echo "[ACR] Could not retrieve admin credentials. Check Azure login and permissions."
+            exit 1
           fi
 
       - name: Build and push
