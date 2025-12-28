@@ -56,8 +56,31 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           allow-no-subscriptions: true
 
-      - name: Log in to ACR (az acr login via OIDC)
-        run: az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}
+      - name: Log in to ACR (robust)
+        shell: bash
+        run: |
+          set -e
+          REG="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io"
+          echo "Attempting docker login to $REG with ACR secrets..."
+          if docker login "$REG" -u "${{ secrets.ACR_USERNAME }}" -p "${{ secrets.ACR_PASSWORD }}"; then
+            echo "✓ Logged in to ACR using repository secrets"
+          else
+            echo "⚠️ ACR secret login failed, trying az acr login"
+            if az acr login --name "${{ env.AZURE_CONTAINER_REGISTRY }}"; then
+              echo "✓ Logged in to ACR using az acr login"
+            else
+              echo "⚠️ az acr login failed, fetching admin credentials via Azure CLI"
+              USER=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query username -o tsv)
+              PASS=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query 'passwords[0].value' -o tsv)
+              if [ -n "$USER" ] && [ -n "$PASS" ]; then
+                echo "$PASS" | docker login "$REG" -u "$USER" --password-stdin
+                echo "✓ Logged in to ACR using admin credentials"
+              else
+                echo "❌ Could not retrieve ACR admin credentials. Check Azure login and permissions."
+                exit 1
+              fi
+            fi
+          fi
 
       - name: Build and push
         uses: docker/build-push-action@v5
