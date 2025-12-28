@@ -205,6 +205,7 @@ class PeriodPredictor:
             "predicted_margin": predicted_margin,
             "spread_line": spread_line,
             "confidence": confidence,
+            "side": bet_side,  # Alias for downstream code expecting generic side
             "bet_side": bet_side,
             "edge": edge_abs,  # Always positive for the recommended side
             "raw_edge": edge,  # Signed edge for diagnostics
@@ -311,6 +312,7 @@ class PeriodPredictor:
             "predicted_total": predicted_total,
             "total_line": total_line,
             "confidence": confidence,
+            "side": bet_side,  # Alias for downstream code expecting generic side
             "bet_side": bet_side,
             "edge": edge_abs,  # Always positive for the recommended side
             "raw_edge": edge,  # Signed edge for diagnostics
@@ -431,17 +433,15 @@ class UnifiedPredictionEngine:
     """
     NBA v33.0.7.0 - Production Prediction Engine
 
-    6 INDEPENDENT Markets (1H + FG):
+    4 ACTIVE Markets (1H + FG spreads/totals; moneyline disabled):
 
     First Half (1H):
     - 1H Spread
     - 1H Total
-    - 1H Moneyline
 
     Full Game (FG):
     - FG Spread
     - FG Total
-    - FG Moneyline
 
     ARCHITECTURE:
     - Each period has independent models trained on period-specific features
@@ -478,13 +478,13 @@ class UnifiedPredictionEngine:
         logger.info("[v33.0.7.0] Loading 1H + FG models...")
 
         # Load 1H models - WILL RAISE if any missing
-        logger.info("Loading 1H models (spread, total, moneyline)...")
+        logger.info("Loading 1H models (spread, total; moneyline disabled)...")
         h1_models = self._load_period_models("1h")
         self.h1_predictor = PeriodPredictor("1h", *h1_models)
         logger.info("1H predictor initialized (2/2 models - Moneyline disabled)")
 
         # Load FG models - WILL RAISE if any missing
-        logger.info("Loading FG models (spread, total, moneyline)...")
+        logger.info("Loading FG models (spread, total; moneyline disabled)...")
         fg_models = self._load_period_models("fg")
         self.fg_predictor = PeriodPredictor("fg", *fg_models)
         logger.info("FG predictor initialized (2/2 models - Moneyline disabled)")
@@ -817,7 +817,7 @@ class UnifiedPredictionEngine:
         """Return info about loaded models."""
         return {
             "version": MODEL_VERSION,
-            "architecture": "6-model independent (1H + FG)",
+            "architecture": "4-model independent (1H + FG spreads/totals; moneyline disabled)",
             "markets": sum(1 for v in self.loaded_models.values() if v),
             "markets_list": [k for k, v in self.loaded_models.items() if v],
             "periods": ["first_half", "full_game"],

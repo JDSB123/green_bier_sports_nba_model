@@ -90,7 +90,7 @@ limiter = Limiter(key_func=get_remote_address)
 # --- Request/Response Models - NBA_v33.0.8.0 ---
 
 class GamePredictionRequest(BaseModel):
-    """Request for single game prediction - 6 markets (1H + FG)."""
+    """Request for single game prediction - 4 markets (1H + FG, moneyline disabled)."""
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
     # Full game lines - REQUIRED
@@ -137,7 +137,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.8.0: 6 markets (1H+FG for Spread, Total, Moneyline). Q1 removed.
+    NBA_v33.0.8.0: 4 markets (1H+FG for Spread, Total; moneyline disabled). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -171,7 +171,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("v33.0.8.0 STRICT MODE: Using 1H/FG only (6 markets)")
+    logger.info("v33.0.8.0 STRICT MODE: Using 1H/FG only (4 markets; moneyline disabled)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
@@ -186,7 +186,7 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"v33.0.8.0 initialized - {model_info['markets']}/6 markets loaded: {model_info['markets_list']}")
+    logger.info(f"v33.0.8.0 initialized - {model_info['markets']}/4 markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
@@ -268,7 +268,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v33.0.8.0 with 6 markets."""
+    """Check API health - v33.0.8.0 with 4 markets (moneyline disabled)."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -280,12 +280,12 @@ def health(request: Request):
         "status": "ok",
         "version": RELEASE_VERSION,
         "mode": "STRICT",
-        "architecture": "6-model independent (1H + FG)",
+        "architecture": "4-model independent (1H + FG spreads/totals; moneyline disabled)",
         "caching": "DISABLED - fresh data every request",
         "markets": model_info.get("markets", 0),
         "markets_list": [
-            "1h_spread", "1h_total", "1h_moneyline",
-            "fg_spread", "fg_total", "fg_moneyline",
+            "1h_spread", "1h_total",
+            "fg_spread", "fg_total",
         ],
         "periods": ["first_half", "full_game"],
         "engine_loaded": engine_loaded,
@@ -584,7 +584,6 @@ def verify_integrity(request: Request):
             results["checks"]["fg_prediction_works"] = True
             results["checks"]["fg_has_spread"] = "spread" in test_pred
             results["checks"]["fg_has_total"] = "total" in test_pred
-            results["checks"]["fg_has_moneyline"] = "moneyline" in test_pred
             
         except Exception as e:
             results["status"] = "fail"
@@ -605,8 +604,8 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v33.0.8.0: 6 markets (1H + FG only). Q1 removed entirely.
-    Returns all 6 markets (1H+FG for Spread, Total, Moneyline).
+    v33.0.8.0: 4 markets (1H + FG only). Moneyline disabled. Q1 removed entirely.
+    Returns 1H/FG for Spread and Total.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0: Engine not loaded - models missing")
@@ -666,9 +665,9 @@ async def get_slate_predictions(
             fh_home_ml = odds.get("fh_home_ml")
             fh_away_ml = odds.get("fh_away_ml")
 
-            # Allow games with ANY betting lines (moneyline, spread, or total)
-            has_fg_lines = fg_spread is not None or fg_total is not None or (home_ml is not None and away_ml is not None)
-            has_fh_lines = fh_spread is not None or fh_total is not None or (fh_home_ml is not None and fh_away_ml is not None)
+            # Require spread or total lines (moneyline disabled)
+            has_fg_lines = fg_spread is not None or fg_total is not None
+            has_fh_lines = fh_spread is not None or fh_total is not None
 
             if not has_fg_lines and not has_fh_lines:
                 logger.warning(f"Skipping {home_team} vs {away_team} - no betting lines available")
@@ -687,14 +686,18 @@ async def get_slate_predictions(
                 fh_away_ml_odds=fh_away_ml,
             )
 
-            # Count plays (6 markets: 1H + FG)
+            # Count plays (4 markets: 1H + FG spreads/totals)
             game_plays = 0
             game_date = target_date.strftime("%Y-%m-%d")
             for period in ["first_half", "full_game"]:
                 period_preds = preds.get(period, {})
-                for market in ["spread", "total", "moneyline"]:
+                for market in ["spread", "total"]:
                     pred_data = period_preds.get(market, {})
                     if pred_data.get("passes_filter"):
+                        side = pred_data.get("side") or pred_data.get("bet_side")
+                        if not side:
+                            logger.warning(f"Missing side for {period} {market} - skipping track")
+                            continue
                         game_plays += 1
                         # Record the pick for live tracking
                         market_key = f"{period.replace('first_half', '1h').replace('full_game', 'fg')}_{market}"
@@ -709,7 +712,7 @@ async def get_slate_predictions(
                             home_team=home_team,
                             away_team=away_team,
                             market=market_key,
-                            side=pred_data.get("side"),
+                            side=side,
                             line=line,
                             confidence=pred_data.get("confidence"),
                         )
@@ -860,7 +863,7 @@ async def get_executive_summary(
             if fg_spread is None or fg_total is None:
                 continue
 
-            # Get predictions for 6 markets (1H + FG)
+            # Get predictions for 4 markets (1H + FG spreads/totals)
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
@@ -933,33 +936,6 @@ async def get_executive_summary(
                     "fire_rating": get_fire_rating(fg_total_pred.get("confidence", 0), fg_total_pred.get("edge", 0))
                 })
             
-            # FG Moneyline
-            fg_ml_pred = fg.get("moneyline", {})
-            if fg_ml_pred.get("passes_filter"):
-                rec_bet = fg_ml_pred.get("recommended_bet")
-                if rec_bet:
-                    pick_team = home_team if rec_bet == "home" else away_team
-                    pick_odds_val = home_ml if rec_bet == "home" else away_ml
-                    model_prob = fg_ml_pred.get("home_win_prob", 0.5) if rec_bet == "home" else fg_ml_pred.get("away_win_prob", 0.5)
-                    market_prob = odds.get("home_implied_prob", 0.5) if rec_bet == "home" else odds.get("away_implied_prob", 0.5)
-                    edge_pct = fg_ml_pred.get("home_edge", 0) if rec_bet == "home" else fg_ml_pred.get("away_edge", 0)
-                    
-                    all_plays.append({
-                        "time_cst": time_cst_str,
-                        "sort_time": game_cst.isoformat() if game_cst else "",
-                        "matchup": matchup_display,
-                        "period": "FG",
-                        "market": "ML",
-                        "pick": pick_team,
-                        "pick_odds": format_american_odds(pick_odds_val),
-                        "model_prediction": f"{model_prob*100:.1f}%",
-                        "market_line": f"{market_prob*100:.1f}%",
-                        "edge": f"{edge_pct*100:+.1f}%",
-                        "edge_raw": abs(edge_pct * 100),
-                        "confidence": fg_ml_pred.get("confidence", 0),
-                        "fire_rating": get_fire_rating(fg_ml_pred.get("confidence", 0), edge_pct * 100)
-                    })
-            
             # Process First Half markets
             fh = preds.get("first_half", {})
             
@@ -1020,33 +996,6 @@ async def get_executive_summary(
                     "fire_rating": get_fire_rating(fh_total_pred.get("confidence", 0), fh_total_pred.get("edge", 0))
                 })
             
-            # 1H Moneyline
-            fh_ml_pred = fh.get("moneyline", {})
-            if fh_ml_pred.get("passes_filter") and fh_home_ml is not None:
-                rec_bet = fh_ml_pred.get("recommended_bet")
-                if rec_bet:
-                    pick_team = home_team if rec_bet == "home" else away_team
-                    pick_odds_val = fh_home_ml if rec_bet == "home" else fh_away_ml
-                    model_prob = fh_ml_pred.get("home_win_prob", 0.5) if rec_bet == "home" else fh_ml_pred.get("away_win_prob", 0.5)
-                    market_prob = odds.get("fh_home_implied_prob", 0.5) if rec_bet == "home" else odds.get("fh_away_implied_prob", 0.5)
-                    edge_pct = fh_ml_pred.get("home_edge", 0) if rec_bet == "home" else fh_ml_pred.get("away_edge", 0)
-                    
-                    all_plays.append({
-                        "time_cst": time_cst_str,
-                        "sort_time": game_cst.isoformat() if game_cst else "",
-                        "matchup": matchup_display,
-                        "period": "1H",
-                        "market": "ML",
-                        "pick": pick_team,
-                        "pick_odds": format_american_odds(pick_odds_val),
-                        "model_prediction": f"{model_prob*100:.1f}%",
-                        "market_line": f"{market_prob*100:.1f}%",
-                        "edge": f"{edge_pct*100:+.1f}%",
-                        "edge_raw": abs(edge_pct * 100),
-                        "confidence": fh_ml_pred.get("confidence", 0),
-                        "fire_rating": get_fire_rating(fh_ml_pred.get("confidence", 0), edge_pct * 100)
-                    })
-
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
             continue
@@ -1125,7 +1074,7 @@ async def get_comprehensive_slate_analysis(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
-    # Get edge thresholds (all 6 markets)
+    # Get edge thresholds (all active markets)
     edge_thresholds = get_edge_thresholds_for_game(
         game_date=target_date,
         bet_types=["spread", "total", "moneyline", "1h_spread", "1h_total", "1h_moneyline"]
@@ -1230,8 +1179,8 @@ async def get_comprehensive_slate_analysis(
         "date": str(target_date),
         "version": RELEASE_VERSION,
         "markets": [
-            "1h_spread", "1h_total", "1h_moneyline",
-            "fg_spread", "fg_total", "fg_moneyline"
+            "1h_spread", "1h_total",
+            "fg_spread", "fg_total"
         ],
         "analysis": analysis_results,
         "edge_thresholds": edge_thresholds
@@ -1244,8 +1193,8 @@ async def get_meta_info():
     return {
         "version": RELEASE_VERSION,
         "markets": [
-            "1h_spread", "1h_total", "1h_moneyline",
-            "fg_spread", "fg_total", "fg_moneyline",
+            "1h_spread", "1h_total",
+            "fg_spread", "fg_total",
         ],
         "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
         "server_time": datetime.now().isoformat(),
@@ -1260,7 +1209,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     Generate predictions for a specific matchup.
 
     v33.0.8.0: STRICT MODE - Fetches fresh data from all APIs.
-    6 markets (1H+FG for Spread, Total, Moneyline).
+    4 markets (1H+FG for Spread, Total; moneyline disabled).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
@@ -1274,7 +1223,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             req.home_team, req.away_team
         )
 
-        # Predict all 6 markets (1H + FG)
+        # Predict all 4 markets (1H + FG spreads/totals)
         preds = app.state.engine.predict_all_markets(
             features,
             fg_spread_line=req.fg_spread_line,
