@@ -41,7 +41,7 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 # Copy application code
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser scripts/ ./scripts/
-COPY --chown=appuser:appuser ./azure/function_app/ ./function_host/
+COPY --chown=appuser:appuser azure/function_app/ ./function_host/
 COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 
 # Environment
