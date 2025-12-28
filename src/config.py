@@ -81,7 +81,7 @@ class FilterThresholds:
     - FILTER_MONEYLINE_MIN_CONFIDENCE
     - FILTER_MONEYLINE_MIN_EDGE_PCT
 
-    NBA_v33.0.1.0: 6 markets only (1H + FG). No Q1 markets.
+    NBA_v33.0.1.0: 6 markets only (1H + FG).
     """
     # Spread thresholds
     spread_min_confidence: float = field(

@@ -87,14 +87,14 @@ def check_stack_running() -> bool:
     """Check if the NBA stack is running."""
     try:
         result = subprocess.run(
-            ["docker", "ps", "--filter", "name=nba-v60", "--format", "{{.Names}}"],
+            ["docker", "ps", "--filter", "name=nba-v33", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        # Container is named 'nba-v60' per compose; service name is 'nba-v60-api'
+        # Container is named 'nba-v33' per compose; service name is 'nba-v33-api'
         names = result.stdout.splitlines()
-        return any(n in ("nba-v60", "nba-v60-api") for n in names)
+        return any(n in ("nba-v33", "nba-v33-api") for n in names)
     except Exception:
         return False
 
@@ -527,7 +527,7 @@ def main():
     args = parser.parse_args()
     
     print("\n" + "="*80)
-    print("🏀 NBA PREDICTION SYSTEM v33.0.8.0 (Moneyline Disabled)")
+    print("🏀 NBA PREDICTION SYSTEM v33.0.8.0 (6 markets: 1H + FG)")
     print("="*80)
     
     # Step 1: Check Docker
@@ -544,7 +544,7 @@ def main():
     
     # Step 3: Wait for API
     if not wait_for_api():
-        print("\n💡 Try: docker compose logs nba-v60")
+        print("\n💡 Try: docker compose logs nba-v33")
         sys.exit(1)
     
     # Step 4: Fetch and display

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Unified backtest for all 6 active NBA betting markets.
+Unified backtest for all 6 active NBA betting markets (1H + FG).
 
-NBA v6.0: 6 INDEPENDENT Markets Architecture (Q1 Disabled)
 STRICT MODE: No silent failures, no placeholder data.
 
-Markets (All INDEPENDENT models - Q1 DISABLED):
+Markets (All INDEPENDENT models):
     1H (First Half):
         1h_spread    - First Half Spreads
         1h_total     - First Half Totals
@@ -17,15 +16,15 @@ Markets (All INDEPENDENT models - Q1 DISABLED):
         fg_moneyline - Full Game Moneyline
 
 ARCHITECTURE:
-    Each period (Q1, 1H, FG) uses INDEPENDENT features computed from
+    Each period (1H, FG) uses INDEPENDENT features computed from
     historical data for that specific period. No cross-period dependencies.
 
 Method: Walk-forward validation (train on past, predict next game - NO LEAKAGE)
 
 Usage:
-    python scripts/backtest.py                              # All 9 markets
-    python scripts/backtest.py --markets fg_spread,q1_total # Specific markets
-    python scripts/backtest.py --periods q1,1h              # Specific periods
+    python scripts/backtest.py                              # All markets
+    python scripts/backtest.py --markets fg_spread          # Specific markets
+    python scripts/backtest.py --periods 1h,fg              # Specific periods
     python scripts/backtest.py --min-training 100           # More training data
     python scripts/backtest.py --strict                     # Fail on any error
 
@@ -65,9 +64,6 @@ from src.modeling.models import (
     FirstHalfSpreadsModel,
     FirstHalfTotalsModel,
     FirstHalfMoneylineModel,
-    FirstQuarterSpreadsModel,
-    FirstQuarterTotalsModel,
-    FirstQuarterMoneylineModel,
 )
 from src.modeling.features import FeatureEngineer
 
@@ -119,28 +115,6 @@ MARKETS = {
         "label_col": "home_1h_win",
         "line_col": None,
         "period": "1h",
-    },
-    # First Quarter Markets
-    "q1_spread": {
-        "name": "First Quarter Spreads",
-        "model_class": FirstQuarterSpreadsModel,
-        "label_col": "q1_spread_covered",
-        "line_col": "q1_spread_line",
-        "period": "q1",
-    },
-    "q1_total": {
-        "name": "First Quarter Totals",
-        "model_class": FirstQuarterTotalsModel,
-        "label_col": "q1_total_over",
-        "line_col": "q1_total_line",
-        "period": "q1",
-    },
-    "q1_moneyline": {
-        "name": "First Quarter Moneyline",
-        "model_class": FirstQuarterMoneylineModel,
-        "label_col": "home_q1_win",
-        "line_col": None,
-        "period": "q1",
     },
 }
 
@@ -293,42 +267,6 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
         else:
             df["1h_total_over"] = np.nan
     
-    # Q1 labels
-    if "home_q1" in df.columns and "away_q1" in df.columns:
-        df["home_q1_win"] = (df["home_q1"].fillna(0) > df["away_q1"].fillna(0)).astype(int)
-        df["actual_q1_total"] = df["home_q1"].fillna(0) + df["away_q1"].fillna(0)
-        df["actual_q1_margin"] = df["home_q1"].fillna(0) - df["away_q1"].fillna(0)
-        
-        if "q1_spread_line" not in df.columns:
-            df["q1_spread_line"] = np.nan
-        if "spread_line" in df.columns:
-            mask = df["q1_spread_line"].isna()
-            df.loc[mask, "q1_spread_line"] = df.loc[mask, "spread_line"] / 4
-        # Only compute if we have valid line data
-        if df["q1_spread_line"].notna().any():
-            df["q1_spread_covered"] = np.where(
-                df["q1_spread_line"].notna(),
-                (df["actual_q1_margin"] > -df["q1_spread_line"]).astype(int),
-                np.nan
-            )
-        else:
-            df["q1_spread_covered"] = np.nan
-
-        if "q1_total_line" not in df.columns:
-            df["q1_total_line"] = np.nan
-        if "total_line" in df.columns:
-            mask = df["q1_total_line"].isna()
-            df.loc[mask, "q1_total_line"] = df.loc[mask, "total_line"] / 4
-        # Only compute if we have valid line data
-        if df["q1_total_line"].notna().any():
-            df["q1_total_over"] = np.where(
-                df["q1_total_line"].notna(),
-                (df["actual_q1_total"] > df["q1_total_line"]).astype(int),
-                np.nan
-            )
-        else:
-            df["q1_total_over"] = np.nan
-    
     print(f"[OK] Loaded {len(df)} games")
     
     return df
@@ -362,8 +300,8 @@ def backtest_market(
     """
     Run walk-forward backtest for a single market.
 
-    NBA v6.0: Uses period-specific features computed from historical
-    data for that specific period (Q1, 1H, or FG).
+    Uses period-specific features computed from historical
+    data for that specific period (1H or FG).
     """
     config = MARKETS[market_key]
 

@@ -1,7 +1,7 @@
 """
 Period-specific feature definitions for 1H and FG markets.
 
-v33.0.7.0: Q1 markets removed. Only 1H + FG are active.
+Q1 markets are removed; only 1H + FG are supported.
 
 Each period (1H, FG) has INDEPENDENT features computed from
 historical data for that specific period. No cross-period dependencies.
@@ -9,8 +9,6 @@ historical data for that specific period. No cross-period dependencies.
 Key Principle: Features for 1H predictions come from 1H historical stats,
 and FG from FG stats. This prevents leakage and allows each model to learn
 period-specific patterns.
-
-Note: Q1_FEATURES is kept for backwards compatibility but is DEPRECATED.
 """
 from __future__ import annotations
 from typing import Dict, List
@@ -22,12 +20,6 @@ from dataclasses import dataclass, field
 # =============================================================================
 # These are used for rest/travel adjustments, NOT for deriving predictions
 PERIOD_SCALING = {
-    "q1": {
-        "hca_factor": 0.25,        # Q1 HCA ~0.75 pts (vs 3 pts FG)
-        "rest_factor": 0.25,       # Rest impact reduced for Q1
-        "travel_factor": 0.3,      # Travel fatigue lower early in game
-        "scoring_pct": 0.25,       # Q1 is ~25% of game scoring
-    },
     "1h": {
         "hca_factor": 0.5,         # 1H HCA ~1.5 pts (vs 3 pts FG)
         "rest_factor": 0.5,        # Rest impact moderate for 1H
@@ -50,10 +42,10 @@ PERIOD_SCALING = {
 @dataclass
 class PeriodFeatureConfig:
     """Configuration for a specific period's features."""
-    period: str  # "q1", "1h", or "fg"
+    period: str  # "1h" or "fg"
 
     # Suffixes for period-specific columns in training data
-    score_suffix: str = ""  # e.g., "_q1", "_1h", "" for FG
+    score_suffix: str = ""  # e.g., "_1h", "" for FG
 
     # Core statistical features (computed from period-specific historical data)
     core_features: List[str] = field(default_factory=list)
@@ -69,77 +61,6 @@ class PeriodFeatureConfig:
 
     # Context features (rest, travel - same for all periods but scaled)
     context_features: List[str] = field(default_factory=list)
-
-
-# First Quarter Features
-Q1_FEATURES = PeriodFeatureConfig(
-    period="q1",
-    score_suffix="_q1",
-    core_features=[
-        # Q1-specific rolling stats (computed from historical Q1 data)
-        "home_ppg_q1",           # Home team Q1 PPG (last N games)
-        "home_papg_q1",          # Home team Q1 points allowed
-        "home_margin_q1",        # Home team Q1 avg margin
-        "away_ppg_q1",           # Away team Q1 PPG
-        "away_papg_q1",          # Away team Q1 points allowed
-        "away_margin_q1",        # Away team Q1 avg margin
-        # Differentials
-        "ppg_diff_q1",           # Q1 PPG differential
-        "margin_diff_q1",        # Q1 margin differential
-        # Win rates in Q1
-        "home_q1_win_pct",       # Home team Q1 win rate
-        "away_q1_win_pct",       # Away team Q1 win rate
-        # Pace in Q1
-        "home_pace_q1",          # Home total Q1 points (off + def)
-        "away_pace_q1",          # Away total Q1 points
-        # Recent form (last 5 games Q1 performance)
-        "home_l5_margin_q1",     # Home Q1 margin last 5
-        "away_l5_margin_q1",     # Away Q1 margin last 5
-        # Consistency
-        "home_margin_std_q1",    # Q1 margin volatility
-        "away_margin_std_q1",
-    ],
-    spread_features=[
-        # Q1 spread-specific
-        "predicted_margin_q1",    # Model's Q1 margin prediction
-        "q1_spread_line",         # Market Q1 spread line
-        "spread_vs_predicted_q1", # Model vs market disagreement
-        # Q1 ATS performance
-        "home_ats_pct_q1",        # Q1 cover rate
-        "away_ats_pct_q1",
-    ],
-    total_features=[
-        # Q1 total-specific
-        "predicted_total_q1",     # Model's Q1 total prediction
-        "q1_total_line",          # Market Q1 total line
-        "total_vs_predicted_q1",  # Model vs market disagreement
-        # Q1 over/under tendencies
-        "home_over_pct_q1",       # Q1 over rate
-        "away_over_pct_q1",
-        # Combined pace
-        "expected_pace_q1",       # Expected Q1 combined scoring
-    ],
-    moneyline_features=[
-        # Q1 moneyline-specific
-        "ml_prob_home_q1",        # Q1 home win probability estimate
-        "ml_elo_diff_q1",         # Elo difference (can be shared)
-        "ml_momentum_q1",         # Recent Q1 momentum
-        "home_q1_lead_pct",       # How often home leads after Q1
-        "away_q1_lead_pct",
-    ],
-    context_features=[
-        # Scaled for Q1
-        "dynamic_hca_q1",         # Q1-scaled HCA
-        "home_rest_adj_q1",       # Rest adjustment (scaled)
-        "away_rest_adj_q1",
-        "travel_fatigue_q1",      # Travel impact (scaled)
-        # Raw (unscaled) for reference
-        "home_rest_days",
-        "away_rest_days",
-        "home_b2b",
-        "away_b2b",
-    ],
-)
 
 
 # First Half Features
@@ -379,14 +300,13 @@ def get_model_features(period: str, market: str) -> List[str]:
     Get the full feature list for a specific model.
 
     Args:
-        period: "q1", "1h", or "fg"
+        period: "1h" or "fg"
         market: "spread", "total", or "moneyline"
 
     Returns:
         List of feature column names
     """
     config = {
-        "q1": Q1_FEATURES,
         "1h": H1_FEATURES,
         "fg": FG_FEATURES,
     }.get(period)
@@ -414,35 +334,10 @@ def get_model_features(period: str, market: str) -> List[str]:
 
 
 # =============================================================================
-# ALL 9 MODEL CONFIGURATIONS
+# ALL 6 MODEL CONFIGURATIONS
 # =============================================================================
 
 MODEL_CONFIGS: Dict[str, Dict] = {
-    # First Quarter Models
-    "q1_spread": {
-        "period": "q1",
-        "market": "spread",
-        "label_col": "q1_spread_covered",
-        "line_col": "q1_spread_line",
-        "model_file": "q1_spread_model.joblib",
-        "features": get_model_features("q1", "spread"),
-    },
-    "q1_total": {
-        "period": "q1",
-        "market": "total",
-        "label_col": "q1_total_over",
-        "line_col": "q1_total_line",
-        "model_file": "q1_total_model.joblib",
-        "features": get_model_features("q1", "total"),
-    },
-    "q1_moneyline": {
-        "period": "q1",
-        "market": "moneyline",
-        "label_col": "home_q1_win",
-        "line_col": None,
-        "model_file": "q1_moneyline_model.joblib",
-        "features": get_model_features("q1", "moneyline"),
-    },
     # First Half Models (using .pkl format with separate features file)
     "1h_spread": {
         "period": "1h",
@@ -499,7 +394,7 @@ MODEL_CONFIGS: Dict[str, Dict] = {
 
 
 def get_all_market_keys() -> List[str]:
-    """Return all 9 market keys."""
+    """Return all active market keys (1H + FG)."""
     return list(MODEL_CONFIGS.keys())
 
 

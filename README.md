@@ -1,10 +1,8 @@
-# NBA Basketball Prediction System v6.0
+# NBA Basketball Prediction System v33.0.8.0
 
 Production-grade containerized system for NBA betting predictions with **6 independent markets**.
 
 ## Markets (6 Independent Models)
-
-**Status:** Q1 markets disabled as of v33.0.1.0+
 
 | Period | Spread | Total | Moneyline |
 |--------|--------|-------|-----------|
@@ -32,7 +30,9 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 ---
 
-> **📖 Single Source of Truth:** See [`docs/SINGLE_SOURCE_OF_TRUTH.md`](docs/SINGLE_SOURCE_OF_TRUTH.md) for the master reference.
+> **📖 Single Source of Truth:** See [`docs/STACK_FLOW_AND_VERIFICATION.md`](docs/STACK_FLOW_AND_VERIFICATION.md) for the master reference.
+
+**Versioning:** `VERSION` is the canonical release identifier (current: `NBA_v33.0.8.0`). Keep `pyproject.toml`, Dockerfiles, `docker-compose.yml`, and `scripts/train_models.py` in sync with this file before building or deploying.
 
 ## Architecture Overview
 
@@ -43,7 +43,7 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| `nba-v60-api` | 8090 | **Main prediction API** - FastAPI with 9 independent markets |
+| `nba-v33-api` | 8090 | **Main prediction API** - FastAPI with 6 independent markets (1H + FG) |
 
 ### Backtest Services (On-Demand)
 

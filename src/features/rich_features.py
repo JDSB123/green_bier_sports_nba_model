@@ -603,7 +603,7 @@ class RichFeatureBuilder:
         def calc_recent_form(
             recent_games: List[Dict], team_id: int, game_dt: Optional[datetime]
         ) -> Dict:
-            """Calculate recent form metrics from game history (1H, FG). v33.0.7.0: Q1 removed."""
+            """Calculate recent form metrics from game history (1H, FG)."""
             if not recent_games:
                 return {"l5_win_pct": 0.5, "l10_win_pct": 0.5, "l5_margin": 0, "l10_margin": 0,
                         "l5_ppg": 0, "l5_papg": 0, "rest_days": 3, "prev_game_location": None,
@@ -936,7 +936,7 @@ class RichFeatureBuilder:
             "home_l10_margin": home_form["l10_margin"],
             "away_l10_margin": away_form["l10_margin"],
 
-            # 1H-specific features (first half stats from recent form) - v33.0.7.0: Q1 removed
+            # 1H-specific features (first half stats from recent form)
             "home_ppg_1h": home_form["l5_ppg_1h"],
             "home_papg_1h": home_form["l5_papg_1h"],
             "home_spread_margin_1h": home_form["l5_margin_1h"],

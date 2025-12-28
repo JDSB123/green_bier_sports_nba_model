@@ -627,15 +627,6 @@ class FirstHalfMixin:
     pass
 
 
-class FirstQuarterMixin:
-    """Mixin to indicate this model targets first-quarter outcomes.
-
-    This mixin does not change implementation but provides a semantic marker
-    and a place to override defaults in the future.
-    """
-    pass
-
-
 class FirstHalfSpreadsModel(FirstHalfMixin, SpreadsModel):
     """First-half spreads model (home covers first-half spread)."""
     def __init__(
@@ -707,87 +698,6 @@ class FirstHalfMoneylineModel(FirstHalfMixin, MoneylineModel):
         use_calibration: bool = True,
     ):
         # Use 1H-specific defaults if no features provided
-        if feature_columns is None:
-            feature_columns = self.DEFAULT_FEATURES
-        super().__init__(
-            name=name,
-            model_type=model_type,
-            feature_columns=feature_columns,
-            use_calibration=use_calibration,
-        )
-
-
-class FirstQuarterSpreadsModel(FirstQuarterMixin, SpreadsModel):
-    """First-quarter spreads model (home covers first-quarter spread)."""
-    def __init__(
-        self,
-        name: str = "q1_spreads_model",
-        model_type: str = "logistic",
-        feature_columns: Optional[List[str]] = None,
-        use_calibration: bool = True,
-    ):
-        super().__init__(
-            name=name,
-            model_type=model_type,
-            feature_columns=feature_columns,
-            use_calibration=use_calibration,
-        )
-
-
-class FirstQuarterTotalsModel(FirstQuarterMixin, TotalsModel):
-    """First-quarter totals model (first-quarter over/under)."""
-    def __init__(
-        self,
-        name: str = "q1_totals_model",
-        model_type: str = "logistic",
-        feature_columns: Optional[List[str]] = None,
-        use_calibration: bool = True,
-    ):
-        super().__init__(
-            name=name,
-            model_type=model_type,
-            feature_columns=feature_columns,
-            use_calibration=use_calibration,
-        )
-
-
-class FirstQuarterMoneylineModel(FirstQuarterMixin, MoneylineModel):
-    """
-    First-quarter moneyline model (home leading after first quarter).
-    
-    Uses Q1-specific features when available, with calibration.
-    """
-    
-    DEFAULT_FEATURES = [
-        # Q1-specific features (when available from Q1 training data)
-        "home_ppg_q1", "away_ppg_q1",
-        "home_margin_q1", "away_margin_q1",
-        "ppg_diff_q1", "margin_diff_q1",
-        # FG features scaled for Q1 context
-        "home_win_pct", "away_win_pct", "win_pct_diff",
-        "home_margin", "away_margin", "margin_diff",
-        # Context (same for Q1)
-        "home_rest", "away_rest", "rest_diff",
-        "home_b2b", "away_b2b",
-        # Scaled HCA for Q1 (~0.75 pts instead of 3)
-        "dynamic_hca",
-        # H2H
-        "h2h_margin", "h2h_home_win_pct",
-        # Moneyline features
-        "ml_win_prob_diff", "ml_elo_diff", "ml_pythagorean_diff",
-        "ml_momentum_diff", "ml_estimated_home_prob",
-        # Derived
-        "predicted_margin",
-    ]
-    
-    def __init__(
-        self,
-        name: str = "q1_moneyline_model",
-        model_type: str = "logistic",
-        feature_columns: Optional[List[str]] = None,
-        use_calibration: bool = True,
-    ):
-        # Use Q1-specific defaults if no features provided
         if feature_columns is None:
             feature_columns = self.DEFAULT_FEATURES
         super().__init__(

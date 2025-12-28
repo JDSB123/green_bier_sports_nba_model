@@ -1,9 +1,6 @@
-"""Tests for the FastAPI serving application - v6.0 STRICT MODE.
+"""Tests for the FastAPI serving application - v33.0.8.0 STRICT MODE.
 
-Tests all 9 INDEPENDENT markets:
-- First Quarter: Spread, Total, Moneyline
-- First Half: Spread, Total, Moneyline
-- Full Game: Spread, Total, Moneyline
+Active markets: 1H + FG (spreads, totals, moneylines). Q1 is disabled.
 """
 import pytest
 from unittest.mock import Mock, MagicMock, AsyncMock, patch
@@ -12,46 +9,9 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def mock_engine():
-    """Create a mock UnifiedPredictionEngine for v6.0 (9 markets)."""
+    """Create a mock UnifiedPredictionEngine for 6 markets (1H + FG)."""
     engine = MagicMock()
     engine.predict_all_markets.return_value = {
-        "first_quarter": {
-            "spread": {
-                "home_cover_prob": 0.58,
-                "away_cover_prob": 0.42,
-                "predicted_margin": 1.2,
-                "confidence": 0.58,
-                "bet_side": "home",
-                "edge": 0.8,
-                "model_edge_pct": 0.08,
-                "passes_filter": False,
-                "filter_reason": "Low edge",
-            },
-            "total": {
-                "over_prob": 0.54,
-                "under_prob": 0.46,
-                "predicted_total": 56.5,
-                "confidence": 0.54,
-                "bet_side": "over",
-                "edge": 1.0,
-                "model_edge_pct": 0.04,
-                "passes_filter": False,
-                "filter_reason": "Low confidence",
-            },
-            "moneyline": {
-                "home_win_prob": 0.60,
-                "away_win_prob": 0.40,
-                "predicted_winner": "home",
-                "confidence": 0.60,
-                "home_implied_prob": 0.55,
-                "away_implied_prob": 0.45,
-                "home_edge": 0.05,
-                "away_edge": -0.05,
-                "recommended_bet": "home",
-                "passes_filter": True,
-                "filter_reason": None,
-            },
-        },
         "first_half": {
             "spread": {
                 "home_cover_prob": 0.60,
@@ -129,8 +89,8 @@ def mock_engine():
     }
     # Mock get_model_info for health endpoint
     engine.get_model_info.return_value = {
-        "version": "6.6",
-        "architecture": "6-model independent (Q1 disabled)",
+        "version": "NBA_v33.0.8.0",
+        "architecture": "1H + FG spreads/totals required; moneyline optional",
         "markets": 6,
         "markets_list": [
             "1h_spread", "1h_total", "1h_moneyline",
@@ -152,8 +112,6 @@ def mock_feature_builder():
         "predicted_total": 225.5,
         "predicted_margin_1h": 2.5,
         "predicted_total_1h": 112.5,
-        "predicted_margin_q1": 1.2,
-        "predicted_total_q1": 56.5,
     })
     return builder
 
@@ -184,13 +142,14 @@ def test_health_endpoint_with_engine(app_with_engine):
     assert data["status"] == "ok"
     from src.serving.app import app as fastapi_app
     assert data["version"] == fastapi_app.version
-    assert data["architecture"] == "6-model independent (Q1 disabled)"
+    assert data["architecture"] == "1H + FG spreads/totals required; moneyline optional"
     assert data["markets"] == 6
     assert data["engine_loaded"] is True
-    # Verify only active 6 markets are listed (Q1 disabled)
-    assert "1h_spread" in data["markets_list"]
-    assert "fg_spread" in data["markets_list"]
-    assert "q1_spread" not in data["markets_list"]
+    # Verify only active 6 markets are listed
+    assert set(data["markets_list"]) == {
+        "1h_spread", "1h_total", "1h_moneyline",
+        "fg_spread", "fg_total", "fg_moneyline",
+    }
 
 
 def test_health_endpoint_without_engine():
@@ -209,15 +168,15 @@ def test_health_endpoint_without_engine():
     assert data["status"] == "ok"
     from src.serving.app import app as fastapi_app
     assert data["version"] == fastapi_app.version
-    assert data["architecture"] == "6-model independent (Q1 disabled)"
+    assert data["architecture"] == "1H + FG spreads/totals required; moneyline optional"
     assert data["engine_loaded"] is False
 
 
 def test_predict_game_success(app_with_engine):
-    """Test successful single game prediction - v6.0 all 9 markets."""
+    """Test successful single game prediction - v33.0.8.0 (1H + FG)."""
     client = TestClient(app_with_engine)
 
-    # v6.0: Full game lines required, period lines optional
+    # v33.0.8.0: Full game lines required, 1H optional
     request_data = {
         "home_team": "Cleveland Cavaliers",
         "away_team": "Chicago Bulls",
@@ -229,29 +188,19 @@ def test_predict_game_success(app_with_engine):
         "fh_total_line": 111.0,
         "fh_home_ml_odds": -150,
         "fh_away_ml_odds": 130,
-        "q1_spread_line": -1.0,
-        "q1_total_line": 55.5,
-        "q1_home_ml_odds": -120,
-        "q1_away_ml_odds": 100,
     }
 
     response = client.post("/predict/game", json=request_data)
 
     assert response.status_code == 200
     data = response.json()
-    # Check all 3 periods are present
-    assert "first_quarter" in data
+    # Check active periods are present
     assert "first_half" in data
     assert "full_game" in data
     # Check all markets in full_game
     assert "spread" in data["full_game"]
     assert "total" in data["full_game"]
     assert "moneyline" in data["full_game"]
-    # Check first_quarter markets
-    assert "spread" in data["first_quarter"]
-    assert "total" in data["first_quarter"]
-    assert "moneyline" in data["first_quarter"]
-
 
 def test_predict_game_missing_lines():
     """Test prediction fails when required lines are missing - STRICT MODE."""
@@ -304,7 +253,7 @@ def test_predict_game_no_engine():
 
 
 def test_predict_game_with_only_fg_lines(app_with_engine):
-    """Test prediction with only full game lines (1H and Q1 are optional)."""
+    """Test prediction with only full game lines (1H is optional)."""
     client = TestClient(app_with_engine)
 
     # Minimal request - only FG lines required

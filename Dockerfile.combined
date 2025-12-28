@@ -67,7 +67,7 @@ ENV FUNCTIONS_WORKER_RUNTIME=python
 ENV FUNCTIONS_EXTENSION_VERSION=~4
 ENV SEASONS_TO_PROCESS=2025-2026
 
-# Verify models directory (6 markets: 1H + FG only, Q1 disabled)
+# Verify models directory (6 markets: 1H + FG only)
 RUN echo "=== NBA_v33.0.8.0 Models ===" && \
     if [ -d /app/data/processed/models ]; then \
       echo "✓ Models directory exists"; \

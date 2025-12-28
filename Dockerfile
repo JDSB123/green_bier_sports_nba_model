@@ -1,4 +1,4 @@
-# NBA_v33.0.6.0 - Production Container - STRICT MODE
+# NBA_v33.0.8.0 - Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
 #
 # STRICT MODE: FRESH DATA ONLY
@@ -47,7 +47,7 @@ FROM python:3.11.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="NBA_v33.0.6.0"
+LABEL version="NBA_v33.0.8.0"
 LABEL description="NBA Production Picks Model - STRICT MODE - 6 Independent Markets (1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app
@@ -79,8 +79,7 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 
 # Verify ALL 6 REQUIRED model files exist (fail fast if missing)
 # 6 markets: 1H (3) + FG (3), with 1H having separate feature files
-# NOTE: Q1 markets disabled in NBA_v33.0.1.0+
-RUN echo "=== NBA_v33.0.6.0 Model Verification ===" && \
+RUN echo "=== NBA_v33.0.8.0 Model Verification ===" && \
     echo "Checking for 6 independent market models (1H + FG)..." && \
     ls -la /app/data/processed/models/ && \
     echo "" && \
@@ -143,7 +142,7 @@ ENV FILTER_MONEYLINE_MIN_EDGE_PCT=0.03
 ENV ALLOWED_ORIGINS=*
 
 # STRICT MODE - All 6 markets required, FRESH DATA ONLY (baked-in env defaults)
-ENV NBA_MODEL_VERSION=NBA_v33.0.6.0
+ENV NBA_MODEL_VERSION=NBA_v33.0.8.0
 ENV NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
 ENV NBA_PERIODS=first_half,full_game
 ENV NBA_STRICT_MODE=true

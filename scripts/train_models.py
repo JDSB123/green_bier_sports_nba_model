@@ -1,7 +1,5 @@
 """
-Train NBA prediction models for all 6 active markets.
-
-NBA v6.0: 6 INDEPENDENT Markets Training Script (Q1 Disabled)
+Train NBA prediction models for all 6 active markets (1H + FG).
 
 Usage:
     python scripts/train_models.py                          # Train all 6 markets
@@ -9,7 +7,7 @@ Usage:
     python scripts/train_models.py --market 1h              # Train 1H only (3 models)
     python scripts/train_models.py --model-type gradient_boosting
 
-Markets (All INDEPENDENT models - Q1 DISABLED):
+Markets (All INDEPENDENT models):
     1H (First Half):
         1h_spread    - First Half Spreads
         1h_total     - First Half Totals
@@ -21,7 +19,7 @@ Markets (All INDEPENDENT models - Q1 DISABLED):
         fg_moneyline - Full Game Moneyline
 
 ARCHITECTURE:
-    Each period (Q1, 1H, FG) uses INDEPENDENT features computed from
+    Each period (1H, FG) uses INDEPENDENT features computed from
     historical data for that specific period. No cross-period dependencies.
 
 Features include:
@@ -31,7 +29,7 @@ Features include:
     - ELO ratings
     - Injury impact estimation (when injury data available)
     - RLM (Reverse Line Movement) signals (when betting splits available)
-    - Period-specific historical performance (Q1 PPG, 1H margin, etc.)
+    - Period-specific historical performance (1H margin, etc.)
 """
 from __future__ import annotations
 import argparse
@@ -60,7 +58,6 @@ from src.config import settings
 from src.modeling.models import (
     SpreadsModel, TotalsModel, MoneylineModel, ModelMetrics,
     FirstHalfSpreadsModel, FirstHalfTotalsModel, FirstHalfMoneylineModel,
-    FirstQuarterSpreadsModel, FirstQuarterTotalsModel, FirstQuarterMoneylineModel,
 )
 from src.modeling.model_tracker import ModelTracker, ModelVersion
 from src.modeling.feature_config import (
@@ -73,7 +70,7 @@ from src.modeling.period_features import MODEL_CONFIGS, get_model_features
 
 
 # Model version for tracking
-MODEL_VERSION = "6.0.0"
+MODEL_VERSION = "33.0.8.0"
 
 # Market configurations mapping
 MARKET_CONFIG = {
@@ -126,31 +123,6 @@ MARKET_CONFIG = {
         "line_col": None,
         "period": "1h",
         "output_file": "1h_moneyline_model.pkl",
-    },
-    # First Quarter Markets
-    "q1_spread": {
-        "name": "First Quarter Spread",
-        "model_class": FirstQuarterSpreadsModel,
-        "label_col": "q1_spread_covered",
-        "line_col": "q1_spread_line",
-        "period": "q1",
-        "output_file": "q1_spread_model.joblib",
-    },
-    "q1_total": {
-        "name": "First Quarter Total",
-        "model_class": FirstQuarterTotalsModel,
-        "label_col": "q1_total_over",
-        "line_col": "q1_total_line",
-        "period": "q1",
-        "output_file": "q1_total_model.joblib",
-    },
-    "q1_moneyline": {
-        "name": "First Quarter Moneyline",
-        "model_class": FirstQuarterMoneylineModel,
-        "label_col": "home_q1_win",
-        "line_col": None,
-        "period": "q1",
-        "output_file": "q1_moneyline_model.joblib",
     },
 }
 
@@ -268,7 +240,7 @@ def train_single_market(
     tracker: ModelTracker,
 ) -> Optional[ModelMetrics]:
     """
-    Train a single market model (one of the 9 independent models).
+    Train a single market model (one of the 6 independent models).
     
     Args:
         market_key: One of 'fg_spread', 'fg_total', 'fg_moneyline', '1h_spread', etc.
@@ -330,15 +302,15 @@ def train_single_market(
         print(f"  [WARN] Could not get features: {e}")
         features = get_spreads_features() if "spread" in market_key else get_totals_features()
 
-    # For 1H/Q1 models, use lower threshold and fallback to FG features if needed
+    # For 1H models, use lower threshold and fallback to FG features if needed
     min_pct = 0.3
-    if period in ("1h", "q1"):
+    if period == "1h":
         min_pct = 0.15  # Lower threshold for period-specific models
 
     try:
         available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=min_pct)
     except ValueError:
-        # Fallback: use FG features for 1H/Q1 models
+        # Fallback: use FG features for 1H models
         print(f"  [INFO] Using FG features for {market_key} (period features unavailable)")
         if "spread" in market_key:
             features = get_spreads_features()
@@ -605,32 +577,6 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
             df["1h_total_over"] = df.apply(
                 lambda r: int(r["actual_1h_total"] > r["1h_total_line"])
                 if pd.notna(r.get("1h_total_line")) else None,
-                axis=1
-            )
-    
-    # First quarter labels
-    if "home_q1" in df.columns and "away_q1" in df.columns:
-        df["home_q1"] = pd.to_numeric(df["home_q1"], errors="coerce")
-        df["away_q1"] = pd.to_numeric(df["away_q1"], errors="coerce")
-        
-        if "home_q1_win" not in df.columns:
-            df["home_q1_win"] = (df["home_q1"] > df["away_q1"]).astype(int)
-        
-        if "actual_q1_margin" not in df.columns:
-            df["actual_q1_margin"] = df["home_q1"] - df["away_q1"]
-            df["actual_q1_total"] = df["home_q1"] + df["away_q1"]
-        
-        if "q1_spread_covered" not in df.columns and "q1_spread_line" in df.columns:
-            df["q1_spread_covered"] = df.apply(
-                lambda r: int(r["actual_q1_margin"] > -r["q1_spread_line"])
-                if pd.notna(r.get("q1_spread_line")) else None,
-                axis=1
-            )
-        
-        if "q1_total_over" not in df.columns and "q1_total_line" in df.columns:
-            df["q1_total_over"] = df.apply(
-                lambda r: int(r["actual_q1_total"] > r["q1_total_line"])
-                if pd.notna(r.get("q1_total_line")) else None,
                 axis=1
             )
     
@@ -1162,9 +1108,9 @@ def main():
     )
     parser.add_argument(
         "--market",
-        choices=["fg", "1h", "q1", "all"],
+        choices=["fg", "1h", "all"],
         default="all",
-        help="Which markets to train: fg (full game), 1h (first half), q1 (first quarter), or all (default)",
+        help="Which markets to train: fg (full game), 1h (first half), or all (default)",
     )
     parser.add_argument(
         "--ensemble",
@@ -1185,8 +1131,6 @@ def main():
         markets = ["fg_spread", "fg_total", "fg_moneyline"]
     elif args.market == "1h":
         markets = ["1h_spread", "1h_total", "1h_moneyline"]
-    elif args.market == "q1":
-        markets = ["q1_spread", "q1_total", "q1_moneyline"]
     else:
         markets = list(MARKET_CONFIG.keys())
     

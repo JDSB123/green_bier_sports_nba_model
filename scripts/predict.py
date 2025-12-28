@@ -4,7 +4,6 @@ Generate predictions for ALL markets using unified prediction engine.
 Production-ready predictor with smart filtering for all markets:
 - Full Game: Spreads, Totals, Moneyline
 - First Half: Spreads, Totals, Moneyline
-- First Quarter: Spreads, Totals, Moneyline
 """
 import os
 from dotenv import load_dotenv
@@ -73,7 +72,7 @@ def generate_rationale(
     Returns bullet-point formatted string.
     """
     rationale_bullets = []
-    is_partial_market = ("1H" in play_type) or ("Q1" in play_type)
+    is_partial_market = "1H" in play_type
     now_cst = datetime.now(CST)
     
     # Calculate expected value
@@ -289,7 +288,7 @@ async def fetch_upcoming_games(target_date: datetime.date):
                 # Fetch 1H odds specifically
                 event_odds = await the_odds.fetch_event_odds(
                     event_id,
-                    markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1"
+                    markets="spreads_h1,totals_h1,h2h_h1"
                 )
                 
                 # MERGE instead of overwrite
@@ -333,11 +332,6 @@ def extract_lines(game: dict, home_team: str):
         "fh_total": None,
         "fh_home_ml": None,
         "fh_away_ml": None,
-        # First quarter
-        "q1_spread": None,
-        "q1_total": None,
-        "q1_home_ml": None,
-        "q1_away_ml": None,
     }
 
     for bm in game.get("bookmakers", []):
@@ -385,24 +379,6 @@ def extract_lines(game: dict, home_team: str):
                         lines["fh_home_ml"] = outcome.get("price")
                     else:
                         lines["fh_away_ml"] = outcome.get("price")
-
-            elif market_key == "spreads_q1":
-                for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == home_team:
-                        lines["q1_spread"] = outcome.get("point")
-                        break
-
-            elif market_key == "totals_q1":
-                for outcome in market.get("outcomes", []):
-                    lines["q1_total"] = outcome.get("point")
-                    break
-
-            elif market_key == "h2h_q1":
-                for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == home_team:
-                        lines["q1_home_ml"] = outcome.get("price")
-                    else:
-                        lines["q1_away_ml"] = outcome.get("price")
 
     return lines
 
@@ -493,15 +469,10 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
                 fh_total_line=lines["fh_total"],
                 fh_home_ml_odds=lines["fh_home_ml"],
                 fh_away_ml_odds=lines["fh_away_ml"],
-                q1_spread_line=lines["q1_spread"],
-                q1_total_line=lines["q1_total"],
-                q1_home_ml_odds=lines["q1_home_ml"],
-                q1_away_ml_odds=lines["q1_away_ml"],
             )
 
             fg_preds = all_preds["full_game"]
             fh_preds = all_preds["first_half"]
-            q1_preds = all_preds["first_quarter"]
 
             # Display FG predictions
             print("\nFULL GAME:")
@@ -510,9 +481,6 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             # Display 1H predictions
             print("\nFIRST HALF:")
             display_market_predictions(fh_preds, lines, market_type="fh", features=features, home_team=home_team, away_team=away_team, splits=splits)
-
-            print("\nFIRST QUARTER:")
-            display_market_predictions(q1_preds, lines, market_type="q1", features=features, home_team=home_team, away_team=away_team, splits=splits)
 
             # Store prediction
             if commence_time:
@@ -535,9 +503,6 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             # Add 1H predictions
             prediction_dict.update(format_predictions_for_csv(fh_preds, lines, prefix="fh"))
 
-            # Add Q1 predictions
-            prediction_dict.update(format_predictions_for_csv(q1_preds, lines, prefix="q1"))
-
             predictions.append(prediction_dict)
 
         except Exception as e:
@@ -554,13 +519,13 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 
 
 def display_market_predictions(preds: dict, lines: dict, market_type: str, features: dict, home_team: str, away_team: str, splits: Any = None):
-    """Display predictions for a market type (FG, 1H, Q1)."""
+    """Display predictions for a market type (FG or 1H)."""
     if market_type == "fg":
         prefix = "fg"
     elif market_type == "fh":
         prefix = "fh"
     else:
-        prefix = "q1"
+        raise ValueError(f"Unsupported market type: {market_type}")
 
     # Spread
     if "spread" in preds:
@@ -718,10 +683,9 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
             fire = calculate_fire_rating(conf, edge)
             fire_str = "🔥" * fire
             
-            # Determine Type (FG, 1H, Q1)
+            # Determine Type (FG or 1H)
             if "FG" in market_type: type_str = "FG"
             elif "1H" in market_type: type_str = "1H"
-            elif "Q1" in market_type: type_str = "Q1"
             else: type_str = "??"
 
             # Format Pick
@@ -773,14 +737,6 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
         # 1H Total
         if pd.notna(row.get('fh_total_line')):
              add_row("1H Total", row['fh_total_bet_side'], -110, row['fh_total_pred'], row['fh_total_line'], row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
-
-        # Q1 Spread
-        if pd.notna(row.get('q1_spread_line')):
-             add_row("Q1 Spread", row['q1_spread_bet_side'], -110, row['q1_spread_pred_margin'], row['q1_spread_line'], row['q1_spread_edge'], row['q1_spread_confidence'], row['q1_spread_passes_filter'])
-
-        # Q1 Total
-        if pd.notna(row.get('q1_total_line')):
-             add_row("Q1 Total", row['q1_total_bet_side'], -110, row['q1_total_pred'], row['q1_total_line'], row['q1_total_edge'], row['q1_total_confidence'], row['q1_total_passes_filter'])
 
     lines.append("")
     lines.append("=" * 120)

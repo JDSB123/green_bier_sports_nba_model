@@ -3,15 +3,17 @@ NBA_v33.0.8.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
-PRODUCTION: 4 INDEPENDENT Markets (Moneyline DISABLED)
+PRODUCTION: 6 INDEPENDENT Markets (1H + FG spreads/totals/moneylines)
 
 First Half (1H):
 - 1H Spread
 - 1H Total
+- 1H Moneyline
 
 Full Game (FG):
 - FG Spread
 - FG Total
+- FG Moneyline
 
 STRICT MODE: Every request fetches fresh data from APIs.
 No assumptions, no defaults - all data must be explicitly provided.
@@ -90,7 +92,7 @@ limiter = Limiter(key_func=get_remote_address)
 # --- Request/Response Models - NBA_v33.0.8.0 ---
 
 class GamePredictionRequest(BaseModel):
-    """Request for single game prediction - 4 markets (1H + FG, moneyline disabled)."""
+    """Request for single game prediction - 6 markets (1H + FG spreads/totals/moneylines)."""
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
     # Full game lines - REQUIRED
@@ -137,7 +139,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.8.0: 4 markets (1H+FG for Spread, Total; moneyline disabled). Q1 removed.
+    NBA_v33.0.8.0: 6 markets (1H+FG for Spread, Total, Moneyline). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -171,7 +173,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("v33.0.8.0 STRICT MODE: Using 1H/FG only (4 markets; moneyline disabled)")
+    logger.info("v33.0.8.0 STRICT MODE: Using 1H/FG models (6 markets including moneylines)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
@@ -186,7 +188,7 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"v33.0.8.0 initialized - {model_info['markets']}/4 markets loaded: {model_info['markets_list']}")
+    logger.info(f"v33.0.8.0 initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
@@ -268,7 +270,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v33.0.8.0 with 4 markets (moneyline disabled)."""
+    """Check API health - v33.0.8.0 with 6 markets (moneyline included)."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -280,13 +282,10 @@ def health(request: Request):
         "status": "ok",
         "version": RELEASE_VERSION,
         "mode": "STRICT",
-        "architecture": "4-model independent (1H + FG spreads/totals; moneyline disabled)",
+        "architecture": "1H + FG spreads/totals required; moneyline optional",
         "caching": "DISABLED - fresh data every request",
         "markets": model_info.get("markets", 0),
-        "markets_list": [
-            "1h_spread", "1h_total",
-            "fg_spread", "fg_total",
-        ],
+        "markets_list": model_info.get("markets_list", []),
         "periods": ["first_half", "full_game"],
         "engine_loaded": engine_loaded,
         "model_info": model_info,
@@ -604,8 +603,8 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v33.0.8.0: 4 markets (1H + FG only). Moneyline disabled. Q1 removed entirely.
-    Returns 1H/FG for Spread and Total.
+    v33.0.8.0: 6 markets (1H + FG spreads/totals/moneylines). Q1 removed entirely.
+    Returns 1H/FG for spread, total, and moneyline when available.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0: Engine not loaded - models missing")
@@ -665,7 +664,7 @@ async def get_slate_predictions(
             fh_home_ml = odds.get("fh_home_ml")
             fh_away_ml = odds.get("fh_away_ml")
 
-            # Require spread or total lines (moneyline disabled)
+            # Require spread or total lines; moneyline odds remain optional
             has_fg_lines = fg_spread is not None or fg_total is not None
             has_fh_lines = fh_spread is not None or fh_total is not None
 
@@ -686,7 +685,7 @@ async def get_slate_predictions(
                 fh_away_ml_odds=fh_away_ml,
             )
 
-            # Count plays (4 markets: 1H + FG spreads/totals)
+            # Count plays (6 markets: 1H + FG spreads/totals/moneylines)
             game_plays = 0
             game_date = target_date.strftime("%Y-%m-%d")
             for period in ["first_half", "full_game"]:
@@ -863,7 +862,7 @@ async def get_executive_summary(
             if fg_spread is None or fg_total is None:
                 continue
 
-            # Get predictions for 4 markets (1H + FG spreads/totals)
+            # Get predictions for 6 markets (1H + FG spreads/totals/moneylines)
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
@@ -1209,7 +1208,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     Generate predictions for a specific matchup.
 
     v33.0.8.0: STRICT MODE - Fetches fresh data from all APIs.
-    4 markets (1H+FG for Spread, Total; moneyline disabled).
+    6 markets (1H+FG for Spread, Total, Moneyline).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
@@ -1223,7 +1222,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             req.home_team, req.away_team
         )
 
-        # Predict all 4 markets (1H + FG spreads/totals)
+        # Predict all 6 markets (1H + FG spreads/totals/moneylines)
         preds = app.state.engine.predict_all_markets(
             features,
             fg_spread_line=req.fg_spread_line,

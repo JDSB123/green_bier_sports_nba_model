@@ -126,22 +126,38 @@ def load_kaggle_data(path: str, seasons: Optional[List[int]] = None) -> pd.DataF
         "q2_away": "away_q2",
         "q3_away": "away_q3",
         "q4_away": "away_q4",
-        "spread": "spread_line",
         "total": "total_line",
-        "h2_spread": "1h_spread_line",  # h2 = first half in kaggle format
         "h2_total": "1h_total_line",
     })
+
+    # Convert Kaggle spread format to standard home spread format
+    # Kaggle: spread is always positive, whos_favored indicates which team
+    # Standard: negative = home favored, positive = home underdog
+    # Example: spread=5, whos_favored=home -> home_spread=-5 (home gives 5 points)
+    # Example: spread=5, whos_favored=away -> home_spread=+5 (home gets 5 points)
+    df["spread_line"] = df.apply(
+        lambda r: -r["spread"] if r.get("whos_favored") == "home" else r["spread"],
+        axis=1
+    )
+    df["1h_spread_line"] = df.apply(
+        lambda r: -r["h2_spread"] if r.get("whos_favored") == "home" else r["h2_spread"]
+        if pd.notna(r.get("h2_spread")) else None,
+        axis=1
+    )
 
     # Compute labels
     df["home_win"] = (df["home_score"] > df["away_score"]).astype(int)
     df["actual_margin"] = df["home_score"] - df["away_score"]
     df["actual_total"] = df["home_score"] + df["away_score"]
 
-    # Spread covered (home team covers if actual_margin > -spread_line)
-    # Note: spread_line is typically negative for favorite, positive for underdog
-    # If home is -5 favorite, they need to win by more than 5 to cover
+    # Spread covered (home team covers if actual_margin > spread_line)
+    # With proper sign: home_spread=-5 means home must win by >5 to cover
+    # actual_margin=7, spread_line=-5 -> 7 > -5 = True (home covered)
+    # actual_margin=3, spread_line=-5 -> 3 > -5 = True but home didn't cover by 5!
+    # WRONG - need: actual_margin > -spread_line for negative spreads
+    # OR: actual_margin + spread_line > 0
     df["spread_covered"] = df.apply(
-        lambda r: int(r["actual_margin"] > -r["spread_line"])
+        lambda r: int(r["actual_margin"] + r["spread_line"] > 0)
         if pd.notna(r.get("spread_line")) else None,
         axis=1
     )
@@ -161,7 +177,7 @@ def load_kaggle_data(path: str, seasons: Optional[List[int]] = None) -> pd.DataF
     df["actual_1h_total"] = df["home_1h_score"] + df["away_1h_score"]
 
     df["1h_spread_covered"] = df.apply(
-        lambda r: int(r["actual_1h_margin"] > -r["1h_spread_line"])
+        lambda r: int(r["actual_1h_margin"] + r["1h_spread_line"] > 0)
         if pd.notna(r.get("1h_spread_line")) else None,
         axis=1
     )

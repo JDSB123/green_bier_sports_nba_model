@@ -1,9 +1,6 @@
-"""Tests for the UnifiedPredictionEngine and PeriodPredictor - v6.0.
+"""Tests for the UnifiedPredictionEngine and PeriodPredictor - v33.0.8.0.
 
-Tests all 9 INDEPENDENT markets:
-- First Quarter: Spread, Total, Moneyline
-- First Half: Spread, Total, Moneyline
-- Full Game: Spread, Total, Moneyline
+Active markets: First Half and Full Game (spreads, totals, moneylines).
 """
 
 import pytest
@@ -45,19 +42,17 @@ class TestPeriodPredictor:
         return {
             "home_ppg": 115.0,
             "away_ppg": 110.0,
-            "home_papg": 108.0,
-            "away_papg": 112.0,
-            "predicted_margin": 5.0,
-            "predicted_total": 225.0,
-            "predicted_margin_1h": 2.5,
-            "predicted_total_1h": 112.5,
-            "predicted_margin_q1": 1.2,
-            "predicted_total_q1": 56.0,
-            "home_win_pct": 0.65,
-            "away_win_pct": 0.45,
-            "home_rest_days": 2,
-            "away_rest_days": 1,
-        }
+        "home_papg": 108.0,
+        "away_papg": 112.0,
+        "predicted_margin": 5.0,
+        "predicted_total": 225.0,
+        "predicted_margin_1h": 2.5,
+        "predicted_total_1h": 112.5,
+        "home_win_pct": 0.65,
+        "away_win_pct": 0.45,
+        "home_rest_days": 2,
+        "away_rest_days": 1,
+    }
 
     @pytest.fixture
     def period_predictor(self, mock_spread_model, mock_total_model, mock_moneyline_model):
@@ -180,16 +175,14 @@ class TestUnifiedPredictionEngine:
 
     def test_get_model_info_returns_correct_structure(self, tmp_path):
         """Test get_model_info returns expected structure."""
-        from src.prediction.engine import UnifiedPredictionEngine
+        from src.prediction.engine import UnifiedPredictionEngine, MODEL_VERSION
 
         # Create engine directly without calling __init__
         engine = UnifiedPredictionEngine.__new__(UnifiedPredictionEngine)
         engine.models_dir = tmp_path
-        engine.q1_predictor = MagicMock()
         engine.h1_predictor = MagicMock()
         engine.fg_predictor = MagicMock()
         engine.loaded_models = {
-            "q1_spread": True, "q1_total": True, "q1_moneyline": True,
             "1h_spread": True, "1h_total": True, "1h_moneyline": True,
             "fg_spread": True, "fg_total": True, "fg_moneyline": True,
         }
@@ -197,13 +190,13 @@ class TestUnifiedPredictionEngine:
         info = engine.get_model_info()
 
         assert "version" in info
-        assert info["version"] == "6.6"
+        assert info["version"] == MODEL_VERSION
         assert "markets" in info
-        assert info["markets"] == 9
+        assert info["markets"] == len([k for k, v in engine.loaded_models.items() if v])
         assert "markets_list" in info
 
     def test_predict_all_markets_returns_expected_periods(self):
-        """Test predict_all_markets returns active periods with 3 markets each (Q1 optional)."""
+        """Test predict_all_markets returns active periods with 3 markets each (1H + FG only)."""
         from src.prediction.engine import UnifiedPredictionEngine
 
         # Create mock engine with mock predictors
@@ -219,13 +212,11 @@ class TestUnifiedPredictionEngine:
         }
 
         mock_predictor = MagicMock()
-        engine.q1_predictor = mock_predictor
         engine.h1_predictor = mock_predictor
         engine.fg_predictor = mock_predictor
 
         # Mock the predict methods to return full period results
-        with patch.object(engine, 'predict_quarter', return_value=mock_period_result), \
-             patch.object(engine, 'predict_first_half', return_value=mock_period_result), \
+        with patch.object(engine, 'predict_first_half', return_value=mock_period_result), \
              patch.object(engine, 'predict_full_game', return_value=mock_period_result):
 
             features = {"home_ppg": 110, "away_ppg": 105, "predicted_margin": 5}
@@ -236,13 +227,10 @@ class TestUnifiedPredictionEngine:
                 fg_total_line=220.0,
                 fh_spread_line=-1.5,
                 fh_total_line=110.0,
-                q1_spread_line=-0.5,
-                q1_total_line=55.0,
                 home_ml_odds=-150,
                 away_ml_odds=130,
             )
 
-            # Q1 is disabled in current architecture; 1H and FG must exist
             assert "first_half" in result
             assert "full_game" in result
 

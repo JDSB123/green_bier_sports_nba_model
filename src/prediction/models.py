@@ -1,8 +1,7 @@
 """
 Model loading and management for predictions.
 
-NBA v6.0: 9 independent markets (Q1 + 1H + FG):
-- Q1 Spread, Total, Moneyline
+NBA v33.0.8.0: 6 independent markets (1H + FG):
 - 1H Spread, Total, Moneyline
 - FG Spread (60.6% acc), Total (59.2% acc), Moneyline (65.5% acc)
 """

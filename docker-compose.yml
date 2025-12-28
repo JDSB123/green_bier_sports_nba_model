@@ -1,11 +1,11 @@
-# NBA v33.0.7.0 - Docker Compose Production Configuration (6 Independent Markets)
+# NBA v33.0.8.0 - Docker Compose Production Configuration (6 Independent Markets)
 #
 # CONFIGURATION (via .env file or environment):
 #   NBA_API_PORT - External port (default: 8090)
 #   REQUIRE_API_AUTH - Enable API key auth (default: false)
 #   SERVICE_API_KEY - API key if auth enabled
 #
-# Markets (6 independent prediction models - Q1 disabled in v33.0.1.0+):
+# Markets (6 independent prediction models - 1H + FG only):
 
 #   1H: 1h_spread, 1h_total, 1h_moneyline
 #   FG: fg_spread, fg_total, fg_moneyline
@@ -20,7 +20,7 @@ version: "3.8"
 
 services:
   # ==========================================================================
-  # NBA v33.0.7.0 - Production API (6 Independent Markets)
+  # NBA v33.0.8.0 - Production API (6 Independent Markets)
   # ==========================================================================
   nba-v33-api:
     build:
@@ -52,7 +52,7 @@ services:
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
 
-      # v33.0.7.0 configuration (6 independent markets - Q1 disabled)
+      # v33.0.8.0 configuration (6 independent markets - 1H + FG)
       - NBA_MODEL_VERSION=NBA_v33.0.8.0
       - NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
       - NBA_PERIODS=first_half,full_game

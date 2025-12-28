@@ -226,7 +226,7 @@ def validate_premium_features() -> Dict[str, Dict[str, any]]:
             "configured": bool(settings.the_odds_api_key),
             "required": True,
             "keys_needed": ["THE_ODDS_API_KEY"],
-            "provides": ["spreads", "totals", "moneylines", "period markets (Q1/1H)"],
+            "provides": ["spreads", "totals", "moneylines", "period markets (1H)"],
         },
         "game_data": {
             "name": "API-Basketball (Team/Game Stats)",

@@ -203,7 +203,7 @@ class FeatureEngineer:
         period: str = "fg",
     ) -> Dict[str, float]:
         """
-        Compute period-specific rolling stats (Q1, 1H, or FG).
+        Compute period-specific rolling stats (1H or FG).
 
         This method computes INDEPENDENT statistics for each period using
         actual historical data for that period, not scaled from FG stats.
@@ -212,7 +212,7 @@ class FeatureEngineer:
             games_df: DataFrame with historical games (must have quarter columns)
             team: Team name to compute stats for
             as_of_date: Compute stats as of this date (exclusive)
-            period: "q1", "1h", or "fg"
+            period: "1h" or "fg"
 
         Returns:
             Dictionary of period-specific statistics
@@ -223,9 +223,9 @@ class FeatureEngineer:
 
         has_quarter_data = all(col in games_df.columns for col in quarter_cols)
 
-        if period in ["q1", "1h"] and not has_quarter_data:
+        if period == "1h" and not has_quarter_data:
             logger.warning(
-                f"Quarter columns not available for {period} stats. "
+                "Quarter columns not available for 1H stats. "
                 f"Missing columns will result in empty stats."
             )
             return {}
@@ -243,21 +243,7 @@ class FeatureEngineer:
 
         # Compute period-specific scores - NO ZERO-FILLING!
         # Games with missing quarter data are EXCLUDED, not corrupted with zeros.
-        if period == "q1":
-            if has_quarter_data:
-                # Only include games where Q1 data exists
-                home_games = home_games.dropna(subset=["home_q1", "away_q1"])
-                away_games = away_games.dropna(subset=["away_q1", "home_q1"])
-                if len(home_games) + len(away_games) < 3:
-                    logger.debug(f"Insufficient Q1 data for {team}: {len(home_games)} home, {len(away_games)} away games with Q1 scores")
-                    return {}
-                home_games["team_score"] = home_games["home_q1"]
-                home_games["opp_score"] = home_games["away_q1"]
-                away_games["team_score"] = away_games["away_q1"]
-                away_games["opp_score"] = away_games["home_q1"]
-            else:
-                return {}
-        elif period == "1h":
+        if period == "1h":
             if has_quarter_data:
                 # Only include games where Q1 AND Q2 data exists
                 home_games = home_games.dropna(subset=["home_q1", "home_q2", "away_q1", "away_q2"])
@@ -271,11 +257,13 @@ class FeatureEngineer:
                 away_games["opp_score"] = away_games["home_q1"] + away_games["home_q2"]
             else:
                 return {}
-        else:  # fg
+        elif period == "fg":
             home_games["team_score"] = home_games["home_score"]
             home_games["opp_score"] = home_games["away_score"]
             away_games["team_score"] = away_games["away_score"]
             away_games["opp_score"] = away_games["home_score"]
+        else:
+            raise ValueError(f"Unsupported period: {period}")
 
         home_games["is_home"] = 1
         away_games["is_home"] = 0
@@ -366,7 +354,7 @@ class FeatureEngineer:
         features: Dict[str, float] = {}
 
         # Build features for each period independently
-        for period in ["q1", "1h", "fg"]:
+        for period in ["1h", "fg"]:
             home_period_stats = self.compute_period_rolling_stats(
                 historical_df, home_team, game_date, period
             )
@@ -1236,15 +1224,6 @@ class FeatureEngineer:
             if "predicted_total_1h" in features:
                 features["fh_total_vs_predicted"] = features["predicted_total_1h"] - fh_total
 
-        # First Quarter lines - PREMIUM API DATA
-        if "q1_spread_line" in game and pd.notna(game["q1_spread_line"]):
-            q1_spread = game["q1_spread_line"]
-            features["q1_spread_line"] = q1_spread
-
-        if "q1_total_line" in game and pd.notna(game["q1_total_line"]):
-            q1_total = game["q1_total_line"]
-            features["q1_total_line"] = q1_total
-
         # Moneyline odds - ALL PERIODS
         if "home_ml_odds" in game and pd.notna(game["home_ml_odds"]):
             features["home_ml_odds"] = game["home_ml_odds"]
@@ -1260,12 +1239,6 @@ class FeatureEngineer:
         if "fh_away_ml" in game and pd.notna(game["fh_away_ml"]):
             features["fh_away_ml"] = game["fh_away_ml"]
             features["1h_away_ml"] = game["fh_away_ml"]
-
-        # Q1 moneyline
-        if "q1_home_ml" in game and pd.notna(game["q1_home_ml"]):
-            features["q1_home_ml"] = game["q1_home_ml"]
-        if "q1_away_ml" in game and pd.notna(game["q1_away_ml"]):
-            features["q1_away_ml"] = game["q1_away_ml"]
 
         # *** INJURY IMPACT FEATURES ***
         # Injury features - has_injury_data indicates whether we have real API data

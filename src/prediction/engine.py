@@ -479,16 +479,16 @@ class UnifiedPredictionEngine:
         self.h1_predictor: Optional[PeriodPredictor] = None
         self.fg_predictor: Optional[PeriodPredictor] = None
 
-        logger.info("[v33.0.7.0] Loading 1H + FG models...")
+        logger.info("[v33.0.8.0] Loading 1H + FG models...")
 
-        # Load 1H models - WILL RAISE if any missing
-        logger.info("Loading 1H models (spread, total; moneyline disabled)...")
+        # Load 1H models - spread/total required, moneyline optional
+        logger.info("Loading 1H models (spread, total; moneyline optional)...")
         h1_models = self._load_period_models("1h")
         self.h1_predictor = PeriodPredictor("1h", *h1_models)
         logger.info("1H predictor initialized (2/2 models - Moneyline disabled)")
 
-        # Load FG models - WILL RAISE if any missing
-        logger.info("Loading FG models (spread, total; moneyline disabled)...")
+        # Load FG models - spread/total required, moneyline optional
+        logger.info("Loading FG models (spread, total; moneyline optional)...")
         fg_models = self._load_period_models("fg")
         self.fg_predictor = PeriodPredictor("fg", *fg_models)
         logger.info("FG predictor initialized (2/2 models - Moneyline disabled)")
@@ -496,9 +496,12 @@ class UnifiedPredictionEngine:
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
 
-        # Verify loaded models (v33.0.6.0 expects 4 total: 1H + FG Spreads/Totals)
-        # Moneyline is disabled, so we filter those out from the count check
-        loaded_count = sum(1 for k, v in self.loaded_models.items() if v and (k.startswith("1h_") or k.startswith("fg_")) and "moneyline" not in k)
+        # Verify loaded models (v33.0.8.0 expects spreads/totals; moneyline optional)
+        loaded_count = sum(
+            1
+            for k, v in self.loaded_models.items()
+            if v and (k.startswith("1h_") or k.startswith("fg_")) and "moneyline" not in k
+        )
         if loaded_count < 4:
             missing = [k for k, v in self.loaded_models.items() if (k.startswith("1h_") or k.startswith("fg_")) and not v and "moneyline" not in k]
             logger.warning(
@@ -506,7 +509,7 @@ class UnifiedPredictionEngine:
                 f"Some predictions may be skipped."
             )
         else:
-            logger.info("SUCCESS: All 4/4 models loaded (1H + FG Spreads/Totals)")
+            logger.info("SUCCESS: All required models loaded (1H + FG spreads/totals)")
 
     def _load_period_models(
         self,
@@ -826,7 +829,7 @@ class UnifiedPredictionEngine:
         """Return info about loaded models."""
         return {
             "version": MODEL_VERSION,
-            "architecture": "4-model independent (1H + FG spreads/totals; moneyline disabled)",
+            "architecture": "1H + FG spreads/totals required; moneyline optional",
             "markets": sum(1 for v in self.loaded_models.values() if v),
             "markets_list": [k for k, v in self.loaded_models.items() if v],
             "periods": ["first_half", "full_game"],
