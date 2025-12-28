@@ -59,22 +59,32 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ### Prerequisites
 ## CI/CD
 
-![Build & Push](https://github.com/JDSB123/green_bier_sports_nba_model/actions/workflows/build-push-acr.yml/badge.svg?branch=main)
+### Current Workflow Architecture
 
-- Build and push on main: see [.github/workflows/build-push-acr.yml](.github/workflows/build-push-acr.yml)
-   - Builds Dockerfile.combined
-   - Pushes tags to nbagbsacr.azurecr.io: `git-<sha>` and `NBA_v33.0`
-   - Requires repo secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
-- Manual deploy to Azure Container Apps: see [.github/workflows/deploy-aca.yml](.github/workflows/deploy-aca.yml)
-   - Input: tag to deploy (`NBA_v33.0` or `git-<sha>`)
-   - Targets Container App `nba-gbsv-api` in Resource Group `nba-gbsv-model-rg`
-- ACR retention (optional): see [.github/workflows/acr-retention.yml](.github/workflows/acr-retention.yml)
-   - Weekly prune of old `git-*` tags, keeps latest N and preserves `NBA_v33.0`
+| Workflow | Trigger | Purpose | Status |
+|----------|---------|---------|--------|
+| **GBS NBA - Build & Deploy** | Auto on `push` to main | Build Docker image + deploy to Container Apps | ✅ **PRIMARY** |
+| **GBS NBA - Deploy Function** | Auto on changes to `azure/function_app/**` | Deploy Function App | ✅ **ACTIVE** |
+| Build and Push NBA Image to ACR | ⚠️ Deprecated | Redundant (GBS NBA - Build & Deploy does this) | ⚠️ Semi-deprecated |
+| Deploy NBA Image to ACA | Manual (`workflow_dispatch`) | Manual rollback only | ⚠️ Fallback only |
+| ACR Retention | Weekly schedule + manual | Clean up old `git-*` tags | ✅ Active |
+
+**Recommended Flow:**
+1. **Push code** → `GBS NBA - Build & Deploy` automatically builds + deploys to Azure Container Apps
+2. **Function changes** → `GBS NBA - Deploy Function` automatically deploys to Azure Functions
+
+**For manual rollback:**
+```bash
+gh workflow run "Deploy NBA Image to Azure Container Apps" \
+  -f tag=NBA_v33.0.8.0
+```
 
 Quick verify (production):
 
 ```bash
-curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health
+# Get current API URL
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/health"
 ```
 
 
