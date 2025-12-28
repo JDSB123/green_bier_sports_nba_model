@@ -140,36 +140,28 @@ def calculate_comprehensive_edge(
                 # Use actual model probabilities from audited moneyline model
                 model_home_prob = float(ml_pred["home_win_prob"])
                 model_away_prob = float(ml_pred["away_win_prob"])
-            else:
-                # Fallback to simplified if structure is unexpected
-                model_home_prob = 0.5 + (fg_predicted_margin * 0.02)
-                model_home_prob = max(0.4, min(0.9, model_home_prob))
-                model_away_prob = 1 - model_home_prob
+                
+                market_home_prob = american_to_implied_prob(fg_home_ml)
+                fg_ml_edge_home = model_home_prob - market_home_prob
+                
+                market_away_prob = american_to_implied_prob(fg_away_ml)
+                fg_ml_edge_away = model_away_prob - market_away_prob
+                
+                ml_threshold = edge_thresholds.get("moneyline", 0.03)
+                if fg_ml_edge_home > ml_threshold or fg_ml_edge_away > ml_threshold:
+                    if fg_ml_edge_home > fg_ml_edge_away:
+                        fg_ml_pick = home_team
+                        fg_ml_confidence = min(fg_ml_edge_home * 2.5, 0.75)
+                        fg_ml_rationale = f"Model gives {home_team} {model_home_prob*100:.1f}% vs market {market_home_prob*100:.1f}%"
+                    else:
+                        fg_ml_pick = away_team
+                        fg_ml_confidence = min(fg_ml_edge_away * 2.5, 0.75)
+                        fg_ml_rationale = f"Model gives {away_team} {model_away_prob*100:.1f}% vs market {market_away_prob*100:.1f}%"
         else:
-            # Fallback: Simplified ML calculation (only if engine predictions not available)
-            # This should rarely happen in production - log a warning
-            import logging
-            logging.warning(f"Using simplified moneyline calculation for {home_team} vs {away_team} - engine predictions not available")
-            model_home_prob = 0.5 + (fg_predicted_margin * 0.02)  # Simplified
-            model_home_prob = max(0.4, min(0.9, model_home_prob))
-            model_away_prob = 1 - model_home_prob
-        
-        market_home_prob = american_to_implied_prob(fg_home_ml)
-        fg_ml_edge_home = model_home_prob - market_home_prob
-        
-        market_away_prob = american_to_implied_prob(fg_away_ml)
-        fg_ml_edge_away = model_away_prob - market_away_prob
-        
-        ml_threshold = edge_thresholds.get("moneyline", 0.03)
-        if fg_ml_edge_home > ml_threshold or fg_ml_edge_away > ml_threshold:
-            if fg_ml_edge_home > fg_ml_edge_away:
-                fg_ml_pick = home_team
-                fg_ml_confidence = min(fg_ml_edge_home * 2.5, 0.75)
-                fg_ml_rationale = f"Model gives {home_team} {model_home_prob*100:.1f}% vs market {market_home_prob*100:.1f}%"
-            else:
-                fg_ml_pick = away_team
-                fg_ml_confidence = min(fg_ml_edge_away * 2.5, 0.75)
-                fg_ml_rationale = f"Model gives {away_team} {model_away_prob*100:.1f}% vs market {market_away_prob*100:.1f}%"
+            # v33.0.8.0: Moneyline DISABLED - No fallback calculation
+            # If engine doesn't provide moneyline prediction, we do NOT generate a pick
+            fg_ml_pick = None
+            fg_ml_rationale = "Moneyline disabled (v33.0.8.0)"
     
     result["full_game"]["moneyline"] = {
         "market_home_odds": fg_home_ml,
