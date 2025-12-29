@@ -13,6 +13,7 @@ import asyncio
 import argparse
 import random
 import logging
+import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Any, Optional
@@ -31,6 +32,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 DATA_DIR = PROJECT_ROOT / "data"
 MODELS_DIR = PROJECT_ROOT / "models" / "production"
+ARCHIVE_DIR = PROJECT_ROOT / "archive"
 
 from src.config import settings
 from src.ingestion import the_odds
@@ -755,6 +757,22 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
     print(f"[OK] Saved {len(predictions)} predictions to {output_path}")
     print(f"{'='*80}")
 
+    def archive_copy(src: Path, dest_dir: Path, filename: str) -> None:
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest_dir / filename)
+
+    archive_ts = datetime.now(CST).strftime("%Y%m%d_%H%M%S")
+    date_tag = target_date.strftime("%Y%m%d") if target_date else datetime.now(CST).strftime("%Y%m%d")
+
+    try:
+        archive_copy(
+            output_path,
+            ARCHIVE_DIR / "predictions",
+            f"predictions_{date_tag}_{archive_ts}.csv",
+        )
+    except Exception as e:
+        print(f"[WARN] Failed to archive predictions: {e}")
+
     # Generate betting card with ALL markets
     all_plays = []
 
@@ -833,6 +851,14 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(text_report)
     print(f"[OK] Saved formatted text report to {report_path}")
+    try:
+        archive_copy(
+            report_path,
+            ARCHIVE_DIR / "analysis",
+            f"slate_analysis_{date_tag}_{archive_ts}.txt",
+        )
+    except Exception as e:
+        print(f"[WARN] Failed to archive slate analysis: {e}")
 
     if all_plays:
         # Save betting card CSV
@@ -840,6 +866,14 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
         betting_card_path = DATA_DIR / "processed" / "betting_card_v3.csv"
         betting_card_df.to_csv(betting_card_path, index=False)
         print(f"[OK] Saved betting card to {betting_card_path}")
+        try:
+            archive_copy(
+                betting_card_path,
+                ARCHIVE_DIR / "picks",
+                f"betting_card_{date_tag}_{archive_ts}.csv",
+            )
+        except Exception as e:
+            print(f"[WARN] Failed to archive betting card: {e}")
     else:
         print("\nNO PLAYS TODAY")
         print("All games filtered out - no bets meet criteria")
@@ -852,6 +886,14 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
             with open(text_path, "w", encoding="utf-8") as f:
                 f.write(text_report)
             print(f"[OK] Saved formatted text report to {text_path}")
+            try:
+                archive_copy(
+                    text_path,
+                    ARCHIVE_DIR / "analysis",
+                    f"slate_analysis_{date_tag}_{archive_ts}.txt",
+                )
+            except Exception as e:
+                print(f"[WARN] Failed to archive slate analysis: {e}")
 
 
 def main():

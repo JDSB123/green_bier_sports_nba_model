@@ -39,7 +39,7 @@ from slowapi.errors import RateLimitExceeded
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 
-from src.config import settings
+from src.config import settings, PROJECT_ROOT
 from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
 from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
@@ -127,6 +127,7 @@ class SlateResponse(BaseModel):
     total_plays: int
     odds_as_of_utc: Optional[str] = None
     odds_snapshot_path: Optional[str] = None
+    odds_archive_path: Optional[str] = None
 
 
 # --- API Setup - NBA_v33.0.8.0 ---
@@ -634,9 +635,16 @@ async def get_slate_predictions(
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
+    odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
         odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+        archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
+        odds_archive_path = save_odds(
+            games,
+            out_dir=str(archive_dir),
+            prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}",
+        )
     except Exception as e:
         logger.warning(f"Could not save odds snapshot: {e}")
 
@@ -750,6 +758,7 @@ async def get_slate_predictions(
         total_plays=total_plays,
         odds_as_of_utc=odds_as_of_utc,
         odds_snapshot_path=odds_snapshot_path,
+        odds_archive_path=odds_archive_path,
     )
 
 
@@ -824,9 +833,16 @@ async def get_executive_summary(
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
+    odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
         odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+        archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
+        odds_archive_path = save_odds(
+            games,
+            out_dir=str(archive_dir),
+            prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}",
+        )
     except Exception as e:
         logger.warning(f"Could not save odds snapshot: {e}")
 
@@ -1131,6 +1147,7 @@ async def get_executive_summary(
         "plays": formatted_plays,
         "odds_as_of_utc": odds_as_of_utc,
         "odds_snapshot_path": odds_snapshot_path,
+        "odds_archive_path": odds_archive_path,
         "legend": {
             "fire_rating": {
                 "ELITE": "70%+ confidence AND 5+ pt edge",
@@ -1192,9 +1209,16 @@ async def get_comprehensive_slate_analysis(
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
+    odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
         odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+        archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
+        odds_archive_path = save_odds(
+            games,
+            out_dir=str(archive_dir),
+            prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}",
+        )
     except Exception as e:
         logger.warning(f"Could not save odds snapshot: {e}")
 
@@ -1299,6 +1323,7 @@ async def get_comprehensive_slate_analysis(
         "edge_thresholds": edge_thresholds,
         "odds_as_of_utc": odds_as_of_utc,
         "odds_snapshot_path": odds_snapshot_path,
+        "odds_archive_path": odds_archive_path,
     })
 
 

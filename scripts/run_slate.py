@@ -24,6 +24,7 @@ This script:
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -44,6 +45,7 @@ import os
 
 PROJECT_ROOT = Path(__file__).parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
+ARCHIVE_DIR = PROJECT_ROOT / "archive" / "slate_outputs"
 CST = ZoneInfo("America/Chicago")
 
 # API URL from environment - no hardcoded ports
@@ -535,6 +537,13 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         with open(output_file, "w", encoding="utf-8") as f:
             f.write("\n".join(output_lines))
         print(f"\n[SAVED] Output saved to: {output_file}")
+        try:
+            ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+            archive_file = ARCHIVE_DIR / output_file.name
+            shutil.copy2(output_file, archive_file)
+            print(f"[ARCHIVE] Output archived to: {archive_file}")
+        except Exception as e:
+            print(f"[WARN] Failed to archive output: {e}")
 
     except TimeoutError:
         print("Request timed out - API may be processing")
