@@ -87,7 +87,10 @@ htmlcov/
 # Archived scripts
 scripts/archive/
 scripts/archived/
-docs/archive/
+
+# Archive folder: historical outputs for audit trail (COMMIT TO GIT)
+# archive/ is intentionally tracked for ROI verification and historical analysis
+# DO NOT ignore archive/ - it provides audit trail for predictions
 
 # Azure Function App
 azure/function_app/local.settings.json
