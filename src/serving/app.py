@@ -26,7 +26,7 @@ import sys
 import uuid
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path as PathLib
-from datetime import datetime
+from datetime import datetime, timezone
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Path, Request
@@ -125,6 +125,8 @@ class SlateResponse(BaseModel):
     date: str
     predictions: List[Dict[str, Any]]
     total_plays: int
+    odds_as_of_utc: Optional[str] = None
+    odds_snapshot_path: Optional[str] = None
 
 
 # --- API Setup - NBA_v33.0.8.0 ---
@@ -630,6 +632,14 @@ async def get_slate_predictions(
     if not games:
         return SlateResponse(date=str(target_date), predictions=[], total_plays=0)
 
+    odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    odds_snapshot_path = None
+    try:
+        from src.ingestion.the_odds import save_odds
+        odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+    except Exception as e:
+        logger.warning(f"Could not save odds snapshot: {e}")
+
     # Fetch splits
     splits_dict = {}
     if use_splits:
@@ -654,7 +664,7 @@ async def get_slate_predictions(
             )
 
             # Extract consensus lines
-            odds = extract_consensus_odds(game)
+            odds = extract_consensus_odds(game, as_of_utc=odds_as_of_utc)
             fg_spread = odds.get("home_spread")
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
@@ -737,7 +747,9 @@ async def get_slate_predictions(
     return SlateResponse(
         date=str(target_date),
         predictions=results,
-        total_plays=total_plays
+        total_plays=total_plays,
+        odds_as_of_utc=odds_as_of_utc,
+        odds_snapshot_path=odds_snapshot_path,
     )
 
 
@@ -775,7 +787,7 @@ async def get_executive_summary(
 
     v33.0.8.0 STRICT MODE: Fetches fresh data from all APIs.
     Returns a clean actionable betting card with all picks that pass filters.
-    Sorted by game time, then fire rating.
+    Sorted by EV% (desc), then game time.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
@@ -787,6 +799,7 @@ async def get_executive_summary(
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
     )
+    from src.utils.odds import devig_two_way, expected_value, kelly_fraction, american_to_implied_prob
     from zoneinfo import ZoneInfo
     
     CST = ZoneInfo("America/Chicago")
@@ -809,6 +822,14 @@ async def get_executive_summary(
             "summary": "No games scheduled"
         }
 
+    odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    odds_snapshot_path = None
+    try:
+        from src.ingestion.the_odds import save_odds
+        odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+    except Exception as e:
+        logger.warning(f"Could not save odds snapshot: {e}")
+
     # Fetch betting splits
     splits_dict = {}
     if use_splits:
@@ -817,6 +838,18 @@ async def get_executive_summary(
             splits_dict = await fetch_public_betting_splits(games, source="auto")
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
+
+    def _pick_ev_fields(p_model: float | None, pick_odds: int | None, odds_a: int | None, odds_b: int | None, pick_is_a: bool) -> tuple[float | None, float | None, float | None]:
+        if pick_odds is None or p_model is None:
+            return None, None, None
+        p_fair_a, p_fair_b = devig_two_way(odds_a, odds_b)
+        p_fair = p_fair_a if pick_is_a else p_fair_b
+        if p_fair is None:
+            p_fair = american_to_implied_prob(pick_odds)
+        ev = expected_value(p_model, pick_odds, stake=1.0)
+        ev_pct = (ev * 100) if ev is not None else None
+        kelly = kelly_fraction(p_model, pick_odds, fraction=0.5)
+        return p_fair, ev_pct, kelly
 
     # Process each game and collect plays
     all_plays = []
@@ -849,7 +882,7 @@ async def get_executive_summary(
             matchup_display = f"{away_team} {away_record} @ {home_team} {home_record}"
             
             # Extract odds
-            odds = extract_consensus_odds(game)
+            odds = extract_consensus_odds(game, as_of_utc=odds_as_of_utc)
             fg_spread = odds.get("home_spread")
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
@@ -884,7 +917,17 @@ async def get_executive_summary(
                 bet_side = fg_spread_pred.get("bet_side", "home")
                 pick_team = home_team if bet_side == "home" else away_team
                 pick_line = fg_spread if bet_side == "home" else -fg_spread
-                pick_price = odds.get("home_spread_price", -110)
+                pick_price = odds.get("home_spread_price") if bet_side == "home" else odds.get("away_spread_price")
+                if pick_price is None:
+                    pick_price = odds.get("home_spread_price")
+                p_model = fg_spread_pred.get("home_cover_prob") if bet_side == "home" else fg_spread_pred.get("away_cover_prob")
+                p_fair, ev_pct, kelly = _pick_ev_fields(
+                    p_model,
+                    pick_price,
+                    odds.get("home_spread_price"),
+                    odds.get("away_spread_price"),
+                    bet_side == "home",
+                )
                 model_margin = features.get("predicted_margin", 0)
                 # Format model prediction for BET SIDE team (same team as pick)
                 # model_margin positive = home wins by X
@@ -909,6 +952,11 @@ async def get_executive_summary(
                     "edge": f"{fg_spread_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(fg_spread_pred.get('edge', 0)),
                     "confidence": fg_spread_pred.get("confidence", 0),
+                    "p_model": p_model,
+                    "p_fair": p_fair,
+                    "ev_pct": ev_pct,
+                    "kelly_fraction": kelly,
+                    "odds_as_of_utc": odds_as_of_utc,
                     "fire_rating": get_fire_rating(fg_spread_pred.get("confidence", 0), fg_spread_pred.get("edge", 0))
                 })
             
@@ -918,6 +966,17 @@ async def get_executive_summary(
                 bet_side = fg_total_pred.get("bet_side", "over")
                 model_total = features.get("predicted_total", 0)
                 pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {fg_total}"
+                pick_price = odds.get("total_over_price") if bet_side == "over" else odds.get("total_under_price")
+                if pick_price is None:
+                    pick_price = odds.get("total_price")
+                p_model = fg_total_pred.get("over_prob") if bet_side == "over" else fg_total_pred.get("under_prob")
+                p_fair, ev_pct, kelly = _pick_ev_fields(
+                    p_model,
+                    pick_price,
+                    odds.get("total_over_price"),
+                    odds.get("total_under_price"),
+                    bet_side == "over",
+                )
                 
                 all_plays.append({
                     "time_cst": time_cst_str,
@@ -926,12 +985,17 @@ async def get_executive_summary(
                     "period": "FG",
                     "market": "TOTAL",
                     "pick": pick_display,
-                    "pick_odds": format_american_odds(odds.get("total_price", -110)),
+                    "pick_odds": format_american_odds(pick_price),
                     "model_prediction": f"{model_total:.1f}",
                     "market_line": f"{fg_total}",
                     "edge": f"{fg_total_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(fg_total_pred.get('edge', 0)),
                     "confidence": fg_total_pred.get("confidence", 0),
+                    "p_model": p_model,
+                    "p_fair": p_fair,
+                    "ev_pct": ev_pct,
+                    "kelly_fraction": kelly,
+                    "odds_as_of_utc": odds_as_of_utc,
                     "fire_rating": get_fire_rating(fg_total_pred.get("confidence", 0), fg_total_pred.get("edge", 0))
                 })
             
@@ -944,7 +1008,17 @@ async def get_executive_summary(
                 bet_side = fh_spread_pred.get("bet_side", "home")
                 pick_team = home_team if bet_side == "home" else away_team
                 pick_line = fh_spread if bet_side == "home" else -fh_spread
-                pick_price = odds.get("fh_home_spread_price", -110)
+                pick_price = odds.get("fh_home_spread_price") if bet_side == "home" else odds.get("fh_away_spread_price")
+                if pick_price is None:
+                    pick_price = odds.get("fh_home_spread_price")
+                p_model = fh_spread_pred.get("home_cover_prob") if bet_side == "home" else fh_spread_pred.get("away_cover_prob")
+                p_fair, ev_pct, kelly = _pick_ev_fields(
+                    p_model,
+                    pick_price,
+                    odds.get("fh_home_spread_price"),
+                    odds.get("fh_away_spread_price"),
+                    bet_side == "home",
+                )
                 model_margin_1h = features.get("predicted_margin_1h", 0)
                 # Format model prediction for BET SIDE team (same team as pick)
                 # model_margin positive = home wins by X
@@ -969,6 +1043,11 @@ async def get_executive_summary(
                     "edge": f"{fh_spread_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(fh_spread_pred.get('edge', 0)),
                     "confidence": fh_spread_pred.get("confidence", 0),
+                    "p_model": p_model,
+                    "p_fair": p_fair,
+                    "ev_pct": ev_pct,
+                    "kelly_fraction": kelly,
+                    "odds_as_of_utc": odds_as_of_utc,
                     "fire_rating": get_fire_rating(fh_spread_pred.get("confidence", 0), fh_spread_pred.get("edge", 0))
                 })
             
@@ -978,6 +1057,17 @@ async def get_executive_summary(
                 bet_side = fh_total_pred.get("bet_side", "over")
                 model_total_1h = features.get("predicted_total_1h", 0)
                 pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {fh_total}"
+                pick_price = odds.get("fh_total_over_price") if bet_side == "over" else odds.get("fh_total_under_price")
+                if pick_price is None:
+                    pick_price = odds.get("fh_total_price")
+                p_model = fh_total_pred.get("over_prob") if bet_side == "over" else fh_total_pred.get("under_prob")
+                p_fair, ev_pct, kelly = _pick_ev_fields(
+                    p_model,
+                    pick_price,
+                    odds.get("fh_total_over_price"),
+                    odds.get("fh_total_under_price"),
+                    bet_side == "over",
+                )
                 
                 all_plays.append({
                     "time_cst": time_cst_str,
@@ -986,12 +1076,17 @@ async def get_executive_summary(
                     "period": "1H",
                     "market": "TOTAL",
                     "pick": pick_display,
-                    "pick_odds": format_american_odds(odds.get("fh_total_price", -110)),
+                    "pick_odds": format_american_odds(pick_price),
                     "model_prediction": f"{model_total_1h:.1f}",
                     "market_line": f"{fh_total}",
                     "edge": f"{fh_total_pred.get('edge', 0):+.1f} pts",
                     "edge_raw": abs(fh_total_pred.get('edge', 0)),
                     "confidence": fh_total_pred.get("confidence", 0),
+                    "p_model": p_model,
+                    "p_fair": p_fair,
+                    "ev_pct": ev_pct,
+                    "kelly_fraction": kelly,
+                    "odds_as_of_utc": odds_as_of_utc,
                     "fire_rating": get_fire_rating(fh_total_pred.get("confidence", 0), fh_total_pred.get("edge", 0))
                 })
             
@@ -999,9 +1094,12 @@ async def get_executive_summary(
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
             continue
     
-    # Sort by time, then by fire rating (descending), then by edge (descending)
-    fire_order = {"ELITE": 3, "STRONG": 2, "GOOD": 1}
-    all_plays.sort(key=lambda x: (x["sort_time"], -fire_order.get(x["fire_rating"], 0), -x["edge_raw"]))
+    # Sort by EV%, then by time (descending EV is primary)
+    def _ev_value(play: Dict[str, Any]) -> float:
+        ev = play.get("ev_pct")
+        return float(ev) if ev is not None else -9999.0
+
+    all_plays.sort(key=lambda x: (-_ev_value(x), x["sort_time"]))
     
     # Format for output - remove internal fields
     formatted_plays = []
@@ -1017,6 +1115,11 @@ async def get_executive_summary(
             "market_line": play["market_line"],
             "edge": play["edge"],
             "confidence": f"{play['confidence']*100:.0f}%",
+            "p_model": play.get("p_model"),
+            "p_fair": play.get("p_fair"),
+            "ev_pct": play.get("ev_pct"),
+            "kelly_fraction": play.get("kelly_fraction"),
+            "odds_as_of_utc": play.get("odds_as_of_utc"),
             "fire_rating": play["fire_rating"]
         })
     
@@ -1026,12 +1129,15 @@ async def get_executive_summary(
         "version": RELEASE_VERSION,
         "total_plays": len(formatted_plays),
         "plays": formatted_plays,
+        "odds_as_of_utc": odds_as_of_utc,
+        "odds_snapshot_path": odds_snapshot_path,
         "legend": {
             "fire_rating": {
                 "ELITE": "70%+ confidence AND 5+ pt edge",
                 "STRONG": "60%+ confidence AND 3+ pt edge",
                 "GOOD": "Passes all filters"
             },
+            "sorting": "EV% (desc), then game time",
             "periods": {"FG": "Full Game", "1H": "First Half"},
             "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}
         }
@@ -1084,6 +1190,14 @@ async def get_comprehensive_slate_analysis(
     if not games:
         return {"date": str(target_date), "analysis": [], "summary": "No games found"}
 
+    odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    odds_snapshot_path = None
+    try:
+        from src.ingestion.the_odds import save_odds
+        odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+    except Exception as e:
+        logger.warning(f"Could not save odds snapshot: {e}")
+
     # Fetch betting splits
     splits_dict = {}
     if use_splits:
@@ -1116,7 +1230,7 @@ async def get_comprehensive_slate_analysis(
             fh_features = features.copy()
             
             # Extract odds
-            odds = extract_consensus_odds(game)
+            odds = extract_consensus_odds(game, as_of_utc=odds_as_of_utc)
             
             # Get betting splits for this game
             betting_splits = splits_dict.get(game_key)
@@ -1182,7 +1296,9 @@ async def get_comprehensive_slate_analysis(
             "fg_spread", "fg_total"
         ],
         "analysis": analysis_results,
-        "edge_thresholds": edge_thresholds
+        "edge_thresholds": edge_thresholds,
+        "odds_as_of_utc": odds_as_of_utc,
+        "odds_snapshot_path": odds_snapshot_path,
     })
 
 

@@ -223,6 +223,16 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         print(line)
         output_lines.append(line)
 
+    def format_ev_line(p_data: dict) -> str | None:
+        """Format EV/Kelly line if available."""
+        ev_pct = p_data.get("ev_pct")
+        kelly = p_data.get("kelly_fraction")
+        if ev_pct is None and kelly is None:
+            return None
+        ev_str = f"{ev_pct:+.1f}%" if isinstance(ev_pct, (int, float)) else "N/A"
+        kelly_str = f"{kelly:.2f}" if isinstance(kelly, (int, float)) else "N/A"
+        return f"       EV: {ev_str}  |  Kelly: {kelly_str}"
+
     log(f"\n{'='*100}")
     log(f"NBA PREDICTIONS - {date_str.upper()}")
     log(f"Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')}")
@@ -256,14 +266,14 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         log(f"Found {len(analysis)} game(s)\n")
 
         # --- BLUF TABLE ---
-        log("=" * 140)
-        log(f"{'RECOMMENDED PICKS':^140}")
-        log("=" * 140)
+        log("=" * 155)
+        log(f"{'RECOMMENDED PICKS':^155}")
+        log("=" * 155)
 
         # Header
-        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Model':<10} | {'Market':<10} | {'Edge':<8} | {'Fire'}"
+        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Model':<10} | {'Market':<10} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
         log(header)
-        log("-" * 140)
+        log("-" * 155)
 
         for game in analysis:
             home = game.get("home_team", "")
@@ -328,6 +338,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     model_val = f"{proj:+.1f}"
                     market_val = f"{pick_line:+.1f}"
 
+                ev_pct = p_data.get("ev_pct")
+                ev_str = f"{ev_pct:+.1f}%" if isinstance(ev_pct, (int, float)) else "N/A"
+
                 picks.append({
                     "market": market_name,
                     "pick": pick_str,
@@ -335,6 +348,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     "model": model_val,
                     "market_line": market_val,
                     "edge": f"{edge_pts:+.1f} pts",
+                    "ev": ev_str,
                     "fire": fire
                 })
 
@@ -356,13 +370,13 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 for p in picks:
                     t_str = time_cst if first else ""
                     m_str = matchup_str if first else ""
-                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<10} | {p['market_line']:<10} | {p['edge']:<8} | {p['fire']}")
+                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<10} | {p['market_line']:<10} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
                     first = False
-                log("-" * 140)
+                log("-" * 155)
             else:
                 # No picks for this game
-                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<10} | {'-':<10} | {'-':<8} | -")
-                log("-" * 140)
+                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<10} | {'-':<10} | {'-':<8} | {'-':<7} | -")
+                log("-" * 155)
 
         log("\n" + "=" * 100)
         log("DETAILED RATIONALE")
@@ -415,6 +429,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     log(f"       Model: {pick_team} {proj_margin:+.1f}")
                     log(f"       Market: {pick_line:+.1f} ({format_odds(market_odds_val)})")
                     log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                    ev_line = format_ev_line(spread)
+                    if ev_line:
+                        log(ev_line)
 
                 # Total
                 total = fg.get("total", {})
@@ -431,6 +448,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     log(f"       Model: {model_total:.1f}")
                     log(f"       Market: {line:.1f} ({format_odds(market_odds_val)})")
                     log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                    ev_line = format_ev_line(total)
+                    if ev_line:
+                        log(ev_line)
 
                 # Moneyline
                 ml = fg.get("moneyline", {})
@@ -450,6 +470,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     log(f"       Model: {rationale}")
                     log(f"       Market: {format_odds(ml_odds)}")
                     log(f"       Edge: {edge_pts:+.1f} pts  |  {fire}")
+                    ev_line = format_ev_line(ml)
+                    if ev_line:
+                        log(ev_line)
 
             # First Half picks
             fh = edge_data.get("first_half", {})
@@ -476,6 +499,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         log(f"       Model: {pick_team} {proj_margin:+.1f}")
                         log(f"       Market: {pick_line:+.1f} ({format_odds(market_odds_val)})")
                         log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                        ev_line = format_ev_line(spread)
+                        if ev_line:
+                            log(ev_line)
 
                     total = fh.get("total", {})
                     if total.get("pick"):
@@ -491,6 +517,9 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         log(f"       Model: {model_total:.1f}")
                         log(f"       Market: {line:.1f} ({format_odds(market_odds_val)})")
                         log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                        ev_line = format_ev_line(total)
+                        if ev_line:
+                            log(ev_line)
 
             log()
 

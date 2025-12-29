@@ -462,10 +462,11 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
 
         fg_spread = fg.get("spread") or {}
         pick_line = fg_spread.get("pick_line") or fg_spread.get("market_line")
+        market_line = fg_spread.get("market_line") or pick_line
         pick = fg_spread.get("pick")
         spread_result = evaluate_spread(
             actual_margin,
-            pick_line,
+            market_line,
             pick,
             home_team,
             away_team,
@@ -488,8 +489,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
                 "market_line": fg_spread.get("market_line"),
                 "evaluation_logic": {
                     "picked_home": pick == home_team if pick else None,
-                    "line_used": pick_line,
-                    "check_condition": f"actual_margin >= {-pick_line if pick_line else 0}" if pick == home_team else f"actual_margin <= {-pick_line if pick_line else 0}" if pick == away_team else None
+                    "line_used": market_line,
+                    "check_condition": f"actual_margin >= {-market_line if market_line else 0}" if pick == home_team else f"actual_margin <= {-market_line if market_line else 0}" if pick == away_team else None
                 }
             }
         )
@@ -547,9 +548,11 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
         )
 
         fh_spread = fh.get("spread") or {}
+        fh_pick_line = fh_spread.get("pick_line") or fh_spread.get("market_line")
+        fh_market_line = fh_spread.get("market_line") or fh_pick_line
         fh_spread_result = evaluate_spread(
             actual["home_first_half"] - actual["away_first_half"],
-            fh_spread.get("pick_line") or fh_spread.get("market_line"),
+            fh_market_line,
             fh_spread.get("pick"),
             home_team,
             away_team,

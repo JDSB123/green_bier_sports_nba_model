@@ -131,9 +131,11 @@ def american_to_implied_prob(american_odds: int) -> float:
         return abs(american_odds) / (abs(american_odds) + 100)
 
 
-def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
+def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str, Any]:
     """Extract consensus odds from all bookmakers."""
     bookmakers = game.get("bookmakers", [])
+    if as_of_utc is None:
+        as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     
     # Collect all odds
     h2h_home = []
@@ -147,10 +149,14 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
     spreads_home = []
     spreads_away = []
     totals = []
+    totals_over = []
+    totals_under = []
     # First half markets
     fh_spreads_home = []
     fh_spreads_away = []
     fh_totals = []
+    fh_totals_over = []
+    fh_totals_under = []
     # First quarter markets
     q1_spreads_home = []
     q1_spreads_away = []
@@ -207,12 +213,14 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                             "point": out.get("point"),
                             "price": out.get("price")
                         })
+                        totals_over.append(out.get("price"))
                     elif out.get("name") == "Under":
                         totals.append({
                             "point": out.get("point"),
                             "price": out.get("price"),
                             "side": "Under"
                         })
+                        totals_under.append(out.get("price"))
             
             # First half markets
             # Market keys from API: "spreads_h1", "totals_h1", "h2h_h1"
@@ -236,12 +244,14 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                                 "point": out.get("point"),
                                 "price": out.get("price")
                             })
+                            fh_totals_over.append(out.get("price"))
                         elif out.get("name") == "Under":
                             fh_totals.append({
                                 "point": out.get("point"),
                                 "price": out.get("price"),
                                 "side": "Under"
                             })
+                            fh_totals_under.append(out.get("price"))
             
             # First quarter markets
             # Market keys from API: "spreads_q1", "totals_q1", "h2h_q1"
@@ -283,6 +293,27 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
                             })
     
     # Calculate consensus
+    def _latest_update_utc() -> str | None:
+        updates = []
+        if game.get("last_update"):
+            updates.append(game.get("last_update"))
+        for bm in bookmakers:
+            if bm.get("last_update"):
+                updates.append(bm.get("last_update"))
+            for market in bm.get("markets", []):
+                if market.get("last_update"):
+                    updates.append(market.get("last_update"))
+        parsed = []
+        for ts in updates:
+            try:
+                parsed.append(datetime.fromisoformat(str(ts).replace("Z", "+00:00")))
+            except ValueError:
+                continue
+        if not parsed:
+            return None
+        latest = max(parsed)
+        return latest.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
     result = {
         "home_ml": None,
         "away_ml": None,
@@ -292,22 +323,31 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
         "q1_away_ml": None,
         "home_spread": None,
         "home_spread_price": None,
+        "away_spread_price": None,
         "total": None,
         "total_price": None,
+        "total_over_price": None,
+        "total_under_price": None,
         "home_implied_prob": None,
         "away_implied_prob": None,
         "fh_home_implied_prob": None,
         "fh_away_implied_prob": None,
         "fh_home_spread": None,
         "fh_home_spread_price": None,
+        "fh_away_spread_price": None,
         "fh_total": None,
         "fh_total_price": None,
+        "fh_total_over_price": None,
+        "fh_total_under_price": None,
         "q1_home_implied_prob": None,
         "q1_away_implied_prob": None,
         "q1_home_spread": None,
         "q1_home_spread_price": None,
         "q1_total": None,
         "q1_total_price": None,
+        "odds_aggregation": "median",
+        "as_of_utc": as_of_utc,
+        "last_update_utc": _latest_update_utc(),
     }
     
     if h2h_home:
@@ -341,24 +381,46 @@ def extract_consensus_odds(game: Dict) -> Dict[str, Any]:
         median_price = statistics.median([s.get("price", -110) for s in spreads_home if s.get("price") is not None])
         result["home_spread"] = float(median_spread)
         result["home_spread_price"] = int(median_price)
+    if spreads_away:
+        median_price = statistics.median([s.get("price", -110) for s in spreads_away if s.get("price") is not None])
+        result["away_spread_price"] = int(median_price)
     
     if totals:
         median_total = statistics.median([t.get("point", 220) for t in totals if t.get("point") is not None])
         median_price = statistics.median([t.get("price", -110) for t in totals if t.get("price") is not None])
         result["total"] = float(median_total)
         result["total_price"] = int(median_price)
+    if totals_over:
+        over_prices = [p for p in totals_over if p is not None]
+        if over_prices:
+            result["total_over_price"] = int(statistics.median(over_prices))
+    if totals_under:
+        under_prices = [p for p in totals_under if p is not None]
+        if under_prices:
+            result["total_under_price"] = int(statistics.median(under_prices))
     
     if fh_spreads_home:
         median_fh_spread = statistics.median([s.get("point", 0) for s in fh_spreads_home if s.get("point") is not None])
         median_fh_price = statistics.median([s.get("price", -110) for s in fh_spreads_home if s.get("price") is not None])
         result["fh_home_spread"] = float(median_fh_spread)
         result["fh_home_spread_price"] = int(median_fh_price)
+    if fh_spreads_away:
+        median_fh_price = statistics.median([s.get("price", -110) for s in fh_spreads_away if s.get("price") is not None])
+        result["fh_away_spread_price"] = int(median_fh_price)
     
     if fh_totals:
         median_fh_total = statistics.median([t.get("point", 110) for t in fh_totals if t.get("point") is not None])
         median_fh_price = statistics.median([t.get("price", -110) for t in fh_totals if t.get("price") is not None])
         result["fh_total"] = float(median_fh_total)
         result["fh_total_price"] = int(median_fh_price)
+    if fh_totals_over:
+        over_prices = [p for p in fh_totals_over if p is not None]
+        if over_prices:
+            result["fh_total_over_price"] = int(statistics.median(over_prices))
+    if fh_totals_under:
+        under_prices = [p for p in fh_totals_under if p is not None]
+        if under_prices:
+            result["fh_total_under_price"] = int(statistics.median(under_prices))
     
     # Q1 moneyline
     if q1_h2h_home:
