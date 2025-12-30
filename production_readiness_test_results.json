@@ -1,147 +1,546 @@
 {
-  "timestamp": "2025-12-29T23:02:43.655603",
+  "timestamp": "2025-12-30T13:51:05.276616",
   "test_suites": {
-    "Configuration": false,
-    "Model Loading": false,
-    "API Endpoints": false,
-    "Prediction Engine": false,
-    "Data Ingestion": false,
-    "Feature Engineering": false,
-    "Error Handling": false,
+    "Configuration": true,
+    "Model Loading": true,
+    "API Endpoints": true,
+    "Prediction Engine": true,
+    "Data Ingestion": true,
+    "Feature Engineering": true,
+    "Error Handling": true,
     "Azure Function": true
   },
   "individual_tests": {
     "passed": [
       {
+        "name": "PROJECT_ROOT",
+        "status": "pass",
+        "message": "Valid: C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "API Key: THE_ODDS_API_KEY",
+        "status": "pass",
+        "message": "Set (from env/secrets)",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "API Key: API_BASKETBALL_KEY",
+        "status": "pass",
+        "message": "Set (from env/secrets)",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Env Var: CURRENT_SEASON",
+        "status": "pass",
+        "message": "Set: 2025-2026",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Env Var: SEASONS_TO_PROCESS",
+        "status": "pass",
+        "message": "Set: ['2024-2025', '2025-2026']",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Env Var: DATA_RAW_DIR",
+        "status": "pass",
+        "message": "Set: C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bie",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Env Var: DATA_PROCESSED_DIR",
+        "status": "pass",
+        "message": "Set: C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bie",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Env Var: THE_ODDS_BASE_URL",
+        "status": "pass",
+        "message": "Set: https://api.the-odds-api.com/v4",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Env Var: API_BASKETBALL_BASE_URL",
+        "status": "pass",
+        "message": "Set: https://v1.basketball.api-sports.io",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Filter Thresholds",
+        "status": "pass",
+        "message": "Loaded successfully",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:56.478292"
+      },
+      {
+        "name": "Models Directory",
+        "status": "pass",
+        "message": "Exists: C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\data\\processed\\models",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "Model Files",
+        "status": "pass",
+        "message": "Found 9 model files",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "  - 1h_moneyline_features.pkl",
+        "status": "pass",
+        "message": "144 bytes",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "  - 1h_moneyline_model.pkl",
+        "status": "pass",
+        "message": "9,407 bytes",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "  - 1h_spread_features.pkl",
+        "status": "pass",
+        "message": "1,006 bytes",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "  - 1h_spread_model.pkl",
+        "status": "pass",
+        "message": "4,718 bytes",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "  - 1h_total_features.pkl",
+        "status": "pass",
+        "message": "1,006 bytes",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.580184"
+      },
+      {
+        "name": "UnifiedPredictionEngine",
+        "status": "pass",
+        "message": "Loaded successfully",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.585501"
+      },
+      {
+        "name": "  Markets",
+        "status": "pass",
+        "message": "4 markets",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.585501"
+      },
+      {
+        "name": "  Markets List",
+        "status": "pass",
+        "message": "['1h_spread', '1h_total', 'fg_spread', 'fg_total']",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.585501"
+      },
+      {
+        "name": "Market Coverage",
+        "status": "pass",
+        "message": "All 4 markets present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:57.585501"
+      },
+      {
+        "name": "FastAPI App",
+        "status": "pass",
+        "message": "Found 25 routes",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /health",
+        "status": "pass",
+        "message": "Health check",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /metrics",
+        "status": "pass",
+        "message": "Prometheus metrics",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /verify",
+        "status": "pass",
+        "message": "Model integrity verification",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /markets",
+        "status": "pass",
+        "message": "Market catalog",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /meta",
+        "status": "pass",
+        "message": "Metadata",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /admin/monitoring",
+        "status": "pass",
+        "message": "Monitoring stats",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "GET /admin/cache/stats",
+        "status": "pass",
+        "message": "Cache statistics",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.351699"
+      },
+      {
+        "name": "Engine Initialization",
+        "status": "pass",
+        "message": "Engine loaded",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.356013"
+      },
+      {
+        "name": "FG Prediction",
+        "status": "pass",
+        "message": "Returns spread and total",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Spread.side",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Spread.confidence",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Spread.edge",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Spread.passes_filter",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Total.side",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Total.confidence",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Total.edge",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "  FG Total.passes_filter",
+        "status": "pass",
+        "message": "Present",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.369836"
+      },
+      {
+        "name": "1H Prediction",
+        "status": "pass",
+        "message": "Returns spread and total",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.379520"
+      },
+      {
+        "name": "predict_all_markets",
+        "status": "pass",
+        "message": "Returns both periods",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.402777"
+      },
+      {
+        "name": "The Odds API - Odds",
+        "status": "pass",
+        "message": "Fetched 5 games",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.247741"
+      },
+      {
+        "name": "API-Basketball - Teams",
+        "status": "pass",
+        "message": "Fetched 30 teams",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.724018"
+      },
+      {
+        "name": "Standardization: Los Angeles Lakers",
+        "status": "pass",
+        "message": "\u2192 Los Angeles Lakers",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.724018"
+      },
+      {
+        "name": "Standardization: Lakers",
+        "status": "pass",
+        "message": "\u2192 Los Angeles Lakers",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.725019"
+      },
+      {
+        "name": "Standardization: LAL",
+        "status": "pass",
+        "message": "\u2192 Los Angeles Lakers",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.725684"
+      },
+      {
+        "name": "Standardization: Boston Celtics",
+        "status": "pass",
+        "message": "\u2192 Boston Celtics",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.726203"
+      },
+      {
+        "name": "Team Standardization",
+        "status": "pass",
+        "message": "31 ESPN teams configured",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.726203"
+      },
+      {
+        "name": "RichFeatureBuilder",
+        "status": "pass",
+        "message": "Initialized",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:59.726203"
+      },
+      {
+        "name": "build_game_features",
+        "status": "pass",
+        "message": "Generated 145 features",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.272203"
+      },
+      {
+        "name": "  Feature: home_ppg",
+        "status": "pass",
+        "message": "Present: 118.7",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.272203"
+      },
+      {
+        "name": "  Feature: away_ppg",
+        "status": "pass",
+        "message": "Present: 118.5",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.272203"
+      },
+      {
+        "name": "  Feature: predicted_margin",
+        "status": "pass",
+        "message": "Present: 6.520195723883298",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.272203"
+      },
+      {
+        "name": "  Feature: predicted_total",
+        "status": "pass",
+        "message": "Present: 233.33937987667923",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.272203"
+      },
+      {
+        "name": "  Feature: predicted_margin_1h",
+        "status": "pass",
+        "message": "Present: 2.4",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.272203"
+      },
+      {
+        "name": "  Feature: predicted_total_1h",
+        "status": "pass",
+        "message": "Present: 117.9",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.273209"
+      },
+      {
+        "name": "Feature Completeness",
+        "status": "pass",
+        "message": "All key features present",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.273209"
+      },
+      {
+        "name": "Invalid Input: None",
+        "status": "pass",
+        "message": "Correctly rejected",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.273209"
+      },
+      {
+        "name": "Invalid Input: ''",
+        "status": "pass",
+        "message": "Correctly rejected",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.274209"
+      },
+      {
+        "name": "Invalid Input: '   '",
+        "status": "pass",
+        "message": "Correctly rejected",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.275211"
+      },
+      {
+        "name": "Invalid Input: 'Invalid Team Name XYZ'",
+        "status": "pass",
+        "message": "Correctly rejected",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.275211"
+      },
+      {
+        "name": "Invalid Input: '12345'",
+        "status": "pass",
+        "message": "Correctly rejected",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.275211"
+      },
+      {
+        "name": "Missing Models",
+        "status": "pass",
+        "message": "Correctly raises ModelNotFoundError",
+        "details": null,
+        "timestamp": "2025-12-30T13:51:05.275211"
+      },
+      {
         "name": "Function App File",
         "status": "pass",
         "message": "Exists: C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\azure\\function_app\\function_app.py",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.654097"
+        "timestamp": "2025-12-30T13:51:05.275211"
       },
       {
         "name": "Function: nba-picks",
         "status": "pass",
         "message": "Main trigger endpoint",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.654097"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: menu",
         "status": "pass",
         "message": "Menu endpoint",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: health",
         "status": "pass",
         "message": "Health check",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: weekly-lineup/nba",
         "status": "pass",
         "message": "Website integration",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: bot",
         "status": "pass",
         "message": "Teams bot endpoint",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: fetch_predictions",
         "status": "pass",
         "message": "Defined",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: clear_api_cache",
         "status": "pass",
         "message": "Defined",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: format_teams_card",
         "status": "pass",
         "message": "Defined",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       },
       {
         "name": "Function: post_to_teams",
         "status": "pass",
         "message": "Defined",
         "details": null,
-        "timestamp": "2025-12-29T23:02:43.655603"
+        "timestamp": "2025-12-30T13:51:05.276616"
       }
     ],
-    "failed": [
+    "failed": [],
+    "warnings": [
       {
-        "name": "Configuration",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 110, in test_configuration\n    from src.config import settings, PROJECT_ROOT\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:42.831444"
-      },
-      {
-        "name": "Model Loading",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 177, in test_model_loading\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:42.836138"
-      },
-      {
-        "name": "API Endpoints",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 256, in test_api_endpoints\n    from src.serving import app\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\serving\\app.py\", line 40, in <module>\n    from src.config import settings, PROJECT_ROOT\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:43.339620"
-      },
-      {
-        "name": "Prediction Engine",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 292, in test_prediction_engine\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:43.341619"
-      },
-      {
-        "name": "Data Ingestion",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 425, in test_data_ingestion\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:43.345127"
-      },
-      {
-        "name": "Feature Engineering",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 530, in test_feature_engineering\n    from src.features import RichFeatureBuilder\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\features\\__init__.py\", line 2, in <module>\n    from src.features.rich_features import RichFeatureBuilder\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\features\\rich_features.py\", line 33, in <module>\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:43.651100"
-      },
-      {
-        "name": "Error Handling",
-        "status": "fail",
-        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
-        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 592, in test_error_handling\n    from src.ingestion.standardize import normalize_team_to_espn\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\ingestion\\standardize.py\", line 27, in <module>\n    from src.config import get_nba_season\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
-        "timestamp": "2025-12-29T23:02:43.654097"
+        "name": "The Odds API - Participants",
+        "status": "warn",
+        "message": "No participants returned",
+        "details": null,
+        "timestamp": "2025-12-30T13:50:58.865447"
       }
     ],
-    "warnings": [],
     "skipped": []
   },
   "summary": {
-    "total_tests": 17,
-    "passed": 10,
-    "failed": 7,
-    "warnings": 0,
+    "total_tests": 74,
+    "passed": 73,
+    "failed": 0,
+    "warnings": 1,
     "skipped": 0
   }
 }

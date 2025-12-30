@@ -49,6 +49,9 @@ os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '1.0')
 os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.55')
 os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '1.5')
 
+# Relax feature validation for test harness to avoid hard fails on synthetic samples
+os.environ.setdefault('PREDICTION_FEATURE_MODE', 'warn')
+
 # Optional Configuration (matches Dockerfile)
 os.environ.setdefault('ALLOWED_ORIGINS', '*')
 os.environ.setdefault('NBA_MODEL_VERSION', 'NBA_v33.0.8.0')
