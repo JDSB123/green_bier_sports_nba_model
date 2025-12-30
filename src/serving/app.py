@@ -663,9 +663,9 @@ async def get_slate_predictions(
     odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
-        odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+        odds_snapshot_path = await save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
         archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
-        odds_archive_path = save_odds(
+        odds_archive_path = await save_odds(
             games,
             out_dir=str(archive_dir),
             prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}",
@@ -852,9 +852,9 @@ async def get_executive_summary(
     odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
-        odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+        odds_snapshot_path = await save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
         archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
-        odds_archive_path = save_odds(
+        odds_archive_path = await save_odds(
             games,
             out_dir=str(archive_dir),
             prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}",
@@ -1220,9 +1220,9 @@ async def get_comprehensive_slate_analysis(
     odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
-        odds_snapshot_path = save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+        odds_snapshot_path = await save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
         archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
-        odds_archive_path = save_odds(
+        odds_archive_path = await save_odds(
             games,
             out_dir=str(archive_dir),
             prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}",
