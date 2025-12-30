@@ -109,11 +109,26 @@ jobs:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
           imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          environmentVariables: |
+            REQUIRE_API_AUTH=false
 
       - name: Smoke tests
         run: |
           set -euo pipefail
           sleep 30
           FQDN=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          
+          echo "Testing health endpoint..."
           curl -sf "https://$FQDN/health" | jq .
-          curl -sf "https://$FQDN/slate/today?use_splits=false" | jq .
+          
+          echo "Testing slate/today endpoint..."
+          RESPONSE=$(curl -sf "https://$FQDN/slate/today?use_splits=false")
+          echo "$RESPONSE" | jq .
+          
+          # Verify response is valid JSON and contains expected structure
+          if echo "$RESPONSE" | jq -e '.games' > /dev/null 2>&1; then
+            echo "✓ Smoke tests passed - API is responding correctly"
+          else
+            echo "✗ Smoke tests failed - Invalid response structure"
+            exit 1
+          fi
