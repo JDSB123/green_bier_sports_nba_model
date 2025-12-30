@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-12-29T23:02:43.655603",
+  "test_suites": {
+    "Configuration": false,
+    "Model Loading": false,
+    "API Endpoints": false,
+    "Prediction Engine": false,
+    "Data Ingestion": false,
+    "Feature Engineering": false,
+    "Error Handling": false,
+    "Azure Function": true
+  },
+  "individual_tests": {
+    "passed": [
+      {
+        "name": "Function App File",
+        "status": "pass",
+        "message": "Exists: C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\azure\\function_app\\function_app.py",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.654097"
+      },
+      {
+        "name": "Function: nba-picks",
+        "status": "pass",
+        "message": "Main trigger endpoint",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.654097"
+      },
+      {
+        "name": "Function: menu",
+        "status": "pass",
+        "message": "Menu endpoint",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: health",
+        "status": "pass",
+        "message": "Health check",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: weekly-lineup/nba",
+        "status": "pass",
+        "message": "Website integration",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: bot",
+        "status": "pass",
+        "message": "Teams bot endpoint",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: fetch_predictions",
+        "status": "pass",
+        "message": "Defined",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: clear_api_cache",
+        "status": "pass",
+        "message": "Defined",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: format_teams_card",
+        "status": "pass",
+        "message": "Defined",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      },
+      {
+        "name": "Function: post_to_teams",
+        "status": "pass",
+        "message": "Defined",
+        "details": null,
+        "timestamp": "2025-12-29T23:02:43.655603"
+      }
+    ],
+    "failed": [
+      {
+        "name": "Configuration",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 110, in test_configuration\n    from src.config import settings, PROJECT_ROOT\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:42.831444"
+      },
+      {
+        "name": "Model Loading",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 177, in test_model_loading\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:42.836138"
+      },
+      {
+        "name": "API Endpoints",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 256, in test_api_endpoints\n    from src.serving import app\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\serving\\app.py\", line 40, in <module>\n    from src.config import settings, PROJECT_ROOT\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:43.339620"
+      },
+      {
+        "name": "Prediction Engine",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 292, in test_prediction_engine\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:43.341619"
+      },
+      {
+        "name": "Data Ingestion",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 425, in test_data_ingestion\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:43.345127"
+      },
+      {
+        "name": "Feature Engineering",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 530, in test_feature_engineering\n    from src.features import RichFeatureBuilder\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\features\\__init__.py\", line 2, in <module>\n    from src.features.rich_features import RichFeatureBuilder\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\features\\rich_features.py\", line 33, in <module>\n    from src.config import settings\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:43.651100"
+      },
+      {
+        "name": "Error Handling",
+        "status": "fail",
+        "message": "Exception: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/",
+        "details": "Traceback (most recent call last):\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\scripts\\test_production_readiness.py\", line 592, in test_error_handling\n    from src.ingestion.standardize import normalize_team_to_espn\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\ingestion\\standardize.py\", line 27, in <module>\n    from src.config import get_nba_season\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 149, in <module>\n    settings = Settings()\n               ^^^^^^^^^^\n  File \"<string>\", line 3, in __init__\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\config.py\", line 117, in <lambda>\n    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict(\"THE_ODDS_API_KEY\"))\n                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 123, in read_secret_strict\n    result = read_secret(secret_name, required=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model\\src\\utils\\secrets.py\", line 96, in read_secret\n    raise SecretNotFoundError(\nsrc.utils.secrets.SecretNotFoundError: Required secret 'THE_ODDS_API_KEY' not found.\nChecked locations:\n  - Environment variable: THE_ODDS_API_KEY\n  - Docker secrets: \\run\\secrets\\THE_ODDS_API_KEY\n  - Local secrets: secrets\\THE_ODDS_API_KEY\n  - App secrets: \\app\\secrets\\THE_ODDS_API_KEY\n\nTo fix:\n  1. Set environment variable: export THE_ODDS_API_KEY=your_key\n  2. Or create file: echo 'your_key' > secrets/THE_ODDS_API_KEY\n  3. Or for Docker: mount secrets volume to /run/secrets/\n",
+        "timestamp": "2025-12-29T23:02:43.654097"
+      }
+    ],
+    "warnings": [],
+    "skipped": []
+  },
+  "summary": {
+    "total_tests": 17,
+    "passed": 10,
+    "failed": 7,
+    "warnings": 0,
+    "skipped": 0
+  }
+}
