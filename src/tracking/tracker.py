@@ -45,14 +45,12 @@ class TrackedPick:
     away_team: str
     
     # Market info
-    market: Literal["q1_spread", "q1_total", "q1_moneyline",
-                    "fh_spread", "fh_total", "fh_moneyline",
-                    "fg_spread", "fg_total", "fg_moneyline"]
-    period: Literal["q1", "1h", "fg"]
-    market_type: Literal["spread", "total", "moneyline"]
+    market: Literal["fh_spread", "fh_total", "fg_spread", "fg_total"]
+    period: Literal["1h", "fg"]
+    market_type: Literal["spread", "total"]
     
     # Prediction details (recorded BEFORE game)
-    side: str  # "home_cover", "away_cover", "over", "under", "home_ml", "away_ml"
+    side: str  # "home_cover", "away_cover", "over", "under"
     line: Optional[float]  # The betting line at time of prediction
     confidence: float  # 0.0-1.0
     passes_filter: bool  # Whether this met our betting threshold
@@ -372,18 +370,6 @@ class PickTracker:
                 else:
                     return "push", total
                     
-        elif pick.market_type == "moneyline":
-            if pick.side in ["home_ml", "home"]:
-                if margin > 0:
-                    return "win", margin
-                else:
-                    return "loss", margin
-            else:  # away_ml
-                if margin < 0:
-                    return "win", margin
-                else:
-                    return "loss", margin
-        
         return "pending", None
     
     def get_roi_summary(
@@ -396,7 +382,7 @@ class PickTracker:
         """
         Calculate ROI summary for tracked picks.
         
-        Assumes -110 odds for spread/total, uses actual ML odds if available.
+        Assumes -110 odds for spread/total.
         """
         picks = self.get_picks(date=date, passes_filter_only=passes_filter_only)
         

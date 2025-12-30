@@ -56,9 +56,6 @@ class PeriodFeatureConfig:
     # Total-specific features
     total_features: List[str] = field(default_factory=list)
 
-    # Moneyline-specific features
-    moneyline_features: List[str] = field(default_factory=list)
-
     # Context features (rest, travel - same for all periods but scaled)
     context_features: List[str] = field(default_factory=list)
 
@@ -119,31 +116,6 @@ H1_FEATURES = PeriodFeatureConfig(
         "away_over_pct_1h",
         # Combined pace
         "expected_pace_1h",       # Expected 1H combined scoring
-    ],
-    moneyline_features=[
-        # 1H moneyline-specific (v34.0: Enhanced with market signals)
-        "ml_prob_home_1h",        # 1H home lead probability
-        "ml_elo_diff",            # Elo difference (shared)
-        "ml_momentum_1h",         # Recent 1H momentum
-        "home_1h_lead_pct",       # How often home leads at half
-        "away_1h_lead_pct",
-        "ml_pythagorean_diff_1h", # Pythagorean expectation for 1H
-        # v34.0: Core ML features (shared)
-        "ml_win_prob_diff",       # Win probability difference
-        "ml_estimated_home_prob", # Base home win probability
-        "ml_h2h_factor",          # H2H adjustment factor
-        # v34.0: Market signal features
-        "ml_market_implied_home", # Fair market probability
-        "ml_model_vs_market",     # Model disagreement with market
-        "ml_public_home_pct",     # Public betting % on home ML
-        "ml_is_rlm",              # Reverse line movement flag
-        "ml_sharp_side",          # Sharp money indicator
-        "ml_ticket_money_diff",   # Ticket vs money divergence
-        "ml_line_movement",       # Implied prob change from open
-        # v34.0: Injury features
-        "ml_injury_adjusted_prob",  # Win prob adjusted for injuries
-        "ml_home_injury_impact",    # Home team injury PPG loss
-        "ml_away_injury_impact",    # Away team injury PPG loss
     ],
     context_features=[
         # Scaled for 1H
@@ -242,37 +214,6 @@ FG_FEATURES = PeriodFeatureConfig(
         "is_rlm_total",
         "sharp_side_total",
     ],
-    moneyline_features=[
-        # FG moneyline-specific (v34.0: Enhanced with market signals)
-        "ml_estimated_home_prob", # Home win probability
-        "ml_elo_diff",            # Elo difference
-        "ml_pythagorean_diff",    # Pythagorean expectation
-        "ml_momentum_diff",       # Momentum difference
-        "ml_win_prob_diff",       # Win probability difference
-        "ml_h2h_factor",          # H2H factor
-        "ml_home_win_rate",       # Home team home record
-        "ml_away_win_rate",       # Away team road record
-        # H2H
-        "h2h_margin",
-        "h2h_home_win_pct",
-        "h2h_games",
-        # SOS
-        "home_sos_rating",
-        "away_sos_rating",
-        "sos_diff",
-        # v34.0: Market signal features
-        "ml_market_implied_home", # Fair market probability (vig removed)
-        "ml_model_vs_market",     # Model disagreement with market
-        "ml_public_home_pct",     # Public betting % on home ML
-        "ml_is_rlm",              # Reverse line movement flag
-        "ml_sharp_side",          # Sharp money indicator
-        "ml_ticket_money_diff",   # Ticket vs money divergence
-        "ml_line_movement",       # Implied prob change from open
-        # v34.0: Injury features
-        "ml_injury_adjusted_prob",  # Win prob adjusted for injuries
-        "ml_home_injury_impact",    # Home team injury PPG loss
-        "ml_away_injury_impact",    # Away team injury PPG loss
-    ],
     context_features=[
         # Full impact
         "dynamic_hca",            # Full HCA
@@ -301,7 +242,7 @@ def get_model_features(period: str, market: str) -> List[str]:
 
     Args:
         period: "1h" or "fg"
-        market: "spread", "total", or "moneyline"
+        market: "spread" or "total"
 
     Returns:
         List of feature column names
@@ -322,8 +263,6 @@ def get_model_features(period: str, market: str) -> List[str]:
         features.extend(config.spread_features)
     elif market == "total":
         features.extend(config.total_features)
-    elif market == "moneyline":
-        features.extend(config.moneyline_features)
     else:
         raise ValueError(f"Unknown market: {market}")
 
@@ -357,14 +296,6 @@ MODEL_CONFIGS: Dict[str, Dict] = {
         "features_file": "1h_total_features.pkl",
         "features": get_model_features("1h", "total"),
     },
-    "1h_moneyline": {
-        "period": "1h",
-        "market": "moneyline",
-        "label_col": "home_1h_win",
-        "line_col": None,
-        "model_file": "1h_moneyline_model.pkl",
-        "features": get_model_features("1h", "moneyline"),
-    },
     # Full Game Models
     "fg_spread": {
         "period": "fg",
@@ -381,14 +312,6 @@ MODEL_CONFIGS: Dict[str, Dict] = {
         "line_col": "total_line",
         "model_file": "fg_total_model.joblib",
         "features": get_model_features("fg", "total"),
-    },
-    "fg_moneyline": {
-        "period": "fg",
-        "market": "moneyline",
-        "label_col": "home_win",
-        "line_col": None,
-        "model_file": "fg_moneyline_model.joblib",
-        "features": get_model_features("fg", "moneyline"),
     },
 }
 

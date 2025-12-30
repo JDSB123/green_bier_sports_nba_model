@@ -1,22 +1,20 @@
 """
-Train NBA prediction models for all 6 active markets (1H + FG).
+Train NBA prediction models for 4 active markets (1H + FG spreads/totals).
 
 Usage:
-    python scripts/train_models.py                          # Train all 6 markets
-    python scripts/train_models.py --market fg              # Train FG only (3 models)
-    python scripts/train_models.py --market 1h              # Train 1H only (3 models)
+    python scripts/train_models.py                          # Train all 4 markets
+    python scripts/train_models.py --market fg              # Train FG only (spread + total)
+    python scripts/train_models.py --market 1h              # Train 1H only (spread + total)
     python scripts/train_models.py --model-type gradient_boosting
 
 Markets (All INDEPENDENT models):
     1H (First Half):
         1h_spread    - First Half Spreads
         1h_total     - First Half Totals
-        1h_moneyline - First Half Moneyline
 
     FG (Full Game):
         fg_spread    - Full Game Spreads
         fg_total     - Full Game Totals
-        fg_moneyline - Full Game Moneyline
 
 ARCHITECTURE:
     Each period (1H, FG) uses INDEPENDENT features computed from
@@ -56,14 +54,13 @@ import pandas as pd
 
 from src.config import settings
 from src.modeling.models import (
-    SpreadsModel, TotalsModel, MoneylineModel, ModelMetrics,
-    FirstHalfSpreadsModel, FirstHalfTotalsModel, FirstHalfMoneylineModel,
+    SpreadsModel, TotalsModel, ModelMetrics,
+    FirstHalfSpreadsModel, FirstHalfTotalsModel,
 )
 from src.modeling.model_tracker import ModelTracker, ModelVersion
 from src.modeling.feature_config import (
     get_spreads_features,
     get_totals_features,
-    get_moneyline_features,
     filter_available_features,
 )
 from src.modeling.period_features import MODEL_CONFIGS, get_model_features
@@ -91,14 +88,6 @@ MARKET_CONFIG = {
         "period": "fg",
         "output_file": "fg_total_model.joblib",
     },
-    "fg_moneyline": {
-        "name": "Full Game Moneyline",
-        "model_class": MoneylineModel,
-        "label_col": "home_win",
-        "line_col": None,
-        "period": "fg",
-        "output_file": "fg_moneyline_model.joblib",
-    },
     # First Half Markets
     "1h_spread": {
         "name": "First Half Spread",
@@ -115,14 +104,6 @@ MARKET_CONFIG = {
         "line_col": "1h_total_line",
         "period": "1h",
         "output_file": "1h_total_model.pkl",
-    },
-    "1h_moneyline": {
-        "name": "First Half Moneyline",
-        "model_class": FirstHalfMoneylineModel,
-        "label_col": "home_1h_win",
-        "line_col": None,
-        "period": "1h",
-        "output_file": "1h_moneyline_model.pkl",
     },
 }
 
@@ -186,21 +167,21 @@ def enrich_with_injury_features(df: pd.DataFrame, injuries_df: pd.DataFrame) -> 
     from src.modeling.features import FeatureEngineer
     fe = FeatureEngineer()
 
-    # Create injury impact columns if not present (spread + moneyline)
+    # Create injury impact columns if not present (spread + total)
     injury_cols = [
         # Spread injury features
         "home_injury_spread_impact", "away_injury_spread_impact",
         "injury_spread_diff", "home_star_out", "away_star_out",
-        # v34.0: Moneyline injury features
-        "ml_home_injury_impact", "ml_away_injury_impact",
-        "ml_injury_adjusted_prob",
+        # Total injury features
+        "home_injury_total_impact", "away_injury_total_impact",
+        "injury_total_diff",
     ]
 
     for col in injury_cols:
         if col not in df.columns:
             df[col] = 0.0
 
-    print(f"  [OK] Added injury feature columns (spread + moneyline)")
+    print(f"  [OK] Added injury feature columns (spread + total)")
     return df
 
 
@@ -209,7 +190,7 @@ def enrich_with_rlm_features(df: pd.DataFrame, splits_df: pd.DataFrame) -> pd.Da
     if splits_df is None or splits_df.empty:
         return df
 
-    # RLM feature columns (spread + total + moneyline)
+    # RLM feature columns (spread + total)
     rlm_cols = [
         # Spread RLM features
         "is_rlm_spread", "sharp_side_spread",
@@ -217,17 +198,13 @@ def enrich_with_rlm_features(df: pd.DataFrame, splits_df: pd.DataFrame) -> pd.Da
         "spread_movement",
         # Total RLM features
         "is_rlm_total", "sharp_side_total",
-        # v34.0: Moneyline RLM features
-        "ml_public_home_pct", "ml_is_rlm", "ml_sharp_side",
-        "ml_ticket_money_diff", "ml_line_movement",
-        "ml_model_vs_market", "ml_market_implied_home",
     ]
 
     for col in rlm_cols:
         if col not in df.columns:
             df[col] = 0.0
 
-    print(f"  [OK] Added RLM feature columns (spread + total + moneyline)")
+    print(f"  [OK] Added RLM feature columns (spread + total)")
     return df
 
 
@@ -240,10 +217,10 @@ def train_single_market(
     tracker: ModelTracker,
 ) -> Optional[ModelMetrics]:
     """
-    Train a single market model (one of the 6 independent models).
+    Train a single market model (one of the 4 independent models).
     
     Args:
-        market_key: One of 'fg_spread', 'fg_total', 'fg_moneyline', '1h_spread', etc.
+        market_key: One of 'fg_spread', 'fg_total', '1h_spread', '1h_total'.
         train_df: Training data DataFrame
         test_df: Test data DataFrame
         model_type: 'logistic' or 'gradient_boosting'
@@ -281,23 +258,18 @@ def train_single_market(
         if period == "fg":
             if "spread" in market_key:
                 features = get_spreads_features()
-            elif "total" in market_key:
-                features = get_totals_features()
             else:
-                features = get_moneyline_features()
+                features = get_totals_features()
         else:
-            # Use period-specific features from period_features.py
-            market_type = "spread" if "spread" in market_key else ("total" if "total" in market_key else "moneyline")
+            market_type = "spread" if "spread" in market_key else "total"
             try:
                 features = get_model_features(period, market_type)
             except Exception:
                 # Fallback to FG features
-                if "spread" in market_key:
+                if market_type == "spread":
                     features = get_spreads_features()
-                elif "total" in market_key:
-                    features = get_totals_features()
                 else:
-                    features = get_moneyline_features()
+                    features = get_totals_features()
     except Exception as e:
         print(f"  [WARN] Could not get features: {e}")
         features = get_spreads_features() if "spread" in market_key else get_totals_features()
@@ -314,10 +286,8 @@ def train_single_market(
         print(f"  [INFO] Using FG features for {market_key} (period features unavailable)")
         if "spread" in market_key:
             features = get_spreads_features()
-        elif "total" in market_key:
-            features = get_totals_features()
         else:
-            features = get_moneyline_features()
+            features = get_totals_features()
         available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=0.3)
 
     print(f"  Using {len(available_features)} of {len(features)} possible features")
@@ -431,7 +401,7 @@ def train_all_markets(
     markets: Optional[List[str]] = None,
 ) -> Dict[str, ModelMetrics]:
     """
-    Train all 9 independent market models.
+    Train all 4 independent market models.
     
     Args:
         model_type: 'logistic' or 'gradient_boosting'
@@ -449,7 +419,7 @@ def train_all_markets(
     tracker = ModelTracker()
     
     print(f"\n{'='*70}")
-    print(f"NBA v6.0 - Training All 9 Independent Market Models")
+    print(f"NBA v6.0 - Training All 4 Independent Market Models")
     print(f"{'='*70}")
     print(f"Model Type: {model_type}")
     print(f"Output Dir: {output_dir}")
@@ -517,7 +487,7 @@ def train_all_markets(
     
     # Summary
     print(f"\n{'='*70}")
-    print(f"Training Complete - {len(results)}/9 markets trained successfully")
+    print(f"Training Complete - {len(results)}/4 markets trained successfully")
     print(f"{'='*70}")
     
     for market_key, metrics in results.items():
@@ -527,13 +497,10 @@ def train_all_markets(
 
 
 def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
-    """Ensure all 9 market labels exist in the DataFrame."""
+    """Ensure all 6 market labels exist in the DataFrame."""
     df = df.copy()
     
     # Full game labels
-    if "home_win" not in df.columns and "home_score" in df.columns:
-        df["home_win"] = (df["home_score"] > df["away_score"]).astype(int)
-    
     if "spread_covered" not in df.columns and "spread_line" in df.columns:
         df["actual_margin"] = df["home_score"] - df["away_score"]
         df["spread_covered"] = df.apply(
@@ -830,76 +797,6 @@ def train_models(
     print("Training Complete!")
     print("="*60)
 
-    # ========== MONEYLINE MODEL ==========
-    print("\n" + "="*60)
-    print("Training MONEYLINE Model")
-    print("="*60)
-
-    # Derive home-win target on the train/test splits
-    if "home_score" not in training_df.columns or "away_score" not in training_df.columns:
-        print("Warning: scores not found. Skipping moneyline model.")
-        return
-
-    # Ensure splits have the target column
-    train_df = train_df.copy()
-    test_df = test_df.copy()
-    train_df["home_win"] = (train_df["home_score"] > train_df["away_score"]).astype(int)
-    test_df["home_win"] = (test_df["home_score"] > test_df["away_score"]).astype(int)
-
-    moneyline_features = get_moneyline_features()
-    available_moneyline = filter_available_features(moneyline_features, train_df.columns.tolist())
-
-    moneyline_train = train_df.dropna(subset=["home_win"]).copy()
-    moneyline_test = test_df.dropna(subset=["home_win"]).copy()
-
-    if len(moneyline_train) > 10:
-        moneyline_model = MoneylineModel(
-            name="moneyline_classifier",
-            model_type=model_type,
-            feature_columns=available_moneyline,
-        )
-
-        moneyline_model.fit(moneyline_train, moneyline_train["home_win"])
-
-        train_metrics = moneyline_model.evaluate(moneyline_train, moneyline_train["home_win"])
-        print_metrics("Moneyline (Train)", train_metrics)
-
-        if len(moneyline_test) > 0:
-            test_metrics = moneyline_model.evaluate(moneyline_test, moneyline_test["home_win"])
-            print_metrics("Moneyline (Test)", test_metrics)
-
-        model_path = os.path.join(output_dir, "moneyline_model.joblib")
-        moneyline_model.save(model_path)
-        print(f"Moneyline model saved to {model_path}")
-
-        # Register moneyline model version
-        try:
-            version_id = f"{MODEL_VERSION}-moneyline-{model_type}"
-            tracker.register_version(
-                ModelVersion(
-                    version=version_id,
-                    model_type="moneyline",
-                    algorithm=model_type,
-                    trained_at=pd.Timestamp.utcnow().isoformat(),
-                    train_samples=len(moneyline_train),
-                    test_samples=len(moneyline_test),
-                    features_count=len(moneyline_model.feature_columns),
-                    feature_names=moneyline_model.feature_columns,
-                    metrics={
-                        "accuracy": float(test_metrics.accuracy) if 'test_metrics' in locals() else float(train_metrics.accuracy),
-                        "log_loss": float(test_metrics.log_loss) if 'test_metrics' in locals() else float(train_metrics.log_loss),
-                        "brier": float(test_metrics.brier) if 'test_metrics' in locals() else float(train_metrics.brier),
-                        "roi": float(test_metrics.roi) if 'test_metrics' in locals() else float(train_metrics.roi),
-                    },
-                    file_path=os.path.basename(model_path),
-                ),
-                set_active=True,
-            )
-        except Exception as e:
-            print(f"[WARN] Could not register moneyline model version: {e}")
-    else:
-        print(f"Insufficient moneyline data for training ({len(moneyline_train)} games)")
-
     # ========== FIRST-HALF MODELS (optional / experimental) ==========
     print("\n" + "="*60)
     print("FIRST-HALF Models (optional / experimental)")
@@ -927,7 +824,7 @@ def train_models(
 
         # First-half spreads
         try:
-            from src.modeling.models import FirstHalfSpreadsModel, FirstHalfTotalsModel, FirstHalfMoneylineModel, TeamTotalsModel
+            from src.modeling.models import FirstHalfSpreadsModel, FirstHalfTotalsModel, TeamTotalsModel
 
             fh_spreads_features = spreads_features
             fh_spreads_available = [f for f in fh_spreads_features if f in train_df.columns]
@@ -1088,7 +985,7 @@ def main():
     random.seed(42)
     logger.info("Random seeds set to 42 for reproducibility")
 
-    parser = argparse.ArgumentParser(description="Train NBA prediction models (v6.0 - 9 independent markets)")
+    parser = argparse.ArgumentParser(description="Train NBA prediction models (v6.0 - 4 independent markets)")
     parser.add_argument(
         "--model-type",
         choices=["logistic", "gradient_boosting", "regression"],
@@ -1128,9 +1025,9 @@ def main():
     if args.market == "all":
         markets = list(MARKET_CONFIG.keys())
     elif args.market == "fg":
-        markets = ["fg_spread", "fg_total", "fg_moneyline"]
+        markets = ["fg_spread", "fg_total"]
     elif args.market == "1h":
-        markets = ["1h_spread", "1h_total", "1h_moneyline"]
+        markets = ["1h_spread", "1h_total"]
     else:
         markets = list(MARKET_CONFIG.keys())
     

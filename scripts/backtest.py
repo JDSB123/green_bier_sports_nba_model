@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified backtest for all 6 active NBA betting markets (1H + FG).
+Unified backtest for 4 active NBA betting markets (1H + FG spreads/totals).
 
 STRICT MODE: No silent failures, no placeholder data.
 
@@ -8,12 +8,10 @@ Markets (All INDEPENDENT models):
     1H (First Half):
         1h_spread    - First Half Spreads
         1h_total     - First Half Totals
-        1h_moneyline - First Half Moneyline
 
     FG (Full Game):
         fg_spread    - Full Game Spreads
         fg_total     - Full Game Totals
-        fg_moneyline - Full Game Moneyline
 
 ARCHITECTURE:
     Each period (1H, FG) uses INDEPENDENT features computed from
@@ -60,11 +58,10 @@ class DataValidationError(Exception):
 from src.modeling.models import (
     SpreadsModel,
     TotalsModel,
-    MoneylineModel,
     FirstHalfSpreadsModel,
     FirstHalfTotalsModel,
-    FirstHalfMoneylineModel,
 )
+from src.modeling.calibration import ModelCalibrator
 from src.modeling.features import FeatureEngineer
 
 DATA_DIR = PROJECT_ROOT / "data"
@@ -87,13 +84,6 @@ MARKETS = {
         "line_col": "total_line",
         "period": "fg",
     },
-    "fg_moneyline": {
-        "name": "Full Game Moneyline",
-        "model_class": MoneylineModel,
-        "label_col": "home_win",
-        "line_col": None,
-        "period": "fg",
-    },
     # First Half Markets
     "1h_spread": {
         "name": "First Half Spreads",
@@ -107,13 +97,6 @@ MARKETS = {
         "model_class": FirstHalfTotalsModel,
         "label_col": "1h_total_over",
         "line_col": "1h_total_line",
-        "period": "1h",
-    },
-    "1h_moneyline": {
-        "name": "First Half Moneyline",
-        "model_class": FirstHalfMoneylineModel,
-        "label_col": "home_1h_win",
-        "line_col": None,
         "period": "1h",
     },
 }
@@ -439,7 +422,7 @@ def backtest_market(
             test_features_df = pd.DataFrame([test_features])
             
             # Predict
-            proba = model.predict_proba(test_features_df)[0, 1]
+            proba = float(model.predict_proba(test_features_df)[0, 1])
             pred = 1 if proba >= 0.5 else 0
             actual = int(test_game[label_col])
             
@@ -475,6 +458,7 @@ def backtest_market(
                 "predicted": pred,
                 "actual": actual,
                 "confidence": proba if pred == 1 else 1 - proba,
+                "model_prob": proba,
                 "line": line,
                 "segment": segment,
                 "profit": profit,
@@ -527,7 +511,7 @@ def analyze_market_results(results_df: pd.DataFrame, market_key: str) -> Dict:
             summary[f"seg_{seg}_bets"] = len(seg_df)
             summary[f"seg_{seg}_acc"] = seg_df["correct"].mean()
             summary[f"seg_{seg}_roi"] = seg_df["profit"].sum() / len(seg_df)
-    
+
     return summary
 
 
@@ -556,7 +540,7 @@ def generate_summary_report(all_summaries: List[Dict]) -> str:
         )
     
     report.append("\n---\n")
-    
+
     # Segment analysis
     report.append("## Performance by Segment\n")
     

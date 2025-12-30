@@ -90,7 +90,7 @@ class TemporalValidator:
     # Features that can use same-day data (pre-game info)
     SAME_DAY_ALLOWED = {
         # Lines are set before game starts
-        "spread_line", "total_line", "home_ml_odds", "away_ml_odds",
+        "spread_line", "total_line",
         "fh_spread_line", "fh_total_line",
         "q1_spread_line", "q1_total_line",
         # Injury reports (pre-game)

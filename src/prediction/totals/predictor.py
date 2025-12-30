@@ -1,7 +1,7 @@
 """
 Totals prediction logic (Full Game + First Half).
 
-NBA v6.0: All 9 markets with independent models.
+NBA v33.0: 6 markets with independent models (1H + FG).
 
 FEATURE VALIDATION:
     Uses unified validation from src/prediction/feature_validation.py

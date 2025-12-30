@@ -1,11 +1,13 @@
 # Model Verification Guide
 **How to Verify Models Are Using Correct Components**
 
+> **Note:** The current production surface only serves the 1H and FG spreads/totals markets. All Moneyline verification steps below are kept for reference only and are not required for the active deployment.
+
 ## Problem
 Even when the system says it's "ready", you need to verify:
 1. Models are actually loaded correctly
 2. Predictions use actual models (not simplified calculations)
-3. Moneyline uses the audited model (not simplified `0.5 + margin * 0.02`)
+3. Moneyline uses the audited model (not simplified `0.5 + margin * 0.02`) *(deprecated)*
 4. All components are working end-to-end
 
 ---

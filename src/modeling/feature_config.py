@@ -117,44 +117,6 @@ def get_totals_features() -> List[str]:
     ]
 
 
-def get_moneyline_features() -> List[str]:
-    """
-    Get all features for moneyline prediction model.
-
-    v34.0: Enhanced with market signals and injury data for accurate
-    independent moneyline predictions.
-
-    NOTE: Feature names must match what FeatureEngineer computes.
-    """
-    return [
-        # Core team performance (names match FeatureEngineer output)
-        "home_ppg", "away_ppg", "home_margin", "away_margin",
-        "home_win_pct", "away_win_pct", "win_pct_diff",
-        "predicted_margin", "predicted_total", "ppg_diff",
-        # Moneyline-specific computed features (from compute_moneyline_features)
-        "ml_win_prob_diff", "ml_pythagorean_diff",
-        "ml_momentum_diff", "ml_estimated_home_prob", "ml_h2h_factor",
-        "ml_home_win_rate", "ml_away_win_rate",
-        # v34.0: Market signal features
-        "ml_market_implied_home",  # Fair market probability (vig removed)
-        "ml_model_vs_market",  # Model disagreement with market
-        "ml_public_home_pct",  # Public betting % on home ML
-        "ml_is_rlm",  # Reverse line movement flag
-        "ml_sharp_side",  # Sharp money indicator (-1/0/1)
-        "ml_ticket_money_diff",  # Ticket vs money divergence
-        "ml_line_movement",  # Implied prob change from open
-        # v34.0: Injury features
-        "ml_injury_adjusted_prob",  # Win prob adjusted for injuries
-        "ml_home_injury_impact",  # Home team injury PPG loss
-        "ml_away_injury_impact",  # Away team injury PPG loss
-        # Context features (names match FeatureEngineer output)
-        "home_rest", "away_rest", "rest_diff",
-        "home_b2b", "away_b2b",
-        # H2H features
-        "h2h_margin", "h2h_win_rate", "h2h_games",
-    ]
-
-
 def get_all_features() -> List[str]:
     """Get complete list of all available features."""
     all_features = set(

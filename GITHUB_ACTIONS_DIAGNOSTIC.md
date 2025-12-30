@@ -61,7 +61,7 @@ gh workflow run "GBS NBA - Build & Deploy" -r main
 ```
 
 ## Code Changes Status
-✅ **v34.0: Enable moneyline markets with market signals and injury features**
+- ✅ **v34.0: Moneyline markets (now retired) were previously enabled with market signals and injury features**
 - 10 files modified/created
 - No Python syntax errors detected
 - All changes successfully pushed to GitHub main branch
@@ -73,10 +73,10 @@ gh workflow run "GBS NBA - Build & Deploy" -r main
 - `scripts/prepare_kaggle_training_data.py` - New Kaggle data preparation script
 - `src/ingestion/betting_splits.py` - Moneyline RLM detection
 - `src/modeling/feature_config.py` - Moneyline feature configuration
-- `src/modeling/features.py` - Enhanced moneyline feature engineering
-- `src/modeling/period_features.py` - Period-specific moneyline features
-- `src/prediction/engine.py` - Re-enabled moneyline market predictions
-- `src/prediction/moneyline/predictor.py` - Dedicated moneyline predictors
+- `src/modeling/features.py` - Enhanced moneyline feature engineering (archived)
+- `src/modeling/period_features.py` - Period-specific moneyline features (archived)
+- `src/prediction/engine.py` - Re-enabled moneyline market predictions (disabled in v33)
+- `src/prediction/moneyline/predictor.py` - Dedicated moneyline predictors (now unused)
 
 ## Next Steps
 1. ✅ DONE: Fixed git sync issue (code is now pushed)

@@ -108,7 +108,7 @@ class ComprehensiveIngestion:
         return data
 
     async def fetch_the_odds_full_game(self, sport: str = "basketball_nba") -> List[Dict]:
-        """Fetch full game odds (spreads, totals, moneyline).
+        """Fetch full game odds (spreads, totals).
 
         TTL: 15 minutes (odds are live)
         """
@@ -119,7 +119,7 @@ class ComprehensiveIngestion:
         async def fetch():
             return await the_odds.fetch_odds(
                 sport=sport,
-                markets="h2h,spreads,totals",
+                markets="spreads,totals",
             )
 
         data = await api_cache.get_or_fetch(
@@ -167,7 +167,7 @@ class ComprehensiveIngestion:
                 return await the_odds.fetch_event_odds(
                     event_id=eid,
                     sport=sport,
-                    markets="spreads_h1,totals_h1,h2h_h1",
+                    markets="spreads_h1,totals_h1",
                 )
 
             try:
@@ -220,7 +220,7 @@ class ComprehensiveIngestion:
                 return await the_odds.fetch_event_odds(
                     event_id=eid,
                     sport=sport,
-                    markets="spreads_q1,totals_q1,h2h_q1",
+                    markets="spreads_q1,totals_q1",
                 )
 
             try:
@@ -269,10 +269,10 @@ class ComprehensiveIngestion:
         results = []
         # All quarter markets available from The Odds API
         all_quarter_markets = (
-            "spreads_q1,totals_q1,h2h_q1,"
-            "spreads_q2,totals_q2,h2h_q2,"
-            "spreads_q3,totals_q3,h2h_q3,"
-            "spreads_q4,totals_q4,h2h_q4"
+            "spreads_q1,totals_q1,"
+            "spreads_q2,totals_q2,"
+            "spreads_q3,totals_q3,"
+            "spreads_q4,totals_q4"
         )
 
         for event_id in event_ids:

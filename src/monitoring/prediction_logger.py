@@ -38,13 +38,11 @@ class PredictionRecord:
 
     # Market info
     period: str  # q1, 1h, fg
-    market: str  # spread, total, moneyline
+    market: str  # spread, total
     market_key: str  # Combined: fg_spread, q1_total, etc.
 
     # Lines
     line: Optional[float]  # Spread line or total line
-    home_ml_odds: Optional[int]
-    away_ml_odds: Optional[int]
 
     # Prediction output
     classifier_side: str
@@ -111,8 +109,6 @@ class PredictionLogger:
         market: str,
         prediction_result: Dict[str, Any],
         line: Optional[float] = None,
-        home_ml_odds: Optional[int] = None,
-        away_ml_odds: Optional[int] = None,
         commence_time: Optional[str] = None,
         features_present: int = 0,
         features_required: int = 0,
@@ -127,11 +123,9 @@ class PredictionLogger:
             home_team: Home team name
             away_team: Away team name
             period: Period (q1, 1h, fg)
-            market: Market type (spread, total, moneyline)
+            market: Market type (spread, total)
             prediction_result: Prediction output dictionary
             line: Spread or total line
-            home_ml_odds: Home moneyline odds
-            away_ml_odds: Away moneyline odds
             commence_time: Game start time
             features_present: Number of features present
             features_required: Number of required features
@@ -143,18 +137,11 @@ class PredictionLogger:
         prediction_id = f"{game_date}_{home_team[:3]}_{away_team[:3]}_{period}_{market}_{datetime.utcnow().strftime('%H%M%S%f')}"
 
         # Extract prediction details based on market type
-        if market == "moneyline":
-            classifier_side = "home" if prediction_result.get("home_win_prob", 0.5) > 0.5 else "away"
-            prediction_side = prediction_result.get("recommended_bet", "none") or "none"
-            bet_side = prediction_result.get("recommended_bet")
-            edge = prediction_result.get("home_edge", 0) if bet_side == "home" else prediction_result.get("away_edge", 0)
-            raw_edge = edge
-        else:
-            classifier_side = prediction_result.get("classifier_side", "unknown")
-            prediction_side = prediction_result.get("prediction_side", "unknown")
-            bet_side = prediction_result.get("bet_side")
-            edge = prediction_result.get("edge", 0)
-            raw_edge = prediction_result.get("raw_edge", 0)
+        classifier_side = prediction_result.get("classifier_side", "unknown")
+        prediction_side = prediction_result.get("prediction_side", "unknown")
+        bet_side = prediction_result.get("bet_side")
+        edge = prediction_result.get("edge", 0)
+        raw_edge = prediction_result.get("raw_edge", 0)
 
         record = PredictionRecord(
             prediction_id=prediction_id,
@@ -168,8 +155,6 @@ class PredictionLogger:
             market=market,
             market_key=f"{period}_{market}",
             line=line,
-            home_ml_odds=home_ml_odds,
-            away_ml_odds=away_ml_odds,
             classifier_side=classifier_side,
             prediction_side=prediction_side,
             signals_agree=prediction_result.get("signals_agree", classifier_side == prediction_side),

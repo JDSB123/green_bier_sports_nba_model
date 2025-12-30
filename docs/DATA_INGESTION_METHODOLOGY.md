@@ -120,9 +120,9 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 - ✅ Proper logging (no print statements)
 
 **Data Collected:**
-- Full-game spread/total lines + moneylines
-- First-half spreads/totals/moneylines
-- First-quarter spreads/totals/moneylines
+- Full-game spread and total lines
+- First-half spread and total lines
+- First-quarter spread and total lines
 - Player props and alternate lines (via fetch_event_odds)
 - Available markets per bookmaker (via fetch_event_markets)
 - Sportsbook metadata + snapshot timestamps
@@ -139,7 +139,7 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 - Skipped games tracked and reported in logs
 
 **Historical Line Capture:**
-- `scripts/collect_historical_lines.py` captures daily snapshots (FG/1H/Q1 markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
+- `scripts/collect_historical_lines.py` captures daily snapshots (FG/1H markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
 - `scripts/extract_betting_lines.py` converts the raw snapshots into consensus lines (`data/processed/betting_lines.csv`) using median aggregation per market.
 
 ---
@@ -382,28 +382,16 @@ python scripts/ingest_all.py --essential
    - Fuzzy date matching (±1 day tolerance)
 4. Build features (team form, rest days, head-to-head, etc.)
 5. Merge with betting splits and injuries
-6. Merge consensus FG/1H/Q1 lines from `data/processed/betting_lines.csv`
+6. Merge consensus FG/1H lines from `data/processed/betting_lines.csv`
 7. Save to `training_data.csv`
 
 **Output:** `data/processed/training_data.csv`
 
 ---
 
-### Step 2b: First-Quarter Feature Dataset
+### Step 2b: First-Quarter Feature Dataset (Deprecated)
 
-**Script:** `scripts/generate_q1_training_data.py`
-
-**Process:**
-1. Loads `training_data.csv` (which now includes Q1 lines/odds).
-2. Builds a team-level long table to compute rolling Q1 scoring, margins, and win rates (10-game lookback).
-3. Adds rest-day + back-to-back indicators plus dynamic HCA via `FeatureEngineer`.
-4. Produces supervised targets for Q1 spread, total, and moneyline markets.
-
-**Output:**
-- `data/processed/q1_training_data.parquet`
-- `data/processed/q1_training_data.csv`
-
-This dataset is the canonical source for training Q1-specific models (spread, total, moneyline) without relying on placeholder lines.
+Q1 training data generation is deprecated. Production markets are 1H + FG only.
 
 ---
 

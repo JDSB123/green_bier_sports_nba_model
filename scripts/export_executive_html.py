@@ -443,7 +443,7 @@ def generate_html(data: dict, output_path: str):
             </div>
             <div class="legend-row">
                 <div class="legend-item"><b>PER:</b> FG = Full Game, 1H = First Half, Q1 = First Quarter</div>
-                <div class="legend-item"><b>MKT:</b> SPREAD = Point Spread, TOTAL = Over/Under, ML = Moneyline</div>
+                <div class="legend-item"><b>MKT:</b> SPREAD = Point Spread, TOTAL = Over/Under</div>
             </div>
             <div class="legend-row">
                 <div class="legend-item"><b>Edge:</b> All edges shown in points (pts) for consistency</div>

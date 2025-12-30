@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Verify calibration on all 6 models.
+Verify calibration on all 4 models.
 
 Checks that model probabilities match actual win rates across bins.
 A well-calibrated model should have:
@@ -27,10 +27,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.modeling.models import (
     SpreadsModel,
     TotalsModel,
-    MoneylineModel,
     FirstHalfSpreadsModel,
     FirstHalfTotalsModel,
-    FirstHalfMoneylineModel,
 )
 from src.modeling.features import FeatureEngineer
 from src.modeling import io
@@ -52,9 +50,6 @@ def load_training_data() -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date").reset_index(drop=True)
     
-    # Create labels
-    df["home_win"] = (df["home_score"] > df["away_score"]).astype(int)
-    
     if "spread_line" in df.columns:
         df["actual_margin"] = df["home_score"] - df["away_score"]
         df["spread_covered"] = (df["actual_margin"] > -df["spread_line"]).astype(int)
@@ -66,8 +61,6 @@ def load_training_data() -> pd.DataFrame:
     if "home_q1" in df.columns and "home_q2" in df.columns:
         df["home_1h_score"] = df["home_q1"].fillna(0) + df["home_q2"].fillna(0)
         df["away_1h_score"] = df["away_q1"].fillna(0) + df["away_q2"].fillna(0)
-        df["home_1h_win"] = (df["home_1h_score"] > df["away_1h_score"]).astype(int)
-        
         if "spread_line" in df.columns:
             df["1h_spread_line"] = df["spread_line"] / 2
             df["actual_1h_margin"] = df["home_1h_score"] - df["away_1h_score"]
@@ -263,10 +256,8 @@ def main():
     models_to_verify = [
         ("FG Spreads", SpreadsModel, "spread_covered"),
         ("FG Totals", TotalsModel, "total_over"),
-        ("FG Moneyline", MoneylineModel, "home_win"),
         ("1H Spreads", FirstHalfSpreadsModel, "1h_spread_covered"),
         ("1H Totals", FirstHalfTotalsModel, "1h_total_over"),
-        ("1H Moneyline", FirstHalfMoneylineModel, "home_1h_win"),
     ]
     
     all_results = []

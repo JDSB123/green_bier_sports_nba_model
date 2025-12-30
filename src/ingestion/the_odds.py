@@ -91,7 +91,7 @@ async def fetch_sports(
 async def fetch_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
-    markets: str = "h2h,spreads,totals",
+    markets: str = "spreads,totals",
 ) -> list[Dict[str, Any]]:
     """
     Fetch odds from The Odds API and standardize to ESPN format.
@@ -178,15 +178,15 @@ async def fetch_odds(
 # All available period/alt markets for NBA
 ALL_PERIOD_MARKETS = (
     # First Half
-    "h2h_h1,spreads_h1,totals_h1,"
+    "spreads_h1,totals_h1,"
     # First Quarter
-    "h2h_q1,spreads_q1,totals_q1,"
+    "spreads_q1,totals_q1,"
     # Second Quarter
-    "h2h_q2,spreads_q2,totals_q2,"
+    "spreads_q2,totals_q2,"
     # Third Quarter
-    "h2h_q3,spreads_q3,totals_q3,"
+    "spreads_q3,totals_q3,"
     # Fourth Quarter
-    "h2h_q4,spreads_q4,totals_q4,"
+    "spreads_q4,totals_q4,"
     # Alternate lines
     "alternate_spreads,alternate_totals,"
     # Player props (if available)
@@ -208,8 +208,8 @@ async def fetch_event_odds(
     Fetch odds for a specific event from The Odds API.
 
     Fetches ALL available markets including:
-    - First half (1H): spreads, totals, moneyline
-    - All quarters (Q1, Q2, Q3, Q4): spreads, totals, moneyline
+    - First half (1H): spreads, totals
+    - All quarters (Q1, Q2, Q3, Q4): spreads, totals
     - Alternate lines: spreads, totals
     - Player props: points, rebounds, assists
 

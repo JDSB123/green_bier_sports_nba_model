@@ -2,12 +2,12 @@
 
 Production-grade containerized system for NBA betting predictions with **6 independent markets**.
 
-## Markets (6 Independent Models)
+## Markets (4 Independent Models)
 
-| Period | Spread | Total | Moneyline |
-|--------|--------|-------|-----------|
-| **1H** (First Half) | 1h_spread | 1h_total | 1h_moneyline |
-| **FG** (Full Game) | fg_spread | fg_total | fg_moneyline |
+| Period | Spread | Total |
+|--------|--------|-------|
+| **1H** (First Half) | 1h_spread | 1h_total |
+| **FG** (Full Game) | fg_spread | fg_total |
 
 Each market uses independent feature engineering and model training, tailored to period-specific scoring patterns.
 
@@ -154,6 +154,12 @@ docker compose down
 curl http://localhost:8090/slate/today
 ```
 
+### List Enabled Markets
+
+```bash
+curl http://localhost:8090/markets
+```
+
 ### Get Comprehensive Analysis
 
 ```bash
@@ -170,12 +176,12 @@ curl -X POST http://localhost:8090/predict/game \
     "away_team": "Chicago Bulls",
     "fg_spread_line": -7.5,
     "fg_total_line": 223.5,
-    "fg_home_ml": -300,
-    "fg_away_ml": 240,
+    "home_ml_odds": -300,
+    "away_ml_odds": 240,
     "fh_spread_line": -4.0,
     "fh_total_line": 111.0,
-    "fh_home_ml": -180,
-    "fh_away_ml": 150
+    "fh_home_ml_odds": -180,
+    "fh_away_ml_odds": 150
   }'
 ```
 
@@ -202,7 +208,7 @@ docker compose -f docker-compose.backtest.yml run --rm backtest-shell
 Set these in your `.env` file:
 ```env
 SEASONS=2024-2025,2025-2026
-MARKETS=all          # Or: fg_spread,fg_total,fg_moneyline,1h_spread,1h_total
+MARKETS=all          # Or: fg_spread,fg_total,1h_spread,1h_total
 MIN_TRAINING=80      # Minimum training games before predictions
 ```
 

@@ -389,7 +389,6 @@ def export_betting_card_to_html(
 
         .pick-type-spread {{ background: #3498db; color: white; }}
         .pick-type-total {{ background: #e74c3c; color: white; }}
-        .pick-type-moneyline {{ background: #27ae60; color: white; }}
 
         .pick-side {{
             display: inline-block;
@@ -610,8 +609,6 @@ def export_betting_card_to_html(
         pick_type_class = "pick-type-spread"
         if "total" in pick.pick_type.lower():
             pick_type_class = "pick-type-total"
-        elif "moneyline" in pick.pick_type.lower():
-            pick_type_class = "pick-type-moneyline"
 
         # Determine side class
         side_class = ""

@@ -90,7 +90,7 @@ class SignalAgreementTracker:
         game_date: str,
         home_team: str,
         away_team: str,
-        market: str,  # e.g., "spread", "total", "moneyline"
+        market: str,  # e.g., "spread", "total"
         period: str,  # e.g., "q1", "1h", "fg"
         classifier_side: str,
         prediction_side: str,
@@ -105,7 +105,7 @@ class SignalAgreementTracker:
             game_date: Date of the game
             home_team: Home team name
             away_team: Away team name
-            market: Market type (spread, total, moneyline)
+            market: Market type (spread, total)
             period: Period (q1, 1h, fg)
             classifier_side: Side chosen by classifier (home/away or over/under)
             prediction_side: Side chosen by point prediction

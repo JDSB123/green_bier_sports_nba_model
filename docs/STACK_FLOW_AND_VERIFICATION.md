@@ -39,12 +39,12 @@
 │  ├─ Try historical odds first (if paid plan)                    │
 │  │  ├─ fetch_historical_odds() → /historical/sports/.../odds    │
 │  │  └─ For each event:                                          │
-│  │     └─ fetch_event_odds() → /events/{id}/odds (1H/Q1)        │
+│  │     └─ fetch_event_odds() → /events/{id}/odds (1H)           │
 │  └─ Fallback to current odds:                                   │
 │     ├─ fetch_events() → /sports/.../events                      │
 │     ├─ fetch_odds() → /sports/.../odds (FG markets)             │
 │     └─ For each event:                                          │
-│        └─ fetch_event_odds() → /events/{id}/odds (1H/Q1)        │
+│        └─ fetch_event_odds() → /events/{id}/odds (1H)           │
 │  └─ Output: lines_df (spread/total lines)                       │
 └────────────────────────┬────────────────────────────────────────┘
                          │
@@ -201,14 +201,14 @@ Fetching betting lines for 180 unique dates...
   Processing date 1/180...
   ✓ Historical odds endpoint available
   ...
-  ✓ Fetched event odds for event abc123 (1H/Q1 markets)
+  ✓ Fetched event odds for event abc123 (1H markets)
   ...
 ```
 
 **What to check:**
 - ✅ `ingest_essential()` called (not just `fetch_games()`)
 - ✅ Participants endpoint called
-- ✅ Event-specific odds called for 1H/Q1 markets
+- ✅ Event-specific odds called for 1H markets
 - ✅ Betting splits endpoint attempted
 
 ---
@@ -429,7 +429,7 @@ docker compose -f docker-compose.backtest.yml up backtest-data
 - [ ] Games fetched from API-Basketball (check logs)
 - [ ] ALL endpoints called (teams, games, statistics, game_stats_teams)
 - [ ] Betting lines fetched (check logs for event-specific calls)
-- [ ] 1H/Q1 markets included (check logs)
+- [ ] 1H markets included (check logs)
 - [ ] Training data file created
 - [ ] Feature engineering includes predicted_margin_1h
 - [ ] Backtest runs successfully

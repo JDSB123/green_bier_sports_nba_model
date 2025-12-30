@@ -9,6 +9,14 @@ from typing import Optional
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Load repo-root .env for local development (do not override shell env)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env", override=False)
+    load_dotenv(PROJECT_ROOT / ".env.local", override=False)
+except Exception:
+    pass
+
 # NOTE: Secrets are managed via src.utils.secrets
 # Priority: Env Vars > Docker Secrets > Baked-in Secrets > Local Files
 # For production (Azure), use Environment Variables.
@@ -78,10 +86,8 @@ class FilterThresholds:
     - FILTER_SPREAD_MIN_EDGE
     - FILTER_TOTAL_MIN_CONFIDENCE
     - FILTER_TOTAL_MIN_EDGE
-    - FILTER_MONEYLINE_MIN_CONFIDENCE
-    - FILTER_MONEYLINE_MIN_EDGE_PCT
 
-    NBA_v33.0.1.0: 6 markets only (1H + FG).
+    NBA_v33.0.1.0: 4 markets only (1H + FG spreads/totals).
     """
     # Spread thresholds
     spread_min_confidence: float = field(
@@ -99,13 +105,6 @@ class FilterThresholds:
         default_factory=lambda: float(_env_required("FILTER_TOTAL_MIN_EDGE"))
     )
 
-    # Moneyline thresholds (FG/1H)
-    moneyline_min_confidence: float = field(
-        default_factory=lambda: float(_env_required("FILTER_MONEYLINE_MIN_CONFIDENCE"))
-    )
-    moneyline_min_edge_pct: float = field(
-        default_factory=lambda: float(_env_required("FILTER_MONEYLINE_MIN_EDGE_PCT"))
-    )
 
 
 # Global filter thresholds instance

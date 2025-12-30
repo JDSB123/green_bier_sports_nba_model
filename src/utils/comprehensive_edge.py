@@ -1,7 +1,7 @@
 """
 Comprehensive edge calculation utilities.
 
-Calculates betting edges for all 6 markets (1H + FG).
+Calculates betting edges for 4 markets (1H + FG spreads/totals).
 Uses actual model predictions from the prediction engine for accurate 1H analysis.
 """
 from __future__ import annotations
@@ -43,13 +43,18 @@ def calculate_comprehensive_edge(
         expected_value,
         kelly_fraction,
     )
+    from src.utils.distributions import (
+        estimate_spread_std,
+        estimate_total_std,
+        cover_probability,
+        over_probability,
+    )
     
     # Default thresholds if not provided
     if edge_thresholds is None:
         edge_thresholds = {
             "spread": 2.0,
             "total": 3.0,
-            "moneyline": 0.03,
             "1h_spread": 1.5,
             "1h_total": 2.0,
         }
@@ -76,8 +81,6 @@ def calculate_comprehensive_edge(
     # Market odds
     fg_market_spread = odds.get("home_spread")
     fg_market_total = odds.get("total")
-    fg_home_ml = odds.get("home_ml")
-    fg_away_ml = odds.get("away_ml")
     fg_spread_odds_home = odds.get("home_spread_price")
     fg_spread_odds_away = odds.get("away_spread_price")
     fg_total_odds_over = odds.get("total_over_price")
@@ -101,6 +104,10 @@ def calculate_comprehensive_edge(
     fg_spread_confidence = min(abs(fg_spread_edge) / 5.0, 0.90) if abs(fg_spread_edge) >= 1.0 else 0
     fg_spread_win_prob = 0.5 + (abs(fg_spread_edge) * 0.03)
     fg_spread_win_prob = max(0.51, min(0.80, fg_spread_win_prob)) if abs(fg_spread_edge) >= 0.5 else 0.5
+    fg_spread_std = estimate_spread_std(features, "fg")
+    fg_home_cover_dist = cover_probability(fg_predicted_margin, fg_market_spread, fg_spread_std)
+    fg_away_cover_dist = 1.0 - fg_home_cover_dist
+    fg_spread_p_dist = fg_home_cover_dist if fg_spread_pick == home_team else fg_away_cover_dist
     fg_spread_pred = engine_predictions.get("full_game", {}).get("spread") if engine_predictions else None
     fg_spread_p_model = None
     if fg_spread_pred:
@@ -112,6 +119,9 @@ def calculate_comprehensive_edge(
             fg_spread_confidence = fg_spread_pred.get("confidence")
         if fg_spread_p_model is not None:
             fg_spread_win_prob = fg_spread_p_model
+    if fg_spread_p_model is None:
+        fg_spread_p_model = fg_spread_p_dist
+        fg_spread_win_prob = fg_spread_p_dist
     
     spread_threshold = edge_thresholds.get("spread", 2.0)
     fg_pick_line = fg_market_spread if fg_spread_pick == home_team else -fg_market_spread
@@ -123,6 +133,7 @@ def calculate_comprehensive_edge(
     if fg_spread_p_fair is None:
         fg_spread_p_fair = american_to_implied_prob(fg_spread_pick_odds)
     fg_spread_ev_pct, fg_spread_kelly = _ev_and_kelly(fg_spread_p_model, fg_spread_pick_odds)
+    fg_spread_ev_pct_dist, fg_spread_kelly_dist = _ev_and_kelly(fg_spread_p_dist, fg_spread_pick_odds)
     
     result["full_game"]["spread"] = {
         "model_margin": fg_predicted_margin,
@@ -141,6 +152,12 @@ def calculate_comprehensive_edge(
         "p_fair": fg_spread_p_fair if abs(fg_spread_edge) >= spread_threshold else None,
         "ev_pct": fg_spread_ev_pct if abs(fg_spread_edge) >= spread_threshold else None,
         "kelly_fraction": fg_spread_kelly if abs(fg_spread_edge) >= spread_threshold else None,
+        "dist_std": fg_spread_std,
+        "dist_home_cover_prob": fg_home_cover_dist,
+        "dist_away_cover_prob": fg_away_cover_dist,
+        "dist_p_model": fg_spread_p_dist,
+        "dist_ev_pct": fg_spread_ev_pct_dist,
+        "dist_kelly_fraction": fg_spread_kelly_dist,
         "odds_as_of_utc": odds_as_of_utc,
         "rationale": f"Model projects {fg_spread_pick} with {fg_spread_edge:+.1f} pt edge"
     }
@@ -152,6 +169,10 @@ def calculate_comprehensive_edge(
     fg_total_confidence = min(abs(fg_total_edge) / 10.0, 0.90) if abs(fg_total_edge) >= (total_threshold * 0.75) else 0
     fg_total_win_prob = 0.5 + (abs(fg_total_edge) * 0.025)
     fg_total_win_prob = max(0.51, min(0.75, fg_total_win_prob)) if abs(fg_total_edge) >= 1.0 else 0.5
+    fg_total_std = estimate_total_std(features, "fg")
+    fg_over_prob_dist = over_probability(fg_predicted_total, fg_market_total, fg_total_std)
+    fg_under_prob_dist = 1.0 - fg_over_prob_dist
+    fg_total_p_dist = fg_over_prob_dist if fg_total_pick == "OVER" else fg_under_prob_dist
     fg_total_pred = engine_predictions.get("full_game", {}).get("total") if engine_predictions else None
     fg_total_p_model = None
     if fg_total_pred:
@@ -163,6 +184,9 @@ def calculate_comprehensive_edge(
             fg_total_confidence = fg_total_pred.get("confidence")
         if fg_total_p_model is not None:
             fg_total_win_prob = fg_total_p_model
+    if fg_total_p_model is None:
+        fg_total_p_model = fg_total_p_dist
+        fg_total_win_prob = fg_total_p_dist
 
     fg_total_pick_odds = fg_total_odds_over if fg_total_pick == "OVER" else fg_total_odds_under
     if fg_total_pick_odds is None:
@@ -172,6 +196,7 @@ def calculate_comprehensive_edge(
     if fg_total_p_fair is None:
         fg_total_p_fair = american_to_implied_prob(fg_total_pick_odds)
     fg_total_ev_pct, fg_total_kelly = _ev_and_kelly(fg_total_p_model, fg_total_pick_odds)
+    fg_total_ev_pct_dist, fg_total_kelly_dist = _ev_and_kelly(fg_total_p_dist, fg_total_pick_odds)
     
     result["full_game"]["total"] = {
         "model_total": fg_predicted_total,
@@ -190,84 +215,14 @@ def calculate_comprehensive_edge(
         "p_fair": fg_total_p_fair if abs(fg_total_edge) >= total_threshold else None,
         "ev_pct": fg_total_ev_pct if abs(fg_total_edge) >= total_threshold else None,
         "kelly_fraction": fg_total_kelly if abs(fg_total_edge) >= total_threshold else None,
+        "dist_std": fg_total_std,
+        "dist_over_prob": fg_over_prob_dist,
+        "dist_under_prob": fg_under_prob_dist,
+        "dist_p_model": fg_total_p_dist,
+        "dist_ev_pct": fg_total_ev_pct_dist,
+        "dist_kelly_fraction": fg_total_kelly_dist,
         "odds_as_of_utc": odds_as_of_utc,
         "rationale": f"Model projects {fg_total_pick} with {fg_total_edge:+.1f} pt edge"
-    }
-    
-    # === FULL GAME MONEYLINE ===
-    fg_ml_pick = None
-    fg_ml_confidence = 0
-    fg_ml_rationale = "No moneyline value found."
-    fg_ml_edge_home = None
-    fg_ml_edge_away = None
-    fg_ml_p_model = None
-    fg_ml_p_fair_home = None
-    fg_ml_p_fair_away = None
-    fg_ml_ev_pct = None
-    fg_ml_kelly = None
-    
-    if fg_home_ml and fg_away_ml:
-        # Use actual engine predictions if available (audited model)
-        if engine_predictions and engine_predictions.get("full_game", {}).get("moneyline"):
-            ml_pred = engine_predictions["full_game"]["moneyline"]
-            # Extract probabilities from the actual model prediction
-            if ml_pred.get("home_win_prob") is not None and ml_pred.get("away_win_prob") is not None:
-                # Use actual model probabilities from audited moneyline model
-                model_home_prob = float(ml_pred["home_win_prob"])
-                model_away_prob = float(ml_pred["away_win_prob"])
-
-                fg_ml_p_fair_home, fg_ml_p_fair_away = devig_two_way(fg_home_ml, fg_away_ml)
-                if fg_ml_p_fair_home is None or fg_ml_p_fair_away is None:
-                    fg_ml_p_fair_home = american_to_implied_prob(fg_home_ml)
-                    fg_ml_p_fair_away = american_to_implied_prob(fg_away_ml)
-
-                fg_ml_edge_home = model_home_prob - (fg_ml_p_fair_home or 0)
-                fg_ml_edge_away = model_away_prob - (fg_ml_p_fair_away or 0)
-
-                ml_threshold = edge_thresholds.get("moneyline", 0.03)
-                if fg_ml_edge_home > ml_threshold or fg_ml_edge_away > ml_threshold:
-                    if fg_ml_edge_home > fg_ml_edge_away:
-                        fg_ml_pick = home_team
-                        fg_ml_confidence = min(fg_ml_edge_home * 2.5, 0.75)
-                        fg_ml_rationale = f"Model gives {home_team} {model_home_prob*100:.1f}% vs market {fg_ml_p_fair_home*100:.1f}%"
-                        fg_ml_p_model = model_home_prob
-                    else:
-                        fg_ml_pick = away_team
-                        fg_ml_confidence = min(fg_ml_edge_away * 2.5, 0.75)
-                        fg_ml_rationale = f"Model gives {away_team} {model_away_prob*100:.1f}% vs market {fg_ml_p_fair_away*100:.1f}%"
-                        fg_ml_p_model = model_away_prob
-        else:
-            # v33.0.8.0: Moneyline DISABLED - No fallback calculation
-            # If engine doesn't provide moneyline prediction, we do NOT generate a pick
-            fg_ml_pick = None
-            fg_ml_rationale = "Moneyline disabled (v33.0.8.0)"
-
-        if fg_ml_p_fair_home is None or fg_ml_p_fair_away is None:
-            fg_ml_p_fair_home, fg_ml_p_fair_away = devig_two_way(fg_home_ml, fg_away_ml)
-            if fg_ml_p_fair_home is None or fg_ml_p_fair_away is None:
-                fg_ml_p_fair_home = american_to_implied_prob(fg_home_ml)
-                fg_ml_p_fair_away = american_to_implied_prob(fg_away_ml)
-    
-    if fg_ml_pick == home_team:
-        fg_ml_ev_pct, fg_ml_kelly = _ev_and_kelly(fg_ml_p_model, fg_home_ml)
-    elif fg_ml_pick == away_team:
-        fg_ml_ev_pct, fg_ml_kelly = _ev_and_kelly(fg_ml_p_model, fg_away_ml)
-
-    result["full_game"]["moneyline"] = {
-        "market_home_odds": fg_home_ml,
-        "market_away_odds": fg_away_ml,
-        "market_home_prob": fg_ml_p_fair_home if fg_home_ml else 0.5,
-        "market_away_prob": fg_ml_p_fair_away if fg_away_ml else 0.5,
-        "edge_home": fg_ml_edge_home if fg_home_ml and fg_away_ml else None,
-        "edge_away": fg_ml_edge_away if fg_home_ml and fg_away_ml else None,
-        "pick": fg_ml_pick,
-        "confidence": fg_ml_confidence,
-        "p_model": fg_ml_p_model,
-        "p_fair": fg_ml_p_fair_home if fg_ml_pick == home_team else fg_ml_p_fair_away,
-        "ev_pct": fg_ml_ev_pct,
-        "kelly_fraction": fg_ml_kelly,
-        "odds_as_of_utc": odds_as_of_utc,
-        "rationale": fg_ml_rationale
     }
     
     # === FIRST HALF - Use actual 1H model predictions if available ===
@@ -278,8 +233,6 @@ def calculate_comprehensive_edge(
     fh_total_odds_over = odds.get("fh_total_over_price")
     fh_total_odds_under = odds.get("fh_total_under_price")
     fh_total_odds = odds.get("fh_total_price")
-    fh_home_ml = odds.get("fh_home_ml")
-    fh_away_ml = odds.get("fh_away_ml")
 
     # Get 1H predictions from engine if available
     fh_engine = engine_predictions.get("first_half", {}) if engine_predictions else {}
@@ -310,6 +263,10 @@ def calculate_comprehensive_edge(
         fh_spread_confidence = min(fh_spread_confidence, 0.70)
         fh_spread_win_prob = fh_cover_prob if fh_spread_edge > 0 else (1 - fh_cover_prob)
         fh_spread_p_model = fh_cover_prob if fh_spread_pick == home_team else (1 - fh_cover_prob)
+        fh_spread_std = estimate_spread_std(fh_features, "1h")
+        fh_home_cover_dist = cover_probability(fh_predicted_margin, fh_market_spread, fh_spread_std)
+        fh_away_cover_dist = 1.0 - fh_home_cover_dist
+        fh_spread_p_dist = fh_home_cover_dist if fh_spread_pick == home_team else fh_away_cover_dist
 
         fh_spread_threshold = edge_thresholds.get("1h_spread", 1.5)
         fh_pick_line = fh_market_spread if fh_spread_pick == home_team else -fh_market_spread
@@ -321,6 +278,7 @@ def calculate_comprehensive_edge(
         if fh_spread_p_fair is None:
             fh_spread_p_fair = american_to_implied_prob(fh_spread_pick_odds)
         fh_spread_ev_pct, fh_spread_kelly = _ev_and_kelly(fh_spread_p_model, fh_spread_pick_odds)
+        fh_spread_ev_pct_dist, fh_spread_kelly_dist = _ev_and_kelly(fh_spread_p_dist, fh_spread_pick_odds)
 
         result["first_half"]["spread"] = {
             "model_margin": fh_predicted_margin,
@@ -339,6 +297,12 @@ def calculate_comprehensive_edge(
             "p_fair": fh_spread_p_fair if abs(fh_spread_edge) >= fh_spread_threshold else None,
             "ev_pct": fh_spread_ev_pct if abs(fh_spread_edge) >= fh_spread_threshold else None,
             "kelly_fraction": fh_spread_kelly if abs(fh_spread_edge) >= fh_spread_threshold else None,
+            "dist_std": fh_spread_std,
+            "dist_home_cover_prob": fh_home_cover_dist,
+            "dist_away_cover_prob": fh_away_cover_dist,
+            "dist_p_model": fh_spread_p_dist,
+            "dist_ev_pct": fh_spread_ev_pct_dist,
+            "dist_kelly_fraction": fh_spread_kelly_dist,
             "odds_as_of_utc": odds_as_of_utc,
             "rationale": f"Model projects {fh_spread_pick} with {fh_spread_edge:+.1f} pt edge (1H)"
         }
@@ -368,6 +332,10 @@ def calculate_comprehensive_edge(
         fh_total_confidence = min(fh_total_confidence, 0.70)
         fh_total_win_prob = fh_over_prob if fh_total_edge > 0 else (1 - fh_over_prob)
         fh_total_p_model = fh_over_prob if fh_total_pick == "OVER" else (1 - fh_over_prob)
+        fh_total_std = estimate_total_std(fh_features, "1h")
+        fh_over_prob_dist = over_probability(fh_predicted_total, fh_market_total, fh_total_std)
+        fh_under_prob_dist = 1.0 - fh_over_prob_dist
+        fh_total_p_dist = fh_over_prob_dist if fh_total_pick == "OVER" else fh_under_prob_dist
 
         fh_total_threshold = edge_thresholds.get("1h_total", 2.0)
         fh_total_pick_odds = fh_total_odds_over if fh_total_pick == "OVER" else fh_total_odds_under
@@ -378,6 +346,7 @@ def calculate_comprehensive_edge(
         if fh_total_p_fair is None:
             fh_total_p_fair = american_to_implied_prob(fh_total_pick_odds)
         fh_total_ev_pct, fh_total_kelly = _ev_and_kelly(fh_total_p_model, fh_total_pick_odds)
+        fh_total_ev_pct_dist, fh_total_kelly_dist = _ev_and_kelly(fh_total_p_dist, fh_total_pick_odds)
 
         result["first_half"]["total"] = {
             "model_total": fh_predicted_total,
@@ -396,6 +365,12 @@ def calculate_comprehensive_edge(
             "p_fair": fh_total_p_fair if abs(fh_total_edge) >= fh_total_threshold else None,
             "ev_pct": fh_total_ev_pct if abs(fh_total_edge) >= fh_total_threshold else None,
             "kelly_fraction": fh_total_kelly if abs(fh_total_edge) >= fh_total_threshold else None,
+            "dist_std": fh_total_std,
+            "dist_over_prob": fh_over_prob_dist,
+            "dist_under_prob": fh_under_prob_dist,
+            "dist_p_model": fh_total_p_dist,
+            "dist_ev_pct": fh_total_ev_pct_dist,
+            "dist_kelly_fraction": fh_total_kelly_dist,
             "odds_as_of_utc": odds_as_of_utc,
             "rationale": f"Model projects {fh_total_pick} with {fh_total_edge:+.1f} pt edge (1H)"
         }
@@ -407,67 +382,6 @@ def calculate_comprehensive_edge(
             "rationale": "First half total: no model prediction available (no fallbacks)"
         }
 
-    # 1H Moneyline - use actual model prediction if available
-    fh_ml_pick = None
-    fh_ml_confidence = 0
-    fh_ml_rationale = "First half moneyline market not available"
-    fh_ml_edge_home = None
-    fh_ml_edge_away = None
-    fh_ml_p_model = None
-    fh_ml_p_fair_home = None
-    fh_ml_p_fair_away = None
-    fh_ml_ev_pct = None
-    fh_ml_kelly = None
-
-    if fh_engine.get("moneyline") and fh_home_ml and fh_away_ml:
-        fh_ml_pred = fh_engine["moneyline"]
-        if fh_ml_pred.get("home_win_prob") is not None and fh_ml_pred.get("away_win_prob") is not None:
-            model_home_prob = float(fh_ml_pred["home_win_prob"])
-            model_away_prob = float(fh_ml_pred["away_win_prob"])
-
-            fh_ml_p_fair_home, fh_ml_p_fair_away = devig_two_way(fh_home_ml, fh_away_ml)
-            if fh_ml_p_fair_home is None or fh_ml_p_fair_away is None:
-                fh_ml_p_fair_home = american_to_implied_prob(fh_home_ml)
-                fh_ml_p_fair_away = american_to_implied_prob(fh_away_ml)
-
-            fh_ml_edge_home = model_home_prob - (fh_ml_p_fair_home or 0)
-            fh_ml_edge_away = model_away_prob - (fh_ml_p_fair_away or 0)
-
-            ml_threshold = edge_thresholds.get("moneyline", 0.03)
-            if fh_ml_edge_home > ml_threshold or fh_ml_edge_away > ml_threshold:
-                if fh_ml_edge_home > fh_ml_edge_away:
-                    fh_ml_pick = home_team
-                    fh_ml_confidence = min(fh_ml_edge_home * 2.5, 0.70)
-                    fh_ml_rationale = f"Model gives {home_team} {model_home_prob*100:.1f}% vs market {fh_ml_p_fair_home*100:.1f}% (1H)"
-                    fh_ml_p_model = model_home_prob
-                else:
-                    fh_ml_pick = away_team
-                    fh_ml_confidence = min(fh_ml_edge_away * 2.5, 0.70)
-                    fh_ml_rationale = f"Model gives {away_team} {model_away_prob*100:.1f}% vs market {fh_ml_p_fair_away*100:.1f}% (1H)"
-                    fh_ml_p_model = model_away_prob
-
-    if fh_ml_pick == home_team:
-        fh_ml_ev_pct, fh_ml_kelly = _ev_and_kelly(fh_ml_p_model, fh_home_ml)
-    elif fh_ml_pick == away_team:
-        fh_ml_ev_pct, fh_ml_kelly = _ev_and_kelly(fh_ml_p_model, fh_away_ml)
-
-    result["first_half"]["moneyline"] = {
-        "market_home_odds": fh_home_ml,
-        "market_away_odds": fh_away_ml,
-        "market_home_prob": fh_ml_p_fair_home if fh_home_ml else None,
-        "market_away_prob": fh_ml_p_fair_away if fh_away_ml else None,
-        "edge_home": fh_ml_edge_home,
-        "edge_away": fh_ml_edge_away,
-        "pick": fh_ml_pick,
-        "confidence": fh_ml_confidence,
-        "p_model": fh_ml_p_model,
-        "p_fair": fh_ml_p_fair_home if fh_ml_pick == home_team else fh_ml_p_fair_away,
-        "ev_pct": fh_ml_ev_pct,
-        "kelly_fraction": fh_ml_kelly,
-        "odds_as_of_utc": odds_as_of_utc,
-        "rationale": fh_ml_rationale
-    }
-    
     # Build top plays
     all_plays = []
     for period_name, period_data in [("full_game", result["full_game"]), ("first_half", result["first_half"])]:
@@ -555,14 +469,6 @@ def generate_comprehensive_text_report(analysis: List[Dict], target_date: date) 
             if tot.get("pick"):
                 lines.append(f"      ✅ PICK: {tot['pick']} {tot.get('pick_line', tot.get('market_line', 0)):.1f}")
                 lines.append(f"      Edge: {tot['edge']:+.1f} pts | Confidence: {tot.get('confidence', 0)*100:.1f}%")
-            lines.append("")
-        
-        if fg.get("moneyline"):
-            ml = fg["moneyline"]
-            if ml.get("pick"):
-                lines.append(f"   MONEYLINE:")
-                lines.append(f"      ✅ PICK: {ml['pick']}")
-                lines.append(f"      Confidence: {ml.get('confidence', 0)*100:.1f}%")
             lines.append("")
         
         # First Half Analysis

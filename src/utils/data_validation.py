@@ -66,9 +66,6 @@ COLUMN_NULL_THRESHOLDS = {
     "q1_spread_line": 0.20,
     "q1_total_line": 0.20,
 
-    # Moneyline odds
-    "home_ml_odds": 0.15,
-    "away_ml_odds": 0.15,
 
     # === LENIENT (max 30% nulls) ===
     # Betting splits (optional feature)
@@ -76,12 +73,6 @@ COLUMN_NULL_THRESHOLDS = {
     "away_spread_pct": 0.30,
     "over_pct": 0.30,
     "under_pct": 0.30,
-
-    # Period ML odds
-    "fh_home_ml_odds": 0.30,
-    "fh_away_ml_odds": 0.30,
-    "q1_home_ml_odds": 0.40,
-    "q1_away_ml_odds": 0.40,
 
     # Injury data
     "home_injury_impact": 0.30,

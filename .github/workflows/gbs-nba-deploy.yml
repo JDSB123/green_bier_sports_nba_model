@@ -110,8 +110,10 @@ jobs:
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
           imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Health check
+      - name: Smoke tests
         run: |
+          set -euo pipefail
           sleep 30
           FQDN=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           curl -sf "https://$FQDN/health" | jq .
+          curl -sf "https://$FQDN/slate/today?use_splits=false" | jq .

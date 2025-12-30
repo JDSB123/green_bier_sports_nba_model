@@ -86,10 +86,8 @@ class ModelDriftDetector:
     BASELINE VALUES (from backtest):
     - FG Spread: 60.6% accuracy
     - FG Total: 59.2% accuracy
-    - FG Moneyline: 65.5% accuracy
     - 1H Spread: 55.9% accuracy
     - 1H Total: 58.1% accuracy
-    - 1H Moneyline: 63.0% accuracy
     - Q1 Markets: 55-58% accuracy
     """
 
@@ -97,13 +95,10 @@ class ModelDriftDetector:
     BASELINE_ACCURACY = {
         "fg_spread": 0.606,
         "fg_total": 0.592,
-        "fg_moneyline": 0.655,
         "1h_spread": 0.559,
         "1h_total": 0.581,
-        "1h_moneyline": 0.630,
         "q1_spread": 0.560,
         "q1_total": 0.575,
-        "q1_moneyline": 0.580,
     }
 
     # Thresholds for drift detection

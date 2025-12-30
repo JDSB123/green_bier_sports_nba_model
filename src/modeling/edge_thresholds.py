@@ -22,7 +22,7 @@ def calculate_dynamic_edge_threshold(
     Args:
         game_date: Date of the game
         season_start_date: Start date of the NBA season (typically mid-October)
-        bet_type: Type of bet ("spread", "total", "moneyline", "1h_spread", "1h_total")
+        bet_type: Type of bet ("spread", "total", "1h_spread", "1h_total")
         base_threshold: Base threshold in points (default 2.0 for spreads)
         
     Returns:
@@ -35,7 +35,6 @@ def calculate_dynamic_edge_threshold(
     base_thresholds = {
         "spread": 2.0,
         "total": 3.0,
-        "moneyline": 0.03,  # 3% probability edge
         "1h_spread": 1.5,
         "1h_total": 2.0,
     }
@@ -57,20 +56,6 @@ def calculate_dynamic_edge_threshold(
     # Late season (120+ days): Slightly more aggressive (-10% threshold)
     else:
         multiplier = 0.9
-    
-    # For probability-based thresholds (moneyline), adjust differently
-    if bet_type == "moneyline":
-        # Probability thresholds: early season = +0.01 (1%), late season = -0.005 (0.5%)
-        if days_into_season < 30:
-            adjustment = 0.01
-        elif days_into_season < 60:
-            adjustment = 0.005
-        elif days_into_season < 120:
-            adjustment = 0.0
-        else:
-            adjustment = -0.005
-        
-        return base + adjustment
     
     # For point-based thresholds (spreads, totals)
     return base * multiplier

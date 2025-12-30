@@ -57,13 +57,6 @@ def get_fire_rating(edge: float, win_prob: float, market_type: str = "spread") -
         elif edge >= 3 and win_prob >= 0.65: fires = 3
         elif edge >= 2 and win_prob >= 0.60: fires = 2
         elif edge >= 1: fires = 1
-    elif market_type == "moneyline":
-        # Excluded per user request, but keeping logic just in case
-        if edge >= 25: fires = 5
-        elif edge >= 20: fires = 4
-        elif edge >= 15: fires = 3
-        elif edge >= 10: fires = 2
-        elif edge >= 5: fires = 1
     else:  # spread (full game)
         if edge >= 10 and win_prob >= 0.75: fires = 5
         elif edge >= 8 and win_prob >= 0.70: fires = 4

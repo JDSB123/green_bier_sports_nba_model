@@ -115,7 +115,7 @@ var appEnvVars = concat(
     }
     {
       name: 'NBA_MARKETS'
-      value: '1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline'
+      value: '1h_spread,1h_total,fg_spread,fg_total'
     }
     {
       name: 'NBA_PERIODS'

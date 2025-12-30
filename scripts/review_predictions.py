@@ -289,24 +289,6 @@ def evaluate_total(
     return None
 
 
-def evaluate_moneyline(
-    home_score: int,
-    away_score: int,
-    pick: Optional[str],
-    home_team: str,
-    away_team: str,
-) -> Optional[str]:
-    if not pick:
-        return None
-    if home_score > away_score and are_same_team(pick, home_team):
-        return "win"
-    if away_score > home_score and are_same_team(pick, away_team):
-        return "win"
-    if home_score == away_score:
-        return None
-    return "loss"
-
-
 def record_outcome(
     metrics: Dict[str, Dict[str, float]],
     category: str,
@@ -523,30 +505,6 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
             }
         )
 
-        fg_moneyline = fg.get("moneyline") or {}
-        ml_result = evaluate_moneyline(
-            actual["home_score"],
-            actual["away_score"],
-            fg_moneyline.get("pick"),
-            home_team,
-            away_team,
-        )
-        chosen_odds = None
-        if ml_result and fg_moneyline.get("pick"):
-            if are_same_team(fg_moneyline["pick"], home_team):
-                chosen_odds = fg_moneyline.get("market_home_odds")
-            elif are_same_team(fg_moneyline["pick"], away_team):
-                chosen_odds = fg_moneyline.get("market_away_odds")
-        record_outcome(metrics, "FG Moneyline", ml_result, chosen_odds)
-        entry["picks"].append(
-            {
-                "category": "FG Moneyline",
-                "pick": fg_moneyline.get("pick"),
-                "odds": chosen_odds,
-                "result": ml_result,
-            }
-        )
-
         fh_spread = fh.get("spread") or {}
         fh_pick_line = fh_spread.get("pick_line") or fh_spread.get("market_line")
         fh_market_line = fh_spread.get("market_line") or fh_pick_line
@@ -585,24 +543,6 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
             }
         )
         record_outcome(metrics, "1H Total", fh_total_result, fh_total.get("pick_odds"))
-
-        fh_moneyline = fh.get("moneyline") or {}
-        fh_ml_result = evaluate_moneyline(
-            actual["home_first_half"],
-            actual["away_first_half"],
-            fh_moneyline.get("pick"),
-            home_team,
-            away_team,
-        )
-        record_outcome(metrics, "1H Moneyline", fh_ml_result, fh_moneyline.get("pick_odds"))
-        entry["picks"].append(
-            {
-                "category": "1H Moneyline",
-                "pick": fh_moneyline.get("pick"),
-                "odds": fh_moneyline.get("pick_odds"),
-                "result": fh_ml_result,
-            }
-        )
 
         games_output.append(entry)
 

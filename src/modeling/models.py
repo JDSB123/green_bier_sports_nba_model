@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
 import logging
+import os
 import numpy as np
 import pandas as pd
 
@@ -455,169 +456,6 @@ class TotalsModel(BaseModel):
         return metrics
 
 
-class MoneylineModel(BaseModel):
-    """
-    Model for predicting full-game moneyline (home win probability).
-
-    Predicts whether the home team will win the game
-    (1 = home win, 0 = away win).
-    
-    Enhanced with:
-    - Probability calibration (CalibratedClassifierCV)
-    - Moneyline-specific features (Elo, Pythagorean, momentum)
-    - Strength of schedule features
-    """
-
-    DEFAULT_FEATURES = [
-        # Team performance
-        "home_win_pct", "away_win_pct", "win_pct_diff",
-        "home_margin", "away_margin", "margin_diff",
-        "home_ppg", "home_papg", "away_ppg", "away_papg",
-        # Context
-        "home_rest", "away_rest", "rest_diff",
-        "home_b2b", "away_b2b",
-        "dynamic_hca",
-        # H2H
-        "h2h_margin", "h2h_home_win_pct", "h2h_games",
-        # Moneyline-specific (from compute_moneyline_features)
-        "ml_win_prob_diff", "ml_elo_diff", "ml_pythagorean_diff",
-        "ml_momentum_diff", "ml_estimated_home_prob", "ml_h2h_factor",
-        # Strength of schedule
-        "home_sos_rating", "away_sos_rating", "sos_diff",
-        # Derived
-        "predicted_margin", "net_rating_diff",
-    ]
-
-    def __init__(
-        self,
-        name: str = "moneyline_model",
-        model_type: str = "logistic",
-        feature_columns: Optional[List[str]] = None,
-        use_calibration: bool = True,
-    ):
-        super().__init__(name)
-        self.model_type = model_type
-        self.feature_columns = feature_columns or self.DEFAULT_FEATURES
-        self.use_calibration = use_calibration
-
-        if not SKLEARN_AVAILABLE:
-            raise ImportError(
-                "scikit-learn required. Install with: pip install scikit-learn"
-            )
-
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "MoneylineModel":
-        available_features = [
-            f for f in self.feature_columns if f in X.columns
-        ]
-        self.feature_columns = available_features
-
-        X_features = X[self.feature_columns].copy()
-        X_features = X_features.fillna(X_features.median())
-
-        # Initialize estimator
-        if self.model_type == "logistic":
-            estimator = LogisticRegression(max_iter=1000, random_state=42)
-        elif self.model_type == "gradient_boosting":
-            estimator = GradientBoostingClassifier(
-                n_estimators=100,
-                max_depth=4,
-                learning_rate=0.1,
-                random_state=42,
-            )
-        else:
-            raise ValueError(f"Unknown model_type: {self.model_type}")
-
-        pipeline = Pipeline([("scaler", StandardScaler()), ("est", estimator)])
-
-        # Apply probability calibration
-        if self.use_calibration:
-            logger.info(f"Applying isotonic calibration to {self.model_type} moneyline model")
-            calibrated_model = CalibratedClassifierCV(
-                pipeline,
-                method='isotonic',
-                cv=5,
-            )
-            calibrated_model.fit(X_features, y)
-            self.pipeline = calibrated_model
-        else:
-            pipeline.fit(X_features, y)
-            self.pipeline = pipeline
-
-        self.model = estimator
-        self.is_fitted = True
-        return self
-
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if not self.is_fitted:
-            raise ValueError("Model not fitted. Call fit() first.")
-        X_features = self._prepare_features(X)
-        return self.pipeline.predict(X_features)
-
-    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
-        if not self.is_fitted:
-            raise ValueError("Model not fitted. Call fit() first.")
-        X_features = self._prepare_features(X)
-
-        if hasattr(self.pipeline, "predict_proba"):
-            return self.pipeline.predict_proba(X_features)
-        return self.model.predict_proba(
-            self.pipeline.named_steps["scaler"].transform(X_features)
-        )
-
-    def evaluate(
-        self,
-        X: pd.DataFrame,
-        y_true: pd.Series,
-        ml_odds: Optional[pd.DataFrame] = None,
-    ) -> ModelMetrics:
-        """
-        Evaluate model performance.
-        
-        Args:
-            X: Feature DataFrame
-            y_true: True labels (1 = home win, 0 = away win)
-            ml_odds: Optional DataFrame with home_ml_odds and away_ml_odds
-                     for proper ROI calculation
-        """
-        y_pred = self.predict(X)
-        y_proba = self.predict_proba(X)[:, 1]
-
-        metrics = ModelMetrics()
-        y_true_arr = y_true.values
-        metrics.accuracy = accuracy_score(y_true_arr, y_pred)
-        metrics.log_loss = log_loss(y_true_arr, y_proba)
-        metrics.brier = float(np.mean((y_proba - y_true_arr) ** 2))
-        
-        # Calculate ROI
-        n = len(y_true_arr)
-        if n > 0:
-            if ml_odds is not None and "home_ml_odds" in ml_odds.columns:
-                # Calculate proper ROI using actual ML odds
-                profit = 0.0
-                for i, (pred, actual) in enumerate(zip(y_pred, y_true_arr)):
-                    if pred == 1:  # Bet on home
-                        odds = ml_odds.iloc[i]["home_ml_odds"]
-                    else:  # Bet on away
-                        odds = ml_odds.iloc[i]["away_ml_odds"]
-                    
-                    if pred == actual:  # Won
-                        if odds > 0:
-                            profit += odds / 100
-                        else:
-                            profit += 100 / abs(odds)
-                    else:  # Lost
-                        profit -= 1
-                
-                metrics.roi = profit / n
-            else:
-                # Simple ROI assuming -110 odds
-                correct = (y_pred == y_true_arr).sum()
-                profit = correct * (100.0 / 110.0) - (n - correct)
-                metrics.roi = profit / n
-        
-        return metrics
-
-
 class FirstHalfMixin:
     """Mixin to indicate this model targets first-half outcomes.
 
@@ -653,53 +491,6 @@ class FirstHalfTotalsModel(FirstHalfMixin, TotalsModel):
         feature_columns: Optional[List[str]] = None,
         use_calibration: bool = True,
     ):
-        super().__init__(
-            name=name,
-            model_type=model_type,
-            feature_columns=feature_columns,
-            use_calibration=use_calibration,
-        )
-
-
-class FirstHalfMoneylineModel(FirstHalfMixin, MoneylineModel):
-    """
-    First-half moneyline model (home leading at half).
-    
-    Uses 1H-specific features when available, with calibration.
-    """
-    
-    DEFAULT_FEATURES = [
-        # 1H-specific features (when available from 1H training data)
-        "home_ppg_1h", "away_ppg_1h",
-        "home_margin_1h", "away_margin_1h",
-        "ppg_diff_1h", "margin_diff_1h",
-        # FG features scaled for 1H context
-        "home_win_pct", "away_win_pct", "win_pct_diff",
-        "home_margin", "away_margin", "margin_diff",
-        # Context (same for 1H)
-        "home_rest", "away_rest", "rest_diff",
-        "home_b2b", "away_b2b",
-        # Scaled HCA for 1H (~1.5 pts instead of 3)
-        "dynamic_hca",
-        # H2H
-        "h2h_margin", "h2h_home_win_pct",
-        # Moneyline features
-        "ml_win_prob_diff", "ml_elo_diff", "ml_pythagorean_diff",
-        "ml_momentum_diff", "ml_estimated_home_prob",
-        # Derived
-        "predicted_margin",
-    ]
-    
-    def __init__(
-        self,
-        name: str = "fh_moneyline_model",
-        model_type: str = "logistic",
-        feature_columns: Optional[List[str]] = None,
-        use_calibration: bool = True,
-    ):
-        # Use 1H-specific defaults if no features provided
-        if feature_columns is None:
-            feature_columns = self.DEFAULT_FEATURES
         super().__init__(
             name=name,
             model_type=model_type,
@@ -920,20 +711,6 @@ def find_value_bets(
                     "implied_prob": row["fh_total_implied_prob"],
                     "edge": edge,
                     "line": row.get("fh_total_line", None),
-                })
-
-        # First-half moneyline (team leading at half)
-        if "fh_moneyline_prob" in row and "fh_moneyline_implied_prob" in row:
-            edge = row["fh_moneyline_prob"] - row["fh_moneyline_implied_prob"]
-            if edge >= min_edge and row["fh_moneyline_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "first_half_moneyline",
-                    "prediction": "home" if row["fh_moneyline_prob"] > 0.5 else "away",
-                    "model_prob": row["fh_moneyline_prob"],
-                    "implied_prob": row["fh_moneyline_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("fh_moneyline_price", None),
                 })
 
         # Team totals (home/away)

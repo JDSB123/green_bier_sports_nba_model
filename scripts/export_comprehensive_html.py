@@ -42,13 +42,6 @@ def get_fire_rating(edge: float, win_prob: float, market_type: str = "spread") -
             return "🔥🔥"
         elif edge >= 5 and win_prob >= 0.55:
             return "🔥"
-    elif market_type == "moneyline":
-        if edge >= 20 and win_prob >= 0.65:
-            return "🔥🔥🔥"
-        elif edge >= 15 and win_prob >= 0.55:
-            return "🔥🔥"
-        elif edge >= 10:
-            return "🔥"
     else:  # spread
         if edge >= 7 and win_prob >= 0.70:
             return "🔥🔥🔥"
@@ -249,22 +242,18 @@ def generate_html(data: dict, output_path: str):
         
         spread_data = edge_data.get("spread", {})
         total_data = edge_data.get("total", {})
-        ml_data = edge_data.get("moneyline", {})
         
         # Format pick_line with +/- sign for spreads
         spread_pick_line = spread_data.get("pick_line")
         spread_pick_line_str = f"{spread_pick_line:+.1f}" if spread_pick_line is not None else ""
         spread_edge = abs(spread_data.get("edge") or 0)
         total_edge = abs(total_data.get("edge") or 0)
-        ml_edge = abs((ml_data.get("edge_away") or 0) * 100)
         
         spread_fire = get_fire_rating(spread_edge, spread_data.get("win_probability", 0), "spread")
         total_fire = get_fire_rating(total_edge, total_data.get("win_probability", 0), "total")
-        ml_fire = get_fire_rating(ml_edge, ml_data.get("model_away_prob", 0), "moneyline")
         
         spread_class = "elite" if spread_fire.count("🔥") >= 3 else "strong" if spread_fire.count("🔥") == 2 else "good" if spread_fire else ""
         total_class = "elite" if total_fire.count("🔥") >= 3 else "strong" if total_fire.count("🔥") == 2 else "good" if total_fire else ""
-        ml_class = "elite" if ml_fire.count("🔥") >= 3 else "strong" if ml_fire.count("🔥") == 2 else "good" if ml_fire else ""
         
         html += f"""
         <div class="game-card">
@@ -322,28 +311,6 @@ def generate_html(data: dict, output_path: str):
                     </div>
                 </div>
                 
-                <div class="market {ml_class}">
-                    <div class="market-header">
-                        <span class="market-type">MONEYLINE</span>
-                        <span class="fire-rating">{ml_fire}</span>
-                    </div>
-                    <div class="market-row">
-                        <span class="label">Model Pick:</span>
-                        <span class="value pick">{ml_data.get('pick', '')}</span>
-                    </div>
-                    <div class="market-row">
-                        <span class="label">Win Prob:</span>
-                        <span class="value">{round(ml_data.get('model_away_prob', 0) * 100, 1)}%</span>
-                    </div>
-                    <div class="market-row">
-                        <span class="label">Market Odds:</span>
-                        <span class="value">Home {odds.get('home_ml', '')} / Away {odds.get('away_ml', '')}</span>
-                    </div>
-                    <div class="market-row">
-                        <span class="label">Edge:</span>
-                        <span class="value edge">{round(ml_edge, 1)}%</span>
-                    </div>
-                </div>
             </div>
         </div>
 """

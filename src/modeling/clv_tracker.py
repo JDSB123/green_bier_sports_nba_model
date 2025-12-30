@@ -56,7 +56,7 @@ class CLVTracker:
         game_date: date,
         home_team: str,
         away_team: str,
-        bet_type: str,  # "spread", "total", "moneyline", "1h_spread", "1h_total"
+        bet_type: str,  # "spread", "total", "1h_spread", "1h_total"
         model_line: float,
         opening_line: Optional[float] = None,
         prediction_time: Optional[datetime] = None,

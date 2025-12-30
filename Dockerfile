@@ -143,7 +143,7 @@ ENV ALLOWED_ORIGINS=*
 
 # STRICT MODE - All 6 markets required, FRESH DATA ONLY (baked-in env defaults)
 ENV NBA_MODEL_VERSION=NBA_v33.0.8.0
-ENV NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+ENV NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
 ENV NBA_PERIODS=first_half,full_game
 ENV NBA_STRICT_MODE=true
 ENV NBA_CACHE_DISABLED=true

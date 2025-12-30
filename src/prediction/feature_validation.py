@@ -5,7 +5,7 @@ This module provides consistent feature validation behavior across ALL predictor
 - PeriodPredictor (engine.py)
 - SpreadPredictor (spreads/predictor.py)
 - TotalPredictor (totals/predictor.py)
-- MoneylinePredictor (moneyline/predictor.py)
+
 
 CONFIGURATION:
     Environment variable: PREDICTION_FEATURE_MODE

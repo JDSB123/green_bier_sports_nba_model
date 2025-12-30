@@ -34,14 +34,14 @@ This directory contains operational scripts for the NBA v6.5 prediction system.
 ### Model Training
 | Script | Description |
 |--------|-------------|
-| `train_models.py` | **Main trainer** - Train all 9 market models |
+| `train_models.py` | **Main trainer** - Train all 6 market models |
 | `extract_feature_importance.py` | Extract and display feature importance |
 | `log_model_performance.py` | Log model performance metrics |
 
 ### Backtesting & Analysis
 | Script | Description |
 |--------|-------------|
-| `backtest.py` | **Main backtest** - Walk-forward validation for all 9 markets |
+| `backtest.py` | **Main backtest** - Walk-forward validation for all 6 markets |
 | `analyze_backtest_results.py` | Parse and display backtest metrics |
 | `analyze_roi.py` | ROI performance analysis |
 | `analyze_spread_performance.py` | Spread-specific analysis |

@@ -215,10 +215,264 @@ def _match_single_filter(*, home: str, away: str, raw: str) -> bool:
     return raw in home or raw in away
 
 
+def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_data: dict = None) -> str:
+    """Generate HTML output for the slate analysis."""
+
+    def fire_to_html(fire_str: str) -> str:
+        """Convert fire emojis to HTML spans for styling."""
+        count = fire_str.count("🔥")
+        return f'<span class="fire fire-{count}">{"🔥" * count}</span>'
+
+    def format_odds_html(odds_val) -> str:
+        if odds_val is None:
+            return "N/A"
+        try:
+            odds_val = int(odds_val)
+            return f"+{odds_val}" if odds_val > 0 else str(odds_val)
+        except (ValueError, TypeError):
+            return str(odds_val)
+
+    html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Picks - {date_str}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .container {{ max-width: 1400px; margin: 0 auto; }}
+        header {{
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 2px solid #e94560;
+            margin-bottom: 30px;
+        }}
+        h1 {{ font-size: 2.5em; color: #e94560; margin-bottom: 10px; }}
+        .subtitle {{ color: #888; font-size: 1.1em; }}
+        .summary-box {{
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid #e94560;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }}
+        .summary-box h2 {{ color: #e94560; margin-bottom: 15px; }}
+        .picks-table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }}
+        .picks-table th {{
+            background: #e94560;
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+        }}
+        .picks-table td {{
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }}
+        .picks-table tr:hover {{ background: rgba(233, 69, 96, 0.1); }}
+        .game-header {{
+            background: rgba(233, 69, 96, 0.2) !important;
+            font-weight: bold;
+        }}
+        .pick-cell {{ font-weight: 600; color: #4ade80; }}
+        .edge-positive {{ color: #4ade80; }}
+        .edge-negative {{ color: #f87171; }}
+        .fire {{ font-size: 1.1em; }}
+        .fire-5 {{ text-shadow: 0 0 10px #ff6b35; }}
+        .fire-4 {{ text-shadow: 0 0 8px #ff8c42; }}
+        .tier-elite {{ background: linear-gradient(90deg, rgba(255,215,0,0.2), transparent) !important; }}
+        .tier-strong {{ background: linear-gradient(90deg, rgba(192,192,192,0.2), transparent) !important; }}
+        .model-val {{ color: #60a5fa; }}
+        .market-val {{ color: #a78bfa; }}
+        footer {{
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #333;
+            margin-top: 30px;
+        }}
+        @media (max-width: 768px) {{
+            .picks-table {{ font-size: 0.85em; }}
+            .picks-table th, .picks-table td {{ padding: 8px 5px; }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏀 NBA PREDICTIONS</h1>
+            <p class="subtitle">{date_str.upper()} | Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')} | v33.0.8.0</p>
+        </header>
+
+        <div class="summary-box">
+            <h2>📊 {len(analysis)} Games Analyzed</h2>
+        </div>
+
+        <table class="picks-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Matchup</th>
+                    <th>Pick</th>
+                    <th>Odds</th>
+                    <th>Prediction</th>
+                    <th>Line</th>
+                    <th>Edge</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+'''
+
+    for game in analysis:
+        home = game.get("home_team", "")
+        away = game.get("away_team", "")
+        time_cst = game.get("time_cst", "TBD")
+        odds = game.get("odds", {})
+        edge_data = game.get("comprehensive_edge", {})
+        features = game.get("features", {})
+
+        home_wins = features.get("home_wins", 0)
+        home_losses = features.get("home_losses", 0)
+        away_wins = features.get("away_wins", 0)
+        away_losses = features.get("away_losses", 0)
+
+        home_record = f"({home_wins}-{home_losses})" if home_wins or home_losses else ""
+        away_record = f"({away_wins}-{away_losses})" if away_wins or away_losses else ""
+
+        matchup_str = f"{away} {away_record} @ {home} {home_record}"
+
+        # Game header row
+        html += f'''            <tr class="game-header">
+                <td>{time_cst}</td>
+                <td colspan="7">{matchup_str}</td>
+            </tr>
+'''
+
+        # Collect picks for this game
+        picks = []
+
+        def add_pick_html(market_name, p_data, p_type="spread"):
+            if not p_data or not p_data.get("pick"):
+                return
+
+            pick_team = p_data.get("pick")
+            market_line = p_data.get("market_line", 0)
+            pick_line = p_data.get("pick_line") if p_data.get("pick_line") is not None else market_line
+            market_odds_val = p_data.get("market_odds")
+            conf = p_data.get("confidence", 0)
+
+            edge_pts = p_data.get("edge", 0) or 0
+
+            # Fire rating
+            edge_norm = min(abs(edge_pts) / 10.0, 1.0)
+            combined = (conf * 0.6) + (edge_norm * 0.4)
+            if combined >= 0.85:
+                fire_count = 5
+            elif combined >= 0.70:
+                fire_count = 4
+            elif combined >= 0.60:
+                fire_count = 3
+            elif combined >= 0.52:
+                fire_count = 2
+            else:
+                fire_count = 1
+
+            # Pick display - make model prediction explicit
+            if p_type == "total":
+                pick_str = f"{pick_team} {market_line}"
+                model_total = p_data.get('model_total', 0)
+                model_val = f"Total: {model_total:.1f}"
+                market_val = f"{market_line:.1f}"
+            else:
+                pick_str = f"{pick_team} {pick_line:+.1f}"
+                model_margin = p_data.get("model_margin", 0)
+                # Model margin is home perspective, convert to predicted winner
+                if model_margin > 0:
+                    model_val = f"{home} by {abs(model_margin):.1f}"
+                elif model_margin < 0:
+                    model_val = f"{away} by {abs(model_margin):.1f}"
+                else:
+                    model_val = "Pick'em"
+                market_val = f"{pick_line:+.1f}"
+
+            tier_class = "tier-elite" if fire_count >= 5 else ("tier-strong" if fire_count >= 4 else "")
+            edge_class = "edge-positive" if edge_pts > 0 else "edge-negative"
+
+            picks.append({
+                "market": market_name,
+                "pick": pick_str,
+                "odds": format_odds_html(market_odds_val),
+                "model": model_val,
+                "market_line": market_val,
+                "edge": f"{edge_pts:+.1f}",
+                "fire_count": fire_count,
+                "tier_class": tier_class,
+                "edge_class": edge_class
+            })
+
+        # Full Game
+        fg = edge_data.get("full_game", {})
+        add_pick_html("FG Spread", fg.get("spread"), "spread")
+        add_pick_html("FG Total", fg.get("total"), "total")
+
+        # 1H
+        fh = edge_data.get("first_half", {})
+        add_pick_html("1H Spread", fh.get("spread"), "spread")
+        add_pick_html("1H Total", fh.get("total"), "total")
+
+        for p in picks:
+            html += f'''            <tr class="{p['tier_class']}">
+                <td></td>
+                <td>{p['market']}</td>
+                <td class="pick-cell">{p['pick']}</td>
+                <td>{p['odds']}</td>
+                <td class="model-val">{p['model']}</td>
+                <td class="market-val">{p['market_line']}</td>
+                <td class="{p['edge_class']}">{p['edge']} pts</td>
+                <td class="fire fire-{p['fire_count']}">{"🔥" * p['fire_count']}</td>
+            </tr>
+'''
+
+        if not picks:
+            html += f'''            <tr>
+                <td></td>
+                <td colspan="7" style="color: #666;">No qualifying picks</td>
+            </tr>
+'''
+
+    html += '''            </tbody>
+        </table>
+
+        <footer>
+            <p>🔥 = Pick strength (5 fires = strongest) | Model v33.0.8.0</p>
+        </footer>
+    </div>
+</body>
+</html>
+'''
+    return html
+
+
 def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
     """Fetch slate, display results, and save to file."""
     now_cst = datetime.now(CST)
     output_lines = []
+    analysis_data = []  # Store for HTML generation
 
     def log(line: str = ""):
         """Print and store line for file output."""
@@ -273,7 +527,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         log("=" * 155)
 
         # Header
-        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Model':<10} | {'Market':<10} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
+        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Prediction':<12} | {'Line':<8} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
         log(header)
         log("-" * 155)
 
@@ -311,33 +565,27 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 market_odds_val = p_data.get("market_odds")
                 conf = p_data.get("confidence", 0)
 
-                # Get edge - convert ML probability edge to pts
-                if p_type == "ml":
-                    is_home_pick = (pick_team == home)
-                    prob_edge = p_data.get("edge_home" if is_home_pick else "edge_away", 0) or 0
-                    edge_pts = prob_edge_to_pts(prob_edge)
-                    # For ML, get the actual odds for the picked team
-                    market_odds_val = odds.get("home_ml" if is_home_pick else "away_ml")
-                else:
-                    edge_pts = p_data.get("edge", 0) or 0
+                edge_pts = p_data.get("edge", 0) or 0
 
                 # Fire rating - all in pts now
                 fire = calculate_fire_rating(conf, abs(edge_pts))
 
-                # Pick display
-                if p_type == "ml":
-                    pick_str = f"{pick_team} ML"
-                    model_val = f"{conf*100:.0f}% WIN"
-                    market_val = format_odds(market_odds_val)
-                elif p_type == "total":
+                # Pick display - make model prediction explicit
+                if p_type == "total":
                     pick_str = f"{pick_team} {market_line}"
-                    model_val = f"{p_data.get('model_total', 0):.1f}"
+                    model_total = p_data.get('model_total', 0)
+                    model_val = f"{model_total:.1f}"
                     market_val = f"{market_line:.1f}"
                 else:  # spread
                     pick_str = f"{pick_team} {pick_line:+.1f}"
                     model_margin = p_data.get("model_margin", 0)
-                    proj = model_margin if pick_team == home else -model_margin
-                    model_val = f"{proj:+.1f}"
+                    # Show predicted winner with margin
+                    if model_margin > 0:
+                        model_val = f"{home[:3].upper()} by {abs(model_margin):.1f}"
+                    elif model_margin < 0:
+                        model_val = f"{away[:3].upper()} by {abs(model_margin):.1f}"
+                    else:
+                        model_val = "Pick'em"
                     market_val = f"{pick_line:+.1f}"
 
                 ev_pct = p_data.get("ev_pct")
@@ -358,13 +606,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             fg = edge_data.get("full_game", {})
             add_pick("FG Spread", fg.get("spread"), "spread")
             add_pick("FG Total", fg.get("total"), "total")
-            add_pick("FG ML", fg.get("moneyline"), "ml")
 
             # 1H
             fh = edge_data.get("first_half", {})
             add_pick("1H Spread", fh.get("spread"), "spread")
             add_pick("1H Total", fh.get("total"), "total")
-            add_pick("1H ML", fh.get("moneyline"), "ml")
 
             # Print rows
             if picks:
@@ -372,12 +618,12 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 for p in picks:
                     t_str = time_cst if first else ""
                     m_str = matchup_str if first else ""
-                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<10} | {p['market_line']:<10} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
+                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<12} | {p['market_line']:<8} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
                     first = False
                 log("-" * 155)
             else:
                 # No picks for this game
-                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<10} | {'-':<10} | {'-':<8} | {'-':<7} | -")
+                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<12} | {'-':<8} | {'-':<8} | {'-':<7} | -")
                 log("-" * 155)
 
         log("\n" + "=" * 100)
@@ -425,12 +671,24 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     model_margin = spread.get("model_margin", 0)
                     fire = calculate_fire_rating(conf, abs(edge))
 
-                    proj_margin = model_margin if pick_team == home else -model_margin
+                    # Determine predicted winner and margin for rationale
+                    if model_margin > 0:
+                        pred_winner, pred_margin = home, abs(model_margin)
+                    elif model_margin < 0:
+                        pred_winner, pred_margin = away, abs(model_margin)
+                    else:
+                        pred_winner, pred_margin = "Toss-up", 0
 
                     log(f"    SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
-                    log(f"       Model: {pick_team} {proj_margin:+.1f}")
-                    log(f"       Market: {pick_line:+.1f} ({format_odds(market_odds_val)})")
-                    log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                    log(f"       Model predicts: {pred_winner} wins by {pred_margin:.1f} pts")
+                    log(f"       Market line: {pick_team} {pick_line:+.1f}")
+                    log(f"       Edge: {edge:+.1f} pts of value")
+                    # Explain the edge calculation
+                    if pick_team == home:
+                        log(f"       Rationale: Model says {home} by {abs(model_margin):.1f}, getting {pick_line:+.1f} → {edge:.1f} pts edge")
+                    else:
+                        log(f"       Rationale: Model says {pred_winner} by {pred_margin:.1f}, but getting {away} {pick_line:+.1f} → {edge:.1f} pts edge")
+                    log(f"       Confidence: {conf:.0%}  |  {fire}")
                     ev_line = format_ev_line(spread)
                     if ev_line:
                         log(ev_line)
@@ -445,41 +703,25 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     conf = total.get("confidence", 0)
                     model_total = total.get("model_total", 0)
                     fire = calculate_fire_rating(conf, abs(edge))
+                    diff = model_total - line
 
                     log(f"    TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds_val)})")
-                    log(f"       Model: {model_total:.1f}")
-                    log(f"       Market: {line:.1f} ({format_odds(market_odds_val)})")
-                    log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                    log(f"       Model predicts: {model_total:.1f} total points")
+                    log(f"       Market line: {line:.1f}")
+                    log(f"       Edge: {abs(edge):.1f} pts of value")
+                    if pick_side == "OVER":
+                        log(f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) by {abs(diff):.1f} pts → OVER")
+                    else:
+                        log(f"       Rationale: Model ({model_total:.1f}) < Line ({line:.1f}) by {abs(diff):.1f} pts → UNDER")
+                    log(f"       Confidence: {conf:.0%}  |  {fire}")
                     ev_line = format_ev_line(total)
-                    if ev_line:
-                        log(ev_line)
-
-                # Moneyline
-                ml = fg.get("moneyline", {})
-                if ml.get("pick"):
-                    pick_team = ml["pick"]
-                    is_home = (pick_team == home)
-                    ml_odds = odds.get("home_ml" if is_home else "away_ml")
-
-                    prob_edge = ml.get("edge_home" if is_home else "edge_away", 0) or 0
-                    edge_pts = prob_edge_to_pts(prob_edge)
-
-                    conf = ml.get("confidence", 0)
-                    fire = calculate_fire_rating(conf, abs(edge_pts))
-                    rationale = ml.get("rationale", "")
-
-                    log(f"    ML: {pick_team} ({format_odds(ml_odds)})")
-                    log(f"       Model: {rationale}")
-                    log(f"       Market: {format_odds(ml_odds)}")
-                    log(f"       Edge: {edge_pts:+.1f} pts  |  {fire}")
-                    ev_line = format_ev_line(ml)
                     if ev_line:
                         log(ev_line)
 
             # First Half picks
             fh = edge_data.get("first_half", {})
             if fh:
-                has_fh_picks = any(fh.get(m, {}).get("pick") for m in ["spread", "total", "moneyline"])
+                has_fh_picks = any(fh.get(m, {}).get("pick") for m in ["spread", "total"])
                 if has_fh_picks:
                     log("\n  FIRST HALF:")
 
@@ -487,7 +729,6 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     if spread.get("pick"):
                         pick_team = spread["pick"]
                         market_line = spread.get("market_line", 0)
-                        # Use pick_line for display (correct sign for picked team)
                         pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
                         market_odds_val = spread.get("market_odds")
                         edge = spread.get("edge", 0) or 0
@@ -495,12 +736,18 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         model_margin = spread.get("model_margin", 0)
                         fire = calculate_fire_rating(conf, abs(edge))
 
-                        proj_margin = model_margin if pick_team == home else -model_margin
+                        if model_margin > 0:
+                            pred_winner, pred_margin = home, abs(model_margin)
+                        elif model_margin < 0:
+                            pred_winner, pred_margin = away, abs(model_margin)
+                        else:
+                            pred_winner, pred_margin = "Toss-up", 0
 
                         log(f"    1H SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
-                        log(f"       Model: {pick_team} {proj_margin:+.1f}")
-                        log(f"       Market: {pick_line:+.1f} ({format_odds(market_odds_val)})")
-                        log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                        log(f"       Model predicts: {pred_winner} leads by {pred_margin:.1f} at half")
+                        log(f"       Market line: {pick_team} {pick_line:+.1f}")
+                        log(f"       Edge: {edge:+.1f} pts of value")
+                        log(f"       Confidence: {conf:.0%}  |  {fire}")
                         ev_line = format_ev_line(spread)
                         if ev_line:
                             log(ev_line)
@@ -514,11 +761,17 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         conf = total.get("confidence", 0)
                         model_total = total.get("model_total", 0)
                         fire = calculate_fire_rating(conf, abs(edge))
+                        diff = model_total - line
 
                         log(f"    1H TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds_val)})")
-                        log(f"       Model: {model_total:.1f}")
-                        log(f"       Market: {line:.1f} ({format_odds(market_odds_val)})")
-                        log(f"       Edge: {edge:+.1f} pts  |  {fire}")
+                        log(f"       Model predicts: {model_total:.1f} 1H points")
+                        log(f"       Market line: {line:.1f}")
+                        log(f"       Edge: {abs(edge):.1f} pts of value")
+                        if pick_side == "OVER":
+                            log(f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) → OVER")
+                        else:
+                            log(f"       Rationale: Model ({model_total:.1f}) < Line ({line:.1f}) → UNDER")
+                        log(f"       Confidence: {conf:.0%}  |  {fire}")
                         ev_line = format_ev_line(total)
                         if ev_line:
                             log(ev_line)
@@ -537,10 +790,21 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         with open(output_file, "w", encoding="utf-8") as f:
             f.write("\n".join(output_lines))
         print(f"\n[SAVED] Output saved to: {output_file}")
+
+        # Generate and save HTML output
+        html_file = OUTPUT_DIR / f"slate_output_{timestamp}.html"
+        html_content = generate_html_output(analysis, date_str, now_cst)
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
+        print(f"[SAVED] HTML output saved to: {html_file}")
+
         try:
             ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
             archive_file = ARCHIVE_DIR / output_file.name
             shutil.copy2(output_file, archive_file)
+            # Also archive HTML
+            archive_html = ARCHIVE_DIR / html_file.name
+            shutil.copy2(html_file, archive_html)
             print(f"[ARCHIVE] Output archived to: {archive_file}")
         except Exception as e:
             print(f"[WARN] Failed to archive output: {e}")

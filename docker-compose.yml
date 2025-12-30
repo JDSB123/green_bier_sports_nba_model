@@ -54,7 +54,7 @@ services:
 
       # v33.0.8.0 configuration (6 independent markets - 1H + FG)
       - NBA_MODEL_VERSION=NBA_v33.0.8.0
-      - NBA_MARKETS=1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline
+      - NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
       - NBA_PERIODS=first_half,full_game
 
       # CORS - configured via environment variable

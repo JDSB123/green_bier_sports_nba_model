@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Optional, Tuple
 
 
+COMMON_JUICES = (-105, -110, -115)
+
+
 def american_to_implied_prob(odds: Optional[int]) -> Optional[float]:
     """Convert American odds to implied probability."""
     if odds is None:
@@ -78,3 +81,19 @@ def kelly_fraction(p_model: Optional[float], odds: Optional[int], fraction: floa
     if f_star <= 0:
         return 0.0
     return f_star * fraction
+
+
+def break_even_probability(odds: Optional[int]) -> Optional[float]:
+    """Return the break-even probability implied by American odds."""
+    return american_to_implied_prob(odds)
+
+
+def break_even_percent(odds: Optional[int]) -> Optional[float]:
+    """Return the break-even percentage implied by American odds."""
+    prob = break_even_probability(odds)
+    return None if prob is None else prob * 100.0
+
+
+def break_even_common_juices() -> dict[int, float]:
+    """Return break-even percentages for common two-way juices."""
+    return {odds: round(break_even_percent(odds) or 0.0, 2) for odds in COMMON_JUICES}

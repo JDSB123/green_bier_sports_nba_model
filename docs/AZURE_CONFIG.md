@@ -81,8 +81,8 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 
 ## Model Version
 
-- **Target:** NBA_v33.0.8.0 (6 markets: 1H + FG spreads/totals/moneylines)
-- **Markets:** 1h_spread, 1h_total, 1h_moneyline, fg_spread, fg_total, fg_moneyline
+- **Target:** NBA_v33.0.8.0 (4 markets: 1H + FG spreads/totals)
+- **Markets:** 1h_spread, 1h_total, fg_spread, fg_total
 - **Dockerfile:** `Dockerfile.combined`
 
 ## API Endpoints (core)

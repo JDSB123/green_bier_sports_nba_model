@@ -6,7 +6,6 @@ Verifies that:
 1. All required models are loaded correctly
 2. Models are using the correct components
 3. Predictions are using actual models (not simplified calculations)
-4. Moneyline predictions use the audited model
 """
 import sys
 import io
@@ -27,15 +26,13 @@ os.environ.setdefault('FILTER_SPREAD_MIN_CONFIDENCE', '0.55')
 os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '1.0')
 os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.55')
 os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '1.5')
-os.environ.setdefault('FILTER_MONEYLINE_MIN_CONFIDENCE', '0.55')
-os.environ.setdefault('FILTER_MONEYLINE_MIN_EDGE_PCT', '0.03')
 os.environ.setdefault('THE_ODDS_BASE_URL', 'https://api.the-odds-api.com/v4')
 os.environ.setdefault('API_BASKETBALL_BASE_URL', 'https://v1.basketball.api-sports.io')
 os.environ.setdefault('DATA_RAW_DIR', 'data/raw')
 os.environ.setdefault('DATA_PROCESSED_DIR', 'data/processed')
 os.environ.setdefault('CURRENT_SEASON', '2025-2026')
 os.environ.setdefault('SEASONS_TO_PROCESS', '2025-2026')
-os.environ.setdefault('NBA_MARKETS', '1h_spread,1h_total,1h_moneyline,fg_spread,fg_total,fg_moneyline')
+os.environ.setdefault('NBA_MARKETS', '1h_spread,1h_total,fg_spread,fg_total')
 
 from src.prediction.engine import UnifiedPredictionEngine
 from src.prediction.models import (
@@ -121,16 +118,6 @@ def verify_engine_initialization(models_dir: Path) -> dict:
             results["predictors"]["spread"] = "loaded"
         if hasattr(engine, 'total_predictor'):
             results["predictors"]["total"] = "loaded"
-        if hasattr(engine, 'moneyline_predictor'):
-            results["predictors"]["moneyline"] = "loaded"
-            # Verify moneyline uses actual model (not simplified)
-            if hasattr(engine.moneyline_predictor, 'model'):
-                model_type = type(engine.moneyline_predictor.model).__name__
-                results["predictors"]["moneyline_model_type"] = model_type
-            else:
-                results["status"] = "fail"
-                results["errors"].append("Moneyline predictor missing model attribute")
-        
     except Exception as e:
         results["status"] = "fail"
         results["errors"].append(f"Engine initialization: {str(e)}")
@@ -214,26 +201,7 @@ def verify_prediction_pipeline(models_dir: Path) -> dict:
                 features=test_features,
                 spread_line=-3.5,
                 total_line=225.0,
-                home_ml_odds=-150,
-                away_ml_odds=130,
             )
-            
-            # Verify moneyline uses actual model
-            if "moneyline" in fg_preds:
-                ml_pred = fg_preds["moneyline"]
-                if "home_win_prob" in ml_pred and "away_win_prob" in ml_pred:
-                    results["tests"].append("[PASS] Moneyline uses actual model probabilities")
-                    # Verify probabilities are reasonable (not simplified calculation)
-                    home_prob = ml_pred["home_win_prob"]
-                    away_prob = ml_pred["away_win_prob"]
-                    if abs(home_prob + away_prob - 1.0) < 0.01:
-                        results["tests"].append("[PASS] Moneyline probabilities sum to ~1.0")
-                    else:
-                        results["status"] = "fail"
-                        results["errors"].append(f"Moneyline probabilities don't sum to 1.0: {home_prob} + {away_prob}")
-                else:
-                    results["status"] = "fail"
-                    results["errors"].append("Moneyline prediction missing probabilities")
             
             results["tests"].append("[PASS] Full game predictions generated")
             
@@ -315,8 +283,6 @@ def verify_feature_alignment(models_dir: Path) -> dict:
         os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '1.0')
         os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.55')
         os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '1.5')
-        os.environ.setdefault('FILTER_MONEYLINE_MIN_CONFIDENCE', '0.55')
-        os.environ.setdefault('FILTER_MONEYLINE_MIN_EDGE_PCT', '0.03')
         os.environ.setdefault('THE_ODDS_BASE_URL', 'https://api.the-odds-api.com/v4')
         os.environ.setdefault('API_BASKETBALL_BASE_URL', 'https://v1.basketball.api-sports.io')
         os.environ.setdefault('DATA_RAW_DIR', 'data/raw')
@@ -454,8 +420,6 @@ def main():
     if engine_results["status"] == "pass":
         print(f"   [PASS] Engine initialized successfully")
         print(f"   [PASS] Predictors loaded: {', '.join(engine_results['predictors'].keys())}")
-        if "moneyline_model_type" in engine_results["predictors"]:
-            print(f"   [PASS] Moneyline model type: {engine_results['predictors']['moneyline_model_type']}")
     else:
         print(f"   [FAIL] Engine initialization errors:")
         for error in engine_results["errors"]:

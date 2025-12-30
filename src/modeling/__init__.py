@@ -1,7 +1,7 @@
 """NBA prediction modeling package."""
 from src.modeling.features import FeatureEngineer
 from src.modeling.dataset import DatasetBuilder
-from src.modeling.models import SpreadsModel, TotalsModel, MoneylineModel
+from src.modeling.models import SpreadsModel, TotalsModel
 
 # New modules for v1.2.0
 try:
@@ -24,7 +24,6 @@ __all__ = [
     "DatasetBuilder",
     "SpreadsModel",
     "TotalsModel",
-    "MoneylineModel",
     "ModelCalibrator",
     "CalibrationMetrics",
     "analyze_model",

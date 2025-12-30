@@ -15,7 +15,7 @@ from dataclasses import dataclass, asdict
 class ModelVersion:
     """Model version metadata."""
     version: str
-    model_type: str  # "spreads", "totals", "moneyline", "ensemble"
+    model_type: str  # "spreads", "totals", "ensemble"
     algorithm: str  # "logistic", "gradient_boosting", "ensemble"
     trained_at: str
     train_samples: int

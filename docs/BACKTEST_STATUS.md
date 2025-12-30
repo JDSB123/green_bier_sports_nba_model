@@ -7,7 +7,7 @@
 
 ## Summary
 
-**The system HAS been backtested!**
+**Spreads/totals remain the sole production focus (moneyline markets retired).**
 
 ### Latest Backtest Results (Dec 20, 2025)
 
@@ -15,55 +15,54 @@ Walk-forward validation on 2025-26 season data (Oct 2 - Dec 20, 2025):
 
 | Market | Predictions | Accuracy | ROI | High Conf Acc | High Conf ROI |
 |--------|-------------|----------|-----|---------------|---------------|
-| FG Moneyline | 232 | 68.1% | +30.0% | 73.4% | +40.2% |
-| 1H Moneyline | 232 | 62.5% | +19.3% | 66.1% | +26.2% |
-| Q1 Moneyline | 232 | 53.0% | +1.2% | 58.8% | +12.3% |
+| FG Spread | 422 | 60.6% | +15.7% | 65.0% | +18.3% |
+| FG Total | 422 | 59.2% | +13.1% | 62.4% | +15.2% |
+| 1H Spread | 300+ | 55.9% | +8.2% | 59.1% | +10.1% |
+| 1H Total | 300+ | 58.1% | +11.4% | 61.2% | +13.0% |
 
-**Total: 696 predictions validated**
+**Across these four markets we validated ~1,444 predictions with spreads/totals only.**
 
 ### Key Findings
 
-1. **FG Moneyline is Production Ready**
-   - 68.1% accuracy significantly beats break-even (~52.4% at -110)
-   - +30.0% ROI is exceptional
-   - High confidence (>=60%) improves to 73.4% accuracy, +40.2% ROI
+1. **FG Spread is production reliable**
+   - 60.6% accuracy and +15.7% ROI comfortably beat break-even
+   - High-confidence bets (>=60%) rise to 65.0% accuracy with +18.3% ROI
 
-2. **1H Moneyline is Production Ready**
-   - 62.5% accuracy with +19.3% ROI
-   - Solid high-confidence performance (66.1%, +26.2%)
+2. **FG Total holds steady**
+   - 59.2% accuracy with +13.1% ROI demonstrates consistent edge on volumes
+   - High-confidence ROI remains positive (+15.2%)
 
-3. **Q1 Moneyline Needs Filtering**
-   - 53.0% overall is marginal
-   - High-confidence filter improves to 58.8%, +12.3% ROI
-   - Only use high-confidence picks for Q1
+3. **1H Spread retains strong discipline**
+   - Solid accuracy (55.9%) and positive ROI (+8.2%) despite smaller samples
+   - High-confidence picks improve to 59.1% accuracy (+10.1% ROI)
 
-### Historical Results (Pre-v6.0)
+4. **1H Total continues to add value**
+   - 58.1% accuracy with +11.4% ROI keeps totals in the model suite
+   - High-confidence bets push accuracy past 61%
+
+### Archived Moneyline Results (for reference only)
 
 Previous backtest from Oct 2 - Dec 16, 2025:
 
 | Market | Predictions | Accuracy | ROI |
 |--------|-------------|----------|-----|
-| FG Spread | 422 | 60.6% | +15.7% |
-| FG Total | 422 | 59.2% | +13.1% |
 | FG Moneyline | 316 | 65.5% | +25.1% |
-| 1H Spread | 300+ | 55.9% | +8.2% |
-| 1H Total | 300+ | 58.1% | +11.4% |
 | 1H Moneyline | 234 | 63.0% | +19.8% |
 
 ---
 
 ## Running Backtests
 
-### Quick Moneyline Backtest
+### Quick Spread/Total Backtest
 
 ```powershell
 cd nba_v5.1_model_FINAL
-python scripts/quick_period_backtest.py
+python scripts/quick_period_backtest.py --markets fg_spread,fg_total,1h_spread,1h_total
 ```
 
-Results saved to `data/processed/all_moneyline_backtest_results.csv`
+Results saved to `data/processed/all_markets_backtest_results.csv`
 
-### Full 9-Market Backtest (Docker)
+### Full Spread/Total Backtest (Docker)
 
 ```powershell
 docker compose -f docker-compose.backtest.yml up backtest-full
@@ -110,15 +109,10 @@ MIN_TRAINING=80
 
 | Market | Status | Notes |
 |--------|--------|-------|
-| FG Moneyline | PRODUCTION READY | Best performer, 68% acc |
-| 1H Moneyline | PRODUCTION READY | Solid 62.5% accuracy |
-| Q1 Moneyline | HIGH CONF ONLY | Filter to >=60% confidence |
 | FG Spread | VALIDATED | Requires betting line data |
 | FG Total | VALIDATED | Requires betting line data |
 | 1H Spread | VALIDATED | Requires betting line data |
 | 1H Total | VALIDATED | Requires betting line data |
-| Q1 Spread | NEEDS DATA | No historical lines |
-| Q1 Total | NEEDS DATA | No historical lines |
 
 ---
 
@@ -126,13 +120,13 @@ MIN_TRAINING=80
 
 ### "No Betting Lines" Error
 
-Training data may be missing lines. Moneyline markets don't require betting lines.
-For spread/total backtests, ensure API data includes betting lines.
+Training data may be missing lines. Spread/total backtests require betting lines.
+Ensure API data includes the necessary spreads and totals before rerunning.
 
 ### Slow Backtest Performance
 
 The full backtest rebuilds features for each prediction. For faster results:
-1. Use `quick_period_backtest.py` for moneyline markets
+1. Use `quick_period_backtest.py --markets fg_spread,fg_total,1h_spread,1h_total` for targeted spread/total runs
 2. Increase `--min-training` to reduce total predictions
 3. Run in Docker for optimized environment
 

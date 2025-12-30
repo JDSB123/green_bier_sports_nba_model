@@ -557,54 +557,6 @@ def generate_betting_card(
             )
             game_picks.append(pick_obj)
         
-        # Moneyline
-        if fg.get("moneyline", {}).get("pick"):
-            ml_data = fg["moneyline"]
-            ml_team = ml_data["pick"]
-            is_home_pick = ml_team == home_team
-            ml_odds = odds.get("home_ml") if is_home_pick else odds.get("away_ml")
-            pick_str = f"{ml_team} ({ml_odds:+d})"
-            pick_side = "HOME" if is_home_pick else "AWAY"
-            
-            # Create clear bet description for moneyline
-            model_prob = ml_data.get("model_home_prob", 0.5) if is_home_pick else ml_data.get("model_away_prob", 0.5)
-            if ml_odds and ml_odds > 0:
-                bet_desc = f"Bet {pick_side}: {ml_team} to WIN straight up (+{ml_odds} underdog)"
-            elif ml_odds and ml_odds < 0:
-                bet_desc = f"Bet {pick_side}: {ml_team} to WIN straight up ({ml_odds} favorite)"
-            else:
-                bet_desc = f"Bet {pick_side}: {ml_team} to WIN straight up"
-            
-            rationale = generate_rationale(
-                pick_type="FG Moneyline",
-                pick=pick_str,
-                game_data={"home_team": home_team, "away_team": away_team, "time_cst": game_time},
-                features=features,
-                odds=odds,
-                comprehensive_edge=comp_edge,
-                betting_splits=betting_splits,
-            )
-            
-            pick_obj = BettingCardPick(
-                game_date=game_time,
-                matchup=matchup,
-                pick_type="FG Moneyline",
-                pick=pick_str,
-                market_line=0,
-                market_odds=ml_odds or -110,
-                model_prediction=model_prob,
-                model_probability=model_prob,
-                edge=ml_data.get("edge_home", 0) if is_home_pick else ml_data.get("edge_away", 0),
-                expected_value=0,
-                confidence="high" if ml_data.get("confidence", 0) >= 0.6 else "medium",
-                rationale=rationale,
-                home_team=home_team,
-                away_team=away_team,
-                pick_side=pick_side,
-                bet_description=bet_desc,
-            )
-            game_picks.append(pick_obj)
-        
         # First half picks
         fh = comp_edge.get("first_half", {})
         

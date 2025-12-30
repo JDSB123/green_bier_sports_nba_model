@@ -1,7 +1,7 @@
 """
 Betting splits data ingestion.
 
-Collects public betting percentages and money line distributions
+Collects public betting percentages and line distributions
 for RLM (Reverse Line Movement) detection.
 
 Sources:
@@ -73,31 +73,17 @@ class GameSplits:
     over_money_pct: float = 50.0
     under_money_pct: float = 50.0
     
-    # Moneyline splits
-    ml_home_ticket_pct: float = 50.0
-    ml_away_ticket_pct: float = 50.0
-    ml_home_money_pct: float = 50.0
-    ml_away_money_pct: float = 50.0
-    
     # Line movement
     spread_open: float = 0.0
     spread_current: float = 0.0
     total_open: float = 0.0
     total_current: float = 0.0
 
-    # Moneyline line movement (American odds)
-    ml_home_open: int = 0  # Opening ML odds for home (e.g., -150)
-    ml_away_open: int = 0  # Opening ML odds for away (e.g., +130)
-    ml_home_current: int = 0  # Current ML odds for home
-    ml_away_current: int = 0  # Current ML odds for away
-
     # Derived signals
     spread_rlm: bool = False  # Reverse line movement detected
     total_rlm: bool = False
-    ml_rlm: bool = False  # Moneyline reverse line movement
     sharp_spread_side: Optional[str] = None  # "home" or "away"
     sharp_total_side: Optional[str] = None   # "over" or "under"
-    sharp_ml_side: Optional[str] = None  # "home" or "away" for moneyline
 
     updated_at: Optional[dt.datetime] = None
 
@@ -160,77 +146,6 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
         else:
             splits.sharp_total_side = "over"
 
-    # Detect moneyline RLM
-    splits = detect_moneyline_rlm(splits)
-
-    return splits
-
-
-def _american_to_implied(odds: int) -> float:
-    """Convert American odds to implied probability (0-1)."""
-    if odds == 0:
-        return 0.5
-    if odds < 0:
-        return abs(odds) / (abs(odds) + 100)
-    return 100 / (odds + 100)
-
-
-def detect_moneyline_rlm(splits: GameSplits) -> GameSplits:
-    """
-    Detect RLM (Reverse Line Movement) for moneyline market.
-
-    ML RLM occurs when:
-    - Public heavily on one side (>60% tickets)
-    - But odds move to make that side CHEAPER (unusual)
-    - Suggests sharp money on the opposite side
-
-    Example:
-    - Public 65% on home at -150, line moves to -170: NORMAL (books want less home action)
-    - Public 65% on home at -150, line moves to -130: RLM (sharps on away, book moving toward public)
-
-    Also detects ticket vs money divergence (>10% = sharp signal).
-    """
-    # Need opening and current odds to detect movement
-    if splits.ml_home_open == 0 or splits.ml_home_current == 0:
-        # No line movement data - check ticket vs money divergence only
-        ml_ticket_money_diff = splits.ml_home_ticket_pct - splits.ml_home_money_pct
-        if abs(ml_ticket_money_diff) > 10:
-            if ml_ticket_money_diff > 0:
-                # More tickets on home than money -> sharps on away
-                splits.sharp_ml_side = "away"
-            else:
-                splits.sharp_ml_side = "home"
-        return splits
-
-    # Calculate implied probability change
-    home_open_prob = _american_to_implied(splits.ml_home_open)
-    home_current_prob = _american_to_implied(splits.ml_home_current)
-    prob_movement = home_current_prob - home_open_prob  # Positive = home became MORE likely
-
-    # RLM Detection:
-    # If public on home (>60%) and home implied prob DECREASED, that's RLM (sharps on away)
-    # If public on away (>60%) and home implied prob INCREASED, that's RLM (sharps on home)
-
-    if splits.ml_home_ticket_pct > 60:
-        # Public on home
-        if prob_movement < -0.03:  # Home became 3%+ LESS likely
-            splits.ml_rlm = True
-            splits.sharp_ml_side = "away"
-    elif splits.ml_away_ticket_pct > 60:
-        # Public on away
-        if prob_movement > 0.03:  # Home became 3%+ MORE likely
-            splits.ml_rlm = True
-            splits.sharp_ml_side = "home"
-
-    # Ticket vs money divergence (overrides RLM if stronger signal)
-    ml_ticket_money_diff = splits.ml_home_ticket_pct - splits.ml_home_money_pct
-    if abs(ml_ticket_money_diff) > 10:
-        if ml_ticket_money_diff > 0:
-            # More tickets on home than money -> sharps on away
-            splits.sharp_ml_side = "away"
-        else:
-            splits.sharp_ml_side = "home"
-
     return splits
 
 
@@ -245,7 +160,6 @@ def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
     
     spread_market = markets.get("spread", {})
     total_market = markets.get("total", {})
-    ml_market = markets.get("moneyline", {})
     
     # Standardize team names to ESPN format (mandatory)
     from src.ingestion.standardize import normalize_team_to_espn
@@ -283,11 +197,6 @@ def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
         under_money_pct=total_market.get("under_money_pct", 50),
         total_open=total_market.get("opening_line", 0),
         total_current=total_market.get("current_line", 0),
-        # ML
-        ml_home_ticket_pct=ml_market.get("home_tickets_pct", 50),
-        ml_away_ticket_pct=ml_market.get("away_tickets_pct", 50),
-        ml_home_money_pct=ml_market.get("home_money_pct", 50),
-        ml_away_money_pct=ml_market.get("away_money_pct", 50),
         updated_at=dt.datetime.now(),
     )
     
@@ -325,7 +234,6 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
             
             spread_market = next((m for m in markets if m["key"] == "spreads"), {})
             total_market = next((m for m in markets if m["key"] == "totals"), {})
-            ml_market = next((m for m in markets if m["key"] == "h2h"), {})
             
             def get_pct(market, outcome_name):
                 outcomes = market.get("outcomes", [])
@@ -348,9 +256,6 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
                 # Total
                 over_ticket_pct=get_total_pct(total_market, "Over"),
                 under_ticket_pct=get_total_pct(total_market, "Under"),
-                # ML
-                ml_home_ticket_pct=get_pct(ml_market, home_team),
-                ml_away_ticket_pct=get_pct(ml_market, away_team),
                 source="the_odds",
                 updated_at=dt.datetime.now(),
             )
@@ -416,29 +321,6 @@ def splits_to_features(splits: GameSplits) -> Dict[str, float]:
         ),
         "total_ticket_money_diff": (
             splits.over_ticket_pct - splits.over_money_pct
-        ),
-        # Moneyline market features
-        "ml_public_home_pct": splits.ml_home_ticket_pct,
-        "ml_public_away_pct": splits.ml_away_ticket_pct,
-        "ml_money_home_pct": splits.ml_home_money_pct,
-        "ml_money_away_pct": splits.ml_away_money_pct,
-        # Moneyline line movement
-        "ml_home_open": splits.ml_home_open,
-        "ml_home_current": splits.ml_home_current,
-        "ml_away_open": splits.ml_away_open,
-        "ml_away_current": splits.ml_away_current,
-        "ml_movement": (
-            _american_to_implied(splits.ml_home_current) - _american_to_implied(splits.ml_home_open)
-            if splits.ml_home_open != 0 else 0.0
-        ),
-        # Moneyline RLM signals
-        "is_rlm_ml": 1 if splits.ml_rlm else 0,
-        "sharp_side_ml": (
-            1 if splits.sharp_ml_side == "home"
-            else (-1 if splits.sharp_ml_side == "away" else 0)
-        ),
-        "ml_ticket_money_diff": (
-            splits.ml_home_ticket_pct - splits.ml_home_money_pct
         ),
     }
 
@@ -643,11 +525,6 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     over_money = game_odds.get("total_over_money")
                     under_money = game_odds.get("total_under_money")
 
-                    ml_home_pct = game_odds.get("ml_home_public")
-                    ml_away_pct = game_odds.get("ml_away_public")
-                    ml_home_money = game_odds.get("ml_home_money")
-                    ml_away_money = game_odds.get("ml_away_money")
-
                     # Skip if no public data at all
                     if spread_home_pct is None and over_pct is None:
                         continue
@@ -674,10 +551,6 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                         under_money_pct=float(under_money) if under_money is not None else 50.0,
                         total_open=float(total_line) if total_line is not None else 0.0,
                         total_current=float(total_line) if total_line is not None else 0.0,
-                        ml_home_ticket_pct=float(ml_home_pct) if ml_home_pct is not None else 50.0,
-                        ml_away_ticket_pct=float(ml_away_pct) if ml_away_pct is not None else 50.0,
-                        ml_home_money_pct=float(ml_home_money) if ml_home_money is not None else 50.0,
-                        ml_away_money_pct=float(ml_away_money) if ml_away_money is not None else 50.0,
                         updated_at=dt.datetime.now(),
                     )
 

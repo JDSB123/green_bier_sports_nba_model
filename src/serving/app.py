@@ -3,17 +3,15 @@ NBA_v33.0.8.0 - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
-PRODUCTION: 6 INDEPENDENT Markets (1H + FG spreads/totals/moneylines)
+PRODUCTION: 4 INDEPENDENT Markets (1H + FG spreads/totals)
 
 First Half (1H):
 - 1H Spread
 - 1H Total
-- 1H Moneyline
 
 Full Game (FG):
 - FG Spread
 - FG Total
-- FG Moneyline
 
 STRICT MODE: Every request fetches fresh data from APIs.
 No assumptions, no defaults - all data must be explicitly provided.
@@ -45,7 +43,9 @@ from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
 from src.features import RichFeatureBuilder
 from src.utils.logging import get_logger
-from src.utils.security import fail_fast_on_missing_keys, get_api_key_status, mask_api_key, validate_premium_features
+from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
+from src.utils.markets import get_market_catalog
+from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegrityError
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
 from src.tracking import PickTracker
 
@@ -92,7 +92,7 @@ limiter = Limiter(key_func=get_remote_address)
 # --- Request/Response Models - NBA_v33.0.8.0 ---
 
 class GamePredictionRequest(BaseModel):
-    """Request for single game prediction - 6 markets (1H + FG spreads/totals/moneylines)."""
+    """Request for single game prediction - 4 markets (1H + FG spreads/totals)."""
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
     # Full game lines - REQUIRED
@@ -101,11 +101,6 @@ class GamePredictionRequest(BaseModel):
     # First half lines - optional but recommended
     fh_spread_line: Optional[float] = None
     fh_total_line: Optional[float] = None
-    # Moneyline odds - optional but recommended
-    home_ml_odds: Optional[int] = Field(None, example=-150)
-    away_ml_odds: Optional[int] = Field(None, example=130)
-    fh_home_ml_odds: Optional[int] = None
-    fh_away_ml_odds: Optional[int] = None
 
 
 class MarketPrediction(BaseModel):
@@ -130,6 +125,17 @@ class SlateResponse(BaseModel):
     odds_archive_path: Optional[str] = None
 
 
+class MarketsResponse(BaseModel):
+    version: str
+    source: str
+    markets: List[str]
+    market_count: int
+    periods: Dict[str, List[str]]
+    market_types: List[str]
+    model_pack_version: Optional[str] = None
+    model_pack_path: Optional[str] = None
+
+
 # --- API Setup - NBA_v33.0.8.0 ---
 
 def _models_dir() -> PathLib:
@@ -142,16 +148,19 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.8.0: 6 markets (1H+FG for Spread, Total, Moneyline). Q1 removed.
+    NBA_v33.0.8.0: 4 markets (1H+FG for Spread, Total). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
-    # SECURITY: Validate API keys at startup - fail fast if missing
+    # SECURITY: Startup integrity checks (secrets, market list, feature alignment)
     try:
-        fail_fast_on_missing_keys()
-        logger.info("API keys validated")
+        run_startup_integrity_checks(PROJECT_ROOT, _models_dir())
+        logger.info("Startup integrity checks passed")
+    except StartupIntegrityError as e:
+        logger.error(str(e))
+        raise
     except Exception as e:
-        logger.error(f"Security validation failed: {e}")
+        logger.error(f"Startup integrity checks failed: {e}")
         raise
 
     # Validate betting splits sources (warning only, not fatal)
@@ -176,7 +185,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("v33.0.8.0 STRICT MODE: Using 1H/FG models (6 markets including moneylines)")
+    logger.info("v33.0.8.0 STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
@@ -201,7 +210,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="NBA v33.0.8.0 - STRICT MODE Production Picks",
-    description="6 INDEPENDENT Markets: 1H+FG for Spread, Total, Moneyline. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
+    description="4 INDEPENDENT Markets: 1H+FG for Spread and Total. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan
 )
@@ -273,7 +282,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v33.0.8.0 with 6 markets (moneyline included)."""
+    """Check API health - v33.0.8.0 with 4 markets (spread/total only)."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -285,7 +294,7 @@ def health(request: Request):
         "status": "ok",
         "version": RELEASE_VERSION,
         "mode": "STRICT",
-        "architecture": "1H + FG spreads/totals required; moneyline optional",
+        "architecture": "1H + FG spreads/totals only",
         "caching": "DISABLED - fresh data every request",
         "markets": model_info.get("markets", 0),
         "markets_list": model_info.get("markets_list", []),
@@ -491,14 +500,14 @@ def verify_integrity(request: Request):
     """
     Verify model integrity and component usage.
 
-    v33.0.8.0: Verifies 6 independent models (1H + FG for spread, total, moneyline)
+    v33.0.8.0: Verifies 4 independent models (1H + FG for spread, total)
     """
     results = {
         "status": "pass",
         "version": RELEASE_VERSION,
         "markets": {
-            "1h": ["spread", "total", "moneyline"],
-            "fg": ["spread", "total", "moneyline"],
+            "1h": ["spread", "total"],
+            "fg": ["spread", "total"],
         },
         "checks": {},
         "errors": []
@@ -524,12 +533,9 @@ def verify_integrity(request: Request):
         # Also check legacy predictors if present
         has_spread = hasattr(app.state.engine, 'spread_predictor')
         has_total = hasattr(app.state.engine, 'total_predictor')
-        has_moneyline = hasattr(app.state.engine, 'moneyline_predictor')
-
         results["checks"]["legacy_predictors"] = {
             "spread": has_spread,
             "total": has_total,
-            "moneyline": has_moneyline,
         }
 
         if not (has_fg or (has_spread and has_total)):
@@ -559,14 +565,11 @@ def verify_integrity(request: Request):
                 features=test_features,
                 spread_line=-1.5,
                 total_line=112.5,
-                home_ml_odds=-140,
-                away_ml_odds=120,
             )
             
             results["checks"]["1h_prediction_works"] = True
             results["checks"]["1h_has_spread"] = "spread" in test_pred_1h
             results["checks"]["1h_has_total"] = "total" in test_pred_1h
-            results["checks"]["1h_has_moneyline"] = "moneyline" in test_pred_1h
             
         except Exception as e:
             results["status"] = "fail"
@@ -579,8 +582,6 @@ def verify_integrity(request: Request):
                 features=test_features,
                 spread_line=-3.5,
                 total_line=225.0,
-                home_ml_odds=-150,
-                away_ml_odds=130,
             )
             
             results["checks"]["fg_prediction_works"] = True
@@ -606,8 +607,8 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v33.0.8.0: 6 markets (1H + FG spreads/totals/moneylines). Q1 removed entirely.
-    Returns 1H/FG for spread, total, and moneyline when available.
+    v33.0.8.0: 4 markets (1H + FG spreads/totals). Q1 removed entirely.
+    Returns 1H/FG for spread and total when available.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0: Engine not loaded - models missing")
@@ -677,12 +678,7 @@ async def get_slate_predictions(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            home_ml = odds.get("home_ml")
-            away_ml = odds.get("away_ml")
-            fh_home_ml = odds.get("fh_home_ml")
-            fh_away_ml = odds.get("fh_away_ml")
-
-            # Require spread or total lines; moneyline odds remain optional
+            # Require spread or total lines
             has_fg_lines = fg_spread is not None or fg_total is not None
             has_fh_lines = fh_spread is not None or fh_total is not None
 
@@ -697,13 +693,9 @@ async def get_slate_predictions(
                 fg_total_line=fg_total,
                 fh_spread_line=fh_spread,
                 fh_total_line=fh_total,
-                home_ml_odds=home_ml,
-                away_ml_odds=away_ml,
-                fh_home_ml_odds=fh_home_ml,
-                fh_away_ml_odds=fh_away_ml,
             )
 
-            # Count plays (6 markets: 1H + FG spreads/totals/moneylines)
+            # Count plays (4 markets: 1H + FG spreads/totals)
             game_plays = 0
             game_date = target_date.strftime("%Y-%m-%d")
             for period in ["first_half", "full_game"]:
@@ -903,25 +895,17 @@ async def get_executive_summary(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            home_ml = odds.get("home_ml")
-            away_ml = odds.get("away_ml")
-            fh_home_ml = odds.get("fh_home_ml")
-            fh_away_ml = odds.get("fh_away_ml")
 
             if fg_spread is None or fg_total is None:
                 continue
 
-            # Get predictions for 6 markets (1H + FG spreads/totals/moneylines)
+            # Get predictions for 4 markets (1H + FG spreads/totals)
             preds = app.state.engine.predict_all_markets(
                 features,
                 fg_spread_line=fg_spread,
                 fg_total_line=fg_total,
                 fh_spread_line=fh_spread,
                 fh_total_line=fh_total,
-                home_ml_odds=home_ml,
-                away_ml_odds=away_ml,
-                fh_home_ml_odds=fh_home_ml,
-                fh_away_ml_odds=fh_away_ml,
             )
             
             # Process Full Game markets
@@ -1156,7 +1140,7 @@ async def get_executive_summary(
             },
             "sorting": "EV% (desc), then game time",
             "periods": {"FG": "Full Game", "1H": "First Half"},
-            "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under", "ML": "Moneyline"}
+            "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under"}
         }
     })
 
@@ -1172,7 +1156,7 @@ async def get_comprehensive_slate_analysis(
     Get comprehensive slate analysis with full edge calculations.
 
     v33.0.8.0 STRICT MODE: Fetches fresh data from all APIs.
-    Full analysis for all 9 markets.
+    Full analysis for all 4 markets (1H + FG spreads/totals).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
@@ -1199,7 +1183,7 @@ async def get_comprehensive_slate_analysis(
     # Get edge thresholds (all active markets)
     edge_thresholds = get_edge_thresholds_for_game(
         game_date=target_date,
-        bet_types=["spread", "total", "moneyline", "1h_spread", "1h_total", "1h_moneyline"]
+        bet_types=["spread", "total", "1h_spread", "1h_total"]
     )
 
     # Fetch games
@@ -1264,11 +1248,6 @@ async def get_comprehensive_slate_analysis(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            home_ml = odds.get("home_ml")
-            away_ml = odds.get("away_ml")
-            fh_home_ml = odds.get("fh_home_ml")
-            fh_away_ml = odds.get("fh_away_ml")
-            
             engine_predictions = None
             if fg_spread is not None and fg_total is not None:
                 try:
@@ -1278,10 +1257,6 @@ async def get_comprehensive_slate_analysis(
                         fg_total_line=fg_total,
                         fh_spread_line=fh_spread,
                         fh_total_line=fh_total,
-                        home_ml_odds=home_ml,
-                        away_ml_odds=away_ml,
-                        fh_home_ml_odds=fh_home_ml,
-                        fh_away_ml_odds=fh_away_ml,
                     )
                 except Exception as e:
                     logger.warning(f"Could not get engine predictions for {home_team} vs {away_team}: {e}")
@@ -1330,15 +1305,33 @@ async def get_comprehensive_slate_analysis(
 @app.get("/meta", tags=["Ops"])
 async def get_meta_info():
     """Get metadata about the running service."""
+    catalog = get_market_catalog(PROJECT_ROOT, settings.data_processed_dir)
     return {
         "version": RELEASE_VERSION,
-        "markets": [
-            "1h_spread", "1h_total",
-            "fg_spread", "fg_total",
-        ],
+        "markets": catalog.markets,
+        "market_types": catalog.market_types,
+        "periods": catalog.periods,
+        "markets_source": catalog.source,
+        "model_pack_version": catalog.model_pack_version,
         "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
         "server_time": datetime.now().isoformat(),
         "python_version": sys.version
+    }
+
+
+@app.get("/markets", response_model=MarketsResponse, tags=["Meta"])
+def get_markets(request: Request):
+    """List enabled markets and periods from the model pack or configs."""
+    catalog = get_market_catalog(PROJECT_ROOT, settings.data_processed_dir)
+    return {
+        "version": RELEASE_VERSION,
+        "source": catalog.source,
+        "markets": catalog.markets,
+        "market_count": len(catalog.markets),
+        "periods": catalog.periods,
+        "market_types": catalog.market_types,
+        "model_pack_version": catalog.model_pack_version,
+        "model_pack_path": catalog.model_pack_path,
     }
 
 
@@ -1349,7 +1342,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     Generate predictions for a specific matchup.
 
     v33.0.8.0: STRICT MODE - Fetches fresh data from all APIs.
-    6 markets (1H+FG for Spread, Total, Moneyline).
+    4 markets (1H+FG for Spread, Total).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
@@ -1363,17 +1356,13 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             req.home_team, req.away_team
         )
 
-        # Predict all 6 markets (1H + FG spreads/totals/moneylines)
+        # Predict all 4 markets (1H + FG spreads/totals)
         preds = app.state.engine.predict_all_markets(
             features,
             fg_spread_line=req.fg_spread_line,
             fg_total_line=req.fg_total_line,
             fh_spread_line=req.fh_spread_line,
             fh_total_line=req.fh_total_line,
-            home_ml_odds=req.home_ml_odds,
-            away_ml_odds=req.away_ml_odds,
-            fh_home_ml_odds=req.fh_home_ml_odds,
-            fh_away_ml_odds=req.fh_away_ml_odds,
         )
         return preds
     except ValueError as e:
@@ -1392,7 +1381,7 @@ async def get_tracking_summary(
     request: Request,
     date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
     period: Optional[str] = Query(None, description="Filter by period (1h, fg)"),
-    market_type: Optional[str] = Query(None, description="Filter by market (spread, total, moneyline)")
+    market_type: Optional[str] = Query(None, description="Filter by market (spread, total)")
 ):
     """
     Get ROI summary for tracked picks.

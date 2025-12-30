@@ -157,7 +157,7 @@
 │  │   - bookmakers[].markets[]                                          │    │
 │  │     • spreads: outcomes[].point (spread line)                       │    │
 │  │     • totals: outcomes[].point (total line)                         │    │
-│  │     • h2h: outcomes[].price (moneyline odds)                        │    │
+│  │     • h2h: outcomes[].price (moneyline odds) — logged for completeness but not processed (spreads/totals only)
 │  │ Output: Cached in memory for processing                             │    │
 │  │ Purpose: Historical FG markets for backtesting                      │    │
 │  │ Status: ✅ OPTIMIZED (requires paid plan Group 2+)                  │    │
@@ -165,23 +165,20 @@
 │  └────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 │  ┌────────────────────────────────────────────────────────────────────┐    │
-│  │ 3.2: FETCH EVENT-SPECIFIC ODDS (1H/Q1 Markets)                     │    │
+│  │ 3.2: FETCH EVENT-SPECIFIC ODDS (1H Markets)                        │    │
 │  │ Endpoint: GET /v4/sports/basketball_nba/events/{eventId}/odds      │    │
 │  │ Params:                                                              │    │
 │  │   - apiKey={key}                                                    │    │
 │  │   - regions=us                                                      │    │
-│  │   - markets=spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1│    │
+│  │   - markets=spreads_h1,totals_h1                             │    │
 │  │   - oddsFormat=american                                             │    │
 │  │ ───────────────────────────────────────────────────────────────    │    │
 │  │ Response: Event object with bookmakers and markets                  │    │
 │  │ Markets:                                                             │    │
 │  │   - spreads_h1: First half spreads                                  │    │
 │  │   - totals_h1: First half totals                                    │    │
-│  │   - h2h_h1: First half moneyline                                    │    │
-│  │   - spreads_q1: First quarter spreads                               │    │
-│  │   - totals_q1: First quarter totals                                 │    │
-│  │   - h2h_q1: First quarter moneyline                                 │    │
-│  │ Purpose: 1H and Q1 markets (not in main /odds endpoint)            │    │
+│  │   - h2h_h1: (removed - ML no longer supported)                                    │    │
+│  │ Purpose: 1H markets (not in main /odds endpoint)                    │    │
 │  │ Status: ✅ OPTIMIZED (called per event for enrichment)              │    │
 │  │ Note: Merged with main event data                                   │    │
 │  └────────────────────────────────────────────────────────────────────┘    │
@@ -212,7 +209,7 @@
 │  │ Fields: Same as historical odds (current snapshot)                 │    │
 │  │ Purpose: Current/recent odds when historical unavailable           │    │
 │  │ Status: ✅ OPTIMIZED (fallback path)                                │    │
-│  │ Note: Each event then enriched with 1H/Q1 via event-specific       │    │
+│  │ Note: Each event then enriched with 1H via event-specific          │    │
 │  └────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 │  Result: lines_df DataFrame with:                                           │
@@ -220,7 +217,7 @@
 │    - home_team, away_team (standardized)                                    │
 │    - fg_spread_line, fg_total_line, fg_home_ml, fg_away_ml                 │
 │    - fh_spread_line, fh_total_line, fh_home_ml, fh_away_ml                 │
-│    - q1_spread_line, q1_total_line, q1_home_ml, q1_away_ml                 │
+│    - 1h_spread_line, 1h_total_line, 1h_home_ml, 1h_away_ml                 │
 └────────────────────────────┬────────────────────────────────────────────────┘
                              │
                              ▼
@@ -244,7 +241,7 @@
 │    - total_over = (actual_total > total_line)                               │
 │    - 1h_spread_covered = (actual_1h_margin > -1h_spread_line)              │
 │    - 1h_total_over = (actual_1h_total > 1h_total_line)                      │
-│    - q1_spread_covered, q1_total_over (if Q1 data available)                │
+│    - 1h_spread_covered, 1h_total_over (if 1H data available)               │
 └────────────────────────────┬────────────────────────────────────────────────┘
                              │
                              ▼
@@ -411,7 +408,7 @@
 |----------|--------|---------|--------|--------|
 | `/v4/sports/basketball_nba/participants` | GET | Team reference | ✅ **OPTIMIZED** | `apiKey, dateFormat=iso` |
 | `/v4/historical/sports/basketball_nba/odds` | GET | Historical FG odds | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads,totals,h2h, date={ISO}` |
-| `/v4/sports/basketball_nba/events/{eventId}/odds` | GET | 1H/Q1 markets | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1` |
+| `/v4/sports/basketball_nba/events/{eventId}/odds` | GET | 1H markets | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads_h1,totals_h1` |
 | `/v4/sports/basketball_nba/events` | GET | Events list | ✅ **OPTIMIZED** | `apiKey, dateFormat=iso` |
 | `/v4/sports/basketball_nba/odds` | GET | Current FG odds | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads,totals,h2h` |
 | `/v4/sports/basketball_nba/scores` | GET | Recent scores | ⚠️ Not used | `apiKey, daysFrom=1` |
@@ -420,7 +417,7 @@
 **Primary Endpoints (Always Called):**
 - ✅ `/participants` - Team validation
 - ✅ `/historical/.../odds` or `/odds` - FG markets
-- ✅ `/events/{id}/odds` - 1H/Q1 enrichment
+- ✅ `/events/{id}/odds` - 1H enrichment
 - ✅ `/betting-splits` - Public percentages
 
 **Optional Endpoints:**
@@ -439,7 +436,7 @@
 │                      │         │                      │
 │  • Game outcomes     │         │  • Betting lines     │
 │  • Q1-Q4 scores      │         │  • Spreads/totals    │
-│  • Team statistics   │         │  • 1H/Q1 markets     │
+│  • Team statistics   │         │  • 1H markets        │
 │  • Box scores        │         │  • Betting splits    │
 └──────────┬───────────┘         └──────────┬───────────┘
            │                                 │
@@ -551,7 +548,7 @@ For each game in backtest:
 2. **The Odds API:**
    - `/participants` - 1 call at start
    - `/historical/.../odds` or `/odds` - 1 call per date
-   - `/events/{id}/odds` - N calls (1 per event for 1H/Q1)
+   - `/events/{id}/odds` - N calls (1 per event for 1H)
    - `/betting-splits` - 1 call (if available)
 
 ### Optional (Fallback/Enhancement)
@@ -572,13 +569,13 @@ Ingesting: statistics
 Ingesting: game_stats_teams
 Fetching betting lines for 180 unique dates...
 ✓ Historical odds endpoint available
-✓ Fetched event odds for event {id} (1H/Q1 markets)
+✓ Fetched event odds for event {id} (1H markets)
 ✓ Fetched betting splits for 50 games
 ```
 
 **Count API calls:**
 - API-Basketball: ~60-65 calls per season (teams=1, games=1, stats=30, game_stats=~30)
-- The Odds API: ~180 calls for dates + N calls for events (1H/Q1) + 1 for splits
+- The Odds API: ~180 calls for dates + N calls for events (1H) + 1 for splits
 
 ---
 

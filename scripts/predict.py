@@ -2,8 +2,8 @@
 Generate predictions for ALL markets using unified prediction engine.
 
 Production-ready predictor with smart filtering for all markets:
-- Full Game: Spreads, Totals, Moneyline
-- First Half: Spreads, Totals, Moneyline
+- Full Game: Spreads, Totals
+- First Half: Spreads, Totals
 """
 import os
 from dotenv import load_dotenv
@@ -290,7 +290,7 @@ async def fetch_upcoming_games(target_date: datetime.date):
                 # Fetch 1H odds specifically
                 event_odds = await the_odds.fetch_event_odds(
                     event_id,
-                    markets="spreads_h1,totals_h1,h2h_h1"
+                    markets="spreads_h1,totals_h1"
                 )
                 
                 # MERGE instead of overwrite
@@ -321,19 +321,15 @@ def extract_lines(game: dict, home_team: str):
     Extract all available betting lines from game data.
 
     Returns:
-        Dict with FG and 1H lines for spreads, totals, and moneyline
+        Dict with FG and 1H lines for spreads and totals
     """
     lines = {
         # Full game
         "fg_spread": None,
         "fg_total": None,
-        "fg_home_ml": None,
-        "fg_away_ml": None,
         # First half
         "fh_spread": None,
         "fh_total": None,
-        "fh_home_ml": None,
-        "fh_away_ml": None,
     }
 
     for bm in game.get("bookmakers", []):
@@ -353,14 +349,6 @@ def extract_lines(game: dict, home_team: str):
                     lines["fg_total"] = outcome.get("point")
                     break
 
-            # Full game moneyline
-            elif market_key == "h2h":
-                for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == home_team:
-                        lines["fg_home_ml"] = outcome.get("price")
-                    else:
-                        lines["fg_away_ml"] = outcome.get("price")
-
             # First half spreads
             elif market_key == "spreads_h1":
                 for outcome in market.get("outcomes", []):
@@ -373,14 +361,6 @@ def extract_lines(game: dict, home_team: str):
                 for outcome in market.get("outcomes", []):
                     lines["fh_total"] = outcome.get("point")
                     break
-
-            # First half moneyline
-            elif market_key == "h2h_h1":
-                for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == home_team:
-                        lines["fh_home_ml"] = outcome.get("price")
-                    else:
-                        lines["fh_away_ml"] = outcome.get("price")
 
     return lines
 
@@ -395,7 +375,7 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
     print("=" * 80)
     print(f"Current time: {now_cst.strftime('%A, %B %d, %Y at %I:%M %p CST')}")
     print(f"Target date: {target_date.strftime('%A, %B %d, %Y')}")
-    print(f"Markets: FG + 1H (Spreads, Totals, Moneyline)")
+    print(f"Markets: FG + 1H (Spreads, Totals)")
 
     # Fetch games
     games = await fetch_upcoming_games(target_date)
@@ -423,7 +403,6 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
     engine = UnifiedPredictionEngine(models_dir=MODELS_DIR)
     print(f"  [OK] Loaded spread predictor")
     print(f"  [OK] Loaded total predictor")
-    print(f"  [OK] Loaded moneyline predictor")
 
     # Generate predictions
     predictions = []
@@ -465,12 +444,8 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
                 features,
                 fg_spread_line=lines["fg_spread"],
                 fg_total_line=lines["fg_total"],
-                home_ml_odds=lines["fg_home_ml"],
-                away_ml_odds=lines["fg_away_ml"],
                 fh_spread_line=lines["fh_spread"],
                 fh_total_line=lines["fh_total"],
-                fh_home_ml_odds=lines["fh_home_ml"],
-                fh_away_ml_odds=lines["fh_away_ml"],
             )
 
             fg_preds = all_preds["full_game"]
@@ -594,16 +569,11 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
     else:
         print(f"  [TOTAL] Model not loaded")
 
-    # Moneyline - DISABLED
-    # if "moneyline" in preds:
-    #     pass
-
 
 def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
     """Format predictions for CSV output."""
     spread_pred = preds.get("spread", {})
     total_pred = preds.get("total", {})
-    ml_pred = preds.get("moneyline", {})
 
     return {
         # Spread
@@ -624,17 +594,6 @@ def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
         f"{prefix}_total_passes_filter": total_pred.get('passes_filter', False),
         f"{prefix}_total_filter_reason": total_pred.get('filter_reason', "") or "",
         f"{prefix}_total_rationale": total_pred.get('rationale', ""),
-        # Moneyline
-        f"{prefix}_ml_home_odds": lines.get(f"{prefix}_home_ml"),
-        f"{prefix}_ml_away_odds": lines.get(f"{prefix}_away_ml"),
-        f"{prefix}_ml_predicted_winner": ml_pred.get('predicted_winner'),
-        f"{prefix}_ml_recommended_bet": ml_pred.get('recommended_bet'),
-        f"{prefix}_ml_confidence": round(ml_pred.get('confidence', 0), 3) if ml_pred else None,
-        f"{prefix}_ml_home_edge": round(ml_pred.get('home_edge', 0), 3) if ml_pred and ml_pred.get('home_edge') else None,
-        f"{prefix}_ml_away_edge": round(ml_pred.get('away_edge', 0), 3) if ml_pred and ml_pred.get('away_edge') else None,
-        f"{prefix}_ml_passes_filter": ml_pred.get('passes_filter', False),
-        f"{prefix}_ml_filter_reason": ml_pred.get('filter_reason', "") or "",
-        f"{prefix}_ml_rationale": ml_pred.get('rationale', ""),
     }
 
 
@@ -806,10 +765,6 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "rationale": row.get('fg_total_rationale', ""),
             })
 
-        # FG Moneyline - DISABLED
-        # if row.get("fg_ml_passes_filter") and row.get("fg_ml_recommended_bet"):
-        #     pass
-
         # 1H Spreads
         if row.get("fh_spread_passes_filter") and pd.notna(row.get('fh_spread_line')):
             all_plays.append({
@@ -835,10 +790,6 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "edge": row.get('fh_total_edge'),
                 "rationale": row.get('fh_total_rationale', ""),
             })
-
-        # 1H Moneyline - DISABLED
-        # if row.get("fh_ml_passes_filter") and row.get("fh_ml_recommended_bet"):
-        #     pass
 
     # Generate formatted text report
     text_report = generate_formatted_text_report(df, target_date)
