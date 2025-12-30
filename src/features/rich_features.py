@@ -1,7 +1,7 @@
 """
-Build rich features from API-Basketball endpoints - STRICT MODE.
+Build rich features from API-Basketball endpoints.
 
-v6.5: FRESH DATA ONLY - No file caching, no silent fallbacks.
+FRESH DATA ONLY - No file caching, no silent fallbacks.
 
 Inspired by proven NBA models (FiveThirtyEight, DRatings, Cleaning the Glass):
 - Tempo-free efficiency ratings (ORtg/DRtg)
@@ -54,7 +54,6 @@ class RichFeatureBuilder:
     """
     Build prediction features from live API data.
 
-    STRICT MODE (v6.5):
     - NO file caching - all data fetched fresh from APIs
     - NO silent fallbacks - errors are raised, not swallowed
     - Session-only memory cache for within-request deduplication
@@ -856,7 +855,7 @@ class RichFeatureBuilder:
             REPLACEMENT_LOSS_FACTOR = 0.35  # 35% of PPG lost when player is out
             injury_margin_adj = (-home_out_ppg + away_out_ppg) * REPLACEMENT_LOSS_FACTOR
 
-            # v6.5 FIX: ADD injury adjustment to existing margin
+            # ADD injury adjustment to existing margin
             # (preserves HOME_COURT_ADV and form_margin_adj)
             predicted_margin_nba += injury_margin_adj
 

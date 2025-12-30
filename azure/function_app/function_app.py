@@ -187,7 +187,7 @@ def get_fire_tier(rating: str) -> str:
 
 def clear_api_cache() -> bool:
     """
-    Clear API cache to ensure fresh data - v6.5 STRICT MODE.
+    Clear API cache to ensure fresh data.
 
     MUST be called before fetching predictions to ensure:
     - Fresh ESPN standings (real-time team records)
@@ -199,7 +199,7 @@ def clear_api_cache() -> bool:
         req = Request(url, method="POST", headers={"Accept": "application/json"})
         with urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode())
-            logging.info(f"v6.5 STRICT MODE: Cache cleared - {result}")
+            logging.info(f"Cache cleared - {result}")
             return True
     except Exception as e:
         logging.warning(f"Could not clear cache (will proceed anyway): {e}")
@@ -210,14 +210,14 @@ def fetch_predictions(date: str = "today") -> dict:
     """
     Fetch predictions from NBA API.
 
-    v6.5 STRICT MODE: Always clears cache first to ensure fresh data.
+    Always clears cache first to ensure fresh data.
     """
-    # STRICT MODE: Clear cache first to force fresh data
+    # Clear cache first to force fresh data
     clear_api_cache()
 
     url = f"{_get_nba_api_url()}/slate/{date}/executive"
     try:
-        logging.info(f"v6.5 STRICT MODE: Fetching fresh predictions for {date}")
+        logging.info(f"Fetching fresh predictions for {date}")
         req = Request(url, headers={"Accept": "application/json"})
         with urlopen(req, timeout=90) as resp:  # Increased timeout for fresh data fetch
             return json.loads(resp.read().decode())
@@ -412,7 +412,7 @@ def format_menu_card() -> dict:
         "version": "1.2",
         "body": [
             {"type": "TextBlock", "text": "GREEN BIER SPORT VENTURES", "weight": "Bolder", "size": "Large", "color": "Good"},
-            {"type": "TextBlock", "text": "NBA Prediction System v6.4", "size": "Medium"},
+            {"type": "TextBlock", "text": "NBA Prediction System", "size": "Medium"},
             {"type": "TextBlock", "text": "Available Commands:", "weight": "Bolder", "size": "Small", "spacing": "Medium"},
             {"type": "FactSet", "facts": [
                 {"title": "picks", "value": "Get today's picks"},
@@ -905,7 +905,7 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
         <a href="/api/csv" class="download-btn">Download Excel (CSV)</a>
     </div>
 
-    <div class="footer">NBA Prediction System v6.0</div>
+    <div class="footer">NBA Prediction System</div>
 </body>
 </html>"""
     return func.HttpResponse(html, status_code=200, mimetype="text/html")
@@ -1114,7 +1114,7 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
                             {"title": "tomorrow", "value": "Tomorrow's picks"},
                             {"title": "12/25", "value": "Picks for specific date"}
                         ]},
-                        {"type": "TextBlock", "text": "v6.5 STRICT MODE - Fresh data always", "size": "Small", "isSubtle": True, "spacing": "Medium"}
+                        {"type": "TextBlock", "text": "Fresh data mode enabled", "size": "Small", "isSubtle": True, "spacing": "Medium"}
                     ]
                 }
             }]

@@ -260,7 +260,7 @@ async def fetch_espn_standings() -> Dict[str, ESPNTeamStanding]:
     """
     Fetch current NBA standings from ESPN.
 
-    v6.5 STRICT MODE: ESPN is the PRIMARY and ONLY source for team records.
+    ESPN is the PRIMARY and ONLY source for team records.
     Raises error on failure - no silent fallbacks.
 
     ESPN's standings API is FREE and provides real-time accurate W-L records.

@@ -4,7 +4,7 @@ Signal Agreement Rate Tracker.
 Tracks when the classifier (ML model) and point prediction signals agree or disagree.
 High disagreement rates may indicate model calibration issues.
 
-DUAL-SIGNAL AGREEMENT (v6.5):
+DUAL-SIGNAL AGREEMENT:
 - Signal 1: Classifier - ML model trained on historical patterns
 - Signal 2: Point Prediction - Quantitative prediction vs market line
 

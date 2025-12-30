@@ -28,8 +28,7 @@ class TotalPredictor:
     """
     Totals predictor for Full Game and First Half.
 
-    NBA v6.0: Both FG and 1H models required.
-    STRICT MODE: Missing model = immediate failure.
+    Both FG and 1H models required. Missing model = immediate failure.
     """
 
     def __init__(
@@ -196,7 +195,7 @@ class TotalPredictor:
         predicted_total_1h = features["predicted_total_1h"]  # No fallback - already validated
 
         # Calculate edge - ALWAYS use consistent formula
-        # v6.5 FIX: Don't flip sign based on bet_side - maintain signed edge
+        # Don't flip sign based on bet_side - maintain signed edge
         raw_edge = predicted_total_1h - total_line
         prediction_side = "over" if raw_edge > 0 else "under"
         edge = abs(raw_edge)  # Use absolute value for display/filtering

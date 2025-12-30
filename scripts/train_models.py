@@ -419,7 +419,7 @@ def train_all_markets(
     tracker = ModelTracker()
     
     print(f"\n{'='*70}")
-    print(f"NBA v6.0 - Training All 4 Independent Market Models")
+    print(f"Training All 4 Independent Market Models")
     print(f"{'='*70}")
     print(f"Model Type: {model_type}")
     print(f"Output Dir: {output_dir}")
@@ -991,7 +991,7 @@ def main():
     random.seed(42)
     logger.info("Random seeds set to 42 for reproducibility")
 
-    parser = argparse.ArgumentParser(description="Train NBA prediction models (v6.0 - 4 independent markets)")
+    parser = argparse.ArgumentParser(description="Train NBA prediction models (4 independent markets)")
     parser.add_argument(
         "--model-type",
         choices=["logistic", "gradient_boosting", "regression"],
@@ -1054,7 +1054,7 @@ def main():
                 train_first_half_models(model_type=model_type, test_size=args.test_size, output_dir=args.output_dir)
         return
 
-    # New unified training mode (v6.0)
+    # Unified training mode
     if args.ensemble:
         print("\n[INFO] Ensemble mode: Training both logistic and gradient boosting models")
         print("\n>>> Training with logistic regression...")

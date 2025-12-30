@@ -22,6 +22,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 MODELS_DIR = PROJECT_ROOT / "models" / "production"
 OUTPUT_PATH = PROJECT_ROOT / "models" / "production" / "feature_importance.json"
+VERSION_FILE = PROJECT_ROOT / "VERSION"
+
+def get_version() -> str:
+    """Read version from VERSION file."""
+    if VERSION_FILE.exists():
+        return VERSION_FILE.read_text().strip()
+    return "unknown"
 
 # Model files mapping
 MODEL_FILES = {
@@ -202,7 +209,7 @@ def main():
 
         if args.output == "json" or args.save:
             output_data = {
-                "version": "6.4.0",
+                "version": get_version(),
                 "extracted_at": __import__("datetime").datetime.now().isoformat(),
                 "markets": results,
             }

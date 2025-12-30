@@ -28,8 +28,7 @@ class SpreadPredictor:
     """
     Handles spread predictions for Full Game and First Half.
 
-    NBA v6.0: Both FG and 1H models required.
-    STRICT MODE: Missing model = immediate failure.
+    Both FG and 1H models required. Missing model = immediate failure.
     """
 
     def __init__(
@@ -109,7 +108,7 @@ class SpreadPredictor:
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
         predicted_margin = features["predicted_margin"]
-        # EDGE CALCULATION (v6.5 fix):
+        # EDGE CALCULATION:
         # spread_line is HOME spread (negative = home favored)
         # predicted_margin is positive when home wins
         # edge = predicted_margin + spread_line
@@ -176,7 +175,7 @@ class SpreadPredictor:
         confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         bet_side = "home" if home_cover_prob > 0.5 else "away"
         predicted_margin_1h = features["predicted_margin_1h"]  # No fallback - already validated
-        # EDGE CALCULATION (v6.5 fix): edge = predicted_margin + spread_line
+        # EDGE CALCULATION: edge = predicted_margin + spread_line
         edge = predicted_margin_1h + spread_line
 
         passes_filter, filter_reason = self.first_half_filter.should_bet(

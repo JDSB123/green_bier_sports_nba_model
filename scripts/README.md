@@ -1,6 +1,6 @@
 # Scripts Directory
 
-This directory contains operational scripts for the NBA v6.5 prediction system.
+This directory contains operational scripts for the NBA prediction system.
 
 ## Primary Scripts
 

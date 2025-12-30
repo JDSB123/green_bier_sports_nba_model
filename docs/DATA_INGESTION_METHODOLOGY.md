@@ -1,13 +1,12 @@
 # Data Ingestion Methodology
 
-**Last Updated:** 2025-12-20
-**Version:** 6.0 - Production Hardened
+**Last Updated:** 2025-12-30
 
 ---
 
 ## Overview
 
-The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that collects data from various APIs, standardizes it to a canonical ESPN format, validates it, and stores it for model training and prediction.
+The NBA prediction system uses a **multi-source data ingestion pipeline** that collects data from various APIs, standardizes it to a canonical ESPN format, validates it, and stores it for model training and prediction.
 
 ### Key Principles
 
@@ -92,7 +91,7 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 
 **Purpose:** Live betting odds and lines
 
-**Production Status:** ✅ HARDENED (v6.0)
+**Production Status:** ✅ HARDENED
 
 **All 11 Endpoints (fully hardened):**
 
@@ -147,7 +146,7 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 
 **Purpose:** Game outcomes, statistics, and team data
 
-**Production Status:** ✅ HARDENED (v6.0)
+**Production Status:** ✅ HARDENED
 
 **Hardening Applied:**
 - ✅ API key validation in `__init__` (raises `ValueError` if missing)
@@ -207,7 +206,7 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 
 **Purpose:** Public betting percentages and reverse line movement
 
-**Production Status:** ✅ HARDENED (v6.0)
+**Production Status:** ✅ HARDENED
 
 **Hardening Applied:**
 - ✅ All `print()` statements replaced with `logger.warning()` calls

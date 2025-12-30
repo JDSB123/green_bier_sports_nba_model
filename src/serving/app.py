@@ -841,7 +841,7 @@ async def get_executive_summary(
         return {
             "date": str(target_date),
             "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
-            "version": "6.0",
+            "version": RELEASE_VERSION,
             "total_plays": 0,
             "plays": [],
             "summary": "No games scheduled"

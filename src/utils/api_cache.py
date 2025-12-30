@@ -1,9 +1,8 @@
 """
-API Response Caching Layer - v6.5 STRICT MODE.
+API Response Caching Layer.
 
-v6.5 STRICT MODE: FILE CACHING DISABLED
-Only session-memory caching for within-request deduplication.
-All file caching operations are NO-OPs in STRICT MODE.
+FILE CACHING DISABLED - Only session-memory caching for within-request deduplication.
+All file caching operations are NO-OPs.
 
 This ensures:
 - Every request gets fresh data from APIs
@@ -55,10 +54,9 @@ class CacheEntry:
 
 class APICache:
     """
-    API response cache - v6.5 STRICT MODE.
+    API response cache.
 
-    STRICT MODE: File caching is DISABLED.
-    Only session-memory caching for within-request deduplication.
+    File caching is DISABLED. Only session-memory caching for within-request deduplication.
     """
 
     # TTLs are ignored in STRICT MODE - always fetch fresh
@@ -76,8 +74,8 @@ class APICache:
         # STRICT MODE: No file cache directory needed
         self.cache_dir = cache_dir or Path(settings.data_processed_dir) / "cache" / "api"
         self._memory_cache: dict[str, CacheEntry] = {}
-        self._strict_mode = True  # v6.5 STRICT MODE enabled
-        logger.info("v6.5 STRICT MODE: File caching DISABLED - memory cache only")
+        self._strict_mode = True  # File caching disabled
+        logger.info("File caching DISABLED - memory cache only")
 
     def _get_cache_path(self, key: str) -> Path:
         """Generate cache file path from key."""
@@ -276,7 +274,7 @@ class APICache:
         count = len(self._memory_cache)
         self._memory_cache.clear()
 
-        logger.info(f"v6.5 STRICT MODE: Cleared {count} memory cache entries")
+        logger.info(f"Cleared {count} memory cache entries")
         return count
 
 

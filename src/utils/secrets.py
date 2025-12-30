@@ -1,5 +1,5 @@
 """
-Docker Secrets Utility for NBA v6.0
+Docker Secrets Utility
 
 Reads secrets from multiple sources in priority order:
 1. Environment variables (for Azure Container Apps, GitHub Actions)

@@ -1,5 +1,5 @@
 """
-NBA v6.0 - Pick Tracker
+Pick Tracker
 
 Dynamic live tracking of predictions with no leakage.
 Records predictions at generation time (BEFORE outcomes are known).

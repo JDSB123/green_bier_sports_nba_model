@@ -943,8 +943,8 @@ class FeatureEngineer:
         features["away_opp_avg_margin"] = away_sos["opp_avg_margin"]
 
 
-        # === UPDATED: Enhanced predicted margin ===
-        # v6.5 FIX: Removed explicit rest term - rest is already accounted for in:
+        # === Enhanced predicted margin ===
+        # Removed explicit rest term - rest is already accounted for in:
         # 1. compute_dynamic_hca() adjusts HCA for home B2B and rest differential
         # 2. calculate_travel_fatigue() mitigates fatigue when rest >= 2 days
         features["predicted_margin"] = (
@@ -955,7 +955,7 @@ class FeatureEngineer:
             + features.get("net_rating_diff", 0) * 0.2  # Net rating
         )
 
-        # v6.5 FIX: Predicted total using matchup-based formula
+        # Predicted total using matchup-based formula
         # Home expected points = average of (home's offense, away's defense allowed)
         # Away expected points = average of (away's offense, home's defense allowed)
         # This properly accounts for the matchup instead of just averaging pace

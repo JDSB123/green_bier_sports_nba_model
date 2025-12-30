@@ -561,7 +561,7 @@ class UnifiedPredictionEngine:
 
         logger.info(f"Loaded {model_key} with {len(features)} features")
 
-        # v6.5 FIX: Verify model class indices match our assumptions
+        # Verify model class indices match our assumptions
         # Expected: class 0 = away/under, class 1 = home/over
         if hasattr(model, "classes_"):
             classes = model.classes_.tolist() if hasattr(model.classes_, "tolist") else list(model.classes_)

@@ -1,5 +1,5 @@
 """
-NBA v6.0 - Pick Tracking Module
+Pick Tracking Module
 
 Provides dynamic live tracking of predictions vs outcomes.
 Records all predictions at generation time and validates against final scores.

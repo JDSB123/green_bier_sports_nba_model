@@ -103,7 +103,7 @@ def app_with_engine(mock_engine, mock_feature_builder):
     app.state.feature_builder = None
 
 def test_health_endpoint_with_engine(app_with_engine):
-    """Test health endpoint when engine is loaded - v6.0."""
+    """Test health endpoint when engine is loaded."""
     client = TestClient(app_with_engine)
     response = client.get("/health")
 
@@ -190,7 +190,7 @@ def test_predict_game_missing_lines():
     app.state.engine = None
 
 def test_predict_game_no_engine():
-    """Test prediction when engine is not loaded - v6.0 STRICT MODE."""
+    """Test prediction when engine is not loaded."""
     from src.serving.app import app
 
     # Ensure no engine

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import json
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field, asdict
@@ -20,6 +21,9 @@ from threading import Lock
 import gzip
 
 logger = logging.getLogger(__name__)
+
+# Model version from central source
+_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.8.0")
 
 
 @dataclass
@@ -56,7 +60,7 @@ class PredictionRecord:
     filter_reason: Optional[str]
 
     # Model info
-    model_version: str = "6.5"
+    model_version: str = field(default_factory=lambda: _MODEL_VERSION)
 
     # Feature completeness
     features_present: int = 0

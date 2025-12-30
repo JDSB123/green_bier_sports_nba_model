@@ -1,5 +1,5 @@
 """
-NBA Prediction Module - v6.0
+NBA Prediction Module
 
 Production prediction engine for 4 INDEPENDENT markets:
 - First Half: Spread, Total
