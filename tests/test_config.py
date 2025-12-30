@@ -97,9 +97,6 @@ class TestFilterThresholds:
         assert thresholds.total_min_confidence == 0.55
         assert thresholds.total_min_edge == 1.5
 
-        # Moneyline defaults
-        assert thresholds.moneyline_min_confidence == 0.55
-        assert thresholds.moneyline_min_edge_pct == 0.03
 
     def test_filter_thresholds_from_env(self, monkeypatch):
         """Test that filter thresholds can be overridden from environment."""
@@ -107,8 +104,6 @@ class TestFilterThresholds:
         monkeypatch.setenv("FILTER_SPREAD_MIN_EDGE", "2.0")
         monkeypatch.setenv("FILTER_TOTAL_MIN_CONFIDENCE", "0.58")
         monkeypatch.setenv("FILTER_TOTAL_MIN_EDGE", "2.5")
-        monkeypatch.setenv("FILTER_MONEYLINE_MIN_CONFIDENCE", "0.62")
-        monkeypatch.setenv("FILTER_MONEYLINE_MIN_EDGE_PCT", "0.05")
 
         thresholds = FilterThresholds()
 
@@ -116,8 +111,6 @@ class TestFilterThresholds:
         assert thresholds.spread_min_edge == 2.0
         assert thresholds.total_min_confidence == 0.58
         assert thresholds.total_min_edge == 2.5
-        assert thresholds.moneyline_min_confidence == 0.62
-        assert thresholds.moneyline_min_edge_pct == 0.05
 
     def test_filter_thresholds_immutable(self):
         """Test that filter thresholds are immutable (frozen dataclass)."""

@@ -1,13 +1,12 @@
 """Tests for the UnifiedPredictionEngine and PeriodPredictor - v33.0.8.0.
 
-Active markets: First Half and Full Game (spreads, totals, moneylines).
+Active markets: First Half and Full Game (spreads, totals).
 """
 
 import pytest
 import numpy as np
 from unittest.mock import Mock, MagicMock, patch
 from pathlib import Path
-
 
 class TestPeriodPredictor:
     """Tests for the PeriodPredictor class."""
@@ -29,33 +28,23 @@ class TestPeriodPredictor:
         return model
 
     @pytest.fixture
-    def mock_moneyline_model(self):
-        """Create mock moneyline model."""
-        model = MagicMock()
-        # Return probabilities [away_win, home_win]
-        model.predict_proba.return_value = np.array([[0.35, 0.65]])
-        return model
-
-    @pytest.fixture
     def sample_features(self):
         """Sample features for testing."""
         return {
             "home_ppg": 115.0,
             "away_ppg": 110.0,
-        "home_papg": 108.0,
-        "away_papg": 112.0,
-        "predicted_margin": 5.0,
-        "predicted_total": 225.0,
-        "predicted_margin_1h": 2.5,
-        "predicted_total_1h": 112.5,
-        "home_win_pct": 0.65,
-        "away_win_pct": 0.45,
-        "home_rest_days": 2,
-        "away_rest_days": 1,
-    }
+            "home_papg": 108.0,
+            "away_papg": 112.0,
+            "predicted_margin": 5.0,
+            "predicted_total": 225.0,
+            "predicted_margin_1h": 2.5,
+            "predicted_total_1h": 112.5,
+            "home_rest_days": 2,
+            "away_rest_days": 1,
+        }
 
     @pytest.fixture
-    def period_predictor(self, mock_spread_model, mock_total_model, mock_moneyline_model):
+    def period_predictor(self, mock_spread_model, mock_total_model):
         """Create a PeriodPredictor instance for testing."""
         from src.prediction.engine import PeriodPredictor
 
@@ -65,8 +54,6 @@ class TestPeriodPredictor:
             spread_features=["home_ppg", "away_ppg", "predicted_margin"],
             total_model=mock_total_model,
             total_features=["home_ppg", "away_ppg", "predicted_total"],
-            moneyline_model=mock_moneyline_model,
-            moneyline_features=["home_win_pct", "away_win_pct"],
         )
 
     def test_predict_spread_returns_correct_structure(self, period_predictor, sample_features):
@@ -92,7 +79,7 @@ class TestPeriodPredictor:
         # (Home favored by 3.5, model predicts +5, so home beats spread by 1.5)
         assert result["edge"] == pytest.approx(1.5, rel=0.01)
 
-    def test_predict_spread_missing_features_raises(self, mock_spread_model, mock_total_model, mock_moneyline_model):
+    def test_predict_spread_missing_features_raises(self, mock_spread_model, mock_total_model):
         """Test that missing features raises ValueError in STRICT MODE."""
         from src.prediction.engine import PeriodPredictor
 
@@ -102,8 +89,6 @@ class TestPeriodPredictor:
             spread_features=["home_ppg", "away_ppg", "nonexistent_feature"],
             total_model=mock_total_model,
             total_features=["home_ppg"],
-            moneyline_model=mock_moneyline_model,
-            moneyline_features=["home_win_pct"],
         )
 
         features = {"home_ppg": 110.0, "away_ppg": 105.0}
@@ -133,33 +118,6 @@ class TestPeriodPredictor:
         # Edge = predicted_total - total_line = 225.0 - 220.0 = 5.0
         assert result["edge"] == pytest.approx(5.0, rel=0.01)
 
-    def test_predict_moneyline_returns_correct_structure(self, period_predictor, sample_features):
-        """Test moneyline prediction returns expected keys."""
-        result = period_predictor.predict_moneyline(
-            sample_features,
-            home_ml_odds=-150,
-            away_ml_odds=130,
-        )
-
-        assert "home_win_prob" in result
-        assert "away_win_prob" in result
-        assert "confidence" in result
-        assert "recommended_bet" in result
-        assert "passes_filter" in result
-
-    def test_predict_moneyline_home_favorite(self, period_predictor, sample_features):
-        """Test moneyline prediction when home team is favorite."""
-        result = period_predictor.predict_moneyline(
-            sample_features,
-            home_ml_odds=-150,
-            away_ml_odds=130,
-        )
-
-        assert result["home_win_prob"] == 0.65
-        assert result["away_win_prob"] == 0.35
-        assert result["recommended_bet"] == "home"
-
-
 class TestUnifiedPredictionEngine:
     """Tests for the UnifiedPredictionEngine class."""
 
@@ -183,8 +141,8 @@ class TestUnifiedPredictionEngine:
         engine.h1_predictor = MagicMock()
         engine.fg_predictor = MagicMock()
         engine.loaded_models = {
-            "1h_spread": True, "1h_total": True, "1h_moneyline": True,
-            "fg_spread": True, "fg_total": True, "fg_moneyline": True,
+            "1h_spread": True, "1h_total": True,
+            "fg_spread": True, "fg_total": True,
         }
 
         info = engine.get_model_info()
@@ -196,7 +154,7 @@ class TestUnifiedPredictionEngine:
         assert "markets_list" in info
 
     def test_predict_all_markets_returns_expected_periods(self):
-        """Test predict_all_markets returns active periods with 3 markets each (1H + FG only)."""
+        """Test predict_all_markets returns active periods with 2 markets each (1H + FG only)."""
         from src.prediction.engine import UnifiedPredictionEngine
 
         # Create mock engine with mock predictors
@@ -208,8 +166,7 @@ class TestUnifiedPredictionEngine:
         mock_period_result = {
             "spread": {"passes_filter": True, "confidence": 0.6},
             "total": {"passes_filter": True, "confidence": 0.55},
-            "moneyline": {"passes_filter": True, "confidence": 0.65}
-        }
+            }
 
         mock_predictor = MagicMock()
         engine.h1_predictor = mock_predictor
@@ -227,8 +184,6 @@ class TestUnifiedPredictionEngine:
                 fg_total_line=220.0,
                 fh_spread_line=-1.5,
                 fh_total_line=110.0,
-                home_ml_odds=-150,
-                away_ml_odds=130,
             )
 
             assert "first_half" in result
@@ -237,8 +192,6 @@ class TestUnifiedPredictionEngine:
             for period in ["first_half", "full_game"]:
                 assert "spread" in result[period]
                 assert "total" in result[period]
-                assert "moneyline" in result[period]
-
 
 class TestModelNotFoundError:
     """Tests for the ModelNotFoundError exception."""
@@ -250,7 +203,6 @@ class TestModelNotFoundError:
         error = ModelNotFoundError("Model not found")
         assert isinstance(error, Exception)
         assert str(error) == "Model not found"
-
 
 class TestConfidenceCalculation:
     """Tests for confidence calculation utilities.
@@ -303,7 +255,6 @@ class TestConfidenceCalculation:
         conf_80 = calculate_confidence_from_probabilities(0.80, 0.20)
 
         assert conf_55 < conf_65 < conf_80
-
 
 class TestFilterThresholds:
     """Tests for filter threshold application."""

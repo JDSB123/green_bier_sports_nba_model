@@ -355,48 +355,8 @@ def flag_conflicts(game_picks: List[BettingCardPick]) -> List[BettingCardPick]:
     Flag conflicting picks with warnings instead of removing them.
     Adds conflict explanations to rationale so user can make informed decisions.
     """
-    # Group by timeframe (FG or 1H)
-    fg_spread = None
-    fg_ml = None
-    
-    for pick in game_picks:
-        if pick.pick_type == "FG Spread":
-            fg_spread = pick
-        elif pick.pick_type == "FG Moneyline":
-            fg_ml = pick
-            
-    # Check FG conflict (Spread vs Moneyline)
-    if fg_spread and fg_ml:
-        # Check if sides are opposite
-        conflict = False
-        if fg_spread.pick_side == "HOME" and fg_ml.pick_side == "AWAY":
-            conflict = True
-        elif fg_spread.pick_side == "AWAY" and fg_ml.pick_side == "HOME":
-            conflict = True
-            
-        if conflict:
-            # Add conflict warning to both picks' rationale
-            conflict_warning = (
-                f"⚠️ MODEL CONFLICT: Spread model favors {fg_spread.pick_side} ({fg_spread.pick_side} team), "
-                f"but Moneyline model sees value in {fg_ml.pick_side} ({fg_ml.pick_side} team). "
-                f"This suggests different models are using different logic. "
-                f"Spread EV: {fg_spread.expected_value*100:+.1f}% | ML EV: {fg_ml.expected_value*100:+.1f}%. "
-                f"Consider the stronger EV or skip this game."
-            )
-            
-            # Add to beginning of rationale
-            fg_spread.rationale.insert(0, conflict_warning)
-            fg_ml.rationale.insert(0, conflict_warning)
-            
-            # Mark confidence as lower due to conflict
-            if fg_spread.confidence == "high":
-                fg_spread.confidence = "medium"
-            if fg_ml.confidence == "high":
-                fg_ml.confidence = "medium"
-    
-    # Return all picks (no removals)
+    # Current markets are independent spreads/totals only.
     return game_picks
-
 
 def generate_betting_card(
     analysis: List[Dict[str, Any]],

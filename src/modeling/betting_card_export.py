@@ -580,29 +580,8 @@ def export_betting_card_to_html(
             </thead>
             <tbody>"""
 
-    # Detect conflicts first (group by game)
-    game_conflicts = {}
-    for pick in picks:
-        if pick.pick_type in ["FG Spread", "FG Moneyline"]:
-            game_key = pick.matchup
-            if game_key not in game_conflicts:
-                game_conflicts[game_key] = {"spread": None, "ml": None}
-            if pick.pick_type == "FG Spread":
-                game_conflicts[game_key]["spread"] = pick
-            elif pick.pick_type == "FG Moneyline":
-                game_conflicts[game_key]["ml"] = pick
-    
-    # Mark conflicts
+    # No cross-market conflict checks for spread/total-only surface.
     conflict_picks = set()
-    for game_key, picks_dict in game_conflicts.items():
-        spread = picks_dict["spread"]
-        ml = picks_dict["ml"]
-        if spread and ml:
-            if (spread.pick_side == "HOME" and ml.pick_side == "AWAY") or \
-               (spread.pick_side == "AWAY" and ml.pick_side == "HOME"):
-                conflict_picks.add(id(spread))
-                conflict_picks.add(id(ml))
-
     # Add table rows
     for pick in picks:
         # Determine pick type class
@@ -627,7 +606,7 @@ def export_betting_card_to_html(
         elif pick.pick_type in ["FG Total", "1H Total"]:
             model_vs_market = f"Model: {pick.model_prediction:.1f} → Line: {pick.market_line:.1f}"
         else:
-            model_vs_market = f"Model: {pick.model_probability:.0%} → Odds: {pick.market_odds:+d}"
+            model_vs_market = f"Model: {pick.model_prediction:.1f} vs Line: {pick.market_line:.1f}"
 
         # Determine row class (conflict takes priority over high-confidence)
         row_class = ""
