@@ -71,7 +71,6 @@ git push origin :refs/tags/v6.4
 git tag -a NBA_v33.0.8.0 -m "NBA Model v33.0.8.0 - Production Release
 
 Features:
-- 6 markets (1H + FG spreads/totals/moneylines)
 - Archive folder for historical tracking
 - Automated deployment pipeline
 - Version management automation
@@ -195,12 +194,12 @@ versioning follows [VERSIONING.md](VERSIONING.md).
 ## [NBA_v33.0.2.0] - 2025-12-22
 
 ### Added
-- Production deployment with 6 markets
+- Production deployment with 4 markets
 
 ## [NBA_v33.0.0.0] - 2025-12-15
 
 ### Changed
-- Major refactor: 9→6 markets (removed Q1)
+- Major refactor: 9→4 markets (removed Q1)
 
 ---
 
@@ -329,7 +328,6 @@ This is a fresh start for the NBA prediction model repository.
 Previous history was messy with inconsistent versioning and large files.
 
 Features:
-- 6-market prediction engine (1H + FG spreads/totals/moneylines)
 - Automated deployment pipeline
 - Version management automation
 - CI/CD validation

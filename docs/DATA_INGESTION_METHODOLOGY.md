@@ -31,7 +31,6 @@ The NBA v5.0 BETA system uses a **multi-source data ingestion pipeline** that co
 │  │ • Live Odds  │  │ • Game Scores│  │ • Schedule   │         │
 │  │ • Spreads    │  │ • Box Scores │  │ • Standings  │         │
 │  │ • Totals     │  │ • Statistics │  │              │         │
-│  │ • Moneyline  │  │ • H2H        │  │              │         │
 │  │ • Betting    │  │ • Injuries   │  │              │         │
 │  │   Lines      │  │ • Rosters    │  │              │         │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │

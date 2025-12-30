@@ -153,7 +153,6 @@ NBA Model $VERSION - Production Release
 This is the first properly versioned release using the NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD> scheme.
 
 Features:
-- 6 markets (1H + FG spreads/totals/moneylines)
 - Automated deployment pipeline (scripts/deploy.ps1)
 - Version management automation (scripts/bump_version.py)
 - CI/CD version validation (.github/workflows/version-check.yml)

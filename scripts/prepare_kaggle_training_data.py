@@ -6,7 +6,6 @@ This script takes the Kaggle dataset (which has historical betting lines)
 and computes engineered features for model training.
 
 The Kaggle dataset has:
-- spread, total, moneyline_home, moneyline_away
 - h2_spread, h2_total (first half lines)
 - Quarter scores (q1-q4)
 
@@ -191,7 +190,6 @@ def load_kaggle_data(path: str, seasons: Optional[List[int]] = None) -> pd.DataF
     logger.info(f"  Processed {len(df)} games with labels")
     logger.info(f"  Spread coverage: {df['spread_line'].notna().sum()} games ({df['spread_line'].notna().mean()*100:.1f}%)")
     logger.info(f"  Total coverage: {df['total_line'].notna().sum()} games ({df['total_line'].notna().mean()*100:.1f}%)")
-    logger.info(f"  Moneyline coverage: {df['moneyline_home'].notna().sum()} games ({df['moneyline_home'].notna().mean()*100:.1f}%)")
 
     return df
 
@@ -308,7 +306,6 @@ def main():
     logger.info(f"Date range: {df['date'].min().date()} to {df['date'].max().date()}")
     logger.info(f"Games with spread lines: {df['spread_line'].notna().sum()}")
     logger.info(f"Games with total lines: {df['total_line'].notna().sum()}")
-    logger.info(f"Games with moneylines: {df['moneyline_home'].notna().sum()}")
 
     feature_cols = ["home_ppg", "away_ppg", "home_elo", "away_elo", "ppg_diff", "elo_diff"]
     existing = [c for c in feature_cols if c in df.columns]

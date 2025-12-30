@@ -112,19 +112,16 @@ Your comprehensive audit identified 3 critical violations:
 
 | Market | Predictions | Accuracy | ROI | Status |
 |--------|-------------|----------|-----|--------|
-| **FG Moneyline** | 232 | 68.1% | +30.0% | ✅ Excellent |
 | **FG Spread** | 422 | 60.6% | +15.7% | ✅ Good |
 | **FG Total** | 422 | 59.2% | +13.1% | ✅ Good |
-| **1H Moneyline** | 232 | 62.5% | +19.3% | ✅ Good |
 | **1H Spread** | 300+ | 55.9% | +8.2% | ⚠️ Marginal |
 | **1H Total** | 300+ | 58.1% | +11.4% | ✅ Good |
-| **Q1 Moneyline** | 232 | 53.0% | +1.2% | ⚠️ Filter required |
 
 **Total Validated:** 696+ predictions
 
 ### Model Architecture ✅
 
-- 9 independent models (Q1 + 1H + FG × Spread/Total/Moneyline)
+- 4 independent models (1H + FG × Spread/Total)
 - Each period uses period-specific feature engineering
 - No cross-period dependencies (correct design)
 - Dual-signal validation (classifier + point prediction)
@@ -310,7 +307,7 @@ cp .env.example .env
 
 ### Features Verified
 
-- ✅ 9-market predictions (Q1/1H/FG × Spread/Total/Moneyline)
+- ✅ 4-market predictions (1H/FG × Spread/Total)
 - ✅ Fresh data mode (no caching, STRICT mode)
 - ✅ Dual-signal filtering (classifier + point prediction)
 - ✅ Confidence & edge thresholds
@@ -576,7 +573,6 @@ Your system is **production ready** with these strengths:
 Your NBA v6.0 model system is **production-grade** and operating correctly in Azure nba-gbsv-model-rg. The architecture is sound, models are validated, and the API is live and functional.
 
 **Key Strengths:**
-- Excellent model accuracy (68% FG moneyline)
 - Comprehensive backtest validation
 - Single source of truth maintained
 - Live API serving predictions reliably

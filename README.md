@@ -1,6 +1,6 @@
 # NBA Basketball Prediction System v33.0.8.0
 
-Production-grade containerized system for NBA betting predictions with **6 independent markets**.
+Production-grade containerized system for NBA betting predictions with **4 independent markets**.
 
 ## Markets (4 Independent Models)
 
@@ -43,7 +43,7 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| `nba-v33-api` | 8090 | **Main prediction API** - FastAPI with 6 independent markets (1H + FG) |
+| `nba-v33-api` | 8090 | **Main prediction API** - FastAPI with 4 independent markets (1H + FG) |
 
 ### Backtest Services (On-Demand)
 
@@ -262,10 +262,8 @@ Optional:
 |--------|----------|-----|
 | FG Spread | 60.6% | +15.7% |
 | FG Total | 59.2% | +13.1% |
-| FG Moneyline | 65.5% | +25.1% |
 | 1H Spread | 55.9% | +8.2% |
 | 1H Total | 58.1% | +11.4% |
-| 1H Moneyline | 63.0% | +19.8% |
 
 *Results from backtest: Oct 2 - Dec 16, 2025 (316+ predictions)*
 

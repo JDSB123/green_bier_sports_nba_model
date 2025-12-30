@@ -202,29 +202,7 @@ def calculate_result(pick_type: str, segment: str, pick_team: str, line: float,
                     return f"2H Total {actual_total}", "MISS"
                 else:
                     return f"2H Total {actual_total}", "PUSH"
-    
-    elif pick_type == "Moneyline":
-        if segment == "FG":
-            if pick_team == away_team:
-                won = game_data['away_final'] > game_data['home_final']
-            else:
-                won = game_data['home_final'] > game_data['away_final']
-            
-            if won:
-                return "Won", "HIT"
-            else:
-                return "Lost", "MISS"
-        
-        elif segment == "1H":
-            if pick_team == away_team:
-                won = game_data['away_1h'] > game_data['home_1h']
-            else:
-                won = game_data['home_1h'] > game_data['away_1h']
-            
-            if won:
-                return "Won 1H", "HIT"
-            else:
-                return "Lost 1H", "MISS"
+
     
     elif pick_type == "Team Total":
         # Team total - need to get the team's score

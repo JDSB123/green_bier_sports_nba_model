@@ -231,34 +231,6 @@ def generate_html(data):
                     {f'<div><span class="label">Filter:</span> <span class="value">{total.get("filter_reason", "Passed")}</span></div>' if not passes else ''}
                 </div>
 '''
-                
-                # Moneyline
-                if "moneyline" in period_data:
-                    ml = period_data["moneyline"]
-                    home_prob = ml.get("home_win_prob", 0)
-                    away_prob = ml.get("away_win_prob", 0)
-                    home_edge = ml.get("home_edge", 0)
-                    away_edge = ml.get("away_edge", 0)
-                    
-                    if home_prob > away_prob:
-                        bet_side = f"{home_team} ({home_prob*100:.1f}%)"
-                        edge = home_edge
-                        confidence = home_prob
-                    else:
-                        bet_side = f"{away_team} ({away_prob*100:.1f}%)"
-                        edge = away_edge
-                        confidence = away_prob
-                    
-                    conf_class = "confidence-high" if confidence >= 0.65 else "confidence-medium" if confidence >= 0.55 else "confidence-low"
-                    
-                    html += f'''
-                <div class="prediction-item">
-                    <div><span class="label">Moneyline:</span> <span class="value">{bet_side}</span></div>
-                    <div><span class="label">Confidence:</span> <span class="value {conf_class}">{confidence*100:.1f}%</span></div>
-                    <div><span class="label">Edge:</span> <span class="value">{edge:.3f}</span></div>
-                </div>
-'''
-                
                 html += '</div>'
             
             html += '</div></div>'

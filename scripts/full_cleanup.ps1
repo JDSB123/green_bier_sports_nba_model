@@ -11,9 +11,6 @@ Write-Host "Current branch: $(git branch --show-current)"
 $response = Read-Host "Clean up old local branches? (y/n)"
 if ($response -eq 'y') {
     $oldBranches = @(
-        '1h/moneyline', '1h/spread', '1h/totals',
-        'fg/moneyline', 'fg/spread', 'fg/totals',
-        'q1/moneyline', 'q1/spread', 'q1/totals',
         'data_ingestion/api_basketball', 'data_ingestion/betting_splits',
         'data_ingestion/espn', 'data_ingestion/injuries', 'data_ingestion/the_odds_api',
         'data_ingestion_main', 'segment_pick_main', 'testing'

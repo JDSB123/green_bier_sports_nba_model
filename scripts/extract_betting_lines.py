@@ -92,12 +92,6 @@ def summarize_event(
                     if outcome.get("name") == "Over":
                         accumulator["fg_total_line"].append(outcome.get("point"))
                         accumulator["fg_total_price"].append(outcome.get("price"))
-            elif key == "h2h":
-                for outcome in outcomes:
-                    if outcome.get("name") == home:
-                        accumulator["fg_home_ml"].append(outcome.get("price"))
-                    elif outcome.get("name") == away:
-                        accumulator["fg_away_ml"].append(outcome.get("price"))
 
             elif key == "spreads_h1":
                 for outcome in outcomes:
@@ -109,12 +103,6 @@ def summarize_event(
                     if outcome.get("name") == "Over":
                         accumulator["fh_total_line"].append(outcome.get("point"))
                         accumulator["fh_total_price"].append(outcome.get("price"))
-            elif key == "h2h_h1":
-                for outcome in outcomes:
-                    if outcome.get("name") == home:
-                        accumulator["fh_home_ml"].append(outcome.get("price"))
-                    elif outcome.get("name") == away:
-                        accumulator["fh_away_ml"].append(outcome.get("price"))
 
             elif key == "spreads_q1":
                 for outcome in outcomes:
@@ -126,12 +114,6 @@ def summarize_event(
                     if outcome.get("name") == "Over":
                         accumulator["q1_total_line"].append(outcome.get("point"))
                         accumulator["q1_total_price"].append(outcome.get("price"))
-            elif key == "h2h_q1":
-                for outcome in outcomes:
-                    if outcome.get("name") == home:
-                        accumulator["q1_home_ml"].append(outcome.get("price"))
-                    elif outcome.get("name") == away:
-                        accumulator["q1_away_ml"].append(outcome.get("price"))
 
     row = {
         "event_id": event_id,
@@ -144,18 +126,6 @@ def summarize_event(
 
     for key, values in accumulator.items():
         row[key] = _median(values)
-
-    # Derive implied probabilities when moneylines exist
-    for prefix in ("fg", "fh", "q1"):
-        home_ml = row.get(f"{prefix}_home_ml")
-        away_ml = row.get(f"{prefix}_away_ml")
-        row[f"{prefix}_home_implied_prob"] = (
-            american_to_implied_prob(home_ml) if home_ml is not None else None
-        )
-        row[f"{prefix}_away_implied_prob"] = (
-            american_to_implied_prob(away_ml) if away_ml is not None else None
-        )
-
     return row
 
 

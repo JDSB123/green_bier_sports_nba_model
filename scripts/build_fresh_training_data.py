@@ -261,7 +261,7 @@ class FreshDataPipeline:
         
         try:
             # Fetch main odds (FG markets) - fetch_odds handles routing internally
-            current_odds = await fetch_odds(markets="spreads,totals,h2h")
+            current_odds = await fetch_odds(markets="spreads,totals")
             logger.info(f"  Fetched FG odds for {len(current_odds)} events")
             
             # Enrich each event with 1H/Q1 markets
@@ -278,7 +278,7 @@ class FreshDataPipeline:
                         # Fetch 1H and Q1 markets for this event
                         event_odds = await fetch_event_odds(
                             event_id,
-                            markets="spreads_h1,totals_h1,h2h_h1,spreads_q1,totals_q1,h2h_q1",
+                            markets="spreads_h1,totals_h1",
                         )
                         # Merge markets
                         existing_bms = {bm["key"]: bm for bm in event.get("bookmakers", [])}
@@ -311,7 +311,7 @@ class FreshDataPipeline:
             logger.warning(f"Could not fetch current odds: {e}")
         
         if not all_lines:
-            logger.warning("No betting lines fetched - backtest will be limited to moneyline")
+            logger.warning("No betting lines fetched - backtest will be limited to spreads/totals")
             return pd.DataFrame()
         
         df = pd.DataFrame(all_lines)
@@ -350,14 +350,6 @@ class FreshDataPipeline:
             fg_totals: List[float] = []
             fh_spreads: List[float] = []
             fh_totals: List[float] = []
-            q1_spreads: List[float] = []
-            q1_totals: List[float] = []
-            fg_home_ml: List[float] = []
-            fg_away_ml: List[float] = []
-            fh_home_ml: List[float] = []
-            fh_away_ml: List[float] = []
-            q1_home_ml: List[float] = []
-            q1_away_ml: List[float] = []
             
             for bm in bookmakers:
                 markets = bm.get("markets", [])
@@ -377,13 +369,6 @@ class FreshDataPipeline:
                                 point = outcome.get("point")
                                 if point is not None:
                                     fg_totals.append(float(point))
-                    elif key == "h2h":
-                        for outcome in outcomes:
-                            price = outcome.get("price")
-                            if outcome.get("name") == home_team and price is not None:
-                                fg_home_ml.append(float(price))
-                            elif outcome.get("name") == away_team and price is not None:
-                                fg_away_ml.append(float(price))
                     elif key == "spreads_h1":
                         for outcome in outcomes:
                             if outcome.get("name") == home_team:
@@ -396,38 +381,8 @@ class FreshDataPipeline:
                                 point = outcome.get("point")
                                 if point is not None:
                                     fh_totals.append(float(point))
-                    elif key == "h2h_h1":
-                        for outcome in outcomes:
-                            price = outcome.get("price")
-                            if outcome.get("name") == home_team and price is not None:
-                                fh_home_ml.append(float(price))
-                            elif outcome.get("name") == away_team and price is not None:
-                                fh_away_ml.append(float(price))
-                    elif key == "spreads_q1":
-                        for outcome in outcomes:
-                            if outcome.get("name") == home_team:
-                                point = outcome.get("point")
-                                if point is not None:
-                                    q1_spreads.append(float(point))
-                    elif key == "totals_q1":
-                        for outcome in outcomes:
-                            if outcome.get("name") == "Over":
-                                point = outcome.get("point")
-                                if point is not None:
-                                    q1_totals.append(float(point))
-                    elif key == "h2h_q1":
-                        for outcome in outcomes:
-                            price = outcome.get("price")
-                            if outcome.get("name") == home_team and price is not None:
-                                q1_home_ml.append(float(price))
-                            elif outcome.get("name") == away_team and price is not None:
-                                q1_away_ml.append(float(price))
             
-            if any([
-                fg_spreads, fg_totals, fh_spreads, fh_totals,
-                q1_spreads, q1_totals, fg_home_ml, fg_away_ml,
-                fh_home_ml, fh_away_ml, q1_home_ml, q1_away_ml
-            ]):
+            if any([fg_spreads, fg_totals, fh_spreads, fh_totals]):
                 lines.append({
                     "query_date": query_date,
                     "event_id": event.get("id"),
@@ -436,20 +391,12 @@ class FreshDataPipeline:
                     "away_team": away_team,
                     "fg_spread_line": _median(fg_spreads),
                     "fg_total_line": _median(fg_totals),
-                    "fg_home_ml": _median(fg_home_ml),
-                    "fg_away_ml": _median(fg_away_ml),
                     "fh_spread_line": _median(fh_spreads),
                     "fh_total_line": _median(fh_totals),
-                    "fh_home_ml": _median(fh_home_ml),
-                    "fh_away_ml": _median(fh_away_ml),
-                    "q1_spread_line": _median(q1_spreads),
-                    "q1_total_line": _median(q1_totals),
-                    "q1_home_ml": _median(q1_home_ml),
-                    "q1_away_ml": _median(q1_away_ml),
                 })
         
         return lines
-    
+
     def merge_outcomes_and_lines(
         self,
         outcomes_df: pd.DataFrame,
@@ -481,16 +428,8 @@ class FreshDataPipeline:
         column_map = {
             "spread_line": "fg_spread_line",
             "total_line": "fg_total_line",
-            "moneyline_home": "fg_home_ml",
-            "moneyline_away": "fg_away_ml",
             "fh_spread_line": "fh_spread_line",
             "fh_total_line": "fh_total_line",
-            "fh_home_ml": "fh_home_ml",
-            "fh_away_ml": "fh_away_ml",
-            "q1_spread_line": "q1_spread_line",
-            "q1_total_line": "q1_total_line",
-            "q1_home_ml": "q1_home_ml",
-            "q1_away_ml": "q1_away_ml",
         }
         
         for _, game in outcomes_df.iterrows():
@@ -683,15 +622,6 @@ class FreshDataPipeline:
                         else:
                             over_pct = under_pct = 50
                         
-                        # Moneyline splits
-                        ml_market = markets.get("h2h", {})
-                        ml_choices = ml_market.get("choices", [])
-                        if len(ml_choices) >= 2:
-                            home_ml_pct = ml_choices[0].get("value", 50)
-                            away_ml_pct = ml_choices[1].get("value", 50)
-                        else:
-                            home_ml_pct = away_ml_pct = 50
-                        
                         # Extract teams (already standardized)
                         teams = split.get("home_team", ""), split.get("away_team", "")
                         
@@ -701,7 +631,6 @@ class FreshDataPipeline:
                             "game_date": split.get("commence_time", "").split("T")[0] if split.get("commence_time") else "",
                             "spread_public_home_pct": home_spread_pct,
                             "over_public_pct": over_pct,
-                            "home_ml_public_pct": home_ml_pct,
                             # Derived features
                             "is_rlm_spread": 1 if (home_spread_pct > 60 and away_spread_pct < 40) else 0,
                             "spread_ticket_money_diff": home_spread_pct - away_spread_pct,

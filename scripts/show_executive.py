@@ -121,7 +121,7 @@ def main():
     print("  *GOOD*       = Passes all filters")
     print()
     print("PERIODS: FG = Full Game, 1H = First Half")
-    print("MARKETS: SPREAD = Point Spread, TOTAL = Over/Under, ML = Moneyline")
+    print("MARKETS: SPREAD = Point Spread, TOTAL = Over/Under")
     print("=" * 140)
 
 if __name__ == "__main__":

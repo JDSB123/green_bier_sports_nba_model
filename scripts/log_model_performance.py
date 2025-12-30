@@ -3,7 +3,7 @@
 Log model performance to model_pack.json for version control.
 
 Usage:
-    python scripts/log_model_performance.py --market fg_moneyline --accuracy 0.68 --roi 0.30 --predictions 50
+    python scripts/log_model_performance.py --market fg_spread --accuracy 0.61 --roi 0.16 --predictions 50
     python scripts/log_model_performance.py --from-tracker  # Auto-calculate from pick tracker
 """
 from __future__ import annotations
@@ -83,9 +83,8 @@ def calculate_from_tracker() -> dict:
         results = {}
 
         for market in [
-            "fg_spread", "fg_total", "fg_moneyline",
-            "1h_spread", "1h_total", "1h_moneyline",
-            "q1_spread", "q1_total", "q1_moneyline",
+            "fg_spread", "fg_total",
+            "1h_spread", "1h_total",
         ]:
             picks = tracker.get_picks_by_market(market)
             resolved = [p for p in picks if p.get("result") in ["win", "loss", "push"]]
@@ -112,7 +111,7 @@ def calculate_from_tracker() -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="Log model performance to model_pack.json")
-    parser.add_argument("--market", type=str, help="Market name (e.g., fg_moneyline)")
+    parser.add_argument("--market", type=str, help="Market name (e.g., fg_spread)")
     parser.add_argument("--accuracy", type=float, help="Accuracy (0-1)")
     parser.add_argument("--roi", type=float, help="ROI (-1 to +inf)")
     parser.add_argument("--predictions", type=int, help="Number of predictions")

@@ -4,7 +4,6 @@ Extract and log feature importance from production models.
 
 Usage:
     python scripts/extract_feature_importance.py
-    python scripts/extract_feature_importance.py --market fg_moneyline
     python scripts/extract_feature_importance.py --output json
 """
 from __future__ import annotations
@@ -28,19 +27,13 @@ OUTPUT_PATH = PROJECT_ROOT / "models" / "production" / "feature_importance.json"
 MODEL_FILES = {
     "fg_spread": "fg_spread_model.joblib",
     "fg_total": "fg_total_model.joblib",
-    "fg_moneyline": "fg_moneyline_model.joblib",
     "1h_spread": "1h_spread_model.pkl",
     "1h_total": "1h_total_model.pkl",
-    "1h_moneyline": "1h_moneyline_model.pkl",
-    "q1_spread": "q1_spread_model.joblib",
-    "q1_total": "q1_total_model.joblib",
-    "q1_moneyline": "q1_moneyline_model.joblib",
 }
 
 FEATURE_FILES = {
     "1h_spread": "1h_spread_features.pkl",
     "1h_total": "1h_total_features.pkl",
-    "1h_moneyline": "1h_moneyline_features.pkl",
 }
 
 

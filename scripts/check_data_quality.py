@@ -81,7 +81,6 @@ if training_path.exists():
     coverage_report = [
         ("FG Spread", coverage("spread_line")),
         ("FG Total", coverage("total_line")),
-        ("FG Moneyline", "present" if {"moneyline_home", "moneyline_away"}.issubset(df_train.columns) else "missing"),
         ("1H Spread", coverage("1h_spread_line")),
         ("1H Total", coverage("1h_total_line")),
         ("Q1 Spread", coverage("q1_spread_line")),

@@ -141,7 +141,6 @@
 │  │ Params:                                                              │    │
 │  │   - apiKey={key}                                                    │    │
 │  │   - regions=us                                                      │    │
-│  │   - markets=spreads,totals,h2h                                      │    │
 │  │   - date={ISO date string}                                          │    │
 │  │   - oddsFormat=american                                             │    │
 │  │ ───────────────────────────────────────────────────────────────    │    │
@@ -157,7 +156,6 @@
 │  │   - bookmakers[].markets[]                                          │    │
 │  │     • spreads: outcomes[].point (spread line)                       │    │
 │  │     • totals: outcomes[].point (total line)                         │    │
-│  │     • h2h: outcomes[].price (moneyline odds) — logged for completeness but not processed (spreads/totals only)
 │  │ Output: Cached in memory for processing                             │    │
 │  │ Purpose: Historical FG markets for backtesting                      │    │
 │  │ Status: ✅ OPTIMIZED (requires paid plan Group 2+)                  │    │
@@ -177,7 +175,6 @@
 │  │ Markets:                                                             │    │
 │  │   - spreads_h1: First half spreads                                  │    │
 │  │   - totals_h1: First half totals                                    │    │
-│  │   - h2h_h1: (removed - ML no longer supported)                                    │    │
 │  │ Purpose: 1H markets (not in main /odds endpoint)                    │    │
 │  │ Status: ✅ OPTIMIZED (called per event for enrichment)              │    │
 │  │ Note: Merged with main event data                                   │    │
@@ -202,7 +199,6 @@
 │  │ Params:                                                              │    │
 │  │   - apiKey={key}                                                    │    │
 │  │   - regions=us                                                      │    │
-│  │   - markets=spreads,totals,h2h                                      │    │
 │  │   - oddsFormat=american                                             │    │
 │  │ ───────────────────────────────────────────────────────────────    │    │
 │  │ Response: Array of event objects with bookmakers                   │    │
@@ -262,7 +258,6 @@
 │  │ Fields:                                                              │    │
 │  │   - markets.spreads.choices[].value (public % on each side)        │    │
 │  │   - markets.totals.choices[].value                                  │    │
-│  │   - markets.h2h.choices[].value                                     │    │
 │  │ Purpose: Public betting percentages, RLM detection                  │    │
 │  │ Status: ✅ OPTIMIZED (tried first, requires paid plan Group 2+)     │    │
 │  │ Note: Returns 403 if not enabled, falls back to Action Network     │    │
@@ -344,7 +339,6 @@
 │  │         ├─ compute_rest_days()                                     │    │
 │  │         ├─ compute_travel_features()                               │    │
 │  │         ├─ compute_dynamic_hca()                                   │    │
-│  │         ├─ compute_h2h_stats()                                     │    │
 │  │         ├─ compute_sos_features()                                  │    │
 │  │         └─ build_game_features() → feature dict                    │    │
 │  │                                                                     │    │
@@ -379,7 +373,6 @@
 | `/v1/games` | GET | Game outcomes + Q1-Q4 | ✅ **OPTIMIZED** | `league=12, season={season}` |
 | `/v1/statistics` | GET | Team PPG/PAPG/W-L | ✅ **OPTIMIZED** | `league=12, season={season}, team={id}` |
 | `/v1/games/statistics/teams` | GET | Full box scores | ✅ **OPTIMIZED** | `ids={id1-id2-id3...}` |
-| `/v1/games?h2h={id1-id2}` | GET | Head-to-head history | ⚠️ Optional | `h2h={team1_id}-{team2_id}` |
 | `/v1/standings` | GET | Conference rankings | ⚠️ Optional | `league=12, season={season}` |
 | `/v1/games/statistics/players` | GET | Player box scores | ⚠️ Optional | `ids={id1-id2-id3...}` |
 | `/v1/players` | GET | Team rosters | ⚠️ Optional | `team={id}, season={season}` |
@@ -392,7 +385,6 @@
 
 **Tier 2 (Valuable - Can be added):**
 - ⚠️ `/standings` - Rankings
-- ⚠️ `/games?h2h` - H2H history
 - ⚠️ `/games/statistics/players` - Player stats
 
 **Tier 3 (Reference - Static):**
@@ -407,10 +399,8 @@
 | Endpoint | Method | Purpose | Status | Params |
 |----------|--------|---------|--------|--------|
 | `/v4/sports/basketball_nba/participants` | GET | Team reference | ✅ **OPTIMIZED** | `apiKey, dateFormat=iso` |
-| `/v4/historical/sports/basketball_nba/odds` | GET | Historical FG odds | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads,totals,h2h, date={ISO}` |
 | `/v4/sports/basketball_nba/events/{eventId}/odds` | GET | 1H markets | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads_h1,totals_h1` |
 | `/v4/sports/basketball_nba/events` | GET | Events list | ✅ **OPTIMIZED** | `apiKey, dateFormat=iso` |
-| `/v4/sports/basketball_nba/odds` | GET | Current FG odds | ✅ **OPTIMIZED** | `apiKey, regions=us, markets=spreads,totals,h2h` |
 | `/v4/sports/basketball_nba/scores` | GET | Recent scores | ⚠️ Not used | `apiKey, daysFrom=1` |
 | `/v4/sports/basketball_nba/betting-splits` | GET | Public betting % | ✅ **OPTIMIZED** | `apiKey, regions=us` |
 

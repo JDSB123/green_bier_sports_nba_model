@@ -43,8 +43,6 @@ TEST_ENV_VARS = {
     "FILTER_SPREAD_MIN_EDGE": "1.0",
     "FILTER_TOTAL_MIN_CONFIDENCE": "0.55",
     "FILTER_TOTAL_MIN_EDGE": "1.5",
-    "FILTER_MONEYLINE_MIN_CONFIDENCE": "0.55",
-    "FILTER_MONEYLINE_MIN_EDGE_PCT": "0.03",
     
     # Optional (empty for tests)
     "BETSAPI_KEY": "",

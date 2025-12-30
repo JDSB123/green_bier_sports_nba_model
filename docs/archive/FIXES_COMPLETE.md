@@ -189,7 +189,6 @@ These fixes resolve:
    - Prediction: Uses unified fetch_odds()
    - Feature parsing now consistent
 
-**Expected Accuracy Improvement:** +2-3% across all markets (Spread, Total, Moneyline)
 
 ---
 

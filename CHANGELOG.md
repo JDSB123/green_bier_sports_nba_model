@@ -57,7 +57,7 @@ This release establishes professional DevOps standards with automated deployment
 ## [NBA_v33.0.2.0] - 2025-12-22
 
 ### Added
-- Production deployment with 6 markets (1H + FG spreads/totals/moneylines)
+- Production deployment with 4 markets (1H + FG spreads/totals)
 - Azure Container App infrastructure
 
 ### Changed
@@ -69,18 +69,18 @@ This release establishes professional DevOps standards with automated deployment
 ## [NBA_v33.0.0.0] - 2025-12-15
 
 ### 🎯 Major Refactor
-Complete market structure overhaul from 9 markets to 6 markets.
+Complete market structure overhaul from 9 markets to 4 markets.
 
 ### Changed
 - **BREAKING:** Removed Q1/Q2/Q3 markets (too noisy, poor performance)
-- Consolidated to 1H + FG only (6 markets total):
-  - 1H Spread, 1H Total, 1H Moneyline
-  - FG Spread, FG Total, FG Moneyline
-- Updated prediction engine for 6-market structure
+- Consolidated to 1H + FG only (4 markets total):
+  - 1H Spread, 1H Total
+  - FG Spread, FG Total
+- Updated prediction engine for 4-market structure
 - Retrained models with new feature set
 
 ### Removed
-- Q1 spread/total/moneyline markets
+- Q1 spread/total markets
 - Q2 markets
 - Q3 markets
 

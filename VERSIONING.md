@@ -30,7 +30,7 @@ Example: `NBA_v33.0.8.0`
 - Database schema breaking changes
 
 **Examples:**
-- Switching from 9 markets to 6 markets ✅
+- Switching from 9 markets to 4 markets ✅
 - Changing from XGBoost to Neural Network ✅
 - Removing deprecated `/predict/v2` endpoint ✅
 
@@ -173,8 +173,8 @@ Example: `NBA_v33.0.8.0`
 |---------|------|---------|
 | NBA_v33.0.8.0 | 2025-12-29 | Added archiving, fixed spread signs, updated docs |
 | NBA_v33.0.7.0 | 2025-12-28 | Calibration improvements, edge tuning |
-| NBA_v33.0.2.0 | 2025-12-22 | Production deployment with 6 markets |
-| NBA_v33.0.0.0 | 2025-12-15 | Major refactor: 9→6 markets (removed Q1) |
+| NBA_v33.0.2.0 | 2025-12-22 | Production deployment with 4 markets |
+| NBA_v33.0.0.0 | 2025-12-15 | Major refactor: 9→4 markets (removed Q1) |
 
 ---
 

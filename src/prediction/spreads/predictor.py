@@ -1,7 +1,7 @@
 """
 Spread prediction logic (Full Game + First Half).
 
-NBA v33.0: 6 markets with independent models (1H + FG).
+NBA v33.0: 4 markets with independent models (1H + FG).
 
 FEATURE VALIDATION:
     Uses unified validation from src/prediction/feature_validation.py

@@ -5,7 +5,7 @@ Merge Kaggle NBA betting data with training data.
 This script:
 1. Loads the Kaggle NBA betting dataset (2008-2025)
 2. Maps abbreviated team names to ESPN full names
-3. Merges betting lines (spread, total, moneyline) into training data
+3. Merges betting lines (spread, total) into training data
 4. Recalculates outcome labels (spread_covered, total_over, etc.)
 
 Usage:
@@ -99,9 +99,6 @@ def load_kaggle_data(filepath: Path) -> pd.DataFrame:
     # Total line
     df["total_line"] = df["total"]
 
-    # Moneylines
-    df["home_ml"] = df["moneyline_home"]
-    df["away_ml"] = df["moneyline_away"]
 
     # First half lines (h2 appears to be second half, so estimate 1H)
     # Using standard NBA scaling: 1H ~ 50% of FG

@@ -41,7 +41,7 @@ This directory contains operational scripts for the NBA v6.5 prediction system.
 ### Backtesting & Analysis
 | Script | Description |
 |--------|-------------|
-| `backtest.py` | **Main backtest** - Walk-forward validation for all 6 markets |
+| `backtest.py` | **Main backtest** - Walk-forward validation for all 4 markets |
 | `analyze_backtest_results.py` | Parse and display backtest metrics |
 | `analyze_roi.py` | ROI performance analysis |
 | `analyze_spread_performance.py` | Spread-specific analysis |

@@ -7,7 +7,7 @@
 
 ## Summary
 
-**Spreads/totals remain the sole production focus (moneyline markets retired).**
+**Spreads/totals remain the sole production focus.**
 
 ### Latest Backtest Results (Dec 20, 2025)
 
@@ -39,15 +39,6 @@ Walk-forward validation on 2025-26 season data (Oct 2 - Dec 20, 2025):
 4. **1H Total continues to add value**
    - 58.1% accuracy with +11.4% ROI keeps totals in the model suite
    - High-confidence bets push accuracy past 61%
-
-### Archived Moneyline Results (for reference only)
-
-Previous backtest from Oct 2 - Dec 16, 2025:
-
-| Market | Predictions | Accuracy | ROI |
-|--------|-------------|----------|-----|
-| FG Moneyline | 316 | 65.5% | +25.1% |
-| 1H Moneyline | 234 | 63.0% | +19.8% |
 
 ---
 

@@ -3,7 +3,7 @@
   "created_at": "2025-12-28T00:00:00Z",
   "git_commit": "manual-sync",
   "git_tag": "NBA_v33.0.8.0",
-  "release_notes": "NBA_v33.0.8.0 Production - 6 markets (1H+FG spreads/totals/moneylines), edge-based bet_side, classifier drift checks",
+  "release_notes": "NBA_v33.0.8.0 Production - 4 markets (1H+FG spreads/totals), edge-based bet_side, classifier drift checks",
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-20",
@@ -23,12 +23,6 @@
       "predictions": 232,
       "status": "production"
     },
-    "fg_moneyline": {
-      "accuracy": 0.655,
-      "roi": 0.251,
-      "predictions": 232,
-      "status": "production"
-    },
     "1h_spread": {
       "accuracy": 0.559,
       "roi": 0.082,
@@ -38,12 +32,6 @@
     "1h_total": {
       "accuracy": 0.581,
       "roi": 0.114,
-      "predictions": 232,
-      "status": "production"
-    },
-    "1h_moneyline": {
-      "accuracy": 0.630,
-      "roi": 0.198,
       "predictions": 232,
       "status": "production"
     }
@@ -69,11 +57,6 @@
       "model_file": "fg_total_model.joblib",
       "features": 9
     },
-    "fg_moneyline": {
-      "status": "production",
-      "model_file": "fg_moneyline_model.joblib",
-      "features": 9
-    },
     "1h_spread": {
       "status": "production",
       "model_file": "1h_spread_model.pkl",
@@ -85,12 +68,6 @@
       "model_file": "1h_total_model.pkl",
       "features_file": "1h_total_features.pkl",
       "features": 10
-    },
-    "1h_moneyline": {
-      "status": "production",
-      "model_file": "1h_moneyline_model.pkl",
-      "features_file": "1h_moneyline_features.pkl",
-      "features": 10
     }
   },
   "filter_thresholds": {
@@ -101,10 +78,6 @@
     "total": {
       "min_confidence": 0.55,
       "min_edge": 1.5
-    },
-    "moneyline": {
-      "min_confidence": 0.55,
-      "min_edge_pct": 0.03
     }
   },
   "deployment": {
@@ -112,7 +85,7 @@
     "resource_group": "nba-gbsv-model-rg",
     "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0",
     "health_endpoint": "/health",
-    "markets_required": 6
+    "markets_required": 4
   },
   "performance_history": []
 }
