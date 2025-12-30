@@ -273,8 +273,6 @@ class TestFilterThresholds:
             spread_features=["home_ppg"],
             total_model=MagicMock(),
             total_features=["home_ppg"],
-            moneyline_model=MagicMock(),
-            moneyline_features=["home_ppg"],
         )
 
         features = {"home_ppg": 110, "predicted_margin": 5}
@@ -299,8 +297,6 @@ class TestFilterThresholds:
             spread_features=["home_ppg"],
             total_model=MagicMock(),
             total_features=["home_ppg"],
-            moneyline_model=MagicMock(),
-            moneyline_features=["home_ppg"],
         )
 
         # Big edge: predicted_margin=8, spread_line=-3.5, edge=11.5
