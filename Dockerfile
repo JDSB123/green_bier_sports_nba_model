@@ -146,10 +146,10 @@ ENV NBA_CACHE_DISABLED=true
 # =============================================================================
 
 # =============================================================================
-# Health Check Configuration - STRICT MODE: All 6 models required (1H + FG)
+# Health Check Configuration - STRICT MODE: All 4 models required (1H + FG)
 # =============================================================================
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') and d.get('markets')==6 else 1)" || exit 1
+    CMD python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8080/health', timeout=5); import json; d=json.loads(r.read()); exit(0 if d.get('engine_loaded') and d.get('markets')==4 else 1)" || exit 1
 
 # =============================================================================
 # Security: Switch to non-root user

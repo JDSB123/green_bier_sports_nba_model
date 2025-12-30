@@ -156,7 +156,6 @@ def merge_betting_data(training_df: pd.DataFrame, kaggle_df: pd.DataFrame) -> pd
     # Select columns to merge from Kaggle
     betting_cols = [
         "spread_line", "total_line",
-        "home_ml", "away_ml",
         "fh_spread_line", "fh_total_line",
         "q1_spread_line", "q1_total_line",
     ]

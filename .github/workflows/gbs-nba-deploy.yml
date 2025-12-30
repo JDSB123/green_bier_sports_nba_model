@@ -126,7 +126,7 @@ jobs:
           echo "$RESPONSE" | jq .
           
           # Verify response is valid JSON and contains expected structure
-          if echo "$RESPONSE" | jq -e '.games' > /dev/null 2>&1; then
+          if echo "$RESPONSE" | jq -e '.predictions' > /dev/null 2>&1; then
             echo "✓ Smoke tests passed - API is responding correctly"
           else
             echo "✗ Smoke tests failed - Invalid response structure"

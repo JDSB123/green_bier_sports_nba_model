@@ -90,7 +90,12 @@ class TotalPredictor:
             raise ValueError("predicted_total is REQUIRED in features for FG total predictions")
 
         # Prepare features using unified validation
-        feature_df = pd.DataFrame([features])
+        feature_payload = dict(features)
+        feature_payload["total_line"] = total_line
+        feature_payload["fg_total_line"] = total_line
+        feature_payload["total_vs_predicted"] = feature_payload["predicted_total"] - total_line
+
+        feature_df = pd.DataFrame([feature_payload])
         X, missing = validate_and_prepare_features(
             feature_df,
             self.fg_feature_columns,
@@ -170,7 +175,13 @@ class TotalPredictor:
             )
 
         # Use 1H model ONLY - no fallbacks
-        feature_df = pd.DataFrame([features])
+        feature_payload = dict(features)
+        feature_payload["1h_total_line"] = total_line
+        feature_payload["fh_total_line"] = total_line
+        feature_payload["total_vs_predicted_1h"] = feature_payload["predicted_total_1h"] - total_line
+        feature_payload["fh_total_vs_predicted"] = feature_payload["predicted_total_1h"] - total_line
+
+        feature_df = pd.DataFrame([feature_payload])
         X, missing = validate_and_prepare_features(
             feature_df,
             self.fh_feature_columns,

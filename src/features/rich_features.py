@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import math
 import os
+from statistics import stdev
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
@@ -574,6 +575,7 @@ class RichFeatureBuilder:
         if h2h:
             home_h2h_wins = 0
             valid_h2h_games = 0
+            h2h_margins = []
             for g in h2h:
                 try:
                     g_home_id = g.get("teams", {}).get("home", {}).get("id")
@@ -582,6 +584,10 @@ class RichFeatureBuilder:
                     g_away_score = g.get("scores", {}).get("away", {}).get("total")
                     if g_home_score is None or g_away_score is None:
                         continue
+                    if g_home_id == home_id:
+                        h2h_margins.append(g_home_score - g_away_score)
+                    elif g_away_id == home_id:
+                        h2h_margins.append(g_away_score - g_home_score)
                     valid_h2h_games += 1
                     # Determine winner against the provided home_id team (true home for current game)
                     if (g_home_id == home_id and g_home_score > g_away_score) or (
@@ -591,8 +597,11 @@ class RichFeatureBuilder:
                 except (TypeError, AttributeError):
                     continue
             h2h_win_rate = home_h2h_wins / valid_h2h_games if valid_h2h_games > 0 else 0.5
+            h2h_margin = sum(h2h_margins) / len(h2h_margins) if h2h_margins else 0.0
         else:
             h2h_win_rate = 0.5  # Neutral if no history
+            h2h_margin = 0.0
+            valid_h2h_games = 0
 
         # ============================================================
         # RECENT FORM (FiveThirtyEight-style rolling performance)
@@ -607,7 +616,9 @@ class RichFeatureBuilder:
             if not recent_games:
                 return {"l5_win_pct": 0.5, "l10_win_pct": 0.5, "l5_margin": 0, "l10_margin": 0,
                         "l5_ppg": 0, "l5_papg": 0, "rest_days": 3, "prev_game_location": None,
-                        "l5_ppg_1h": 0, "l5_papg_1h": 0, "l5_margin_1h": 0}
+                        "l5_ppg_1h": 0, "l5_papg_1h": 0, "l5_margin_1h": 0,
+                        "l5_win_pct_1h": 0.5, "win_pct_1h": 0.5,
+                        "score_std": 0.0, "margin_std": 0.0}
 
             wins_l5 = wins_l10 = 0
             margin_l5 = margin_l10 = 0
@@ -615,6 +626,9 @@ class RichFeatureBuilder:
             # 1H stats
             pts_l5_1h = pts_allowed_l5_1h = 0
             margin_l5_1h = 0
+            wins_1h_l5 = wins_1h_l10 = 0
+            scores_all = []
+            margins_all = []
 
             for i, g in enumerate(recent_games[:10]):
                 try:
@@ -638,6 +652,10 @@ class RichFeatureBuilder:
                     margin = team_score - opp_score
                     margin_1h = team_1h - opp_1h
                     won = 1 if margin > 0 else 0
+                    won_1h = 1 if margin_1h > 0 else 0
+
+                    scores_all.append(team_score)
+                    margins_all.append(margin)
 
                     if i < 5:
                         wins_l5 += won
@@ -648,9 +666,11 @@ class RichFeatureBuilder:
                         pts_l5_1h += team_1h
                         pts_allowed_l5_1h += opp_1h
                         margin_l5_1h += margin_1h
+                        wins_1h_l5 += won_1h
 
                     wins_l10 += won
                     margin_l10 += margin
+                    wins_1h_l10 += won_1h
                 except (TypeError, KeyError):
                     continue
 
@@ -697,6 +717,10 @@ class RichFeatureBuilder:
                 "l5_ppg_1h": pts_l5_1h / games_l5 if games_l5 > 0 else 0,
                 "l5_papg_1h": pts_allowed_l5_1h / games_l5 if games_l5 > 0 else 0,
                 "l5_margin_1h": margin_l5_1h / games_l5 if games_l5 > 0 else 0,
+                "l5_win_pct_1h": wins_1h_l5 / games_l5 if games_l5 > 0 else 0.5,
+                "win_pct_1h": wins_1h_l10 / games_l10 if games_l10 > 0 else 0.5,
+                "score_std": float(stdev(scores_all)) if len(scores_all) > 1 else 0.0,
+                "margin_std": float(stdev(margins_all)) if len(margins_all) > 1 else 0.0,
                 "rest_days": days_rest,
                 "prev_game_location": prev_game_location,
             }
@@ -927,6 +951,8 @@ class RichFeatureBuilder:
 
             # H2H
             "h2h_win_rate": h2h_win_rate,
+            "h2h_margin": h2h_margin,
+            "h2h_games": valid_h2h_games,
 
             # Recent form (FiveThirtyEight-style)
             "home_l5_win_pct": home_form["l5_win_pct"],
@@ -992,6 +1018,33 @@ class RichFeatureBuilder:
             "home_star_out": home_star_out,
             "away_star_out": away_star_out,
         }
+
+        # Compatibility aliases for offline FeatureEngineer training schema
+        features["home_margin"] = features["home_avg_margin"]
+        features["away_margin"] = features["away_avg_margin"]
+        features["home_rest"] = features["home_rest_days"]
+        features["away_rest"] = features["away_rest_days"]
+        features["rest_diff"] = features["home_rest_days"] - features["away_rest_days"]
+        features["home_pace"] = home_ppg + home_papg
+        features["away_pace"] = away_ppg + away_papg
+        features["expected_pace"] = (features["home_pace"] + features["away_pace"]) / 2
+        features["home_score_std"] = home_form["score_std"]
+        features["away_score_std"] = away_form["score_std"]
+        features["home_margin_std"] = home_form["margin_std"]
+        features["away_margin_std"] = away_form["margin_std"]
+        features["home_net_rating"] = features["home_net_rtg"]
+        features["away_net_rating"] = features["away_net_rtg"]
+        features["net_rating_diff"] = features["home_net_rtg"] - features["away_net_rtg"]
+        features["home_1h_win_pct"] = home_form["win_pct_1h"]
+        features["away_1h_win_pct"] = away_form["win_pct_1h"]
+        features["home_margin_1h"] = features["home_spread_margin_1h"]
+        features["away_margin_1h"] = features["away_spread_margin_1h"]
+        features["home_pace_1h"] = features["home_ppg_1h"] + features["home_papg_1h"]
+        features["away_pace_1h"] = features["away_ppg_1h"] + features["away_papg_1h"]
+        features["expected_pace_1h"] = (features["home_pace_1h"] + features["away_pace_1h"]) / 2
+        features["dynamic_hca"] = HOME_COURT_ADV
+        features["dynamic_hca_1h"] = HOME_COURT_ADV * 0.5
+        features["h2h_win_pct"] = h2h_win_rate
 
         features["elo_diff"] = features["home_elo"] - features["away_elo"]
         features["elo_prob_home"] = 1 / (1 + 10 ** (-features["elo_diff"] / 400))

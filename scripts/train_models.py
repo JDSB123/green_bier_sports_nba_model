@@ -709,8 +709,14 @@ def train_models(
     available_totals = filter_available_features(totals_features, train_df.columns.tolist())
     print(f"  Using {len(available_totals)} of {len(totals_features)} possible features")
 
-    if "went_over" not in train_df.columns:
-        print("Warning: 'went_over' target not found. Skipping totals model.")
+    totals_label = None
+    if "total_over" in train_df.columns:
+        totals_label = "total_over"
+    elif "went_over" in train_df.columns:
+        totals_label = "went_over"
+
+    if totals_label is None:
+        print("Warning: totals target not found ('total_over' or 'went_over'). Skipping totals model.")
     else:
         totals_model = TotalsModel(
             name="totals_classifier",
@@ -723,19 +729,19 @@ def train_models(
         test_totals = test_df[test_df["total_line"].notna()].copy()
 
         if len(train_totals) > 10:
-            totals_model.fit(train_totals, train_totals["went_over"])
+            totals_model.fit(train_totals, train_totals[totals_label])
 
             # Evaluate
-            train_metrics = totals_model.evaluate(train_totals, train_totals["went_over"])
+            train_metrics = totals_model.evaluate(train_totals, train_totals[totals_label])
             print_metrics("Totals (Train)", train_metrics)
 
             if len(test_totals) > 0:
-                test_metrics = totals_model.evaluate(test_totals, test_totals["went_over"])
+                test_metrics = totals_model.evaluate(test_totals, test_totals[totals_label])
                 print_metrics("Totals (Test)", test_metrics)
 
                 # Additional evaluation: Brier score & high-confidence ROI buckets
                 proba = totals_model.predict_proba(test_totals)[:, 1]
-                actual = test_totals["went_over"].values
+                actual = test_totals[totals_label].values
                 preds = totals_model.predict(test_totals)
 
                 conf_for_bet = np.where(preds == 1, proba, 1.0 - proba)

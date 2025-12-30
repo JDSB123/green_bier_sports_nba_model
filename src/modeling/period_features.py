@@ -273,7 +273,7 @@ def get_model_features(period: str, market: str) -> List[str]:
 
 
 # =============================================================================
-# ALL 6 MODEL CONFIGURATIONS
+# ALL 4 MODEL CONFIGURATIONS
 # =============================================================================
 
 MODEL_CONFIGS: Dict[str, Dict] = {

@@ -115,8 +115,24 @@ class PeriodPredictor:
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # Prepare features using unified validation
-        feature_df = pd.DataFrame([features])
+        # Prepare features using unified validation (add line context for compatibility)
+        margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
+        feature_payload = dict(features)
+        feature_payload["spread_line"] = spread_line
+        feature_payload["fg_spread_line"] = spread_line
+        if self.period != "fg":
+            feature_payload["1h_spread_line"] = spread_line
+            feature_payload["fh_spread_line"] = spread_line
+
+        predicted_margin_value = feature_payload.get(margin_key)
+        if predicted_margin_value is not None:
+            if self.period == "fg":
+                feature_payload["spread_vs_predicted"] = predicted_margin_value - (-spread_line)
+            else:
+                feature_payload["spread_vs_predicted_1h"] = predicted_margin_value - (-spread_line)
+                feature_payload["fh_spread_vs_predicted"] = predicted_margin_value - (-spread_line)
+
+        feature_df = pd.DataFrame([feature_payload])
         X, missing = validate_and_prepare_features(
             feature_df,
             self.spread_features,
@@ -135,8 +151,7 @@ class PeriodPredictor:
         # =====================================================================
         # SIGNAL 2: POINT PREDICTION (model's predicted margin vs market line)
         # =====================================================================
-        margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
-        predicted_margin = features.get(margin_key)
+        predicted_margin = feature_payload.get(margin_key)
 
         # CRITICAL: Log and warn when predicted margin is missing
         if predicted_margin is None:
@@ -222,8 +237,24 @@ class PeriodPredictor:
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # Prepare features using unified validation
-        feature_df = pd.DataFrame([features])
+        # Prepare features using unified validation (add line context for compatibility)
+        total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
+        feature_payload = dict(features)
+        feature_payload["total_line"] = total_line
+        feature_payload["fg_total_line"] = total_line
+        if self.period != "fg":
+            feature_payload["1h_total_line"] = total_line
+            feature_payload["fh_total_line"] = total_line
+
+        predicted_total_value = feature_payload.get(total_key)
+        if predicted_total_value is not None:
+            if self.period == "fg":
+                feature_payload["total_vs_predicted"] = predicted_total_value - total_line
+            else:
+                feature_payload["total_vs_predicted_1h"] = predicted_total_value - total_line
+                feature_payload["fh_total_vs_predicted"] = predicted_total_value - total_line
+
+        feature_df = pd.DataFrame([feature_payload])
         X, missing = validate_and_prepare_features(
             feature_df,
             self.total_features,
@@ -242,8 +273,7 @@ class PeriodPredictor:
         # =====================================================================
         # SIGNAL 2: POINT PREDICTION (model's predicted total vs market line)
         # =====================================================================
-        total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
-        predicted_total = features.get(total_key)
+        predicted_total = feature_payload.get(total_key)
 
         # CRITICAL: Log and warn when predicted total is missing
         if predicted_total is None:

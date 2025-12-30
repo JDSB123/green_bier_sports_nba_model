@@ -90,7 +90,12 @@ class SpreadPredictor:
             raise ValueError("predicted_margin is REQUIRED in features for FG spread predictions")
 
         # Prepare features using unified validation
-        feature_df = pd.DataFrame([features])
+        feature_payload = dict(features)
+        feature_payload["spread_line"] = spread_line
+        feature_payload["fg_spread_line"] = spread_line
+        feature_payload["spread_vs_predicted"] = feature_payload["predicted_margin"] - (-spread_line)
+
+        feature_df = pd.DataFrame([feature_payload])
         X, missing = validate_and_prepare_features(
             feature_df,
             self.fg_feature_columns,
@@ -152,7 +157,13 @@ class SpreadPredictor:
             )
 
         # Use 1H model ONLY - no fallbacks
-        feature_df = pd.DataFrame([features])
+        feature_payload = dict(features)
+        feature_payload["1h_spread_line"] = spread_line
+        feature_payload["fh_spread_line"] = spread_line
+        feature_payload["spread_vs_predicted_1h"] = feature_payload["predicted_margin_1h"] - (-spread_line)
+        feature_payload["fh_spread_vs_predicted"] = feature_payload["predicted_margin_1h"] - (-spread_line)
+
+        feature_df = pd.DataFrame([feature_payload])
         X, missing = validate_and_prepare_features(
             feature_df,
             self.fh_feature_columns,
