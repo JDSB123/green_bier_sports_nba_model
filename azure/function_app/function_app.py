@@ -763,7 +763,8 @@ def dashboard(req: func.HttpRequest) -> func.HttpResponse:
     data = fetch_predictions("today")
     
     if not data or not data.get("plays"):
-        # Error page
+        # No picks available – return empty card without failing the endpoint
+        logging.info("No picks available - returning empty dashboard")
         html = """<!DOCTYPE html>
 <html><head><title>NBA Picks</title>
 <style>body{font-family:'Segoe UI',sans-serif;background:#1a1a2e;color:#fff;padding:40px;text-align:center;}

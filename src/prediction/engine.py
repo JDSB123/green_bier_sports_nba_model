@@ -153,7 +153,7 @@ class PeriodPredictor:
         # =====================================================================
         predicted_margin = feature_payload.get(margin_key)
 
-        # CRITICAL: Log and warn when predicted margin is missing
+        # CRITICAL: Log and warn when predicted margin is missing, but keep processing
         if predicted_margin is None:
             logger.warning(
                 f"[{self.period}_spread] MISSING predicted_margin feature (key: {margin_key}). "
@@ -275,7 +275,7 @@ class PeriodPredictor:
         # =====================================================================
         predicted_total = feature_payload.get(total_key)
 
-        # CRITICAL: Log and warn when predicted total is missing
+        # CRITICAL: Log and warn when predicted total is missing, but keep processing
         if predicted_total is None:
             logger.warning(
                 f"[{self.period}_total] MISSING predicted_total feature (key: {total_key}). "

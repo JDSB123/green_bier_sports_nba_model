@@ -35,7 +35,8 @@ from src.modeling import io
 
 DATA_DIR = PROJECT_ROOT / "data"
 PROCESSED_DIR = DATA_DIR / "processed"
-MODELS_DIR = PROCESSED_DIR / "models"
+# Note: Models are at models/production/ locally, not data/processed/models/
+# MODELS_DIR is not used in this script (models are trained fresh for calibration testing)
 
 
 def load_training_data() -> pd.DataFrame:

@@ -139,7 +139,31 @@ class MarketsResponse(BaseModel):
 # --- API Setup - NBA_v33.0.8.0 ---
 
 def _models_dir() -> PathLib:
-    return PathLib(settings.data_processed_dir) / "models"
+    """
+    Resolve models directory with explicit, non-silent fallback.
+
+    Priority:
+    1) data_processed_dir/models (runtime target)
+    2) PROJECT_ROOT/models/production (local source of truth)
+
+    Raise if neither exists.
+    """
+    primary = PathLib(settings.data_processed_dir) / "models"
+    if primary.exists():
+        return primary
+
+    secondary = PROJECT_ROOT / "models" / "production"
+    if secondary.exists():
+        logger.warning(
+            f"Models directory not found at {primary}. Using local source {secondary}. "
+            f"Ensure models are copied to data/processed/models for deployment."
+        )
+        return secondary
+
+    raise RuntimeError(
+        f"No models directory found. Checked: {primary} and {secondary}. "
+        f"Copy trained models to data/processed/models or set data_processed_dir correctly."
+    )
 
 
 @asynccontextmanager
