@@ -85,11 +85,17 @@ This directory contains operational scripts for the NBA prediction system.
 ## Quick Start
 
 ```bash
-# Get today's predictions
+# EASIEST: Run tonight's predictions (via shell script)
+./run_tonight_predictions.sh
+
+# Get today's predictions (Python)
 python scripts/run_slate.py
 
 # Get tomorrow's predictions
 python scripts/run_slate.py --date tomorrow
+
+# Filter by team
+./run_tonight_predictions.sh today "Lakers"
 
 # Run backtest
 python scripts/backtest.py
@@ -100,6 +106,8 @@ python scripts/train_models.py
 # Validate production readiness
 python scripts/validate_production_readiness.py
 ```
+
+**See also:** `docs/RUNNING_PREDICTIONS.md` for complete prediction guide
 
 ## Docker Usage
 
