@@ -15,6 +15,12 @@ Each market uses independent feature engineering and model training, tailored to
 
 ## 🚀 THE ONE COMMAND
 
+**Quick start - run predictions for tonight:**
+```bash
+./run_tonight_predictions.sh
+```
+
+Or use Python directly:
 ```powershell
 python scripts/run_slate.py
 ```
@@ -22,11 +28,13 @@ python scripts/run_slate.py
 That's it. This handles everything automatically.
 
 **Options:**
-```powershell
-python scripts/run_slate.py --date tomorrow        # Tomorrow's games
-python scripts/run_slate.py --matchup Lakers       # Filter to Lakers
+```bash
+./run_tonight_predictions.sh tomorrow              # Tomorrow's games
+./run_tonight_predictions.sh today "Lakers"        # Filter to Lakers
 python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ```
+
+> **📖 Full Guide:** See [`docs/RUNNING_PREDICTIONS.md`](docs/RUNNING_PREDICTIONS.md) for complete instructions, troubleshooting, and GitHub Actions workflow.
 
 ---
 
@@ -65,11 +73,13 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 |----------|---------|---------|
 | **GBS NBA - Build & Deploy** | Auto on `push` to main | Build Docker image + deploy to Container Apps |
 | **GBS NBA - Deploy Function** | Auto on `azure/function_app/**` changes | Deploy Function App |
+| **Run NBA Predictions** | Manual workflow dispatch | Generate predictions for today/tomorrow's slate |
 | **ACR Retention** | Weekly schedule + manual | Clean up old image tags |
 
 **Standard Flow:**
 1. **Push code** → `GBS NBA - Build & Deploy` auto-triggers → builds + deploys
 2. **Function updates** → `GBS NBA - Deploy Function` auto-triggers → deploys Function App
+3. **Generate predictions** → Manually trigger `Run NBA Predictions` → fetches predictions from production API
 
 Quick verify (production):
 

@@ -1,0 +1,207 @@
+# NBA Predictions Runner
+# Manually triggered workflow to generate predictions for tonight's slate
+# 
+# Usage:
+#   1. Go to Actions tab in GitHub
+#   2. Select "Run NBA Predictions"
+#   3. Click "Run workflow"
+#   4. Choose date (today/tomorrow or specific date)
+#   5. Optionally filter by matchup
+#
+# Requirements:
+#   - Azure credentials configured (AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID)
+#   - Container app deployed (nba-gbsv-api)
+
+name: Run NBA Predictions
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date for predictions'
+        required: true
+        default: 'today'
+        type: choice
+        options:
+          - today
+          - tomorrow
+      matchup:
+        description: 'Optional: Filter by team (e.g., "Lakers")'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  RESOURCE_GROUP: nba-gbsv-model-rg
+  CONTAINER_APP_NAME: nba-gbsv-api
+
+jobs:
+  run-predictions:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install requests python-dotenv
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Container App FQDN
+        id: get-fqdn
+        run: |
+          FQDN=$(az containerapp show \
+            -n ${{ env.CONTAINER_APP_NAME }} \
+            -g ${{ env.RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn \
+            -o tsv)
+          echo "fqdn=$FQDN" >> $GITHUB_OUTPUT
+          echo "Container App URL: https://$FQDN"
+
+      - name: Check API Health
+        run: |
+          echo "Checking API health..."
+          response=$(curl -s "https://${{ steps.get-fqdn.outputs.fqdn }}/health" || echo "failed")
+          echo "$response"
+          
+          if echo "$response" | grep -q "engine_loaded"; then
+            echo "✅ API is healthy"
+          else
+            echo "❌ API health check failed"
+            exit 1
+          fi
+
+      - name: Run Predictions
+        id: predictions
+        run: |
+          echo "Fetching predictions for: ${{ inputs.date }}"
+          
+          # Build URL with parameters
+          URL="https://${{ steps.get-fqdn.outputs.fqdn }}/slate/${{ inputs.date }}/comprehensive?use_splits=true"
+          
+          echo "Calling: $URL"
+          
+          # Fetch predictions
+          curl -s "$URL" > predictions.json
+          
+          # Check if successful
+          if [ ! -s predictions.json ]; then
+            echo "❌ Failed to fetch predictions"
+            exit 1
+          fi
+          
+          # Parse and display results
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          import sys
+          from datetime import datetime
+          
+          try:
+              with open('predictions.json', 'r') as f:
+                  data = json.load(f)
+              
+              analysis = data.get('analysis', [])
+              
+              if not analysis:
+                  print("No games found for this date")
+                  sys.exit(0)
+              
+              print("\n" + "="*100)
+              print(f"NBA PREDICTIONS - {datetime.now().strftime('%Y-%m-%d %H:%M CST')}")
+              print("="*100)
+              print(f"\nFound {len(analysis)} game(s)\n")
+              
+              for game in analysis:
+                  home = game.get('home_team', '')
+                  away = game.get('away_team', '')
+                  time_cst = game.get('time_cst', 'TBD')
+                  edge_data = game.get('comprehensive_edge', {})
+                  
+                  print(f"\n{'='*100}")
+                  print(f"GAME: {away} @ {home}")
+                  print(f"TIME: {time_cst}")
+                  
+                  # Full Game picks
+                  fg = edge_data.get('full_game', {})
+                  if fg:
+                      print("\n  FULL GAME:")
+                      
+                      spread = fg.get('spread', {})
+                      if spread.get('pick'):
+                          print(f"    SPREAD: {spread['pick']} {spread.get('pick_line', 0):+.1f}")
+                          print(f"       Edge: {spread.get('edge', 0):+.1f} pts")
+                          print(f"       Confidence: {spread.get('confidence', 0):.0%}")
+                      
+                      total = fg.get('total', {})
+                      if total.get('pick'):
+                          print(f"    TOTAL: {total['pick']} {total.get('market_line', 0):.1f}")
+                          print(f"       Edge: {abs(total.get('edge', 0)):.1f} pts")
+                          print(f"       Confidence: {total.get('confidence', 0):.0%}")
+                  
+                  # First Half picks
+                  fh = edge_data.get('first_half', {})
+                  if fh:
+                      has_picks = any(fh.get(m, {}).get('pick') for m in ['spread', 'total'])
+                      if has_picks:
+                          print("\n  FIRST HALF:")
+                          
+                          spread = fh.get('spread', {})
+                          if spread.get('pick'):
+                              print(f"    1H SPREAD: {spread['pick']} {spread.get('pick_line', 0):+.1f}")
+                              print(f"       Edge: {spread.get('edge', 0):+.1f} pts")
+                              print(f"       Confidence: {spread.get('confidence', 0):.0%}")
+                          
+                          total = fh.get('total', {})
+                          if total.get('pick'):
+                              print(f"    1H TOTAL: {total['pick']} {total.get('market_line', 0):.1f}")
+                              print(f"       Edge: {abs(total.get('edge', 0)):.1f} pts")
+                              print(f"       Confidence: {total.get('confidence', 0):.0%}")
+              
+              print("\n" + "="*100)
+              
+              # Save summary
+              summary = {
+                  'date': datetime.now().isoformat(),
+                  'games_count': len(analysis),
+                  'games': [{'home': g.get('home_team'), 'away': g.get('away_team')} for g in analysis]
+              }
+              with open('predictions_summary.json', 'w') as f:
+                  json.dump(summary, f, indent=2)
+                  
+          except Exception as e:
+              print(f"Error processing predictions: {e}")
+              sys.exit(1)
+          PYTHON_SCRIPT
+
+      - name: Save Predictions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nba-predictions-${{ inputs.date }}-${{ github.run_number }}
+          path: |
+            predictions.json
+            predictions_summary.json
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "✅ Predictions generated successfully"
+          echo "📊 Results saved as workflow artifact"
+          echo ""
+          echo "View predictions:"
+          echo "1. Go to Actions > This workflow run"
+          echo "2. Download artifact: nba-predictions-${{ inputs.date }}-${{ github.run_number }}"
