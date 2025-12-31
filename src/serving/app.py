@@ -123,6 +123,7 @@ class SlateResponse(BaseModel):
     odds_as_of_utc: Optional[str] = None
     odds_snapshot_path: Optional[str] = None
     odds_archive_path: Optional[str] = None
+    error_message: Optional[str] = None
 
 
 class MarketsResponse(BaseModel):
@@ -652,8 +653,15 @@ async def get_slate_predictions(
     try:
         games = await fetch_todays_games(target_date)
     except Exception as e:
-        logger.error(f"Error fetching odds: {e}")
-        raise HTTPException(status_code=502, detail="Failed to fetch data from Odds API")
+        logger.error("Error fetching odds for %s: %s", target_date, e, exc_info=True)
+        fallback_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        return SlateResponse(
+            date=str(target_date),
+            predictions=[],
+            total_plays=0,
+            odds_as_of_utc=fallback_timestamp,
+            error_message="Failed to fetch data from Odds API",
+        )
 
     if not games:
         return SlateResponse(date=str(target_date), predictions=[], total_plays=0)
