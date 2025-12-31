@@ -70,6 +70,13 @@ echo -e "${GREEN}✅ Python 3 found${NC}"
 DATE_ARG="${1:-today}"
 MATCHUP_ARG="${2:-}"
 
+# Validate date argument
+if [[ ! "$DATE_ARG" =~ ^(today|tomorrow|[0-9]{4}-[0-9]{2}-[0-9]{2})$ ]]; then
+    echo -e "${YELLOW}⚠️  Invalid date format: $DATE_ARG${NC}"
+    echo "Valid formats: today, tomorrow, or YYYY-MM-DD"
+    exit 1
+fi
+
 echo ""
 echo -e "${BLUE}Running predictions...${NC}"
 

@@ -16,7 +16,33 @@ from pathlib import Path
 
 
 def display_predictions(predictions_file: str = "predictions.json"):
-    """Parse and display predictions from JSON file."""
+    """
+    Parse and display predictions from JSON file.
+    
+    Args:
+        predictions_file: Path to JSON file containing NBA predictions.
+                         Expected structure:
+                         {
+                             "analysis": [
+                                 {
+                                     "home_team": str,
+                                     "away_team": str,
+                                     "time_cst": str,
+                                     "comprehensive_edge": {
+                                         "full_game": {"spread": {...}, "total": {...}},
+                                         "first_half": {"spread": {...}, "total": {...}}
+                                     }
+                                 }
+                             ]
+                         }
+    
+    Returns:
+        int: 0 on success, 1 on error
+        
+    Side Effects:
+        - Prints formatted predictions to stdout
+        - Creates 'predictions_summary.json' with game count and team names
+    """
     
     try:
         with open(predictions_file, 'r') as f:
