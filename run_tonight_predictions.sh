@@ -70,19 +70,20 @@ echo -e "${GREEN}✅ Python 3 found${NC}"
 DATE_ARG="${1:-today}"
 MATCHUP_ARG="${2:-}"
 
-# Build command
-CMD="python3 scripts/run_slate.py --date $DATE_ARG"
-if [ -n "$MATCHUP_ARG" ]; then
-    CMD="$CMD --matchup '$MATCHUP_ARG'"
-fi
-
 echo ""
 echo -e "${BLUE}Running predictions...${NC}"
-echo -e "${BLUE}Command: $CMD${NC}"
+
+# Build command array (safe from injection)
+CMD_ARGS=(python3 scripts/run_slate.py --date "$DATE_ARG")
+if [ -n "$MATCHUP_ARG" ]; then
+    CMD_ARGS+=(--matchup "$MATCHUP_ARG")
+fi
+
+echo -e "${BLUE}Command: ${CMD_ARGS[*]}${NC}"
 echo ""
 
-# Run the prediction script
-eval $CMD
+# Run the prediction script (no eval - direct execution)
+"${CMD_ARGS[@]}"
 
 EXIT_CODE=$?
 
