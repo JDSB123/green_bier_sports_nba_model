@@ -1,0 +1,310 @@
+name: Daily NBA Picks to SharePoint
+
+on:
+  # Run daily at 10 AM EST (3 PM UTC) - before most NBA games
+  schedule:
+    - cron: '0 15 * * *'
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date for predictions (YYYY-MM-DD, today, or tomorrow)'
+        required: false
+        default: 'today'
+
+env:
+  ACA_ENDPOINT: https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io
+  SHAREPOINT_SITE: greenbiercapital.sharepoint.com
+  SHAREPOINT_SITE_PATH: /sites/EarlyStageSportVentures
+  UPLOAD_FOLDER: NBA Picks
+
+jobs:
+  fetch-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get current date
+        id: date
+        run: |
+          if [ "${{ github.event.inputs.date }}" = "" ] || [ "${{ github.event.inputs.date }}" = "today" ]; then
+            echo "target_date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+            echo "display_date=$(date +'%B %d, %Y')" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.date }}" = "tomorrow" ]; then
+            echo "target_date=$(date -d '+1 day' +%Y-%m-%d)" >> $GITHUB_OUTPUT
+            echo "display_date=$(date -d '+1 day' +'%B %d, %Y')" >> $GITHUB_OUTPUT
+          else
+            echo "target_date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+            echo "display_date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch predictions from ACA
+        id: fetch
+        run: |
+          echo "Fetching predictions for ${{ steps.date.outputs.target_date }}..."
+
+          # Fetch executive summary
+          RESPONSE=$(curl -s -f "${{ env.ACA_ENDPOINT }}/slate/${{ steps.date.outputs.target_date }}/executive")
+
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to fetch predictions from ACA"
+            exit 1
+          fi
+
+          # Save JSON response
+          echo "$RESPONSE" > picks_${{ steps.date.outputs.target_date }}.json
+
+          # Extract key stats
+          TOTAL_PLAYS=$(echo "$RESPONSE" | jq -r '.total_plays // 0')
+          VERSION=$(echo "$RESPONSE" | jq -r '.version // "unknown"')
+
+          echo "total_plays=$TOTAL_PLAYS" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          echo "✅ Fetched $TOTAL_PLAYS plays for ${{ steps.date.outputs.target_date }}"
+
+      - name: Generate HTML report
+        run: |
+          cat > picks_${{ steps.date.outputs.target_date }}.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>NBA Picks - ${{ steps.date.outputs.display_date }}</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+              .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+              .header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; padding: 25px; text-align: center; }
+              .header h1 { margin: 0; font-size: 28px; }
+              .header p { margin: 5px 0 0; opacity: 0.9; }
+              .content { padding: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+              th { background: #1e3a5f; color: white; padding: 12px 8px; text-align: left; font-size: 13px; }
+              td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; }
+              tr:hover { background: #f8f9fa; }
+              .elite { background: #fff3cd; }
+              .strong { background: #d4edda; }
+              .pick { font-weight: 600; color: #1e3a5f; }
+              .confidence { font-weight: 600; }
+              .edge { color: #28a745; font-weight: 500; }
+              .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+              .badge-elite { background: #ffc107; color: #000; }
+              .badge-strong { background: #28a745; color: #fff; }
+              .badge-good { background: #6c757d; color: #fff; }
+              .footer { padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+              .no-picks { text-align: center; padding: 40px; color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🏀 NBA Picks</h1>
+                <p>${{ steps.date.outputs.display_date }} | ${{ steps.fetch.outputs.version }}</p>
+              </div>
+              <div class="content">
+          HTMLEOF
+
+          # Parse JSON and generate table rows
+          PLAYS=$(cat picks_${{ steps.date.outputs.target_date }}.json | jq -r '.plays // []')
+          PLAY_COUNT=$(echo "$PLAYS" | jq 'length')
+
+          if [ "$PLAY_COUNT" = "0" ] || [ "$PLAY_COUNT" = "null" ]; then
+            echo '<div class="no-picks">No plays for today. Check back later!</div>' >> picks_${{ steps.date.outputs.target_date }}.html
+          else
+            cat >> picks_${{ steps.date.outputs.target_date }}.html << 'TABLESTART'
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Matchup</th>
+                      <th>Period</th>
+                      <th>Pick</th>
+                      <th>Odds</th>
+                      <th>Confidence</th>
+                      <th>Edge</th>
+                      <th>Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+          TABLESTART
+
+            # Generate rows from JSON
+            echo "$PLAYS" | jq -r '.[] | @base64' | while read row; do
+              _jq() { echo "$row" | base64 -d | jq -r "$1"; }
+
+              TIME=$(_jq '.time_cst // "TBD"')
+              MATCHUP=$(_jq '.matchup // ""')
+              PERIOD=$(_jq '.period // ""')
+              PICK=$(_jq '.pick // ""')
+              ODDS=$(_jq '.pick_odds // ""')
+              CONF=$(_jq '.confidence // ""')
+              EDGE=$(_jq '.edge // ""')
+              RATING=$(_jq '.fire_rating // "GOOD"')
+
+              # Determine row class and badge
+              ROW_CLASS=""
+              BADGE_CLASS="badge-good"
+              if [ "$RATING" = "ELITE" ]; then
+                ROW_CLASS="elite"
+                BADGE_CLASS="badge-elite"
+              elif [ "$RATING" = "STRONG" ]; then
+                ROW_CLASS="strong"
+                BADGE_CLASS="badge-strong"
+              fi
+
+              cat >> picks_${{ steps.date.outputs.target_date }}.html << ROWEOF
+                    <tr class="$ROW_CLASS">
+                      <td>$TIME</td>
+                      <td>$MATCHUP</td>
+                      <td>$PERIOD</td>
+                      <td class="pick">$PICK</td>
+                      <td>$ODDS</td>
+                      <td class="confidence">$CONF</td>
+                      <td class="edge">$EDGE</td>
+                      <td><span class="badge $BADGE_CLASS">$RATING</span></td>
+                    </tr>
+          ROWEOF
+            done
+
+            echo '</tbody></table>' >> picks_${{ steps.date.outputs.target_date }}.html
+          fi
+
+          # Close HTML
+          cat >> picks_${{ steps.date.outputs.target_date }}.html << 'HTMLEND'
+              </div>
+              <div class="footer">
+                Generated by NBA Prediction System ${{ steps.fetch.outputs.version }} |
+                Total Plays: ${{ steps.fetch.outputs.total_plays }} |
+                <a href="https://github.com/JDSB123/green_bier_sports_nba_model">GitHub</a>
+              </div>
+            </div>
+          </body>
+          </html>
+          HTMLEND
+
+          echo "✅ HTML report generated"
+
+      - name: Get Microsoft Graph access token
+        id: auth
+        run: |
+          TOKEN_RESPONSE=$(curl -s -X POST \
+            "https://login.microsoftonline.com/${{ secrets.AZURE_TENANT_ID }}/oauth2/v2.0/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+            -d "client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
+            -d "scope=https://graph.microsoft.com/.default" \
+            -d "grant_type=client_credentials")
+
+          ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token')
+
+          if [ "$ACCESS_TOKEN" = "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "::error::Failed to get access token"
+            echo "$TOKEN_RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "::add-mask::$ACCESS_TOKEN"
+          echo "token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+          echo "✅ Successfully authenticated with Microsoft Graph"
+
+      - name: Get SharePoint site and drive IDs
+        id: sharepoint
+        run: |
+          # Get site ID
+          SITE_RESPONSE=$(curl -s \
+            "https://graph.microsoft.com/v1.0/sites/${{ env.SHAREPOINT_SITE }}:${{ env.SHAREPOINT_SITE_PATH }}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}")
+
+          SITE_ID=$(echo "$SITE_RESPONSE" | jq -r '.id')
+
+          if [ "$SITE_ID" = "null" ] || [ -z "$SITE_ID" ]; then
+            echo "::error::Failed to get SharePoint site ID"
+            echo "$SITE_RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "site_id=$SITE_ID" >> $GITHUB_OUTPUT
+          echo "✅ Found SharePoint site: $SITE_ID"
+
+          # Get default drive ID
+          DRIVE_RESPONSE=$(curl -s \
+            "https://graph.microsoft.com/v1.0/sites/$SITE_ID/drive" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}")
+
+          DRIVE_ID=$(echo "$DRIVE_RESPONSE" | jq -r '.id')
+
+          if [ "$DRIVE_ID" = "null" ] || [ -z "$DRIVE_ID" ]; then
+            echo "::error::Failed to get drive ID"
+            echo "$DRIVE_RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "drive_id=$DRIVE_ID" >> $GITHUB_OUTPUT
+          echo "✅ Found drive: $DRIVE_ID"
+
+      - name: Create folder if not exists
+        run: |
+          # Check if folder exists, create if not
+          FOLDER_CHECK=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://graph.microsoft.com/v1.0/drives/${{ steps.sharepoint.outputs.drive_id }}/root:/${{ env.UPLOAD_FOLDER }}" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}")
+
+          if [ "$FOLDER_CHECK" = "404" ]; then
+            echo "Creating folder: ${{ env.UPLOAD_FOLDER }}"
+            curl -s -X POST \
+              "https://graph.microsoft.com/v1.0/drives/${{ steps.sharepoint.outputs.drive_id }}/root/children" \
+              -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "name": "${{ env.UPLOAD_FOLDER }}",
+                "folder": {},
+                "@microsoft.graph.conflictBehavior": "fail"
+              }'
+            echo "✅ Folder created"
+          else
+            echo "✅ Folder already exists"
+          fi
+
+      - name: Upload files to SharePoint
+        run: |
+          DATE="${{ steps.date.outputs.target_date }}"
+
+          # Upload JSON
+          echo "Uploading JSON..."
+          curl -s -X PUT \
+            "https://graph.microsoft.com/v1.0/drives/${{ steps.sharepoint.outputs.drive_id }}/root:/${{ env.UPLOAD_FOLDER }}/picks_${DATE}.json:/content" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @picks_${DATE}.json
+
+          echo "✅ JSON uploaded"
+
+          # Upload HTML
+          echo "Uploading HTML..."
+          curl -s -X PUT \
+            "https://graph.microsoft.com/v1.0/drives/${{ steps.sharepoint.outputs.drive_id }}/root:/${{ env.UPLOAD_FOLDER }}/picks_${DATE}.html:/content" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.token }}" \
+            -H "Content-Type: text/html" \
+            --data-binary @picks_${DATE}.html
+
+          echo "✅ HTML uploaded"
+
+          echo ""
+          echo "=========================================="
+          echo "📁 Files uploaded to SharePoint!"
+          echo "Site: https://${{ env.SHAREPOINT_SITE }}${{ env.SHAREPOINT_SITE_PATH }}"
+          echo "Folder: ${{ env.UPLOAD_FOLDER }}"
+          echo "Files: picks_${DATE}.json, picks_${DATE}.html"
+          echo "=========================================="
+
+      - name: Summary
+        run: |
+          echo "## 🏀 NBA Picks Upload Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** ${{ steps.date.outputs.display_date }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Plays:** ${{ steps.fetch.outputs.total_plays }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.fetch.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 SharePoint Location" >> $GITHUB_STEP_SUMMARY
+          echo "- **Site:** [Early Stage Sport Ventures](https://${{ env.SHAREPOINT_SITE }}${{ env.SHAREPOINT_SITE_PATH }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Folder:** ${{ env.UPLOAD_FOLDER }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files:** \`picks_${{ steps.date.outputs.target_date }}.json\`, \`picks_${{ steps.date.outputs.target_date }}.html\`" >> $GITHUB_STEP_SUMMARY
