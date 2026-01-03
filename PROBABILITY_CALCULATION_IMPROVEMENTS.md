@@ -156,15 +156,14 @@ filter_thresholds = FilterThresholds(
 )
 ```
 
-### High Confidence Criteria (Improved - Multiple Paths)
+### High Confidence Criteria (Statistically Sound - Rigorous)
 **OLD:** `confidence >= 70% AND (probability >= 65% or <= 35%)`
 
-**NEW - Multiple Criteria (Don't filter out good picks):**
-1. **High Confidence + Moderate Extremity**: `confidence >= 70% AND (probability >= 60% or <= 40%)`
-2. **Very Extreme Probability**: `confidence >= 55% AND (probability >= 70% or <= 30%)`
-3. **Large Edge + Good Confidence**: `edge >= 3.0 AND confidence >= 60%`
+**NEW - Statistically Sound Requirements (Model should need minimal filtering):**
+1. **Model Certainty + Statistical Significance**: `confidence >= 75% AND edge >= 2.5pts AND probability <= 35%`
+2. **Extreme Market Mismatch**: `confidence >= 65% AND edge >= 4.0pts AND (probability <= 25% OR >= 75%)`
 
-**Result:** Picks qualify as high confidence if ANY criteria is met
+**Rationale:** High confidence requires BOTH statistical significance (large edge) AND model certainty. If the model were truly sound, this filtering would be unnecessary.
 
 ## Future Enhancements
 
