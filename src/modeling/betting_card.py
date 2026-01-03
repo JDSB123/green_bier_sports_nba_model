@@ -91,7 +91,9 @@ def generate_rationale(
         market_data = {}
     
     current_line = market_data.get("market_line")
-    market_odds = market_data.get("market_odds", -110)
+    market_odds = market_data.get("market_odds")
+    if market_odds is None:
+        raise ValueError(f"Missing market_odds for {pick_type} pick - cannot generate betting card without real odds")
     
     # Try to get line movement from betting splits or features
     if betting_splits:
@@ -434,7 +436,9 @@ def generate_betting_card(
             
             # Calculate expected value
             model_prob = spread_data.get("win_probability", 0.5)
-            market_odds = spread_data.get("market_odds", -110)
+            market_odds = spread_data.get("market_odds")
+            if market_odds is None:
+                raise ValueError(f"Missing market_odds for FG Spread pick - cannot generate betting card without real odds")
             implied_prob = implied_prob_from_american(market_odds)
             if market_odds > 0:
                 win_amount = market_odds / 100
@@ -489,7 +493,9 @@ def generate_betting_card(
             
             # Calculate expected value
             model_prob = total_data.get("win_probability", 0.5)
-            market_odds = total_data.get("market_odds", -110)
+            market_odds = total_data.get("market_odds")
+            if market_odds is None:
+                raise ValueError(f"Missing market_odds for FG Total pick - cannot generate betting card without real odds")
             implied_prob = implied_prob_from_american(market_odds)
             if market_odds > 0:
                 win_amount = market_odds / 100
@@ -559,7 +565,8 @@ def generate_betting_card(
                 pick_type="1H Spread",
                 pick=pick_str,
                 market_line=fh_spread.get("market_line", 0),
-                market_odds=fh_spread.get("market_odds", -110),
+                market_odds=fh_spread.get("market_odds"),
+                # Note: market_odds validation happens in comprehensive_edge.py
                 model_prediction=fh_spread.get("model_margin", 0),
                 model_probability=fh_spread.get("win_probability", 0.5),
                 edge=fh_spread.get("edge", 0),
@@ -602,7 +609,8 @@ def generate_betting_card(
                 pick_type="1H Total",
                 pick=pick_str,
                 market_line=total_line,
-                market_odds=fh_total.get("market_odds", -110),
+                market_odds=fh_total.get("market_odds"),
+                # Note: market_odds validation happens in comprehensive_edge.py
                 model_prediction=model_total,
                 model_probability=fh_total.get("win_probability", 0.5),
                 edge=fh_total.get("edge", 0),

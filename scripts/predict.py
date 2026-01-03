@@ -77,13 +77,16 @@ def generate_rationale(
     is_partial_market = "1H" in play_type
     now_cst = datetime.now(CST)
     
-    # Calculate expected value
-    if odds > 0:
-        profit = odds / 100
+    # Calculate expected value (skip if no real odds available)
+    if odds is not None:
+        if odds > 0:
+            profit = odds / 100
+        else:
+            profit = 100 / abs(odds)
+        ev = (model_prob * profit) - (1 - model_prob)
+        ev_pct = ev * 100
     else:
-        profit = 100 / abs(odds or 110)
-    ev = (model_prob * profit) - (1 - model_prob)
-    ev_pct = ev * 100
+        ev_pct = None  # No fake EV calculation without real odds
     
     # ============================================================
     # 1. MARKET CONTEXT (High Priority)
@@ -197,7 +200,7 @@ def generate_rationale(
         f"[MODEL] Model assigns {model_prob:.1%} probability to {pick} with {edge:+.1f} pt edge."
     ]
     
-    if abs(ev_pct) >= 5:
+    if ev_pct is not None and abs(ev_pct) >= 5:
         model_confidence.append(f"[MODEL] Expected value: {ev_pct:+.1f}% based on market odds.")
     
     # ============================================================
@@ -519,7 +522,7 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
                 play_type=f"{market_type.upper()}_SPREAD",
                 pick=spread_pred['bet_side'],
                 line=lines[f'{prefix}_spread'] or 0,
-                odds=-110, # default
+                odds=None,  # No fake odds - rationale will handle missing odds
                 edge=spread_pred['edge'],
                 model_prob=spread_pred['confidence'],
                 features=features,
@@ -551,7 +554,7 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
                 play_type=f"{market_type.upper()}_TOTAL",
                 pick=total_pred['bet_side'],
                 line=lines[f'{prefix}_total'] or 0,
-                odds=-110,
+                odds=None,  # No fake odds - rationale will handle missing odds
                 edge=total_pred['edge'],
                 model_prob=total_pred['confidence'],
                 features=features,
@@ -638,7 +641,7 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
         date_time = row['date'].replace(" CST", "") # Shorten slightly
         
         # Helper to add row
-        def add_row(market_type, pick, odds, model_val, market_val, edge, conf, passes):
+        def add_row(market_type, pick, model_val, market_val, edge, conf, passes):
             if not passes: return
             
             fire = calculate_fire_rating(conf, edge)
@@ -685,19 +688,19 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
 
         # FG Spread
         if pd.notna(row.get('fg_spread_line')):
-            add_row("FG Spread", row['fg_spread_bet_side'], -110, row['fg_spread_pred_margin'], row['fg_spread_line'], row['fg_spread_edge'], row['fg_spread_confidence'], row['fg_spread_passes_filter'])
+            add_row("FG Spread", row['fg_spread_bet_side'], row['fg_spread_pred_margin'], row['fg_spread_line'], row['fg_spread_edge'], row['fg_spread_confidence'], row['fg_spread_passes_filter'])
 
         # FG Total
         if pd.notna(row.get('fg_total_line')):
-            add_row("FG Total", row['fg_total_bet_side'], -110, row['fg_total_pred'], row['fg_total_line'], row['fg_total_edge'], row['fg_total_confidence'], row['fg_total_passes_filter'])
+            add_row("FG Total", row['fg_total_bet_side'], row['fg_total_pred'], row['fg_total_line'], row['fg_total_edge'], row['fg_total_confidence'], row['fg_total_passes_filter'])
 
         # 1H Spread
         if pd.notna(row.get('fh_spread_line')):
-             add_row("1H Spread", row['fh_spread_bet_side'], -110, row['fh_spread_pred_margin'], row['fh_spread_line'], row['fh_spread_edge'], row['fh_spread_confidence'], row['fh_spread_passes_filter'])
+             add_row("1H Spread", row['fh_spread_bet_side'], row['fh_spread_pred_margin'], row['fh_spread_line'], row['fh_spread_edge'], row['fh_spread_confidence'], row['fh_spread_passes_filter'])
 
         # 1H Total
         if pd.notna(row.get('fh_total_line')):
-             add_row("1H Total", row['fh_total_bet_side'], -110, row['fh_total_pred'], row['fh_total_line'], row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
+             add_row("1H Total", row['fh_total_bet_side'], row['fh_total_pred'], row['fh_total_line'], row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
 
     lines.append("")
     lines.append("=" * 120)
