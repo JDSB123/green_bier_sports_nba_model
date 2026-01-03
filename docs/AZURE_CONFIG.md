@@ -105,9 +105,9 @@ Semantic tag `NBA_v33.0.8.0` should be pushed for releases (manual or scripted).
 
 | File | Purpose |
 |------|---------|
-| `infra/nba/main.bicep` | Infrastructure as Code for container app + storage |
+| `infra/nba/main.bicep` | **Single source of truth** - ALL Azure resources |
 | `infra/nba/deploy.ps1` | PowerShell wrapper for Bicep deployment |
-| `infra/shared/main.bicep` | Shared resources (ACR, Key Vault, Log Analytics) |
+| `infra/modules/*.bicep` | Reusable modules (storage, containerApp) |
 | `.github/workflows/iac.yml` | Infrastructure CI/CD pipeline |
 | `Dockerfile.combined` | Combined API + Function image |
 | `azure/function_app/function_app.py` | Azure Function / Teams integration |

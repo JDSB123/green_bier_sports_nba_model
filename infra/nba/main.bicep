@@ -1,11 +1,15 @@
 // Green Bier Sports - NBA Model Infrastructure
-// Single-source-of-truth deployment for the NBA resource group.
+// Single-source-of-truth deployment - ALL resources in one file.
 //
 // Usage:
-//   az deployment group create -g <nba-rg> -f infra/nba/main.bicep `
+//   az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep `
 //     -p theOddsApiKey=... apiBasketballKey=... imageTag=<tag>
 
 targetScope = 'resourceGroup'
+
+// =============================================================================
+// PARAMETERS
+// =============================================================================
 
 @description('Azure region')
 @minLength(1)
@@ -13,11 +17,7 @@ targetScope = 'resourceGroup'
 param location string = resourceGroup().location
 
 @description('Environment')
-@allowed([
-  'dev'
-  'staging'
-  'prod'
-])
+@allowed(['dev', 'staging', 'prod'])
 param environment string = 'prod'
 
 @description('NBA app semantic version (tag + resource tagging)')
@@ -41,29 +41,23 @@ param complianceTag string = 'internal'
 @description('Additional tags to merge onto all resources')
 param extraTags object = {}
 
+// Resource names (match actual Azure resources)
 @description('Container App name')
 param appName string = 'nba-gbsv-api'
 
 @description('Container Apps Environment name')
 param containerAppEnvName string = 'nba-gbsv-model-env'
 
-@description('ACR name (existing)')
+@description('Container Registry name')
 param acrName string = 'nbagbsacr'
 
-@description('Storage account name override (optional)')
+@description('Key Vault name')
+param keyVaultName string = 'nbagbs-keyvault'
+
+@description('Storage account name override (optional, auto-generated if empty)')
 param storageAccountName string = ''
 
-@description('Database URL (optional)')
-@secure()
-param databaseUrl string = ''
-
-@description('Application Insights connection string (optional)')
-@secure()
-param appInsightsConnectionString string = ''
-
-// =============================================================================
-// API KEYS - Required for the NBA Picks API to function
-// =============================================================================
+// API Keys (required)
 @description('The Odds API Key (required)')
 @secure()
 param theOddsApiKey string
@@ -72,9 +66,15 @@ param theOddsApiKey string
 @secure()
 param apiBasketballKey string
 
-@description('Website domain for CORS (e.g., greenbiersportventures.com)')
+// Optional integrations
+@description('Database URL (optional)')
+@secure()
+param databaseUrl string = ''
+
+@description('Website domain for CORS')
 param websiteDomain string = 'greenbiersportventures.com'
 
+// Scaling
 @description('Minimum replicas')
 param minReplicas int = 1
 
@@ -90,16 +90,10 @@ param containerCpu string = '0.5'
 @description('Memory for the container')
 param containerMemory string = '1Gi'
 
-// Existing shared resources in the same RG
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
-  name: containerAppEnvName
-}
+// =============================================================================
+// TAGS
+// =============================================================================
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: acrName
-}
-
-// Required tag policy (merges with extraTags)
 var requiredTags = {
   enterprise: 'green-bier-sports-ventures'
   app: appTag
@@ -113,37 +107,77 @@ var requiredTags = {
 
 var tags = union(requiredTags, extraTags)
 
-// Secrets list (optional entries appended)
-var apiSecrets = concat(
-  [
-    {
-      name: 'acr-password'
-      value: acr.listCredentials().passwords[0].value
-    }
-    {
-      name: 'the-odds-api-key'
-      value: theOddsApiKey
-    }
-    {
-      name: 'api-basketball-key'
-      value: apiBasketballKey
-    }
-  ],
-  databaseUrl == '' ? [] : [
-    {
-      name: 'database-url'
-      value: databaseUrl
-    }
-  ],
-  appInsightsConnectionString == '' ? [] : [
-    {
-      name: 'app-insights-connection-string'
-      value: appInsightsConnectionString
-    }
-  ]
-)
+// =============================================================================
+// PLATFORM RESOURCES (ACR, Key Vault, Log Analytics, App Insights, CA Env)
+// =============================================================================
 
-// Data layer (Storage)
+// Container Registry
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+  name: acrName
+  location: location
+  tags: tags
+  sku: { name: 'Basic' }
+  properties: { adminUserEnabled: true }
+}
+
+// Key Vault
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: keyVaultName
+  location: location
+  tags: tags
+  properties: {
+    sku: { family: 'A', name: 'standard' }
+    tenantId: subscription().tenantId
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 7
+    enablePurgeProtection: true
+  }
+}
+
+// Log Analytics Workspace
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'gbs-logs-${environment}'
+  location: location
+  tags: tags
+  properties: {
+    sku: { name: 'PerGB2018' }
+    retentionInDays: 30
+  }
+}
+
+// Application Insights
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: 'gbs-insights-${environment}'
+  location: location
+  tags: tags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalytics.id
+  }
+}
+
+// Container Apps Environment
+resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' = {
+  name: containerAppEnvName
+  location: location
+  tags: tags
+  properties: {
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logAnalytics.properties.customerId
+        sharedKey: logAnalytics.listKeys().primarySharedKey
+      }
+    }
+  }
+}
+
+// =============================================================================
+// DATA LAYER (Storage)
+// =============================================================================
+
 module storage '../modules/storage.bicep' = {
   name: 'data-storage'
   params: {
@@ -152,61 +186,40 @@ module storage '../modules/storage.bicep' = {
     environment: environment
     location: location
     tags: tags
-    containers: [
-      'models'
-      'predictions'
-      'results'
-    ]
+    containers: ['models', 'predictions', 'results']
   }
 }
 
-// Environment variables (optional entries appended)
-var appEnvVars = concat(
+// =============================================================================
+// COMPUTE LAYER (Container App)
+// =============================================================================
+
+// Secrets
+var apiSecrets = concat(
   [
-    {
-      name: 'THE_ODDS_API_KEY'
-      secretRef: 'the-odds-api-key'
-    }
-    {
-      name: 'API_BASKETBALL_KEY'
-      secretRef: 'api-basketball-key'
-    }
-    {
-      name: 'GBS_SPORT'
-      value: 'nba'
-    }
-    {
-      name: 'NBA_MODEL_VERSION'
-      value: versionTag
-    }
-    {
-      name: 'NBA_MARKETS'
-      value: '1h_spread,1h_total,fg_spread,fg_total'
-    }
-    {
-      name: 'NBA_PERIODS'
-      value: 'first_half,full_game'
-    }
-    {
-      name: 'AZURE_STORAGE_CONNECTION_STRING'
-      value: storage.outputs.connectionString
-    }
+    { name: 'acr-password', value: acr.listCredentials().passwords[0].value }
+    { name: 'the-odds-api-key', value: theOddsApiKey }
+    { name: 'api-basketball-key', value: apiBasketballKey }
+    { name: 'app-insights-connection-string', value: appInsights.properties.ConnectionString }
   ],
-  databaseUrl == '' ? [] : [
-    {
-      name: 'DATABASE_URL'
-      secretRef: 'database-url'
-    }
-  ],
-  appInsightsConnectionString == '' ? [] : [
-    {
-      name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-      secretRef: 'app-insights-connection-string'
-    }
-  ]
+  databaseUrl == '' ? [] : [{ name: 'database-url', value: databaseUrl }]
 )
 
-// Compute layer (Container App)
+// Environment variables
+var appEnvVars = concat(
+  [
+    { name: 'THE_ODDS_API_KEY', secretRef: 'the-odds-api-key' }
+    { name: 'API_BASKETBALL_KEY', secretRef: 'api-basketball-key' }
+    { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'app-insights-connection-string' }
+    { name: 'GBS_SPORT', value: 'nba' }
+    { name: 'NBA_MODEL_VERSION', value: versionTag }
+    { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
+    { name: 'NBA_PERIODS', value: 'first_half,full_game' }
+    { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
+  ],
+  databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]
+)
+
 module containerApp '../modules/containerApp.bicep' = {
   name: 'compute-app'
   params: {
@@ -227,7 +240,6 @@ module containerApp '../modules/containerApp.bicep' = {
     ingressOrigins: [
       'http://localhost:3000'
       'https://*.azurewebsites.net'
-      'https://*.greenbier.com'
       'https://${websiteDomain}'
       'https://www.${websiteDomain}'
     ]
@@ -242,7 +254,13 @@ module containerApp '../modules/containerApp.bicep' = {
   }
 }
 
-// Outputs
+// =============================================================================
+// OUTPUTS
+// =============================================================================
+
 output containerAppFqdn string = containerApp.outputs.containerAppFqdn
 output containerAppUrl string = containerApp.outputs.containerAppUrl
 output storageAccountName string = storage.outputs.storageAccountName
+output acrLoginServer string = acr.properties.loginServer
+output keyVaultUri string = keyVault.properties.vaultUri
+output appInsightsConnectionString string = appInsights.properties.ConnectionString

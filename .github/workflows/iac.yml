@@ -56,7 +56,6 @@ jobs:
       - name: Build Bicep (lint)
         run: |
           az bicep build --file infra/nba/main.bicep --stdout > /dev/null
-          az bicep build --file infra/shared/main.bicep --stdout > /dev/null
           echo "✅ Bicep files are valid"
 
       - name: What-If (PR only)
