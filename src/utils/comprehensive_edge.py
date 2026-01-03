@@ -50,14 +50,24 @@ def calculate_comprehensive_edge(
         over_probability,
     )
     
-    # Default thresholds if not provided
+    # Default thresholds if not provided - use same source as engine
     if edge_thresholds is None:
-        edge_thresholds = {
-            "spread": 2.0,
-            "total": 3.0,
-            "1h_spread": 1.5,
-            "1h_total": 2.0,
-        }
+        try:
+            from src.config import filter_thresholds
+            edge_thresholds = {
+                "spread": filter_thresholds.spread_min_edge,
+                "total": filter_thresholds.total_min_edge,
+                "1h_spread": filter_thresholds.spread_min_edge * 0.75,  # Scale for 1H
+                "1h_total": filter_thresholds.total_min_edge * 0.67,   # Scale for 1H
+            }
+        except ImportError:
+            # Fallback if config not available
+            edge_thresholds = {
+                "spread": 2.0,
+                "total": 3.0,
+                "1h_spread": 1.5,
+                "1h_total": 2.0,
+            }
     
     home_team = game.get("home_team", "Home")
     away_team = game.get("away_team", "Away")

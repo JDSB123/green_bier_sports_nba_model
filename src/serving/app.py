@@ -49,6 +49,14 @@ from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegr
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
 from src.tracking import PickTracker
 
+# Additional imports for comprehensive edge calculation
+from src.utils.slate_analysis import (
+    get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
+)
+from src.utils.comprehensive_edge import calculate_comprehensive_edge
+from src.modeling.edge_thresholds import get_edge_thresholds_for_game
+from zoneinfo import ZoneInfo
+
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
@@ -793,19 +801,18 @@ def format_american_odds(odds: int) -> str:
     return f"+{odds}" if odds > 0 else str(odds)
 
 
-def get_fire_rating(confidence: float, edge: float) -> str:
-    """
-    Get fire rating based on confidence and edge.
-    ELITE = conf >= 70% AND edge >= 5
-    STRONG = conf >= 60% AND edge >= 3
-    GOOD = passes filters
-    """
-    if confidence >= 0.70 and abs(edge) >= 5:
-        return "ELITE"
-    elif confidence >= 0.60 and abs(edge) >= 3:
-        return "STRONG"
-    else:
-        return "GOOD"
+def get_fire_rating(confidence: float, edge: float) -> int:
+    """Calculate fire rating (1-5) based on confidence and edge."""
+    # Normalize edge (pts) to 0-1 scale (10 pts = max)
+    edge_norm = min(abs(edge) / 10.0, 1.0)
+    # Combine confidence and edge
+    combined_score = (confidence * 0.6) + (edge_norm * 0.4)
+
+    if combined_score >= 0.85: return 5
+    elif combined_score >= 0.70: return 4
+    elif combined_score >= 0.60: return 3
+    elif combined_score >= 0.52: return 2
+    else: return 1
 
 
 @app.get("/slate/{date}/executive")
@@ -1193,37 +1200,54 @@ async def get_comprehensive_slate_analysis(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
 
-    # STRICT MODE: Clear session cache to force fresh data
+    # STRICT MODE: Clear ALL caches to force fresh data
     app.state.feature_builder.clear_session_cache()
+    app.state.feature_builder.clear_persistent_cache()
     logger.info("v33.0.8.0 STRICT MODE: Comprehensive analysis - fetching fresh data")
-
-    from src.utils.slate_analysis import (
-        get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
-    )
-    from src.utils.comprehensive_edge import calculate_comprehensive_edge
-    from src.modeling.edge_thresholds import get_edge_thresholds_for_game
-    from zoneinfo import ZoneInfo
     
     CST = ZoneInfo("America/Chicago")
     
+    # Enforce fresh data: clear ALL caches before fetching
+    request_started_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    request_started_cst = datetime.now(CST).strftime("%Y-%m-%d %I:%M:%S %p %Z")
+    try:
+        # Session cache (per-request)
+        app.state.feature_builder.clear_session_cache()
+        # Persistent reference cache (team/league lookups)
+        RichFeatureBuilder.clear_persistent_cache()
+    except Exception as e:
+        logger.warning(f"Failed to clear feature caches before slate fetch: {e}")
+
     # Resolve date
     try:
         target_date = get_target_date(date)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
-    # Get edge thresholds (all active markets)
-    edge_thresholds = get_edge_thresholds_for_game(
-        game_date=target_date,
-        bet_types=["spread", "total", "1h_spread", "1h_total"]
-    )
+    # Get edge thresholds - use SAME source as engine for consistency
+    try:
+        from src.config import filter_thresholds
+        edge_thresholds = {
+            "spread": filter_thresholds.spread_min_edge,
+            "total": filter_thresholds.total_min_edge,
+            "1h_spread": filter_thresholds.spread_min_edge * 0.75,  # Scale for 1H
+            "1h_total": filter_thresholds.total_min_edge * 0.67,   # Scale for 1H
+        }
+    except ImportError:
+        # Fallback if config not available
+        edge_thresholds = {
+            "spread": 2.0,
+            "total": 3.0,
+            "1h_spread": 1.5,
+            "1h_total": 2.0,
+        }
 
     # Fetch games
     games = await fetch_todays_games(target_date)
     if not games:
         return {"date": str(target_date), "analysis": [], "summary": "No games found"}
 
-    odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    odds_as_of_utc = request_started_utc
     odds_snapshot_path = None
     odds_archive_path = None
     try:
@@ -1322,6 +1346,7 @@ async def get_comprehensive_slate_analysis(
     return convert_numpy_types({
         "date": str(target_date),
         "version": RELEASE_VERSION,
+        "data_fetched_at_cst": request_started_cst,
         "markets": [
             "1h_spread", "1h_total",
             "fg_spread", "fg_total"

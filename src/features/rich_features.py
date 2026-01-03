@@ -971,21 +971,8 @@ class RichFeatureBuilder:
             "ppg_diff_1h": home_form["l5_ppg_1h"] - away_form["l5_ppg_1h"],
             "papg_diff_1h": home_form["l5_papg_1h"] - away_form["l5_papg_1h"],
 
-            # Additional FG stats for 1H model
-            "home_ppg_fg": home_ppg,
-            "home_papg_fg": home_papg,
-            "home_spread_margin_fg": home_ppg - home_papg,
-            "home_games_played": home_games_played,
-            "home_wins": home_wins,
-            "home_losses": home_losses,
-            "away_ppg_fg": away_ppg,
-            "away_papg_fg": away_papg,
-            "away_spread_margin_fg": away_ppg - away_papg,
-            "away_games_played": away_games_played,
-            "away_wins": away_wins,
-            "away_losses": away_losses,
-            "ppg_diff_fg": home_ppg - away_ppg,
-            "papg_diff_fg": home_papg - away_papg,
+            # STRICT MODE: 1H models get NO FG features (temporal isolation)
+            # Only 1H-specific features for 1H predictions
 
             # Predicted values for 1H model (v33.0.7.0: matchup-based, not scaled)
             "predicted_margin_1h": predicted_margin_1h,

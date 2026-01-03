@@ -107,6 +107,30 @@ def _validate_api_auth_config() -> Optional[str]:
     return None
 
 
+def _validate_filter_thresholds() -> List[str]:
+    """
+    Validate that filter thresholds are explicitly set (not using defaults).
+
+    Returns list of warnings for any thresholds using defaults.
+    """
+    warnings = []
+
+    # Check if env vars are explicitly set vs using defaults
+    filter_env_vars = [
+        ("FILTER_SPREAD_MIN_CONFIDENCE", "0.60"),
+        ("FILTER_SPREAD_MIN_EDGE", "2.0"),
+        ("FILTER_TOTAL_MIN_CONFIDENCE", "0.58"),
+        ("FILTER_TOTAL_MIN_EDGE", "3.0"),
+    ]
+
+    for env_var, default_value in filter_env_vars:
+        env_value = os.getenv(env_var)
+        if env_value is None:
+            warnings.append(f"{env_var} not set - using default {default_value}. Consider setting explicitly for production.")
+
+    return warnings
+
+
 def run_startup_integrity_checks(project_root: Path, models_dir: Path) -> None:
     errors: List[str] = []
     warnings: List[str] = []
@@ -119,6 +143,10 @@ def run_startup_integrity_checks(project_root: Path, models_dir: Path) -> None:
     api_auth_error = _validate_api_auth_config()
     if api_auth_error:
         errors.append(api_auth_error)
+
+    # Filter thresholds validation (warn if using defaults)
+    filter_warnings = _validate_filter_thresholds()
+    warnings.extend(filter_warnings)
 
     # Enabled market list alignment
     expected_markets = get_expected_markets()

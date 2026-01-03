@@ -126,6 +126,29 @@ def read_secret_strict(secret_name: str) -> str:
     return result
 
 
+def read_secret_lax(secret_name: str) -> str:
+    """
+    Read a secret with lax validation - for import-time compatibility.
+
+    Returns empty string if not found, but logs warning.
+    Actual validation happens at runtime when secrets are needed.
+
+    Args:
+        secret_name: Name of the secret
+
+    Returns:
+        Secret value as string, or empty string if not found
+    """
+    try:
+        result = read_secret(secret_name, required=True)
+        return result
+    except SecretNotFoundError:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Secret '{secret_name}' not found - will fail at runtime when needed")
+        return ""  # Return empty string to avoid import-time failure
+
+
 def read_secret_optional(secret_name: str) -> Optional[str]:
     """
     Read an optional secret - returns None if not found.

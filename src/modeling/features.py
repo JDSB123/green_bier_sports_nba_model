@@ -410,18 +410,27 @@ class FeatureEngineer:
                 (home_margin - away_margin) / 2 + period_hca
             )
 
-            # Predicted total for this period using MATCHUP formula (v33.0.7.0 fix)
-            # Home expected = avg(home's offense, away's defense allowed)
-            # Away expected = avg(away's offense, home's defense allowed)
+            # Predicted total for this period using SOPHISTICATED EFFICIENCY MODEL
+            # Match the methodology from rich_features.py for consistency
             papg_key = f"papg{suffix}"
-            home_ppg = home_period_stats[ppg_key]
-            home_papg = home_period_stats[papg_key]
-            away_ppg = away_period_stats[ppg_key]
-            away_papg = away_period_stats[papg_key]
+            ppg_key = f"ppg{suffix}"
 
-            home_expected = (home_ppg + away_papg) / 2
-            away_expected = (away_ppg + home_papg) / 2
-            features[f"predicted_total{suffix}"] = home_expected + away_expected
+            # Get efficiency ratings (ORTG/DRTG equivalent for periods)
+            home_ortg = home_period_stats[ppg_key] / max(home_period_stats.get(f"pace{suffix}", 50), 1) * 100 if home_period_stats.get(f"pace{suffix}", 0) > 0 else home_period_stats[ppg_key]
+            away_ortg = away_period_stats[ppg_key] / max(away_period_stats.get(f"pace{suffix}", 50), 1) * 100 if away_period_stats.get(f"pace{suffix}", 0) > 0 else away_period_stats[ppg_key]
+            home_drtg = home_period_stats[papg_key] / max(home_period_stats.get(f"pace{suffix}", 50), 1) * 100 if home_period_stats.get(f"pace{suffix}", 0) > 0 else home_period_stats[papg_key]
+            away_drtg = away_period_stats[papg_key] / max(away_period_stats.get(f"pace{suffix}", 50), 1) * 100 if away_period_stats.get(f"pace{suffix}", 0) > 0 else away_period_stats[papg_key]
+
+            # Expected pace factor (geometric mean for better outlier handling)
+            home_pace = home_period_stats.get(f"pace{suffix}", 50)
+            away_pace = away_period_stats.get(f"pace{suffix}", 50)
+            expected_pace_factor = (home_pace * away_pace) ** 0.5 / 50 if home_pace > 0 and away_pace > 0 else 1.0
+
+            # Home expected points = avg(home offense + away defense) × pace factor
+            home_expected_pts = ((home_ortg + away_drtg) / 2) * expected_pace_factor
+            away_expected_pts = ((away_ortg + home_drtg) / 2) * expected_pace_factor
+
+            features[f"predicted_total{suffix}"] = home_expected_pts + away_expected_pts
 
         return features
 

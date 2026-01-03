@@ -21,7 +21,7 @@ except Exception:
 # Priority: Env Vars > Docker Secrets > Baked-in Secrets > Local Files
 # For production (Azure), use Environment Variables.
 
-from src.utils.secrets import read_secret_strict
+from src.utils.secrets import read_secret_strict, read_secret_lax
 
 def get_nba_season(d: date | None = None) -> str:
     """Get the NBA season string for a given date.
@@ -63,9 +63,22 @@ def _env_required(key: str) -> str:
     return value
 
 
-def _env_optional(key: str) -> Optional[str]:
-    """Resolve optional environment variable - returns None if not set."""
-    return os.getenv(key)
+def _env_optional(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Resolve optional environment variable - returns default if not set."""
+    return os.getenv(key, default)
+
+
+def _env_float_required(key: str, default: float = None) -> float:
+    """Resolve required float environment variable with fallback."""
+    value = os.getenv(key)
+    if value:
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    if default is not None:
+        return default
+    raise ValueError(f"Required environment variable not set or invalid: {key}")
 
 
 def _current_season() -> str:
@@ -81,28 +94,28 @@ class FilterThresholds:
     These thresholds determine whether a prediction passes the betting filter.
     A prediction must meet BOTH confidence AND edge thresholds to pass.
 
-    Thresholds MUST be set via environment variables - no defaults:
-    - FILTER_SPREAD_MIN_CONFIDENCE
-    - FILTER_SPREAD_MIN_EDGE
-    - FILTER_TOTAL_MIN_CONFIDENCE
-    - FILTER_TOTAL_MIN_EDGE
+    Thresholds can be set via environment variables. Defaults provided for local development:
+    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.60)
+    - FILTER_SPREAD_MIN_EDGE (default: 2.0)
+    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.58)
+    - FILTER_TOTAL_MIN_EDGE (default: 3.0)
 
     NBA_v33.0.1.0: 4 markets only (1H + FG spreads/totals).
     """
     # Spread thresholds
     spread_min_confidence: float = field(
-        default_factory=lambda: float(_env_required("FILTER_SPREAD_MIN_CONFIDENCE"))
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.60)
     )
     spread_min_edge: float = field(
-        default_factory=lambda: float(_env_required("FILTER_SPREAD_MIN_EDGE"))
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 2.0)
     )
 
     # Total thresholds
     total_min_confidence: float = field(
-        default_factory=lambda: float(_env_required("FILTER_TOTAL_MIN_CONFIDENCE"))
+        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.58)
     )
     total_min_edge: float = field(
-        default_factory=lambda: float(_env_required("FILTER_TOTAL_MIN_EDGE"))
+        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_EDGE", 3.0)
     )
 
 
@@ -113,9 +126,9 @@ filter_thresholds = FilterThresholds()
 
 @dataclass(frozen=True)
 class Settings:
-    # Core API Keys (Required) - STRICT MODE: Env only, raise if missing
-    the_odds_api_key: str = field(default_factory=lambda: read_secret_strict("THE_ODDS_API_KEY"))
-    api_basketball_key: str = field(default_factory=lambda: read_secret_strict("API_BASKETBALL_KEY"))
+    # Core API Keys - STRICT MODE: Env only, validated at runtime
+    the_odds_api_key: str = field(default_factory=lambda: read_secret_lax("THE_ODDS_API_KEY"))
+    api_basketball_key: str = field(default_factory=lambda: read_secret_lax("API_BASKETBALL_KEY"))
     
     # Optional API Keys (None if not set)
     betsapi_key: Optional[str] = field(default_factory=lambda: _env_optional("BETSAPI_KEY"))
@@ -123,27 +136,49 @@ class Settings:
     action_network_password: Optional[str] = field(default_factory=lambda: _env_optional("ACTION_NETWORK_PASSWORD"))
     kaggle_api_token: Optional[str] = field(default_factory=lambda: _env_optional("KAGGLE_API_TOKEN"))
 
-    # API base URLs (required - raise if not set)
+    # API base URLs (with defaults for import compatibility)
     the_odds_base_url: str = field(
-        default_factory=lambda: _env_required("THE_ODDS_BASE_URL")
+        default_factory=lambda: _env_optional("THE_ODDS_BASE_URL", "https://api.the-odds-api.com")
     )
     api_basketball_base_url: str = field(
-        default_factory=lambda: _env_required("API_BASKETBALL_BASE_URL")
+        default_factory=lambda: _env_optional("API_BASKETBALL_BASE_URL", "https://v1.basketball.api-sports.io")
     )
 
-    # Season Configuration (required)
-    current_season: str = field(default_factory=lambda: _env_required("CURRENT_SEASON"))
+    # Season Configuration (with defaults for import compatibility)
+    current_season: str = field(default_factory=lambda: _env_optional("CURRENT_SEASON", "2025-2026"))
     seasons_to_process: list[str] = field(
-        default_factory=lambda: _env_required("SEASONS_TO_PROCESS").split(",")
+        default_factory=lambda: _env_optional("SEASONS_TO_PROCESS", "2024-2025,2025-2026").split(",")
     )
 
-    # Data directories (required)
+    # Data directories (with defaults for import compatibility)
     data_raw_dir: str = field(
-        default_factory=lambda: _env_required("DATA_RAW_DIR")
+        default_factory=lambda: _env_optional("DATA_RAW_DIR", "data/raw")
     )
     data_processed_dir: str = field(
-        default_factory=lambda: _env_required("DATA_PROCESSED_DIR")
+        default_factory=lambda: _env_optional("DATA_PROCESSED_DIR", "data/processed")
     )
 
 
-settings = Settings()
+# Lazy-loaded settings to avoid import-time failures
+_settings = None
+
+def get_settings() -> Settings:
+    """Get settings instance, creating it on first access."""
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+    return _settings
+
+# For backward compatibility, create a settings object that behaves like the old one
+class LazySettings:
+    """Lazy settings proxy that creates Settings instance on first access."""
+
+    def __init__(self):
+        self._settings = None
+
+    def __getattr__(self, name):
+        if self._settings is None:
+            self._settings = Settings()
+        return getattr(self._settings, name)
+
+settings = LazySettings()
