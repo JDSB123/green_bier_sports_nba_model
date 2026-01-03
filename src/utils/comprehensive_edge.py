@@ -61,16 +61,10 @@ def calculate_comprehensive_edge(
                 "1h_total": filter_thresholds.total_min_edge * 0.67,   # Scale for 1H
             }
 
-            # DYNAMIC ADJUSTMENT: Adjust thresholds based on probability source reliability
-            # ML models are more reliable than distribution-based estimates
-            if engine_predictions:
-                # If we have ML model predictions, we can be slightly more aggressive
-                edge_thresholds = {k: v * 0.9 for k, v in base_thresholds.items()}
-                logger.debug("Using dynamic thresholds: ML models available, reduced thresholds by 10%")
-            else:
-                # If only distribution-based, be more conservative
-                edge_thresholds = {k: v * 1.1 for k, v in base_thresholds.items()}
-                logger.debug("Using dynamic thresholds: No ML models, increased thresholds by 10%")
+            # STRICT MODE: Since we now REQUIRE ML models, use base thresholds
+            # No more dynamic adjustment - ML models must be available and are our source of truth
+            edge_thresholds = base_thresholds
+            logger.debug("Using strict ML-required thresholds: all predictions must come from trained models")
 
         except ImportError:
             # Fallback if config not available
@@ -124,43 +118,49 @@ def calculate_comprehensive_edge(
     fg_spread_edge = fg_predicted_margin - market_expected_margin
     fg_spread_pick = home_team if fg_spread_edge > 0 else away_team
     fg_spread_confidence = min(abs(fg_spread_edge) / 5.0, 0.90) if abs(fg_spread_edge) >= 1.0 else 0
-    # IMPROVED: Better probability source prioritization
-    # Priority: 1) ML Engine predictions, 2) Distribution-based, 3) Edge heuristic
-    fg_spread_probability_source = "heuristic"  # Default fallback
-    fg_spread_win_prob = 0.5 + (abs(fg_spread_edge) * 0.03)
-    fg_spread_win_prob = max(0.51, min(0.80, fg_spread_win_prob)) if abs(fg_spread_edge) >= 0.5 else 0.5
+    # NO SILENT FAILURES: Require ML Engine predictions for all markets
+    # The system must have trained ML models available - no fallbacks to heuristics
+    if not engine_predictions:
+        raise ValueError(
+            f"No ML engine predictions available for {home_team} vs {away_team}. "
+            f"Cannot generate predictions without trained models. "
+            f"Ensure fg_spread_model.joblib and fg_total_model.joblib exist in models/production/"
+        )
 
-    # Distribution-based probability (statistical estimate)
+    # ML Engine predictions - REQUIRED (no fallbacks)
+    fg_spread_pred = engine_predictions.get("full_game", {}).get("spread")
+    if not fg_spread_pred:
+        raise ValueError(
+            f"Missing ML spread predictions for {home_team} vs {away_team}. "
+            f"Engine must provide full_game.spread predictions"
+        )
+
+    # Extract ML model probabilities - these are calibrated classifier outputs
+    if fg_spread_pick == home_team:
+        fg_spread_p_model = fg_spread_pred.get("home_cover_prob")
+    else:
+        fg_spread_p_model = fg_spread_pred.get("away_cover_prob")
+
+    if fg_spread_p_model is None or fg_spread_p_model == 0.5:
+        raise ValueError(
+            f"Invalid ML spread probability for {fg_spread_pick}: {fg_spread_p_model}. "
+            f"Model must provide calibrated probability != 0.5"
+        )
+
+    # Use ML model confidence (entropy-based from calibrated classifier)
+    fg_spread_confidence = fg_spread_pred.get("confidence")
+    if fg_spread_confidence is None:
+        raise ValueError(f"Missing confidence score from ML spread model for {home_team} vs {away_team}")
+
+    # Use calibrated ML probability as win probability
+    fg_spread_win_prob = fg_spread_p_model
+    fg_spread_probability_source = "engine_ml"
+
+    # Distribution-based for diagnostics only (not used for predictions)
     fg_spread_std = estimate_spread_std(features, "fg")
     fg_home_cover_dist = cover_probability(fg_predicted_margin, fg_market_spread, fg_spread_std)
     fg_away_cover_dist = 1.0 - fg_home_cover_dist
     fg_spread_p_dist = fg_home_cover_dist if fg_spread_pick == home_team else fg_away_cover_dist
-
-    # ML Engine predictions (highest priority when available)
-    fg_spread_pred = engine_predictions.get("full_game", {}).get("spread") if engine_predictions else None
-    fg_spread_p_model = None
-    if fg_spread_pred:
-        if fg_spread_pick == home_team:
-            fg_spread_p_model = fg_spread_pred.get("home_cover_prob")
-        else:
-            fg_spread_p_model = fg_spread_pred.get("away_cover_prob")
-
-        # Use ML model confidence if available (more accurate than entropy-based)
-        if fg_spread_pred.get("confidence") is not None:
-            fg_spread_confidence = fg_spread_pred.get("confidence")
-
-        # Use ML model probability if available (most accurate)
-        if fg_spread_p_model is not None and fg_spread_p_model != 0.5:  # Avoid neutral predictions
-            fg_spread_win_prob = fg_spread_p_model
-            fg_spread_probability_source = "engine_ml"
-        else:
-            # Fall back to distribution-based if ML model gives neutral prediction
-            fg_spread_win_prob = fg_spread_p_dist
-            fg_spread_probability_source = "distribution"
-    else:
-        # No engine predictions available, use distribution-based
-        fg_spread_win_prob = fg_spread_p_dist
-        fg_spread_probability_source = "distribution"
     
     spread_threshold = edge_thresholds.get("spread", 2.0)
     fg_pick_line = fg_market_spread if fg_spread_pick == home_team else -fg_market_spread
@@ -207,46 +207,47 @@ def calculate_comprehensive_edge(
     fg_total_pick = "OVER" if fg_total_edge > 0 else "UNDER"
     total_threshold = edge_thresholds.get("total", 3.0)
 
-    # IMPROVED: Better probability source prioritization for totals
-    fg_total_probability_source = "heuristic"  # Default fallback
-    fg_total_win_prob = 0.5 + (abs(fg_total_edge) * 0.025)
-    fg_total_win_prob = max(0.51, min(0.75, fg_total_win_prob)) if abs(fg_total_edge) >= 1.0 else 0.5
+    # NO SILENT FAILURES: Require ML Engine predictions for totals
+    if not engine_predictions:
+        raise ValueError(
+            f"No ML engine predictions available for {home_team} vs {away_team}. "
+            f"Cannot generate predictions without trained models."
+        )
 
-    # Distribution-based probability (statistical estimate)
+    # ML Engine predictions - REQUIRED for totals
+    fg_total_pred = engine_predictions.get("full_game", {}).get("total")
+    if not fg_total_pred:
+        raise ValueError(
+            f"Missing ML total predictions for {home_team} vs {away_team}. "
+            f"Engine must provide full_game.total predictions"
+        )
+
+    # Extract ML model probabilities - calibrated over/under classifier
+    if fg_total_pick == "OVER":
+        fg_total_p_model = fg_total_pred.get("over_prob")
+    else:
+        fg_total_p_model = fg_total_pred.get("under_prob")
+
+    if fg_total_p_model is None or fg_total_p_model == 0.5:
+        raise ValueError(
+            f"Invalid ML total probability for {fg_total_pick}: {fg_total_p_model}. "
+            f"Model must provide calibrated probability != 0.5"
+        )
+
+    # Use ML model confidence (entropy-based from calibrated classifier)
+    fg_total_confidence = fg_total_pred.get("confidence")
+    if fg_total_confidence is None:
+        raise ValueError(f"Missing confidence score from ML total model for {home_team} vs {away_team}")
+
+    # Use calibrated ML probability as win probability
+    fg_total_win_prob = fg_total_p_model
+    fg_total_probability_source = "engine_ml"
+
+    # Distribution-based for diagnostics only (not used for predictions)
     fg_total_std = estimate_total_std(features, "fg")
     fg_over_prob_dist = over_probability(fg_predicted_total, fg_market_total, fg_total_std)
     fg_under_prob_dist = 1.0 - fg_over_prob_dist
     fg_total_p_dist = fg_over_prob_dist if fg_total_pick == "OVER" else fg_under_prob_dist
-
-    # ML Engine predictions (highest priority when available)
-    fg_total_pred = engine_predictions.get("full_game", {}).get("total") if engine_predictions else None
-    fg_total_p_model = None
-    if fg_total_pred:
-        if fg_total_pick == "OVER":
-            fg_total_p_model = fg_total_pred.get("over_prob")
-        else:
-            fg_total_p_model = fg_total_pred.get("under_prob")
-
-        # Use ML model confidence if available (more accurate than heuristic)
-        if fg_total_pred.get("confidence") is not None:
-            fg_total_confidence = fg_total_pred.get("confidence")
-        else:
-            # Fallback heuristic confidence calculation
-            fg_total_confidence = min(abs(fg_total_edge) / 10.0, 0.90) if abs(fg_total_edge) >= (total_threshold * 0.75) else 0
-
-        # Use ML model probability if available (most accurate)
-        if fg_total_p_model is not None and fg_total_p_model != 0.5:  # Avoid neutral predictions
-            fg_total_win_prob = fg_total_p_model
-            fg_total_probability_source = "engine_ml"
-        else:
-            # Fall back to distribution-based if ML model gives neutral prediction
-            fg_total_win_prob = fg_total_p_dist
-            fg_total_probability_source = "distribution"
-    else:
-        # No engine predictions available, use distribution-based
-        fg_total_win_prob = fg_total_p_dist
-        fg_total_probability_source = "distribution"
-        fg_total_confidence = min(abs(fg_total_edge) / 10.0, 0.90) if abs(fg_total_edge) >= (total_threshold * 0.75) else 0
 
     fg_total_pick_odds = fg_total_odds_over if fg_total_pick == "OVER" else fg_total_odds_under
     if fg_total_pick_odds is None:
@@ -455,12 +456,31 @@ def calculate_comprehensive_edge(
                 confidence_score = market_data.get("confidence", 0)
                 win_probability = market_data.get("win_probability", 0.5)
 
-                # High confidence criteria: confidence >= 70% AND probability is extreme (>=65% or <=35%)
-                # This combines model certainty with prediction extremity for true high-conviction plays
-                is_high_confidence = (
-                    confidence_score >= 0.70 and  # Model is confident in its prediction
-                    (win_probability >= 0.65 or win_probability <= 0.35)  # AND prediction is extreme
+                # IMPROVED EXTREME FILTERING: Multiple criteria for high confidence picks
+                # Don't filter out good picks that may have moderate confidence but extreme probabilities
+                edge_value = market_data["edge"]
+
+                # Criteria for high confidence picks:
+                # 1. High confidence + moderately extreme probability
+                high_conf_extreme = (
+                    confidence_score >= 0.70 and  # Model is confident
+                    (win_probability >= 0.60 or win_probability <= 0.40)  # Moderately extreme probability
                 )
+
+                # 2. Very extreme probability (regardless of confidence, but with minimum confidence)
+                very_extreme_prob = (
+                    confidence_score >= 0.55 and  # Minimum confidence required
+                    (win_probability >= 0.70 or win_probability <= 0.30)  # Very extreme probability
+                )
+
+                # 3. Large edge with good confidence (catches strong fundamental mismatches)
+                large_edge_good_conf = (
+                    abs(edge_value) >= 3.0 and  # Large edge (>= 3 points for spreads, >= 3 total)
+                    confidence_score >= 0.60  # Good confidence
+                )
+
+                # High confidence if any criteria met
+                is_high_confidence = high_conf_extreme or very_extreme_prob or large_edge_good_conf
 
                 # Validate probability source consistency
                 probability_source = market_data.get("probability_source", "unknown")
@@ -498,11 +518,11 @@ def calculate_comprehensive_edge(
 
 def _validate_probability_sources(result: Dict, engine_predictions: Optional[Dict]) -> None:
     """
-    Validate and log probability source usage for transparency and debugging.
+    Validate that ALL predictions come from ML models (strict requirement).
 
     Args:
         result: Comprehensive edge analysis result
-        engine_predictions: Engine predictions dict (if available)
+        engine_predictions: Engine predictions dict (required)
     """
     source_counts = {"engine_ml": 0, "distribution": 0, "heuristic": 0}
 
@@ -512,25 +532,22 @@ def _validate_probability_sources(result: Dict, engine_predictions: Optional[Dic
                 source = market_data["probability_source"]
                 source_counts[source] = source_counts.get(source, 0) + 1
 
-    # Log summary
+    # STRICT VALIDATION: All picks must come from ML models
     total_picks = sum(source_counts.values())
     if total_picks > 0:
         ml_pct = (source_counts["engine_ml"] / total_picks) * 100
-        dist_pct = (source_counts["distribution"] / total_picks) * 100
-        heur_pct = (source_counts["heuristic"] / total_picks) * 100
 
-        logger.info(
-            f"Probability sources used: ML={source_counts['engine_ml']} ({ml_pct:.1f}%), "
-            f"Distribution={source_counts['distribution']} ({dist_pct:.1f}%), "
-            f"Heuristic={source_counts['heuristic']} ({heur_pct:.1f}%)"
-        )
+        logger.info(f"ML Model Coverage: {source_counts['engine_ml']}/{total_picks} picks ({ml_pct:.1f}%) from calibrated classifiers")
 
-        # Warn if relying too heavily on non-ML sources
-        if ml_pct < 50.0 and engine_predictions:
-            logger.warning(
-                f"Low ML model usage ({ml_pct:.1f}%) despite models being available. "
-                f"Check if models are providing neutral predictions (0.5) or failing."
+        # STRICT REQUIREMENT: 100% ML model usage
+        if ml_pct < 100.0:
+            non_ml_sources = [src for src in ["distribution", "heuristic"] if source_counts.get(src, 0) > 0]
+            raise ValueError(
+                f"STRICT VIOLATION: {100.0 - ml_pct:.1f}% of picks ({sum(source_counts[s] for s in non_ml_sources)}) "
+                f"come from non-ML sources {non_ml_sources}. All predictions must use trained ML models only."
             )
+
+        logger.info("✅ STRICT VALIDATION PASSED: All predictions use ML models (no fallbacks)")
 
 
 def generate_comprehensive_text_report(analysis: List[Dict], target_date: date) -> str:

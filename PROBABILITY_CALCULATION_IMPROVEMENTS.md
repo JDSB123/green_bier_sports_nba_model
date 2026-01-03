@@ -21,11 +21,25 @@ is_high_confidence = (
 
 **Rationale:** Combines model certainty (entropy-based confidence) with prediction extremity for true high-conviction plays.
 
-### 2. Probability Source Prioritization
-**Priority Order (Highest to Lowest):**
-1. **Engine ML Models** - Direct predictions from trained classifiers
-2. **Distribution-Based** - Statistical estimates using normal distributions
-3. **Edge Heuristics** - Simple calculations from prediction edges
+### 2. ML Classifier Architecture (NO FALLBACKS)
+**STRICT REQUIREMENT:** ML models are now mandatory - no silent fallbacks to heuristics
+
+**ML Classifiers Used:**
+- **Spread Classifier**: Calibrated Logistic Regression predicting if home team covers spread (29 features)
+- **Total Classifier (ML Over/Under)**: Calibrated Logistic Regression predicting if game goes OVER total (29 features)
+- **Calibration**: Isotonic regression ensures probabilities reflect true likelihood
+- **Features**: PPG, PAPG, avg_margin, pace, efficiency metrics, home/away splits, etc.
+
+**What is the ML Over/Under Classifier?**
+The "ML over/under" refers to the **Total Classifier** - a trained logistic regression model that predicts whether the total points scored in a game will be OVER or UNDER the sportsbook's total line. It outputs calibrated probabilities (0.0-1.0) for the "OVER" outcome, where:
+- 0.7 = 70% chance game goes over the total
+- 0.3 = 30% chance game goes over (70% chance goes under)
+- 0.5 = neutral (50/50 chance)
+
+**Probability Sources (Post-Update):**
+1. **Engine ML Models ONLY** - Calibrated classifier predictions (required)
+2. **Distribution-Based** - Statistical estimates (diagnostics only)
+3. **Edge Heuristics** - Removed (no longer used)
 
 **Full Game Markets:**
 ```python
@@ -142,9 +156,15 @@ filter_thresholds = FilterThresholds(
 )
 ```
 
-### High Confidence Criteria
-- `confidence_score >= 0.70`
-- `win_probability >= 0.65 or <= 0.35`
+### High Confidence Criteria (Improved - Multiple Paths)
+**OLD:** `confidence >= 70% AND (probability >= 65% or <= 35%)`
+
+**NEW - Multiple Criteria (Don't filter out good picks):**
+1. **High Confidence + Moderate Extremity**: `confidence >= 70% AND (probability >= 60% or <= 40%)`
+2. **Very Extreme Probability**: `confidence >= 55% AND (probability >= 70% or <= 30%)`
+3. **Large Edge + Good Confidence**: `edge >= 3.0 AND confidence >= 60%`
+
+**Result:** Picks qualify as high confidence if ANY criteria is met
 
 ## Future Enhancements
 
