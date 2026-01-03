@@ -36,13 +36,13 @@ param complianceTag string = 'internal'
 param extraTags object = {}
 
 @description('Container Registry name (override to clone/shared per RG)')
-param containerRegistryName string = 'greenbieracr'
+param containerRegistryName string = 'nbagbsacr'
 
 @description('Key Vault name override (defaults to unique computed name when empty)')
 param keyVaultName string = ''
 
 @description('Container Apps Environment name')
-param containerAppEnvName string = 'greenbier-nba-env'
+param containerAppEnvName string = 'nba-gbsv-model-env'
 
 // Naming
 var prefix = 'gbs'
@@ -59,7 +59,7 @@ var requiredTags = {
 var tags = union(requiredTags, extraTags)
 
 // ============================================================================
-// Container Registry (shared across all sports) - ACTUAL: greenbieracr
+// Container Registry (shared across all sports) - ACTUAL: nbagbsacr
 // ============================================================================
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: containerRegistryName
@@ -125,7 +125,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 // ============================================================================
-// Container Apps Environment - ACTUAL: greenbier-nba-env
+// Container Apps Environment - ACTUAL: nba-gbsv-model-env
 // ============================================================================
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   name: containerAppEnvName

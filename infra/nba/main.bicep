@@ -45,7 +45,7 @@ param extraTags object = {}
 param appName string = 'nba-gbsv-api'
 
 @description('Container Apps Environment name')
-param containerAppEnvName string = 'nbagbsvmodel-env'
+param containerAppEnvName string = 'nba-gbsv-model-env'
 
 @description('ACR name (existing)')
 param acrName string = 'nbagbsacr'
@@ -231,7 +231,7 @@ module containerApp '../modules/containerApp.bicep' = {
       'https://${websiteDomain}'
       'https://www.${websiteDomain}'
     ]
-    targetPort: 8080
+    targetPort: 8090
     transport: 'auto'
     minReplicas: minReplicas
     maxReplicas: maxReplicas

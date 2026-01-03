@@ -1,0 +1,117 @@
+# Infrastructure as Code workflow for NBA Model
+# Runs Bicep validation on PRs, deploys on push to main
+
+name: Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/iac.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/iac.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_RG_NBA: nba-gbsv-model-rg
+  AZURE_LOCATION: eastus
+
+jobs:
+  validate:
+    name: Validate Bicep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read VERSION
+        id: version
+        run: echo "tag=$(cat VERSION | tr -d '\n\r')" >> $GITHUB_OUTPUT
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build Bicep (lint)
+        run: |
+          az bicep build --file infra/nba/main.bicep --stdout > /dev/null
+          az bicep build --file infra/shared/main.bicep --stdout > /dev/null
+          echo "✅ Bicep files are valid"
+
+      - name: What-If (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          az deployment group what-if \
+            --resource-group ${{ env.AZURE_RG_NBA }} \
+            --template-file infra/nba/main.bicep \
+            --parameters imageTag=${{ steps.version.outputs.tag }} \
+            --parameters theOddsApiKey=${{ secrets.THE_ODDS_API_KEY }} \
+            --parameters apiBasketballKey=${{ secrets.API_BASKETBALL_KEY }}
+
+  deploy:
+    name: Deploy Infrastructure
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read VERSION
+        id: version
+        run: echo "tag=$(cat VERSION | tr -d '\n\r')" >> $GITHUB_OUTPUT
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy NBA Infrastructure
+        run: |
+          az deployment group create \
+            --resource-group ${{ env.AZURE_RG_NBA }} \
+            --template-file infra/nba/main.bicep \
+            --name "nba-iac-${{ github.run_number }}" \
+            --parameters imageTag=${{ steps.version.outputs.tag }} \
+            --parameters theOddsApiKey=${{ secrets.THE_ODDS_API_KEY }} \
+            --parameters apiBasketballKey=${{ secrets.API_BASKETBALL_KEY }}
+
+      - name: Show Outputs
+        run: |
+          az deployment group show \
+            --resource-group ${{ env.AZURE_RG_NBA }} \
+            --name "nba-iac-${{ github.run_number }}" \
+            --query properties.outputs
+
+      - name: Verify Container App
+        run: |
+          FQDN=$(az containerapp show \
+            --name nba-gbsv-api \
+            --resource-group ${{ env.AZURE_RG_NBA }} \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Container App URL: https://$FQDN"
+          curl -sf "https://$FQDN/health" || echo "⚠️ Health check pending (cold start)"

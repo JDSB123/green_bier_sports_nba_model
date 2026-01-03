@@ -53,7 +53,10 @@ curl "$NBA_API_URL/health"
 
 ```bash
 # Deploy new version (semantic tag)
-pwsh infra/nba/deploy.ps1 -Tag NBA_v33.0.8.0
+pwsh ./infra/nba/deploy.ps1 -Tag NBA_v33.0.8.0
+
+# What-if mode (preview changes)
+pwsh ./infra/nba/deploy.ps1 -WhatIf
 
 # View container app logs
 az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --follow
@@ -77,7 +80,11 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 
 ## CI/CD
 
-`.github/workflows/gbs-nba-deploy.yml` builds from `Dockerfile.combined`, pushes to `nbagbsacr.azurecr.io/nba-gbsv-api:<sha>` and deploys that SHA to `nba-gbsv-api` in `nba-gbsv-model-rg`. Semantic tag `NBA_v33.0.8.0` should be pushed for releases (manual or scripted).
+**Workflows:**
+- `.github/workflows/iac.yml` - Infrastructure deployment (Bicep) with what-if on PRs
+- Container image builds use `Dockerfile.combined`, push to `nbagbsacr.azurecr.io/nba-gbsv-api:<sha>`
+
+Semantic tag `NBA_v33.0.8.0` should be pushed for releases (manual or scripted).
 
 ## Model Version
 
@@ -99,7 +106,9 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 | File | Purpose |
 |------|---------|
 | `infra/nba/main.bicep` | Infrastructure as Code for container app + storage |
+| `infra/nba/deploy.ps1` | PowerShell wrapper for Bicep deployment |
+| `infra/shared/main.bicep` | Shared resources (ACR, Key Vault, Log Analytics) |
+| `.github/workflows/iac.yml` | Infrastructure CI/CD pipeline |
 | `Dockerfile.combined` | Combined API + Function image |
-| `.github/workflows/gbs-nba-deploy.yml` | CI/CD pipeline |
 | `azure/function_app/function_app.py` | Azure Function / Teams integration |
 | `.env.example` | Environment variable template |
