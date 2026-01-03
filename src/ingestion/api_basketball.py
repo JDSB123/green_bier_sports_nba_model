@@ -35,13 +35,14 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, List
+from typing import Any, Dict, List
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.config import settings
 from src.utils.logging import get_logger
+from src.utils.team_names import normalize_team_name, get_canonical_name
 
 logger = get_logger(__name__)
 
@@ -824,6 +825,77 @@ async def fetch_standings(
     params = {"league": league, "season": season}
     params.update({k: v for k, v in kwargs.items() if v is not None})
     return await client._fetch("standings", params)
+
+
+def normalize_standings_response(data: dict[str, Any]) -> dict[str, Dict[str, Any]]:
+    """
+    Normalize API-Basketball standings into convenient lookups.
+
+    Returns:
+        {
+            "by_id": {team_id: {...}},
+            "by_team": {canonical_team_id_or_name: {...}},
+        }
+    """
+    raw = data.get("response", [])
+    entries: list[dict[str, Any]] = []
+    for item in raw:
+        if isinstance(item, list):
+            entries.extend(item)
+        elif isinstance(item, dict):
+            entries.append(item)
+
+    by_id: Dict[Any, Dict[str, Any]] = {}
+    by_team: Dict[str, Dict[str, Any]] = {}
+
+    for entry in entries:
+        team_info = entry.get("team", {}) or {}
+        team_id = team_info.get("id")
+        team_name = (
+            team_info.get("name")
+            or team_info.get("nickname")
+            or team_info.get("code")
+            or ""
+        )
+
+        games = entry.get("games", {}) or {}
+        wins = games.get("win", {}).get("total", 0)
+        losses = games.get("lose", {}).get("total", 0)
+        played = games.get("played", wins + losses)
+        win_pct = games.get("win", {}).get("percentage")
+        if win_pct is None and (wins + losses) > 0:
+            win_pct = wins / (wins + losses)
+
+        record = {
+            "wins": wins,
+            "losses": losses,
+            "games_played": played,
+            "win_pct": float(win_pct) if win_pct is not None else 0.0,
+            "position": entry.get("position"),
+            "conference_rank": entry.get("conference", {}).get("rank")
+            if isinstance(entry.get("conference"), dict)
+            else entry.get("conference_rank"),
+            "division_rank": entry.get("division", {}).get("rank")
+            if isinstance(entry.get("division"), dict)
+            else entry.get("division_rank"),
+            "streak": entry.get("streak", {}).get("long")
+            if isinstance(entry.get("streak"), dict)
+            else entry.get("streak"),
+            "form": entry.get("form"),
+            "home_record": games.get("win", {}).get("home"),
+            "away_record": games.get("win", {}).get("away"),
+        }
+
+        if team_id is not None:
+            by_id[team_id] = record
+
+        if team_name:
+            canonical = normalize_team_name(team_name)
+            canonical_full = get_canonical_name(canonical)
+            by_team[canonical] = record
+            by_team[canonical_full] = record
+
+    return {"by_id": by_id, "by_team": by_team}
 
 
 async def fetch_game_stats_teams(

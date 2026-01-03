@@ -32,7 +32,7 @@ import pandas as pd
 
 from src.config import settings
 from src.ingestion import api_basketball
-from src.ingestion.espn import fetch_espn_standings
+from src.ingestion.api_basketball import normalize_standings_response
 from src.modeling.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
@@ -394,43 +394,13 @@ class RichFeatureBuilder:
             "games_played": wins + losses
         }
 
-    async def get_standings(self) -> Dict[int, Dict]:
-        """Get current standings indexed by team ID.
-
-        Standings data is more current than /statistics for W-L records.
-        """
+    async def get_standings(self) -> Dict[str, Dict]:
+        """Get normalized standings (API-Basketball) keyed by team ID and canonical name."""
         result = await api_basketball.fetch_standings(
             league=self.league_id,
             season=self.season
         )
-
-        standings = {}
-        # Handle nested response structure (may be list of lists)
-        response = result.get("response", [])
-        entries = []
-        for item in response:
-            if isinstance(item, list):
-                entries.extend(item)
-            elif isinstance(item, dict):
-                entries.append(item)
-
-        for entry in entries:
-            team_id = entry.get("team", {}).get("id")
-            if team_id:
-                games = entry.get("games", {})
-                wins = games.get("win", {}).get("total", 0)
-                losses = games.get("lose", {}).get("total", 0)
-                played = games.get("played", wins + losses)
-
-                standings[team_id] = {
-                    "position": entry.get("position"),
-                    "win_rate": games.get("win", {}).get("percentage"),
-                    "games_played": played,
-                    "wins": wins,
-                    "losses": losses,
-                }
-
-        return standings
+        return normalize_standings_response(result)
 
     async def get_injuries_df(self) -> Optional[pd.DataFrame]:
         """
@@ -501,15 +471,14 @@ class RichFeatureBuilder:
         home_id = await self.get_team_id(home_team)
         away_id = await self.get_team_id(away_team)
 
-        # Fetch all data in parallel (including ESPN standings for accurate W-L records)
-        home_stats, away_stats, h2h, standings, home_recent, away_recent, espn_standings = await asyncio.gather(
+        # Fetch all data in parallel (API-Basketball standings used for W-L records)
+        home_stats, away_stats, h2h, standings_norm, home_recent, away_recent = await asyncio.gather(
             self.get_team_stats(home_id),
             self.get_team_stats(away_id),
             self.get_h2h_history(home_id, away_id),
             self.get_standings(),
             self.get_recent_games(home_id, limit=10),
             self.get_recent_games(away_id, limit=10),
-            self.get_espn_standings(),  # ESPN is most accurate for W-L records
         )
 
         # Extract season averages
@@ -526,48 +495,31 @@ class RichFeatureBuilder:
         if home_ppg == 0 or away_ppg == 0:
             raise ValueError(f"Missing PPG data: home={home_ppg}, away={away_ppg}")
 
-        # Standings position (from API-Basketball for conference position)
-        home_standing = standings.get(home_id, {})
-        away_standing = standings.get(away_id, {})
+        standings_by_id = standings_norm.get("by_id", {}) if isinstance(standings_norm, dict) else {}
 
-        # STRICT MODE: ESPN is the ONLY source for team records
-        # NO FALLBACKS - ESPN is free, real-time, and accurate
-        
-        # Normalize team names for ESPN lookup
-        espn_name_map = {
-            "Los Angeles Clippers": "LA Clippers",
-            "Lakers": "Los Angeles Lakers",
-            "Celtics": "Boston Celtics",
-        }
-        home_team_espn_name = espn_name_map.get(home_team, home_team)
-        away_team_espn_name = espn_name_map.get(away_team, away_team)
+        # Standings position and records (API-Basketball)
+        home_standing = standings_by_id.get(home_id, {})
+        away_standing = standings_by_id.get(away_id, {})
 
-        home_espn = espn_standings.get(home_team_espn_name, {})
-        away_espn = espn_standings.get(away_team_espn_name, {})
+        # Use API-B standings for W/L; fall back to computed record if missing
+        home_record = home_standing or self.calculate_team_record_from_games(home_id)
+        away_record = away_standing or self.calculate_team_record_from_games(away_id)
 
-        home_wins = home_espn.get("wins", 0)
-        home_losses = home_espn.get("losses", 0)
-        away_wins = away_espn.get("wins", 0)
-        away_losses = away_espn.get("losses", 0)
+        home_wins = home_record.get("wins", 0)
+        home_losses = home_record.get("losses", 0)
+        away_wins = away_record.get("wins", 0)
+        away_losses = away_record.get("losses", 0)
 
-        # STRICT MODE: Fail if ESPN doesn't have this team's data
-        if home_wins == 0 and home_losses == 0:
-            raise ValueError(f"STRICT MODE: ESPN has no record for '{home_team}' - verify team name matches ESPN format")
-        if away_wins == 0 and away_losses == 0:
-            raise ValueError(f"STRICT MODE: ESPN has no record for '{away_team}' - verify team name matches ESPN format")
-
-        # Log record sources for confirmation
-        print(f"[RECORDS] {home_team}: {home_wins}-{home_losses} (source: ESPN LIVE)")
-        print(f"[RECORDS] {away_team}: {away_wins}-{away_losses} (source: ESPN LIVE)")
-
-        home_games_played = home_wins + home_losses
-        away_games_played = away_wins + away_losses
+        home_games_played = home_record.get("games_played", home_wins + home_losses)
+        away_games_played = away_record.get("games_played", away_wins + away_losses)
 
         if home_games_played == 0 or away_games_played == 0:
-            raise ValueError(f"No games played: home={home_games_played}, away={away_games_played}")
+            raise ValueError(
+                f"STRICT MODE: API-B standings missing games played data (home={home_team}, away={away_team})"
+            )
 
-        home_win_pct = home_wins / home_games_played
-        away_win_pct = away_wins / away_games_played
+        home_win_pct = home_wins / home_games_played if home_games_played > 0 else 0.0
+        away_win_pct = away_wins / away_games_played if away_games_played > 0 else 0.0
 
         home_position = home_standing.get("position", 15)  # Mid-table if missing
         away_position = away_standing.get("position", 15)
