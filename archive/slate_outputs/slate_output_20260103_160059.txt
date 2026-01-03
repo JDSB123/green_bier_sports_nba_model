@@ -1,0 +1,219 @@
+
+====================================================================================================
+NBA PREDICTIONS - TODAY
+Generated: 2026-01-03 04:00 PM CST
+====================================================================================================
+
+Found 8 game(s)
+
+===========================================================================================================================================================
+                                                                     RECOMMENDED PICKS                                                                     
+===========================================================================================================================================================
+Time (CST)   | Matchup                                    | Pick                   | Odds    | Prediction   | Line     | Edge     | EV%     | Fire
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+04:10 PM CST | Minnesota Timberwolves (21-13) @ Miami Heat (19-15) | Miami Heat +2.5        | -110    | MIA by 1.5   | +2.5     | +4.0 pts | N/A     | 🔥🔥🔥
+             |                                            | Miami Heat +1.5        | -110    | MIA by 4.9   | +1.5     | +6.4 pts | N/A     | 🔥🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+06:40 PM CST | Atlanta Hawks (17-19) @ Toronto Raptors (20-15) | Atlanta Hawks +2.5     | -110    | ATL by 3.2   | +2.5     | -5.7 pts | N/A     | 🔥🔥🔥
+             |                                            | UNDER 118.5            | -110    | 116.1        | 118.5    | -2.4 pts | N/A     | 🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+06:40 PM CST | Philadelphia 76ers (18-14) @ New York Knicks (23-11) | UNDER 233.5            | -110    | 226.0        | 233.5    | -7.5 pts | N/A     | 🔥🔥🔥🔥
+             |                                            | OVER 120.0             | -110    | 123.3        | 120.0    | +3.3 pts | N/A     | 🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+07:10 PM CST | Charlotte Hornets (11-23) @ Chicago Bulls (17-17) | UNDER 240.0            | -110    | 233.2        | 240.0    | -6.8 pts | N/A     | 🔥🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+07:10 PM CST | Portland Trail Blazers (15-20) @ San Antonio Spurs (25-9) | UNDER 235.5            | -110    | 230.9        | 235.5    | -4.6 pts | N/A     | 🔥
+             |                                            | Portland Trail Blazers +4.5 | -110    | SAN by 2.3   | +4.5     | -2.2 pts | N/A     | 🔥
+             |                                            | OVER 120.75            | -110    | 124.8        | 120.8    | +4.0 pts | N/A     | 🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+07:40 PM CST | Houston Rockets (21-10) @ Dallas Mavericks (12-23) | Dallas Mavericks +8.0  | -110    | HOU by 4.3   | +8.0     | +3.7 pts | N/A     | 🔥🔥
+             |                                            | Houston Rockets -4.5   | -110    | HOU by 7.4   | -4.5     | -2.9 pts | N/A     | 🔥🔥
+             |                                            | OVER 110.5             | -110    | 116.9        | 110.5    | +6.4 pts | N/A     | 🔥🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+09:10 PM CST | Utah Jazz (12-21) @ Golden State Warriors (18-17) | Utah Jazz +10.5        | -110    | GOL by 7.0   | +10.5    | -3.5 pts | N/A     | 🔥🔥
+             |                                            | UNDER 244.5            | -110    | 232.9        | 244.5    | -11.6 pts | N/A     | 🔥🔥🔥🔥🔥
+             |                                            | Utah Jazz +6.5         | -110    | GOL by 0.8   | +6.5     | -5.7 pts | N/A     | 🔥🔥🔥
+             |                                            | OVER 118.75            | -110    | 122.9        | 118.8    | +4.1 pts | N/A     | 🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+09:40 PM CST | Boston Celtics (21-12) @ Los Angeles Clippers (12-21) | Los Angeles Clippers -0.5 | -105    | LOS by 6.8   | -0.5     | +6.3 pts | N/A     | 🔥🔥🔥
+             |                                            | OVER 113.5             | -110    | 116.1        | 113.5    | +2.6 pts | N/A     | 🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+====================================================================================================
+DETAILED RATIONALE
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+GAME: Minnesota Timberwolves (21-13) @ Miami Heat (19-15)
+TIME: 04:10 PM CST
+
+  FULL GAME:
+    SPREAD: Miami Heat +2.5 (-110)
+       Model predicts: Miami Heat wins by 1.5 pts
+       Market line: Miami Heat +2.5
+       Edge: +4.0 pts of value
+       Rationale: Model says Miami Heat by 1.5, getting +2.5 → 4.0 pts edge
+       Confidence: 81%  |  🔥🔥🔥
+
+  FIRST HALF:
+    1H SPREAD: Miami Heat +1.5 (-110)
+       Model predicts: Miami Heat leads by 4.9 at half
+       Market line: Miami Heat +1.5
+       Edge: +6.4 pts of value
+       Confidence: 70%  |  🔥🔥🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Atlanta Hawks (17-19) @ Toronto Raptors (20-15)
+TIME: 06:40 PM CST
+
+  FULL GAME:
+
+  FIRST HALF:
+    1H SPREAD: Atlanta Hawks +2.5 (-110)
+       Model predicts: Atlanta Hawks leads by 3.2 at half
+       Market line: Atlanta Hawks +2.5
+       Edge: -5.7 pts of value
+       Confidence: 70%  |  🔥🔥🔥
+    1H TOTAL: UNDER 118.5 (-110)
+       Model predicts: 116.1 1H points
+       Market line: 118.5
+       Edge: 2.4 pts of value
+       Rationale: Model (116.1) < Line (118.5) → UNDER
+       Confidence: 70%  |  🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Philadelphia 76ers (18-14) @ New York Knicks (23-11)
+TIME: 06:40 PM CST
+
+  FULL GAME:
+    TOTAL: UNDER 233.5 (-110)
+       Model predicts: 226.0 total points
+       Market line: 233.5
+       Edge: 7.5 pts of value
+       Rationale: Model (226.0) < Line (233.5) by 7.5 pts → UNDER
+       Confidence: 75%  |  🔥🔥🔥🔥
+
+  FIRST HALF:
+    1H TOTAL: OVER 120.0 (-110)
+       Model predicts: 123.3 1H points
+       Market line: 120.0
+       Edge: 3.3 pts of value
+       Rationale: Model (123.3) > Line (120.0) → OVER
+       Confidence: 67%  |  🔥🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Charlotte Hornets (11-23) @ Chicago Bulls (17-17)
+TIME: 07:10 PM CST
+
+  FULL GAME:
+    TOTAL: UNDER 240.0 (-110)
+       Model predicts: 233.2 total points
+       Market line: 240.0
+       Edge: 6.8 pts of value
+       Rationale: Model (233.2) < Line (240.0) by 6.8 pts → UNDER
+       Confidence: 68%  |  🔥🔥🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Portland Trail Blazers (15-20) @ San Antonio Spurs (25-9)
+TIME: 07:10 PM CST
+
+  FULL GAME:
+    TOTAL: UNDER 235.5 (-110)
+       Model predicts: 230.9 total points
+       Market line: 235.5
+       Edge: 4.6 pts of value
+       Rationale: Model (230.9) < Line (235.5) by 4.6 pts → UNDER
+       Confidence: 46%  |  🔥
+
+  FIRST HALF:
+    1H SPREAD: Portland Trail Blazers +4.5 (-110)
+       Model predicts: San Antonio Spurs leads by 2.3 at half
+       Market line: Portland Trail Blazers +4.5
+       Edge: -2.2 pts of value
+       Confidence: 70%  |  🔥
+    1H TOTAL: OVER 120.8 (-110)
+       Model predicts: 124.8 1H points
+       Market line: 120.8
+       Edge: 4.0 pts of value
+       Rationale: Model (124.8) > Line (120.8) → OVER
+       Confidence: 70%  |  🔥🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Houston Rockets (21-10) @ Dallas Mavericks (12-23)
+TIME: 07:40 PM CST
+
+  FULL GAME:
+    SPREAD: Dallas Mavericks +8.0 (-110)
+       Model predicts: Houston Rockets wins by 4.3 pts
+       Market line: Dallas Mavericks +8.0
+       Edge: +3.7 pts of value
+       Rationale: Model says Dallas Mavericks by 4.3, getting +8.0 → 3.7 pts edge
+       Confidence: 75%  |  🔥🔥
+
+  FIRST HALF:
+    1H SPREAD: Houston Rockets -4.5 (-110)
+       Model predicts: Houston Rockets leads by 7.4 at half
+       Market line: Houston Rockets -4.5
+       Edge: -2.9 pts of value
+       Confidence: 70%  |  🔥🔥
+    1H TOTAL: OVER 110.5 (-110)
+       Model predicts: 116.9 1H points
+       Market line: 110.5
+       Edge: 6.4 pts of value
+       Rationale: Model (116.9) > Line (110.5) → OVER
+       Confidence: 59%  |  🔥🔥🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Utah Jazz (12-21) @ Golden State Warriors (18-17)
+TIME: 09:10 PM CST
+
+  FULL GAME:
+    SPREAD: Utah Jazz +10.5 (-110)
+       Model predicts: Golden State Warriors wins by 7.0 pts
+       Market line: Utah Jazz +10.5
+       Edge: -3.5 pts of value
+       Rationale: Model says Golden State Warriors by 7.0, but getting Utah Jazz +10.5 → -3.5 pts edge
+       Confidence: 70%  |  🔥🔥
+    TOTAL: UNDER 244.5 (-110)
+       Model predicts: 232.9 total points
+       Market line: 244.5
+       Edge: 11.6 pts of value
+       Rationale: Model (232.9) < Line (244.5) by 11.6 pts → UNDER
+       Confidence: 90%  |  🔥🔥🔥🔥🔥
+
+  FIRST HALF:
+    1H SPREAD: Utah Jazz +6.5 (-110)
+       Model predicts: Golden State Warriors leads by 0.8 at half
+       Market line: Utah Jazz +6.5
+       Edge: -5.7 pts of value
+       Confidence: 70%  |  🔥🔥🔥
+    1H TOTAL: OVER 118.8 (-110)
+       Model predicts: 122.9 1H points
+       Market line: 118.8
+       Edge: 4.1 pts of value
+       Rationale: Model (122.9) > Line (118.8) → OVER
+       Confidence: 70%  |  🔥🔥
+
+----------------------------------------------------------------------------------------------------
+GAME: Boston Celtics (21-12) @ Los Angeles Clippers (12-21)
+TIME: 09:40 PM CST
+
+  FULL GAME:
+
+  FIRST HALF:
+    1H SPREAD: Los Angeles Clippers -0.5 (-105)
+       Model predicts: Los Angeles Clippers leads by 6.8 at half
+       Market line: Los Angeles Clippers -0.5
+       Edge: +6.3 pts of value
+       Confidence: 70%  |  🔥🔥🔥
+    1H TOTAL: OVER 113.5 (-110)
+       Model predicts: 116.1 1H points
+       Market line: 113.5
+       Edge: 2.6 pts of value
+       Rationale: Model (116.1) > Line (113.5) → OVER
+       Confidence: 52%  |  🔥
+
+====================================================================================================
+Analysis complete
+   More fires = stronger pick (5 fires = best)
+====================================================================================================
