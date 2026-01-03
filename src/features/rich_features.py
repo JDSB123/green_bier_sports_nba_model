@@ -536,6 +536,8 @@ class RichFeatureBuilder:
         # Normalize team names for ESPN lookup
         espn_name_map = {
             "Los Angeles Clippers": "LA Clippers",
+            "Lakers": "Los Angeles Lakers",
+            "Celtics": "Boston Celtics",
         }
         home_team_espn_name = espn_name_map.get(home_team, home_team)
         away_team_espn_name = espn_name_map.get(away_team, away_team)
