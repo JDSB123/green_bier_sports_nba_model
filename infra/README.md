@@ -5,12 +5,24 @@
 All Azure resources are defined in **one file**: `infra/nba/main.bicep`
 
 This deploys everything to `nba-gbsv-model-rg`:
+
+### Platform Layer
 - Container Registry (`nbagbsacr`)
 - Key Vault (`nbagbs-keyvault`)
-- Log Analytics + App Insights
+- Log Analytics (`gbs-logs-prod`)
+- App Insights (`gbs-insights-prod`)
+
+### Data Layer
+- Storage Account (`nbagbsvstrg`) with containers: models, predictions, results
+
+### Compute Layer
 - Container Apps Environment (`nba-gbsv-model-env`)
 - Container App (`nba-gbsv-api`)
-- Storage Account (for models/predictions/results)
+
+### Teams Bot Layer
+- App Service Plan (`nba-gbsv-func-plan`) - Consumption/Dynamic
+- Function App (`nba-picks-trigger`) - Python 3.11
+- Bot Service (`nba-picks-bot`)
 
 ## Layout
 
@@ -38,9 +50,13 @@ pwsh ./infra/nba/deploy.ps1 -Tag NBA_v33.0.8.0
 # Preview changes (what-if)
 pwsh ./infra/nba/deploy.ps1 -WhatIf
 
-# Direct az CLI
+# Direct az CLI (full deployment including Teams Bot)
 az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep `
-  -p theOddsApiKey=<secret> apiBasketballKey=<secret>
+  -p theOddsApiKey=<secret> `
+     apiBasketballKey=<secret> `
+     microsoftAppId=<bot-app-id> `
+     microsoftAppTenantId=<tenant-id> `
+     microsoftAppPassword=<bot-secret>
 ```
 
 ## CI/CD (GitHub Actions)

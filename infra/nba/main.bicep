@@ -54,8 +54,18 @@ param acrName string = 'nbagbsacr'
 @description('Key Vault name')
 param keyVaultName string = 'nbagbs-keyvault'
 
-@description('Storage account name override (optional, auto-generated if empty)')
-param storageAccountName string = ''
+@description('Storage account name')
+param storageAccountName string = 'nbagbsvstrg'
+
+// Teams Bot resource names
+@description('Function App name for Teams bot trigger')
+param functionAppName string = 'nba-picks-trigger'
+
+@description('Bot Service name')
+param botServiceName string = 'nba-picks-bot'
+
+@description('App Service Plan name for Function App')
+param appServicePlanName string = 'nba-gbsv-func-plan'
 
 // API Keys (required)
 @description('The Odds API Key (required)')
@@ -65,6 +75,17 @@ param theOddsApiKey string
 @description('API-Basketball Key (required)')
 @secure()
 param apiBasketballKey string
+
+// Teams Bot credentials (required for bot)
+@description('Microsoft App ID for Teams Bot')
+param microsoftAppId string = ''
+
+@description('Microsoft App Tenant ID for Teams Bot')
+param microsoftAppTenantId string = ''
+
+@description('Microsoft App Password for Teams Bot')
+@secure()
+param microsoftAppPassword string = ''
 
 // Optional integrations
 @description('Database URL (optional)')
@@ -261,6 +282,72 @@ module containerApp '../modules/containerApp.bicep' = {
 }
 
 // =============================================================================
+// TEAMS BOT LAYER (Function App + Bot Service)
+// =============================================================================
+
+// App Service Plan (Consumption/Dynamic for Function App)
+resource funcAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+  name: appServicePlanName
+  location: location
+  tags: tags
+  kind: 'functionapp'
+  sku: {
+    name: 'Y1'
+    tier: 'Dynamic'
+    size: 'Y1'
+    family: 'Y'
+    capacity: 0
+  }
+  properties: {
+    reserved: true // Linux
+  }
+}
+
+// Function App for Teams Bot trigger
+resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
+  name: functionAppName
+  location: location
+  tags: tags
+  kind: 'functionapp,linux'
+  properties: {
+    serverFarmId: funcAppServicePlan.id
+    reserved: true
+    siteConfig: {
+      linuxFxVersion: 'Python|3.11'
+      appSettings: [
+        { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
+        { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
+        { name: 'AzureWebJobsStorage', value: storage.outputs.connectionString }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
+        { name: 'NBA_API_URL', value: 'https://${containerApp.outputs.containerAppFqdn}' }
+        { name: 'MICROSOFT_APP_ID', value: microsoftAppId }
+        { name: 'MICROSOFT_APP_TENANT_ID', value: microsoftAppTenantId }
+        { name: 'MICROSOFT_APP_PASSWORD', value: microsoftAppPassword }
+      ]
+    }
+    httpsOnly: true
+  }
+}
+
+// Bot Service
+resource botService 'Microsoft.BotService/botServices@2022-09-15' = if (microsoftAppId != '') {
+  name: botServiceName
+  location: 'global'
+  tags: tags
+  kind: 'azurebot'
+  sku: {
+    name: 'F0'
+  }
+  properties: {
+    displayName: 'NBA Picks Bot'
+    endpoint: 'https://${functionApp.properties.defaultHostName}/api/bot'
+    msaAppId: microsoftAppId
+    msaAppTenantId: microsoftAppTenantId
+    msaAppType: 'SingleTenant'
+  }
+}
+
+// =============================================================================
 // OUTPUTS
 // =============================================================================
 
@@ -270,3 +357,5 @@ output storageAccountName string = storage.outputs.storageAccountName
 output acrLoginServer string = acr.properties.loginServer
 output keyVaultUri string = keyVault.properties.vaultUri
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
+output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
+output botEndpoint string = microsoftAppId != '' ? 'https://${functionApp.properties.defaultHostName}/api/bot' : ''

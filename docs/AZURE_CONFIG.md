@@ -6,18 +6,28 @@
 
 ```
 Resource Group: nba-gbsv-model-rg
-  ├─ Container Registry: nbagbsacr.azurecr.io
-  ├─ Key Vault: nbagbs-keyvault
-  ├─ Container Apps Environment: nba-gbsv-model-env
+  │
+  ├─ PLATFORM
+  │   ├─ Container Registry: nbagbsacr.azurecr.io
+  │   ├─ Key Vault: nbagbs-keyvault
+  │   ├─ Log Analytics: gbs-logs-prod
+  │   └─ App Insights: gbs-insights-prod
+  │
+  ├─ DATA
+  │   └─ Storage Account: nbagbsvstrg
+  │       └─ Containers: models, predictions, results
+  │
+  ├─ COMPUTE (Container Apps)
+  │   ├─ Environment: nba-gbsv-model-env
   │   └─ Container App: nba-gbsv-api
-  │       ├─ Image: nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0 (semantic) + :<git-sha> (CI)
+  │       ├─ Image: nbagbsacr.azurecr.io/nba-gbsv-api:<tag>
   │       ├─ Port: 8090
-  │       ├─ Scaling: 1-3 replicas
-  │       └─ Environment Variables:
-  │           ├─ THE_ODDS_API_KEY
-  │           ├─ API_BASKETBALL_KEY
-  │           ├─ SEASONS_TO_PROCESS=2025-2026
-  │           └─ NBA_MODEL_VERSION=NBA_v33.0.8.0
+  │       └─ Scaling: 1-3 replicas
+  │
+  └─ TEAMS BOT
+      ├─ App Service Plan: nba-gbsv-func-plan (Consumption)
+      ├─ Function App: nba-picks-trigger (Python 3.11)
+      └─ Bot Service: nba-picks-bot
 ```
 
 ## Resource Names
@@ -29,6 +39,12 @@ Resource Group: nba-gbsv-model-rg
 | Container App | `nba-gbsv-api` |
 | Container Registry | `nbagbsacr` |
 | Key Vault | `nbagbs-keyvault` |
+| Storage Account | `nbagbsvstrg` |
+| Log Analytics | `gbs-logs-prod` |
+| App Insights | `gbs-insights-prod` |
+| Function App (Teams Bot) | `nba-picks-trigger` |
+| App Service Plan | `nba-gbsv-func-plan` |
+| Bot Service | `nba-picks-bot` |
 
 ## Get Current API URL (dynamic)
 
