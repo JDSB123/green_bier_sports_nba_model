@@ -250,7 +250,7 @@ module containerApp '../modules/containerApp.bicep' = {
     httpConcurrentRequests: concurrentRequests
     cpu: containerCpu
     memory: containerMemory
-    revisionMode: 'Single'
+    activeRevisionsMode: 'Single'
   }
 }
 

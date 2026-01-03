@@ -47,8 +47,8 @@ param cpu string = '0.5'
 @description('Memory allocation')
 param memory string = '1Gi'
 
-@description('Revision mode')
-param revisionMode string = 'Single'
+@description('Active revisions mode (Single or Multiple)')
+param activeRevisionsMode string = 'Single'
 
 @description('Identity type')
 param identityType string = 'SystemAssigned'
@@ -79,7 +79,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       }
       registries: registries
       secrets: secrets
-      revisionMode: revisionMode
+      activeRevisionsMode: activeRevisionsMode
     }
     template: {
       containers: [
