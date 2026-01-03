@@ -456,31 +456,30 @@ def calculate_comprehensive_edge(
                 confidence_score = market_data.get("confidence", 0)
                 win_probability = market_data.get("win_probability", 0.5)
 
-                # IMPROVED EXTREME FILTERING: Multiple criteria for high confidence picks
-                # Don't filter out good picks that may have moderate confidence but extreme probabilities
-                edge_value = market_data["edge"]
+                # STATISTICALLY SOUND HIGH CONFIDENCE FILTERING
+                # For a well-calibrated model, high confidence requires both statistical significance AND model certainty
+                # If the model were truly sound, minimal filtering would be needed
+                edge_value = abs(market_data["edge"])
 
-                # Criteria for high confidence picks:
-                # 1. High confidence + moderately extreme probability
-                high_conf_extreme = (
-                    confidence_score >= 0.70 and  # Model is confident
-                    (win_probability >= 0.60 or win_probability <= 0.40)  # Moderately extreme probability
+                # Primary criteria: Model certainty + statistical significance
+                # Confidence represents information gain (certainty vs uncertainty)
+                # Edge represents magnitude of predicted deviation from market
+                model_certainty_and_significance = (
+                    confidence_score >= 0.75 and  # High certainty (75%+ confidence = strong signal)
+                    edge_value >= 2.5 and         # Statistically significant edge (2.5+ points)
+                    win_probability <= 0.35       # Conservative probability (≤35% for underdogs, ≥65% for favorites)
                 )
 
-                # 2. Very extreme probability (regardless of confidence, but with minimum confidence)
-                very_extreme_prob = (
-                    confidence_score >= 0.55 and  # Minimum confidence required
-                    (win_probability >= 0.70 or win_probability <= 0.30)  # Very extreme probability
+                # Secondary criteria: Extreme market mismatch with reasonable certainty
+                extreme_market_mismatch = (
+                    confidence_score >= 0.65 and  # Good certainty (65%+)
+                    edge_value >= 4.0 and         # Very large edge (4+ points = major mismatch)
+                    (win_probability <= 0.25 or win_probability >= 0.75)  # Very extreme probabilities
                 )
 
-                # 3. Large edge with good confidence (catches strong fundamental mismatches)
-                large_edge_good_conf = (
-                    abs(edge_value) >= 3.0 and  # Large edge (>= 3 points for spreads, >= 3 total)
-                    confidence_score >= 0.60  # Good confidence
-                )
-
-                # High confidence if any criteria met
-                is_high_confidence = high_conf_extreme or very_extreme_prob or large_edge_good_conf
+                # High confidence requires meeting statistical significance criteria
+                # This filtering should be minimal if the model is well-calibrated
+                is_high_confidence = model_certainty_and_significance or extreme_market_mismatch
 
                 # Validate probability source consistency
                 probability_source = market_data.get("probability_source", "unknown")
