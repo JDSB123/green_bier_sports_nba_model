@@ -42,13 +42,32 @@ jobs:
         run: |
           echo "Fetching predictions for ${{ steps.date.outputs.target_date }}..."
 
-          # Fetch executive summary
-          RESPONSE=$(curl -s -f "${{ env.ACA_ENDPOINT }}/slate/${{ steps.date.outputs.target_date }}/executive")
+          # Endpoints to try (in order)
+          ENDPOINTS=(
+            "https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/slate/${{ steps.date.outputs.target_date }}/executive"
+            "https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io/slate/${{ steps.date.outputs.target_date }}/executive"
+            "https://nba-picks-trigger.azurewebsites.net/api/nba-picks?date=${{ steps.date.outputs.target_date }}"
+          )
 
-          if [ $? -ne 0 ]; then
-            echo "::error::Failed to fetch predictions from ACA"
+          HTTP_CODE="000"
+          for ENDPOINT in "${ENDPOINTS[@]}"; do
+            echo "Trying: $ENDPOINT"
+            HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" "$ENDPOINT" --connect-timeout 30 --max-time 120)
+            echo "Response: HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ Success!"
+              break
+            fi
+          done
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Failed to fetch predictions. HTTP $HTTP_CODE"
+            echo "Response:"
+            cat /tmp/response.json || echo "(empty)"
             exit 1
           fi
+
+          RESPONSE=$(cat /tmp/response.json)
 
           # Save JSON response
           echo "$RESPONSE" > picks_${{ steps.date.outputs.target_date }}.json
