@@ -44,8 +44,8 @@ jobs:
 
           # Endpoints to try (in order)
           ENDPOINTS=(
-            "https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/slate/${{ steps.date.outputs.target_date }}/executive"
-            "https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io/slate/${{ steps.date.outputs.target_date }}/executive"
+            "https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/slate/${{ steps.date.outputs.target_date }}"
+            "https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io/slate/${{ steps.date.outputs.target_date }}"
             "https://nba-picks-trigger.azurewebsites.net/api/nba-picks?date=${{ steps.date.outputs.target_date }}"
           )
 
