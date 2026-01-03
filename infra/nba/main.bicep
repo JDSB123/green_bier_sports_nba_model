@@ -1,25 +1,57 @@
 // Green Bier Sports - NBA Model Infrastructure
-// Deploys NBA-specific resources (Container App, Function, Storage)
-//
-// SINGLE SOURCE OF TRUTH - All NBA resources in nba-gbsv-model-rg
-// Container App: nba-gbsv-api
-// ACR: nbagbsacr (in nba-gbsv-model-rg, NOT shared)
-// Key Vault: nbagbs-keyvault
+// Single-source-of-truth deployment for the NBA resource group.
 //
 // Usage:
-//   az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep
+//   az deployment group create -g <nba-rg> -f infra/nba/main.bicep `
+//     -p theOddsApiKey=... apiBasketballKey=... imageTag=<tag>
 
 targetScope = 'resourceGroup'
 
 @description('Azure region')
+@minLength(1)
+@maxLength(50)
 param location string = resourceGroup().location
 
 @description('Environment')
-@allowed(['dev', 'staging', 'prod'])
+@allowed([
+  'dev'
+  'staging'
+  'prod'
+])
 param environment string = 'prod'
 
-@description('Container image tag')
-param imageTag string = 'NBA_v33.0.8.0'
+@description('NBA app semantic version (tag + resource tagging)')
+param versionTag string = 'NBA_v33.0.8.0'
+
+@description('Container image tag (defaults to versionTag)')
+param imageTag string = versionTag
+
+@description('Application identifier for tagging')
+param appTag string = 'nba-model'
+
+@description('Owner tag value')
+param ownerTag string = 'sports-analytics'
+
+@description('Cost center tag value')
+param costCenterTag string = 'sports-nba'
+
+@description('Compliance tag value')
+param complianceTag string = 'internal'
+
+@description('Additional tags to merge onto all resources')
+param extraTags object = {}
+
+@description('Container App name')
+param appName string = 'nba-gbsv-api'
+
+@description('Container Apps Environment name')
+param containerAppEnvName string = 'nbagbsvmodel-env'
+
+@description('ACR name (existing)')
+param acrName string = 'nbagbsacr'
+
+@description('Storage account name override (optional)')
+param storageAccountName string = ''
 
 @description('Database URL (optional)')
 @secure()
@@ -43,24 +75,43 @@ param apiBasketballKey string
 @description('Website domain for CORS (e.g., greenbiersportventures.com)')
 param websiteDomain string = 'greenbiersportventures.com'
 
-// Get Container Apps Environment - nbagbsvmodel-env (NOT greenbier-nba-env)
+@description('Minimum replicas')
+param minReplicas int = 1
+
+@description('Maximum replicas')
+param maxReplicas int = 3
+
+@description('Concurrent requests per replica before scaling out')
+param concurrentRequests string = '50'
+
+@description('CPU cores for the container')
+param containerCpu string = '0.5'
+
+@description('Memory for the container')
+param containerMemory string = '1Gi'
+
+// Existing shared resources in the same RG
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' existing = {
-  name: 'nbagbsvmodel-env'
+  name: containerAppEnvName
 }
 
-// Get Container Registry - nbagbsacr (in same resource group)
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: 'nbagbsacr'
+  name: acrName
 }
 
-// Naming
-var sport = 'nba'
-var tags = {
+// Required tag policy (merges with extraTags)
+var requiredTags = {
   enterprise: 'green-bier-sports-ventures'
-  sport: sport
+  app: appTag
   environment: environment
+  owner: ownerTag
+  cost_center: costCenterTag
+  compliance: complianceTag
+  version: versionTag
   managedBy: 'bicep'
 }
+
+var tags = union(requiredTags, extraTags)
 
 // Secrets list (optional entries appended)
 var apiSecrets = concat(
@@ -92,10 +143,26 @@ var apiSecrets = concat(
   ]
 )
 
+// Data layer (Storage)
+module storage '../modules/storage.bicep' = {
+  name: 'data-storage'
+  params: {
+    name: storageAccountName
+    app: 'nba'
+    environment: environment
+    location: location
+    tags: tags
+    containers: [
+      'models'
+      'predictions'
+      'results'
+    ]
+  }
+}
+
 // Environment variables (optional entries appended)
 var appEnvVars = concat(
   [
-    // Required API keys via secrets
     {
       name: 'THE_ODDS_API_KEY'
       secretRef: 'the-odds-api-key'
@@ -104,14 +171,13 @@ var appEnvVars = concat(
       name: 'API_BASKETBALL_KEY'
       secretRef: 'api-basketball-key'
     }
-    // NBA v33.0.8.0 configuration
     {
       name: 'GBS_SPORT'
       value: 'nba'
     }
     {
       name: 'NBA_MODEL_VERSION'
-      value: 'NBA_v33.0.8.0'
+      value: versionTag
     }
     {
       name: 'NBA_MARKETS'
@@ -121,10 +187,9 @@ var appEnvVars = concat(
       name: 'NBA_PERIODS'
       value: 'first_half,full_game'
     }
-    // Azure storage (inline connection string)
     {
       name: 'AZURE_STORAGE_CONNECTION_STRING'
-      value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${az.environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+      value: storage.outputs.connectionString
     }
   ],
   databaseUrl == '' ? [] : [
@@ -141,145 +206,43 @@ var appEnvVars = concat(
   ]
 )
 
-// ============================================================================
-// Storage Account (NBA predictions archive)
-// ============================================================================
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: 'gbs${sport}data${uniqueString(resourceGroup().id)}'
-  location: location
-  tags: tags
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  properties: {
-    supportsHttpsTrafficOnly: true
-    minimumTlsVersion: 'TLS1_2'
-    accessTier: 'Hot'
-  }
-}
-
-resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource modelsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobServices
-  name: 'models'
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-resource predictionsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobServices
-  name: 'predictions'
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-resource resultsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobServices
-  name: 'results'
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-// ============================================================================
-// Container App - NBA Picks API (ACTUAL NAME: nba-gbsv-api)
-// ============================================================================
-resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
-  name: 'nba-gbsv-api'
-  location: location
-  tags: tags
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
+// Compute layer (Container App)
+module containerApp '../modules/containerApp.bicep' = {
+  name: 'compute-app'
+  params: {
+    name: appName
+    location: location
     managedEnvironmentId: containerAppEnv.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 8080
-        transport: 'auto'
-        corsPolicy: {
-          allowedOrigins: [
-            'http://localhost:3000'
-            'https://*.azurewebsites.net'
-            'https://*.greenbier.com'
-            'https://${websiteDomain}'
-            'https://www.${websiteDomain}'
-          ]
-          allowedMethods: ['GET', 'POST', 'OPTIONS']
-          allowedHeaders: ['*']
-        }
+    tags: tags
+    image: '${acr.properties.loginServer}/nba-gbsv-api:${imageTag}'
+    envVars: appEnvVars
+    secrets: apiSecrets
+    registries: [
+      {
+        server: acr.properties.loginServer
+        username: acr.listCredentials().username
+        passwordSecretRef: 'acr-password'
       }
-      registries: [
-        {
-          server: acr.properties.loginServer
-          username: acr.listCredentials().username
-          passwordSecretRef: 'acr-password'
-        }
-      ]
-      secrets: apiSecrets
-    }
-    template: {
-      containers: [
-        {
-          name: 'gbs-nba-api'
-          image: '${acr.properties.loginServer}/nba-gbsv-api:${imageTag}'
-          resources: {
-            cpu: json('0.5')
-            memory: '1Gi'
-          }
-          env: appEnvVars
-          probes: [
-            {
-              type: 'Liveness'
-              httpGet: {
-                path: '/health'
-                port: 8080
-              }
-              initialDelaySeconds: 10
-              periodSeconds: 30
-            }
-            {
-              type: 'Readiness'
-              httpGet: {
-                path: '/health'
-                port: 8080
-              }
-              initialDelaySeconds: 5
-              periodSeconds: 10
-            }
-          ]
-        }
-      ]
-      scale: {
-        minReplicas: 1
-        maxReplicas: 3
-        rules: [
-          {
-            name: 'http-rule'
-            http: {
-              metadata: {
-                concurrentRequests: '50'
-              }
-            }
-          }
-        ]
-      }
-    }
+    ]
+    ingressOrigins: [
+      'http://localhost:3000'
+      'https://*.azurewebsites.net'
+      'https://*.greenbier.com'
+      'https://${websiteDomain}'
+      'https://www.${websiteDomain}'
+    ]
+    targetPort: 8080
+    transport: 'auto'
+    minReplicas: minReplicas
+    maxReplicas: maxReplicas
+    httpConcurrentRequests: concurrentRequests
+    cpu: containerCpu
+    memory: containerMemory
+    revisionMode: 'Single'
   }
 }
 
-
-// ============================================================================
 // Outputs
-// ============================================================================
-output containerAppFqdn string = containerApp.properties.configuration.ingress.fqdn
-output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
-output storageAccountName string = storageAccount.name
+output containerAppFqdn string = containerApp.outputs.containerAppFqdn
+output containerAppUrl string = containerApp.outputs.containerAppUrl
+output storageAccountName string = storage.outputs.storageAccountName

@@ -1,12 +1,8 @@
 // Green Bier Sports Ventures - Shared Infrastructure
 // Deploy ONCE - shared across all sports (NBA, NCAAM, NFL, MLB, etc.)
 //
-// SINGLE SOURCE OF TRUTH:
-//   Resource Group: greenbier-enterprise-rg
-//   ACR:            greenbieracr
-//
 // Usage:
-//   az deployment group create -g greenbier-enterprise-rg -f infra/shared/main.bicep
+//   az deployment group create -g <shared-rg> -f infra/shared/main.bicep
 
 targetScope = 'resourceGroup'
 
@@ -14,8 +10,30 @@ targetScope = 'resourceGroup'
 param location string = resourceGroup().location
 
 @description('Environment (dev, staging, prod)')
-@allowed(['dev', 'staging', 'prod'])
+@allowed([
+  'dev'
+  'staging'
+  'prod'
+])
 param environment string = 'prod'
+
+@description('Semantic version for shared stack (tagging only)')
+param versionTag string = 'shared-1.0.0'
+
+@description('Application tag identifier')
+param appTag string = 'shared-platform'
+
+@description('Owner tag value')
+param ownerTag string = 'platform-eng'
+
+@description('Cost center tag value')
+param costCenterTag string = 'platform-shared'
+
+@description('Compliance tag value')
+param complianceTag string = 'internal'
+
+@description('Additional tags to merge onto all resources')
+param extraTags object = {}
 
 @description('Container Registry name (override to clone/shared per RG)')
 param containerRegistryName string = 'greenbieracr'
@@ -28,11 +46,17 @@ param containerAppEnvName string = 'greenbier-nba-env'
 
 // Naming
 var prefix = 'gbs'
-var tags = {
+var requiredTags = {
   enterprise: 'green-bier-sports-ventures'
   environment: environment
+  app: appTag
+  owner: ownerTag
+  cost_center: costCenterTag
+  compliance: complianceTag
+  version: versionTag
   managedBy: 'bicep'
 }
+var tags = union(requiredTags, extraTags)
 
 // ============================================================================
 // Container Registry (shared across all sports) - ACTUAL: greenbieracr
