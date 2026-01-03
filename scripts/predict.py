@@ -853,7 +853,7 @@ def main():
     random.seed(42)
     logger.info("Random seeds set to 42 for reproducibility")
     
-    print("\n⚠️  NOTE: Running in LOCAL mode. For Docker execution, use 'python scripts/run_slate.py' or './run.ps1'")
+    print("\nWARNING: Running in LOCAL mode. For Docker execution, use 'python scripts/run_slate.py' or './run.ps1'")
 
     parser = argparse.ArgumentParser(description="Generate NBA predictions for all markets")
     parser.add_argument("--date", help="Date for predictions (YYYY-MM-DD, 'today', or 'tomorrow')")

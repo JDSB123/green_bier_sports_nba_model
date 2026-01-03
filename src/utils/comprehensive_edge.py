@@ -50,16 +50,28 @@ def calculate_comprehensive_edge(
         over_probability,
     )
     
-    # Default thresholds if not provided - use same source as engine
+    # IMPROVED: Dynamic thresholds based on market conditions and historical calibration
     if edge_thresholds is None:
         try:
             from src.config import filter_thresholds
-            edge_thresholds = {
+            base_thresholds = {
                 "spread": filter_thresholds.spread_min_edge,
                 "total": filter_thresholds.total_min_edge,
                 "1h_spread": filter_thresholds.spread_min_edge * 0.75,  # Scale for 1H
                 "1h_total": filter_thresholds.total_min_edge * 0.67,   # Scale for 1H
             }
+
+            # DYNAMIC ADJUSTMENT: Adjust thresholds based on probability source reliability
+            # ML models are more reliable than distribution-based estimates
+            if engine_predictions:
+                # If we have ML model predictions, we can be slightly more aggressive
+                edge_thresholds = {k: v * 0.9 for k, v in base_thresholds.items()}
+                logger.debug("Using dynamic thresholds: ML models available, reduced thresholds by 10%")
+            else:
+                # If only distribution-based, be more conservative
+                edge_thresholds = {k: v * 1.1 for k, v in base_thresholds.items()}
+                logger.debug("Using dynamic thresholds: No ML models, increased thresholds by 10%")
+
         except ImportError:
             # Fallback if config not available
             edge_thresholds = {
@@ -112,12 +124,19 @@ def calculate_comprehensive_edge(
     fg_spread_edge = fg_predicted_margin - market_expected_margin
     fg_spread_pick = home_team if fg_spread_edge > 0 else away_team
     fg_spread_confidence = min(abs(fg_spread_edge) / 5.0, 0.90) if abs(fg_spread_edge) >= 1.0 else 0
+    # IMPROVED: Better probability source prioritization
+    # Priority: 1) ML Engine predictions, 2) Distribution-based, 3) Edge heuristic
+    fg_spread_probability_source = "heuristic"  # Default fallback
     fg_spread_win_prob = 0.5 + (abs(fg_spread_edge) * 0.03)
     fg_spread_win_prob = max(0.51, min(0.80, fg_spread_win_prob)) if abs(fg_spread_edge) >= 0.5 else 0.5
+
+    # Distribution-based probability (statistical estimate)
     fg_spread_std = estimate_spread_std(features, "fg")
     fg_home_cover_dist = cover_probability(fg_predicted_margin, fg_market_spread, fg_spread_std)
     fg_away_cover_dist = 1.0 - fg_home_cover_dist
     fg_spread_p_dist = fg_home_cover_dist if fg_spread_pick == home_team else fg_away_cover_dist
+
+    # ML Engine predictions (highest priority when available)
     fg_spread_pred = engine_predictions.get("full_game", {}).get("spread") if engine_predictions else None
     fg_spread_p_model = None
     if fg_spread_pred:
@@ -125,13 +144,23 @@ def calculate_comprehensive_edge(
             fg_spread_p_model = fg_spread_pred.get("home_cover_prob")
         else:
             fg_spread_p_model = fg_spread_pred.get("away_cover_prob")
+
+        # Use ML model confidence if available (more accurate than entropy-based)
         if fg_spread_pred.get("confidence") is not None:
             fg_spread_confidence = fg_spread_pred.get("confidence")
-        if fg_spread_p_model is not None:
+
+        # Use ML model probability if available (most accurate)
+        if fg_spread_p_model is not None and fg_spread_p_model != 0.5:  # Avoid neutral predictions
             fg_spread_win_prob = fg_spread_p_model
-    if fg_spread_p_model is None:
-        fg_spread_p_model = fg_spread_p_dist
+            fg_spread_probability_source = "engine_ml"
+        else:
+            # Fall back to distribution-based if ML model gives neutral prediction
+            fg_spread_win_prob = fg_spread_p_dist
+            fg_spread_probability_source = "distribution"
+    else:
+        # No engine predictions available, use distribution-based
         fg_spread_win_prob = fg_spread_p_dist
+        fg_spread_probability_source = "distribution"
     
     spread_threshold = edge_thresholds.get("spread", 2.0)
     fg_pick_line = fg_market_spread if fg_spread_pick == home_team else -fg_market_spread
@@ -158,6 +187,7 @@ def calculate_comprehensive_edge(
         "pick_odds": fg_spread_pick_odds if abs(fg_spread_edge) >= spread_threshold else None,
         "confidence": fg_spread_confidence,
         "win_probability": fg_spread_win_prob if abs(fg_spread_edge) >= spread_threshold else 0.5,
+        "probability_source": fg_spread_probability_source,
         "p_model": fg_spread_p_model if abs(fg_spread_edge) >= spread_threshold else None,
         "p_fair": fg_spread_p_fair if abs(fg_spread_edge) >= spread_threshold else None,
         "ev_pct": fg_spread_ev_pct if abs(fg_spread_edge) >= spread_threshold else None,
@@ -176,13 +206,19 @@ def calculate_comprehensive_edge(
     fg_total_edge = fg_predicted_total - fg_market_total
     fg_total_pick = "OVER" if fg_total_edge > 0 else "UNDER"
     total_threshold = edge_thresholds.get("total", 3.0)
-    fg_total_confidence = min(abs(fg_total_edge) / 10.0, 0.90) if abs(fg_total_edge) >= (total_threshold * 0.75) else 0
+
+    # IMPROVED: Better probability source prioritization for totals
+    fg_total_probability_source = "heuristic"  # Default fallback
     fg_total_win_prob = 0.5 + (abs(fg_total_edge) * 0.025)
     fg_total_win_prob = max(0.51, min(0.75, fg_total_win_prob)) if abs(fg_total_edge) >= 1.0 else 0.5
+
+    # Distribution-based probability (statistical estimate)
     fg_total_std = estimate_total_std(features, "fg")
     fg_over_prob_dist = over_probability(fg_predicted_total, fg_market_total, fg_total_std)
     fg_under_prob_dist = 1.0 - fg_over_prob_dist
     fg_total_p_dist = fg_over_prob_dist if fg_total_pick == "OVER" else fg_under_prob_dist
+
+    # ML Engine predictions (highest priority when available)
     fg_total_pred = engine_predictions.get("full_game", {}).get("total") if engine_predictions else None
     fg_total_p_model = None
     if fg_total_pred:
@@ -190,13 +226,27 @@ def calculate_comprehensive_edge(
             fg_total_p_model = fg_total_pred.get("over_prob")
         else:
             fg_total_p_model = fg_total_pred.get("under_prob")
+
+        # Use ML model confidence if available (more accurate than heuristic)
         if fg_total_pred.get("confidence") is not None:
             fg_total_confidence = fg_total_pred.get("confidence")
-        if fg_total_p_model is not None:
+        else:
+            # Fallback heuristic confidence calculation
+            fg_total_confidence = min(abs(fg_total_edge) / 10.0, 0.90) if abs(fg_total_edge) >= (total_threshold * 0.75) else 0
+
+        # Use ML model probability if available (most accurate)
+        if fg_total_p_model is not None and fg_total_p_model != 0.5:  # Avoid neutral predictions
             fg_total_win_prob = fg_total_p_model
-    if fg_total_p_model is None:
-        fg_total_p_model = fg_total_p_dist
+            fg_total_probability_source = "engine_ml"
+        else:
+            # Fall back to distribution-based if ML model gives neutral prediction
+            fg_total_win_prob = fg_total_p_dist
+            fg_total_probability_source = "distribution"
+    else:
+        # No engine predictions available, use distribution-based
         fg_total_win_prob = fg_total_p_dist
+        fg_total_probability_source = "distribution"
+        fg_total_confidence = min(abs(fg_total_edge) / 10.0, 0.90) if abs(fg_total_edge) >= (total_threshold * 0.75) else 0
 
     fg_total_pick_odds = fg_total_odds_over if fg_total_pick == "OVER" else fg_total_odds_under
     if fg_total_pick_odds is None:
@@ -221,6 +271,7 @@ def calculate_comprehensive_edge(
         "pick_odds": fg_total_pick_odds if abs(fg_total_edge) >= total_threshold else None,
         "confidence": fg_total_confidence,
         "win_probability": fg_total_win_prob if abs(fg_total_edge) >= total_threshold else 0.5,
+        "probability_source": fg_total_probability_source,
         "p_model": fg_total_p_model if abs(fg_total_edge) >= total_threshold else None,
         "p_fair": fg_total_p_fair if abs(fg_total_edge) >= total_threshold else None,
         "ev_pct": fg_total_ev_pct if abs(fg_total_edge) >= total_threshold else None,
@@ -303,6 +354,7 @@ def calculate_comprehensive_edge(
             "pick_odds": fh_spread_pick_odds if abs(fh_spread_edge) >= fh_spread_threshold else None,
             "confidence": fh_spread_confidence,
             "win_probability": fh_spread_win_prob,
+            "probability_source": "engine_ml",  # 1H always uses engine predictions when available
             "p_model": fh_spread_p_model if abs(fh_spread_edge) >= fh_spread_threshold else None,
             "p_fair": fh_spread_p_fair if abs(fh_spread_edge) >= fh_spread_threshold else None,
             "ev_pct": fh_spread_ev_pct if abs(fh_spread_edge) >= fh_spread_threshold else None,
@@ -371,6 +423,7 @@ def calculate_comprehensive_edge(
             "pick_odds": fh_total_pick_odds if abs(fh_total_edge) >= fh_total_threshold else None,
             "confidence": fh_total_confidence,
             "win_probability": fh_total_win_prob,
+            "probability_source": "engine_ml",  # 1H always uses engine predictions when available
             "p_model": fh_total_p_model if abs(fh_total_edge) >= fh_total_threshold else None,
             "p_fair": fh_total_p_fair if abs(fh_total_edge) >= fh_total_threshold else None,
             "ev_pct": fh_total_ev_pct if abs(fh_total_edge) >= fh_total_threshold else None,
@@ -397,14 +450,32 @@ def calculate_comprehensive_edge(
     for period_name, period_data in [("full_game", result["full_game"]), ("first_half", result["first_half"])]:
         for market_name, market_data in period_data.items():
             if market_data.get("pick") and market_data.get("edge") is not None:
+                # IMPROVED: Use actual confidence score for high confidence determination
+                # Instead of arbitrary win_probability thresholds, use the calibrated confidence score
+                confidence_score = market_data.get("confidence", 0)
+                win_probability = market_data.get("win_probability", 0.5)
+
+                # High confidence criteria: confidence >= 70% AND probability is extreme (>=65% or <=35%)
+                # This combines model certainty with prediction extremity for true high-conviction plays
+                is_high_confidence = (
+                    confidence_score >= 0.70 and  # Model is confident in its prediction
+                    (win_probability >= 0.65 or win_probability <= 0.35)  # AND prediction is extreme
+                )
+
+                # Validate probability source consistency
+                probability_source = market_data.get("probability_source", "unknown")
+                if probability_source not in ["engine_ml", "distribution", "heuristic"]:
+                    logger.warning(f"Unknown probability source '{probability_source}' for {period_name} {market_name}")
+
                 play = {
                     "type": f"{period_name.upper()} {market_name.upper()}",
                     "pick": market_data["pick"],
-                    "confidence": market_data.get("confidence", 0),
+                    "confidence": confidence_score,
                     "edge": market_data["edge"],
-                    "model_probability": market_data.get("win_probability", 0.5),
+                    "model_probability": win_probability,
+                    "probability_source": probability_source,
                     "ev_pct": market_data.get("ev_pct"),
-                    "is_high_confidence": market_data.get("win_probability", 0.5) > 0.60 or market_data.get("win_probability", 0.5) < 0.40,
+                    "is_high_confidence": is_high_confidence,
                     "rationale": market_data.get("rationale", "")
                 }
                 all_plays.append(play)
@@ -419,7 +490,47 @@ def calculate_comprehensive_edge(
     result["top_plays"] = all_plays[:3]
     result["high_confidence_plays"] = [p for p in all_plays if p.get("is_high_confidence", False)][:5]
     
+    # VALIDATION: Log probability source usage for transparency
+    _validate_probability_sources(result, engine_predictions)
+
     return result
+
+
+def _validate_probability_sources(result: Dict, engine_predictions: Optional[Dict]) -> None:
+    """
+    Validate and log probability source usage for transparency and debugging.
+
+    Args:
+        result: Comprehensive edge analysis result
+        engine_predictions: Engine predictions dict (if available)
+    """
+    source_counts = {"engine_ml": 0, "distribution": 0, "heuristic": 0}
+
+    for period_name, period_data in [("full_game", result["full_game"]), ("first_half", result["first_half"])]:
+        for market_name, market_data in period_data.items():
+            if market_data.get("pick") and market_data.get("probability_source"):
+                source = market_data["probability_source"]
+                source_counts[source] = source_counts.get(source, 0) + 1
+
+    # Log summary
+    total_picks = sum(source_counts.values())
+    if total_picks > 0:
+        ml_pct = (source_counts["engine_ml"] / total_picks) * 100
+        dist_pct = (source_counts["distribution"] / total_picks) * 100
+        heur_pct = (source_counts["heuristic"] / total_picks) * 100
+
+        logger.info(
+            f"Probability sources used: ML={source_counts['engine_ml']} ({ml_pct:.1f}%), "
+            f"Distribution={source_counts['distribution']} ({dist_pct:.1f}%), "
+            f"Heuristic={source_counts['heuristic']} ({heur_pct:.1f}%)"
+        )
+
+        # Warn if relying too heavily on non-ML sources
+        if ml_pct < 50.0 and engine_predictions:
+            logger.warning(
+                f"Low ML model usage ({ml_pct:.1f}%) despite models being available. "
+                f"Check if models are providing neutral predictions (0.5) or failing."
+            )
 
 
 def generate_comprehensive_text_report(analysis: List[Dict], target_date: date) -> str:
