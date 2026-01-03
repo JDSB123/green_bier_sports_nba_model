@@ -264,18 +264,19 @@
 │  └────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 │  ┌────────────────────────────────────────────────────────────────────┐    │
-│  │ 6.2: FETCH BETTING SPLITS (Action Network - Fallback)              │    │
+│  │ 6.2: FETCH BETTING SPLITS (Action Network - Premium + Public)       │    │
 │  │ Endpoint: POST https://api.actionnetwork.com/web/v1/auth/login     │    │
 │  │          GET https://api.actionnetwork.com/web/v1/games/nba        │    │
+│  │          GET https://api.actionnetwork.com/web/v1/scoreboard/nba   │    │
 │  │ Params:                                                              │    │
-│  │   - Requires ACTION_NETWORK_USERNAME                                │    │
-│  │   - Requires ACTION_NETWORK_PASSWORD                                │    │
+│  │   - ACTION_NETWORK_USERNAME (optional - enables premium access)     │    │
+│  │   - ACTION_NETWORK_PASSWORD (optional - enables premium access)     │    │
 │  │ ───────────────────────────────────────────────────────────────    │    │
-│  │ Response: HTML/JSON with betting splits                             │    │
-│  │ Fields: Public percentages, ticket/money splits                     │    │
-│  │ Purpose: Fallback when The Odds API splits unavailable              │    │
-│  │ Status: ✅ OPTIMIZED (fallback path)                                │    │
-│  │ Note: Only fetches recent dates (last 30 days)                      │    │
+│  │ Response: JSON with betting splits                                  │    │
+│  │ Fields: Public percentages, ticket/money splits, expert picks       │    │
+│  │ Purpose: Primary betting splits source (premium when available)     │    │
+│  │ Status: ✅ ENHANCED (premium auth + public fallback)               │    │
+│  │ Note: Premium access provides Action PRO/Labs features              │    │
 │  └────────────────────────────────────────────────────────────────────┘    │
 │                                                                              │
 │  Added Features:                                                             │

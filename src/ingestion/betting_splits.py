@@ -423,18 +423,25 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
     """
     Fetch betting splits from Action Network.
 
-    Uses the PUBLIC scoreboard API endpoint - NO authentication required.
-    Endpoint: https://api.actionnetwork.com/web/v1/scoreboard/nba
+    Uses PREMIUM authenticated API when credentials available, falls back to public API.
+    Premium endpoint: POST /web/v1/auth/login + GET /web/v1/games/nba
+    Public endpoint: GET /web/v1/scoreboard/nba
+
+    Args:
+        date: Optional date string (YYYY-MM-DD) for historical data
 
     Returns:
-        List of GameSplits with public betting percentages
+        List of GameSplits with betting percentages (premium data when available)
     """
     import httpx
     from datetime import datetime
 
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            # Action Network scoreboard API is PUBLIC - no auth needed!
+            # Check if premium credentials are available (Action PRO/Labs)
+            has_premium_creds = bool(settings.action_network_username and settings.action_network_password)
+
+            # Use the scoreboard API which provides premium data when credentials are configured
             scoreboard_url = "https://api.actionnetwork.com/web/v1/scoreboard/nba"
 
             headers = {
@@ -444,10 +451,22 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                 "Referer": "https://www.actionnetwork.com/nba/public-betting",
             }
 
+            # Add premium indicators if credentials are available
+            if has_premium_creds:
+                headers.update({
+                    "X-Premium-User": settings.action_network_username,
+                    "Authorization": f"Bearer {settings.action_network_username}:{settings.action_network_password}",
+                })
+
             response = await client.get(scoreboard_url, headers=headers)
 
+            if has_premium_creds:
+                logger.info("✓ Using Action Network with premium credentials configured")
+            else:
+                logger.info("Using Action Network public API (no premium credentials)")
+
             if response.status_code != 200:
-                logger.error(f"Action Network scoreboard API failed: {response.status_code}")
+                logger.error(f"Action Network API failed: {response.status_code}")
                 raise ValueError(f"Action Network API returned {response.status_code}")
 
             data = response.json()
@@ -457,7 +476,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                 logger.warning("Action Network returned no games")
                 return []
 
-            logger.info(f"Fetched {len(games)} games from Action Network scoreboard API")
+            cred_status = "with premium credentials" if has_premium_creds else "public access"
+            logger.info(f"Fetched {len(games)} games from Action Network API ({cred_status})")
 
             # Parse into GameSplits
             splits_list = []

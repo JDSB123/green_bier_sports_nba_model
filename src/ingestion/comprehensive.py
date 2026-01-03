@@ -459,7 +459,11 @@ class ComprehensiveIngestion:
     async def fetch_action_network_splits(self, target_date: Optional[str] = None) -> List[Dict]:
         """Fetch betting splits from Action Network.
 
-        Requires ACTION_NETWORK_USERNAME and ACTION_NETWORK_PASSWORD.
+        Uses premium authenticated API when ACTION_NETWORK_USERNAME and ACTION_NETWORK_PASSWORD
+        are configured, otherwise falls back to public API.
+
+        Premium access provides Action PRO/Labs features including expert picks and advanced analytics.
+        Public access provides basic betting percentages.
 
         TTL: 2 hours
 
@@ -468,11 +472,11 @@ class ComprehensiveIngestion:
         """
         from src.ingestion.betting_splits import fetch_splits_action_network
 
-        # Check if credentials are configured
+        # Check if credentials are configured (optional - premium access)
         if not settings.action_network_username or not settings.action_network_password:
-            logger.info("Action Network credentials not configured - skipping")
-            self._record_result("action_network", "/games/nba", False, 0, error="No credentials")
-            return []
+            logger.info("Action Network credentials not configured - using public API")
+        else:
+            logger.info("Action Network premium credentials configured - using authenticated API")
 
         target = target_date or date.today().isoformat()
         key = f"action_network_splits_{target}"

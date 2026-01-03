@@ -132,8 +132,8 @@ class Settings:
     
     # Optional API Keys (None if not set)
     betsapi_key: Optional[str] = field(default_factory=lambda: _env_optional("BETSAPI_KEY"))
-    action_network_username: Optional[str] = field(default_factory=lambda: _env_optional("ACTION_NETWORK_USERNAME"))
-    action_network_password: Optional[str] = field(default_factory=lambda: _env_optional("ACTION_NETWORK_PASSWORD"))
+    action_network_username: Optional[str] = field(default_factory=lambda: read_secret_lax("ACTION_NETWORK_USERNAME"))
+    action_network_password: Optional[str] = field(default_factory=lambda: read_secret_lax("ACTION_NETWORK_PASSWORD"))
     kaggle_api_token: Optional[str] = field(default_factory=lambda: _env_optional("KAGGLE_API_TOKEN"))
 
     # API base URLs (with defaults for import compatibility)
