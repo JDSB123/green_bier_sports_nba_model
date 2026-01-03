@@ -24,11 +24,14 @@ Resource Group: nba-gbsv-model-rg
   │       ├─ Port: 8090
   │       └─ Scaling: 1-3 replicas
   │
-  └─ TEAMS BOT
+  └─ TEAMS BOT (Optional - requires deployTeamsBot=true)
       ├─ App Service Plan: nba-gbsv-func-plan (Consumption)
       ├─ Function App: nba-picks-trigger (Python 3.11)
       └─ Bot Service: nba-picks-bot
 ```
+
+> **Note:** Teams Bot deployment requires Azure quota for Dynamic VMs in the target region.
+> Set `deployTeamsBot=true` in Bicep parameters to enable.
 
 ## Resource Names
 

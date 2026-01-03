@@ -67,6 +67,9 @@ param botServiceName string = 'nba-picks-bot'
 @description('App Service Plan name for Function App')
 param appServicePlanName string = 'nba-gbsv-func-plan'
 
+@description('Deploy Teams Bot resources (Function App, Bot Service). Requires Azure quota for Dynamic VMs.')
+param deployTeamsBot bool = false
+
 // API Keys (required)
 @description('The Odds API Key (required)')
 @secure()
@@ -282,11 +285,13 @@ module containerApp '../modules/containerApp.bicep' = {
 }
 
 // =============================================================================
-// TEAMS BOT LAYER (Function App + Bot Service)
+// TEAMS BOT LAYER (Function App + Bot Service) - OPTIONAL
+// Requires Azure quota for Dynamic VMs in the target region.
+// Set deployTeamsBot=true to enable.
 // =============================================================================
 
 // App Service Plan (Consumption/Dynamic for Function App)
-resource funcAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+resource funcAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = if (deployTeamsBot) {
   name: appServicePlanName
   location: location
   tags: tags
@@ -304,7 +309,7 @@ resource funcAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 }
 
 // Function App for Teams Bot trigger
-resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
+resource functionApp 'Microsoft.Web/sites@2023-01-01' = if (deployTeamsBot) {
   name: functionAppName
   location: location
   tags: tags
@@ -330,7 +335,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
 }
 
 // Bot Service
-resource botService 'Microsoft.BotService/botServices@2022-09-15' = if (microsoftAppId != '') {
+resource botService 'Microsoft.BotService/botServices@2022-09-15' = if (deployTeamsBot && microsoftAppId != '') {
   name: botServiceName
   location: 'global'
   tags: tags
@@ -357,5 +362,5 @@ output storageAccountName string = storage.outputs.storageAccountName
 output acrLoginServer string = acr.properties.loginServer
 output keyVaultUri string = keyVault.properties.vaultUri
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
-output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
-output botEndpoint string = microsoftAppId != '' ? 'https://${functionApp.properties.defaultHostName}/api/bot' : ''
+output functionAppUrl string = deployTeamsBot ? 'https://${functionApp.properties.defaultHostName}' : ''
+output botEndpoint string = deployTeamsBot && microsoftAppId != '' ? 'https://${functionApp.properties.defaultHostName}/api/bot' : ''
