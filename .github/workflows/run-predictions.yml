@@ -1,0 +1,127 @@
+# NBA Predictions Runner
+# Manually triggered workflow to generate predictions for tonight's slate
+# 
+# Usage:
+#   1. Go to Actions tab in GitHub
+#   2. Select "Run NBA Predictions"
+#   3. Click "Run workflow"
+#   4. Choose date (today/tomorrow or specific date)
+#   5. Optionally filter by matchup
+#
+# Requirements:
+#   - Azure credentials configured (AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID)
+#   - Container app deployed (nba-gbsv-api)
+
+name: Run NBA Predictions
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date for predictions'
+        required: true
+        default: 'today'
+        type: choice
+        options:
+          - today
+          - tomorrow
+      matchup:
+        description: 'Optional: Filter by team (e.g., "Lakers")'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  RESOURCE_GROUP: nba-gbsv-model-rg
+  CONTAINER_APP_NAME: nba-gbsv-api
+
+jobs:
+  run-predictions:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install requests python-dotenv
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Container App FQDN
+        id: get-fqdn
+        run: |
+          FQDN=$(az containerapp show \
+            -n ${{ env.CONTAINER_APP_NAME }} \
+            -g ${{ env.RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn \
+            -o tsv)
+          echo "fqdn=$FQDN" >> $GITHUB_OUTPUT
+          echo "Container App URL: https://$FQDN"
+
+      - name: Check API Health
+        run: |
+          echo "Checking API health..."
+          response=$(curl -s "https://${{ steps.get-fqdn.outputs.fqdn }}/health" || echo "failed")
+          echo "$response"
+          
+          if echo "$response" | grep -q "engine_loaded"; then
+            echo "✅ API is healthy"
+          else
+            echo "❌ API health check failed"
+            exit 1
+          fi
+
+      - name: Run Predictions
+        id: predictions
+        run: |
+          echo "Fetching predictions for: ${{ inputs.date }}"
+          
+          # Build URL with parameters
+          URL="https://${{ steps.get-fqdn.outputs.fqdn }}/slate/${{ inputs.date }}/comprehensive?use_splits=true"
+          
+          echo "Calling: $URL"
+          
+          # Fetch predictions
+          curl -s "$URL" > predictions.json
+          
+          # Check if successful
+          if [ ! -s predictions.json ]; then
+            echo "❌ Failed to fetch predictions"
+            exit 1
+          fi
+          
+          # Parse and display results using external script
+          python3 scripts/display_predictions.py predictions.json
+
+      - name: Save Predictions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nba-predictions-${{ inputs.date }}-${{ github.run_number }}
+          path: |
+            predictions.json
+            predictions_summary.json
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "✅ Predictions generated successfully"
+          echo "📊 Results saved as workflow artifact"
+          echo ""
+          echo "View predictions:"
+          echo "1. Go to Actions > This workflow run"
+          echo "2. Download artifact: nba-predictions-${{ inputs.date }}-${{ github.run_number }}"
