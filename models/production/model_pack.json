@@ -50,24 +50,30 @@
     "fg_spread": {
       "status": "production",
       "model_file": "fg_spread_model.joblib",
-      "features": 9
+      "features": 29,
+      "feature_source": "bundled in joblib"
     },
     "fg_total": {
       "status": "production",
       "model_file": "fg_total_model.joblib",
-      "features": 9
+      "features": 15,
+      "feature_source": "bundled in joblib"
     },
     "1h_spread": {
       "status": "production",
       "model_file": "1h_spread_model.pkl",
       "features_file": "1h_spread_features.pkl",
-      "features": 10
+      "features": 58,
+      "feature_source": "separate pkl file",
+      "note": "Uses FG-style features (not 1H-specific suffixes)"
     },
     "1h_total": {
       "status": "production",
       "model_file": "1h_total_model.pkl",
       "features_file": "1h_total_features.pkl",
-      "features": 10
+      "features": 58,
+      "feature_source": "separate pkl file",
+      "note": "Uses FG-style features (not 1H-specific suffixes)"
     }
   },
   "filter_thresholds": {
