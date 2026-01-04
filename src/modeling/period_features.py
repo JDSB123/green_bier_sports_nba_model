@@ -277,14 +277,13 @@ def get_model_features(period: str, market: str) -> List[str]:
 # =============================================================================
 
 MODEL_CONFIGS: Dict[str, Dict] = {
-    # First Half Models (using .pkl format with separate features file)
+    # First Half Models (v33.1.0: standardized to .joblib format, bundled features)
     "1h_spread": {
         "period": "1h",
         "market": "spread",
         "label_col": "1h_spread_covered",
         "line_col": "1h_spread_line",
-        "model_file": "1h_spread_model.pkl",
-        "features_file": "1h_spread_features.pkl",
+        "model_file": "1h_spread_model.joblib",
         "features": get_model_features("1h", "spread"),
     },
     "1h_total": {
@@ -292,8 +291,7 @@ MODEL_CONFIGS: Dict[str, Dict] = {
         "market": "total",
         "label_col": "1h_total_over",
         "line_col": "1h_total_line",
-        "model_file": "1h_total_model.pkl",
-        "features_file": "1h_total_features.pkl",
+        "model_file": "1h_total_model.joblib",
         "features": get_model_features("1h", "total"),
     },
     # Full Game Models

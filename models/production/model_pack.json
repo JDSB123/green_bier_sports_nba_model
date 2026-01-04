@@ -1,14 +1,21 @@
 {
-  "version": "NBA_v33.0.8.0",
-  "created_at": "2025-12-28T00:00:00Z",
-  "git_commit": "manual-sync",
-  "git_tag": "NBA_v33.0.8.0",
-  "release_notes": "NBA_v33.0.8.0 Production - 4 markets (1H+FG spreads/totals), edge-based bet_side, classifier drift checks",
+  "version": "NBA_v33.1.0.0",
+  "created_at": "2026-01-04T00:00:00Z",
+  "git_commit": "pending",
+  "git_tag": "NBA_v33.1.0.0",
+  "release_notes": "v33.1.0.0 Architecture Fix - Removed silent fallback that caused 1H models to use FG features. All models now use .joblib format with bundled features. Training pipeline now fails loudly if 1H features unavailable.",
+  "changes": [
+    "BREAKING: 1H models now require 1H-specific features (home_ppg_1h, predicted_margin_1h, etc.)",
+    "FIX: Removed silent fallback in train_models.py that caused 1H to use FG features",
+    "FIX: Standardized all models to .joblib format with bundled features",
+    "FIX: Same 30% feature threshold for all models (no special 15% for 1H)"
+  ],
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-20",
     "total_predictions": 464,
-    "source": "docs/BACKTEST_STATUS.md"
+    "source": "docs/BACKTEST_STATUS.md",
+    "note": "Backtest results from v33.0.8.0 - rerun required after retraining"
   },
   "backtest_results": {
     "fg_spread": {
@@ -24,16 +31,16 @@
       "status": "production"
     },
     "1h_spread": {
-      "accuracy": 0.559,
-      "roi": 0.082,
+      "accuracy": "pending_retrain",
+      "roi": "pending_retrain",
       "predictions": 232,
-      "status": "production"
+      "status": "awaiting_retrain"
     },
     "1h_total": {
-      "accuracy": 0.581,
-      "roi": 0.114,
+      "accuracy": "pending_retrain",
+      "roi": "pending_retrain",
       "predictions": 232,
-      "status": "production"
+      "status": "awaiting_retrain"
     }
   },
   "model_algorithm": {
@@ -44,7 +51,8 @@
   "training_data": {
     "source": "data/processed/training_data.csv",
     "date_range": "2024-10-02 to 2025-12-20",
-    "validation": "walk-forward (no leakage)"
+    "validation": "walk-forward (no leakage)",
+    "requirements": "Must include 1H-specific features (home_ppg_1h, predicted_margin_1h, etc.)"
   },
   "market_status": {
     "fg_spread": {
@@ -60,20 +68,18 @@
       "feature_source": "bundled in joblib"
     },
     "1h_spread": {
-      "status": "production",
-      "model_file": "1h_spread_model.pkl",
-      "features_file": "1h_spread_features.pkl",
-      "features": 58,
-      "feature_source": "separate pkl file",
-      "note": "Uses FG-style features (not 1H-specific suffixes)"
+      "status": "awaiting_retrain",
+      "model_file": "1h_spread_model.joblib",
+      "features": "~30 (1H-specific)",
+      "feature_source": "bundled in joblib",
+      "expected_features": ["home_ppg_1h", "away_ppg_1h", "predicted_margin_1h", "1h_spread_line", "etc."]
     },
     "1h_total": {
-      "status": "production",
-      "model_file": "1h_total_model.pkl",
-      "features_file": "1h_total_features.pkl",
-      "features": 58,
-      "feature_source": "separate pkl file",
-      "note": "Uses FG-style features (not 1H-specific suffixes)"
+      "status": "awaiting_retrain",
+      "model_file": "1h_total_model.joblib",
+      "features": "~20 (1H-specific)",
+      "feature_source": "bundled in joblib",
+      "expected_features": ["home_ppg_1h", "away_ppg_1h", "predicted_total_1h", "1h_total_line", "etc."]
     }
   },
   "filter_thresholds": {
@@ -89,9 +95,15 @@
   "deployment": {
     "container_app": "nba-gbsv-api",
     "resource_group": "nba-gbsv-model-rg",
-    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0",
+    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.1.0.0",
     "health_endpoint": "/health",
     "markets_required": 4
   },
+  "next_steps": [
+    "1. Run: python scripts/build_fresh_training_data.py",
+    "2. Run: python scripts/train_models.py",
+    "3. Run backtest to validate performance",
+    "4. Deploy to Azure"
+  ],
   "performance_history": []
 }
