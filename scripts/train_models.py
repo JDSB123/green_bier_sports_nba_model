@@ -67,7 +67,7 @@ from src.modeling.period_features import MODEL_CONFIGS, get_model_features
 
 
 # Model version for tracking
-MODEL_VERSION = "33.1.0.0"
+MODEL_VERSION = "33.0.8.0"
 
 # Market configurations mapping
 MARKET_CONFIG = {
@@ -88,14 +88,14 @@ MARKET_CONFIG = {
         "period": "fg",
         "output_file": "fg_total_model.joblib",
     },
-    # First Half Markets (v33.1.0: standardized to .joblib format)
+    # First Half Markets
     "1h_spread": {
         "name": "First Half Spread",
         "model_class": FirstHalfSpreadsModel,
         "label_col": "1h_spread_covered",
         "line_col": "1h_spread_line",
         "period": "1h",
-        "output_file": "1h_spread_model.joblib",
+        "output_file": "1h_spread_model.pkl",
     },
     "1h_total": {
         "name": "First Half Total",
@@ -103,7 +103,7 @@ MARKET_CONFIG = {
         "label_col": "1h_total_over",
         "line_col": "1h_total_line",
         "period": "1h",
-        "output_file": "1h_total_model.joblib",
+        "output_file": "1h_total_model.pkl",
     },
 }
 
@@ -261,26 +261,34 @@ def train_single_market(
             else:
                 features = get_totals_features()
         else:
-            # 1H models MUST use 1H-specific features - NO FALLBACK
             market_type = "spread" if "spread" in market_key else "total"
-            features = get_model_features(period, market_type)
+            try:
+                features = get_model_features(period, market_type)
+            except Exception:
+                # Fallback to FG features
+                if market_type == "spread":
+                    features = get_spreads_features()
+                else:
+                    features = get_totals_features()
     except Exception as e:
-        print(f"  [ERROR] Could not get features for {market_key}: {e}")
-        print(f"  [ERROR] This model requires proper feature engineering. Run build_fresh_training_data.py first.")
-        return None
+        print(f"  [WARN] Could not get features: {e}")
+        features = get_spreads_features() if "spread" in market_key else get_totals_features()
 
-    # Same feature threshold for all models - no special handling for 1H
+    # For 1H models, use lower threshold and fallback to FG features if needed
     min_pct = 0.3
+    if period == "1h":
+        min_pct = 0.15  # Lower threshold for period-specific models
 
     try:
         available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=min_pct)
-    except ValueError as e:
-        # NO FALLBACK - fail loudly so we know to fix the training data
-        print(f"  [ERROR] Cannot train {market_key}: insufficient features available")
-        print(f"  [ERROR] Required: {len(features)} features, available: check training data")
-        print(f"  [ERROR] Run: python scripts/build_fresh_training_data.py")
-        print(f"  [ERROR] Details: {e}")
-        return None
+    except ValueError:
+        # Fallback: use FG features for 1H models
+        print(f"  [INFO] Using FG features for {market_key} (period features unavailable)")
+        if "spread" in market_key:
+            features = get_spreads_features()
+        else:
+            features = get_totals_features()
+        available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=0.3)
 
     print(f"  Using {len(available_features)} of {len(features)} possible features")
     

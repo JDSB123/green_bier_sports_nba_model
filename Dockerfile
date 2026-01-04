@@ -1,4 +1,4 @@
-# NBA_v33.1.0.0 - Production Container - STRICT MODE
+# NBA_v33.0.8.0 - Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
 #
 # STRICT MODE: FRESH DATA ONLY
@@ -11,8 +11,8 @@
 # 4 INDEPENDENT MARKETS (1H + FG x Spread/Total):
 #
 # First Half (2):
-# - Spread: 1h_spread_model.joblib (v33.1.0: 1H-specific features)
-# - Total: 1h_total_model.joblib (v33.1.0: 1H-specific features)
+# - Spread: 1h_spread_model.pkl (55.9% accuracy, +8.2% ROI)
+# - Total: 1h_total_model.pkl (58.1% accuracy, +11.4% ROI)
 #
 # Full Game (2):
 # - Spread: fg_spread_model.joblib (60.6% accuracy, +15.7% ROI)
@@ -45,7 +45,7 @@ FROM python:3.11.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="NBA_v33.1.0.0"
+LABEL version="NBA_v33.0.8.0"
 LABEL description="NBA Production Picks Model - STRICT MODE - 4 Independent Markets (1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app

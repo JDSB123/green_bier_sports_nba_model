@@ -95,8 +95,6 @@ def load_first_half_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
     """
     Load 1H spread model with feature columns.
 
-    v33.1.0: Standardized to .joblib format with bundled features.
-
     Args:
         models_dir: Path to models directory
 
@@ -106,27 +104,17 @@ def load_first_half_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
     Raises:
         FileNotFoundError: If model not found
     """
-    # v33.1.0: Use .joblib format (same as FG models)
-    model_path = models_dir / "1h_spread_model.joblib"
+    model_path = models_dir / "1h_spread_model.pkl"
+    features_path = models_dir / "1h_spread_features.pkl"
 
-    # Fallback to legacy .pkl format for backward compatibility
     if not model_path.exists():
-        legacy_path = models_dir / "1h_spread_model.pkl"
-        if legacy_path.exists():
-            features_path = models_dir / "1h_spread_features.pkl"
-            model = joblib.load(legacy_path)
-            feature_cols = joblib.load(features_path) if features_path.exists() else []
-            return model, feature_cols
         raise FileNotFoundError(
             f"1H spread model not found at {model_path}. "
-            f"Run: python scripts/train_models.py"
+            f"Run: python scripts/train_first_half_models.py"
         )
 
-    model_data = joblib.load(model_path)
-
-    # Support both formats
-    model = model_data.get("pipeline") or model_data.get("model")
-    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+    model = joblib.load(model_path)
+    feature_cols = joblib.load(features_path)
 
     return model, feature_cols
 
@@ -135,8 +123,6 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
     """
     Load 1H total model with feature columns.
 
-    v33.1.0: Standardized to .joblib format with bundled features.
-
     Args:
         models_dir: Path to models directory
 
@@ -146,27 +132,17 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
     Raises:
         FileNotFoundError: If model not found
     """
-    # v33.1.0: Use .joblib format (same as FG models)
-    model_path = models_dir / "1h_total_model.joblib"
+    model_path = models_dir / "1h_total_model.pkl"
+    features_path = models_dir / "1h_total_features.pkl"
 
-    # Fallback to legacy .pkl format for backward compatibility
     if not model_path.exists():
-        legacy_path = models_dir / "1h_total_model.pkl"
-        if legacy_path.exists():
-            features_path = models_dir / "1h_total_features.pkl"
-            model = joblib.load(legacy_path)
-            feature_cols = joblib.load(features_path) if features_path.exists() else []
-            return model, feature_cols
         raise FileNotFoundError(
             f"1H total model not found at {model_path}. "
-            f"Run: python scripts/train_models.py"
+            f"Run: python scripts/train_first_half_models.py"
         )
 
-    model_data = joblib.load(model_path)
-
-    # Support both formats
-    model = model_data.get("pipeline") or model_data.get("model")
-    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+    model = joblib.load(model_path)
+    feature_cols = joblib.load(features_path)
 
     return model, feature_cols
 
