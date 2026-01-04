@@ -1193,12 +1193,94 @@ def teams_bot(req: func.HttpRequest) -> func.HttpResponse:
         lines.append(f"{time_cst:<12} | {matchup:<50} | {segment:<3} | {pick_with_odds:<28} | {model_pred:<24} | {market_line:<8} | {edge:<9} | {fire_display}")
 
     lines.append("```")
+    lines.append("")
+    lines.append("📊 [View Full Dashboard](https://nba-picks-trigger.azurewebsites.net/api/dashboard) | 📥 [Download CSV](https://nba-picks-trigger.azurewebsites.net/api/csv)")
 
     text_response = "\n".join(lines)
 
+    # Build Adaptive Card with HTML table embedded and action buttons
+    # Count tiers for summary
+    elite_count = len([p for p in sorted_plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
+    strong_count = len([p for p in sorted_plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
+    good_count = len([p for p in sorted_plays if get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
+
+    # Build HTML table for the card
+    html_rows = []
+    for p in sorted_plays[:10]:  # Limit to 10 for Teams size limits
+        fire_rating = p.get("fire_rating", "")
+        fire_map = {"ELITE": "🔥🔥🔥", "STRONG": "🔥🔥", "GOOD": "🔥"}
+        fire_display = fire_map.get(fire_rating, "-")
+        
+        time_cst = p.get("time_cst", "")
+        matchup = p.get("matchup", "")[:35]
+        segment = p.get("period", "FG")
+        pick = p.get("pick", "")[:20]
+        edge = p.get("edge", "N/A")
+        
+        html_rows.append(f"| {time_cst} | {matchup} | {segment} | **{pick}** | {edge} | {fire_display} |")
+
+    table_md = "| Time | Matchup | Seg | Pick | Edge | Fire |\n|---|---|---|---|---|---|\n" + "\n".join(html_rows)
+
     response_msg = {
         "type": "message",
-        "text": text_response
+        "attachments": [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "type": "AdaptiveCard",
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "version": "1.4",
+                "body": [
+                    {
+                        "type": "TextBlock",
+                        "text": "🏀 GREEN BIER NBA PICKS",
+                        "weight": "Bolder",
+                        "size": "Large",
+                        "color": "Good"
+                    },
+                    {
+                        "type": "TextBlock",
+                        "text": f"{generated_at}{filter_label}",
+                        "size": "Small",
+                        "isSubtle": True
+                    },
+                    {
+                        "type": "ColumnSet",
+                        "columns": [
+                            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": f"🔥🔥🔥 {elite_count}", "weight": "Bolder", "color": "Attention"}]},
+                            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": f"🔥🔥 {strong_count}", "weight": "Bolder", "color": "Warning"}]},
+                            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": f"🔥 {good_count}", "weight": "Bolder", "color": "Good"}]},
+                            {"type": "Column", "width": "auto", "items": [{"type": "TextBlock", "text": f"Total: {len(sorted_plays)}", "weight": "Bolder"}]}
+                        ]
+                    },
+                    {
+                        "type": "TextBlock",
+                        "text": table_md,
+                        "wrap": True,
+                        "size": "Small",
+                        "spacing": "Medium"
+                    },
+                    {
+                        "type": "TextBlock",
+                        "text": f"Showing top {min(10, len(sorted_plays))} of {len(sorted_plays)} picks",
+                        "size": "Small",
+                        "isSubtle": True,
+                        "spacing": "Small"
+                    }
+                ],
+                "actions": [
+                    {
+                        "type": "Action.OpenUrl",
+                        "title": "📊 View Full Dashboard",
+                        "url": "https://nba-picks-trigger.azurewebsites.net/api/dashboard"
+                    },
+                    {
+                        "type": "Action.OpenUrl",
+                        "title": "📥 Download CSV",
+                        "url": "https://nba-picks-trigger.azurewebsites.net/api/csv"
+                    }
+                ]
+            }
+        }]
     }
 
     logging.info(f"Sending {len(sorted_plays)} picks to Teams")
