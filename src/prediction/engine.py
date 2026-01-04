@@ -18,6 +18,7 @@ predicted totals (not scaled from FG).
 v33.0.8.0 FIXES:
     - bet_side now based on EDGE calculation, not classifier
     - Added classifier sanity check to detect data drift (extreme probabilities)
+    - FIXED: 1H models now use 1H-specific features (not FG features)
     - Simple filter: confidence + edge thresholds (NO dual-signal requirement)
 
 FEATURE VALIDATION:
@@ -81,6 +82,112 @@ class ModelNotFoundError(Exception):
     pass
 
 
+def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
+    """
+    Map 1H-specific feature names to FG feature names for model compatibility.
+
+    The 1H models were trained on FG feature names but should use 1H data.
+    This function copies 1H features to the FG feature names the model expects.
+
+    Args:
+        features: Dict with both FG and 1H features
+
+    Returns:
+        Dict with 1H features mapped to FG names (for 1H model predictions)
+    """
+    mapped_features = dict(features)  # Copy all features
+
+    # Core statistical features mapping
+    feature_mappings = {
+        # PPG (points per game)
+        "home_ppg_1h": "home_ppg",
+        "away_ppg_1h": "away_ppg",
+        "home_papg_1h": "home_papg",
+        "away_papg_1h": "away_papg",
+
+        # Margins
+        "home_margin_1h": "home_avg_margin",
+        "away_margin_1h": "away_avg_margin",
+
+        # Differentials
+        "ppg_diff_1h": "ppg_diff",
+        "margin_diff_1h": "win_pct_diff",  # Using win_pct_diff as closest equivalent
+
+        # Win rates
+        "home_1h_win_pct": "home_win_pct",
+        "away_1h_win_pct": "away_win_pct",
+
+        # Pace
+        "home_pace_1h": "home_pace_factor",
+        "away_pace_1h": "away_pace_factor",
+
+        # Recent form (last 5)
+        "home_l5_margin_1h": "home_l5_margin",
+        "away_l5_margin_1h": "away_l5_margin",
+
+        # Recent form (last 10)
+        "home_l10_margin_1h": "home_l10_margin",
+        "away_l10_margin_1h": "away_l10_margin",
+
+        # Consistency (standard deviation)
+        "home_margin_std_1h": "home_form_adj",  # Using form_adj as closest equivalent
+        "away_margin_std_1h": "away_form_adj",
+
+        # Efficiency ratings
+        "home_ortg_1h": "home_ortg",
+        "away_ortg_1h": "away_ortg",
+        "home_drtg_1h": "home_drtg",
+        "away_drtg_1h": "away_drtg",
+        "home_net_rtg_1h": "home_net_rtg",
+        "away_net_rtg_1h": "away_net_rtg",
+
+        # Position (standings)
+        "home_position_1h": "home_position",
+        "away_position_1h": "away_position",
+
+        # H2H
+        "h2h_margin_1h": "h2h_win_rate",  # Using win_rate as closest equivalent
+
+        # Rest (same for both periods)
+        "home_rest_days_1h": "home_rest_days",
+        "away_rest_days_1h": "away_rest_days",
+        "home_rest_adj_1h": "home_rest_adj",
+        "away_rest_adj_1h": "away_rest_adj",
+        "rest_margin_adj_1h": "rest_margin_adj",
+
+        # Travel (same for both periods)
+        "away_travel_distance_1h": "away_travel_distance",
+        "away_timezone_change_1h": "away_timezone_change",
+        "away_travel_fatigue_1h": "away_travel_fatigue",
+        "is_away_long_trip_1h": "is_away_long_trip",
+        "is_away_cross_country_1h": "is_away_cross_country",
+        "away_b2b_travel_penalty_1h": "away_b2b_travel_penalty",
+        "travel_advantage_1h": "travel_advantage",
+
+        # Home court advantage
+        "dynamic_hca_1h": "home_court_advantage",
+
+        # Injuries (same for both periods)
+        "home_injury_impact_ppg_1h": "home_injury_impact_ppg",
+        "away_injury_impact_ppg_1h": "away_injury_impact_ppg",
+        "injury_margin_adj_1h": "injury_margin_adj",
+
+        # Elo (same for both periods)
+        "home_elo_1h": "home_elo",
+        "away_elo_1h": "away_elo",
+        "elo_diff_1h": "elo_diff",
+        "elo_prob_home_1h": "elo_prob_home",
+    }
+
+    # Apply mappings - copy 1H features to FG names if they exist
+    for h1_feature, fg_feature in feature_mappings.items():
+        if h1_feature in features:
+            mapped_features[fg_feature] = features[h1_feature]
+            logger.debug(f"Mapped {h1_feature} -> {fg_feature} = {features[h1_feature]}")
+
+    return mapped_features
+
+
 class PeriodPredictor:
     """
     Predictor for a single period (1H or FG).
@@ -114,6 +221,11 @@ class PeriodPredictor:
 
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
+
+        # FIX: For 1H models, map 1H features to FG feature names that the model expects
+        if self.period == "1h":
+            features = map_1h_features_to_fg_names(features)
+            logger.debug(f"[{self.period}_spread] Mapped 1H features to FG names for model compatibility")
 
         # Prepare features using unified validation (add line context for compatibility)
         margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
@@ -237,6 +349,11 @@ class PeriodPredictor:
 
         import pandas as pd
         from src.prediction.confidence import calculate_confidence_from_probabilities
+
+        # FIX: For 1H models, map 1H features to FG feature names that the model expects
+        if self.period == "1h":
+            features = map_1h_features_to_fg_names(features)
+            logger.debug(f"[{self.period}_total] Mapped 1H features to FG names for model compatibility")
 
         # Prepare features using unified validation (add line context for compatibility)
         total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"

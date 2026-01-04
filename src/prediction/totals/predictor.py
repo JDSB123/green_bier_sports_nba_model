@@ -173,6 +173,10 @@ class TotalPredictor:
                 "Do not use full-game total with arbitrary multipliers."
             )
 
+        # FIX: For 1H models, map 1H features to FG feature names that the model expects
+        from src.prediction.engine import map_1h_features_to_fg_names
+        features = map_1h_features_to_fg_names(features)
+
         # Use 1H model ONLY - no fallbacks
         feature_payload = dict(features)
         feature_payload["1h_total_line"] = total_line
