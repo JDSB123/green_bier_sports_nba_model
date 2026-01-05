@@ -30,7 +30,7 @@
     },
     "imageTag": {
       "type": "string",
-      "defaultValue": "NBA_v33.0.8.0",
+            "defaultValue": "NBA_v33.0.9.0",
       "metadata": {
         "description": "Container image tag"
       }

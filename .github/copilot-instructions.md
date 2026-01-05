@@ -23,9 +23,9 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 
 **STEPS TO DEPLOY (DO NOT SKIP):**
 1. Commit and push to GitHub: `git push origin main` ✅ **ALWAYS do this first**
-2. Build Docker image: `docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0 -f Dockerfile.combined .`
-3. Push to ACR: `az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0`
-4. Deploy to Azure: `az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0`
+2. Build Docker image: `docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.9.0 -f Dockerfile.combined .`
+3. Push to ACR: `az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.9.0`
+4. Deploy to Azure: `az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.9.0`
 5. Verify: `curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
 
 **⚠️ CRITICAL RULE:** Never let the local workspace drift more than one commit ahead of GitHub. Always push before building Docker images.
@@ -35,7 +35,7 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 ## **Azure Resource → GitHub Source Code Mapping (nba-gbsv-model-rg)**
 | Azure Resource | Type | GitHub Repo | Branch | Current Image |
 |----------------|------|-------------|--------|-------|
-| `nba-gbsv-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0` |
+| `nba-gbsv-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.9.0` |
 | `nbagbsacr` | Container Registry | — | — | Hosts NBA model images |
 | `nbagbs-keyvault` | Key Vault | — | — | Stores: THE-ODDS-API-KEY, API-BASKETBALL-KEY |
 | `nba-gbsv-model-env` | Container Apps Environment | — | — | Hosts nba-gbsv-api |

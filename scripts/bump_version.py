@@ -54,13 +54,13 @@ def find_and_replace(file_path: Path, pattern: str, replacement: str, new_versio
     try:
         content = file_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        print(f"  ⚠️  File not found: {file_path}")
+        print(f"  [WARN] File not found: {file_path}")
         return False, 0
     
     # Count matches before replacement
     matches = len(re.findall(pattern, content))
     if matches == 0:
-        print(f"  ⚠️  No matches found in {file_path}")
+        print(f"  [WARN] No matches found in {file_path}")
         return False, 0
     
     # Perform replacement
@@ -71,7 +71,7 @@ def find_and_replace(file_path: Path, pattern: str, replacement: str, new_versio
         return True, matches
     else:
         file_path.write_text(new_content, encoding="utf-8")
-        print(f"  ✅ Updated {file_path} ({matches} occurrence(s))")
+        print(f"  [OK] Updated {file_path} ({matches} occurrence(s))")
         return True, matches
 
 
@@ -83,7 +83,7 @@ def main():
     
     # Validate version format
     if not validate_version(args.version):
-        print(f"❌ Invalid version format: {args.version}")
+        print(f"[ERROR] Invalid version format: {args.version}")
         print("   Expected format: NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>")
         print("   Example: NBA_v33.0.9.0")
         sys.exit(1)
@@ -119,9 +119,9 @@ def main():
     print("=" * 80)
     print("SUMMARY")
     print("=" * 80)
-    print(f"  ✅ Updated: {len(updated_files)} file(s)")
-    print(f"  ❌ Failed:  {len(failed_files)} file(s)")
-    print(f"  📝 Total:   {total_changes} change(s)")
+    print(f"  [OK] Updated: {len(updated_files)} file(s)")
+    print(f"  [ERR] Failed:  {len(failed_files)} file(s)")
+    print(f"  Total:   {total_changes} change(s)")
     print()
     
     if updated_files:
@@ -137,10 +137,10 @@ def main():
         print()
     
     if args.dry_run:
-        print("🔍 DRY RUN complete - no files were modified")
+        print("[DRY RUN] complete - no files were modified")
         print(f"   Run without --dry-run to apply changes")
     else:
-        print("✅ Version bump complete!")
+        print("[OK] Version bump complete!")
         print()
         print("Next steps:")
         print(f"  1. Review changes: git diff")

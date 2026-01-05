@@ -61,7 +61,7 @@ from zoneinfo import ZoneInfo
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.8.0")
+RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.9.0")
 
 
 def convert_numpy_types(obj):

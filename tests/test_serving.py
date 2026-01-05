@@ -62,7 +62,7 @@ def mock_engine():
     }
     # Mock get_model_info for health endpoint
     engine.get_model_info.return_value = {
-        "version": "NBA_v33.0.8.0",
+                "version": "NBA_v33.0.9.0",
         "architecture": "1H + FG spreads/totals only",
         "markets": 4,
         "markets_list": [
