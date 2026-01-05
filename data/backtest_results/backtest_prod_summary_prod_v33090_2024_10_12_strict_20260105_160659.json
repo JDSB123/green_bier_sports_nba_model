@@ -1,0 +1,89 @@
+{
+  "generated_at": "20260105_160659",
+  "data": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\data\\processed\\training_data_theodds.csv",
+  "models_dir": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\models\\production",
+  "cutoff_granularity": "day",
+  "start_date": "2024-10-02",
+  "end_date": "2024-12-31",
+  "markets": [
+    "fg_spread",
+    "fg_total",
+    "1h_spread",
+    "1h_total"
+  ],
+  "require_real_1h_lines": true,
+  "lookback": 10,
+  "min_history_games": 10,
+  "n_games_considered": 454,
+  "n_predictions": 908,
+  "per_market": {
+    "fg_spread": {
+      "n": 0
+    },
+    "fg_total": {
+      "n": 0
+    },
+    "1h_spread": {
+      "n": 454,
+      "accuracy_all": 0.5220264317180616,
+      "roi_all": -0.0034040849018822537,
+      "profit_all": -1.5454545454545432,
+      "n_filtered": 9,
+      "accuracy_filtered": 0.3333333333333333,
+      "roi_filtered": -0.36363636363636365,
+      "profit_filtered": -3.272727272727273,
+      "n_high_conf": 26,
+      "accuracy_high_conf": 0.5,
+      "roi_high_conf": -0.04545454545454543,
+      "profit_high_conf": -1.1818181818181812
+    },
+    "1h_total": {
+      "n": 454,
+      "accuracy_all": 0.4977973568281938,
+      "roi_all": -0.04965959150981177,
+      "profit_all": -22.545454545454543,
+      "n_filtered": 0,
+      "accuracy_filtered": 0.0,
+      "roi_filtered": 0.0,
+      "profit_filtered": 0.0,
+      "n_high_conf": 3,
+      "accuracy_high_conf": 0.3333333333333333,
+      "roi_high_conf": -0.3636363636363636,
+      "profit_high_conf": -1.0909090909090908
+    }
+  },
+  "skipped": {
+    "missing_label": 0,
+    "missing_line": 0,
+    "missing_pregame_inputs": 908,
+    "insufficient_history": 0,
+    "feature_error": 0,
+    "prediction_error": 0
+  },
+  "model_info": {
+    "version": "NBA_v33.0.9.0",
+    "architecture": "1H + FG spreads/totals only",
+    "markets": 4,
+    "markets_list": [
+      "1h_spread",
+      "1h_total",
+      "fg_spread",
+      "fg_total"
+    ],
+    "periods": [
+      "first_half",
+      "full_game"
+    ],
+    "models_dir": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\models\\production",
+    "loaded_models": {
+      "1h_spread": true,
+      "1h_total": true,
+      "fg_spread": true,
+      "fg_total": true
+    },
+    "predictors": {
+      "1h": true,
+      "fg": true
+    }
+  }
+}

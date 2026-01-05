@@ -1,0 +1,111 @@
+{
+  "generated_at": "20260105_170630",
+  "data": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\data\\processed\\training_data_theodds.csv",
+  "models_dir": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\models\\production",
+  "cutoff_granularity": "day",
+  "start_date": "2024-10-02",
+  "end_date": "2025-06-22",
+  "markets": [
+    "fg_spread",
+    "fg_total",
+    "1h_spread",
+    "1h_total"
+  ],
+  "require_real_1h_lines": true,
+  "lookback": 10,
+  "min_history_games": 10,
+  "n_games_considered": 1239,
+  "n_predictions": 4948,
+  "per_market": {
+    "fg_spread": {
+      "n": 1239,
+      "accuracy_all": 0.510088781275222,
+      "roi_all": -0.026194144838212634,
+      "profit_all": -32.45454545454545,
+      "n_filtered": 0,
+      "accuracy_filtered": 0.0,
+      "roi_filtered": 0.0,
+      "profit_filtered": 0.0,
+      "n_high_conf": 0,
+      "accuracy_high_conf": 0.0,
+      "roi_high_conf": 0.0,
+      "profit_high_conf": 0.0
+    },
+    "fg_total": {
+      "n": 1239,
+      "accuracy_all": 0.49878934624697335,
+      "roi_all": -0.047765793528505386,
+      "profit_all": -59.18181818181817,
+      "n_filtered": 0,
+      "accuracy_filtered": 0.0,
+      "roi_filtered": 0.0,
+      "profit_filtered": 0.0,
+      "n_high_conf": 0,
+      "accuracy_high_conf": 0.0,
+      "roi_high_conf": 0.0,
+      "profit_high_conf": 0.0
+    },
+    "1h_spread": {
+      "n": 1235,
+      "accuracy_all": 0.5052631578947369,
+      "roi_all": -0.035406698564593296,
+      "profit_all": -43.72727272727272,
+      "n_filtered": 66,
+      "accuracy_filtered": 0.4393939393939394,
+      "roi_filtered": -0.16115702479338845,
+      "profit_filtered": -10.636363636363637,
+      "n_high_conf": 115,
+      "accuracy_high_conf": 0.4608695652173913,
+      "roi_high_conf": -0.1201581027667984,
+      "profit_high_conf": -13.818181818181817
+    },
+    "1h_total": {
+      "n": 1235,
+      "accuracy_all": 0.5004048582995951,
+      "roi_all": -0.04468163415531836,
+      "profit_all": -55.18181818181817,
+      "n_filtered": 0,
+      "accuracy_filtered": 0.0,
+      "roi_filtered": 0.0,
+      "profit_filtered": 0.0,
+      "n_high_conf": 9,
+      "accuracy_high_conf": 0.4444444444444444,
+      "roi_high_conf": -0.1515151515151515,
+      "profit_high_conf": -1.3636363636363633
+    }
+  },
+  "skipped": {
+    "missing_label": 8,
+    "missing_line": 0,
+    "missing_pregame_inputs": 0,
+    "insufficient_history": 0,
+    "feature_error": 0,
+    "prediction_error": 0
+  },
+  "model_info": {
+    "version": "NBA_v33.0.9.0",
+    "architecture": "1H + FG spreads/totals only",
+    "markets": 4,
+    "markets_list": [
+      "1h_spread",
+      "1h_total",
+      "fg_spread",
+      "fg_total"
+    ],
+    "periods": [
+      "first_half",
+      "full_game"
+    ],
+    "models_dir": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\models\\production",
+    "loaded_models": {
+      "1h_spread": true,
+      "1h_total": true,
+      "fg_spread": true,
+      "fg_total": true
+    },
+    "predictors": {
+      "1h": true,
+      "fg": true
+    }
+  }
+}

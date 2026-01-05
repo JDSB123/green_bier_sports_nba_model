@@ -1,0 +1,8 @@
+date,home_team,away_team,market,line,bet_side,pred,actual,proba,confidence,edge,raw_edge,passes_filter,filter_reason,profit,correct
+2025-01-10,Indiana Pacers,Golden State Warriors,fg_spread,-7.5,away,0,1,0.480764411651273,0.5000184871789763,0.3754473258408737,-0.3754473258408737,False,Low confidence: 50.0%,-1.0,0
+2025-01-10,Chicago Bulls,Washington Wizards,fg_spread,-11.5,away,0,1,0.47432668051760557,0.5000439626753915,4.2988471813549385,-4.2988471813549385,False,Low confidence: 50.0%,-1.0,0
+2025-01-10,Orlando Magic,Milwaukee Bucks,fg_spread,5.75,home,1,1,0.48347841336674113,0.500011713356415,3.678738445781413,3.678738445781413,False,Low confidence: 50.0%,0.9090909090909091,1
+2025-01-10,Denver Nuggets,Brooklyn Nets,fg_spread,-15.5,home,1,1,0.5071430562040125,0.5000009464856192,0.7722075218927067,0.7722075218927067,False,Low confidence: 50.0%,0.9090909090909091,1
+2025-01-10,Philadelphia 76ers,New Orleans Pelicans,fg_spread,-4.0,home,1,0,0.47223988178783094,0.5000555820184721,4.962950758900156,4.962950758900156,False,Low confidence: 50.0%,-1.0,0
+2025-01-10,New York Knicks,Oklahoma City Thunder,fg_spread,3.5,home,1,0,0.5014258609756156,0.5000000075279926,3.7574851765884487,3.7574851765884487,False,Low confidence: 50.0%,-1.0,0
+2025-01-10,Boston Celtics,Sacramento Kings,fg_spread,-10.5,home,1,0,0.3275703605980651,0.5135905136370235,5.792387932435965,5.792387932435965,False,Low confidence: 51.4%,-1.0,0

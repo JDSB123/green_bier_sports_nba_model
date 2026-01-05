@@ -33,7 +33,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 # Single source of truth for version - read from environment variable
-MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.9.0")
+MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.10.0")
 
 import logging
 import joblib
