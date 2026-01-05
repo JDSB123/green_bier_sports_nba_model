@@ -231,6 +231,56 @@ run_backtest() {
     echo "✓ Backtest completed successfully"
 }
 
+# Function to run leakage-safe backtest using frozen production models
+run_prod_backtest() {
+    echo ""
+    echo "============================================================"
+    echo "PRODUCTION MODEL BACKTEST (FROZEN ARTIFACTS)"
+    echo "============================================================"
+    echo ""
+
+    # Prefer The Odds merged dataset if available (real historical FG+1H lines)
+    DATA_PATH="/app/data/processed/training_data_theodds.csv"
+    if [ ! -f "$DATA_PATH" ]; then
+        DATA_PATH="/app/data/processed/training_data.csv"
+    fi
+
+    if [ ! -f "$DATA_PATH" ]; then
+        echo "ERROR: No training dataset found in /app/data/processed/"
+        echo "  Expected one of:"
+        echo "    - /app/data/processed/training_data_theodds.csv"
+        echo "    - /app/data/processed/training_data.csv"
+        exit 1
+    fi
+
+    if [ ! -d "/app/models/production" ]; then
+        echo "ERROR: Production models not found at /app/models/production"
+        echo "This image must include models/ (see Dockerfile.backtest)"
+        exit 1
+    fi
+
+    echo "Using data: $DATA_PATH"
+    echo "Using models: /app/models/production"
+    echo ""
+
+    # NOTE: Require real 1H lines (fh_*) when available; otherwise 1H markets will be skipped.
+    python scripts/backtest_production_model.py \
+        --data "${DATA_PATH#/app/}" \
+        --models-dir "models/production" \
+        --markets "$MARKETS" \
+        --output-dir "data/backtest_results" \
+        --tag "prod"
+
+    exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo ""
+        echo "✗ Production model backtest failed with exit code: $exit_code"
+        exit 1
+    fi
+
+    echo "✓ Production model backtest completed successfully"
+}
+
 # Function to validate existing data
 validate_data() {
     echo ""
@@ -277,6 +327,15 @@ case "$COMMAND" in
         echo ""
         echo "============================================================"
         echo "BACKTEST COMPLETED SUCCESSFULLY"
+        echo "============================================================"
+        ;;
+
+    prod)
+        validate_python
+        run_prod_backtest
+        echo ""
+        echo "============================================================"
+        echo "PRODUCTION MODEL BACKTEST COMPLETED SUCCESSFULLY"
         echo "============================================================"
         ;;
     
@@ -342,6 +401,7 @@ case "$COMMAND" in
         echo "  full                - Full pipeline: fetch data + build training + run backtest"
         echo "  data                - Fetch and build training data only"
         echo "  backtest            - Run backtest on existing data"
+        echo "  prod                - Backtest using frozen production model artifacts"
         echo "  validate            - Validate existing training data"
         echo "  shell               - Interactive shell for debugging"
         echo "  diagnose            - Show diagnostic information"

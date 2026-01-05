@@ -308,8 +308,12 @@ class PeriodPredictor:
 
         # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
         # Use entropy-based confidence from src/prediction/confidence.py for consistency
-        min_conf = filter_thresholds.spread_min_confidence
-        min_edge = filter_thresholds.spread_min_edge
+        if self.period == "1h":
+            min_conf = filter_thresholds.fh_spread_min_confidence
+            min_edge = filter_thresholds.fh_spread_min_edge
+        else:
+            min_conf = filter_thresholds.spread_min_confidence
+            min_edge = filter_thresholds.spread_min_edge
 
         # Simple filter: just need confidence and edge to pass
         passes_filter = confidence >= min_conf and edge_abs >= min_edge
@@ -436,8 +440,12 @@ class PeriodPredictor:
         edge_abs = abs(edge)
 
         # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
-        min_conf = filter_thresholds.total_min_confidence
-        min_edge = filter_thresholds.total_min_edge
+        if self.period == "1h":
+            min_conf = filter_thresholds.fh_total_min_confidence
+            min_edge = filter_thresholds.fh_total_min_edge
+        else:
+            min_conf = filter_thresholds.total_min_confidence
+            min_edge = filter_thresholds.total_min_edge
 
         # Simple filter: just need confidence and edge to pass
         passes_filter = confidence >= min_conf and edge_abs >= min_edge
@@ -699,8 +707,14 @@ class UnifiedPredictionEngine:
         return model, features
 
     def _init_legacy_predictors(self):
-        """Initialize legacy predictors for backwards compatibility."""
-        # These are used by old code paths
+        """
+        Initialize legacy predictors for backwards compatibility.
+
+        DEPRECATED (v33.0.9.0): These predictors are NOT used by any production code path.
+        All predictions go through PeriodPredictor.predict_spread/predict_total.
+        Keeping for API stability but may be removed in v34.0.
+        """
+        # DEPRECATED: These are NOT used by predict_all_markets() or any serving code
         if self.fg_predictor:
             # Create legacy SpreadPredictor
             if self.fg_predictor.spread_model:

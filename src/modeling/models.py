@@ -150,6 +150,7 @@ class SpreadsModel(BaseModel):
     Can also predict the expected margin for finding value bets.
     """
 
+    # Core features that have predictive value based on historical data
     DEFAULT_FEATURES = [
         # Team performance
         "home_ppg", "home_papg", "home_win_pct", "home_avg_margin",
@@ -167,17 +168,27 @@ class SpreadsModel(BaseModel):
         "spread_line",  # The actual spread line
         "spread_vs_predicted",  # Model vs market disagreement
         "spread_opening_line",
-        "spread_movement",  # Line movement
         "spread_line_std",  # Book disagreement
         # ATS performance
         "home_ats_pct", "away_ats_pct",
-        # RLM and sharp signals (when available)
-        "is_rlm_spread", "sharp_side_spread",
-        "spread_public_home_pct", "spread_ticket_money_diff",
         # Injury impact (when available)
         "home_injury_spread_impact", "away_injury_spread_impact",
         "injury_spread_diff", "home_star_out", "away_star_out",
         "predicted_margin_adj",  # Injury-adjusted prediction
+    ]
+
+    # DISABLED: Market signal features that require real betting splits data
+    # These features have 0% importance in current models because training data
+    # lacks real splits (all 50/50 placeholders). To enable:
+    # 1. Set up daily pre-game splits collection (see scripts/collect_betting_splits.py)
+    # 2. Build training data with real splits
+    # 3. Add these features back to DEFAULT_FEATURES and retrain
+    MARKET_SIGNAL_FEATURES = [
+        "is_rlm_spread",           # Reverse line movement detected
+        "sharp_side_spread",       # Sharp money indicator (-1=away, 0=neutral, 1=home)
+        "spread_public_home_pct",  # Public betting % on home
+        "spread_ticket_money_diff",  # Ticket vs money divergence (sharp indicator)
+        "spread_movement",         # Line movement from open
     ]
 
     def __init__(
@@ -312,6 +323,7 @@ class TotalsModel(BaseModel):
     Can also predict the expected total for finding value bets.
     """
 
+    # Core features that have predictive value based on historical data
     DEFAULT_FEATURES = [
         # Team performance
         "home_ppg", "home_papg", "home_total_ppg",
@@ -327,17 +339,27 @@ class TotalsModel(BaseModel):
         "total_line",  # The actual total line
         "total_vs_predicted",  # Model vs market disagreement
         "total_opening_line",
-        "total_movement",  # Line movement
         "total_line_std",  # Book disagreement
         # Over/under tendencies
         "home_over_pct", "away_over_pct",
-        # RLM and sharp signals (when available)
-        "is_rlm_total", "sharp_side_total",
-        "over_public_pct", "total_ticket_money_diff",
         # Injury impact (when available)
         "home_injury_total_impact", "away_injury_total_impact",
         "injury_total_diff",
         "predicted_total_adj",  # Injury-adjusted prediction
+    ]
+
+    # DISABLED: Market signal features that require real betting splits data
+    # These features have 0% importance in current models because training data
+    # lacks real splits (all 50/50 placeholders). To enable:
+    # 1. Set up daily pre-game splits collection (see scripts/collect_betting_splits.py)
+    # 2. Build training data with real splits
+    # 3. Add these features back to DEFAULT_FEATURES and retrain
+    MARKET_SIGNAL_FEATURES = [
+        "is_rlm_total",            # Reverse line movement detected
+        "sharp_side_total",        # Sharp money indicator (-1=under, 0=neutral, 1=over)
+        "over_public_pct",         # Public betting % on over
+        "total_ticket_money_diff", # Ticket vs money divergence (sharp indicator)
+        "total_movement",          # Line movement from open
     ]
 
     def __init__(

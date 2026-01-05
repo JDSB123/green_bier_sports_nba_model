@@ -1,0 +1,182 @@
+{
+  "models": [
+    {
+      "path": "fg_spread_model.joblib",
+      "saved_at": "2026-01-05T22:39:21.997548Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -7625068515649018102,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "fg_total_model.joblib",
+      "saved_at": "2026-01-05T22:39:22.316695Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -7625068515649018102,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "1h_spread_model.joblib",
+      "saved_at": "2026-01-05T22:39:22.588530Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -7625068515649018102,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "1h_total_model.joblib",
+      "saved_at": "2026-01-05T22:39:22.851851Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -7625068515649018102,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "fg_spread_model.joblib",
+      "saved_at": "2026-01-05T22:42:10.575439Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 47,
+      "features_hash": -6560311611794301920,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "fg_total_model.joblib",
+      "saved_at": "2026-01-05T22:42:10.858333Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 47,
+      "features_hash": -6560311611794301920,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "1h_spread_model.joblib",
+      "saved_at": "2026-01-05T22:42:11.088051Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 47,
+      "features_hash": -6560311611794301920,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "1h_total_model.joblib",
+      "saved_at": "2026-01-05T22:42:11.331962Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 47,
+      "features_hash": -6560311611794301920,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "fg_spread_model.joblib",
+      "saved_at": "2026-01-05T22:46:57.801674Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "fg_total_model.joblib",
+      "saved_at": "2026-01-05T22:46:58.126064Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "1h_spread_model.joblib",
+      "saved_at": "2026-01-05T22:46:58.387579Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    {
+      "path": "1h_total_model.joblib",
+      "saved_at": "2026-01-05T22:46:58.655613Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    }
+  ],
+  "latest": {
+    "fg_spread_model": {
+      "path": "fg_spread_model.joblib",
+      "saved_at": "2026-01-05T22:46:57.801674Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    "fg_total_model": {
+      "path": "fg_total_model.joblib",
+      "saved_at": "2026-01-05T22:46:58.126064Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    "1h_spread_model": {
+      "path": "1h_spread_model.joblib",
+      "saved_at": "2026-01-05T22:46:58.387579Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    },
+    "1h_total_model": {
+      "path": "1h_total_model.joblib",
+      "saved_at": "2026-01-05T22:46:58.655613Z",
+      "version": "1.0.0",
+      "model_type": "logistic",
+      "n_features": 55,
+      "features_hash": -2796000199554222563,
+      "meta": {
+        "model_type": "logistic"
+      }
+    }
+  }
+}

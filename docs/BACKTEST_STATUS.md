@@ -66,6 +66,24 @@ This runs:
 4. Backtest on all markets
 5. Results output to `data/results/`
 
+### Production Model Backtest (Frozen Artifacts)
+
+This backtest validates the **actual shipped production `.joblib` models**
+against historical games, with **leakage-safe feature reconstruction** (features
+computed only from games before each game).
+
+Local:
+
+```powershell
+python scripts/backtest_production_model.py --data data/processed/training_data_theodds.csv --models-dir models/production --markets all
+```
+
+Docker:
+
+```powershell
+docker compose -f docker-compose.backtest.yml up backtest-prod
+```
+
 ### Other Options
 
 ```powershell

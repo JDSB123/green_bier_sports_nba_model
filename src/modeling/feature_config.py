@@ -40,8 +40,8 @@ TRAVEL_FEATURES = get_features_by_category(FeatureCategory.TRAVEL)
 INJURY_FEATURES = get_features_by_category(FeatureCategory.INJURY)
 H2H_FEATURES = get_features_by_category(FeatureCategory.H2H)
 
-# RLM_FEATURES - Explicitly defined to match original (9 features, NO ATS)
-# Original did NOT include ATS features (home_ats_pct, away_ats_pct, etc.)
+# RLM_FEATURES - Live predictions fetch real splits from Action Network
+# Training data has placeholders, but models include these for live use
 RLM_FEATURES = [
     "is_rlm_spread", "sharp_side_spread",
     "spread_public_home_pct", "spread_ticket_money_diff",

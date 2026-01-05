@@ -238,13 +238,17 @@ class TestConfidenceCalculation:
         assert confidence_away == pytest.approx(confidence_home, rel=0.01)
 
     def test_confidence_extreme_probability(self):
-        """Test confidence with extreme probability approaches max."""
+        """Test confidence equals calibrated probability (no arbitrary cap).
+
+        Since models use CalibratedClassifierCV (isotonic regression), the
+        predict_proba output is already calibrated. Confidence = calibrated prob.
+        No arbitrary caps - calibration naturally constrains realistic outputs.
+        """
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # Near-certain prediction (99%)
+        # Near-certain prediction (99%) - confidence equals the calibrated probability
         confidence = calculate_confidence_from_probabilities(0.99, 0.01)
-        assert confidence > 0.8  # High confidence
-        assert confidence <= 0.95  # Capped at max
+        assert confidence == pytest.approx(0.99, rel=0.01)  # No arbitrary cap
 
     def test_confidence_increases_with_probability_difference(self):
         """Test that confidence increases as probability difference increases."""

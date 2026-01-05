@@ -4,7 +4,8 @@ Cache consensus betting lines from committed The Odds API historical data.
 
 Reads committed raw JSON under:
   - data/historical/the_odds/odds/<season>/odds_*_featured.json
-  - data/historical/the_odds/period_odds/<season>/period_odds_1h.json (optional)
+  - data/historical/the_odds/period_odds/<season>/period_odds_1h.json
+    (optional)
 
 Outputs a single CSV with one row per event, including:
   - fg_spread_line, fg_total_line
@@ -24,10 +25,10 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+import numpy as np
 import pandas as pd
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -94,7 +95,10 @@ def _extract_lines_from_event(
     }
 
 
-def load_fg_featured_odds(season_dir: Path, bookmaker_key: Optional[str]) -> pd.DataFrame:
+def load_fg_featured_odds(
+    season_dir: Path,
+    bookmaker_key: Optional[str],
+) -> pd.DataFrame:
     rows: List[Dict[str, Any]] = []
     for path in _iter_json_files(season_dir, "odds_*_featured.json"):
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -104,23 +108,32 @@ def load_fg_featured_odds(season_dir: Path, bookmaker_key: Optional[str]) -> pd.
             lines = _extract_lines_from_event(ev, bookmaker_key=bookmaker_key)
             if not any(lines.values()):
                 continue
-            rows.append({
-                "event_id": ev.get("id"),
-                "commence_time": ev.get("commence_time"),
-                "home_team": ev.get("home_team"),
-                "away_team": ev.get("away_team"),
-                "snapshot_timestamp": snapshot_ts,
-                **lines,
-            })
+            rows.append(
+                {
+                    "event_id": ev.get("id"),
+                    "commence_time": ev.get("commence_time"),
+                    "home_team": ev.get("home_team"),
+                    "away_team": ev.get("away_team"),
+                    "snapshot_timestamp": snapshot_ts,
+                    **lines,
+                }
+            )
     df = pd.DataFrame(rows)
     if not df.empty:
-        df["commence_time"] = pd.to_datetime(df["commence_time"], utc=True, errors="coerce")
-        df["snapshot_timestamp"] = pd.to_datetime(df["snapshot_timestamp"], utc=True, errors="coerce")
+        df["commence_time"] = pd.to_datetime(
+            df["commence_time"], utc=True, errors="coerce"
+        )
+        df["snapshot_timestamp"] = pd.to_datetime(
+            df["snapshot_timestamp"], utc=True, errors="coerce"
+        )
         df["line_date"] = df["commence_time"].dt.date
     return df
 
 
-def load_1h_period_odds(period_file: Path, bookmaker_key: Optional[str]) -> pd.DataFrame:
+def load_1h_period_odds(
+    period_file: Path,
+    bookmaker_key: Optional[str],
+) -> pd.DataFrame:
     payload = json.loads(period_file.read_text(encoding="utf-8"))
     wrappers = payload.get("data") or []
 
@@ -131,39 +144,57 @@ def load_1h_period_odds(period_file: Path, bookmaker_key: Optional[str]) -> pd.D
             continue
         lines = _extract_lines_from_event(ev, bookmaker_key=bookmaker_key)
         # For period file we only expect 1H lines, but keep schema consistent
-        if lines.get("fh_spread_line") is None and lines.get("fh_total_line") is None:
+        if (
+            lines.get("fh_spread_line") is None
+            and lines.get("fh_total_line") is None
+        ):
             continue
-        rows.append({
-            "event_id": ev.get("id"),
-            "commence_time": ev.get("commence_time"),
-            "home_team": ev.get("home_team"),
-            "away_team": ev.get("away_team"),
-            "snapshot_timestamp": w.get("timestamp") or payload.get("fetched_at"),
-            "fh_spread_line": lines.get("fh_spread_line"),
-            "fh_total_line": lines.get("fh_total_line"),
-        })
+        rows.append(
+            {
+                "event_id": ev.get("id"),
+                "commence_time": ev.get("commence_time"),
+                "home_team": ev.get("home_team"),
+                "away_team": ev.get("away_team"),
+                "snapshot_timestamp": w.get("timestamp")
+                or payload.get("fetched_at"),
+                "fh_spread_line": lines.get("fh_spread_line"),
+                "fh_total_line": lines.get("fh_total_line"),
+            }
+        )
 
     df = pd.DataFrame(rows)
     if not df.empty:
-        df["commence_time"] = pd.to_datetime(df["commence_time"], utc=True, errors="coerce")
-        df["snapshot_timestamp"] = pd.to_datetime(df["snapshot_timestamp"], utc=True, errors="coerce")
+        df["commence_time"] = pd.to_datetime(
+            df["commence_time"], utc=True, errors="coerce"
+        )
+        df["snapshot_timestamp"] = pd.to_datetime(
+            df["snapshot_timestamp"], utc=True, errors="coerce"
+        )
         df["line_date"] = df["commence_time"].dt.date
     return df
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Cache The Odds historical lines to CSV")
+    p = argparse.ArgumentParser(
+        description="Cache The Odds historical lines to CSV"
+    )
     p.add_argument(
         "--seasons",
         nargs="*",
         default=[],
-        help="Seasons to process (e.g. 2023-2024 2024-2025). Default: auto-discover.",
+        help=(
+            "Seasons to process (e.g. 2023-2024 2024-2025). "
+            "Default: auto-discover."
+        ),
     )
     p.add_argument(
         "--bookmaker",
         type=str,
         default=None,
-        help="Optional bookmaker key (e.g. draftkings). Default: median across all books.",
+        help=(
+            "Optional bookmaker key (e.g. draftkings). "
+            "Default: median across all books."
+        ),
     )
     p.add_argument(
         "--out",
@@ -215,10 +246,14 @@ def main() -> int:
             )
             # Coalesce 1H columns (FG featured snapshots don't include 1H markets)
             if "fh_spread_line_fh" in merged.columns:
-                merged["fh_spread_line"] = merged["fh_spread_line"].combine_first(merged["fh_spread_line_fh"])
+                merged["fh_spread_line"] = merged["fh_spread_line"].combine_first(
+                    merged["fh_spread_line_fh"]
+                )
                 merged = merged.drop(columns=["fh_spread_line_fh"])
             if "fh_total_line_fh" in merged.columns:
-                merged["fh_total_line"] = merged["fh_total_line"].combine_first(merged["fh_total_line_fh"])
+                merged["fh_total_line"] = merged["fh_total_line"].combine_first(
+                    merged["fh_total_line_fh"]
+                )
                 merged = merged.drop(columns=["fh_total_line_fh"])
         elif not fg_df.empty:
             merged = fg_df
@@ -233,7 +268,60 @@ def main() -> int:
         return 1
 
     df = pd.concat(all_rows, ignore_index=True)
-    df = df.drop_duplicates(subset=["event_id"], keep="last")
+
+    # ---------------------------------------------------------------------
+    # LEAKAGE SAFETY: pick the latest snapshot strictly BEFORE tipoff.
+    #
+    # Raw committed files may contain multiple snapshots per event. Using a
+    # naive "last row wins" strategy can accidentally select a snapshot fetched
+    # after the game started.
+    #
+    # Selection rules per event_id:
+    #   1) Prefer max(snapshot_timestamp) where snapshot_timestamp <= commence_time
+    #   2) If none exist, fall back to the latest snapshot available and mark it
+    # ---------------------------------------------------------------------
+    df["commence_time"] = pd.to_datetime(
+        df["commence_time"], utc=True, errors="coerce"
+    )
+    df["snapshot_timestamp"] = pd.to_datetime(
+        df["snapshot_timestamp"], utc=True, errors="coerce"
+    )
+    df = df.dropna(subset=["event_id", "commence_time"]).copy()
+
+    df["snapshot_is_pregame"] = (
+        df["snapshot_timestamp"].notna()
+        & (df["snapshot_timestamp"] <= df["commence_time"])
+    )
+    df["minutes_to_tipoff"] = np.where(
+        df["snapshot_timestamp"].notna(),
+        (df["commence_time"] - df["snapshot_timestamp"]).dt.total_seconds()
+        / 60.0,
+        np.nan,
+    )
+
+    df = df.sort_values(["event_id", "snapshot_timestamp"], ascending=[True, True])
+
+    pregame = (
+        df[df["snapshot_is_pregame"]]
+        .groupby("event_id", as_index=False)
+        .tail(1)
+    )
+    remaining_ids = set(df["event_id"].unique()) - set(
+        pregame["event_id"].unique()
+    )
+    fallback = (
+        df[df["event_id"].isin(list(remaining_ids))]
+        .groupby("event_id", as_index=False)
+        .tail(1)
+    )
+    if not fallback.empty:
+        fallback = fallback.copy()
+        fallback["snapshot_is_pregame"] = False
+
+    if fallback.empty:
+        df = pregame
+    else:
+        df = pd.concat([pregame, fallback], ignore_index=True)
     df = df.sort_values(["commence_time", "event_id"]).reset_index(drop=True)
     df.to_csv(out_path, index=False)
     print(f"[OK] Wrote {len(df)} events to {out_path}")
@@ -242,4 +330,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

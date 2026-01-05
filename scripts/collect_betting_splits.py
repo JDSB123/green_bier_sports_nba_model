@@ -1,8 +1,27 @@
 """
 Collect public betting percentages and save to data directory.
 
+This script captures pre-game betting splits for building historical training data.
+Run daily before games to collect RLM/sharp money signals.
+
 Usage:
-    python scripts/collect_betting_splits.py [--source sbro|covers|mock]
+    # Collect today's splits (default: Action Network)
+    python scripts/collect_betting_splits.py
+
+    # Collect and save to historical CSV
+    python scripts/collect_betting_splits.py --save --append-history
+
+    # Use specific source
+    python scripts/collect_betting_splits.py --source action_network
+
+Data Sources:
+    - action_network: Best data (public API with premium indicators when available)
+    - auto: Tries sources in order of quality
+    - mock: Fake data for testing only
+
+Output:
+    - data/processed/betting_splits.json: Today's splits snapshot
+    - data/splits/historical_splits.csv: Cumulative training data
 """
 import asyncio
 import argparse
@@ -11,6 +30,8 @@ import sys
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
+import pandas as pd
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -26,22 +47,42 @@ from src.ingestion.betting_splits import (
 from src.ingestion import the_odds
 
 DATA_DIR = PROJECT_ROOT / "data"
+SPLITS_DIR = DATA_DIR / "splits"
 CST = ZoneInfo("America/Chicago")
 
 
 async def main():
     """Collect betting splits and save to file."""
-    parser = argparse.ArgumentParser(description="Collect public betting splits")
+    parser = argparse.ArgumentParser(
+        description="Collect public betting splits for training data",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Quick check of today's splits
+    python scripts/collect_betting_splits.py
+
+    # Collect and save to training history
+    python scripts/collect_betting_splits.py --save --append-history
+
+    # Use Action Network specifically
+    python scripts/collect_betting_splits.py --source action_network --save
+        """,
+    )
     parser.add_argument(
         "--source",
-        choices=["auto", "sbro", "covers", "mock"],
+        choices=["auto", "action_network", "sbro", "covers", "mock"],
         default="auto",
-        help="Data source for betting splits",
+        help="Data source for betting splits (default: auto)",
     )
     parser.add_argument(
         "--save",
         action="store_true",
         help="Save splits to data/processed/betting_splits.json",
+    )
+    parser.add_argument(
+        "--append-history",
+        action="store_true",
+        help="Append to historical CSV for training (data/splits/historical_splits.csv)",
     )
     args = parser.parse_args()
 
@@ -128,6 +169,53 @@ async def main():
             json.dump(splits_data, f, indent=2)
 
         print(f"\n[OK] Saved betting splits to {output_file}")
+
+    # Append to historical CSV for training data
+    if args.append_history:
+        SPLITS_DIR.mkdir(parents=True, exist_ok=True)
+        history_file = SPLITS_DIR / "historical_splits.csv"
+
+        # Build rows for CSV
+        rows = []
+        collection_time = datetime.now(CST)
+        for game_key, splits in splits_dict.items():
+            features = splits_to_features(splits)
+            row = {
+                "collection_date": collection_time.strftime("%Y-%m-%d"),
+                "collection_time": collection_time.isoformat(),
+                "event_id": splits.event_id,
+                "home_team": splits.home_team,
+                "away_team": splits.away_team,
+                "game_time": (
+                    splits.game_time.isoformat() if splits.game_time else None
+                ),
+                "source": splits.source,
+                **features,  # Flatten all features into columns
+            }
+            rows.append(row)
+
+        new_df = pd.DataFrame(rows)
+
+        # Append or create
+        if history_file.exists():
+            existing_df = pd.read_csv(history_file)
+            original_count = len(existing_df)
+            # Deduplicate by event_id + collection_date (keep latest)
+            combined = pd.concat([existing_df, new_df], ignore_index=True)
+            combined = combined.drop_duplicates(
+                subset=["event_id", "collection_date"], keep="last"
+            )
+            combined.to_csv(history_file, index=False)
+            # Net new = final count - original count (accounts for replacements)
+            net_new = len(combined) - original_count
+            replaced = len(new_df) - net_new if net_new < len(new_df) else 0
+            print(f"\n[OK] Added {len(new_df)} rows to {history_file}")
+            if replaced > 0:
+                print(f"     ({replaced} replaced existing, {net_new} net new)")
+            print(f"     Total rows: {len(combined)}")
+        else:
+            new_df.to_csv(history_file, index=False)
+            print(f"\n[OK] Created {history_file} with {len(new_df)} rows")
 
     print("\n" + "=" * 80)
 

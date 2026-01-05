@@ -152,6 +152,10 @@ INJURY_FEATURES = [
 # -----------------------------------------------------------------------------
 # BETTING SPLITS AND RLM - Sharp money signals
 # -----------------------------------------------------------------------------
+# NOTE: Training data has placeholder values (50/50), but LIVE predictions
+# fetch real splits from Action Network. Models include these features so
+# live predictions can leverage real RLM/sharp money signals.
+# -----------------------------------------------------------------------------
 BETTING_FEATURES = [
     Feature("has_real_splits", FeatureCategory.BETTING, "Real splits data available (0/1)", default=0.0),
     # Spread public betting

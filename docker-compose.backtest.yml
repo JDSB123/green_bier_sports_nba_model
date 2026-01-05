@@ -81,6 +81,23 @@ services:
       - backtest-network
 
   # ─────────────────────────────────────────────────────────────────────────
+  # PRODUCTION MODEL BACKTEST (FROZEN ARTIFACTS)
+  # Uses committed models under models/production + leakage-safe feature rebuild
+  # ─────────────────────────────────────────────────────────────────────────
+  backtest-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.backtest
+    container_name: nba-backtest-prod
+    environment:
+      - MARKETS=${MARKETS:-all}
+    volumes:
+      - ./data:/app/data
+    command: ["prod"]
+    networks:
+      - backtest-network
+
+  # ─────────────────────────────────────────────────────────────────────────
   # VALIDATION
   # Validates training data integrity
   # ─────────────────────────────────────────────────────────────────────────

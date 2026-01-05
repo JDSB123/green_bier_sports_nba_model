@@ -56,6 +56,7 @@ COPY --from=builder /root/.local /home/appuser/.local
 # Copy application code with proper ownership
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser scripts/ ./scripts/
+COPY --chown=appuser:appuser models/ ./models/
 
 # Copy entrypoint script and fix line endings (Windows -> Unix)
 COPY docker-entrypoint-backtest.sh /docker-entrypoint.sh

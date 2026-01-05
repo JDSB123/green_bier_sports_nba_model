@@ -42,6 +42,7 @@ This directory contains operational scripts for the NBA prediction system.
 | Script | Description |
 |--------|-------------|
 | `backtest.py` | **Main backtest** - Walk-forward validation for all 4 markets |
+| `backtest_production_model.py` | **Frozen artifact backtest** - Backtest the shipped `models/production` models with leakage-safe feature reconstruction |
 | `analyze_backtest_results.py` | Parse and display backtest metrics |
 | `analyze_roi.py` | ROI performance analysis |
 | `analyze_spread_performance.py` | Spread-specific analysis |
@@ -93,6 +94,9 @@ python scripts/run_slate.py --date tomorrow
 
 # Run backtest
 python scripts/backtest.py
+
+# Backtest the actual production artifacts (recommended for release validation)
+python scripts/backtest_production_model.py --data data/processed/training_data_theodds.csv --models-dir models/production --markets all
 
 # Train all models
 python scripts/train_models.py

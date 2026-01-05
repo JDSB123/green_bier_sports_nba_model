@@ -104,7 +104,7 @@ class FilterThresholds:
     """
     # Spread thresholds
     spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.60)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.62)
     )
     spread_min_edge: float = field(
         default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 2.0)
@@ -112,10 +112,26 @@ class FilterThresholds:
 
     # Total thresholds
     total_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.58)
+        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.72)
     )
     total_min_edge: float = field(
         default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_EDGE", 3.0)
+    )
+
+    # 1H Spread thresholds
+    fh_spread_min_confidence: float = field(
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.68)
+    )
+    fh_spread_min_edge: float = field(
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_EDGE", 1.5)
+    )
+
+    # 1H Total thresholds
+    fh_total_min_confidence: float = field(
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.66)
+    )
+    fh_total_min_edge: float = field(
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_EDGE", 2.0)
     )
 
 
