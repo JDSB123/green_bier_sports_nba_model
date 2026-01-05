@@ -1,0 +1,4 @@
+# Protect historical data from accidental deletion
+data/historical/** linguist-vendored=false
+data/historical/** -diff
+data/historical/** merge=ours
