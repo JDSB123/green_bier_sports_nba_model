@@ -1,51 +1,47 @@
 """
 Feature configuration for NBA prediction models.
 
-Centralizes feature definitions used across training, backtesting, and prediction.
-This ensures consistency and makes it easy to add/remove features in one place.
+SINGLE SOURCE OF TRUTH: All features are now defined in unified_features.py
+
+This module provides backward-compatible imports and helper functions.
+For new code, use:
+    from src.modeling.unified_features import (
+        UNIFIED_FEATURE_NAMES,
+        MODEL_REGISTRY,
+        get_model_config,
+        validate_features,
+    )
 """
 from __future__ import annotations
 import logging
 from typing import List
 
+# Import from unified source of truth
+from src.modeling.unified_features import (
+    UNIFIED_FEATURE_NAMES,
+    FEATURE_DEFAULTS,
+    REQUIRED_FEATURES,
+    FeatureCategory,
+    get_features_by_category,
+    validate_features,
+)
+
 logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# FEATURE GROUPS
+# BACKWARD COMPATIBLE FEATURE GROUPS
 # =============================================================================
+# These are explicitly defined to match original semantics exactly
 
-# Core team performance stats
-CORE_TEAM_FEATURES = [
-    "home_ppg", "home_papg", "home_margin",
-    "away_ppg", "away_papg", "away_margin",
-    "home_win_pct", "away_win_pct",
-    "predicted_margin", "win_pct_diff", "ppg_diff",
-]
+CORE_TEAM_FEATURES = get_features_by_category(FeatureCategory.CORE)
+REST_FEATURES = get_features_by_category(FeatureCategory.REST)
+TRAVEL_FEATURES = get_features_by_category(FeatureCategory.TRAVEL)
+INJURY_FEATURES = get_features_by_category(FeatureCategory.INJURY)
+H2H_FEATURES = get_features_by_category(FeatureCategory.H2H)
 
-# Rest and scheduling features
-REST_FEATURES = [
-    "home_rest", "away_rest", "rest_diff",
-    "home_b2b", "away_b2b",
-]
-
-# Travel and fatigue features (NEW in v1.3)
-TRAVEL_FEATURES = [
-    "away_travel_distance", "away_timezone_change", "away_travel_fatigue",
-    "is_away_long_trip", "is_away_cross_country",
-    "away_b2b_travel_penalty", "travel_advantage",
-    "home_court_advantage",  # Team-specific HCA (Denver ~4.2, etc.)
-]
-
-# Injury impact features
-INJURY_FEATURES = [
-    "home_injury_spread_impact", "away_injury_spread_impact",
-    "injury_spread_diff", "home_star_out", "away_star_out",
-    "home_injury_total_impact", "away_injury_total_impact",
-    "injury_total_diff",
-]
-
-# RLM (Reverse Line Movement) and sharp money features
+# RLM_FEATURES - Explicitly defined to match original (9 features, NO ATS)
+# Original did NOT include ATS features (home_ats_pct, away_ats_pct, etc.)
 RLM_FEATURES = [
     "is_rlm_spread", "sharp_side_spread",
     "spread_public_home_pct", "spread_ticket_money_diff",
@@ -54,17 +50,12 @@ RLM_FEATURES = [
     "over_public_pct", "total_ticket_money_diff",
 ]
 
-# Head-to-head features
-H2H_FEATURES = [
-    "h2h_games", "h2h_margin", "h2h_win_rate",
-]
-
-# ATS (Against The Spread) features
+# ATS_FEATURES - Against The Spread performance (separate from RLM)
 ATS_FEATURES = [
     "home_ats_pct", "away_ats_pct",
 ]
 
-# Totals-specific features
+# TOTALS_FEATURES - Explicitly include predicted_total (original had 3 features)
 TOTALS_FEATURES = [
     "home_total_ppg", "away_total_ppg",
     "predicted_total",
@@ -72,70 +63,34 @@ TOTALS_FEATURES = [
 
 
 # =============================================================================
-# MODEL-SPECIFIC FEATURE SETS
+# UNIFIED FEATURE FUNCTIONS
 # =============================================================================
 
 def get_spreads_features() -> List[str]:
-    """Get all features for spreads prediction model."""
-    return (
-        CORE_TEAM_FEATURES +
-        REST_FEATURES +
-        TRAVEL_FEATURES +  # NEW: Travel/fatigue features
-        ATS_FEATURES +
-        [f for f in INJURY_FEATURES if "spread" in f or "star" in f] +
-        [f for f in RLM_FEATURES if "spread" in f]
-    )
+    """Get all features for spreads prediction model.
+    
+    Now returns the UNIFIED feature set (same as totals).
+    """
+    return UNIFIED_FEATURE_NAMES.copy()
 
 
 def get_totals_features() -> List[str]:
+    """Get all features for totals prediction model.
+    
+    Now returns the UNIFIED feature set (same as spreads).
     """
-    Get all features for totals prediction model.
-
-    Uses features that directly impact game pace and scoring:
-    - Team offensive/defensive efficiency (PPG, PAPG)
-    - Pace indicators
-    - Rest/fatigue factors
-    - Historical totals performance
-    """
-    return [
-        # Core scoring efficiency
-        "home_ppg", "home_papg", "away_ppg", "away_papg",
-        "home_pace", "away_pace",
-        "predicted_total",
-        # Scoring variance (high variance = less predictable)
-        "home_score_std", "away_score_std",
-        "home_margin_std", "away_margin_std",
-        # Rest and fatigue (tired teams = lower scores)
-        "home_rest", "away_rest", "home_b2b", "away_b2b",
-        "away_travel_fatigue", "travel_advantage",
-        # Net rating (offensive - defensive efficiency)
-        "home_net_rating", "away_net_rating",
-        # Situational scoring
-        "home_away_ppg", "away_away_ppg",  # Away team's road scoring
-        # RLM signals
-        "is_rlm_total", "sharp_side_total",
-    ]
+    return UNIFIED_FEATURE_NAMES.copy()
 
 
 def get_all_features() -> List[str]:
     """Get complete list of all available features."""
-    all_features = set(
-        CORE_TEAM_FEATURES +
-        REST_FEATURES +
-        TRAVEL_FEATURES +
-        INJURY_FEATURES +
-        RLM_FEATURES +
-        H2H_FEATURES +
-        ATS_FEATURES +
-        TOTALS_FEATURES
-    )
-    return sorted(list(all_features))
+    return UNIFIED_FEATURE_NAMES.copy()
 
 
 def filter_available_features(
     requested: List[str],
     available_columns: List[str],
-    min_required_pct: float = 0.5,
+    min_required_pct: float = 0.3,  # Reduced from 0.5 since we have many features
     critical_features: List[str] = None,
 ) -> List[str]:
     """
@@ -144,8 +99,8 @@ def filter_available_features(
     Args:
         requested: List of requested feature names
         available_columns: List of column names actually present in data
-        min_required_pct: Minimum % of requested features that must be available (default 0.5)
-        critical_features: List of feature names that MUST be present (raises error if missing)
+        min_required_pct: Minimum % of requested features that must be available
+        critical_features: List of feature names that MUST be present
 
     Returns:
         List of features that are both requested and available
@@ -163,10 +118,16 @@ def filter_available_features(
     # Log the filtering results
     if missing:
         missing_pct = len(missing) / len(requested) * 100
-        logger.warning(
-            f"Feature filtering: {len(missing)}/{len(requested)} ({missing_pct:.1f}%) features unavailable"
+        logger.info(
+            f"Feature filtering: {len(available)}/{len(requested)} features available "
+            f"({len(missing)} missing)"
         )
-        logger.warning(f"Missing features: {sorted(missing)}")
+        if missing_pct > 50:
+            logger.warning(f"Many features missing ({missing_pct:.0f}%): {sorted(list(missing)[:10])}...")
+
+    # Use default critical features if not specified
+    if critical_features is None:
+        critical_features = REQUIRED_FEATURES
 
     # Check for critical features
     if critical_features:
@@ -175,19 +136,42 @@ def filter_available_features(
         if missing_critical:
             raise ValueError(
                 f"CRITICAL FEATURES MISSING: {sorted(missing_critical)}. "
-                f"Cannot proceed without these features. Available: {sorted(available_set)}"
+                f"Cannot proceed without these features."
             )
 
     # Check if we have enough features
-    available_pct = len(available) / len(requested)
+    available_pct = len(available) / len(requested) if requested else 0
     if available_pct < min_required_pct:
         raise ValueError(
             f"Insufficient features available: {len(available)}/{len(requested)} "
             f"({available_pct:.1%} < {min_required_pct:.1%} required). "
-            f"Missing: {sorted(missing)}"
+            f"Missing: {sorted(list(missing)[:20])}..."
         )
 
     logger.info(f"Using {len(available)}/{len(requested)} requested features ({available_pct:.1%})")
 
     # Return in original request order
     return [f for f in requested if f in available_set]
+
+
+# =============================================================================
+# RE-EXPORTS FOR BACKWARD COMPATIBILITY
+# =============================================================================
+
+__all__ = [
+    "CORE_TEAM_FEATURES",
+    "REST_FEATURES",
+    "TRAVEL_FEATURES",
+    "INJURY_FEATURES",
+    "RLM_FEATURES",
+    "H2H_FEATURES",
+    "ATS_FEATURES",
+    "TOTALS_FEATURES",
+    "get_spreads_features",
+    "get_totals_features",
+    "get_all_features",
+    "filter_available_features",
+    "UNIFIED_FEATURE_NAMES",
+    "FEATURE_DEFAULTS",
+    "REQUIRED_FEATURES",
+]

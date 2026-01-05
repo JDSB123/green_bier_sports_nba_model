@@ -42,8 +42,11 @@ secrets/*
 # Data directories
 data/raw/
 data/processed/
+data/historical/the_odds/
+data/historical/exports/
 !data/processed/.gitkeep
 !data/raw/.gitkeep
+!data/historical/.gitkeep
 
 # Model artifacts (exclude from data/processed, but include production models)
 *.joblib
