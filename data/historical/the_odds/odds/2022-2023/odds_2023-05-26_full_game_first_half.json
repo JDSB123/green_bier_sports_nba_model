@@ -1,0 +1,1422 @@
+{
+  "timestamp": "2023-05-26T11:55:40Z",
+  "data": [
+    {
+      "id": "210ff89f822d9bd3603215b168ebdad3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-28T00:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Boston Celtics",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-05-26T11:54:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:54:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -145
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:54:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:54:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:24:31Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -120
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:24:31Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -105,
+                  "point": -0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -115,
+                  "point": 0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:24:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 102.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 102.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-05-26T11:54:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:54:08Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -146
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 124
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:54:08Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -114,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:54:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:21:21Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -124
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 102
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:21:21Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -114,
+                  "point": -0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -106,
+                  "point": 0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:21:21Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 102.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 102.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-05-26T11:54:06Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:54:06Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -140
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:54:06Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:54:06Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:25:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -125
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -105
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:25:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": 100,
+                  "point": -1.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -130,
+                  "point": 1.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:25:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 103.5
+                },
+                {
+                  "name": "Under",
+                  "price": -125,
+                  "point": 103.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-05-26T11:54:14Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -145
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -105,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.5
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:21:28Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -120
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:21:28Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:21:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 102.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 102.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-05-26T11:54:06Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:54:06Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -145
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 122
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:54:06Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:54:06Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:24:42Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -120
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:24:42Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:24:42Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 102.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 102.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-05-26T11:53:40Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -143
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 122
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -108,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:25:13Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -118
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -102
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:25:13Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": 100,
+                  "point": -0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -120,
+                  "point": 0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:25:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 102.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 102.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-05-26T11:51:17Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:51:17Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -142
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 122
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:51:17Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -107,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -103,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:51:17Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -103,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 211.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-05-26T11:54:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:54:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -140
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:54:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:54:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:22:38Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -120
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:22:38Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:22:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -120,
+                  "point": 102.5
+                },
+                {
+                  "name": "Under",
+                  "price": 100,
+                  "point": 102.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-05-26T11:51:51Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:51:51Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -145
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:51:51Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:51:51Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "circasports",
+          "title": "Circa Sports",
+          "last_update": "2023-05-26T11:51:42Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:51:42Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -137
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:51:42Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -107,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:51:42Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 210.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 210.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-05-26T11:55:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:55:25Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -148
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:55:25Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:55:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:22:09Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -127
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:22:09Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -137,
+                  "point": 0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 106,
+                  "point": -0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:22:09Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -205,
+                  "point": 98.5
+                },
+                {
+                  "name": "Under",
+                  "price": 140,
+                  "point": 98.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-05-26T11:51:52Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -148
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:23:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -127
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:23:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -137,
+                  "point": 0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 106,
+                  "point": -0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:23:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -205,
+                  "point": 98.5
+                },
+                {
+                  "name": "Under",
+                  "price": 140,
+                  "point": 98.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-05-26T11:51:19Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:51:19Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -148
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:51:19Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:51:19Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 211.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-05-26T11:51:36Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:51:36Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -148
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:51:36Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:51:36Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:25:49Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -127
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:25:49Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -137,
+                  "point": 0.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 106,
+                  "point": -0.5
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:25:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -205,
+                  "point": 98.5
+                },
+                {
+                  "name": "Under",
+                  "price": 140,
+                  "point": 98.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-05-26T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -154
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-05-26T11:55:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:55:13Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -140
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 119
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:55:13Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:55:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            },
+            {
+              "key": "h2h_h1",
+              "last_update": "2023-05-28T00:25:46Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -140
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads_h1",
+              "last_update": "2023-05-28T00:25:46Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -1.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 1.0
+                }
+              ]
+            },
+            {
+              "key": "totals_h1",
+              "last_update": "2023-05-28T00:25:46Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 102.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 102.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "superbook",
+          "title": "SuperBook",
+          "last_update": "2023-05-26T11:52:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-05-26T11:52:24Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -145
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-05-26T11:52:24Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-05-26T11:52:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 211.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 211.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

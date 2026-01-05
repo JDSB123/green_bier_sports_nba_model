@@ -1,0 +1,39 @@
+{
+  "timestamp": "2023-03-23T11:55:38Z",
+  "previous_timestamp": "2023-03-23T11:50:38Z",
+  "next_timestamp": "2023-03-23T12:00:38Z",
+  "data": [
+    {
+      "id": "38e3734f75727751248d59520bb2e127",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-23T23:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "e04dfa83498e56e6552abcd719fdb3f6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-23T23:40:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "9bcd965c09600a271a023deaec0d38d5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-24T00:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "a2138dfb801cbd3041f5373ecd86e877",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-24T02:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Oklahoma City Thunder"
+    }
+  ]
+}

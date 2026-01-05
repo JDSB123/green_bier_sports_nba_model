@@ -1,0 +1,1352 @@
+{
+  "timestamp": "2024-05-26T11:55:38Z",
+  "previous_timestamp": "2024-05-26T11:50:38Z",
+  "next_timestamp": "2024-05-26T12:00:38Z",
+  "data": [
+    {
+      "id": "56ee042b1559df60b76ff0483ad6826c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-05-27T00:10:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Minnesota Timberwolves",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-05-26T11:55:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -142
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-05-26T11:54:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:54:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -134
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 114
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:54:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -108,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:54:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-05-26T11:53:58Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:53:58Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -131
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 111
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:53:58Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -106,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -106,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:53:58Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -101,
+                  "point": 208.0
+                },
+                {
+                  "name": "Under",
+                  "price": -114,
+                  "point": 208.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-05-26T11:55:03Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -131
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 111
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -104,
+                  "point": 208.0
+                },
+                {
+                  "name": "Under",
+                  "price": -116,
+                  "point": 208.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-05-26T11:55:03Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2024-05-26T11:53:40Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -140
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 208.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 208.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "superbook",
+          "title": "SuperBook",
+          "last_update": "2024-05-26T11:54:27Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -135
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-05-26T11:55:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -134
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 112
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -107,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -114,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-05-26T11:55:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -134
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 112
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": -2.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -107,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-05-26T11:55:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -137
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 116
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-05-26T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 100,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -120,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 207.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 207.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-05-26T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -140
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2024-05-26T11:53:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:53:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -135
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:53:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:53:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4709999c6e33516b8cf24912a564fd63",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-05-28T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Boston Celtics",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-05-26T11:55:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -340
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 270
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-05-26T11:53:58Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:53:58Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -330
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:53:58Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -106,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:53:58Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-05-26T11:55:03Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -330
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-05-26T11:54:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:54:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -350
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:54:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:54:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-05-26T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -350
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -105,
+                  "point": -8.5
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -115,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-05-26T11:55:03Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -345
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 270
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:03Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-05-26T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -340
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 270
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2024-05-26T11:53:40Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -340
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:53:40Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "superbook",
+          "title": "SuperBook",
+          "last_update": "2024-05-26T11:54:27Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -330
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 270
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-05-26T11:55:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -345
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-05-26T11:55:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -315
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 255
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-05-26T11:55:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -315
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": 255
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -8.0
+                },
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-05-26T11:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

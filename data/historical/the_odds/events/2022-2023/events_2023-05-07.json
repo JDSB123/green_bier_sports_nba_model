@@ -1,0 +1,39 @@
+{
+  "timestamp": "2023-05-07T11:55:39Z",
+  "previous_timestamp": "2023-05-07T11:50:39Z",
+  "next_timestamp": "2023-05-07T12:00:39Z",
+  "data": [
+    {
+      "id": "62cf1a469826d66f44a8655b857bedff",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-07T19:30:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "f5b9652f8144b4d2376c5d9b8825f43f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-08T00:00:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "eaef1f8ffee464f1709471c1a05fe7e9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-08T23:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "bbb9e1422a1bb99806156c5a2209fd5d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-09T02:00:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Golden State Warriors"
+    }
+  ]
+}

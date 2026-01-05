@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-03-25T11:55:39Z",
+  "previous_timestamp": "2025-03-25T11:50:39Z",
+  "next_timestamp": "2025-03-25T12:00:38Z",
+  "data": [
+    {
+      "id": "c39fca06cd6bde50f88622a84514c31e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-25T23:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "5823666c4647cda743363c25278be9c7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-25T23:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "bc1729007381bae2cba3cc229943e13a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-25T23:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "0e1dde121b5be88b7c95e744d43c877f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-25T23:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "7a55ebea407d4274a2374a144c2597d2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-26T00:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "1188c8b022ed8603fb3e4d5430ef7953",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-26T01:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "40a56a7bb3bbfb6a4d38bddfefc37a58",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-26T02:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "9b5267c6f60224e74b2dd6f5cba8c361",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-26T02:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Oklahoma City Thunder"
+    }
+  ]
+}

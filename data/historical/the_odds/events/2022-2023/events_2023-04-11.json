@@ -1,0 +1,71 @@
+{
+  "timestamp": "2023-04-11T11:55:39Z",
+  "previous_timestamp": "2023-04-11T11:50:39Z",
+  "next_timestamp": "2023-04-11T12:00:39Z",
+  "data": [
+    {
+      "id": "f50c828f0a5d5eb0935129c3b723f6d7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-11T23:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "9519c1bee9be3234edd840fd2ee82b54",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-12T02:00:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "f5e2ddaf76f305e0fcc1004c4b8bcde9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-12T23:00:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "a2d76e219fb560011cc1ae8bfc0745dd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-13T01:30:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "75c2ded107b0de858f62891d627b96ac",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-15T17:00:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "a090ffb13e578cd89d37e0d8a4462576",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-15T22:00:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "df4b9058abf350a556c9e373815dd8a3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-16T00:30:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "9e2b7296c01fb6619f09334528eb21fd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-17T02:00:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Los Angeles Clippers"
+    }
+  ]
+}

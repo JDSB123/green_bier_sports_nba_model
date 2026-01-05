@@ -1,0 +1,15 @@
+{
+  "timestamp": "2022-02-18T05:55:00Z",
+  "previous_timestamp": "2022-02-18T05:45:00Z",
+  "next_timestamp": "2022-02-21T17:05:00Z",
+  "data": [
+    {
+      "id": "916fbf90ab9f00dea26c08b8344caf0d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-18T03:40:56Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Houston Rockets"
+    }
+  ]
+}

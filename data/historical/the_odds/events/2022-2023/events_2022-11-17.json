@@ -1,0 +1,31 @@
+{
+  "timestamp": "2022-11-17T11:55:38Z",
+  "previous_timestamp": "2022-11-17T11:50:38Z",
+  "next_timestamp": "2022-11-17T12:00:39Z",
+  "data": [
+    {
+      "id": "342e4d53b4947dfa454ab2e2e4529036",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-18T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "c1113f445654f8ba7d6dbab57862622d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-18T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "20d49ffae3c9837223011cb9731c8326",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-18T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Detroit Pistons"
+    }
+  ]
+}

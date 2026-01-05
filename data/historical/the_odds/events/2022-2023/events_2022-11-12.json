@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-11-12T11:55:39Z",
+  "previous_timestamp": "2022-11-12T11:50:39Z",
+  "next_timestamp": "2022-11-12T12:00:40Z",
+  "data": [
+    {
+      "id": "3cae1cd5ce858e820438bf7b311c5049",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T21:10:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "c31f502bc26652c909c544e14a3f8a6e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T23:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "a15f030ff7ce195dca97412078d780c8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-13T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "b4c29135af45ee32c66ec229845a47ce",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-13T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "96dd09b5c745eb54ac430fcf7697b28d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-13T00:40:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "1960184412b32e414533f273a191ea97",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-13T01:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "40598f9c8035f14c47e2e59db839f154",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-13T01:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "b02aff1f76ce16e49f1b6cc9f26f612f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-13T01:40:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Houston Rockets"
+    }
+  ]
+}

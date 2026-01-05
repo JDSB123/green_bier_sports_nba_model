@@ -1,0 +1,2056 @@
+{
+  "timestamp": "2022-05-21T11:55:00Z",
+  "data": [
+    {
+      "id": "3633bf9ff73f99931726d5d59e9dea42",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-22T00:30:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Miami Heat",
+      "bookmakers": [
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-05-21T11:47:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:47:53Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:47:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:47:53Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -270
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-05-21T11:49:57Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:49:57Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:49:57Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 207.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 207.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:49:57Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -278
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-05-21T11:48:07Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:07Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -105,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:07Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -270
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 225
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-05-21T11:49:37Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:49:37Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:49:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:49:37Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -278
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-05-21T11:45:05Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:45:05Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:45:05Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:45:05Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -270
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-05-21T11:49:38Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:49:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:49:38Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -105,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -115,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:49:38Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -278
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-05-21T11:46:30Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -118,
+                  "point": 207.0
+                },
+                {
+                  "name": "Under",
+                  "price": 100,
+                  "point": 207.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -286
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 205
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-05-21T11:47:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:47:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -108,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:47:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:47:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -270
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-05-21T11:45:37Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 100,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 225
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-05-21T11:46:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-05-21T11:48:08Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:08Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:08Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 215
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-05-21T11:46:20Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:46:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:46:20Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:20Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -270
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-05-21T11:47:57Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:47:57Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:47:57Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:47:57Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 215
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "intertops",
+          "title": "Intertops",
+          "last_update": "2022-05-21T11:50:09Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:50:09Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:50:09Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:50:09Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 220
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-05-21T11:46:39Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-05-21T11:46:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -233
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 240
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 230
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-05-21T11:48:56Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 215
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-05-21T11:48:21Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 215
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-05-21T11:45:58Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:45:58Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:45:58Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:45:58Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 215
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-05-21T11:48:56Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -109,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -270
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 225
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-05-21T11:48:36Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -263
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 215
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 207.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -6.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -108,
+                  "point": 6.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1bb1923e3625ed3aaaa1d30e9203f967",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-23T01:00:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Golden State Warriors",
+      "bookmakers": [
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-05-21T11:47:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:47:53Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:47:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:47:53Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-05-21T11:49:57Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:49:57Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:49:57Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:49:57Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -132
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-05-21T11:49:37Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:49:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:49:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:49:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-05-21T11:47:57Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:47:57Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:47:57Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -128
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:47:57Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-05-21T11:49:38Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:49:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:49:38Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -105,
+                  "point": -2.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -115,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:49:38Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -141
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 115
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-05-21T11:45:05Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:45:05Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:45:05Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -115,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -105,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:45:05Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-05-21T11:47:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:47:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:47:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:47:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-05-21T11:46:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-05-21T11:48:08Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:08Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:08Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -128
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-05-21T11:46:20Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:46:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:46:20Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:20Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-05-21T11:48:56Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -128
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 107
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-05-21T11:46:39Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-05-21T11:46:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 122
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -123
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 112
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-05-21T11:48:07Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:07Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -111,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -111,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:07Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -132
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-05-21T11:48:36Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -108,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -108,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -135
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 112
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-05-21T11:48:21Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -128
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-05-21T11:46:30Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:46:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -139
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 105
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-05-21T11:48:56Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -109,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -109,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:48:56Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-05-21T11:45:58Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:45:58Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -111,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:45:58Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:45:58Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -128
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-05-21T11:45:37Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-05-21T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 218.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-05-21T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -105,
+                  "point": -2.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -105,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-05-21T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -130
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 110
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

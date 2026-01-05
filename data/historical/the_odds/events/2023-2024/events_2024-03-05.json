@@ -1,0 +1,79 @@
+{
+  "timestamp": "2024-03-05T11:55:38Z",
+  "previous_timestamp": "2024-03-05T11:50:39Z",
+  "next_timestamp": "2024-03-05T12:00:39Z",
+  "data": [
+    {
+      "id": "3c91c57984b8465f9a93a38d3ebf9e11",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "6fa157d2f3a9fcb3bad1b45d7b4af820",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T00:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "5b17d3e602b3035c81fefe4f53e29dde",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T00:30:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "d4bbe49fdd17a16f5333b1ec407a4f6c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T00:40:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "053626ca1b919a6721879172d51f6714",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T00:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "3258e5234b2caf31ab940e6eb8f6c613",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T00:40:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "New Orleans Pelicans"
+    },
+    {
+      "id": "66bc5c23e9e8ab9737e74f5cf37d0410",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T01:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "379f9bea7f53a4d658e9183d5db461cc",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T01:30:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "b2b80d981ff4426f188472bf545a5325",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-06T03:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

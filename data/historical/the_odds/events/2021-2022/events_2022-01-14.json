@@ -1,0 +1,79 @@
+{
+  "timestamp": "2022-01-14T11:55:00Z",
+  "previous_timestamp": "2022-01-14T11:45:00Z",
+  "next_timestamp": "2022-01-14T12:05:00Z",
+  "data": [
+    {
+      "id": "0ace381b58c70267f7b8ee4a596b2c90",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T00:05:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "d268efec29056ba2e8b174258d504ba2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "baa47a75fb5eb888e528012693ef68af",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "ca2fa656ad083b0415b0ac3408be7067",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T00:40:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "4dfa7d938972e7bbe41ec2c875252d4f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T01:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "1be020c5099d81fe156a11de53ba9627",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T01:40:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "d4661955412a7065df236247adc90183",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "22d142ca7caf949ef7b63832ae2d7b85",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T03:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "f5508ac29505863543cd177f63e2bee2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-15T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

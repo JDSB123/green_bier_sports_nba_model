@@ -1,0 +1,39 @@
+{
+  "timestamp": "2022-05-01T11:55:00Z",
+  "previous_timestamp": "2022-05-01T11:45:00Z",
+  "next_timestamp": "2022-05-01T12:05:00Z",
+  "data": [
+    {
+      "id": "c2f5d5cc63b3d6fa6caa19048d5536fd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-01T17:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "02e9eb8c3628f59ae3fac49d20c3f28c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-02T23:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "15ae09996f5cb1013aef544fc8e89ca9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-03T02:00:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "5b8cbd68f2f1944eb6a1f744b6f081b0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-01T19:30:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Golden State Warriors"
+    }
+  ]
+}

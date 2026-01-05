@@ -1,0 +1,15 @@
+{
+  "timestamp": "2023-06-05T11:55:38Z",
+  "previous_timestamp": "2023-06-05T11:50:38Z",
+  "next_timestamp": "2023-06-05T12:00:38Z",
+  "data": [
+    {
+      "id": "69623f443d3a43b18a90221f1ced9ea2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-06-08T00:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Denver Nuggets"
+    }
+  ]
+}

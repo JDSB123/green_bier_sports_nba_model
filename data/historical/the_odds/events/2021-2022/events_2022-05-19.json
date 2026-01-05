@@ -1,0 +1,23 @@
+{
+  "timestamp": "2022-05-19T11:55:00Z",
+  "previous_timestamp": "2022-05-19T11:45:00Z",
+  "next_timestamp": "2022-05-19T12:05:00Z",
+  "data": [
+    {
+      "id": "cdc3a662d0750af717817471d9b42703",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-20T00:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "a2071e125a14f123cf27036f43d23911",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-21T01:00:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Dallas Mavericks"
+    }
+  ]
+}

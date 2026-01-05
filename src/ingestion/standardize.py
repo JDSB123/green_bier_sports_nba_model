@@ -2,14 +2,20 @@
 Data Standardization Module - Unified Team Name Matching.
 
 This module provides functions to standardize team names, dates, and game data
-from different sources (The Odds API, API-Basketball) to match ESPN's format.
+from different sources (The Odds API, API-Basketball, etc.) to a canonical format.
+
+IMPORTANT CLARIFICATION:
+- "Standard format" team names (e.g., "Los Angeles Lakers") are a NAMING CONVENTION
+- This naming style happens to match ESPN's format, but data comes from MULTIPLE sources
+- ESPN is used as a data source ONLY for schedules (see src/ingestion/espn.py)
+- Most data (odds, stats, records) comes from The Odds API and API-Basketball
 
 Uses the MASTER team_mapping.json database via src.utils.team_names for:
 - Canonical team IDs (nba_lal, nba_bos, etc.)
 - Comprehensive variant matching (95+ variants)
 - Fuzzy matching for edge cases
 
-ESPN team names are the OUTPUT format. Internal processing uses canonical IDs.
+Standard team names are the OUTPUT format. Internal processing uses canonical IDs.
 
 STANDARD FORMAT: "AWAY TEAM vs. HOME TEAM"
 - All game data uses 'away_team' and 'home_team' fields
@@ -434,11 +440,15 @@ def is_valid_espn_team_name(team_name: str) -> bool:
 
 def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_failure: bool = False) -> Tuple[str, bool]:
     """
-    Normalize team name from any source to ESPN format.
+    Normalize team name from any source to standard format.
+    
+    NOTE: Function name uses "espn" for historical reasons, but this is a
+    NAMING CONVENTION only (standard format like "Los Angeles Lakers").
+    Data comes from multiple sources (The Odds API, API-Basketball, etc.).
     
     USES MASTER DATABASE: team_mapping.json via src.utils.team_names
     - Canonical IDs (nba_lal, nba_bos, etc.) for internal matching
-    - ESPN full names as OUTPUT format
+    - Standard full names as OUTPUT format (e.g., "Los Angeles Lakers")
     - Fuzzy matching for edge cases (95+ variants supported)
     
     Args:

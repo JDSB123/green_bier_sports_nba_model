@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-11-11T11:55:39Z",
+  "previous_timestamp": "2022-11-11T11:50:39Z",
+  "next_timestamp": "2022-11-11T12:00:39Z",
+  "data": [
+    {
+      "id": "de785e87df09f69906f5c17b2c496526",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T00:10:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "de091abe9f0e0c55dbaaa8659b5b8d33",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T00:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "4b584f6e86174d124daf3aebac2e29ea",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T00:40:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "48e34fa96cf793e5a2ddf9d1e4b2ac06",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T01:10:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "bf1394661db5ae54f3b8caaaf743415a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T01:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "c90b57a33d2640f3c003f7b725b1bb2a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T02:40:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "46c9efd74bff40ae34a31d107aeca90c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "2172d52ffc87ecf0baa8d7f204648fc3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-12T03:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Sacramento Kings"
+    }
+  ]
+}

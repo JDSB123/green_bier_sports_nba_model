@@ -1,0 +1,23 @@
+{
+  "exported_at": "2026-01-05T15:00:52.610222+00:00",
+  "seasons": [
+    "2023-2024",
+    "2024-2025"
+  ],
+  "files": {
+    "events": [
+      "data\\historical\\exports\\2023-2024_events.csv",
+      "data\\historical\\exports\\2023-2024_events.parquet",
+      "data\\historical\\exports\\2024-2025_events.csv",
+      "data\\historical\\exports\\2024-2025_events.parquet"
+    ],
+    "odds": [
+      "data\\historical\\exports\\2023-2024_odds_featured.csv",
+      "data\\historical\\exports\\2023-2024_odds_featured.parquet",
+      "data\\historical\\exports\\2024-2025_odds_featured.csv",
+      "data\\historical\\exports\\2024-2025_odds_featured.parquet"
+    ],
+    "player_props": []
+  },
+  "total_files": 8
+}

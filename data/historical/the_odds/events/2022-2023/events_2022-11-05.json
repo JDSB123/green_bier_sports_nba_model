@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-11-05T11:55:40Z",
+  "previous_timestamp": "2022-11-05T11:50:41Z",
+  "next_timestamp": "2022-11-05T12:00:40Z",
+  "data": [
+    {
+      "id": "8e684aff702833c7085a00f96eda616b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-05T21:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Sacramento Kings"
+    },
+    {
+      "id": "9102356457cbbb690753533b2390bc20",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-05T23:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "b1672a2d7699b65057ee162a3da8bd91",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-05T23:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "New Orleans Pelicans"
+    },
+    {
+      "id": "41082293778950e9483e1982c3ed8eab",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-05T23:40:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "87007e148815a1e550aefe4f2af0c4c3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-06T00:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "c773aba9929b08ae3b9af1c8777a7635",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-06T00:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "156d757d5826be207d409bec68f78f88",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-06T01:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "ce78f27e1e28fdc76b3d57f9c098b295",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-06T02:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Portland Trail Blazers"
+    }
+  ]
+}

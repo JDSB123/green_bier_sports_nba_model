@@ -1,0 +1,55 @@
+{
+  "timestamp": "2022-02-05T11:55:00Z",
+  "previous_timestamp": "2022-02-05T11:45:00Z",
+  "next_timestamp": "2022-02-05T12:05:00Z",
+  "data": [
+    {
+      "id": "86718b902fc21773e62339631c5b7561",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-06T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "3c1722fbc5c3b11e61a85899016d3585",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-05T22:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "d823e71e9d339646e9866cf9db5087e5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-06T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "a34ec255aa371fb42e22903a90c8e5a0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-06T01:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "572d984e132eddaac3da93e5db332e7e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-06T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "e2296d6d1206f8d185466876e2b444ea",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-06T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Milwaukee Bucks"
+    }
+  ]
+}

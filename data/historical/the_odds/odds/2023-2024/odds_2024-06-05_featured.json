@@ -1,0 +1,600 @@
+{
+  "timestamp": "2024-06-05T11:55:37Z",
+  "previous_timestamp": "2024-06-05T11:50:37Z",
+  "next_timestamp": "2024-06-05T12:00:37Z",
+  "data": [
+    {
+      "id": "c7e48011b1086976b26516e9d7b513f6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-06-07T00:40:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Dallas Mavericks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-06-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -230
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 190
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-06-05T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -250
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-06-05T11:54:05Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:05Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -245
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:05Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -106,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:05Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-06-05T11:53:57Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:53:57Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -245
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:53:57Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:53:57Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-06-05T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -240
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -105,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -115,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-06-05T11:54:52Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:52Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -260
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:52Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2024-06-05T11:54:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -260
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 218
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "superbook",
+          "title": "SuperBook",
+          "last_update": "2024-06-05T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -250
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-06-05T11:55:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:55:16Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -244
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 204
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:55:16Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:55:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-06-05T11:54:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -240
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -107,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-06-05T11:54:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-06-05T11:54:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -250
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-06-05T11:54:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-06-05T11:54:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

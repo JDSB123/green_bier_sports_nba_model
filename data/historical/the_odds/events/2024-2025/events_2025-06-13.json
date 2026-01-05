@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-06-13T11:55:37Z",
+  "previous_timestamp": "2025-06-13T11:50:37Z",
+  "next_timestamp": "2025-06-13T12:00:37Z",
+  "data": [
+    {
+      "id": "b3341893e40e1357ab9fcd9c362d7401",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-06-14T00:30:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Oklahoma City Thunder"
+    }
+  ]
+}

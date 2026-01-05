@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-02-27T11:55:00Z",
+  "previous_timestamp": "2022-02-27T11:45:00Z",
+  "next_timestamp": "2022-02-27T12:05:00Z",
+  "data": [
+    {
+      "id": "f695ef5d363d72965179602eb808e0a8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-27T18:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "31fa5cf8ee74ffe36189257f6bce5078",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-27T20:40:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "b63acf78fdcf9be48edc08773c343b2b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-27T22:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "73cd1dadf458c3b94f634817cdf1b3cb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-28T00:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "e85ec37de9ac0d1d3096578e9aa7a3d0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-28T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "48f95d0b487cdd0ac31327749c04a1a2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-28T00:40:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "568c64ada9f7cb65a2bbd8e98d75782e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-28T02:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "058531722f41cc6ca532068467e0e37e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-28T03:10:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "New Orleans Pelicans"
+    }
+  ]
+}

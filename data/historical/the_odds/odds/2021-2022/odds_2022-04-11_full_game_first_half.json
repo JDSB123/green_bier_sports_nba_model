@@ -1,0 +1,5582 @@
+{
+  "timestamp": "2022-04-11T11:55:00Z",
+  "data": [
+    {
+      "id": "797ba6277d31d5b5021a9fd57f37219b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-13T01:30:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Los Angeles Clippers",
+      "bookmakers": [
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-04-11T11:47:48Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 125
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -145
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 130
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -149
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 120
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -141
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 136
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -122
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 122
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-04-11T11:48:16Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -111,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -111,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 120
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -141
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 231.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -108,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -141
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-04-11T11:50:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -141
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 118
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -139
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-04-11T11:47:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -105,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 120
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -141
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -109,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -137
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-04-11T11:47:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 125
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -145
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -109,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -137
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "intertops",
+          "title": "Intertops",
+          "last_update": "2022-04-11T11:46:59Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 125
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -145
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -109,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -137
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -109,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -137
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-04-11T11:45:46Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-04-11T11:49:50Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 105
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -139
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-04-11T11:44:22Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -109,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -109,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 125
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -145
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -109,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -111,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 115
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -137
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-04-11T11:45:41Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": 2.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": 120
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -141
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "95324c30dfcbdef0ddc9ef9ea9163fdd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-14T01:30:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "San Antonio Spurs",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -233
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 194
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-04-11T11:47:48Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -200
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 170
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -227
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 185
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -208
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-04-11T11:48:16Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -111,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -111,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -200
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -108,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -108,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -222
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 180
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-04-11T11:50:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -227
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 180
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -189
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 200
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -200
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 176
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -111,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -109,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -192
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-04-11T11:47:20Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -105,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -200
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -112,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -109,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -196
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-04-11T11:47:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -200
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 170
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -112,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -109,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -196
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "intertops",
+          "title": "Intertops",
+          "last_update": "2022-04-11T11:46:59Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -204
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -112,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -109,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -196
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -112,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -109,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -196
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-04-11T11:49:50Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -227
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 170
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-04-11T11:45:46Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -208
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-04-11T11:44:22Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -109,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -109,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -200
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 170
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-04-11T11:45:41Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -208
+                },
+                {
+                  "name": "San Antonio Spurs",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a5f7ee0e082201793e24ec39da5003ab",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-12T23:00:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Cleveland Cavaliers",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -115,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -105,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -370
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 280
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -108,
+                  "point": -8.5
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -112,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -357
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 290
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-04-11T11:47:48Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -417
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 320
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -333
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 265
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-04-11T11:48:16Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -115,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -105,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -385
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 315
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -333
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 265
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -333
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 265
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -333
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 265
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-04-11T11:49:50Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -118,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 100,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -455
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 290
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -333
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 265
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-04-11T11:47:20Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 229.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 100,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -385
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 315
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-04-11T11:45:41Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -385
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 320
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-04-11T11:47:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -400
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 310
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -357
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 280
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "intertops",
+          "title": "Intertops",
+          "last_update": "2022-04-11T11:46:59Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -385
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 300
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-04-11T11:48:32Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 230.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:32Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -108,
+                  "point": -8.5
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -108,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:32Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -400
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 315
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -312
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 340
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -333
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 320
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-04-11T11:50:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -7.5
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 7.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -345
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 260
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-04-11T11:45:46Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -400
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 300
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-04-11T11:44:22Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -109,
+                  "point": -8.0
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -109,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 229.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -400
+                },
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": 300
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f4f4958f958fe8529fc8137fecc60040",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-13T23:00:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Charlotte Hornets",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -196
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 165
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -196
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 166
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-04-11T11:47:48Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:48Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -189
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -109,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 148
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -109,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 148
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -109,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 148
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-04-11T11:48:16Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -111,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -111,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 237.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:16Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -182
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -109,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 148
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-04-11T11:49:50Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -189
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 140
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-04-11T11:47:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -105,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 237.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:20Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-04-11T11:45:46Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -185
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:46Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -111,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -109,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -175
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 148
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-04-11T11:45:41Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:45:41Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-04-11T11:47:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -189
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -200
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 165
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "intertops",
+          "title": "Intertops",
+          "last_update": "2022-04-11T11:46:59Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:46:59Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 238.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 238.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -108,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -108,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -200
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 165
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-04-11T11:50:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:50:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -189
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 155
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -169
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 180
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -179
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 170
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-04-11T11:44:22Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -109,
+                  "point": -4.5
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -109,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 237.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:44:22Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -189
+                },
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "313f1e3a12f28182bf16045cc36a50bd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-16T22:00:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Toronto Raptors",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -208
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -189
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -189
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -5000
+                }
+              ]
+            },
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -161
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 190
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -208
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 175
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -118,
+                  "point": -4.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -104,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -196
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 155
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -118,
+                  "point": -4.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -104,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -196
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 155
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -118,
+                  "point": -4.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -104,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -196
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 155
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -118,
+                  "point": -4.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -104,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -196
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 155
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -118,
+                  "point": -4.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -103,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -192
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 155
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8703293a4eedcd53d7e47a7d4b6c8de2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-18T02:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Chicago Bulls",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 9.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -9.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 315
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -400
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 420
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -294
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -5000
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -417
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d3d7f848492b501db285bfd0d909b827",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-17T00:30:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Denver Nuggets",
+      "bookmakers": [
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 210
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -222
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 175
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -208
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -108,
+                  "point": 5.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -114,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 175
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -222
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -108,
+                  "point": 5.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -114,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 175
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -222
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -108,
+                  "point": 5.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -114,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 175
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -222
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -108,
+                  "point": 5.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -114,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 175
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -222
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 188
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -227
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -106,
+                  "point": 5.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -114,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 175
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -217
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 225
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -189
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -5000
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -222
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4d9d3ef86cfc82a4867ee33aabfc68f5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-16T17:00:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Utah Jazz",
+      "bookmakers": [
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-04-11T11:48:45Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -161
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -149
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 130
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": -2.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -108,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -141
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 116
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": -2.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -108,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -141
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 116
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": -2.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -108,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -141
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 116
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": -2.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -108,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -141
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 116
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-04-11T11:48:28Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:28Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -143
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 120
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -114,
+                  "point": -2.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -106,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -141
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 116
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-04-11T11:49:24Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -119
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:49:24Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -139
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 120
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eb1122d218c41aa92c5c98ebc5320590",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-17T17:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Chicago Bulls",
+      "bookmakers": [
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 290
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -370
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-04-11T11:48:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:30Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 290
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -370
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-04-11T11:48:39Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:39Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 290
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -385
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-04-11T11:47:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:47:47Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 290
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -370
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-04-11T11:48:33Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:33Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 290
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -370
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-04-11T11:48:20Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-04-11T11:48:20Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 290
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -370
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

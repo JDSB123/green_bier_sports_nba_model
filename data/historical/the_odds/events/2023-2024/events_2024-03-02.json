@@ -1,0 +1,47 @@
+{
+  "timestamp": "2024-03-02T11:55:41Z",
+  "previous_timestamp": "2024-03-02T11:50:39Z",
+  "next_timestamp": "2024-03-02T12:00:40Z",
+  "data": [
+    {
+      "id": "c364863d5a2d7f6e0a8628fcff868fa2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-02T20:10:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "83d583d598f6cc1ce5fc01bb94485a8a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-02T22:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "decd0fe6876afcb4654c1a2ed5840766",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-03T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "0fb83b1ef41912af1127cb2928230b7b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-03T01:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "64226e5c3fc6970071dcd746d2d8567b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-03T02:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Houston Rockets"
+    }
+  ]
+}

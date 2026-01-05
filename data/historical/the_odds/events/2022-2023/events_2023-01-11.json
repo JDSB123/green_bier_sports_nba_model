@@ -1,0 +1,71 @@
+{
+  "timestamp": "2023-01-11T11:55:38Z",
+  "previous_timestamp": "2023-01-11T11:50:39Z",
+  "next_timestamp": "2023-01-11T12:00:38Z",
+  "data": [
+    {
+      "id": "2d934bf32f91b7c3c433e376d11fec9e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "f0f99592d93d1c34b9b018432b3ad850",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "01546c92018addf538e27e8529e6f700",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T00:30:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "3fc3c2a781b1f6f4b5498a5282f7b0ae",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T00:30:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "New Orleans Pelicans"
+    },
+    {
+      "id": "4d55835f4f34b33ca20ba252993fbbb7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T00:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "363ed6c18112ae9d5dd6945bbb122b29",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "1c2b274771d6c6e0274af77227c1aa79",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T03:00:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "e04777491f32ba711361a1e72fa7eec9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-12T03:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

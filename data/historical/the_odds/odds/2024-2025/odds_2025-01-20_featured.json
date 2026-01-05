@@ -1,0 +1,3697 @@
+{
+  "timestamp": "2025-01-20T11:55:38Z",
+  "previous_timestamp": "2025-01-20T11:50:38Z",
+  "next_timestamp": "2025-01-20T12:00:38Z",
+  "data": [
+    {
+      "id": "018bca38c1fc33355f7dfc20ad69b2ee",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T17:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Dallas Mavericks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 180
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -218
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -108,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 205
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -245
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -105,
+                  "point": 6.0
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -115,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 190
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -105,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -115,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 190
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -101,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -111,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 190
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -108,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 185
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -225
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 165
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -113,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -108,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": 180
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -225
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-01-20T11:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Charlotte Hornets",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "648497f8f49bde0d229d66eb1e3c27d3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T19:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Detroit Pistons",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 270
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -340
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -108,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -112,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 260
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -320
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -115,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -105,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 280
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -335
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -115,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 280
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -335
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -101,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -111,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 270
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -335
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -108,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -112,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 270
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -345
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -110,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 223.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 223.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 260
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -350
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -115,
+                  "point": 8.5
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -105,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 265
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -335
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -107,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -114,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 224.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 224.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-01-20T11:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 8.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -115,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "499a4015cf50b478efb61409fa0786d5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T19:40:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Minnesota Timberwolves",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -192
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -108,
+                  "point": -4.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -195
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -105,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -115,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -196
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 164
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -200
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -190
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 158
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -190
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 155
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 234.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 234.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -185
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -115,
+                  "point": -4.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -185
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -111,
+                  "point": -4.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -101,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-01-20T11:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -115,
+                  "point": -4.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b736883206d52bd2d7f89ed1d3c89f62",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T20:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Atlanta Hawks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 210
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -258
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -115,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -105,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -118,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 235.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -240
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -115,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -105,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 236.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 236.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 220
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -270
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 236.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 236.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 205
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -250
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -115,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -105,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 220
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 210
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -250
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -106,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -106,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 100,
+                  "point": 236.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 236.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 210
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -250
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -103,
+                  "point": 236.0
+                },
+                {
+                  "name": "Under",
+                  "price": -117,
+                  "point": 236.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-01-20T11:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 236.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 236.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 205
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -250
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -109,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "78c8db06b7974d20983f9b3c9bc1b678",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T20:40:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Phoenix Suns",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -305
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 245
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -115,
+                  "point": -7.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -105,
+                  "point": 7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -285
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 235
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -7.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 233.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 233.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -315
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 265
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -8.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -315
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 265
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -106,
+                  "point": -8.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -106,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -102,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -335
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -105,
+                  "point": -8.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -115,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -350
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -115,
+                  "point": -7.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -105,
+                  "point": 7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 233.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 233.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -320
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -108,
+                  "point": -8.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -112,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 233.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 233.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -305
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 245
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -108,
+                  "point": -8.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -113,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 234.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 234.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "173d7d5f2bf8881f4bc4a2179fdf895f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T22:00:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Boston Celtics",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -345
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -112,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -370
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 285
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -350
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -360
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 290
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -375
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 300
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -340
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 285
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -340
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 285
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -106,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-01-20T11:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -8.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -315
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 255
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -113,
+                  "point": -8.0
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -108,
+                  "point": 8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "20515d2b43e180979c39074d4f7bcb3f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-21T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Utah Jazz",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -600
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 440
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -115,
+                  "point": -11.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -105,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -600
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 425
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -115,
+                  "point": -11.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -105,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -600
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 430
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -11.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -110,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -650
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 450
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -11.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -115,
+                  "point": 11.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -600
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 460
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -116,
+                  "point": -10.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 104,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -600
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 460
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -120,
+                  "point": -10.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 100,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-01-20T11:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -120,
+                  "point": -10.5
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 100,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -530
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -108,
+                  "point": -11.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -113,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -550
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -11.0
+                },
+                {
+                  "name": "Utah Jazz",
+                  "price": -110,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "570c8e2909c0bc3a600aff932287d50f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-21T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Chicago Bulls",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-01-20T11:53:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 180
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -218
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-01-20T11:53:54Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 170
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:53:54Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-01-20T11:55:08Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 190
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -230
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -114,
+                  "point": 6.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -107,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:08Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-01-20T11:55:07Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 170
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:55:07Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-01-20T11:54:28Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 172
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:28Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 170
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -105,
+                  "point": 5.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -115,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-01-20T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 170
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -101,
+                  "point": 5.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -111,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-01-20T11:54:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 185
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -225
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-01-20T11:54:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 226.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 226.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

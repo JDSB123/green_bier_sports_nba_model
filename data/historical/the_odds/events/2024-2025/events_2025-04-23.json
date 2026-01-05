@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-04-23T11:55:39Z",
+  "previous_timestamp": "2025-04-23T11:50:38Z",
+  "next_timestamp": "2025-04-23T12:00:39Z",
+  "data": [
+    {
+      "id": "7a618b29a0b9af8b895940149badce7b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-23T23:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "14a3b88a3d45b7afa6622d6f960e0b09",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-23T23:40:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "280a8379b89f8ad370276332b30328d6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-24T01:30:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "3bc5054ad4bc0f2c50cd87a3fcb8cd45",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-24T23:00:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "f39fff52133794a10c16ba61d2c0eeda",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-25T01:40:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "19aca5a6e1fa8b1aa68505d3f1d75b37",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-25T02:00:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "8af134619ff871a0b76992d76de7e224",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-26T00:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "cce8a5bd08230e0c507ec925508889bc",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-26T01:30:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Los Angeles Lakers"
+    }
+  ]
+}

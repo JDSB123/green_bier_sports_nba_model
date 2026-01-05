@@ -1,0 +1,1327 @@
+event_id,sport_key,sport_title,commence_time,home_team,away_team,completed,game_date
+92cf7db605a734b10e69eabf56e1eac9,basketball_nba,NBA,2024-10-22 23:40:00+00:00,Boston Celtics,New York Knicks,False,2024-10-22
+026ffb7b2ccf8a09dab9b24f33de27f7,basketball_nba,NBA,2024-10-23 02:00:00+00:00,Los Angeles Lakers,Minnesota Timberwolves,False,2024-10-23
+bcd8b3510e7a9d55ccbd7ce761761e11,basketball_nba,NBA,2024-10-23 23:00:00+00:00,Detroit Pistons,Indiana Pacers,False,2024-10-23
+3f1e025363323de9c99f3d7ec0eb26b7,basketball_nba,NBA,2024-10-23 23:30:00+00:00,Atlanta Hawks,Brooklyn Nets,False,2024-10-23
+520febbdcfd2e1f8c002f0e5969ddd49,basketball_nba,NBA,2024-10-23 23:30:00+00:00,Toronto Raptors,Cleveland Cavaliers,False,2024-10-23
+8e1c55c639dc5d22d84decb3f27c7b66,basketball_nba,NBA,2024-10-23 23:30:00+00:00,Miami Heat,Orlando Magic,False,2024-10-23
+5908e64fdee6aa0aee10509f928b8344,basketball_nba,NBA,2024-10-23 23:30:00+00:00,Philadelphia 76ers,Milwaukee Bucks,False,2024-10-23
+3614297da4247a7aaef3dbd9463e644b,basketball_nba,NBA,2024-10-24 00:00:00+00:00,Houston Rockets,Charlotte Hornets,False,2024-10-24
+ed3d298bba3be64b2ccdf364afa3c097,basketball_nba,NBA,2024-10-24 00:00:00+00:00,New Orleans Pelicans,Chicago Bulls,False,2024-10-24
+6f2e578dbd59095e80b5b0c74f43d8d8,basketball_nba,NBA,2024-10-24 01:00:00+00:00,Utah Jazz,Memphis Grizzlies,False,2024-10-24
+7f82790f1c8e7caa7dfa873ec0547fe4,basketball_nba,NBA,2024-10-24 02:00:00+00:00,Portland Trail Blazers,Golden State Warriors,False,2024-10-24
+8de94b8af5293483abe2a5c52875810d,basketball_nba,NBA,2024-10-24 02:00:00+00:00,Los Angeles Clippers,Phoenix Suns,False,2024-10-24
+9e5c6a9f958653c964712b118e07f6ab,basketball_nba,NBA,2024-10-24 23:10:00+00:00,Washington Wizards,Boston Celtics,False,2024-10-24
+9fc2bfeed6fed586c135c5f1bafbab54,basketball_nba,NBA,2024-10-24 23:40:00+00:00,Dallas Mavericks,San Antonio Spurs,False,2024-10-24
+d1c48b0232af93a5b1b27fce495ae28b,basketball_nba,NBA,2024-10-25 02:00:00+00:00,Denver Nuggets,Oklahoma City Thunder,False,2024-10-25
+933e68c9038b6d3a7ffd59790addde8d,basketball_nba,NBA,2024-10-25 02:10:00+00:00,Sacramento Kings,Minnesota Timberwolves,False,2024-10-25
+7cdee69a4e2927c0b2c17e7bfbfd6ab0,basketball_nba,NBA,2024-10-25 23:10:00+00:00,Orlando Magic,Brooklyn Nets,False,2024-10-25
+0f18f0a08f985e86e9db9430b5a85e3f,basketball_nba,NBA,2024-10-25 23:10:00+00:00,Toronto Raptors,Philadelphia 76ers,False,2024-10-25
+3212efff7788723bdd2ec598fd8f7a43,basketball_nba,NBA,2024-10-25 23:40:00+00:00,New York Knicks,Indiana Pacers,False,2024-10-25
+d427c123a47ed18e5c6a00749921fa34,basketball_nba,NBA,2024-10-25 23:40:00+00:00,Cleveland Cavaliers,Detroit Pistons,False,2024-10-25
+d9b45f284cc30d3ee16f3d38499ff6fe,basketball_nba,NBA,2024-10-25 23:40:00+00:00,Atlanta Hawks,Charlotte Hornets,False,2024-10-25
+4d100d17e68d4c23be0801e6574919e7,basketball_nba,NBA,2024-10-26 00:10:00+00:00,Milwaukee Bucks,Chicago Bulls,False,2024-10-26
+b2442e1bb0182208b3850a6574b179f0,basketball_nba,NBA,2024-10-26 00:10:00+00:00,Houston Rockets,Memphis Grizzlies,False,2024-10-26
+cf2f4cd5b4e9c76b594bcc5346ba509a,basketball_nba,NBA,2024-10-26 01:40:00+00:00,Utah Jazz,Golden State Warriors,False,2024-10-26
+74aea6b7943c5717d05eb1e6d05a75c6,basketball_nba,NBA,2024-10-26 02:10:00+00:00,Los Angeles Lakers,Phoenix Suns,False,2024-10-26
+21491b71fdca2f4146fcd5263a14675f,basketball_nba,NBA,2024-10-26 02:10:00+00:00,Portland Trail Blazers,New Orleans Pelicans,False,2024-10-26
+cfb19547e4e15469539403ef660d3a4e,basketball_nba,NBA,2024-10-26 21:10:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2024-10-26
+f02c49d363fa412285c5bd630e6b8db0,basketball_nba,NBA,2024-10-26 23:10:00+00:00,Charlotte Hornets,Miami Heat,False,2024-10-26
+69e41216a389779310992902c407fb16,basketball_nba,NBA,2024-10-26 23:10:00+00:00,Washington Wizards,Cleveland Cavaliers,False,2024-10-26
+feb862ee9dbe752f1bba0ffb774ddc4a,basketball_nba,NBA,2024-10-26 23:10:00+00:00,Detroit Pistons,Boston Celtics,False,2024-10-26
+f9c7d537298de376639b2518f9d89d15,basketball_nba,NBA,2024-10-27 00:10:00+00:00,Chicago Bulls,Oklahoma City Thunder,False,2024-10-27
+12d7b6212965fe28084bd6d296a3ef86,basketball_nba,NBA,2024-10-27 00:10:00+00:00,Memphis Grizzlies,Orlando Magic,False,2024-10-27
+7f8a6c1e24166c8829e4545b4bdf9904,basketball_nba,NBA,2024-10-27 00:10:00+00:00,Minnesota Timberwolves,Toronto Raptors,False,2024-10-27
+467b1bf2892dff18154294934b7edbe7,basketball_nba,NBA,2024-10-27 00:40:00+00:00,San Antonio Spurs,Houston Rockets,False,2024-10-27
+8de0609d2ecb76c604ea0234f3634e97,basketball_nba,NBA,2024-10-27 02:10:00+00:00,Phoenix Suns,Dallas Mavericks,False,2024-10-27
+0e1aef8ecad498b06dc9785da1b02a84,basketball_nba,NBA,2024-10-27 02:40:00+00:00,Los Angeles Lakers,Sacramento Kings,False,2024-10-27
+6aed95c15b1b55b0d40f911cf702c2e8,basketball_nba,NBA,2024-10-27 19:40:00+00:00,Indiana Pacers,Philadelphia 76ers,False,2024-10-27
+f3886316e64ad5e79bc457ce7d19a9bb,basketball_nba,NBA,2024-10-27 22:10:00+00:00,Portland Trail Blazers,New Orleans Pelicans,False,2024-10-27
+cfd6ffdc9bdbbb7be1a69e17b936efbe,basketball_nba,NBA,2024-10-27 22:10:00+00:00,Brooklyn Nets,Milwaukee Bucks,False,2024-10-27
+6e6ff2fd930b652ba8469b898ecd8cf2,basketball_nba,NBA,2024-10-27 23:10:00+00:00,Oklahoma City Thunder,Atlanta Hawks,False,2024-10-27
+76a04d121df0cce534863990126ac8c9,basketball_nba,NBA,2024-10-28 00:40:00+00:00,Golden State Warriors,Los Angeles Clippers,False,2024-10-28
+afbdf758c85a15cc869323ec93480b5d,basketball_nba,NBA,2024-10-28 23:10:00+00:00,Orlando Magic,Indiana Pacers,False,2024-10-28
+56f6aed143df37149b0a9d7802322276,basketball_nba,NBA,2024-10-28 23:30:00+00:00,Atlanta Hawks,Washington Wizards,False,2024-10-28
+9127a905bc028e42d027e15c225d310f,basketball_nba,NBA,2024-10-28 23:40:00+00:00,Boston Celtics,Milwaukee Bucks,False,2024-10-28
+cb47726dd9940fa88bf3d2f24a0794ce,basketball_nba,NBA,2024-10-28 23:40:00+00:00,New York Knicks,Cleveland Cavaliers,False,2024-10-28
+91073994cd05f4738b880e0d07a3e270,basketball_nba,NBA,2024-10-28 23:40:00+00:00,Toronto Raptors,Denver Nuggets,False,2024-10-28
+7ffca5e7b2cac47cf2958f98f4b13e2e,basketball_nba,NBA,2024-10-28 23:40:00+00:00,Miami Heat,Detroit Pistons,False,2024-10-28
+79230185cd438af68ea49c6d68f5f91b,basketball_nba,NBA,2024-10-29 00:10:00+00:00,Memphis Grizzlies,Chicago Bulls,False,2024-10-29
+a06a25ca228baede0d7fba2e86118c9f,basketball_nba,NBA,2024-10-29 00:10:00+00:00,San Antonio Spurs,Houston Rockets,False,2024-10-29
+803eb6e3fb8e7139f9471dcb29a6693b,basketball_nba,NBA,2024-10-29 00:40:00+00:00,Dallas Mavericks,Utah Jazz,False,2024-10-29
+197c28e2d655a7b5f33f005ffa99d233,basketball_nba,NBA,2024-10-29 02:10:00+00:00,Sacramento Kings,Portland Trail Blazers,False,2024-10-29
+b06bb50b14ed2f9b40418a1d2dd209d4,basketball_nba,NBA,2024-10-29 02:10:00+00:00,Phoenix Suns,Los Angeles Lakers,False,2024-10-29
+351ec2a958a204ecb22489330d658ce6,basketball_nba,NBA,2024-10-29 23:30:00+00:00,Brooklyn Nets,Denver Nuggets,False,2024-10-29
+15893327c28d5d11f74b1b9a0560aa78,basketball_nba,NBA,2024-10-29 23:30:00+00:00,Minnesota Timberwolves,Dallas Mavericks,False,2024-10-29
+64b97e005d46756473c62e9fe2fe9363,basketball_nba,NBA,2024-10-30 01:00:00+00:00,Utah Jazz,Sacramento Kings,False,2024-10-30
+7e53379b83a207f929bf35d6f4a0e5c3,basketball_nba,NBA,2024-10-30 02:00:00+00:00,Golden State Warriors,New Orleans Pelicans,False,2024-10-30
+9fadc26265b153d0280dd8382d9c5ac5,basketball_nba,NBA,2024-10-30 23:10:00+00:00,Washington Wizards,Atlanta Hawks,False,2024-10-30
+cde552586229236873e3698b720babd8,basketball_nba,NBA,2024-10-30 23:10:00+00:00,Indiana Pacers,Boston Celtics,False,2024-10-30
+0e47e2449a96f6b0ad731135660f3871,basketball_nba,NBA,2024-10-30 23:10:00+00:00,Charlotte Hornets,Toronto Raptors,False,2024-10-30
+3366cac8007c5e968fa480aa6ce14408,basketball_nba,NBA,2024-10-30 23:10:00+00:00,Cleveland Cavaliers,Los Angeles Lakers,False,2024-10-30
+a3c6e5d32e56f40a45b595b4cf999e79,basketball_nba,NBA,2024-10-30 23:10:00+00:00,Philadelphia 76ers,Detroit Pistons,False,2024-10-30
+18029e934db1e5370d8acabb33c17e0f,basketball_nba,NBA,2024-10-30 23:40:00+00:00,Miami Heat,New York Knicks,False,2024-10-30
+4849304d19eb215b0d30f83f7ee7aa28,basketball_nba,NBA,2024-10-31 00:10:00+00:00,Memphis Grizzlies,Brooklyn Nets,False,2024-10-31
+53ae735ffa24e569c3893b37c067e232,basketball_nba,NBA,2024-10-31 00:10:00+00:00,Chicago Bulls,Orlando Magic,False,2024-10-31
+7555c1b4ee9fafda7ef05850a0753425,basketball_nba,NBA,2024-10-31 01:40:00+00:00,Oklahoma City Thunder,San Antonio Spurs,False,2024-10-31
+9b89376475f9e0121ebac0b7a1dac95b,basketball_nba,NBA,2024-10-31 02:10:00+00:00,Golden State Warriors,New Orleans Pelicans,False,2024-10-31
+902fc430d7ad80e0f78ca62198993956,basketball_nba,NBA,2024-10-31 02:40:00+00:00,Los Angeles Clippers,Portland Trail Blazers,False,2024-10-31
+189d69ff1460fe7810e1f523220f2a4c,basketball_nba,NBA,2024-11-01 00:10:00+00:00,Memphis Grizzlies,Milwaukee Bucks,False,2024-11-01
+23e16aad02fd623a17b1a24c28846a36,basketball_nba,NBA,2024-11-01 00:30:00+00:00,Dallas Mavericks,Houston Rockets,False,2024-11-01
+e3a74199e6cc3f0ad1099045b5c8cce7,basketball_nba,NBA,2024-11-01 01:10:00+00:00,Utah Jazz,San Antonio Spurs,False,2024-11-01
+508b10d9c88192aa51f65527745b05ea,basketball_nba,NBA,2024-11-01 02:30:00+00:00,Los Angeles Clippers,Phoenix Suns,False,2024-11-01
+77edacd134038bd26fb356dd29652cf3,basketball_nba,NBA,2024-11-01 23:10:00+00:00,Detroit Pistons,New York Knicks,False,2024-11-01
+e3520db55ef2d7e8de8e2ed204a544c8,basketball_nba,NBA,2024-11-01 23:10:00+00:00,Charlotte Hornets,Boston Celtics,False,2024-11-01
+78f15d141ebf7a3845bd4be3a4828a82,basketball_nba,NBA,2024-11-01 23:10:00+00:00,Cleveland Cavaliers,Orlando Magic,False,2024-11-01
+4de83a69c1b9c9f100c25c109450b15d,basketball_nba,NBA,2024-11-01 23:40:00+00:00,Atlanta Hawks,Sacramento Kings,False,2024-11-01
+f329b1799617663930ea0ac475620925,basketball_nba,NBA,2024-11-01 23:40:00+00:00,Brooklyn Nets,Chicago Bulls,False,2024-11-01
+6b3c89551ffb520dc60046290dbab9c5,basketball_nba,NBA,2024-11-01 23:40:00+00:00,Toronto Raptors,Los Angeles Lakers,False,2024-11-01
+7a829c48eb616be7d32bb1ea8f06b0e2,basketball_nba,NBA,2024-11-02 00:10:00+00:00,New Orleans Pelicans,Indiana Pacers,False,2024-11-02
+346bdb44d864cef818dec9050320d883,basketball_nba,NBA,2024-11-02 01:40:00+00:00,Minnesota Timberwolves,Denver Nuggets,False,2024-11-02
+3df5560073801880965b6f162a21ec36,basketball_nba,NBA,2024-11-02 02:10:00+00:00,Portland Trail Blazers,Oklahoma City Thunder,False,2024-11-02
+b6a441be8a8bfbc98f81f10fc9871242,basketball_nba,NBA,2024-11-02 22:10:00+00:00,Charlotte Hornets,Boston Celtics,False,2024-11-02
+d087a0df2d70a552190892fb8437a2f8,basketball_nba,NBA,2024-11-02 23:40:00+00:00,Toronto Raptors,Sacramento Kings,False,2024-11-02
+6804bef5473a20af6f1961f35222d029,basketball_nba,NBA,2024-11-02 23:40:00+00:00,Philadelphia 76ers,Memphis Grizzlies,False,2024-11-02
+c964ff35d3877fe2cc177840e7849b56,basketball_nba,NBA,2024-11-03 00:10:00+00:00,Milwaukee Bucks,Cleveland Cavaliers,False,2024-11-03
+d0795fd9220c18669a07a0482b1c7d12,basketball_nba,NBA,2024-11-03 00:10:00+00:00,Houston Rockets,Golden State Warriors,False,2024-11-03
+dd70c59ef34cad65eae610a55f9f1b1f,basketball_nba,NBA,2024-11-03 00:10:00+00:00,San Antonio Spurs,Minnesota Timberwolves,False,2024-11-03
+d35ddee1c4251399c3eca618798adf8c,basketball_nba,NBA,2024-11-03 01:40:00+00:00,Washington Wizards,Miami Heat,False,2024-11-03
+9d4e84b4698222b4a7268cc54d4702e2,basketball_nba,NBA,2024-11-03 02:10:00+00:00,Denver Nuggets,Utah Jazz,False,2024-11-03
+c240b61df0fe48c2f99bd6a768215273,basketball_nba,NBA,2024-11-03 02:10:00+00:00,Phoenix Suns,Portland Trail Blazers,False,2024-11-03
+1f282e297378b2bf5962666aff292e7c,basketball_nba,NBA,2024-11-03 02:40:00+00:00,Los Angeles Clippers,Oklahoma City Thunder,False,2024-11-03
+52f131451119b9bd5610b4cab700baf3,basketball_nba,NBA,2024-11-03 20:40:00+00:00,Brooklyn Nets,Detroit Pistons,False,2024-11-03
+a3522d8758b3a10aa1a60ad4cd23db58,basketball_nba,NBA,2024-11-04 00:10:00+00:00,New Orleans Pelicans,Atlanta Hawks,False,2024-11-04
+de5c040a818f5bd3daaf5b0fd3ccaa87,basketball_nba,NBA,2024-11-04 00:40:00+00:00,Dallas Mavericks,Orlando Magic,False,2024-11-04
+a8a342f91ff1a2a962cd0208f6d134ae,basketball_nba,NBA,2024-11-05 00:00:00+00:00,Cleveland Cavaliers,Milwaukee Bucks,False,2024-11-05
+6e5283e3561335f5b8aaa8ac235a3649,basketball_nba,NBA,2024-11-05 00:15:00+00:00,Washington Wizards,Golden State Warriors,False,2024-11-05
+4a65852b312d2567a2416479d4e7865d,basketball_nba,NBA,2024-11-05 00:30:00+00:00,Detroit Pistons,Los Angeles Lakers,False,2024-11-05
+3daf8c9d55f6171788c9c9be784d1c0d,basketball_nba,NBA,2024-11-05 00:45:00+00:00,Atlanta Hawks,Boston Celtics,False,2024-11-05
+5bfef772da68c1f21b2f64b5d51a8335,basketball_nba,NBA,2024-11-05 01:00:00+00:00,Brooklyn Nets,Memphis Grizzlies,False,2024-11-05
+df0ba6367cbeced18131b9ebb7a1fb0a,basketball_nba,NBA,2024-11-05 01:15:00+00:00,Miami Heat,Sacramento Kings,False,2024-11-05
+d915fdc124456eba7588db14472b11e4,basketball_nba,NBA,2024-11-05 01:30:00+00:00,Chicago Bulls,Utah Jazz,False,2024-11-05
+0699f97f41299dacc9f8925b8578f6e4,basketball_nba,NBA,2024-11-05 01:45:00+00:00,Houston Rockets,New York Knicks,False,2024-11-05
+5c9b05d1970612383a2610f28c75dbab,basketball_nba,NBA,2024-11-05 02:00:00+00:00,Minnesota Timberwolves,Charlotte Hornets,False,2024-11-05
+fae985eb0a67b6ab4ebc41b1b48bd8d7,basketball_nba,NBA,2024-11-05 02:15:00+00:00,Oklahoma City Thunder,Orlando Magic,False,2024-11-05
+656e5296ddc350f402a0fc488696ef99,basketball_nba,NBA,2024-11-05 02:30:00+00:00,New Orleans Pelicans,Portland Trail Blazers,False,2024-11-05
+39e379d0f4ea095a76ea00b31c461146,basketball_nba,NBA,2024-11-05 02:45:00+00:00,Dallas Mavericks,Indiana Pacers,False,2024-11-05
+cd22e81b39058cad060b23ff583d705f,basketball_nba,NBA,2024-11-05 03:00:00+00:00,Denver Nuggets,Toronto Raptors,False,2024-11-05
+f5d380ca5f80d45b776b8cc4365ef870,basketball_nba,NBA,2024-11-05 03:15:00+00:00,Phoenix Suns,Philadelphia 76ers,False,2024-11-05
+e77b1486f5db9ced78ba28c74434339e,basketball_nba,NBA,2024-11-05 03:30:00+00:00,Los Angeles Clippers,San Antonio Spurs,False,2024-11-05
+d8a4500a8cc85a77dcea342ae4099316,basketball_nba,NBA,2024-11-07 00:10:00+00:00,Charlotte Hornets,Detroit Pistons,False,2024-11-07
+bc5e0e6e79a5d82ad2b20e991492db8c,basketball_nba,NBA,2024-11-07 00:10:00+00:00,Indiana Pacers,Orlando Magic,False,2024-11-07
+55e42ff38d847dc50703546e7493cce2,basketball_nba,NBA,2024-11-07 00:40:00+00:00,Atlanta Hawks,New York Knicks,False,2024-11-07
+6dc1349cbc1293f743feb18946ff2f4c,basketball_nba,NBA,2024-11-07 00:40:00+00:00,Boston Celtics,Golden State Warriors,False,2024-11-07
+8a6e6ad9eff01832c4dcc8085227f319,basketball_nba,NBA,2024-11-07 01:10:00+00:00,Memphis Grizzlies,Los Angeles Lakers,False,2024-11-07
+e11aab280c73770d02d2a81c162debeb,basketball_nba,NBA,2024-11-07 01:10:00+00:00,Houston Rockets,San Antonio Spurs,False,2024-11-07
+2aca7da4384db5d91c0bf5e7ef8bad3e,basketball_nba,NBA,2024-11-07 01:10:00+00:00,New Orleans Pelicans,Cleveland Cavaliers,False,2024-11-07
+c109fa8f6b5af24ef9718aed21811c35,basketball_nba,NBA,2024-11-07 01:40:00+00:00,Dallas Mavericks,Chicago Bulls,False,2024-11-07
+9e3ad3534d3b3a6702d2ee41b756ec3d,basketball_nba,NBA,2024-11-07 02:10:00+00:00,Denver Nuggets,Oklahoma City Thunder,False,2024-11-07
+6b8b7ee373af6d1ae89c0f2940635b00,basketball_nba,NBA,2024-11-07 02:10:00+00:00,Phoenix Suns,Miami Heat,False,2024-11-07
+b66e2dcd5f73800d50d9e6cedb0f5816,basketball_nba,NBA,2024-11-07 03:10:00+00:00,Los Angeles Clippers,Philadelphia 76ers,False,2024-11-07
+cb8bf9aed92604c1334706f5c0c82c57,basketball_nba,NBA,2024-11-07 03:10:00+00:00,Sacramento Kings,Toronto Raptors,False,2024-11-07
+84d6b1ca05b2ad858b5b9ac52ea4b0ee,basketball_nba,NBA,2024-11-08 01:10:00+00:00,Chicago Bulls,Minnesota Timberwolves,False,2024-11-08
+1e6137994854a6163d6f9fea8dc6e83e,basketball_nba,NBA,2024-11-08 01:10:00+00:00,Milwaukee Bucks,Utah Jazz,False,2024-11-08
+808cd638f31e1657b3c5cd3841a76b4a,basketball_nba,NBA,2024-11-08 01:10:00+00:00,San Antonio Spurs,Portland Trail Blazers,False,2024-11-08
+faadb19c2f6776135eeabc11eee01d67,basketball_nba,NBA,2024-11-09 00:10:00+00:00,Orlando Magic,New Orleans Pelicans,False,2024-11-09
+a8ecc9d55ef3ef2d1ae9e2ef518cb059,basketball_nba,NBA,2024-11-09 00:10:00+00:00,Detroit Pistons,Atlanta Hawks,False,2024-11-09
+12242c9b25747345d3b9251f19ae8065,basketball_nba,NBA,2024-11-09 00:10:00+00:00,Charlotte Hornets,Indiana Pacers,False,2024-11-09
+b432836ef47656bc4bb88d999827ba26,basketball_nba,NBA,2024-11-09 00:40:00+00:00,Boston Celtics,Brooklyn Nets,False,2024-11-09
+8dadd3e43cf1e51c8b709476bc0afff7,basketball_nba,NBA,2024-11-09 00:40:00+00:00,Cleveland Cavaliers,Golden State Warriors,False,2024-11-09
+13171f5216a88dd17acb9052569ad894,basketball_nba,NBA,2024-11-09 00:40:00+00:00,Dallas Mavericks,Phoenix Suns,False,2024-11-09
+da5d3ecb8094a13ab7c7c8e7997e0ae8,basketball_nba,NBA,2024-11-09 00:40:00+00:00,New York Knicks,Milwaukee Bucks,False,2024-11-09
+1ec253bda365ce2183af3ac8e70f8342,basketball_nba,NBA,2024-11-09 01:00:00+00:00,Memphis Grizzlies,Washington Wizards,False,2024-11-09
+c59598a6a551486fcd9943a821ed9f0f,basketball_nba,NBA,2024-11-09 01:10:00+00:00,Oklahoma City Thunder,Houston Rockets,False,2024-11-09
+1eaaa199fcb79189ebcfa731fdcaf5d0,basketball_nba,NBA,2024-11-09 02:10:00+00:00,Denver Nuggets,Miami Heat,False,2024-11-09
+a50aa9b1ee0c9e8f42406a9168d33ec0,basketball_nba,NBA,2024-11-09 02:10:00+00:00,Minnesota Timberwolves,Portland Trail Blazers,False,2024-11-09
+16610ec97fb84294cf3c0fc7f7f31a5b,basketball_nba,NBA,2024-11-09 03:10:00+00:00,Los Angeles Lakers,Philadelphia 76ers,False,2024-11-09
+57e8fedc4a95d37b5d52f3a4a529c353,basketball_nba,NBA,2024-11-09 03:10:00+00:00,Sacramento Kings,Los Angeles Clippers,False,2024-11-09
+8504db816d5b4c739b490bd225691a89,basketball_nba,NBA,2024-11-09 22:10:00+00:00,San Antonio Spurs,Utah Jazz,False,2024-11-09
+e18731fc875e44084ff38e50db6a0161,basketball_nba,NBA,2024-11-10 00:40:00+00:00,Atlanta Hawks,Chicago Bulls,False,2024-11-10
+d5e0219685ec27694d99dde4f7d3cbb9,basketball_nba,NBA,2024-11-10 00:40:00+00:00,Cleveland Cavaliers,Brooklyn Nets,False,2024-11-10
+f0602ae5c6b288647779977a72a8e250,basketball_nba,NBA,2024-11-10 03:40:00+00:00,Los Angeles Clippers,Toronto Raptors,False,2024-11-10
+03107774cb0b0cc72417346ff491d10b,basketball_nba,NBA,2024-11-10 20:10:00+00:00,Detroit Pistons,Houston Rockets,False,2024-11-10
+d082b83dd23d8910ae6b84cdf74a6f9c,basketball_nba,NBA,2024-11-10 20:40:00+00:00,Milwaukee Bucks,Boston Celtics,False,2024-11-10
+8ba94b6f56fc0bb50bd04ad13e2b73fb,basketball_nba,NBA,2024-11-10 22:10:00+00:00,Indiana Pacers,New York Knicks,False,2024-11-10
+2f1d263e41f6003cbc4dbfbba0adc84e,basketball_nba,NBA,2024-11-10 23:10:00+00:00,Orlando Magic,Washington Wizards,False,2024-11-10
+22966137a0b1df67555591c1a15cb76e,basketball_nba,NBA,2024-11-11 00:10:00+00:00,Minnesota Timberwolves,Miami Heat,False,2024-11-11
+5ba3634de6acb1ee1df9993f24229994,basketball_nba,NBA,2024-11-11 00:10:00+00:00,Philadelphia 76ers,Charlotte Hornets,False,2024-11-11
+e4f700f813869b6430e7db005a85a087,basketball_nba,NBA,2024-11-11 00:10:00+00:00,Oklahoma City Thunder,Golden State Warriors,False,2024-11-11
+95c6606a73e1218dfde3a620a8f70281,basketball_nba,NBA,2024-11-11 01:10:00+00:00,Denver Nuggets,Dallas Mavericks,False,2024-11-11
+2186b9470c9e358ca60ec9f62eb383ab,basketball_nba,NBA,2024-11-11 01:10:00+00:00,Phoenix Suns,Sacramento Kings,False,2024-11-11
+6b8494ce0f87df2a92dd6c1b2e96821f,basketball_nba,NBA,2024-11-11 02:10:00+00:00,Portland Trail Blazers,Memphis Grizzlies,False,2024-11-11
+86063535fd6ffaed9aab4bfd1a0082c4,basketball_nba,NBA,2024-11-11 02:40:00+00:00,Los Angeles Lakers,Toronto Raptors,False,2024-11-11
+4c65fb969ac80375654b3bf008db7e8a,basketball_nba,NBA,2024-11-12 01:10:00+00:00,New Orleans Pelicans,Brooklyn Nets,False,2024-11-12
+f6332b5b82fa9a4e4b1e2be7091171cc,basketball_nba,NBA,2024-11-12 01:10:00+00:00,Chicago Bulls,Cleveland Cavaliers,False,2024-11-12
+ce9117fa84821ae069a20238f90206a3,basketball_nba,NBA,2024-11-12 01:10:00+00:00,Houston Rockets,Washington Wizards,False,2024-11-12
+aac06078dcea994124e8ba33553dab22,basketball_nba,NBA,2024-11-12 01:10:00+00:00,Oklahoma City Thunder,Los Angeles Clippers,False,2024-11-12
+a03bb6d54e8c501291594c78c582efe3,basketball_nba,NBA,2024-11-12 01:10:00+00:00,San Antonio Spurs,Sacramento Kings,False,2024-11-12
+74058cb479045efa21ebd5c57050e23e,basketball_nba,NBA,2024-11-13 00:10:00+00:00,Boston Celtics,Atlanta Hawks,False,2024-11-13
+ff0b160b9779ae75b9f7d05511270837,basketball_nba,NBA,2024-11-13 00:10:00+00:00,Orlando Magic,Charlotte Hornets,False,2024-11-13
+e80e0c514aa69872360f58b079796a8b,basketball_nba,NBA,2024-11-13 00:10:00+00:00,Detroit Pistons,Miami Heat,False,2024-11-13
+2d650fff73dcc627c1c0de3a4694e9fc,basketball_nba,NBA,2024-11-13 00:40:00+00:00,Philadelphia 76ers,New York Knicks,False,2024-11-13
+30e4d7fc5396e7b0b8be16b278c123fe,basketball_nba,NBA,2024-11-13 01:10:00+00:00,Milwaukee Bucks,Toronto Raptors,False,2024-11-13
+6050b0be3ce7b57b77ef6695b9cecaa1,basketball_nba,NBA,2024-11-13 02:10:00+00:00,Utah Jazz,Phoenix Suns,False,2024-11-13
+f0bfcb563a5de00b392bda6960db1796,basketball_nba,NBA,2024-11-13 03:10:00+00:00,Golden State Warriors,Dallas Mavericks,False,2024-11-13
+4a86e15d2c8c52972524be69d15941cc,basketball_nba,NBA,2024-11-13 03:10:00+00:00,Portland Trail Blazers,Minnesota Timberwolves,False,2024-11-13
+da66702637cc0413553b92c792a05c50,basketball_nba,NBA,2024-11-14 00:10:00+00:00,Orlando Magic,Indiana Pacers,False,2024-11-14
+8e4ee6d0217de06a9defe24875b1b24e,basketball_nba,NBA,2024-11-14 00:40:00+00:00,Brooklyn Nets,Boston Celtics,False,2024-11-14
+ca4ada15a7c62966e17f7eecb36b2745,basketball_nba,NBA,2024-11-14 00:40:00+00:00,New York Knicks,Chicago Bulls,False,2024-11-14
+479ed48e101593d026f662ec12a3c984,basketball_nba,NBA,2024-11-14 00:40:00+00:00,Philadelphia 76ers,Cleveland Cavaliers,False,2024-11-14
+9c27acba13d14a8066e297096bce0349,basketball_nba,NBA,2024-11-14 00:40:00+00:00,Oklahoma City Thunder,New Orleans Pelicans,False,2024-11-14
+ca77278189a9747eae7bd56344e86485,basketball_nba,NBA,2024-11-14 01:10:00+00:00,Milwaukee Bucks,Detroit Pistons,False,2024-11-14
+521751e36a2efea1e1a05a7ed22120a4,basketball_nba,NBA,2024-11-14 01:10:00+00:00,Houston Rockets,Los Angeles Clippers,False,2024-11-14
+3eb19bad0a5843a7a402bded7ee83760,basketball_nba,NBA,2024-11-14 01:10:00+00:00,San Antonio Spurs,Washington Wizards,False,2024-11-14
+e6189dd8c7a2ba60a32c5252d17d6de6,basketball_nba,NBA,2024-11-14 03:10:00+00:00,Portland Trail Blazers,Minnesota Timberwolves,False,2024-11-14
+aaca57d0691d4402964f21d9fa8a0d2c,basketball_nba,NBA,2024-11-14 03:10:00+00:00,Sacramento Kings,Phoenix Suns,False,2024-11-14
+c64a5e1b02e660dda2a9fdebff5bd591,basketball_nba,NBA,2024-11-14 03:10:00+00:00,Los Angeles Lakers,Memphis Grizzlies,False,2024-11-14
+48c42a6286126b7f36c3d6e76c631de0,basketball_nba,NBA,2024-11-15 02:10:00+00:00,Utah Jazz,Dallas Mavericks,False,2024-11-15
+b545064206b8dded3eacfe94a3486010,basketball_nba,NBA,2024-11-16 00:10:00+00:00,Toronto Raptors,Detroit Pistons,False,2024-11-16
+0619b014dfdc9d5586485d1092d0ad57,basketball_nba,NBA,2024-11-16 00:10:00+00:00,Indiana Pacers,Miami Heat,False,2024-11-16
+ca224a310a95b9304f7c8b6e2494ee15,basketball_nba,NBA,2024-11-16 00:10:00+00:00,Orlando Magic,Philadelphia 76ers,False,2024-11-16
+cfa354d9b48630ea2630af8defb2b9ef,basketball_nba,NBA,2024-11-16 00:30:00+00:00,San Antonio Spurs,Los Angeles Lakers,False,2024-11-16
+0c8bcf32079a8c03a4b22e13a8c77a41,basketball_nba,NBA,2024-11-16 00:40:00+00:00,Cleveland Cavaliers,Chicago Bulls,False,2024-11-16
+1a46dad2277cca4a74204b8e2bbe6bc6,basketball_nba,NBA,2024-11-16 00:40:00+00:00,Atlanta Hawks,Washington Wizards,False,2024-11-16
+432e5ff1dfaf3992cc9fde2c1582c76f,basketball_nba,NBA,2024-11-16 00:40:00+00:00,New York Knicks,Brooklyn Nets,False,2024-11-16
+4f810271cfe5cec9d74be5bf4bac935b,basketball_nba,NBA,2024-11-16 01:10:00+00:00,Oklahoma City Thunder,Phoenix Suns,False,2024-11-16
+4440572120e5bfc80b66c6092af854dc,basketball_nba,NBA,2024-11-16 01:10:00+00:00,Houston Rockets,Los Angeles Clippers,False,2024-11-16
+3dc935a0b75960161d6bfdf8f2fa8e3d,basketball_nba,NBA,2024-11-16 01:10:00+00:00,New Orleans Pelicans,Denver Nuggets,False,2024-11-16
+f539352357353e1bec8c5e594d1a816b,basketball_nba,NBA,2024-11-16 03:10:00+00:00,Golden State Warriors,Memphis Grizzlies,False,2024-11-16
+88ce2e9fedcf84d708244491037ed0f2,basketball_nba,NBA,2024-11-16 03:10:00+00:00,Sacramento Kings,Minnesota Timberwolves,False,2024-11-16
+53cda0357baf3c631baf0a85c03bbc47,basketball_nba,NBA,2024-11-16 20:10:00+00:00,Charlotte Hornets,Milwaukee Bucks,False,2024-11-16
+c5d4bea033d5df350953050bdcb5dbf6,basketball_nba,NBA,2024-11-17 01:10:00+00:00,Boston Celtics,Toronto Raptors,False,2024-11-17
+0549c21b21c85673d2615dade308ae9a,basketball_nba,NBA,2024-11-17 01:10:00+00:00,New Orleans Pelicans,Los Angeles Lakers,False,2024-11-17
+3e6ba3e7385a2b5706ce9d646cdff9b7,basketball_nba,NBA,2024-11-17 01:40:00+00:00,Dallas Mavericks,San Antonio Spurs,False,2024-11-17
+e6401fb536035ca54741dd0891e5bf62,basketball_nba,NBA,2024-11-17 03:10:00+00:00,Sacramento Kings,Utah Jazz,False,2024-11-17
+a312863a7b37f4834c28ef6baf35388a,basketball_nba,NBA,2024-11-17 20:40:00+00:00,Minnesota Timberwolves,Phoenix Suns,False,2024-11-17
+3de0de5cb1a2515f900818c1450c27d6,basketball_nba,NBA,2024-11-17 22:10:00+00:00,Indiana Pacers,Miami Heat,False,2024-11-17
+a11dadc22992b37ca8f2a3eca789d203,basketball_nba,NBA,2024-11-17 23:10:00+00:00,Portland Trail Blazers,Atlanta Hawks,False,2024-11-17
+93653e2e21378af10008b568019af044,basketball_nba,NBA,2024-11-17 23:10:00+00:00,Cleveland Cavaliers,Charlotte Hornets,False,2024-11-17
+b032b3afc0dd7def72f7db31f4acfba2,basketball_nba,NBA,2024-11-17 23:10:00+00:00,Memphis Grizzlies,Denver Nuggets,False,2024-11-17
+68e4a684137c1d8d8cdb617dc70e2740,basketball_nba,NBA,2024-11-17 23:10:00+00:00,Washington Wizards,Detroit Pistons,False,2024-11-17
+08f615a23f6087399bb05e8a2c3c42c3,basketball_nba,NBA,2024-11-18 00:10:00+00:00,New York Knicks,Brooklyn Nets,False,2024-11-18
+3fd9e6f1140a0057fc6a783a4e93ad6a,basketball_nba,NBA,2024-11-18 00:10:00+00:00,Chicago Bulls,Houston Rockets,False,2024-11-18
+9f5a7ab5e928494aa397e4c30a0bf648,basketball_nba,NBA,2024-11-18 00:10:00+00:00,Oklahoma City Thunder,Dallas Mavericks,False,2024-11-18
+098e51ebb9ad331b0fe039e0f3230d91,basketball_nba,NBA,2024-11-18 02:10:00+00:00,Los Angeles Clippers,Utah Jazz,False,2024-11-18
+c2b6a1922c38c48e109c505afeb8b073,basketball_nba,NBA,2024-11-19 00:10:00+00:00,Detroit Pistons,Chicago Bulls,False,2024-11-19
+3425c4597f2b4d3d1a67b0faeb4d55b3,basketball_nba,NBA,2024-11-19 00:40:00+00:00,New York Knicks,Washington Wizards,False,2024-11-19
+c160c10efd1d38c5221aad509e82802f,basketball_nba,NBA,2024-11-19 00:40:00+00:00,Miami Heat,Philadelphia 76ers,False,2024-11-19
+2260a4f4b2b303b29d4e58f6d0ee642b,basketball_nba,NBA,2024-11-19 00:40:00+00:00,Toronto Raptors,Indiana Pacers,False,2024-11-19
+1353a1cc4f8e9aad91c1e7c0154fffa4,basketball_nba,NBA,2024-11-19 01:10:00+00:00,Milwaukee Bucks,Houston Rockets,False,2024-11-19
+2c4636c6b6877f3ebd69eb0686c81862,basketball_nba,NBA,2024-11-19 02:10:00+00:00,Phoenix Suns,Orlando Magic,False,2024-11-19
+57f5956a2a5eb2762e08a3d4f8e8b2d0,basketball_nba,NBA,2024-11-19 03:10:00+00:00,Sacramento Kings,Atlanta Hawks,False,2024-11-19
+4eb1757948972e8fe4040d4a35d8760b,basketball_nba,NBA,2024-11-19 03:30:00+00:00,Los Angeles Clippers,Golden State Warriors,False,2024-11-19
+28ce00ceda2646f4b0579095537d2c55,basketball_nba,NBA,2024-11-20 00:10:00+00:00,Boston Celtics,Cleveland Cavaliers,False,2024-11-20
+4f0bbc699601b7e229affc95e3305210,basketball_nba,NBA,2024-11-20 00:40:00+00:00,Brooklyn Nets,Charlotte Hornets,False,2024-11-20
+d070638782ccca86d8b610ef704f9be0,basketball_nba,NBA,2024-11-20 01:10:00+00:00,Memphis Grizzlies,Denver Nuggets,False,2024-11-20
+5dc4f9a9d1a0eeacee652cd7556b57e7,basketball_nba,NBA,2024-11-20 01:40:00+00:00,Dallas Mavericks,New Orleans Pelicans,False,2024-11-20
+1868bde5ea04d48d73e7ec63602deebd,basketball_nba,NBA,2024-11-20 02:40:00+00:00,San Antonio Spurs,Oklahoma City Thunder,False,2024-11-20
+4da1e5d0859d00cf060770cbe9d575ac,basketball_nba,NBA,2024-11-20 03:40:00+00:00,Los Angeles Lakers,Utah Jazz,False,2024-11-20
+9b2809453fe61d0a5e1269a2fb7a2af0,basketball_nba,NBA,2024-11-21 00:40:00+00:00,Milwaukee Bucks,Chicago Bulls,False,2024-11-21
+ee5a41f6f099b865b1fb2c309c2cb6ec,basketball_nba,NBA,2024-11-21 00:40:00+00:00,Cleveland Cavaliers,New Orleans Pelicans,False,2024-11-21
+12af867f2363b63481b69fe2d0b346e5,basketball_nba,NBA,2024-11-21 01:10:00+00:00,Houston Rockets,Indiana Pacers,False,2024-11-21
+30daa4a2a4df041706fd92e2a824923b,basketball_nba,NBA,2024-11-21 01:10:00+00:00,Memphis Grizzlies,Philadelphia 76ers,False,2024-11-21
+09ffc6f23bd619ecf418571575771aa6,basketball_nba,NBA,2024-11-21 01:10:00+00:00,Oklahoma City Thunder,Portland Trail Blazers,False,2024-11-21
+d6d94773bc361c4d725b0e3dfbd959e2,basketball_nba,NBA,2024-11-21 03:00:00+00:00,Phoenix Suns,New York Knicks,False,2024-11-21
+c39f736bf74b27b466d5343ce86ddc5a,basketball_nba,NBA,2024-11-21 03:10:00+00:00,Golden State Warriors,Atlanta Hawks,False,2024-11-21
+339370f3b9b0c4768e43cf3cbc91e8f5,basketball_nba,NBA,2024-11-21 03:40:00+00:00,Los Angeles Clippers,Orlando Magic,False,2024-11-21
+a94279dcfb065a9c40cc6869d6b68fcd,basketball_nba,NBA,2024-11-22 00:10:00+00:00,Charlotte Hornets,Detroit Pistons,False,2024-11-22
+fc0af137075bbfab01411d88dcec50a5,basketball_nba,NBA,2024-11-22 00:40:00+00:00,Toronto Raptors,Minnesota Timberwolves,False,2024-11-22
+882bf20a823fe5d98b78592b3e2ccc89,basketball_nba,NBA,2024-11-22 01:10:00+00:00,San Antonio Spurs,Utah Jazz,False,2024-11-22
+5c89c0aa80d567680f352f9c2a3b8222,basketball_nba,NBA,2024-11-22 03:40:00+00:00,Los Angeles Lakers,Orlando Magic,False,2024-11-22
+b600186d2dc2ace2fa5ac10c04e17059,basketball_nba,NBA,2024-11-23 00:10:00+00:00,Washington Wizards,Boston Celtics,False,2024-11-23
+472f1e3e2efd7d64a3af836936a83ec5,basketball_nba,NBA,2024-11-23 00:10:00+00:00,Philadelphia 76ers,Brooklyn Nets,False,2024-11-23
+9cc15bb04622261a10545f179a61c3a8,basketball_nba,NBA,2024-11-23 00:40:00+00:00,New Orleans Pelicans,Golden State Warriors,False,2024-11-23
+feff9ee9f3337c34943c5ae257f40c5e,basketball_nba,NBA,2024-11-23 01:10:00+00:00,Chicago Bulls,Atlanta Hawks,False,2024-11-23
+d5867a7b248d1fa208569ce6399e662c,basketball_nba,NBA,2024-11-23 01:10:00+00:00,Houston Rockets,Portland Trail Blazers,False,2024-11-23
+cae716a9887d0ec78c9daee644d94f1c,basketball_nba,NBA,2024-11-23 01:10:00+00:00,Milwaukee Bucks,Indiana Pacers,False,2024-11-23
+9e56472e15b270db1994636e56e96a90,basketball_nba,NBA,2024-11-23 03:10:00+00:00,Denver Nuggets,Dallas Mavericks,False,2024-11-23
+f1f07b258350717d5f038c3cea64a258,basketball_nba,NBA,2024-11-23 03:30:00+00:00,Los Angeles Clippers,Sacramento Kings,False,2024-11-23
+b260c49ab9337ae42774bb3b1531a915,basketball_nba,NBA,2024-11-23 22:10:00+00:00,Utah Jazz,New York Knicks,False,2024-11-23
+41bf45335490b6b8fa552ffb71126c3b,basketball_nba,NBA,2024-11-24 00:10:00+00:00,Orlando Magic,Detroit Pistons,False,2024-11-24
+981b23d30d332edfe527196c4818dcf2,basketball_nba,NBA,2024-11-24 01:10:00+00:00,Milwaukee Bucks,Charlotte Hornets,False,2024-11-24
+ce345bbb3a55d78421626f5745a3307f,basketball_nba,NBA,2024-11-24 01:10:00+00:00,Chicago Bulls,Memphis Grizzlies,False,2024-11-24
+400a07daeb99713dc9054016d7b56f9b,basketball_nba,NBA,2024-11-24 01:10:00+00:00,Houston Rockets,Portland Trail Blazers,False,2024-11-24
+21b07d359b35843040b942719eb15875,basketball_nba,NBA,2024-11-24 01:40:00+00:00,San Antonio Spurs,Golden State Warriors,False,2024-11-24
+b856eee19b805c01422c94a007faee08,basketball_nba,NBA,2024-11-24 03:40:00+00:00,Los Angeles Lakers,Denver Nuggets,False,2024-11-24
+acd573d323ba35d9fb96987bc7fd4516,basketball_nba,NBA,2024-11-24 20:40:00+00:00,Boston Celtics,Minnesota Timberwolves,False,2024-11-24
+f436744b60efd24a59222398bc0b134a,basketball_nba,NBA,2024-11-24 22:10:00+00:00,Indiana Pacers,Washington Wizards,False,2024-11-24
+51b8fadeddaf0e6dca09d48b50b23c82,basketball_nba,NBA,2024-11-24 23:10:00+00:00,Philadelphia 76ers,Los Angeles Clippers,False,2024-11-24
+09f005fd2a562151c80a569a94c75e8f,basketball_nba,NBA,2024-11-24 23:10:00+00:00,Miami Heat,Dallas Mavericks,False,2024-11-24
+28a11effc6120d500f3e3ae1abf4d5a2,basketball_nba,NBA,2024-11-25 00:40:00+00:00,Cleveland Cavaliers,Toronto Raptors,False,2024-11-25
+53867fc0835e5d1d0a4c24a08c0d9630,basketball_nba,NBA,2024-11-25 02:10:00+00:00,Sacramento Kings,Brooklyn Nets,False,2024-11-25
+4a4a2472a449232216e801c0081d6aeb,basketball_nba,NBA,2024-11-26 00:00:00+00:00,Charlotte Hornets,Orlando Magic,False,2024-11-26
+7756376eb4f2e1e0038fbe527931285f,basketball_nba,NBA,2024-11-26 00:00:00+00:00,Detroit Pistons,Toronto Raptors,False,2024-11-26
+db6b727fdd113e43ea377b627aa6b9a5,basketball_nba,NBA,2024-11-26 00:00:00+00:00,Indiana Pacers,New Orleans Pelicans,False,2024-11-26
+0563c24a2934af84c792fb58df7fe593,basketball_nba,NBA,2024-11-26 00:30:00+00:00,Atlanta Hawks,Dallas Mavericks,False,2024-11-26
+640b97f9acd0a423b80942157388230e,basketball_nba,NBA,2024-11-26 00:30:00+00:00,Boston Celtics,Los Angeles Clippers,False,2024-11-26
+6962b115d0e0a3d42ab6d7edf72a820f,basketball_nba,NBA,2024-11-26 01:00:00+00:00,Memphis Grizzlies,Portland Trail Blazers,False,2024-11-26
+4548309c59e38d9bb091bde61ea421dc,basketball_nba,NBA,2024-11-26 02:00:00+00:00,Denver Nuggets,New York Knicks,False,2024-11-26
+787144f993e9c92a0ee844b8f204f702,basketball_nba,NBA,2024-11-26 03:00:00+00:00,Golden State Warriors,Brooklyn Nets,False,2024-11-26
+a5a334c286280111c77ec6ea1d8fc8b9,basketball_nba,NBA,2024-11-26 03:00:00+00:00,Sacramento Kings,Oklahoma City Thunder,False,2024-11-26
+8371571bb6059f03debc55b594422565,basketball_nba,NBA,2024-11-27 00:00:00+00:00,Washington Wizards,Chicago Bulls,False,2024-11-27
+979282582fedc5d942f4f0f2f22763ee,basketball_nba,NBA,2024-11-27 00:30:00+00:00,Miami Heat,Milwaukee Bucks,False,2024-11-27
+312350cf1c97873d6cb81224bac3873e,basketball_nba,NBA,2024-11-27 01:00:00+00:00,Minnesota Timberwolves,Houston Rockets,False,2024-11-27
+0a3002d2aaa7b94c5c9c4d3bf792ac7d,basketball_nba,NBA,2024-11-27 02:00:00+00:00,Utah Jazz,San Antonio Spurs,False,2024-11-27
+0ae85f4502bca2d13e62d2e35c94744c,basketball_nba,NBA,2024-11-27 03:00:00+00:00,Phoenix Suns,Los Angeles Lakers,False,2024-11-27
+19a2df14f1abd46ae75a31f621fdc0e7,basketball_nba,NBA,2024-11-28 00:10:00+00:00,Washington Wizards,Los Angeles Clippers,False,2024-11-28
+4d67f8c5b511dff44092940fc914a470,basketball_nba,NBA,2024-11-28 00:10:00+00:00,Indiana Pacers,Portland Trail Blazers,False,2024-11-28
+c735cde8bd598324a51bb899324a5a49,basketball_nba,NBA,2024-11-28 00:10:00+00:00,Philadelphia 76ers,Houston Rockets,False,2024-11-28
+dadbec70e3f8e655af81b4354da4a733,basketball_nba,NBA,2024-11-28 00:10:00+00:00,Charlotte Hornets,Miami Heat,False,2024-11-28
+ec08adb1c3a277a93dc0dbfd05eee50d,basketball_nba,NBA,2024-11-28 00:10:00+00:00,Cleveland Cavaliers,Atlanta Hawks,False,2024-11-28
+500f21047b7113b0f265a4eb8070edfe,basketball_nba,NBA,2024-11-28 00:10:00+00:00,Orlando Magic,Chicago Bulls,False,2024-11-28
+edcdf25d5f5f290610ded28cae0ffb07,basketball_nba,NBA,2024-11-28 00:40:00+00:00,Dallas Mavericks,New York Knicks,False,2024-11-28
+0f1f50c453002029b144358dbd2d7c5b,basketball_nba,NBA,2024-11-28 01:10:00+00:00,Memphis Grizzlies,Detroit Pistons,False,2024-11-28
+b964c7d3a8467679ae7b966aaccf2e75,basketball_nba,NBA,2024-11-28 01:10:00+00:00,Minnesota Timberwolves,Sacramento Kings,False,2024-11-28
+19f5a8e6df36d2dcd01e39bdc4f4ed1e,basketball_nba,NBA,2024-11-28 01:10:00+00:00,New Orleans Pelicans,Toronto Raptors,False,2024-11-28
+7c21f0f776e1c48708c5efbd73c9bce1,basketball_nba,NBA,2024-11-28 01:40:00+00:00,San Antonio Spurs,Los Angeles Lakers,False,2024-11-28
+4051baa4fc86ea2edd7c499e16dd0f30,basketball_nba,NBA,2024-11-28 02:10:00+00:00,Utah Jazz,Denver Nuggets,False,2024-11-28
+693801537443a99cda79a98e7f9a1697,basketball_nba,NBA,2024-11-28 02:10:00+00:00,Phoenix Suns,Brooklyn Nets,False,2024-11-28
+6719711e94412208c9fd5fa2da3d6835,basketball_nba,NBA,2024-11-28 03:10:00+00:00,Golden State Warriors,Oklahoma City Thunder,False,2024-11-28
+75b64ab4b7b899475e75f3c3fed6e6d6,basketball_nba,NBA,2024-11-29 17:10:00+00:00,Charlotte Hornets,New York Knicks,False,2024-11-29
+fea39cdef1993115642387a9d17d3aa8,basketball_nba,NBA,2024-11-29 19:40:00+00:00,Atlanta Hawks,Cleveland Cavaliers,False,2024-11-29
+057e5aae2a26f423eaf44d3e6bcab7eb,basketball_nba,NBA,2024-11-29 22:10:00+00:00,Memphis Grizzlies,New Orleans Pelicans,False,2024-11-29
+9d0591b5528cb94518423d0b98163127,basketball_nba,NBA,2024-11-30 00:40:00+00:00,Brooklyn Nets,Orlando Magic,False,2024-11-30
+505781b2259d8ce45cba4e34aecf5d26,basketball_nba,NBA,2024-11-30 00:40:00+00:00,Minnesota Timberwolves,Los Angeles Clippers,False,2024-11-30
+97daad0d675ac67ead333551dac221e7,basketball_nba,NBA,2024-11-30 01:10:00+00:00,Chicago Bulls,Boston Celtics,False,2024-11-30
+962ea9850dad2028b34dc93947a626a7,basketball_nba,NBA,2024-11-30 01:10:00+00:00,Indiana Pacers,Detroit Pistons,False,2024-11-30
+f3facf03d0bcded5d8f4c868ad2cae58,basketball_nba,NBA,2024-11-30 01:10:00+00:00,Miami Heat,Toronto Raptors,False,2024-11-30
+363cc300fd430fdf4510ff652bc54ef7,basketball_nba,NBA,2024-11-30 03:10:00+00:00,Los Angeles Lakers,Oklahoma City Thunder,False,2024-11-30
+ced44c7cacce1e7ddc97f529434326b6,basketball_nba,NBA,2024-11-30 03:10:00+00:00,Portland Trail Blazers,Sacramento Kings,False,2024-11-30
+618d92be3ea6080d179e501aebc7f971,basketball_nba,NBA,2024-11-30 23:10:00+00:00,Charlotte Hornets,Atlanta Hawks,False,2024-11-30
+b34338e9f9ac81db22c012514c338784,basketball_nba,NBA,2024-12-01 00:10:00+00:00,Detroit Pistons,Philadelphia 76ers,False,2024-12-01
+e34e658b91c8b7cec8596408592450bb,basketball_nba,NBA,2024-12-01 01:10:00+00:00,Milwaukee Bucks,Washington Wizards,False,2024-12-01
+24c5878202cb5d7e806d17ae27a1d17e,basketball_nba,NBA,2024-12-01 02:10:00+00:00,Phoenix Suns,Golden State Warriors,False,2024-12-01
+94e37c8227c1196969b7702bea4ea97f,basketball_nba,NBA,2024-12-01 02:40:00+00:00,Utah Jazz,Dallas Mavericks,False,2024-12-01
+63d09cdb1e59c1435acde1892c74c9d0,basketball_nba,NBA,2024-12-01 20:40:00+00:00,Brooklyn Nets,Orlando Magic,False,2024-12-01
+3b444a47972a5c9e2df655aaf00e2421,basketball_nba,NBA,2024-12-01 20:40:00+00:00,Memphis Grizzlies,Indiana Pacers,False,2024-12-01
+93dc92cd7fc9ce1ac4da3b06e2158788,basketball_nba,NBA,2024-12-01 23:10:00+00:00,Cleveland Cavaliers,Boston Celtics,False,2024-12-01
+9d8521a8ab02c5c86f8bec7d1af0ebe4,basketball_nba,NBA,2024-12-01 23:10:00+00:00,Toronto Raptors,Miami Heat,False,2024-12-01
+3ef2b1162b9c3d3a66e556b9db6f2725,basketball_nba,NBA,2024-12-01 23:10:00+00:00,New York Knicks,New Orleans Pelicans,False,2024-12-01
+bf975b14263b2d381ec75836a25c3cef,basketball_nba,NBA,2024-12-02 00:10:00+00:00,Houston Rockets,Oklahoma City Thunder,False,2024-12-02
+0d3378401caed94fcf1f210413477cb8,basketball_nba,NBA,2024-12-02 01:10:00+00:00,Utah Jazz,Los Angeles Lakers,False,2024-12-02
+543fb709d4b6baf6793f197a3e1d81eb,basketball_nba,NBA,2024-12-02 02:10:00+00:00,Portland Trail Blazers,Dallas Mavericks,False,2024-12-02
+dc8372c0dddd11fb24716db6a27bc19f,basketball_nba,NBA,2024-12-02 02:10:00+00:00,Sacramento Kings,San Antonio Spurs,False,2024-12-02
+ccad2ed3b522ebd6d8de25f4e2a43cb9,basketball_nba,NBA,2024-12-02 03:10:00+00:00,Los Angeles Clippers,Denver Nuggets,False,2024-12-02
+f39bf2e3df253fc7f6af9c6cf532b6a9,basketball_nba,NBA,2024-12-03 00:40:00+00:00,Atlanta Hawks,New Orleans Pelicans,False,2024-12-03
+3bc9be32097c263541ef9179500048c3,basketball_nba,NBA,2024-12-03 00:40:00+00:00,Boston Celtics,Miami Heat,False,2024-12-03
+50bd2a1df8fb7f7af8d8cef115cfbfdd,basketball_nba,NBA,2024-12-03 01:10:00+00:00,Chicago Bulls,Brooklyn Nets,False,2024-12-03
+01f6fb3f81f056771f34518ee02cbe20,basketball_nba,NBA,2024-12-03 01:10:00+00:00,Minnesota Timberwolves,Los Angeles Lakers,False,2024-12-03
+51b9bfc3b65785071f6baf407abb4cbd,basketball_nba,NBA,2024-12-04 00:10:00+00:00,Detroit Pistons,Milwaukee Bucks,False,2024-12-04
+476416aa38d1c8fb8a9bfc5ae8fe6251,basketball_nba,NBA,2024-12-04 00:10:00+00:00,Cleveland Cavaliers,Washington Wizards,False,2024-12-04
+a529d206e3ed0dfda3123b17eab6a162,basketball_nba,NBA,2024-12-04 00:10:00+00:00,Charlotte Hornets,Philadelphia 76ers,False,2024-12-04
+823e03f1e150f589e94392112743e204,basketball_nba,NBA,2024-12-04 00:30:00+00:00,New York Knicks,Orlando Magic,False,2024-12-04
+f53359e43a9975db8b93a561183faeb8,basketball_nba,NBA,2024-12-04 00:40:00+00:00,Toronto Raptors,Indiana Pacers,False,2024-12-04
+09758dcdf7adb5fded5490f2191ba107,basketball_nba,NBA,2024-12-04 01:10:00+00:00,Oklahoma City Thunder,Utah Jazz,False,2024-12-04
+6060ee0918c66681cee75352d305f91c,basketball_nba,NBA,2024-12-04 01:40:00+00:00,Dallas Mavericks,Memphis Grizzlies,False,2024-12-04
+413cdfb55ea70d2f55ddc47233d14b99,basketball_nba,NBA,2024-12-04 02:10:00+00:00,Phoenix Suns,San Antonio Spurs,False,2024-12-04
+eaf04a3044de875dc6c83132d04ae9f6,basketball_nba,NBA,2024-12-04 03:00:00+00:00,Denver Nuggets,Golden State Warriors,False,2024-12-04
+30f75d85c74e0811f06c0fbe86044f54,basketball_nba,NBA,2024-12-04 03:10:00+00:00,Sacramento Kings,Houston Rockets,False,2024-12-04
+e707fb0dc8825d51e20056a4bcaa4fa8,basketball_nba,NBA,2024-12-04 03:40:00+00:00,Los Angeles Clippers,Portland Trail Blazers,False,2024-12-04
+417efaa5b7a4706dfa04b33aef252675,basketball_nba,NBA,2024-12-05 00:40:00+00:00,Philadelphia 76ers,Orlando Magic,False,2024-12-05
+f1bb4f3b905e5b9437c3c0ea33b8769c,basketball_nba,NBA,2024-12-05 00:40:00+00:00,Miami Heat,Los Angeles Lakers,False,2024-12-05
+a521a13f2cf073291f8bffac0ba75837,basketball_nba,NBA,2024-12-05 00:40:00+00:00,Boston Celtics,Detroit Pistons,False,2024-12-05
+9da7eeb45b9873ae6df89b33a573fd7f,basketball_nba,NBA,2024-12-05 00:40:00+00:00,Brooklyn Nets,Indiana Pacers,False,2024-12-05
+f1ab290af81df58166c626360d5e62cc,basketball_nba,NBA,2024-12-05 01:10:00+00:00,Milwaukee Bucks,Atlanta Hawks,False,2024-12-05
+d0f89787fe1b4d71bac9102a21327f99,basketball_nba,NBA,2024-12-05 03:40:00+00:00,Los Angeles Clippers,Minnesota Timberwolves,False,2024-12-05
+ca4bb2d50c5d55cf031d8cad02d92b7a,basketball_nba,NBA,2024-12-06 00:10:00+00:00,Cleveland Cavaliers,Denver Nuggets,False,2024-12-06
+40960b0e939d16dfb5565e4b010eb92e,basketball_nba,NBA,2024-12-06 00:10:00+00:00,Washington Wizards,Dallas Mavericks,False,2024-12-06
+6f03cdfc23339b78c996582d25c31370,basketball_nba,NBA,2024-12-06 00:40:00+00:00,Toronto Raptors,Oklahoma City Thunder,False,2024-12-06
+798c3ee76086c9f5cadfbd86b4e58d3b,basketball_nba,NBA,2024-12-06 00:40:00+00:00,New York Knicks,Charlotte Hornets,False,2024-12-06
+0ae64846be96f62ac260ab692449e0c1,basketball_nba,NBA,2024-12-06 01:10:00+00:00,Memphis Grizzlies,Sacramento Kings,False,2024-12-06
+c4ce3c29c8d33833f12d44896aeb1d58,basketball_nba,NBA,2024-12-06 01:10:00+00:00,New Orleans Pelicans,Phoenix Suns,False,2024-12-06
+8d2bb8205f807002d278230d36fcc28e,basketball_nba,NBA,2024-12-06 01:10:00+00:00,San Antonio Spurs,Chicago Bulls,False,2024-12-06
+326c817bae57ebf40a20871f95c4e1ad,basketball_nba,NBA,2024-12-06 03:10:00+00:00,Golden State Warriors,Houston Rockets,False,2024-12-06
+cc7e0e6b1a36a1ac19c0d74550479f67,basketball_nba,NBA,2024-12-07 00:10:00+00:00,Philadelphia 76ers,Orlando Magic,False,2024-12-07
+054686aafaf26a3a9c0cb2d3f85f7e1a,basketball_nba,NBA,2024-12-07 00:40:00+00:00,Atlanta Hawks,Los Angeles Lakers,False,2024-12-07
+777d86c37951e9c17d4b0c10571de4c0,basketball_nba,NBA,2024-12-07 00:40:00+00:00,Boston Celtics,Milwaukee Bucks,False,2024-12-07
+2a9e5dccbd62f770ab94b927a2861f5b,basketball_nba,NBA,2024-12-07 01:10:00+00:00,Chicago Bulls,Indiana Pacers,False,2024-12-07
+77eeb214cb14729b743e125373a73f04,basketball_nba,NBA,2024-12-07 01:10:00+00:00,San Antonio Spurs,Sacramento Kings,False,2024-12-07
+8da11d2f43b74f5a290662bef25077b6,basketball_nba,NBA,2024-12-07 03:10:00+00:00,Golden State Warriors,Minnesota Timberwolves,False,2024-12-07
+7e9b9a80be69537fba4e661ad6475a08,basketball_nba,NBA,2024-12-07 03:10:00+00:00,Portland Trail Blazers,Utah Jazz,False,2024-12-07
+223a860079cb85067264a18d348a9b3f,basketball_nba,NBA,2024-12-07 18:10:00+00:00,Charlotte Hornets,Cleveland Cavaliers,False,2024-12-07
+2d89d4690f6f62dd422e539fbb16c997,basketball_nba,NBA,2024-12-08 00:10:00+00:00,Washington Wizards,Denver Nuggets,False,2024-12-08
+53f2f3e546f666cc19dc82a02f0e76fe,basketball_nba,NBA,2024-12-08 00:10:00+00:00,New Orleans Pelicans,Oklahoma City Thunder,False,2024-12-08
+2f39629dea728dc80d1173ff831453a1,basketball_nba,NBA,2024-12-08 00:40:00+00:00,Toronto Raptors,Dallas Mavericks,False,2024-12-08
+77e6e9aaf71d7c5297ed7a1152c967f4,basketball_nba,NBA,2024-12-08 00:40:00+00:00,New York Knicks,Detroit Pistons,False,2024-12-08
+df1b3decfabf837d1854ef97683838de,basketball_nba,NBA,2024-12-08 01:10:00+00:00,Boston Celtics,Memphis Grizzlies,False,2024-12-08
+532f3d249b5041fc73a13cfc992d24dd,basketball_nba,NBA,2024-12-08 01:10:00+00:00,Miami Heat,Phoenix Suns,False,2024-12-08
+17428abcf1af6a66a8040613d5b3f5d1,basketball_nba,NBA,2024-12-08 18:10:00+00:00,Chicago Bulls,Philadelphia 76ers,False,2024-12-08
+b04a03862d6825f5e36e9a66f9c1888f,basketball_nba,NBA,2024-12-08 20:40:00+00:00,Brooklyn Nets,Milwaukee Bucks,False,2024-12-08
+893abcad44bcaefd924d3fc880cce6c4,basketball_nba,NBA,2024-12-08 22:10:00+00:00,Indiana Pacers,Charlotte Hornets,False,2024-12-08
+eb7c4b88e286929ef2a576fe508e2169,basketball_nba,NBA,2024-12-08 23:10:00+00:00,Miami Heat,Cleveland Cavaliers,False,2024-12-08
+9fe0bbe2b1e033ae048452a8285d1bc1,basketball_nba,NBA,2024-12-08 23:10:00+00:00,Atlanta Hawks,Denver Nuggets,False,2024-12-08
+0ccc7d1a321b80fb5bb3db3d6f0e6427,basketball_nba,NBA,2024-12-08 23:40:00+00:00,Orlando Magic,Phoenix Suns,False,2024-12-08
+6f7b9dfc4b525c5a8dc930da48dd92e2,basketball_nba,NBA,2024-12-09 00:00:00+00:00,Washington Wizards,Memphis Grizzlies,False,2024-12-09
+1546bea5c1e65c866ee758b94a5f9527,basketball_nba,NBA,2024-12-09 00:10:00+00:00,San Antonio Spurs,New Orleans Pelicans,False,2024-12-09
+3cdac2eab39fad8c74a6291b911ea993,basketball_nba,NBA,2024-12-09 01:40:00+00:00,Golden State Warriors,Minnesota Timberwolves,False,2024-12-09
+fb8aee02b1cddedd9e4156f5853e2727,basketball_nba,NBA,2024-12-09 02:10:00+00:00,Los Angeles Clippers,Houston Rockets,False,2024-12-09
+42dde05336b258ab17e18670922ff9c9,basketball_nba,NBA,2024-12-09 02:10:00+00:00,Sacramento Kings,Utah Jazz,False,2024-12-09
+0717c42f68b5c2524c27431cf8861329,basketball_nba,NBA,2024-12-09 02:40:00+00:00,Los Angeles Lakers,Portland Trail Blazers,False,2024-12-09
+081e6621470f217e705dfdb7a7002270,basketball_nba,NBA,2024-12-10 00:40:00+00:00,Toronto Raptors,New York Knicks,False,2024-12-10
+7e2048eb3f47487e576dae3b41d296bf,basketball_nba,NBA,2024-12-11 00:00:00+00:00,Milwaukee Bucks,Orlando Magic,False,2024-12-11
+9267739cadf69b4bab8e7b7815d8b5e7,basketball_nba,NBA,2024-12-11 02:30:00+00:00,Oklahoma City Thunder,Dallas Mavericks,False,2024-12-11
+0667c1e4b0ffd20ab6acdceee432183f,basketball_nba,NBA,2024-12-12 00:00:00+00:00,New York Knicks,Atlanta Hawks,False,2024-12-12
+15efbb0a504a461af257905a64ad03f0,basketball_nba,NBA,2024-12-12 02:30:00+00:00,Houston Rockets,Golden State Warriors,False,2024-12-12
+7008c6d2f130e944fdd99fc0ca2c2952,basketball_nba,NBA,2024-12-13 00:40:00+00:00,Boston Celtics,Detroit Pistons,False,2024-12-13
+43ca075ce123acf59381e4455bfb54b0,basketball_nba,NBA,2024-12-13 00:40:00+00:00,Miami Heat,Toronto Raptors,False,2024-12-13
+48451f605af0efc8aa220afa2c3394da,basketball_nba,NBA,2024-12-13 01:10:00+00:00,New Orleans Pelicans,Sacramento Kings,False,2024-12-13
+571baeece08b336e3826b7ca98b656d6,basketball_nba,NBA,2024-12-14 00:10:00+00:00,Cleveland Cavaliers,Washington Wizards,False,2024-12-14
+d051b9de0b1bf363e5827f1b2845e1a1,basketball_nba,NBA,2024-12-14 00:10:00+00:00,Philadelphia 76ers,Indiana Pacers,False,2024-12-14
+588eb7f774dce2830329b5f78d43baa1,basketball_nba,NBA,2024-12-14 01:10:00+00:00,Chicago Bulls,Charlotte Hornets,False,2024-12-14
+623861b782c1cc51619c7dee7b916d40,basketball_nba,NBA,2024-12-14 01:10:00+00:00,Minnesota Timberwolves,Los Angeles Lakers,False,2024-12-14
+bec5c54189264e7ee9b5f331f1769d30,basketball_nba,NBA,2024-12-14 01:10:00+00:00,Memphis Grizzlies,Brooklyn Nets,False,2024-12-14
+ea90eb672a04820dcd2b3c397a95c336,basketball_nba,NBA,2024-12-14 02:10:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2024-12-14
+cd8c159ede7f08847d2d82bb92bc08b4,basketball_nba,NBA,2024-12-14 02:40:00+00:00,Utah Jazz,Phoenix Suns,False,2024-12-14
+01e15864afd824ea8f60b9766da2b1b6,basketball_nba,NBA,2024-12-14 03:10:00+00:00,Portland Trail Blazers,San Antonio Spurs,False,2024-12-14
+9c0cdf4d91abf7e718d57cb1565a7079,basketball_nba,NBA,2024-12-14 21:30:00+00:00,Milwaukee Bucks,Atlanta Hawks,False,2024-12-14
+5a58a058b265aa10346a63c741bfdc43,basketball_nba,NBA,2024-12-15 01:30:00+00:00,Oklahoma City Thunder,Houston Rockets,False,2024-12-15
+d39aa4878e703e91b1aa9e62e785375a,basketball_nba,NBA,2024-12-15 22:10:00+00:00,Indiana Pacers,New Orleans Pelicans,False,2024-12-15
+d06ca60172ba8aa0a163912aef82c90c,basketball_nba,NBA,2024-12-15 23:10:00+00:00,Washington Wizards,Boston Celtics,False,2024-12-15
+a4bdbd45f909b1f12bcb318d61e628ca,basketball_nba,NBA,2024-12-15 23:10:00+00:00,Orlando Magic,New York Knicks,False,2024-12-15
+e45d417f345d21a702da9414af2aee73,basketball_nba,NBA,2024-12-16 00:10:00+00:00,San Antonio Spurs,Minnesota Timberwolves,False,2024-12-16
+0410ba016f5c48252bf26ebb09e5f08a,basketball_nba,NBA,2024-12-16 01:10:00+00:00,Phoenix Suns,Portland Trail Blazers,False,2024-12-16
+2ed631812e25779f3ad3703ec54656b5,basketball_nba,NBA,2024-12-16 01:40:00+00:00,Golden State Warriors,Dallas Mavericks,False,2024-12-16
+dcd0da92bf3c4f3a97d2023b9ac14ae8,basketball_nba,NBA,2024-12-16 02:40:00+00:00,Los Angeles Lakers,Memphis Grizzlies,False,2024-12-16
+2a31912a9ecdfebe488e739445bb3433,basketball_nba,NBA,2024-12-17 00:10:00+00:00,Charlotte Hornets,Philadelphia 76ers,False,2024-12-17
+7443aaf02669cab6651424f81b3ede58,basketball_nba,NBA,2024-12-17 00:10:00+00:00,Detroit Pistons,Miami Heat,False,2024-12-17
+edcdaa8d607277d189d7993fe9c396e6,basketball_nba,NBA,2024-12-17 00:40:00+00:00,Brooklyn Nets,Cleveland Cavaliers,False,2024-12-17
+5f31a3ad7465f5265d9f393ed141f213,basketball_nba,NBA,2024-12-17 00:40:00+00:00,Toronto Raptors,Chicago Bulls,False,2024-12-17
+04f9c6a45bf9361d47a32ac0542bb3e4,basketball_nba,NBA,2024-12-17 03:10:00+00:00,Sacramento Kings,Denver Nuggets,False,2024-12-17
+d298cc7d7547424883b2ddffcc91a730,basketball_nba,NBA,2024-12-17 03:40:00+00:00,Los Angeles Clippers,Utah Jazz,False,2024-12-17
+552b0679668ac1011ceb86524711c27b,basketball_nba,NBA,2024-12-18 01:40:00+00:00,Oklahoma City Thunder,Milwaukee Bucks,False,2024-12-18
+9bcbac9c9a2d69aba5d65416ad520221,basketball_nba,NBA,2024-12-20 00:00:00+00:00,Orlando Magic,Oklahoma City Thunder,False,2024-12-20
+689e962f39b76d1fbb129c94a56cfb65,basketball_nba,NBA,2024-12-20 00:10:00+00:00,Washington Wizards,Charlotte Hornets,False,2024-12-20
+4da343a0092066f8ba76605cc93f9e99,basketball_nba,NBA,2024-12-20 00:10:00+00:00,Detroit Pistons,Utah Jazz,False,2024-12-20
+7a9b0d738dd82c314cc060949d355833,basketball_nba,NBA,2024-12-20 00:40:00+00:00,Boston Celtics,Chicago Bulls,False,2024-12-20
+4f50ef6ba691863493d1518e5809002a,basketball_nba,NBA,2024-12-20 00:40:00+00:00,Toronto Raptors,Brooklyn Nets,False,2024-12-20
+0837d9568df4daac2dd707b8e927b9d3,basketball_nba,NBA,2024-12-20 01:10:00+00:00,San Antonio Spurs,Atlanta Hawks,False,2024-12-20
+a53d227fcd0b37ba102524b758d0322e,basketball_nba,NBA,2024-12-20 01:10:00+00:00,Memphis Grizzlies,Golden State Warriors,False,2024-12-20
+060d352f0c7cb2692c6265d50e2fe240,basketball_nba,NBA,2024-12-20 01:10:00+00:00,Houston Rockets,New Orleans Pelicans,False,2024-12-20
+301210ba967d10356037e1f79a5e0d02,basketball_nba,NBA,2024-12-20 01:40:00+00:00,Dallas Mavericks,Los Angeles Clippers,False,2024-12-20
+ee575ce96a769e7bdb5d7d2609a7fca0,basketball_nba,NBA,2024-12-20 02:10:00+00:00,Phoenix Suns,Indiana Pacers,False,2024-12-20
+1c742df7f4aebc9328c3824455b24eee,basketball_nba,NBA,2024-12-20 02:30:00+00:00,Minnesota Timberwolves,New York Knicks,False,2024-12-20
+5fd5e867bfeef8ce745416d8749be6e6,basketball_nba,NBA,2024-12-20 03:10:00+00:00,Portland Trail Blazers,Denver Nuggets,False,2024-12-20
+69b2a23ca9e715f8b441c297d40f2028,basketball_nba,NBA,2024-12-20 03:10:00+00:00,Sacramento Kings,Los Angeles Lakers,False,2024-12-20
+2a7dbcfb83d9321a10d76ff067ee48e8,basketball_nba,NBA,2024-12-21 00:10:00+00:00,Philadelphia 76ers,Charlotte Hornets,False,2024-12-21
+de4b0a58518b04e6a594bf13cf088bf9,basketball_nba,NBA,2024-12-21 00:40:00+00:00,Cleveland Cavaliers,Milwaukee Bucks,False,2024-12-21
+7e71c7e05484687ee8c14b8a0b9ab364,basketball_nba,NBA,2024-12-21 01:10:00+00:00,Miami Heat,Oklahoma City Thunder,False,2024-12-21
+6c862db84095718c9991f8b053ee0f97,basketball_nba,NBA,2024-12-21 23:10:00+00:00,Sacramento Kings,Los Angeles Lakers,False,2024-12-21
+18aa38443177f6700205547721af548f,basketball_nba,NBA,2024-12-22 00:10:00+00:00,Orlando Magic,Miami Heat,False,2024-12-22
+83b021d80acb98e663163868877a0a18,basketball_nba,NBA,2024-12-22 00:40:00+00:00,Atlanta Hawks,Memphis Grizzlies,False,2024-12-22
+6504e5952ce79a153f38459f95a047fb,basketball_nba,NBA,2024-12-22 00:40:00+00:00,Brooklyn Nets,Utah Jazz,False,2024-12-22
+a52558d9391d7cf1e5aa6edbb2b08aa7,basketball_nba,NBA,2024-12-22 01:10:00+00:00,New Orleans Pelicans,New York Knicks,False,2024-12-22
+dde018748d6f9c1384f4ac2ed1594024,basketball_nba,NBA,2024-12-22 01:10:00+00:00,Milwaukee Bucks,Washington Wizards,False,2024-12-22
+b9d90ca3edc4711f12b18ca7946846ce,basketball_nba,NBA,2024-12-22 01:10:00+00:00,Minnesota Timberwolves,Golden State Warriors,False,2024-12-22
+c2ada948dd2fde81b6268f418bfe3f52,basketball_nba,NBA,2024-12-22 01:10:00+00:00,Cleveland Cavaliers,Philadelphia 76ers,False,2024-12-22
+dae3fc7ce74c00ce2864375961c2e1c4,basketball_nba,NBA,2024-12-22 01:10:00+00:00,Chicago Bulls,Boston Celtics,False,2024-12-22
+73dfe6579a2b46bfb459afc35e214797,basketball_nba,NBA,2024-12-22 01:40:00+00:00,Dallas Mavericks,Los Angeles Clippers,False,2024-12-22
+36ec65d55154bf5da3ee0058205e11b5,basketball_nba,NBA,2024-12-22 01:40:00+00:00,San Antonio Spurs,Portland Trail Blazers,False,2024-12-22
+9a00be7e1e076a07bdae93cacf15456e,basketball_nba,NBA,2024-12-22 02:10:00+00:00,Phoenix Suns,Detroit Pistons,False,2024-12-22
+34df465b55c9b15d02fdfde3184afacc,basketball_nba,NBA,2024-12-22 23:00:00+00:00,Sacramento Kings,Indiana Pacers,False,2024-12-22
+06bea5c751ad73d3977dc90d2b8e198b,basketball_nba,NBA,2024-12-22 23:10:00+00:00,Toronto Raptors,Houston Rockets,False,2024-12-22
+01d70bf94d2e1519cbfbfb51c684fc25,basketball_nba,NBA,2024-12-23 00:10:00+00:00,New Orleans Pelicans,Denver Nuggets,False,2024-12-23
+d040eb23dfbc283aea0d74734bf4407f,basketball_nba,NBA,2024-12-24 00:10:00+00:00,Philadelphia 76ers,San Antonio Spurs,False,2024-12-24
+8b97a1006b31e8e04032fdde4532b193,basketball_nba,NBA,2024-12-24 00:10:00+00:00,Cleveland Cavaliers,Utah Jazz,False,2024-12-24
+3f8dcdc2520a406d27bdddd648fdd1e3,basketball_nba,NBA,2024-12-24 00:10:00+00:00,Charlotte Hornets,Houston Rockets,False,2024-12-24
+30397cce5394ae6ddb2c658d04968cfa,basketball_nba,NBA,2024-12-24 00:10:00+00:00,Orlando Magic,Boston Celtics,False,2024-12-24
+57afe6dde59b6c16ef531b74a94033a5,basketball_nba,NBA,2024-12-24 00:40:00+00:00,Atlanta Hawks,Minnesota Timberwolves,False,2024-12-24
+18aaff6c645021bf95f39e0e73f59871,basketball_nba,NBA,2024-12-24 00:40:00+00:00,Miami Heat,Brooklyn Nets,False,2024-12-24
+d18868492802b762e425d1280c791373,basketball_nba,NBA,2024-12-24 00:40:00+00:00,New York Knicks,Toronto Raptors,False,2024-12-24
+d981712f3f0aa1f3864dda6040a05a3f,basketball_nba,NBA,2024-12-24 01:10:00+00:00,Chicago Bulls,Milwaukee Bucks,False,2024-12-24
+80bb19938199e433727700a204ade43f,basketball_nba,NBA,2024-12-24 01:10:00+00:00,Memphis Grizzlies,Los Angeles Clippers,False,2024-12-24
+48656b41c4f2e42dee4c455d2f88de52,basketball_nba,NBA,2024-12-24 01:10:00+00:00,Oklahoma City Thunder,Washington Wizards,False,2024-12-24
+24dc530655644f98609de8f7c33c465a,basketball_nba,NBA,2024-12-24 01:40:00+00:00,Dallas Mavericks,Portland Trail Blazers,False,2024-12-24
+4ce62dddd2bc680984fcefa576c224fd,basketball_nba,NBA,2024-12-24 03:10:00+00:00,Golden State Warriors,Indiana Pacers,False,2024-12-24
+38bdace5e2d728fa7daced7f3705071f,basketball_nba,NBA,2024-12-24 03:10:00+00:00,Denver Nuggets,Phoenix Suns,False,2024-12-24
+2e4aac41db6b060069cef597eaa36189,basketball_nba,NBA,2024-12-24 03:40:00+00:00,Los Angeles Lakers,Detroit Pistons,False,2024-12-24
+973a6ea86af7d9e2bf4c52509822f5bf,basketball_nba,NBA,2024-12-25 17:00:00+00:00,New York Knicks,San Antonio Spurs,False,2024-12-25
+07a07eaa8f786d68cb371107f36f5b33,basketball_nba,NBA,2024-12-25 19:30:00+00:00,Dallas Mavericks,Minnesota Timberwolves,False,2024-12-25
+6f66bc2154fb45b2047e1c1c5afcdc38,basketball_nba,NBA,2024-12-25 22:00:00+00:00,Boston Celtics,Philadelphia 76ers,False,2024-12-25
+bc6f994bad539db5054c8b750c437fb8,basketball_nba,NBA,2024-12-26 01:00:00+00:00,Golden State Warriors,Los Angeles Lakers,False,2024-12-26
+22a9b650e64ca15cb0c83dc0148a571e,basketball_nba,NBA,2024-12-26 03:30:00+00:00,Phoenix Suns,Denver Nuggets,False,2024-12-26
+4bfd5b23c0d4cad658d4a20ea0f06955,basketball_nba,NBA,2024-12-27 00:00:00+00:00,Washington Wizards,Charlotte Hornets,False,2024-12-27
+e39267d11691e68e77ef431e52fdb11e,basketball_nba,NBA,2024-12-27 00:00:00+00:00,Orlando Magic,Miami Heat,False,2024-12-27
+e21b40ce22364256e88f6c0ad7193033,basketball_nba,NBA,2024-12-27 00:10:00+00:00,Indiana Pacers,Oklahoma City Thunder,False,2024-12-27
+af06375b9911e15a6f5d2b3de8705daf,basketball_nba,NBA,2024-12-27 00:40:00+00:00,Atlanta Hawks,Chicago Bulls,False,2024-12-27
+f90f5c23b0fa7053a26e7a0568c8fa39,basketball_nba,NBA,2024-12-27 01:10:00+00:00,Milwaukee Bucks,Brooklyn Nets,False,2024-12-27
+db1120a8a9bf3cb147989817bc5bdaad,basketball_nba,NBA,2024-12-27 01:10:00+00:00,New Orleans Pelicans,Houston Rockets,False,2024-12-27
+cbe24b9f6a6dd3e656d4dd1eb7850341,basketball_nba,NBA,2024-12-27 01:10:00+00:00,Memphis Grizzlies,Toronto Raptors,False,2024-12-27
+6d8fe26d7672819d7668680ebe499cc1,basketball_nba,NBA,2024-12-27 03:10:00+00:00,Sacramento Kings,Detroit Pistons,False,2024-12-27
+419d8d371201cc9b15e2784811c98d1c,basketball_nba,NBA,2024-12-27 03:10:00+00:00,Portland Trail Blazers,Utah Jazz,False,2024-12-27
+7a05980674f68bc16f680e72ec56a341,basketball_nba,NBA,2024-12-28 00:10:00+00:00,Orlando Magic,New York Knicks,False,2024-12-28
+dbc1c5cdc05f9f23ad5ba940b826dbe8,basketball_nba,NBA,2024-12-28 00:40:00+00:00,Boston Celtics,Indiana Pacers,False,2024-12-28
+1469ef9c9f1234b6e4b4459d278febf9,basketball_nba,NBA,2024-12-28 00:40:00+00:00,Brooklyn Nets,San Antonio Spurs,False,2024-12-28
+bc47b4f184c141ec9dfeee3384a9aada,basketball_nba,NBA,2024-12-28 01:10:00+00:00,New Orleans Pelicans,Memphis Grizzlies,False,2024-12-28
+6d8f048a883629979e17719317a2cffd,basketball_nba,NBA,2024-12-28 01:10:00+00:00,Houston Rockets,Minnesota Timberwolves,False,2024-12-28
+dd5c7ce9aab037d3f7c681c18576ca9b,basketball_nba,NBA,2024-12-28 02:10:00+00:00,Phoenix Suns,Dallas Mavericks,False,2024-12-28
+e7c8bb79711405f088d6e1a5aa8c8611,basketball_nba,NBA,2024-12-28 02:10:00+00:00,Denver Nuggets,Cleveland Cavaliers,False,2024-12-28
+cff4f10e2bdfa44473fd70dd746dafec,basketball_nba,NBA,2024-12-28 03:10:00+00:00,Los Angeles Clippers,Golden State Warriors,False,2024-12-28
+19588d18dd485a02f3cd4b0205255548,basketball_nba,NBA,2024-12-28 20:10:00+00:00,Atlanta Hawks,Miami Heat,False,2024-12-28
+95cbd0296c0f0db22d72550d5cbdc127,basketball_nba,NBA,2024-12-28 23:10:00+00:00,Charlotte Hornets,Oklahoma City Thunder,False,2024-12-28
+344f56fc125c7da72e13ee290d092afa,basketball_nba,NBA,2024-12-29 00:10:00+00:00,Washington Wizards,New York Knicks,False,2024-12-29
+40e1ec3c8239124263fe3b44acd212a3,basketball_nba,NBA,2024-12-29 01:10:00+00:00,Chicago Bulls,Milwaukee Bucks,False,2024-12-29
+e39682fc30c7ab5da3052a91ece65b60,basketball_nba,NBA,2024-12-29 01:40:00+00:00,Golden State Warriors,Phoenix Suns,False,2024-12-29
+efb1af33c4ee8c1152e9f4c8fa696aed,basketball_nba,NBA,2024-12-29 02:10:00+00:00,Denver Nuggets,Detroit Pistons,False,2024-12-29
+069de53617a33409fad9af82b567b9b1,basketball_nba,NBA,2024-12-29 02:40:00+00:00,Utah Jazz,Philadelphia 76ers,False,2024-12-29
+db7e00deff470f6ae263cb4382733028,basketball_nba,NBA,2024-12-29 03:10:00+00:00,Portland Trail Blazers,Dallas Mavericks,False,2024-12-29
+5c003c67504420c3b2d17099ec541204,basketball_nba,NBA,2024-12-29 03:40:00+00:00,Los Angeles Lakers,Sacramento Kings,False,2024-12-29
+5d7315a20314b4214c36dbb8e66e153d,basketball_nba,NBA,2024-12-29 20:40:00+00:00,Orlando Magic,Brooklyn Nets,False,2024-12-29
+fb14bcb5417043c018da7f5a62be0ea4,basketball_nba,NBA,2024-12-29 23:10:00+00:00,Toronto Raptors,Atlanta Hawks,False,2024-12-29
+d3ae24d0197450a3e35f06815f27c0d9,basketball_nba,NBA,2024-12-29 23:10:00+00:00,Boston Celtics,Indiana Pacers,False,2024-12-29
+4c77212c2915a07f52f48d02dc9d3e76,basketball_nba,NBA,2024-12-30 00:10:00+00:00,Houston Rockets,Miami Heat,False,2024-12-30
+ea39a22680a88694363e2bfb801c8f40,basketball_nba,NBA,2024-12-30 00:10:00+00:00,Oklahoma City Thunder,Memphis Grizzlies,False,2024-12-30
+ab147db7fe7e98ac0407eed94a3d2859,basketball_nba,NBA,2024-12-30 01:10:00+00:00,Minnesota Timberwolves,San Antonio Spurs,False,2024-12-30
+95a73f31c04e5efe67d63edd3b712ea4,basketball_nba,NBA,2024-12-31 00:10:00+00:00,Charlotte Hornets,Chicago Bulls,False,2024-12-31
+5b56036dc54c8ed8d9f48daf54be127d,basketball_nba,NBA,2024-12-31 00:10:00+00:00,Washington Wizards,New York Knicks,False,2024-12-31
+b9290db9bfac85969edfbb6bbe18cc1a,basketball_nba,NBA,2024-12-31 01:10:00+00:00,New Orleans Pelicans,Los Angeles Clippers,False,2024-12-31
+6cad9abcacacf0c44e11c2c69a3c932a,basketball_nba,NBA,2024-12-31 02:10:00+00:00,Utah Jazz,Denver Nuggets,False,2024-12-31
+1acd3d3cfc7eecfb83fbb98946dde600,basketball_nba,NBA,2024-12-31 03:10:00+00:00,Golden State Warriors,Cleveland Cavaliers,False,2024-12-31
+7273441b90fc6cfe5c54653640e2ba4e,basketball_nba,NBA,2024-12-31 03:10:00+00:00,Sacramento Kings,Dallas Mavericks,False,2024-12-31
+8ac4b422c97aa1f864449bc89e57b753,basketball_nba,NBA,2024-12-31 03:10:00+00:00,Portland Trail Blazers,Philadelphia 76ers,False,2024-12-31
+ae970107e2737f57291b96263aed4ea9,basketball_nba,NBA,2024-12-31 20:10:00+00:00,Boston Celtics,Toronto Raptors,False,2024-12-31
+24578f5f23e167e01819773b30904dee,basketball_nba,NBA,2024-12-31 20:10:00+00:00,Indiana Pacers,Milwaukee Bucks,False,2024-12-31
+aff24c77ef458bdc0830c60fd91acb8b,basketball_nba,NBA,2025-01-01 00:10:00+00:00,San Antonio Spurs,Los Angeles Clippers,False,2025-01-01
+74722b5cca9e227ae877345bd878496b,basketball_nba,NBA,2025-01-01 01:10:00+00:00,Oklahoma City Thunder,Minnesota Timberwolves,False,2025-01-01
+04b77ec07e712b35e2acd45c97d17bc1,basketball_nba,NBA,2025-01-01 02:10:00+00:00,Los Angeles Lakers,Cleveland Cavaliers,False,2025-01-01
+b9ee2d4806667285e40708d7887b00c8,basketball_nba,NBA,2025-01-01 02:10:00+00:00,Phoenix Suns,Memphis Grizzlies,False,2025-01-01
+5dafe2b124ef15fa7222fb4b3c073194,basketball_nba,NBA,2025-01-02 00:10:00+00:00,Detroit Pistons,Orlando Magic,False,2025-01-02
+0a5a9e810f06ed0adb33581b2163f143,basketball_nba,NBA,2025-01-02 00:10:00+00:00,Washington Wizards,Chicago Bulls,False,2025-01-02
+89603f2b0a204dbc3d297e2376139ce3,basketball_nba,NBA,2025-01-02 00:40:00+00:00,Toronto Raptors,Brooklyn Nets,False,2025-01-02
+1c50f326ecf2fbcd60204c5a5ab7dbbd,basketball_nba,NBA,2025-01-02 00:40:00+00:00,Miami Heat,New Orleans Pelicans,False,2025-01-02
+f015b579964f3d7dd9791e79f376815d,basketball_nba,NBA,2025-01-02 00:40:00+00:00,New York Knicks,Utah Jazz,False,2025-01-02
+248c33700321ce34eaaba46dec5a39d3,basketball_nba,NBA,2025-01-02 01:10:00+00:00,Houston Rockets,Dallas Mavericks,False,2025-01-02
+0b5d74feda8b6c31c2d76ee850374b13,basketball_nba,NBA,2025-01-02 02:10:00+00:00,Denver Nuggets,Atlanta Hawks,False,2025-01-02
+40e637d38bead46362387d77ea8c187e,basketball_nba,NBA,2025-01-02 03:10:00+00:00,Sacramento Kings,Philadelphia 76ers,False,2025-01-02
+a480ee72fa8d5276d08ce1f84356058f,basketball_nba,NBA,2025-01-03 00:30:00+00:00,Minnesota Timberwolves,Boston Celtics,False,2025-01-03
+f5808c0580cf1e0c870d92f7e38e1613,basketball_nba,NBA,2025-01-03 00:40:00+00:00,Miami Heat,Indiana Pacers,False,2025-01-03
+e940da7e0af5712842e600fdfa5096c7,basketball_nba,NBA,2025-01-03 01:10:00+00:00,Oklahoma City Thunder,Los Angeles Clippers,False,2025-01-03
+2416c8d0e975b61e91be5466c7c0d159,basketball_nba,NBA,2025-01-03 01:10:00+00:00,Milwaukee Bucks,Brooklyn Nets,False,2025-01-03
+899a51e2d81323d6490b0779d7a54a0b,basketball_nba,NBA,2025-01-03 03:10:00+00:00,Golden State Warriors,Philadelphia 76ers,False,2025-01-03
+82fee6f4433de853f96b84a8814b101f,basketball_nba,NBA,2025-01-03 03:40:00+00:00,Los Angeles Lakers,Portland Trail Blazers,False,2025-01-03
+dd54144aa9198f2a9aeb9335da4178ab,basketball_nba,NBA,2025-01-04 00:00:00+00:00,Detroit Pistons,Charlotte Hornets,False,2025-01-04
+11d62601c5a55c4b94a20488f50c980e,basketball_nba,NBA,2025-01-04 00:40:00+00:00,Toronto Raptors,Orlando Magic,False,2025-01-04
+53e827321076168e524ff39c2e685755,basketball_nba,NBA,2025-01-04 01:00:00+00:00,New Orleans Pelicans,Washington Wizards,False,2025-01-04
+c04c75a51be9a98d94376d06fe98419a,basketball_nba,NBA,2025-01-04 01:10:00+00:00,Houston Rockets,Boston Celtics,False,2025-01-04
+5a41209fe371713677fe451c0b903510,basketball_nba,NBA,2025-01-04 01:10:00+00:00,Oklahoma City Thunder,New York Knicks,False,2025-01-04
+b86ece4fd0d98af3ab129728eb6d20f1,basketball_nba,NBA,2025-01-04 01:30:00+00:00,Dallas Mavericks,Cleveland Cavaliers,False,2025-01-04
+b1b05543c486b3b658d206f23ef75513,basketball_nba,NBA,2025-01-04 02:00:00+00:00,Denver Nuggets,San Antonio Spurs,False,2025-01-04
+ce54a15a025f63138f75b9caf186ce69,basketball_nba,NBA,2025-01-04 03:00:00+00:00,Sacramento Kings,Memphis Grizzlies,False,2025-01-04
+59819cf3348408e741b42cb5c0536e78,basketball_nba,NBA,2025-01-04 03:40:00+00:00,Los Angeles Lakers,Atlanta Hawks,False,2025-01-04
+5d3b30e20293de12cf84f713a707e721,basketball_nba,NBA,2025-01-04 23:10:00+00:00,Brooklyn Nets,Philadelphia 76ers,False,2025-01-04
+5f75aa5ec69da99dd52723c3ff64dbf3,basketball_nba,NBA,2025-01-05 00:10:00+00:00,Detroit Pistons,Minnesota Timberwolves,False,2025-01-05
+7c138909a671e2895ea58542823dde19,basketball_nba,NBA,2025-01-05 00:10:00+00:00,Indiana Pacers,Phoenix Suns,False,2025-01-05
+329b7d398b4199cf46e6e59380e84879,basketball_nba,NBA,2025-01-05 01:10:00+00:00,Chicago Bulls,New York Knicks,False,2025-01-05
+7f4cc2ee0112a9a90b481f3260feffb6,basketball_nba,NBA,2025-01-05 01:10:00+00:00,San Antonio Spurs,Denver Nuggets,False,2025-01-05
+09540a7b36c6595f914366fac21b9341,basketball_nba,NBA,2025-01-05 01:10:00+00:00,Miami Heat,Utah Jazz,False,2025-01-05
+e908a45357225b4bbd8ed8c56ebea2c0,basketball_nba,NBA,2025-01-05 01:10:00+00:00,Milwaukee Bucks,Portland Trail Blazers,False,2025-01-05
+c2b48aa55d3033a876e5d93e1f877c39,basketball_nba,NBA,2025-01-05 01:40:00+00:00,Golden State Warriors,Memphis Grizzlies,False,2025-01-05
+0d48e3b3532422c2eefee90bc29d7eab,basketball_nba,NBA,2025-01-05 03:30:00+00:00,Los Angeles Clippers,Atlanta Hawks,False,2025-01-05
+f5fee2b969c5801e0050c4bec55b8f77,basketball_nba,NBA,2025-01-05 20:40:00+00:00,Oklahoma City Thunder,Boston Celtics,False,2025-01-05
+db347b052a6eef25b8e6ccf828265510,basketball_nba,NBA,2025-01-05 23:10:00+00:00,Cleveland Cavaliers,Charlotte Hornets,False,2025-01-05
+9ce173d96d0ea070c27b22ff075e0e2b,basketball_nba,NBA,2025-01-05 23:10:00+00:00,Washington Wizards,New Orleans Pelicans,False,2025-01-05
+47b5f9c4f55be8b15e28b691764920ce,basketball_nba,NBA,2025-01-05 23:40:00+00:00,Orlando Magic,Utah Jazz,False,2025-01-05
+d600b92c53571414490376c065fecfba,basketball_nba,NBA,2025-01-06 00:10:00+00:00,Houston Rockets,Los Angeles Lakers,False,2025-01-06
+3672b0562e54c6bf6784cdaa71d58c2e,basketball_nba,NBA,2025-01-06 01:40:00+00:00,Golden State Warriors,Sacramento Kings,False,2025-01-06
+e1dd5208841d8c7c791147ba258da58a,basketball_nba,NBA,2025-01-07 00:10:00+00:00,Detroit Pistons,Portland Trail Blazers,False,2025-01-07
+0a123fe416474ac425b98712fc902e5f,basketball_nba,NBA,2025-01-07 00:10:00+00:00,Philadelphia 76ers,Phoenix Suns,False,2025-01-07
+1005cff17ce99fccd2cc820369d5738a,basketball_nba,NBA,2025-01-07 00:40:00+00:00,New York Knicks,Orlando Magic,False,2025-01-07
+908313a6c56573588f7274810736f16e,basketball_nba,NBA,2025-01-07 00:40:00+00:00,Toronto Raptors,Milwaukee Bucks,False,2025-01-07
+24dbb7067e8182d548694aa5d911357b,basketball_nba,NBA,2025-01-07 00:40:00+00:00,Brooklyn Nets,Indiana Pacers,False,2025-01-07
+a4bb1101bac62c47c838f65850145f3f,basketball_nba,NBA,2025-01-07 01:10:00+00:00,Chicago Bulls,San Antonio Spurs,False,2025-01-07
+703669dbf20b294f62d381849b88aaa0,basketball_nba,NBA,2025-01-07 01:10:00+00:00,Memphis Grizzlies,Dallas Mavericks,False,2025-01-07
+fbfbfeb570fc433c8dc87a901e5636ad,basketball_nba,NBA,2025-01-07 01:10:00+00:00,Minnesota Timberwolves,Los Angeles Clippers,False,2025-01-07
+dacca6522f193996c2b8e0e0f144e3d5,basketball_nba,NBA,2025-01-07 03:10:00+00:00,Sacramento Kings,Miami Heat,False,2025-01-07
+842ec88046f2bba42a95f2bac85ff78a,basketball_nba,NBA,2025-01-08 00:10:00+00:00,Charlotte Hornets,Phoenix Suns,False,2025-01-08
+e0b8319e07a33042a1affc78f653b6ae,basketball_nba,NBA,2025-01-08 00:10:00+00:00,Washington Wizards,Houston Rockets,False,2025-01-08
+2543b2068a7bf0c7fcc32e1c63c3a03a,basketball_nba,NBA,2025-01-08 00:40:00+00:00,Dallas Mavericks,Los Angeles Lakers,False,2025-01-08
+23f985ec811f2813e01c771501c0fac0,basketball_nba,NBA,2025-01-08 01:10:00+00:00,New Orleans Pelicans,Minnesota Timberwolves,False,2025-01-08
+36ee31070e4af2e4abd3d9fa2286ca1b,basketball_nba,NBA,2025-01-08 02:10:00+00:00,Utah Jazz,Atlanta Hawks,False,2025-01-08
+aa8848c4a9648b9f79a361891b0141c8,basketball_nba,NBA,2025-01-08 03:10:00+00:00,Denver Nuggets,Boston Celtics,False,2025-01-08
+46ba25589d5f7c05ca919da07e61bbcf,basketball_nba,NBA,2025-01-08 03:10:00+00:00,Golden State Warriors,Miami Heat,False,2025-01-08
+e49c35167662c7e6ea6970b981b018f8,basketball_nba,NBA,2025-01-09 00:00:00+00:00,Philadelphia 76ers,Washington Wizards,False,2025-01-09
+c62f042c293d7c240b837a532e82e1f9,basketball_nba,NBA,2025-01-09 00:10:00+00:00,Indiana Pacers,Chicago Bulls,False,2025-01-09
+5d1e8ab87ce778e4c7ab00c0553faa9f,basketball_nba,NBA,2025-01-09 00:10:00+00:00,Cleveland Cavaliers,Oklahoma City Thunder,False,2025-01-09
+b5c93aa8425dd073ff0965efeee639f8,basketball_nba,NBA,2025-01-09 00:40:00+00:00,Brooklyn Nets,Detroit Pistons,False,2025-01-09
+c33de7a122ef4c821ab8550248df9a08,basketball_nba,NBA,2025-01-09 00:40:00+00:00,New York Knicks,Toronto Raptors,False,2025-01-09
+c5d1a55aacf259e6a3e167e5fd5d0372,basketball_nba,NBA,2025-01-09 01:00:00+00:00,New Orleans Pelicans,Portland Trail Blazers,False,2025-01-09
+dd8248b21938d4246870fa725dd003b0,basketball_nba,NBA,2025-01-09 02:00:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2025-01-09
+ce5fe0a6d5f99b9c1659e2f03a0b405e,basketball_nba,NBA,2025-01-09 02:40:00+00:00,Milwaukee Bucks,San Antonio Spurs,False,2025-01-09
+84c46a915d78675134a5fcf018c7771e,basketball_nba,NBA,2025-01-10 00:10:00+00:00,Cleveland Cavaliers,Toronto Raptors,False,2025-01-10
+78bde2ba3a89a79b6285c8055f3d850e,basketball_nba,NBA,2025-01-10 00:10:00+00:00,Detroit Pistons,Golden State Warriors,False,2025-01-10
+3a1881e49680765b7cab8c196c103e99,basketball_nba,NBA,2025-01-10 00:10:00+00:00,Orlando Magic,Minnesota Timberwolves,False,2025-01-10
+50d160a91a56524fee4c471ae8b69754,basketball_nba,NBA,2025-01-10 01:10:00+00:00,Memphis Grizzlies,Houston Rockets,False,2025-01-10
+f030170fabee1ee9bc17ed360ce1712a,basketball_nba,NBA,2025-01-10 01:40:00+00:00,Dallas Mavericks,Portland Trail Blazers,False,2025-01-10
+4f1c87b0757e1a2a475fdce9cfb37f9f,basketball_nba,NBA,2025-01-10 02:10:00+00:00,Phoenix Suns,Atlanta Hawks,False,2025-01-10
+7702b35a172bb027ea579fd0a9787313,basketball_nba,NBA,2025-01-10 02:10:00+00:00,Utah Jazz,Miami Heat,False,2025-01-10
+b708fe113f15f5f0129b149182b0f325,basketball_nba,NBA,2025-01-10 03:40:00+00:00,Los Angeles Lakers,Charlotte Hornets,False,2025-01-10
+ac9a309cf08be57f7f31fe528a4d825f,basketball_nba,NBA,2025-01-11 00:10:00+00:00,Philadelphia 76ers,New Orleans Pelicans,False,2025-01-11
+be3802cac81b9607b7b88cde78ae113d,basketball_nba,NBA,2025-01-11 00:10:00+00:00,Orlando Magic,Milwaukee Bucks,False,2025-01-11
+0e32fe32a9bde703c8e600fd95677293,basketball_nba,NBA,2025-01-11 00:10:00+00:00,Indiana Pacers,Golden State Warriors,False,2025-01-11
+606b4c2ce520cc1ac3585349d1f2fb1c,basketball_nba,NBA,2025-01-11 00:40:00+00:00,Boston Celtics,Sacramento Kings,False,2025-01-11
+e0cea4ffd07ba3dadf233f37f72d6687,basketball_nba,NBA,2025-01-11 00:40:00+00:00,New York Knicks,Oklahoma City Thunder,False,2025-01-11
+cd35615a88f559f460bc05ccae1b4167,basketball_nba,NBA,2025-01-11 01:10:00+00:00,Chicago Bulls,Washington Wizards,False,2025-01-11
+c501c248cf7484497c48359faa70950d,basketball_nba,NBA,2025-01-11 02:10:00+00:00,Denver Nuggets,Brooklyn Nets,False,2025-01-11
+5e417ce3e427637eb5d0697aa947613d,basketball_nba,NBA,2025-01-11 20:10:00+00:00,Atlanta Hawks,Houston Rockets,False,2025-01-11
+846db12296ff38518b5c00dd40519f23,basketball_nba,NBA,2025-01-11 22:10:00+00:00,Phoenix Suns,Utah Jazz,False,2025-01-11
+0018eb3403ccfeac26ecf6dca2c8ec2c,basketball_nba,NBA,2025-01-12 00:10:00+00:00,Detroit Pistons,Toronto Raptors,False,2025-01-12
+0d0f85bab66183a85f76190524915c9d,basketball_nba,NBA,2025-01-12 01:10:00+00:00,Minnesota Timberwolves,Memphis Grizzlies,False,2025-01-12
+9df4a1a38d880c9a054c89cb542b5a10,basketball_nba,NBA,2025-01-12 03:10:00+00:00,Portland Trail Blazers,Miami Heat,False,2025-01-12
+e1bcff9bf41c7fede8e3f8eb12b0270c,basketball_nba,NBA,2025-01-12 20:00:00+00:00,Dallas Mavericks,Denver Nuggets,False,2025-01-12
+4eb39427c536fb6e368f749680f8e021,basketball_nba,NBA,2025-01-12 20:10:00+00:00,New York Knicks,Milwaukee Bucks,False,2025-01-12
+001a6f6b65837f6bd710af95226ce1b3,basketball_nba,NBA,2025-01-12 20:30:00+00:00,Chicago Bulls,Sacramento Kings,False,2025-01-12
+2f3cda7ca8ecf34aff79d9aad255729f,basketball_nba,NBA,2025-01-12 23:10:00+00:00,Boston Celtics,New Orleans Pelicans,False,2025-01-12
+67684c208c6741989a4ec1db5a523439,basketball_nba,NBA,2025-01-12 23:10:00+00:00,Cleveland Cavaliers,Indiana Pacers,False,2025-01-12
+58b46c9397011f730367d56e32ac7dfd,basketball_nba,NBA,2025-01-12 23:10:00+00:00,Washington Wizards,Oklahoma City Thunder,False,2025-01-12
+4e2e4b0bc4161ce2422c4fa329f1157b,basketball_nba,NBA,2025-01-12 23:10:00+00:00,Orlando Magic,Philadelphia 76ers,False,2025-01-12
+91f0488867fdd555b523926a9f4a260f,basketball_nba,NBA,2025-01-13 01:10:00+00:00,Utah Jazz,Brooklyn Nets,False,2025-01-13
+568a23a4d283ab157a879e1503263c5b,basketball_nba,NBA,2025-01-13 02:10:00+00:00,Phoenix Suns,Charlotte Hornets,False,2025-01-13
+8055267414f42969c8e4c903a2723d9b,basketball_nba,NBA,2025-01-14 00:10:00+00:00,Washington Wizards,Minnesota Timberwolves,False,2025-01-14
+bf337a3b215f30da17d7763d07d32d1f,basketball_nba,NBA,2025-01-14 00:40:00+00:00,Toronto Raptors,Golden State Warriors,False,2025-01-14
+8fa123545e73bd70359c25d60cc9821d,basketball_nba,NBA,2025-01-14 00:40:00+00:00,New York Knicks,Detroit Pistons,False,2025-01-14
+a04831ae636093acbedaefdc148947df,basketball_nba,NBA,2025-01-14 01:10:00+00:00,Houston Rockets,Memphis Grizzlies,False,2025-01-14
+f32ccd497be5726f740e10947e625e3b,basketball_nba,NBA,2025-01-14 03:40:00+00:00,Los Angeles Clippers,Miami Heat,False,2025-01-14
+3f2e6d37be2f5d266fc6cdea667d989e,basketball_nba,NBA,2025-01-14 03:40:00+00:00,Los Angeles Lakers,San Antonio Spurs,False,2025-01-14
+2be789815b3355d543d2b9ac8ff09002,basketball_nba,NBA,2025-01-15 00:10:00+00:00,Indiana Pacers,Cleveland Cavaliers,False,2025-01-15
+ceba1fb7f48df707eb6a5866c0aa9a26,basketball_nba,NBA,2025-01-15 00:10:00+00:00,Philadelphia 76ers,Oklahoma City Thunder,False,2025-01-15
+0121869cd6f93c1f8873045e71fa1605,basketball_nba,NBA,2025-01-15 00:40:00+00:00,Atlanta Hawks,Phoenix Suns,False,2025-01-15
+757dfa8ea873f51e304f699aa4d6105d,basketball_nba,NBA,2025-01-15 01:10:00+00:00,Chicago Bulls,New Orleans Pelicans,False,2025-01-15
+f9f0f4bb154f93d73bc364dfbb884cc4,basketball_nba,NBA,2025-01-15 01:10:00+00:00,Milwaukee Bucks,Sacramento Kings,False,2025-01-15
+e893ba0c4269e68598bbbdaa065b71e8,basketball_nba,NBA,2025-01-15 02:40:00+00:00,Dallas Mavericks,Denver Nuggets,False,2025-01-15
+4b8bef24f19685b2141260a3090f95c3,basketball_nba,NBA,2025-01-15 03:10:00+00:00,Portland Trail Blazers,Brooklyn Nets,False,2025-01-15
+8e825a8f4a6264c7983a1fad6d45ad4a,basketball_nba,NBA,2025-01-16 00:10:00+00:00,Philadelphia 76ers,New York Knicks,False,2025-01-16
+99761689307be374917f5ca3fc43eb3d,basketball_nba,NBA,2025-01-16 00:40:00+00:00,Toronto Raptors,Boston Celtics,False,2025-01-16
+a7668e7c95646978a2384d7e0da69c3c,basketball_nba,NBA,2025-01-16 01:10:00+00:00,Chicago Bulls,Atlanta Hawks,False,2025-01-16
+ab43ba18589408bd30794c00bb23a987,basketball_nba,NBA,2025-01-16 01:10:00+00:00,New Orleans Pelicans,Dallas Mavericks,False,2025-01-16
+3efcb332fc7fc4284fea6415e2f312da,basketball_nba,NBA,2025-01-16 01:10:00+00:00,San Antonio Spurs,Memphis Grizzlies,False,2025-01-16
+96611de878429b40d45bf3d4f0e7865d,basketball_nba,NBA,2025-01-16 01:10:00+00:00,Milwaukee Bucks,Orlando Magic,False,2025-01-16
+f3761770ef30c0d48a020da31d0f75d4,basketball_nba,NBA,2025-01-16 02:10:00+00:00,Utah Jazz,Charlotte Hornets,False,2025-01-16
+b7c5ff2c3662554161017cd57626a387,basketball_nba,NBA,2025-01-16 02:10:00+00:00,Denver Nuggets,Houston Rockets,False,2025-01-16
+a157e49ac69cb746ba21ed4c6232dfa9,basketball_nba,NBA,2025-01-16 02:40:00+00:00,Minnesota Timberwolves,Golden State Warriors,False,2025-01-16
+15f5ceaef1e4492f4c22dc3d910cba3d,basketball_nba,NBA,2025-01-16 03:10:00+00:00,Los Angeles Lakers,Miami Heat,False,2025-01-16
+6c9223009357137ab41128c696aba7e3,basketball_nba,NBA,2025-01-16 03:40:00+00:00,Los Angeles Clippers,Brooklyn Nets,False,2025-01-16
+5fa4e5331caf83bcafb2eabead3515e1,basketball_nba,NBA,2025-01-17 00:10:00+00:00,Detroit Pistons,Indiana Pacers,False,2025-01-17
+5eca5e45e635e3195ab9050b0f54a564,basketball_nba,NBA,2025-01-17 00:10:00+00:00,Washington Wizards,Phoenix Suns,False,2025-01-17
+84c7b056cda9684496beb8d9c9f5423e,basketball_nba,NBA,2025-01-17 00:30:00+00:00,Oklahoma City Thunder,Cleveland Cavaliers,False,2025-01-17
+2447040fa8cf0f436f6f9d621eae8823,basketball_nba,NBA,2025-01-17 03:10:00+00:00,Sacramento Kings,Houston Rockets,False,2025-01-17
+1abb6dbd0df740709fc98cba57f0494e,basketball_nba,NBA,2025-01-17 03:10:00+00:00,Portland Trail Blazers,Los Angeles Clippers,False,2025-01-17
+95cafe4d06fb0ec814b86612635bb094,basketball_nba,NBA,2025-01-18 00:10:00+00:00,Boston Celtics,Orlando Magic,False,2025-01-18
+8cfe98192375f79406df25997c65373b,basketball_nba,NBA,2025-01-18 00:40:00+00:00,New York Knicks,Minnesota Timberwolves,False,2025-01-18
+e8a60d35af7c2e468bfb924ca376ca27,basketball_nba,NBA,2025-01-18 01:10:00+00:00,New Orleans Pelicans,Utah Jazz,False,2025-01-18
+1919d2323b44dce7be0f3b5ed5ab9301,basketball_nba,NBA,2025-01-18 01:10:00+00:00,Milwaukee Bucks,Toronto Raptors,False,2025-01-18
+98e1d99a88a96fd2b4c7706a8806f883,basketball_nba,NBA,2025-01-18 01:10:00+00:00,Chicago Bulls,Charlotte Hornets,False,2025-01-18
+7ad3239c7447ea61f41bb61ba02dcd57,basketball_nba,NBA,2025-01-18 01:10:00+00:00,Miami Heat,Denver Nuggets,False,2025-01-18
+167ff7864fd94f3b57ff0b8e7782abd3,basketball_nba,NBA,2025-01-18 01:40:00+00:00,Dallas Mavericks,Oklahoma City Thunder,False,2025-01-18
+de7b7ec3f43b79a85c949f46bf5e86d4,basketball_nba,NBA,2025-01-18 02:40:00+00:00,San Antonio Spurs,Memphis Grizzlies,False,2025-01-18
+eac986570ca49807e7f8fef6c7deace9,basketball_nba,NBA,2025-01-18 03:40:00+00:00,Los Angeles Lakers,Brooklyn Nets,False,2025-01-18
+d6a085a82b0cce9815e21c508ffbe650,basketball_nba,NBA,2025-01-18 21:10:00+00:00,Detroit Pistons,Phoenix Suns,False,2025-01-18
+a3e8ee51219729348c03e7c0dc8b6883,basketball_nba,NBA,2025-01-19 00:10:00+00:00,Indiana Pacers,Philadelphia 76ers,False,2025-01-19
+82e81d493406295dcb6aa371451569d4,basketball_nba,NBA,2025-01-19 00:10:00+00:00,Boston Celtics,Atlanta Hawks,False,2025-01-19
+6b0eb5da2bd995b7467fd1313719e320,basketball_nba,NBA,2025-01-19 01:40:00+00:00,Golden State Warriors,Washington Wizards,False,2025-01-19
+b413e72ebf38363da05eda473e7c175e,basketball_nba,NBA,2025-01-19 02:10:00+00:00,Minnesota Timberwolves,Cleveland Cavaliers,False,2025-01-19
+140573848d377091e0709c676caf9a78,basketball_nba,NBA,2025-01-19 03:10:00+00:00,Portland Trail Blazers,Houston Rockets,False,2025-01-19
+c0dcdd2d7cc6bf212747e826d496a268,basketball_nba,NBA,2025-01-19 20:10:00+00:00,Miami Heat,San Antonio Spurs,False,2025-01-19
+2edec9d8d51e6aaa54be3201dbe3ffbe,basketball_nba,NBA,2025-01-19 23:10:00+00:00,Orlando Magic,Denver Nuggets,False,2025-01-19
+ac53c07fbe5f258ea3e51573ca0e542b,basketball_nba,NBA,2025-01-20 00:10:00+00:00,Oklahoma City Thunder,Brooklyn Nets,False,2025-01-20
+4b0e07981ac0eea91683ab99e9305b8d,basketball_nba,NBA,2025-01-20 00:10:00+00:00,Milwaukee Bucks,Philadelphia 76ers,False,2025-01-20
+27d7270c9e38cf2cc025e344e0307f12,basketball_nba,NBA,2025-01-20 02:10:00+00:00,Portland Trail Blazers,Chicago Bulls,False,2025-01-20
+48472e287f9c5642e7e3cdefb3568580,basketball_nba,NBA,2025-01-20 02:10:00+00:00,Los Angeles Clippers,Los Angeles Lakers,False,2025-01-20
+c2a6c09ed5f342d00f979cc923594607,basketball_nba,NBA,2025-01-20 02:10:00+00:00,Sacramento Kings,Washington Wizards,False,2025-01-20
+018bca38c1fc33355f7dfc20ad69b2ee,basketball_nba,NBA,2025-01-20 17:10:00+00:00,Charlotte Hornets,Dallas Mavericks,False,2025-01-20
+648497f8f49bde0d229d66eb1e3c27d3,basketball_nba,NBA,2025-01-20 19:10:00+00:00,Houston Rockets,Detroit Pistons,False,2025-01-20
+499a4015cf50b478efb61409fa0786d5,basketball_nba,NBA,2025-01-20 19:40:00+00:00,Memphis Grizzlies,Minnesota Timberwolves,False,2025-01-20
+b736883206d52bd2d7f89ed1d3c89f62,basketball_nba,NBA,2025-01-20 20:10:00+00:00,New York Knicks,Atlanta Hawks,False,2025-01-20
+78c8db06b7974d20983f9b3c9bc1b678,basketball_nba,NBA,2025-01-20 20:40:00+00:00,Cleveland Cavaliers,Phoenix Suns,False,2025-01-20
+173d7d5f2bf8881f4bc4a2179fdf895f,basketball_nba,NBA,2025-01-20 22:00:00+00:00,Golden State Warriors,Boston Celtics,False,2025-01-20
+20515d2b43e180979c39074d4f7bcb3f,basketball_nba,NBA,2025-01-21 01:10:00+00:00,New Orleans Pelicans,Utah Jazz,False,2025-01-21
+570c8e2909c0bc3a600aff932287d50f,basketball_nba,NBA,2025-01-21 03:40:00+00:00,Los Angeles Clippers,Chicago Bulls,False,2025-01-21
+ef3f4ef25b54e90b8ccff036468e4888,basketball_nba,NBA,2025-01-22 00:40:00+00:00,Brooklyn Nets,New York Knicks,False,2025-01-22
+fca5b6086018ef187eba8868f30c874e,basketball_nba,NBA,2025-01-22 00:40:00+00:00,Miami Heat,Portland Trail Blazers,False,2025-01-22
+5c456f4536f90b8d9a31a8a5b996abd2,basketball_nba,NBA,2025-01-22 00:40:00+00:00,Toronto Raptors,Orlando Magic,False,2025-01-22
+dca2e08e1bd82602ba0e716fa519d2d9,basketball_nba,NBA,2025-01-22 03:10:00+00:00,Denver Nuggets,Philadelphia 76ers,False,2025-01-22
+3dbc3307c4fed7a173051c2d8f07741b,basketball_nba,NBA,2025-01-22 03:40:00+00:00,Los Angeles Lakers,Washington Wizards,False,2025-01-22
+33f7be6747a15f9e36d7341863907c5d,basketball_nba,NBA,2025-01-23 00:40:00+00:00,Atlanta Hawks,Detroit Pistons,False,2025-01-23
+08506118721a1523d1e2b26c11676ec8,basketball_nba,NBA,2025-01-23 00:40:00+00:00,Brooklyn Nets,Phoenix Suns,False,2025-01-23
+d2036bb7eb58c7f9937efcb77d7f7ee0,basketball_nba,NBA,2025-01-23 00:40:00+00:00,Dallas Mavericks,Minnesota Timberwolves,False,2025-01-23
+d34a1f613c8fe3424990ff71939ac227,basketball_nba,NBA,2025-01-23 01:10:00+00:00,Memphis Grizzlies,Charlotte Hornets,False,2025-01-23
+d6ff21cfce2a414242fea9331804aa85,basketball_nba,NBA,2025-01-23 01:10:00+00:00,Houston Rockets,Cleveland Cavaliers,False,2025-01-23
+9fa9fd46fe842a25a4178e3b2d702cd9,basketball_nba,NBA,2025-01-23 01:10:00+00:00,New Orleans Pelicans,Milwaukee Bucks,False,2025-01-23
+747ca0e15fb940c8a282bd30256a1461,basketball_nba,NBA,2025-01-23 01:10:00+00:00,Oklahoma City Thunder,Utah Jazz,False,2025-01-23
+baf880617d80ad47bab4a447513aa1d2,basketball_nba,NBA,2025-01-23 03:10:00+00:00,Sacramento Kings,Golden State Warriors,False,2025-01-23
+5960906d79cf1ed09329d2cd861c6dce,basketball_nba,NBA,2025-01-23 03:40:00+00:00,Los Angeles Clippers,Boston Celtics,False,2025-01-23
+59065cde52a9e2b367362915f8e2298a,basketball_nba,NBA,2025-01-23 19:00:00+00:00,Indiana Pacers,San Antonio Spurs,False,2025-01-23
+e90b727044fb2a4ea1db3e20286bc4ce,basketball_nba,NBA,2025-01-24 00:10:00+00:00,Orlando Magic,Portland Trail Blazers,False,2025-01-24
+e78a6c50c453af982da84de4169b030e,basketball_nba,NBA,2025-01-24 00:40:00+00:00,Atlanta Hawks,Toronto Raptors,False,2025-01-24
+b96a284bb2f278f67d33e9481698d03c,basketball_nba,NBA,2025-01-24 00:40:00+00:00,Milwaukee Bucks,Miami Heat,False,2025-01-24
+75504a3843124cb9fd021ef3ccbec2f1,basketball_nba,NBA,2025-01-24 01:10:00+00:00,Oklahoma City Thunder,Dallas Mavericks,False,2025-01-24
+97e5e5a500721cf73564a83aefe8c6c2,basketball_nba,NBA,2025-01-24 02:10:00+00:00,Denver Nuggets,Sacramento Kings,False,2025-01-24
+ab895e8aab81cbbf4c7605782f2f806b,basketball_nba,NBA,2025-01-24 03:10:00+00:00,Los Angeles Lakers,Boston Celtics,False,2025-01-24
+8191aa1958da0dfe9d961f0a231c370a,basketball_nba,NBA,2025-01-24 03:10:00+00:00,Golden State Warriors,Chicago Bulls,False,2025-01-24
+5065223058735f9ebb26715d41d722f0,basketball_nba,NBA,2025-01-24 03:10:00+00:00,Los Angeles Clippers,Washington Wizards,False,2025-01-24
+6a6e08cde4593b3632d191e657eb09b4,basketball_nba,NBA,2025-01-25 00:10:00+00:00,Charlotte Hornets,Portland Trail Blazers,False,2025-01-25
+8be88b659b096322958a52c9b586c399,basketball_nba,NBA,2025-01-25 00:10:00+00:00,Philadelphia 76ers,Cleveland Cavaliers,False,2025-01-25
+0ef3b7159add5b92a32545bb6fecf138,basketball_nba,NBA,2025-01-25 01:10:00+00:00,Memphis Grizzlies,New Orleans Pelicans,False,2025-01-25
+178af5284f2a47d4e8b7771bebab5da9,basketball_nba,NBA,2025-01-25 17:00:00+00:00,San Antonio Spurs,Indiana Pacers,False,2025-01-25
+240a84b2dddf3a224173e70c23b1d624,basketball_nba,NBA,2025-01-25 20:10:00+00:00,Minnesota Timberwolves,Denver Nuggets,False,2025-01-25
+76930b971b553c28937a93bc0d6d401f,basketball_nba,NBA,2025-01-25 22:40:00+00:00,Dallas Mavericks,Boston Celtics,False,2025-01-25
+da35d7f08ed78c853ad079b9037ac97c,basketball_nba,NBA,2025-01-25 23:10:00+00:00,Brooklyn Nets,Miami Heat,False,2025-01-25
+a94554db3c304438bbe47e488a1f664d,basketball_nba,NBA,2025-01-26 00:10:00+00:00,Charlotte Hornets,New Orleans Pelicans,False,2025-01-26
+5098f9b5adbcaab14331d39b47291ae7,basketball_nba,NBA,2025-01-26 00:10:00+00:00,Orlando Magic,Detroit Pistons,False,2025-01-26
+1dd7c5ce12b32dbc39ffba632f4dc425,basketball_nba,NBA,2025-01-26 00:40:00+00:00,Atlanta Hawks,Toronto Raptors,False,2025-01-26
+6c82000938f8b077ffbc9686bbb1d03f,basketball_nba,NBA,2025-01-26 00:40:00+00:00,Cleveland Cavaliers,Houston Rockets,False,2025-01-26
+0baffcadf6ff742878bf35b40e7529a3,basketball_nba,NBA,2025-01-26 00:40:00+00:00,New York Knicks,Sacramento Kings,False,2025-01-26
+021e8f2b9443a70c2f674f2fe2cc848c,basketball_nba,NBA,2025-01-26 01:10:00+00:00,Memphis Grizzlies,Utah Jazz,False,2025-01-26
+05ba8831b03e58276032dab4ca8d16b7,basketball_nba,NBA,2025-01-26 01:10:00+00:00,Chicago Bulls,Philadelphia 76ers,False,2025-01-26
+9f689ebb3ced18aaace3694dc0f5ba02,basketball_nba,NBA,2025-01-26 01:40:00+00:00,Golden State Warriors,Los Angeles Lakers,False,2025-01-26
+5f349f9747a6c4faa00ee1f91505ca5f,basketball_nba,NBA,2025-01-26 02:10:00+00:00,Phoenix Suns,Washington Wizards,False,2025-01-26
+f9f266723569ad13fcc3c51c16352d99,basketball_nba,NBA,2025-01-26 03:40:00+00:00,Los Angeles Clippers,Milwaukee Bucks,False,2025-01-26
+cf4360ae388e3a68fb1c2aea7c890815,basketball_nba,NBA,2025-01-26 23:10:00+00:00,Portland Trail Blazers,Oklahoma City Thunder,False,2025-01-26
+de708b9536df1f308b67b97274fb58aa,basketball_nba,NBA,2025-01-28 00:10:00+00:00,Charlotte Hornets,Los Angeles Lakers,False,2025-01-28
+ec53aa3f3f58e9c8f692cb7cf363f5df,basketball_nba,NBA,2025-01-28 00:10:00+00:00,Cleveland Cavaliers,Detroit Pistons,False,2025-01-28
+1274e69cacf9310f766bd0fe93aeb340,basketball_nba,NBA,2025-01-28 00:40:00+00:00,Miami Heat,Orlando Magic,False,2025-01-28
+900efdbd5d2eaa2267d6f09ddd74e6e3,basketball_nba,NBA,2025-01-28 00:40:00+00:00,New York Knicks,Memphis Grizzlies,False,2025-01-28
+427f94e9f94131f02fb70667fcee4ab4,basketball_nba,NBA,2025-01-28 00:40:00+00:00,Toronto Raptors,New Orleans Pelicans,False,2025-01-28
+fb2efb2987f18418760dcc3d3a8f9df1,basketball_nba,NBA,2025-01-28 00:40:00+00:00,Boston Celtics,Houston Rockets,False,2025-01-28
+49b423bea0e7b1eb1d1ff72b7cd5a917,basketball_nba,NBA,2025-01-28 00:40:00+00:00,Brooklyn Nets,Sacramento Kings,False,2025-01-28
+20ee3189264bd00157ea8dcf54579892,basketball_nba,NBA,2025-01-28 01:10:00+00:00,Minnesota Timberwolves,Atlanta Hawks,False,2025-01-28
+c8f48703497fd9de26c9ce93d5057fe7,basketball_nba,NBA,2025-01-28 01:10:00+00:00,Chicago Bulls,Denver Nuggets,False,2025-01-28
+220e63f7f8bdc7c58d814a46259c67a2,basketball_nba,NBA,2025-01-28 01:40:00+00:00,Dallas Mavericks,Washington Wizards,False,2025-01-28
+4c7063d42a874f80a9c17b9774a945f9,basketball_nba,NBA,2025-01-28 02:10:00+00:00,Utah Jazz,Milwaukee Bucks,False,2025-01-28
+aecc41fbcb21eac7198d1a04bddb07a0,basketball_nba,NBA,2025-01-28 02:40:00+00:00,Phoenix Suns,Los Angeles Clippers,False,2025-01-28
+0ab77208feec99c7bb5f8990cb81739d,basketball_nba,NBA,2025-01-29 00:30:00+00:00,Philadelphia 76ers,Los Angeles Lakers,False,2025-01-29
+699f111aa87fc2cea90b0362b93b928e,basketball_nba,NBA,2025-01-29 00:40:00+00:00,Atlanta Hawks,Houston Rockets,False,2025-01-29
+02a0097a3e442dbca988e6145e43b9c2,basketball_nba,NBA,2025-01-29 03:00:00+00:00,Portland Trail Blazers,Milwaukee Bucks,False,2025-01-29
+cd1d3bb2519f27ba9d884e0dbbcd55bd,basketball_nba,NBA,2025-01-29 03:10:00+00:00,Golden State Warriors,Utah Jazz,False,2025-01-29
+82e230aff36c60de7fcd3bdd6e573b5f,basketball_nba,NBA,2025-01-30 00:10:00+00:00,Charlotte Hornets,Brooklyn Nets,False,2025-01-30
+a75904869ceb53ced4baae29638d4907,basketball_nba,NBA,2025-01-30 00:10:00+00:00,Indiana Pacers,Detroit Pistons,False,2025-01-30
+fd9e9a29c8840b05ec47ce69bb66285f,basketball_nba,NBA,2025-01-30 00:10:00+00:00,Washington Wizards,Toronto Raptors,False,2025-01-30
+c1377c3655be5a0f236e58af35ed96ed,basketball_nba,NBA,2025-01-30 00:40:00+00:00,Boston Celtics,Chicago Bulls,False,2025-01-30
+b96f1ef936ee9645716d3ccfe6a827ab,basketball_nba,NBA,2025-01-30 00:40:00+00:00,Miami Heat,Cleveland Cavaliers,False,2025-01-30
+9b4f16875683c0e509cba63b8f82bb7a,basketball_nba,NBA,2025-01-30 00:40:00+00:00,New York Knicks,Denver Nuggets,False,2025-01-30
+afcd8441571d6c30ca662e7481ac17a3,basketball_nba,NBA,2025-01-30 00:40:00+00:00,Philadelphia 76ers,Sacramento Kings,False,2025-01-30
+53ca6361b55c5a6ef7e15853621f0ed8,basketball_nba,NBA,2025-01-30 01:10:00+00:00,New Orleans Pelicans,Dallas Mavericks,False,2025-01-30
+3f3767f9da127ac9f8b7afa138e3fcea,basketball_nba,NBA,2025-01-30 01:10:00+00:00,San Antonio Spurs,Los Angeles Clippers,False,2025-01-30
+0f5edeaa71dbfb18b0bb9b61b672c728,basketball_nba,NBA,2025-01-30 02:10:00+00:00,Phoenix Suns,Minnesota Timberwolves,False,2025-01-30
+1ec913e38af7a7f0e101ec0c7125bef3,basketball_nba,NBA,2025-01-30 03:10:00+00:00,Golden State Warriors,Oklahoma City Thunder,False,2025-01-30
+a4d3c19bca78a6727a00d6c96e80f573,basketball_nba,NBA,2025-01-31 00:00:00+00:00,Cleveland Cavaliers,Atlanta Hawks,False,2025-01-31
+b7f9752c63e2b5f1ef22d3d5d060f593,basketball_nba,NBA,2025-01-31 00:10:00+00:00,Washington Wizards,Los Angeles Lakers,False,2025-01-31
+92b6e6dd1bbbc4c69c3959fe9da825d0,basketball_nba,NBA,2025-01-31 02:10:00+00:00,Utah Jazz,Minnesota Timberwolves,False,2025-01-31
+836eae09b37fdf8dc41f7ed3c3a1e41c,basketball_nba,NBA,2025-01-31 02:30:00+00:00,Memphis Grizzlies,Houston Rockets,False,2025-01-31
+8dfa07bad117f06a89c016996a0b0730,basketball_nba,NBA,2025-01-31 03:10:00+00:00,Portland Trail Blazers,Orlando Magic,False,2025-01-31
+33c0f2f5adf69508f90c0ddca3f7d4ac,basketball_nba,NBA,2025-02-01 00:10:00+00:00,Charlotte Hornets,Los Angeles Clippers,False,2025-02-01
+9aa814047553f85ad1bc55efa497ce83,basketball_nba,NBA,2025-02-01 00:10:00+00:00,Detroit Pistons,Dallas Mavericks,False,2025-02-01
+1350e52b6ed83b835bf5b933fe9cdb6f,basketball_nba,NBA,2025-02-01 00:40:00+00:00,Toronto Raptors,Chicago Bulls,False,2025-02-01
+0002c59303f70b3dd2b393a67b49f975,basketball_nba,NBA,2025-02-01 00:40:00+00:00,Philadelphia 76ers,Denver Nuggets,False,2025-02-01
+91479a0a512048f9f505aff21cdd54a6,basketball_nba,NBA,2025-02-01 01:10:00+00:00,San Antonio Spurs,Milwaukee Bucks,False,2025-02-01
+f42b72157e7e585177cc568add8df8d1,basketball_nba,NBA,2025-02-01 01:10:00+00:00,New Orleans Pelicans,Boston Celtics,False,2025-02-01
+afed9b6c6698f76a8f0b12b342fb10f4,basketball_nba,NBA,2025-02-01 03:10:00+00:00,Golden State Warriors,Phoenix Suns,False,2025-02-01
+e15ff567c82a8612fcd3c64613fa271f,basketball_nba,NBA,2025-02-01 22:10:00+00:00,Indiana Pacers,Atlanta Hawks,False,2025-02-01
+f0f8530aece682be12f08ba2550a2acb,basketball_nba,NBA,2025-02-01 22:10:00+00:00,Utah Jazz,Orlando Magic,False,2025-02-01
+6ca29edff6433fb34747341ec8c8d9f5,basketball_nba,NBA,2025-02-02 00:10:00+00:00,Charlotte Hornets,Denver Nuggets,False,2025-02-02
+5bcdd83ab405b194ed68cb7e1a385018,basketball_nba,NBA,2025-02-02 01:10:00+00:00,Houston Rockets,Brooklyn Nets,False,2025-02-02
+ba95fe551d5f1c8df560676c6f7a2804,basketball_nba,NBA,2025-02-02 01:10:00+00:00,Minnesota Timberwolves,Washington Wizards,False,2025-02-02
+be96657c220fe1fa52a989d5c7ce3a42,basketball_nba,NBA,2025-02-02 01:10:00+00:00,Oklahoma City Thunder,Sacramento Kings,False,2025-02-02
+8a077eefc721f3038823ebabaf2cf7b6,basketball_nba,NBA,2025-02-02 01:40:00+00:00,New York Knicks,Los Angeles Lakers,False,2025-02-02
+f982eaf2f66b67b216e9fd12a72cd7e9,basketball_nba,NBA,2025-02-02 01:40:00+00:00,San Antonio Spurs,Miami Heat,False,2025-02-02
+ef5730e686aca111d5d628c8d44625ba,basketball_nba,NBA,2025-02-02 03:10:00+00:00,Portland Trail Blazers,Phoenix Suns,False,2025-02-02
+3b81094303eaa6a85df848ddf3338e51,basketball_nba,NBA,2025-02-02 20:10:00+00:00,Detroit Pistons,Chicago Bulls,False,2025-02-02
+093d616c3e0657ee88285396d418c656,basketball_nba,NBA,2025-02-02 20:40:00+00:00,Cleveland Cavaliers,Dallas Mavericks,False,2025-02-02
+b1b104392f62d1972e51e11971d57029,basketball_nba,NBA,2025-02-02 20:40:00+00:00,Toronto Raptors,Los Angeles Clippers,False,2025-02-02
+d396223d4a8e42b604523eff606f8766,basketball_nba,NBA,2025-02-02 23:10:00+00:00,Philadelphia 76ers,Boston Celtics,False,2025-02-02
+fc948635a5c823e35bc072ee026db31b,basketball_nba,NBA,2025-02-03 01:40:00+00:00,Milwaukee Bucks,Memphis Grizzlies,False,2025-02-03
+243a2713dd209ea6d5ce9cfb952ba305,basketball_nba,NBA,2025-02-04 00:10:00+00:00,Detroit Pistons,Atlanta Hawks,False,2025-02-04
+4a1ab01ed1f80004b15f13491437d04e,basketball_nba,NBA,2025-02-04 00:10:00+00:00,Charlotte Hornets,Washington Wizards,False,2025-02-04
+40d562250a4eece875d31cfd852a3867,basketball_nba,NBA,2025-02-04 00:40:00+00:00,New York Knicks,Houston Rockets,False,2025-02-04
+d98b95bc5825930f104e2037886fc40d,basketball_nba,NBA,2025-02-04 01:10:00+00:00,Minnesota Timberwolves,Sacramento Kings,False,2025-02-04
+a378aa2359a0bde3d131d57282f5e312,basketball_nba,NBA,2025-02-04 01:10:00+00:00,Oklahoma City Thunder,Milwaukee Bucks,False,2025-02-04
+8d21ed1b9b834b66d75fdcf7b2cf1ae7,basketball_nba,NBA,2025-02-04 01:10:00+00:00,Memphis Grizzlies,San Antonio Spurs,False,2025-02-04
+1717f0bce8dbf49be0d3e77bc99bc665,basketball_nba,NBA,2025-02-04 02:10:00+00:00,Denver Nuggets,New Orleans Pelicans,False,2025-02-04
+7806dd23a149f5b912030948fb2a39f3,basketball_nba,NBA,2025-02-04 02:10:00+00:00,Utah Jazz,Indiana Pacers,False,2025-02-04
+c4ae24f5802ac12083a858c24cee4cdd,basketball_nba,NBA,2025-02-04 03:10:00+00:00,Golden State Warriors,Orlando Magic,False,2025-02-04
+4c6d742eba9943e71b7840775d3df198,basketball_nba,NBA,2025-02-04 03:10:00+00:00,Portland Trail Blazers,Phoenix Suns,False,2025-02-04
+cb748d8f3c1e5ade4e01cffe663721b1,basketball_nba,NBA,2025-02-05 00:10:00+00:00,Philadelphia 76ers,Dallas Mavericks,False,2025-02-05
+500f7a65d999cc5679fa5685688131bc,basketball_nba,NBA,2025-02-05 00:30:00+00:00,Cleveland Cavaliers,Boston Celtics,False,2025-02-05
+5558eea9fab5a44950b813d3da12612d,basketball_nba,NBA,2025-02-05 00:40:00+00:00,Brooklyn Nets,Houston Rockets,False,2025-02-05
+87dd14a608c7809ee03e67231e461068,basketball_nba,NBA,2025-02-05 00:40:00+00:00,Toronto Raptors,New York Knicks,False,2025-02-05
+a2b6a3647b08ec54a8331987dec98599,basketball_nba,NBA,2025-02-05 01:10:00+00:00,Chicago Bulls,Miami Heat,False,2025-02-05
+da7efad2c4a2ecd12a7fc529e8b86ce4,basketball_nba,NBA,2025-02-05 03:10:00+00:00,Los Angeles Clippers,Los Angeles Lakers,False,2025-02-05
+7c9cca5b84b21e02a25efdfcd060be92,basketball_nba,NBA,2025-02-05 03:10:00+00:00,Portland Trail Blazers,Indiana Pacers,False,2025-02-05
+b4333710ce73848da01037039e2c278e,basketball_nba,NBA,2025-02-06 00:10:00+00:00,Atlanta Hawks,San Antonio Spurs,False,2025-02-06
+0a4fb355d858aeb88bbb23481ea3cd4c,basketball_nba,NBA,2025-02-06 00:10:00+00:00,Charlotte Hornets,Milwaukee Bucks,False,2025-02-06
+6f9cd80706188f5d958bbf99f5e81cbf,basketball_nba,NBA,2025-02-06 00:10:00+00:00,Detroit Pistons,Cleveland Cavaliers,False,2025-02-06
+6b4194c02bb5d320e81cab6ca4a56dd0,basketball_nba,NBA,2025-02-06 00:40:00+00:00,Brooklyn Nets,Washington Wizards,False,2025-02-06
+e357f1bf21117b8a1e900647ffc04dc2,basketball_nba,NBA,2025-02-06 00:40:00+00:00,Toronto Raptors,Memphis Grizzlies,False,2025-02-06
+d2c05b2a354b9183252a0578809e33b8,basketball_nba,NBA,2025-02-06 00:40:00+00:00,Philadelphia 76ers,Miami Heat,False,2025-02-06
+0d02175ccdc96f1994dd5377ac8b5382,basketball_nba,NBA,2025-02-06 01:10:00+00:00,Minnesota Timberwolves,Chicago Bulls,False,2025-02-06
+31e6208fb40ebcfd387f1476fa257c50,basketball_nba,NBA,2025-02-06 02:10:00+00:00,Utah Jazz,Golden State Warriors,False,2025-02-06
+4c129c9c43f02b000d5252231fa75d52,basketball_nba,NBA,2025-02-06 02:10:00+00:00,Denver Nuggets,New Orleans Pelicans,False,2025-02-06
+8a708ed701982a1a92f140880660637a,basketball_nba,NBA,2025-02-06 02:40:00+00:00,Oklahoma City Thunder,Phoenix Suns,False,2025-02-06
+a4254d9474c6be9c6c1a4235b588f68b,basketball_nba,NBA,2025-02-06 03:10:00+00:00,Sacramento Kings,Orlando Magic,False,2025-02-06
+0bfd6223d18e57da53a9f5f7dccc250a,basketball_nba,NBA,2025-02-07 00:30:00+00:00,Boston Celtics,Dallas Mavericks,False,2025-02-07
+a906dc1f7ced6b2d575fdd91ba9e58e6,basketball_nba,NBA,2025-02-07 01:10:00+00:00,Minnesota Timberwolves,Houston Rockets,False,2025-02-07
+a916ee7696fde8f1a82e214c36a04b9a,basketball_nba,NBA,2025-02-07 02:10:00+00:00,Denver Nuggets,Orlando Magic,False,2025-02-07
+39da2a6da9ab2746b1ff9f320f9f5a14,basketball_nba,NBA,2025-02-07 03:00:00+00:00,Los Angeles Lakers,Golden State Warriors,False,2025-02-07
+b3df91f1d79355a68f8aa279f17e2a3e,basketball_nba,NBA,2025-02-07 03:10:00+00:00,Portland Trail Blazers,Sacramento Kings,False,2025-02-07
+0dd68311a8617606a6956cd6e511fd9e,basketball_nba,NBA,2025-02-07 03:40:00+00:00,Los Angeles Clippers,Indiana Pacers,False,2025-02-07
+f592f9667df5d2b96f41a71c90cddf39,basketball_nba,NBA,2025-02-08 00:10:00+00:00,Washington Wizards,Cleveland Cavaliers,False,2025-02-08
+c8310e046f80bf6292c633aff61cffdb,basketball_nba,NBA,2025-02-08 00:10:00+00:00,Charlotte Hornets,San Antonio Spurs,False,2025-02-08
+9a5a6098686e727ed1ed46d6dfc879ca,basketball_nba,NBA,2025-02-08 00:40:00+00:00,Atlanta Hawks,Milwaukee Bucks,False,2025-02-08
+2ee31055f5cc3975abda3f49017b550e,basketball_nba,NBA,2025-02-08 00:40:00+00:00,Brooklyn Nets,Miami Heat,False,2025-02-08
+78e03cf799710b90c7e8b9af3bb4d1d1,basketball_nba,NBA,2025-02-08 00:40:00+00:00,Detroit Pistons,Philadelphia 76ers,False,2025-02-08
+5c962a5ad947d385ee524f36970a8ce4,basketball_nba,NBA,2025-02-08 01:10:00+00:00,Oklahoma City Thunder,Toronto Raptors,False,2025-02-08
+984ea4c49b7729eb8269618e77e99b27,basketball_nba,NBA,2025-02-08 03:10:00+00:00,Phoenix Suns,Utah Jazz,False,2025-02-08
+d002383b27fadb65f5788dfdc0aa339c,basketball_nba,NBA,2025-02-08 20:10:00+00:00,Dallas Mavericks,Houston Rockets,False,2025-02-08
+e8ab0829fd613d0cdcca45ce487ee9aa,basketball_nba,NBA,2025-02-08 21:10:00+00:00,Los Angeles Lakers,Indiana Pacers,False,2025-02-08
+1e749488e6d83a99e4b8162e10124c89,basketball_nba,NBA,2025-02-09 00:10:00+00:00,Washington Wizards,Atlanta Hawks,False,2025-02-09
+75306eafbdac484b26c5ae336be95842,basketball_nba,NBA,2025-02-09 00:10:00+00:00,Orlando Magic,San Antonio Spurs,False,2025-02-09
+81e22abb5fb3bdc94da1d9654672b9ae,basketball_nba,NBA,2025-02-09 01:10:00+00:00,Minnesota Timberwolves,Portland Trail Blazers,False,2025-02-09
+f367e199e95e0c026d428bf591c79232,basketball_nba,NBA,2025-02-09 01:10:00+00:00,Chicago Bulls,Golden State Warriors,False,2025-02-09
+2c8d9aec1f8f8ed6ff16e59b72e0e851,basketball_nba,NBA,2025-02-09 01:10:00+00:00,Memphis Grizzlies,Oklahoma City Thunder,False,2025-02-09
+464b448dbf2ea8b32331aa5764a6f14f,basketball_nba,NBA,2025-02-09 01:40:00+00:00,New York Knicks,Boston Celtics,False,2025-02-09
+01cc26e6f8d5b2a9214a6dfe9d519e05,basketball_nba,NBA,2025-02-09 02:10:00+00:00,Phoenix Suns,Denver Nuggets,False,2025-02-09
+345c1fb258b16c2a64bc7c584d928a19,basketball_nba,NBA,2025-02-09 03:10:00+00:00,Sacramento Kings,New Orleans Pelicans,False,2025-02-09
+f05d99b8a83b68dc5a0ae66a036fa3b4,basketball_nba,NBA,2025-02-09 03:40:00+00:00,Los Angeles Clippers,Utah Jazz,False,2025-02-09
+033ffd442857285ce6fc168666e1283d,basketball_nba,NBA,2025-02-09 18:10:00+00:00,Detroit Pistons,Charlotte Hornets,False,2025-02-09
+911ef9b234d936b582ccc7ce5cd37d4e,basketball_nba,NBA,2025-02-09 19:10:00+00:00,Milwaukee Bucks,Philadelphia 76ers,False,2025-02-09
+06420b6c46a70fe5fcfb0a4ae98013eb,basketball_nba,NBA,2025-02-09 19:10:00+00:00,Houston Rockets,Toronto Raptors,False,2025-02-09
+4b1c91161cc3d0cb86b46500daf2e29a,basketball_nba,NBA,2025-02-11 00:10:00+00:00,Washington Wizards,San Antonio Spurs,False,2025-02-11
+3c08e999c5f8c6d6954b8f618b5df9a8,basketball_nba,NBA,2025-02-11 00:10:00+00:00,Cleveland Cavaliers,Minnesota Timberwolves,False,2025-02-11
+de674935dc38d314dc4b4b0ac5c024c4,basketball_nba,NBA,2025-02-11 00:10:00+00:00,Orlando Magic,Atlanta Hawks,False,2025-02-11
+c4f4e62d7ede59a6a74ab6038c332137,basketball_nba,NBA,2025-02-11 00:40:00+00:00,Miami Heat,Boston Celtics,False,2025-02-11
+91c394eb2e93c78c8ec2315dfcc85dc9,basketball_nba,NBA,2025-02-11 00:40:00+00:00,Brooklyn Nets,Charlotte Hornets,False,2025-02-11
+28890e3553d5c550382dc17fe360b622,basketball_nba,NBA,2025-02-11 01:10:00+00:00,Milwaukee Bucks,Golden State Warriors,False,2025-02-11
+948b9d66b01eca0ac831573f593c2871,basketball_nba,NBA,2025-02-11 01:10:00+00:00,Oklahoma City Thunder,New Orleans Pelicans,False,2025-02-11
+b149b26eec030d502d419c0bc0d4ee95,basketball_nba,NBA,2025-02-11 01:40:00+00:00,Dallas Mavericks,Sacramento Kings,False,2025-02-11
+c88cced20eb9497a7b9447bc2ee98f86,basketball_nba,NBA,2025-02-11 02:10:00+00:00,Denver Nuggets,Portland Trail Blazers,False,2025-02-11
+8652e5cb2e7732aff755077975780ad9,basketball_nba,NBA,2025-02-11 03:40:00+00:00,Los Angeles Lakers,Utah Jazz,False,2025-02-11
+b2a4762b71cddeb12aa844efa3d92caf,basketball_nba,NBA,2025-02-12 00:10:00+00:00,Philadelphia 76ers,Toronto Raptors,False,2025-02-12
+6a025e5336d6c182c4c3c9f99952656e,basketball_nba,NBA,2025-02-12 00:40:00+00:00,Indiana Pacers,New York Knicks,False,2025-02-12
+92e6538cc77a0cd7474cf583cda266b1,basketball_nba,NBA,2025-02-12 01:10:00+00:00,Chicago Bulls,Detroit Pistons,False,2025-02-12
+2147587132aa05de18df6c158da786ec,basketball_nba,NBA,2025-02-12 03:10:00+00:00,Phoenix Suns,Memphis Grizzlies,False,2025-02-12
+f37f25cb3bb32fa174392f3b5fe3b361,basketball_nba,NBA,2025-02-13 00:10:00+00:00,Boston Celtics,San Antonio Spurs,False,2025-02-13
+bc5d434ae454c0b2452bb695162d9083,basketball_nba,NBA,2025-02-13 00:10:00+00:00,Orlando Magic,Charlotte Hornets,False,2025-02-13
+a882ed7cf20f04cf03f1e2200c844426,basketball_nba,NBA,2025-02-13 00:10:00+00:00,Washington Wizards,Indiana Pacers,False,2025-02-13
+7c0c18f3aad27ee68eb666ccd67b8e87,basketball_nba,NBA,2025-02-13 00:40:00+00:00,New York Knicks,Atlanta Hawks,False,2025-02-13
+2e5021f0ba9d578ead3fe71158558b71,basketball_nba,NBA,2025-02-13 00:40:00+00:00,Brooklyn Nets,Philadelphia 76ers,False,2025-02-13
+6a6e2c39493c7ebbd0b79d637fe26836,basketball_nba,NBA,2025-02-13 00:40:00+00:00,Toronto Raptors,Cleveland Cavaliers,False,2025-02-13
+34956e8db08118ddedebf60b36951a91,basketball_nba,NBA,2025-02-13 01:10:00+00:00,New Orleans Pelicans,Sacramento Kings,False,2025-02-13
+bb76b9b327387de3ce204f75a71abfb3,basketball_nba,NBA,2025-02-13 01:10:00+00:00,Minnesota Timberwolves,Milwaukee Bucks,False,2025-02-13
+707860571896be900f3cc64061594f6e,basketball_nba,NBA,2025-02-13 01:10:00+00:00,Chicago Bulls,Detroit Pistons,False,2025-02-13
+31f7e6bd9749a31a2180f050a08e36c6,basketball_nba,NBA,2025-02-13 01:10:00+00:00,Oklahoma City Thunder,Miami Heat,False,2025-02-13
+95b2c6b0ce702c3c9490dc8418868f4e,basketball_nba,NBA,2025-02-13 01:40:00+00:00,Houston Rockets,Phoenix Suns,False,2025-02-13
+8f9ffeb5ee3e7caffc63bc3c6fe70f46,basketball_nba,NBA,2025-02-13 02:10:00+00:00,Denver Nuggets,Portland Trail Blazers,False,2025-02-13
+302a28ef34a29ddf66cbd6bfe85975b0,basketball_nba,NBA,2025-02-13 02:10:00+00:00,Utah Jazz,Los Angeles Lakers,False,2025-02-13
+82fd99fc762a6276440efcc68a3c7a80,basketball_nba,NBA,2025-02-13 02:40:00+00:00,Dallas Mavericks,Golden State Warriors,False,2025-02-13
+5ef8f6b9c38e88b24abea5dc79ae6852,basketball_nba,NBA,2025-02-13 03:40:00+00:00,Los Angeles Clippers,Memphis Grizzlies,False,2025-02-13
+3c6e47253e4108bf01641d455b2329e7,basketball_nba,NBA,2025-02-14 01:10:00+00:00,Houston Rockets,Golden State Warriors,False,2025-02-14
+480e200e199564b43806ed98e8051a31,basketball_nba,NBA,2025-02-14 01:10:00+00:00,New Orleans Pelicans,Sacramento Kings,False,2025-02-14
+8718345dafcfcd6c965fb4b2737586a8,basketball_nba,NBA,2025-02-14 01:40:00+00:00,Minnesota Timberwolves,Oklahoma City Thunder,False,2025-02-14
+b6d76f4779b5315551f72f5cd478a46d,basketball_nba,NBA,2025-02-14 01:40:00+00:00,Dallas Mavericks,Miami Heat,False,2025-02-14
+59018cf2adc33bd07509cc282e25a0a5,basketball_nba,NBA,2025-02-14 02:10:00+00:00,Utah Jazz,Los Angeles Clippers,False,2025-02-14
+842fec2c988d27ea3a614d68d9b3cd00,basketball_nba,NBA,2025-02-20 03:10:00+00:00,Los Angeles Lakers,Charlotte Hornets,False,2025-02-20
+4c685c1080d7df98cf6723cb35b408d3,basketball_nba,NBA,2025-02-21 00:00:00+00:00,Philadelphia 76ers,Boston Celtics,False,2025-02-21
+65078fd0317cfc53e4cd0ac255c85c3a,basketball_nba,NBA,2025-02-21 00:10:00+00:00,Indiana Pacers,Memphis Grizzlies,False,2025-02-21
+57a930a28f3e2c70de65552defb51124,basketball_nba,NBA,2025-02-21 00:40:00+00:00,Atlanta Hawks,Orlando Magic,False,2025-02-21
+b3f6547e78bb2e9e622b191abcaf8dcc,basketball_nba,NBA,2025-02-21 00:40:00+00:00,Brooklyn Nets,Cleveland Cavaliers,False,2025-02-21
+745135ffc89a21f59b570c96a537fa40,basketball_nba,NBA,2025-02-21 00:40:00+00:00,New York Knicks,Chicago Bulls,False,2025-02-21
+a7f2df8748c3587d26b18c7419b312eb,basketball_nba,NBA,2025-02-21 01:10:00+00:00,Milwaukee Bucks,Los Angeles Clippers,False,2025-02-21
+c628dea83cb939299aac0052717eda3e,basketball_nba,NBA,2025-02-21 02:10:00+00:00,Denver Nuggets,Charlotte Hornets,False,2025-02-21
+290792c99650154ae55d8c4934d2c841,basketball_nba,NBA,2025-02-21 02:30:00+00:00,San Antonio Spurs,Phoenix Suns,False,2025-02-21
+ae638753c4ed9cdcf8796af66f8dc422,basketball_nba,NBA,2025-02-21 03:10:00+00:00,Portland Trail Blazers,Los Angeles Lakers,False,2025-02-21
+a31abdc525bfcd0f5798a20d39f30cf7,basketball_nba,NBA,2025-02-22 00:10:00+00:00,Washington Wizards,Milwaukee Bucks,False,2025-02-22
+9a5cee259a4c70367132f4fb6f90be03,basketball_nba,NBA,2025-02-22 00:10:00+00:00,Cleveland Cavaliers,New York Knicks,False,2025-02-22
+e2c5133f68dd32d234a6abcb91329cb4,basketball_nba,NBA,2025-02-22 00:10:00+00:00,Orlando Magic,Memphis Grizzlies,False,2025-02-22
+fbfec0530e2ee30e2129c0cf827d2879,basketball_nba,NBA,2025-02-22 00:40:00+00:00,Toronto Raptors,Miami Heat,False,2025-02-22
+baf21b863522236e0f0820c5017d701e,basketball_nba,NBA,2025-02-22 01:40:00+00:00,Dallas Mavericks,New Orleans Pelicans,False,2025-02-22
+98e00329066852fb939287a87b7d4bbe,basketball_nba,NBA,2025-02-22 01:40:00+00:00,San Antonio Spurs,Detroit Pistons,False,2025-02-22
+3fb43736cba951d402acbb6c24789959,basketball_nba,NBA,2025-02-22 02:40:00+00:00,Houston Rockets,Minnesota Timberwolves,False,2025-02-22
+80924d9450380ce8acec0857974525e5,basketball_nba,NBA,2025-02-22 02:40:00+00:00,Utah Jazz,Oklahoma City Thunder,False,2025-02-22
+91a18e6bafdbd28c64d962f13785148b,basketball_nba,NBA,2025-02-22 03:10:00+00:00,Sacramento Kings,Golden State Warriors,False,2025-02-22
+5d439fc5e8eab5f0b80a5957fab4f121,basketball_nba,NBA,2025-02-22 22:10:00+00:00,Chicago Bulls,Phoenix Suns,False,2025-02-22
+13e1f9fdfd648203f0d6544a2ba4a74f,basketball_nba,NBA,2025-02-23 00:40:00+00:00,Philadelphia 76ers,Brooklyn Nets,False,2025-02-23
+321ac3bb188b200e4550ce27d3a7247e,basketball_nba,NBA,2025-02-23 01:40:00+00:00,Denver Nuggets,Los Angeles Lakers,False,2025-02-23
+fd3614621e63d8197e801717550a04b1,basketball_nba,NBA,2025-02-23 02:40:00+00:00,Utah Jazz,Houston Rockets,False,2025-02-23
+49dda13a2a618b53db99ff0d0ddb1e2a,basketball_nba,NBA,2025-02-23 03:10:00+00:00,Portland Trail Blazers,Charlotte Hornets,False,2025-02-23
+8297f74b64d0145a81dee3d17264b516,basketball_nba,NBA,2025-02-23 18:10:00+00:00,Boston Celtics,New York Knicks,False,2025-02-23
+7d8110c8ff0ac605dde0de67287bbd12,basketball_nba,NBA,2025-02-23 20:40:00+00:00,Golden State Warriors,Dallas Mavericks,False,2025-02-23
+04fda3fdafac1d66db732460419a8b43,basketball_nba,NBA,2025-02-23 22:10:00+00:00,Indiana Pacers,Los Angeles Clippers,False,2025-02-23
+3ed8120684eb7fdac50ed872bebe3ea7,basketball_nba,NBA,2025-02-23 23:10:00+00:00,Orlando Magic,Washington Wizards,False,2025-02-23
+7813b6e2069178e4c51d660271acc548,basketball_nba,NBA,2025-02-23 23:10:00+00:00,Toronto Raptors,Phoenix Suns,False,2025-02-23
+ee9d28e78fff13487a9f01a8184e72c5,basketball_nba,NBA,2025-02-23 23:10:00+00:00,Atlanta Hawks,Detroit Pistons,False,2025-02-23
+35a3c525d1c51e630e73702784fb52a3,basketball_nba,NBA,2025-02-23 23:10:00+00:00,Milwaukee Bucks,Miami Heat,False,2025-02-23
+1166f6a605e0dcf7bc63732b1bf90eb2,basketball_nba,NBA,2025-02-24 00:10:00+00:00,Cleveland Cavaliers,Memphis Grizzlies,False,2025-02-24
+15c8383aab9662c352df20ace8e303c2,basketball_nba,NBA,2025-02-24 00:10:00+00:00,New Orleans Pelicans,San Antonio Spurs,False,2025-02-24
+4b9d32579272dee4c7b077688a46efe0,basketball_nba,NBA,2025-02-24 02:40:00+00:00,Minnesota Timberwolves,Oklahoma City Thunder,False,2025-02-24
+48d37852ee2198cb4cdde174b41e98b5,basketball_nba,NBA,2025-02-25 00:10:00+00:00,Washington Wizards,Brooklyn Nets,False,2025-02-25
+7a3be51e3eab3ecaffd37b08dc3ac3e5,basketball_nba,NBA,2025-02-25 00:10:00+00:00,Philadelphia 76ers,Chicago Bulls,False,2025-02-25
+6589e5f24e0919d52e68f9b03bfea864,basketball_nba,NBA,2025-02-25 00:10:00+00:00,Indiana Pacers,Denver Nuggets,False,2025-02-25
+79c87df42ac0149022c76558108b3f3a,basketball_nba,NBA,2025-02-25 00:10:00+00:00,Detroit Pistons,Los Angeles Clippers,False,2025-02-25
+0197bdaadec710c77006d4bbbb995196,basketball_nba,NBA,2025-02-25 00:40:00+00:00,Atlanta Hawks,Miami Heat,False,2025-02-25
+b14dea30081b8ff37a9a3ec2b4aebc16,basketball_nba,NBA,2025-02-25 01:10:00+00:00,Oklahoma City Thunder,Minnesota Timberwolves,False,2025-02-25
+cd8d891255140bd6eade537ed3c0041f,basketball_nba,NBA,2025-02-25 02:10:00+00:00,Utah Jazz,Portland Trail Blazers,False,2025-02-25
+3f18f4481a94eba6d0f7586304730545,basketball_nba,NBA,2025-02-25 03:10:00+00:00,Sacramento Kings,Charlotte Hornets,False,2025-02-25
+87a890c60f7172b0c2dfc1cef0f30b99,basketball_nba,NBA,2025-02-26 00:10:00+00:00,Toronto Raptors,Boston Celtics,False,2025-02-26
+1a2d2068c7cf0f518ef3a223588cf338,basketball_nba,NBA,2025-02-26 00:40:00+00:00,Orlando Magic,Cleveland Cavaliers,False,2025-02-26
+751d0538ffb996c7873e638c79d24f19,basketball_nba,NBA,2025-02-26 01:10:00+00:00,Houston Rockets,Milwaukee Bucks,False,2025-02-26
+dced59f92bb909f9d1ad767b0f9076fc,basketball_nba,NBA,2025-02-26 01:10:00+00:00,Memphis Grizzlies,Phoenix Suns,False,2025-02-26
+eb5de5c1c9f554648e7c6b2bb60b86f4,basketball_nba,NBA,2025-02-26 01:10:00+00:00,New Orleans Pelicans,San Antonio Spurs,False,2025-02-26
+8c5dfc09221b32ad1835ce0e5c426454,basketball_nba,NBA,2025-02-26 03:00:00+00:00,Los Angeles Lakers,Dallas Mavericks,False,2025-02-26
+f03464588b4a09884d52a792a4cbb390,basketball_nba,NBA,2025-02-26 03:10:00+00:00,Golden State Warriors,Charlotte Hornets,False,2025-02-26
+c2280f01af3d01daaedd7712b877b6db,basketball_nba,NBA,2025-02-27 00:10:00+00:00,New York Knicks,Philadelphia 76ers,False,2025-02-27
+3cec61d1fb1aeba91c0134548c12f860,basketball_nba,NBA,2025-02-27 00:10:00+00:00,Washington Wizards,Portland Trail Blazers,False,2025-02-27
+7e7b14aa9dacbc7148af5216e4d8560e,basketball_nba,NBA,2025-02-27 00:10:00+00:00,Detroit Pistons,Boston Celtics,False,2025-02-27
+32df0693cced9f3543d8dce69e2c51a8,basketball_nba,NBA,2025-02-27 00:10:00+00:00,Indiana Pacers,Toronto Raptors,False,2025-02-27
+05ef26443a2105173b9cc009ab4d5b67,basketball_nba,NBA,2025-02-27 00:40:00+00:00,Miami Heat,Atlanta Hawks,False,2025-02-27
+79447ad072adfd8d2f55d5a091e4443c,basketball_nba,NBA,2025-02-27 00:40:00+00:00,Brooklyn Nets,Oklahoma City Thunder,False,2025-02-27
+22f1fdae3a801fdc9ae93ab9e210b125,basketball_nba,NBA,2025-02-27 01:10:00+00:00,Chicago Bulls,Los Angeles Clippers,False,2025-02-27
+5cbaf0319a1740115e806f83d187562a,basketball_nba,NBA,2025-02-27 02:10:00+00:00,Utah Jazz,Sacramento Kings,False,2025-02-27
+f328f625a7eb659ab44fe378d04deaf8,basketball_nba,NBA,2025-02-27 02:40:00+00:00,Houston Rockets,San Antonio Spurs,False,2025-02-27
+e2406ddb19c6ee8ca07a4f74c9cc1f47,basketball_nba,NBA,2025-02-28 00:10:00+00:00,Orlando Magic,Golden State Warriors,False,2025-02-28
+2835d99987b987035e9bc304399ccc1c,basketball_nba,NBA,2025-02-28 01:00:00+00:00,Milwaukee Bucks,Denver Nuggets,False,2025-02-28
+742d9eb489ac515af157e07c25047963,basketball_nba,NBA,2025-02-28 01:40:00+00:00,Dallas Mavericks,Charlotte Hornets,False,2025-02-28
+b4df207df7266e383550fff09f779ad4,basketball_nba,NBA,2025-02-28 02:10:00+00:00,Phoenix Suns,New Orleans Pelicans,False,2025-02-28
+1f2ae5bf11e887f1358d1f4bfaefeeee,basketball_nba,NBA,2025-02-28 03:40:00+00:00,Los Angeles Lakers,Minnesota Timberwolves,False,2025-02-28
+eee6ae58b744461fc358c810e7040bd8,basketball_nba,NBA,2025-03-01 00:10:00+00:00,Detroit Pistons,Denver Nuggets,False,2025-03-01
+590f9f02f4cab0c67dc6a8249cb0bca6,basketball_nba,NBA,2025-03-01 00:40:00+00:00,Atlanta Hawks,Oklahoma City Thunder,False,2025-03-01
+55719343ceb6d9ee5341a55debb8dce3,basketball_nba,NBA,2025-03-01 00:40:00+00:00,Boston Celtics,Cleveland Cavaliers,False,2025-03-01
+034e139f461a7673269c914f33e88cc3,basketball_nba,NBA,2025-03-01 00:40:00+00:00,Brooklyn Nets,Portland Trail Blazers,False,2025-03-01
+3023f1050fbb714a186b7d3800e9f03f,basketball_nba,NBA,2025-03-01 01:10:00+00:00,Chicago Bulls,Toronto Raptors,False,2025-03-01
+c91e9dde70107d5901c9e60ca645ff61,basketball_nba,NBA,2025-03-01 01:10:00+00:00,Miami Heat,Indiana Pacers,False,2025-03-01
+2f6e287b9db4c3785740acec8e0a6a3f,basketball_nba,NBA,2025-03-01 01:10:00+00:00,Memphis Grizzlies,New York Knicks,False,2025-03-01
+4c9bcdc0c91aa3bb0f328a0ff1e10f0b,basketball_nba,NBA,2025-03-01 02:10:00+00:00,Phoenix Suns,New Orleans Pelicans,False,2025-03-01
+0f88bc8d35dc830bff230193fd0bbfdc,basketball_nba,NBA,2025-03-01 02:40:00+00:00,Utah Jazz,Minnesota Timberwolves,False,2025-03-01
+867d3d56f72b8c9fccdce7b8554b2d6a,basketball_nba,NBA,2025-03-01 03:10:00+00:00,Los Angeles Lakers,Los Angeles Clippers,False,2025-03-01
+bed37b3ba4b2db925d6281d708d9840f,basketball_nba,NBA,2025-03-01 23:10:00+00:00,Charlotte Hornets,Washington Wizards,False,2025-03-01
+e9c763c0614afde1a74e1a879a2e9d99,basketball_nba,NBA,2025-03-02 00:10:00+00:00,Detroit Pistons,Brooklyn Nets,False,2025-03-02
+878164a77a0c38e0bbc077bfa30177ac,basketball_nba,NBA,2025-03-02 01:10:00+00:00,Houston Rockets,Sacramento Kings,False,2025-03-02
+191576df455117fc825b052b5610b739,basketball_nba,NBA,2025-03-02 01:10:00+00:00,Memphis Grizzlies,San Antonio Spurs,False,2025-03-02
+6cdf8e902a55b1f69f4a577186c856a1,basketball_nba,NBA,2025-03-02 01:40:00+00:00,Dallas Mavericks,Milwaukee Bucks,False,2025-03-02
+14ba92618c5e4d3bd12d4ea74e694fe7,basketball_nba,NBA,2025-03-02 01:40:00+00:00,Philadelphia 76ers,Golden State Warriors,False,2025-03-02
+d424e14dbd47c9ae61f438beef163949,basketball_nba,NBA,2025-03-02 18:10:00+00:00,Boston Celtics,Denver Nuggets,False,2025-03-02
+373b7cbc2df4ed9d1e05cf322b1217fe,basketball_nba,NBA,2025-03-02 20:40:00+00:00,Cleveland Cavaliers,Portland Trail Blazers,False,2025-03-02
+4bc8ac5f761994607f78bf8767e8363d,basketball_nba,NBA,2025-03-02 22:10:00+00:00,Indiana Pacers,Chicago Bulls,False,2025-03-02
+06f98f72ad122e54a758f31e2ca69f92,basketball_nba,NBA,2025-03-02 23:10:00+00:00,Orlando Magic,Toronto Raptors,False,2025-03-02
+f4420a11a9186ca5d15e80e84d660eb8,basketball_nba,NBA,2025-03-02 23:10:00+00:00,Miami Heat,New York Knicks,False,2025-03-02
+b5c5e0492f6e904196efa180310fc824,basketball_nba,NBA,2025-03-03 00:10:00+00:00,San Antonio Spurs,Oklahoma City Thunder,False,2025-03-03
+385c8e6091ff9173bdf378c6c311a311,basketball_nba,NBA,2025-03-03 01:10:00+00:00,Utah Jazz,New Orleans Pelicans,False,2025-03-03
+5dc147c696d8ae57fa01224b1c498425,basketball_nba,NBA,2025-03-03 02:40:00+00:00,Los Angeles Lakers,Los Angeles Clippers,False,2025-03-03
+59ed9128013613818c3df2f922ab98a9,basketball_nba,NBA,2025-03-03 02:40:00+00:00,Phoenix Suns,Minnesota Timberwolves,False,2025-03-03
+88ec7352b864871886a86b3bcb559179,basketball_nba,NBA,2025-03-04 00:10:00+00:00,Charlotte Hornets,Golden State Warriors,False,2025-03-04
+d9ffe1f98222bd3881003a3eb3bf3178,basketball_nba,NBA,2025-03-04 00:10:00+00:00,Philadelphia 76ers,Portland Trail Blazers,False,2025-03-04
+01703ec69023c48dec6d3a5cef234cfb,basketball_nba,NBA,2025-03-04 00:40:00+00:00,Miami Heat,Washington Wizards,False,2025-03-04
+6a1800f3e3f9e432e58d100a1ed1408d,basketball_nba,NBA,2025-03-04 01:10:00+00:00,Oklahoma City Thunder,Houston Rockets,False,2025-03-04
+7d360fe51d388cd45d67ca0791a15e4d,basketball_nba,NBA,2025-03-04 01:10:00+00:00,Memphis Grizzlies,Atlanta Hawks,False,2025-03-04
+16012c27cfc786cfc9825a4c23b045f0,basketball_nba,NBA,2025-03-04 01:40:00+00:00,Dallas Mavericks,Sacramento Kings,False,2025-03-04
+a2656e442abab0ceb73d1043afaddc31,basketball_nba,NBA,2025-03-04 02:10:00+00:00,Utah Jazz,Detroit Pistons,False,2025-03-04
+735654e148a1dc90f79961500668f91e,basketball_nba,NBA,2025-03-05 00:10:00+00:00,Indiana Pacers,Houston Rockets,False,2025-03-05
+bfc84e5d5f3f10d0daa5bd7a93546a4d,basketball_nba,NBA,2025-03-05 00:10:00+00:00,Orlando Magic,Toronto Raptors,False,2025-03-05
+03c7b27fbc71c140e01015a84c83815c,basketball_nba,NBA,2025-03-05 00:30:00+00:00,New York Knicks,Golden State Warriors,False,2025-03-05
+7fc7c5ee183efb4cbae16b6317c166b4,basketball_nba,NBA,2025-03-05 00:40:00+00:00,Atlanta Hawks,Milwaukee Bucks,False,2025-03-05
+377e39927b397d8cc8d08c68209c4cbb,basketball_nba,NBA,2025-03-05 01:10:00+00:00,Chicago Bulls,Cleveland Cavaliers,False,2025-03-05
+41f75776998a17774e05e86ab1495ea0,basketball_nba,NBA,2025-03-05 01:10:00+00:00,Minnesota Timberwolves,Philadelphia 76ers,False,2025-03-05
+a7315a97f0f8c84127ab2ed585c347df,basketball_nba,NBA,2025-03-05 01:40:00+00:00,San Antonio Spurs,Brooklyn Nets,False,2025-03-05
+fd7093410e2bfb14472804c74cae62da,basketball_nba,NBA,2025-03-05 03:00:00+00:00,Phoenix Suns,Los Angeles Clippers,False,2025-03-05
+8cc691734a67454e7ed3398d2ee0033e,basketball_nba,NBA,2025-03-05 03:40:00+00:00,Los Angeles Lakers,New Orleans Pelicans,False,2025-03-05
+dd11cd814adc99021752681af38ed826,basketball_nba,NBA,2025-03-06 00:10:00+00:00,Washington Wizards,Utah Jazz,False,2025-03-06
+8a0978249007986ccd8e87be3a2a0f45,basketball_nba,NBA,2025-03-06 00:10:00+00:00,Cleveland Cavaliers,Miami Heat,False,2025-03-06
+808967176312a7bee00acc90f0d496ba,basketball_nba,NBA,2025-03-06 00:10:00+00:00,Boston Celtics,Portland Trail Blazers,False,2025-03-06
+45a8bfddd2a9ef47d0b1ce178b5a4550,basketball_nba,NBA,2025-03-06 00:10:00+00:00,Charlotte Hornets,Minnesota Timberwolves,False,2025-03-06
+a017e08a77bc60cb6ed352e213e0da9f,basketball_nba,NBA,2025-03-06 01:10:00+00:00,Milwaukee Bucks,Dallas Mavericks,False,2025-03-06
+fead08a44647be637442a0cf4bdf5587,basketball_nba,NBA,2025-03-06 02:10:00+00:00,Denver Nuggets,Sacramento Kings,False,2025-03-06
+8d09abc5358137cab179d2471675e70e,basketball_nba,NBA,2025-03-06 02:40:00+00:00,Memphis Grizzlies,Oklahoma City Thunder,False,2025-03-06
+e4f8e58abce1f3c0845fedb7fd2eaaa0,basketball_nba,NBA,2025-03-06 03:40:00+00:00,Los Angeles Clippers,Detroit Pistons,False,2025-03-06
+405771221c6013dc40aecf9964df0adc,basketball_nba,NBA,2025-03-07 00:10:00+00:00,Orlando Magic,Chicago Bulls,False,2025-03-07
+b7d59bd12fb88f987980446be3af894f,basketball_nba,NBA,2025-03-07 00:40:00+00:00,Brooklyn Nets,Golden State Warriors,False,2025-03-07
+2dfbf397dcee68b92c3483fd2a55ef69,basketball_nba,NBA,2025-03-07 00:40:00+00:00,Boston Celtics,Philadelphia 76ers,False,2025-03-07
+2455a56e19ca26ff7ac342c95212d862,basketball_nba,NBA,2025-03-07 00:40:00+00:00,Atlanta Hawks,Indiana Pacers,False,2025-03-07
+66594b0a9d37f8ce9b2425a5e99688cd,basketball_nba,NBA,2025-03-07 01:10:00+00:00,New Orleans Pelicans,Houston Rockets,False,2025-03-07
+4ef69c34d9cb953aff69e69c92acf2cd,basketball_nba,NBA,2025-03-07 03:10:00+00:00,Los Angeles Lakers,New York Knicks,False,2025-03-07
+cda2918dff5bd991f43e658102c65f52,basketball_nba,NBA,2025-03-08 00:10:00+00:00,Charlotte Hornets,Cleveland Cavaliers,False,2025-03-08
+b85eb9d4af06a276c5add2446354ed97,basketball_nba,NBA,2025-03-08 00:40:00+00:00,Dallas Mavericks,Memphis Grizzlies,False,2025-03-08
+6955224dd4719260b131ace9f7ea53b4,basketball_nba,NBA,2025-03-08 00:40:00+00:00,Toronto Raptors,Utah Jazz,False,2025-03-08
+fbb83feef66e9aee7ee9bbe38ba92b91,basketball_nba,NBA,2025-03-08 01:10:00+00:00,Miami Heat,Minnesota Timberwolves,False,2025-03-08
+8e7eeb371fad9058c14138128c4cf02d,basketball_nba,NBA,2025-03-08 01:10:00+00:00,Oklahoma City Thunder,Portland Trail Blazers,False,2025-03-08
+f880e059bbee7b5b9e4af4d17bcee511,basketball_nba,NBA,2025-03-08 03:10:00+00:00,Sacramento Kings,San Antonio Spurs,False,2025-03-08
+fbf0d3997ce376d205847d3248d5b208,basketball_nba,NBA,2025-03-08 03:10:00+00:00,Denver Nuggets,Phoenix Suns,False,2025-03-08
+6169dbe021254c66d3c3c246d48d1c7e,basketball_nba,NBA,2025-03-08 03:40:00+00:00,Los Angeles Clippers,New York Knicks,False,2025-03-08
+33e852b036ab436285a82f337e32e959,basketball_nba,NBA,2025-03-08 23:10:00+00:00,Charlotte Hornets,Brooklyn Nets,False,2025-03-08
+7080c86d26fb2e75b344b134b4059fc2,basketball_nba,NBA,2025-03-09 00:10:00+00:00,Houston Rockets,New Orleans Pelicans,False,2025-03-09
+3cd5af5010f635f1bb2492b9bff15864,basketball_nba,NBA,2025-03-09 00:40:00+00:00,Atlanta Hawks,Indiana Pacers,False,2025-03-09
+fbc4ecb5bfbfdf70e843716906756839,basketball_nba,NBA,2025-03-09 00:40:00+00:00,Toronto Raptors,Washington Wizards,False,2025-03-09
+5aa6e6a92cbbc6db4836fd21bc1a0dd6,basketball_nba,NBA,2025-03-09 01:10:00+00:00,Miami Heat,Chicago Bulls,False,2025-03-09
+0cddb6d1c291ea1c614e0513eca82c54,basketball_nba,NBA,2025-03-09 01:10:00+00:00,Milwaukee Bucks,Orlando Magic,False,2025-03-09
+c17047e1327d628c58735ff818b485e5,basketball_nba,NBA,2025-03-09 01:30:00+00:00,Boston Celtics,Los Angeles Lakers,False,2025-03-09
+1df34e2cad9a6ba37e0cc821cddb9228,basketball_nba,NBA,2025-03-09 01:40:00+00:00,Golden State Warriors,Detroit Pistons,False,2025-03-09
+ccd5104e0b087694bcedf880ba209a43,basketball_nba,NBA,2025-03-09 17:10:00+00:00,Oklahoma City Thunder,Denver Nuggets,False,2025-03-09
+ebf73e325fe61099599a1814b261bd54,basketball_nba,NBA,2025-03-09 19:40:00+00:00,Dallas Mavericks,Phoenix Suns,False,2025-03-09
+242c77a8d5890e18bab91773ad32fcb5,basketball_nba,NBA,2025-03-09 23:10:00+00:00,New Orleans Pelicans,Memphis Grizzlies,False,2025-03-09
+c166b5e632c22dc2ab475f6bcc0a73c8,basketball_nba,NBA,2025-03-09 23:40:00+00:00,Philadelphia 76ers,Utah Jazz,False,2025-03-09
+67746197d1b0b87daee111a4c83d1d9a,basketball_nba,NBA,2025-03-10 00:10:00+00:00,Milwaukee Bucks,Cleveland Cavaliers,False,2025-03-10
+8eea0fac716aea84884f4538afd3f382,basketball_nba,NBA,2025-03-10 00:10:00+00:00,Minnesota Timberwolves,San Antonio Spurs,False,2025-03-10
+b1a50cdd0f9cae1b194e4563528bd579,basketball_nba,NBA,2025-03-10 01:10:00+00:00,Portland Trail Blazers,Detroit Pistons,False,2025-03-10
+22c7a88941d89c6c0c72f68194b0cf02,basketball_nba,NBA,2025-03-10 01:40:00+00:00,Los Angeles Clippers,Sacramento Kings,False,2025-03-10
+8ecba2c502a6a9fd77f10ae4967404f4,basketball_nba,NBA,2025-03-10 23:40:00+00:00,Toronto Raptors,Washington Wizards,False,2025-03-10
+ae24916e0f1c168d70364a8748311211,basketball_nba,NBA,2025-03-10 23:40:00+00:00,Miami Heat,Charlotte Hornets,False,2025-03-10
+7b880ef73891d31d2d33fddd77800847,basketball_nba,NBA,2025-03-10 23:40:00+00:00,Brooklyn Nets,Los Angeles Lakers,False,2025-03-10
+a46fe84c8e56f3da49d324093bf10907,basketball_nba,NBA,2025-03-10 23:40:00+00:00,Boston Celtics,Utah Jazz,False,2025-03-10
+88385308eabcb5d71ad6d9d64bfcf072,basketball_nba,NBA,2025-03-10 23:40:00+00:00,Atlanta Hawks,Philadelphia 76ers,False,2025-03-10
+38ba6d78e25e4297749010f54b34ba32,basketball_nba,NBA,2025-03-11 00:10:00+00:00,Chicago Bulls,Indiana Pacers,False,2025-03-11
+fadd7c0c5d6e81a876945a3d7ee0490c,basketball_nba,NBA,2025-03-11 00:10:00+00:00,Oklahoma City Thunder,Denver Nuggets,False,2025-03-11
+f6f420d8a55d0a01f863b688644215ee,basketball_nba,NBA,2025-03-11 00:10:00+00:00,Houston Rockets,Orlando Magic,False,2025-03-11
+fefdda0780a6212806a4c9a8b4285d9e,basketball_nba,NBA,2025-03-11 00:10:00+00:00,Memphis Grizzlies,Phoenix Suns,False,2025-03-11
+e4bcf000e358284bb475f1a3b3195e29,basketball_nba,NBA,2025-03-11 00:40:00+00:00,San Antonio Spurs,Dallas Mavericks,False,2025-03-11
+d547139c212c53cbf2d80cd17a08084f,basketball_nba,NBA,2025-03-11 02:10:00+00:00,Golden State Warriors,Portland Trail Blazers,False,2025-03-11
+7f0a750037d37aeaa688648cffc4a155,basketball_nba,NBA,2025-03-11 02:40:00+00:00,Sacramento Kings,New York Knicks,False,2025-03-11
+606666b7853a65ce3194642367939f56,basketball_nba,NBA,2025-03-11 23:10:00+00:00,Detroit Pistons,Washington Wizards,False,2025-03-11
+8dc3d32bfed44beeb0999dabf1dfcb19,basketball_nba,NBA,2025-03-11 23:10:00+00:00,Cleveland Cavaliers,Brooklyn Nets,False,2025-03-11
+1bc906c042d55f6a64e223c39e53b11a,basketball_nba,NBA,2025-03-11 23:30:00+00:00,Indiana Pacers,Milwaukee Bucks,False,2025-03-11
+925ebeb8d121e4970ffb3a7381cc6a75,basketball_nba,NBA,2025-03-12 00:10:00+00:00,New Orleans Pelicans,Los Angeles Clippers,False,2025-03-12
+5f9e9af38083553dbc9a49ed0ccec2c3,basketball_nba,NBA,2025-03-12 23:40:00+00:00,Atlanta Hawks,Charlotte Hornets,False,2025-03-12
+f45ee8416b2481dfa80fefed8cfe9209,basketball_nba,NBA,2025-03-12 23:40:00+00:00,Boston Celtics,Oklahoma City Thunder,False,2025-03-12
+c800b1c910cf0762ba519c5212acf80f,basketball_nba,NBA,2025-03-12 23:40:00+00:00,Toronto Raptors,Philadelphia 76ers,False,2025-03-12
+344791159861305700e36a296b7c896d,basketball_nba,NBA,2025-03-13 00:10:00+00:00,San Antonio Spurs,Dallas Mavericks,False,2025-03-13
+5e27cec0a6f74b46b10d8a9c990b35cd,basketball_nba,NBA,2025-03-13 00:10:00+00:00,Houston Rockets,Phoenix Suns,False,2025-03-13
+038c616868d911a2f240fe962525f358,basketball_nba,NBA,2025-03-13 00:10:00+00:00,Miami Heat,Los Angeles Clippers,False,2025-03-13
+e7c4d02fd753e6bd71f8a9c003584843,basketball_nba,NBA,2025-03-13 00:10:00+00:00,Memphis Grizzlies,Utah Jazz,False,2025-03-13
+dc399db066bc2ec020a37470a60f619f,basketball_nba,NBA,2025-03-13 02:10:00+00:00,Portland Trail Blazers,New York Knicks,False,2025-03-13
+322bf5ee6a937c41bc2beb3a9ae5c0e9,basketball_nba,NBA,2025-03-13 02:10:00+00:00,Denver Nuggets,Minnesota Timberwolves,False,2025-03-13
+4ea18c33e9a44a01c3b7c15506a112db,basketball_nba,NBA,2025-03-13 23:10:00+00:00,Detroit Pistons,Washington Wizards,False,2025-03-13
+3008abedd6c9035d6923152e92ebec46,basketball_nba,NBA,2025-03-13 23:30:00+00:00,Milwaukee Bucks,Los Angeles Lakers,False,2025-03-13
+fdb9f4f4cec401553d95dcbd98cf2381,basketball_nba,NBA,2025-03-14 00:10:00+00:00,Chicago Bulls,Brooklyn Nets,False,2025-03-14
+50eb71aa891ec74cc411a85e598fda7b,basketball_nba,NBA,2025-03-14 00:10:00+00:00,New Orleans Pelicans,Orlando Magic,False,2025-03-14
+6f438a23832d6ccdf61b8ed0af5633c2,basketball_nba,NBA,2025-03-14 02:10:00+00:00,Golden State Warriors,Sacramento Kings,False,2025-03-14
+7778dd3c609c10110e9b4aadd6753abf,basketball_nba,NBA,2025-03-14 23:10:00+00:00,Miami Heat,Boston Celtics,False,2025-03-14
+dfc48d1713eb691d72b67328716f7ced,basketball_nba,NBA,2025-03-14 23:10:00+00:00,Philadelphia 76ers,Indiana Pacers,False,2025-03-14
+33db6f60a8ab7cddb94c96bd2c90cbc3,basketball_nba,NBA,2025-03-14 23:40:00+00:00,Atlanta Hawks,Los Angeles Clippers,False,2025-03-14
+0fdc0c7f6dbaf6df7383a4cffb8c5e65,basketball_nba,NBA,2025-03-15 00:10:00+00:00,Minnesota Timberwolves,Orlando Magic,False,2025-03-15
+b2dffed2f33fd66e16fcbcd65e62a368,basketball_nba,NBA,2025-03-15 00:10:00+00:00,Houston Rockets,Dallas Mavericks,False,2025-03-15
+395de5b32f7a9c3d95758e1bd3742c9f,basketball_nba,NBA,2025-03-15 00:10:00+00:00,Memphis Grizzlies,Cleveland Cavaliers,False,2025-03-15
+f03b13bd31cbb08e214114af562be7ae,basketball_nba,NBA,2025-03-15 00:10:00+00:00,San Antonio Spurs,Charlotte Hornets,False,2025-03-15
+e1979d16367276f88c7c770af9087bfd,basketball_nba,NBA,2025-03-15 01:40:00+00:00,Denver Nuggets,Los Angeles Lakers,False,2025-03-15
+4f92c61261c284693d37091c24cf85d8,basketball_nba,NBA,2025-03-15 01:40:00+00:00,Utah Jazz,Toronto Raptors,False,2025-03-15
+5af9dfe051f5560545b2fb86e831be24,basketball_nba,NBA,2025-03-15 02:10:00+00:00,Phoenix Suns,Sacramento Kings,False,2025-03-15
+6d44f54f4f7dd906b61977e3736d0550,basketball_nba,NBA,2025-03-15 22:10:00+00:00,Brooklyn Nets,Boston Celtics,False,2025-03-15
+27a840a12c2959c49a3cc3423f021cdf,basketball_nba,NBA,2025-03-15 23:10:00+00:00,Detroit Pistons,Oklahoma City Thunder,False,2025-03-15
+08fb6f00569c49483cd2bd39368d6a41,basketball_nba,NBA,2025-03-16 00:10:00+00:00,Houston Rockets,Chicago Bulls,False,2025-03-16
+6ee1dbf1f37c3648164a3d252aedff98,basketball_nba,NBA,2025-03-16 00:10:00+00:00,Milwaukee Bucks,Indiana Pacers,False,2025-03-16
+0231f7a057eef360df64342894b61169,basketball_nba,NBA,2025-03-16 00:10:00+00:00,Memphis Grizzlies,Miami Heat,False,2025-03-16
+16f2531aa8ae151a4b8c7c1844162160,basketball_nba,NBA,2025-03-16 00:40:00+00:00,San Antonio Spurs,New Orleans Pelicans,False,2025-03-16
+200a00ca4f8d6e66887e24d7896bd5a6,basketball_nba,NBA,2025-03-16 00:40:00+00:00,Golden State Warriors,New York Knicks,False,2025-03-16
+4352c62bf55b47d1afb0a297be10c8d5,basketball_nba,NBA,2025-03-16 01:10:00+00:00,Denver Nuggets,Washington Wizards,False,2025-03-16
+2aef8b9b69f0d0e62ae6dafc2524f51e,basketball_nba,NBA,2025-03-16 17:10:00+00:00,Cleveland Cavaliers,Orlando Magic,False,2025-03-16
+9fe3de8d645431ad5b81db617d6ee571,basketball_nba,NBA,2025-03-16 17:10:00+00:00,Dallas Mavericks,Philadelphia 76ers,False,2025-03-16
+9f5ae1d0355f9d38a8af0a228fe45053,basketball_nba,NBA,2025-03-16 19:40:00+00:00,Los Angeles Lakers,Phoenix Suns,False,2025-03-16
+6a2e8167d9f15bd39be325fad0df92d9,basketball_nba,NBA,2025-03-16 22:10:00+00:00,Brooklyn Nets,Atlanta Hawks,False,2025-03-16
+01b048c1857901dd9f688741cc4c13c2,basketball_nba,NBA,2025-03-16 22:10:00+00:00,Portland Trail Blazers,Toronto Raptors,False,2025-03-16
+fc8d0c4c0e2a57e7ea9c06c5fb35a291,basketball_nba,NBA,2025-03-16 23:10:00+00:00,Los Angeles Clippers,Charlotte Hornets,False,2025-03-16
+085c54e542467c56637a2e0ccd86d9ee,basketball_nba,NBA,2025-03-16 23:10:00+00:00,Minnesota Timberwolves,Utah Jazz,False,2025-03-16
+88c8cb14a4897c96f7cefbddaa9c063f,basketball_nba,NBA,2025-03-17 01:10:00+00:00,Milwaukee Bucks,Oklahoma City Thunder,False,2025-03-17
+2ac1a00ab74372966e61ee167c0a4bfa,basketball_nba,NBA,2025-03-17 23:40:00+00:00,New York Knicks,Miami Heat,False,2025-03-17
+325d2e2cb265a16f7df29f9230ef354e,basketball_nba,NBA,2025-03-18 00:10:00+00:00,New Orleans Pelicans,Detroit Pistons,False,2025-03-18
+f1a23120c8d81acc7502fa8175c96831,basketball_nba,NBA,2025-03-18 00:10:00+00:00,Houston Rockets,Philadelphia 76ers,False,2025-03-18
+26d1646339ba804c945c590424892b60,basketball_nba,NBA,2025-03-18 00:10:00+00:00,Minnesota Timberwolves,Indiana Pacers,False,2025-03-18
+c8e48d7416330d26f21c70e65a8571ee,basketball_nba,NBA,2025-03-18 01:10:00+00:00,Utah Jazz,Chicago Bulls,False,2025-03-18
+07aec6a545be9cff5de723ea38b3ced2,basketball_nba,NBA,2025-03-18 02:10:00+00:00,Golden State Warriors,Denver Nuggets,False,2025-03-18
+700c08527b218b9f3c136a932b1d2f6d,basketball_nba,NBA,2025-03-18 02:10:00+00:00,Sacramento Kings,Memphis Grizzlies,False,2025-03-18
+492d823276e68df2ee7bc99b63ba53ef,basketball_nba,NBA,2025-03-18 02:10:00+00:00,Phoenix Suns,Toronto Raptors,False,2025-03-18
+947d4ba93946bd99ff956efbb79424d7,basketball_nba,NBA,2025-03-18 02:10:00+00:00,Portland Trail Blazers,Washington Wizards,False,2025-03-18
+9fa93ff7802af1188f0cfe7214d6a40a,basketball_nba,NBA,2025-03-18 02:40:00+00:00,Los Angeles Lakers,San Antonio Spurs,False,2025-03-18
+ae797ae9bc451fd38c0602287bec9301,basketball_nba,NBA,2025-03-18 23:10:00+00:00,Charlotte Hornets,Atlanta Hawks,False,2025-03-18
+91e3d5572c0116617237ead983d7adda,basketball_nba,NBA,2025-03-18 23:40:00+00:00,Boston Celtics,Brooklyn Nets,False,2025-03-18
+73220145ed93f536b3f202e535a51036,basketball_nba,NBA,2025-03-19 02:10:00+00:00,Golden State Warriors,Milwaukee Bucks,False,2025-03-19
+155c5d209a9e7c0ca5bdaa1b60bd6dcc,basketball_nba,NBA,2025-03-19 02:40:00+00:00,Los Angeles Clippers,Cleveland Cavaliers,False,2025-03-19
+b0f62486967f67ea2533ab5cd800daf6,basketball_nba,NBA,2025-03-19 23:10:00+00:00,Indiana Pacers,Dallas Mavericks,False,2025-03-19
+3a2f0645841b6624b33e936006196323,basketball_nba,NBA,2025-03-19 23:10:00+00:00,Orlando Magic,Houston Rockets,False,2025-03-19
+6d357b257c0db2782eb3c3b565bc2af1,basketball_nba,NBA,2025-03-19 23:40:00+00:00,Miami Heat,Detroit Pistons,False,2025-03-19
+683d436c23df509fea2170f2016f576c,basketball_nba,NBA,2025-03-19 23:40:00+00:00,Minnesota Timberwolves,New Orleans Pelicans,False,2025-03-19
+697a9660d48019f975dab2c5e3eda450,basketball_nba,NBA,2025-03-20 00:10:00+00:00,San Antonio Spurs,New York Knicks,False,2025-03-20
+16d1df622fcb75e4a81fc7dcbba853d9,basketball_nba,NBA,2025-03-20 00:10:00+00:00,Oklahoma City Thunder,Philadelphia 76ers,False,2025-03-20
+792a745a14ea50ac11b22034265ba128,basketball_nba,NBA,2025-03-20 01:10:00+00:00,Utah Jazz,Washington Wizards,False,2025-03-20
+4298b4b0e3eb435a61815894c7e07d67,basketball_nba,NBA,2025-03-20 02:10:00+00:00,Phoenix Suns,Chicago Bulls,False,2025-03-20
+724642163dcb1f79026392b3936ae218,basketball_nba,NBA,2025-03-20 02:10:00+00:00,Sacramento Kings,Cleveland Cavaliers,False,2025-03-20
+e83db443c389591f9632a1560b2fe44f,basketball_nba,NBA,2025-03-20 02:10:00+00:00,Los Angeles Lakers,Denver Nuggets,False,2025-03-20
+6e4ab2db233003e7d6aa6ace267712d9,basketball_nba,NBA,2025-03-20 02:10:00+00:00,Portland Trail Blazers,Memphis Grizzlies,False,2025-03-20
+03276aad1c7feb2d452d1484c3a2f459,basketball_nba,NBA,2025-03-20 23:10:00+00:00,Indiana Pacers,Brooklyn Nets,False,2025-03-20
+4f21e91e8f09dc2474b646f3f2c55b1c,basketball_nba,NBA,2025-03-20 23:10:00+00:00,Charlotte Hornets,New York Knicks,False,2025-03-20
+32679728dedc0da8e57ea00f854d5be5,basketball_nba,NBA,2025-03-21 02:10:00+00:00,Sacramento Kings,Chicago Bulls,False,2025-03-21
+abe989186da909028bbf62e0dc26be9d,basketball_nba,NBA,2025-03-21 02:10:00+00:00,Golden State Warriors,Toronto Raptors,False,2025-03-21
+ec83fa537e65517332af6c966ae6fba4,basketball_nba,NBA,2025-03-21 02:40:00+00:00,Los Angeles Lakers,Milwaukee Bucks,False,2025-03-21
+39f52f48e6c5a37e3fb771b54912c959,basketball_nba,NBA,2025-03-21 23:10:00+00:00,Washington Wizards,Orlando Magic,False,2025-03-21
+34d8351752cc1f7336eb24a67b933117,basketball_nba,NBA,2025-03-22 00:10:00+00:00,Oklahoma City Thunder,Charlotte Hornets,False,2025-03-22
+fb2f3213497f7221d053819ad2ef9573,basketball_nba,NBA,2025-03-22 00:10:00+00:00,Miami Heat,Houston Rockets,False,2025-03-22
+94ee5eaf061091223301780dcff1b907,basketball_nba,NBA,2025-03-22 00:10:00+00:00,Minnesota Timberwolves,New Orleans Pelicans,False,2025-03-22
+a9ad4f4cd23bd912c076487b59f01fad,basketball_nba,NBA,2025-03-22 00:10:00+00:00,San Antonio Spurs,Philadelphia 76ers,False,2025-03-22
+583bcf24fae3895d582bdab45c51e909,basketball_nba,NBA,2025-03-22 00:40:00+00:00,Dallas Mavericks,Detroit Pistons,False,2025-03-22
+88209330a4a497bc95a88e614e97f5a9,basketball_nba,NBA,2025-03-22 01:40:00+00:00,Utah Jazz,Boston Celtics,False,2025-03-22
+b0f3a9da3cbaaa07015199286ed27b27,basketball_nba,NBA,2025-03-22 02:10:00+00:00,Phoenix Suns,Cleveland Cavaliers,False,2025-03-22
+1ea6ab60f534cef8f53cee9f2dcc16b1,basketball_nba,NBA,2025-03-22 02:10:00+00:00,Portland Trail Blazers,Denver Nuggets,False,2025-03-22
+8e171e6b8d1b9fed3e81f6d885b622d6,basketball_nba,NBA,2025-03-22 02:40:00+00:00,Los Angeles Clippers,Memphis Grizzlies,False,2025-03-22
+75ddda15d53676b7c81f9beb7241ecb2,basketball_nba,NBA,2025-03-22 21:10:00+00:00,Indiana Pacers,Brooklyn Nets,False,2025-03-22
+5b825671615ce28e719e8f99a2d0ba20,basketball_nba,NBA,2025-03-22 23:10:00+00:00,Atlanta Hawks,Golden State Warriors,False,2025-03-22
+7332ecff132c0766afafdd01c5ad2d02,basketball_nba,NBA,2025-03-23 00:10:00+00:00,New York Knicks,Washington Wizards,False,2025-03-23
+d3f0a7b40bf49f5772782507472c5e35,basketball_nba,NBA,2025-03-23 02:10:00+00:00,Sacramento Kings,Milwaukee Bucks,False,2025-03-23
+b9c30f60c21bee7b9f52488c851a4e37,basketball_nba,NBA,2025-03-23 02:40:00+00:00,Los Angeles Lakers,Chicago Bulls,False,2025-03-23
+067f8561e157513e281e6424b1f041a5,basketball_nba,NBA,2025-03-23 19:10:00+00:00,Detroit Pistons,New Orleans Pelicans,False,2025-03-23
+5de0ba0b83bab484811d2771e65c6b9f,basketball_nba,NBA,2025-03-23 19:40:00+00:00,Utah Jazz,Cleveland Cavaliers,False,2025-03-23
+28fc35addb5597f1ce287acaf675235d,basketball_nba,NBA,2025-03-23 22:10:00+00:00,Atlanta Hawks,Philadelphia 76ers,False,2025-03-23
+72816b64432724a07be89b42ba3f55e3,basketball_nba,NBA,2025-03-23 22:10:00+00:00,Portland Trail Blazers,Boston Celtics,False,2025-03-23
+12ad70923da04ecc2c0447046bf77150,basketball_nba,NBA,2025-03-23 22:10:00+00:00,Miami Heat,Charlotte Hornets,False,2025-03-23
+1d97c65586a1e5bb9e38d6a1d817382d,basketball_nba,NBA,2025-03-23 22:10:00+00:00,Toronto Raptors,San Antonio Spurs,False,2025-03-23
+2e6bac18dfa5f420e7ea8df3fbb4ad51,basketball_nba,NBA,2025-03-23 23:10:00+00:00,Houston Rockets,Denver Nuggets,False,2025-03-23
+5e21e42ec3b97ef29e11b25bb7c2829f,basketball_nba,NBA,2025-03-24 01:10:00+00:00,Los Angeles Clippers,Oklahoma City Thunder,False,2025-03-24
+de8f8130c02424ceedda00c0bcd314c2,basketball_nba,NBA,2025-03-24 23:10:00+00:00,Indiana Pacers,Minnesota Timberwolves,False,2025-03-24
+3438c5ff8949b9bdaefb3e811c46d073,basketball_nba,NBA,2025-03-24 23:10:00+00:00,Orlando Magic,Los Angeles Lakers,False,2025-03-24
+16fa2274edee43de31182f5603f9ed87,basketball_nba,NBA,2025-03-24 23:10:00+00:00,Washington Wizards,Toronto Raptors,False,2025-03-24
+f5b6f06f53cc82b2f791424c459f6e64,basketball_nba,NBA,2025-03-24 23:40:00+00:00,Brooklyn Nets,Dallas Mavericks,False,2025-03-24
+1c812f267fdcfdcc3ffe84d6a3d9df61,basketball_nba,NBA,2025-03-25 00:10:00+00:00,New Orleans Pelicans,Philadelphia 76ers,False,2025-03-25
+ae2f21668da22e0ed9d1564b5d15507f,basketball_nba,NBA,2025-03-25 01:10:00+00:00,Denver Nuggets,Chicago Bulls,False,2025-03-25
+402cf3aa521da85914e952cdc2c6f8b4,basketball_nba,NBA,2025-03-25 02:10:00+00:00,Sacramento Kings,Boston Celtics,False,2025-03-25
+fb447cf26599d0e194242865d0ea196b,basketball_nba,NBA,2025-03-25 02:10:00+00:00,Phoenix Suns,Milwaukee Bucks,False,2025-03-25
+5823666c4647cda743363c25278be9c7,basketball_nba,NBA,2025-03-25 23:10:00+00:00,Detroit Pistons,San Antonio Spurs,False,2025-03-25
+c39fca06cd6bde50f88622a84514c31e,basketball_nba,NBA,2025-03-25 23:10:00+00:00,Charlotte Hornets,Orlando Magic,False,2025-03-25
+bc1729007381bae2cba3cc229943e13a,basketball_nba,NBA,2025-03-25 23:30:00+00:00,New York Knicks,Dallas Mavericks,False,2025-03-25
+0e1dde121b5be88b7c95e744d43c877f,basketball_nba,NBA,2025-03-25 23:30:00+00:00,Miami Heat,Golden State Warriors,False,2025-03-25
+7a55ebea407d4274a2374a144c2597d2,basketball_nba,NBA,2025-03-26 00:10:00+00:00,Houston Rockets,Atlanta Hawks,False,2025-03-26
+1188c8b022ed8603fb3e4d5430ef7953,basketball_nba,NBA,2025-03-26 01:10:00+00:00,Utah Jazz,Memphis Grizzlies,False,2025-03-26
+40a56a7bb3bbfb6a4d38bddfefc37a58,basketball_nba,NBA,2025-03-26 02:10:00+00:00,Portland Trail Blazers,Cleveland Cavaliers,False,2025-03-26
+9b5267c6f60224e74b2dd6f5cba8c361,basketball_nba,NBA,2025-03-26 02:10:00+00:00,Sacramento Kings,Oklahoma City Thunder,False,2025-03-26
+a9fe2fed5ee8f127bf88f8f4f62e766f,basketball_nba,NBA,2025-03-26 23:10:00+00:00,Philadelphia 76ers,Washington Wizards,False,2025-03-26
+fc12a2133288fcd54ad925311ac4b8fd,basketball_nba,NBA,2025-03-26 23:40:00+00:00,New York Knicks,Los Angeles Clippers,False,2025-03-26
+b7ca19e207817263ada3a2ed6a7beb66,basketball_nba,NBA,2025-03-26 23:40:00+00:00,Indiana Pacers,Los Angeles Lakers,False,2025-03-26
+5c5f21ae00490e833aae3e807236468a,basketball_nba,NBA,2025-03-26 23:40:00+00:00,Brooklyn Nets,Toronto Raptors,False,2025-03-26
+6ce722bcf11e6beab112d2c3f9435a46,basketball_nba,NBA,2025-03-27 01:10:00+00:00,Denver Nuggets,Milwaukee Bucks,False,2025-03-27
+84c1feb881abf0bf76f05655698be574,basketball_nba,NBA,2025-03-27 02:10:00+00:00,Phoenix Suns,Boston Celtics,False,2025-03-27
+a7d6bf35d58918099f6a139a4e67908d,basketball_nba,NBA,2025-03-27 23:00:00+00:00,Cleveland Cavaliers,San Antonio Spurs,False,2025-03-27
+8446d4cf597e867ed5dc8a47568c3055,basketball_nba,NBA,2025-03-27 23:00:00+00:00,Orlando Magic,Dallas Mavericks,False,2025-03-27
+8a323fd3d0ed756e9c480e9e96a20180,basketball_nba,NBA,2025-03-27 23:00:00+00:00,Washington Wizards,Indiana Pacers,False,2025-03-27
+2184beee6d15f9165b7fd20c8fe434db,basketball_nba,NBA,2025-03-27 23:30:00+00:00,Miami Heat,Atlanta Hawks,False,2025-03-27
+669923b329fcd6213ac20cd22ec7f6b1,basketball_nba,NBA,2025-03-28 00:00:00+00:00,Chicago Bulls,Los Angeles Lakers,False,2025-03-28
+a692a905991f35fc41e78eb6298cba96,basketball_nba,NBA,2025-03-28 00:00:00+00:00,Oklahoma City Thunder,Memphis Grizzlies,False,2025-03-28
+e0a67f5695480ad68fd0e8cc099a821d,basketball_nba,NBA,2025-03-28 01:00:00+00:00,Utah Jazz,Houston Rockets,False,2025-03-28
+21fffc6d14f366e0e51a9708f21a103c,basketball_nba,NBA,2025-03-28 02:00:00+00:00,Sacramento Kings,Portland Trail Blazers,False,2025-03-28
+56b4c3525a0066028edb1cd81124df70,basketball_nba,NBA,2025-03-28 23:10:00+00:00,Detroit Pistons,Cleveland Cavaliers,False,2025-03-28
+181b82a1601a1488c347abd5523ea4e6,basketball_nba,NBA,2025-03-28 23:40:00+00:00,Brooklyn Nets,Los Angeles Clippers,False,2025-03-28
+a623fa04bb1021c2f7000a0142fada19,basketball_nba,NBA,2025-03-28 23:40:00+00:00,Toronto Raptors,Charlotte Hornets,False,2025-03-28
+32be98cad72773dcc562c1ea129be575,basketball_nba,NBA,2025-03-29 00:10:00+00:00,New Orleans Pelicans,Golden State Warriors,False,2025-03-29
+1bb7521bcf781ff2a17194a11046f53d,basketball_nba,NBA,2025-03-29 00:10:00+00:00,Milwaukee Bucks,New York Knicks,False,2025-03-29
+c2cc74da28b8c5a6c28a68d87fb5fec8,basketball_nba,NBA,2025-03-29 00:10:00+00:00,Minnesota Timberwolves,Phoenix Suns,False,2025-03-29
+bd7a66fff11fbdcf09b22d2883f78cdb,basketball_nba,NBA,2025-03-29 01:10:00+00:00,Denver Nuggets,Utah Jazz,False,2025-03-29
+c757d5d77953393c8959385b22d5dd8a,basketball_nba,NBA,2025-03-29 21:10:00+00:00,Orlando Magic,Sacramento Kings,False,2025-03-29
+2386a4b74ddc549e0a9a7cd10e6d581d,basketball_nba,NBA,2025-03-29 23:10:00+00:00,Washington Wizards,Brooklyn Nets,False,2025-03-29
+7cfd299fb5c66ed6676e0d37ad009394,basketball_nba,NBA,2025-03-29 23:40:00+00:00,Philadelphia 76ers,Miami Heat,False,2025-03-29
+67bce26a1659a3715a8b8d98d8641fb2,basketball_nba,NBA,2025-03-30 00:10:00+00:00,San Antonio Spurs,Boston Celtics,False,2025-03-30
+a897c5435a273774ac013f2f320a5793,basketball_nba,NBA,2025-03-30 00:10:00+00:00,Chicago Bulls,Dallas Mavericks,False,2025-03-30
+935e35fa9b473947c1d7ed70266985d8,basketball_nba,NBA,2025-03-30 00:10:00+00:00,Oklahoma City Thunder,Indiana Pacers,False,2025-03-30
+0ebd334c88bfe4229526916dbe09b79d,basketball_nba,NBA,2025-03-30 00:10:00+00:00,Memphis Grizzlies,Los Angeles Lakers,False,2025-03-30
+3089f727bed6fa0465c44c7bb8ca6bcd,basketball_nba,NBA,2025-03-30 19:40:00+00:00,Cleveland Cavaliers,Los Angeles Clippers,False,2025-03-30
+59cfad43e3d449b38c1d11157a9afa8c,basketball_nba,NBA,2025-03-30 22:10:00+00:00,New York Knicks,Portland Trail Blazers,False,2025-03-30
+215490bffdceaf0e93fb23adbfcac6a7,basketball_nba,NBA,2025-03-30 23:10:00+00:00,Minnesota Timberwolves,Detroit Pistons,False,2025-03-30
+e8ddad03ee26d356a3d329c650b869fa,basketball_nba,NBA,2025-03-30 23:10:00+00:00,San Antonio Spurs,Golden State Warriors,False,2025-03-30
+c4ba8c96363891704cd952471518ca88,basketball_nba,NBA,2025-03-30 23:10:00+00:00,Milwaukee Bucks,Atlanta Hawks,False,2025-03-30
+de58ad659249abc19e286ab0d189dca5,basketball_nba,NBA,2025-03-30 23:10:00+00:00,New Orleans Pelicans,Charlotte Hornets,False,2025-03-30
+a1e42c49952c0afdea58a60e9427eb11,basketball_nba,NBA,2025-03-30 23:40:00+00:00,Philadelphia 76ers,Toronto Raptors,False,2025-03-30
+16bd71ad044e86536fab0ad403bb9a18,basketball_nba,NBA,2025-03-31 01:10:00+00:00,Phoenix Suns,Houston Rockets,False,2025-03-31
+6f23db7c42091904c445d84939c92adc,basketball_nba,NBA,2025-03-31 23:10:00+00:00,Charlotte Hornets,Utah Jazz,False,2025-03-31
+f797e2e15a2ce196a9aec7d6be426ca5,basketball_nba,NBA,2025-03-31 23:10:00+00:00,Indiana Pacers,Sacramento Kings,False,2025-03-31
+e2f05c94b90d6a13b409742fc7ce4ab3,basketball_nba,NBA,2025-03-31 23:10:00+00:00,Orlando Magic,Los Angeles Clippers,False,2025-03-31
+ba36a90b9027c2417fc43a5c9144543e,basketball_nba,NBA,2025-03-31 23:10:00+00:00,Washington Wizards,Miami Heat,False,2025-03-31
+51ad4d423678ac8fd32042c7394bba2e,basketball_nba,NBA,2025-03-31 23:40:00+00:00,Memphis Grizzlies,Boston Celtics,False,2025-03-31
+8622fc0ee0b3bdbd22a453d5daa9df3e,basketball_nba,NBA,2025-04-01 00:10:00+00:00,Oklahoma City Thunder,Chicago Bulls,False,2025-04-01
+d447b6f346f3e4d48b43404d9ad56154,basketball_nba,NBA,2025-04-01 00:40:00+00:00,Dallas Mavericks,Brooklyn Nets,False,2025-04-01
+c1c0f109bbfdb65645b2a64baa65ed00,basketball_nba,NBA,2025-04-01 02:10:00+00:00,Los Angeles Lakers,Houston Rockets,False,2025-04-01
+cc1649011ef09ea8183149d19d1c1f3a,basketball_nba,NBA,2025-04-01 23:30:00+00:00,Milwaukee Bucks,Phoenix Suns,False,2025-04-01
+57960820666f2fbb865a1d256183b262,basketball_nba,NBA,2025-04-01 23:40:00+00:00,Atlanta Hawks,Portland Trail Blazers,False,2025-04-01
+b22cadd8e7c03b3a3566522dd463dd23,basketball_nba,NBA,2025-04-01 23:40:00+00:00,New York Knicks,Philadelphia 76ers,False,2025-04-01
+093b32242d261aa422ff3d00333d45d6,basketball_nba,NBA,2025-04-02 00:10:00+00:00,Chicago Bulls,Toronto Raptors,False,2025-04-02
+44ed4bc39c312c90964afe67186e4cf5,basketball_nba,NBA,2025-04-02 00:10:00+00:00,Memphis Grizzlies,Golden State Warriors,False,2025-04-02
+ad6da0ea5ec8e04fb0e0aa9c2ebb77c6,basketball_nba,NBA,2025-04-02 00:10:00+00:00,San Antonio Spurs,Orlando Magic,False,2025-04-02
+8d8e1d6db06df40e8d2e54324c71358b,basketball_nba,NBA,2025-04-02 02:10:00+00:00,Denver Nuggets,Minnesota Timberwolves,False,2025-04-02
+547d4357fdfce78a26ce9d5e177e4320,basketball_nba,NBA,2025-04-02 23:10:00+00:00,Washington Wizards,Sacramento Kings,False,2025-04-02
+c4fed13b53857518ceb32eda84d0ef39,basketball_nba,NBA,2025-04-02 23:10:00+00:00,Cleveland Cavaliers,New York Knicks,False,2025-04-02
+4b5af4eca91fd928b0e45616f6b4d326,basketball_nba,NBA,2025-04-02 23:10:00+00:00,Indiana Pacers,Charlotte Hornets,False,2025-04-02
+f32c5ba7796dce04cd132e1291f038d7,basketball_nba,NBA,2025-04-02 23:40:00+00:00,Boston Celtics,Miami Heat,False,2025-04-02
+3cff0630a14feff1f96850e48ecd487b,basketball_nba,NBA,2025-04-03 00:10:00+00:00,Houston Rockets,Utah Jazz,False,2025-04-03
+f91462c98c164bb8765aaee95800b2a4,basketball_nba,NBA,2025-04-03 00:40:00+00:00,Dallas Mavericks,Atlanta Hawks,False,2025-04-03
+b6c8b6493411b1228e3bd7185d1e6663,basketball_nba,NBA,2025-04-03 01:10:00+00:00,Denver Nuggets,San Antonio Spurs,False,2025-04-03
+69f5c5788111d5dccd7204a627d8f17d,basketball_nba,NBA,2025-04-03 01:40:00+00:00,Oklahoma City Thunder,Detroit Pistons,False,2025-04-03
+ee00682f36c5b21cea5e62c309c37940,basketball_nba,NBA,2025-04-03 02:10:00+00:00,Los Angeles Clippers,New Orleans Pelicans,False,2025-04-03
+acb1b21f0ac6a2b6f41802d340ac570b,basketball_nba,NBA,2025-04-03 23:10:00+00:00,Washington Wizards,Orlando Magic,False,2025-04-03
+6578b9d1dbb7c5574f00c3f79ace17ac,basketball_nba,NBA,2025-04-03 23:10:00+00:00,Philadelphia 76ers,Milwaukee Bucks,False,2025-04-03
+205b6d007b33bb7dc06d41516604a83b,basketball_nba,NBA,2025-04-03 23:30:00+00:00,Miami Heat,Memphis Grizzlies,False,2025-04-03
+2c46c53b5ff3b8389016f8be9cb2f277,basketball_nba,NBA,2025-04-03 23:40:00+00:00,Toronto Raptors,Portland Trail Blazers,False,2025-04-03
+3b96dbd28c5168e7441358056a284ad9,basketball_nba,NBA,2025-04-03 23:40:00+00:00,Brooklyn Nets,Minnesota Timberwolves,False,2025-04-03
+a3c9d814105bac05c91de4c446666f24,basketball_nba,NBA,2025-04-04 02:00:00+00:00,Los Angeles Lakers,Golden State Warriors,False,2025-04-04
+241c9167db2603b226d2f7d549748c74,basketball_nba,NBA,2025-04-04 23:10:00+00:00,Charlotte Hornets,Sacramento Kings,False,2025-04-04
+26ad8f15027497553452e57b82e410d5,basketball_nba,NBA,2025-04-04 23:10:00+00:00,Indiana Pacers,Utah Jazz,False,2025-04-04
+b060b84f8eba323821bb353364b52890,basketball_nba,NBA,2025-04-04 23:40:00+00:00,Boston Celtics,Phoenix Suns,False,2025-04-04
+a2031abdece4411dbbc603239f238349,basketball_nba,NBA,2025-04-04 23:40:00+00:00,Toronto Raptors,Detroit Pistons,False,2025-04-04
+d71f231f171bcb7ae016a6a7b5530a87,basketball_nba,NBA,2025-04-05 00:10:00+00:00,San Antonio Spurs,Cleveland Cavaliers,False,2025-04-05
+5f9d99885b406da4ccc79ff59a15139a,basketball_nba,NBA,2025-04-05 00:10:00+00:00,Houston Rockets,Oklahoma City Thunder,False,2025-04-05
+735a6b54729854cea19447e3f9ab4479,basketball_nba,NBA,2025-04-05 00:10:00+00:00,Chicago Bulls,Portland Trail Blazers,False,2025-04-05
+f1b09e8ad2a0b44a3cb893a048655a3b,basketball_nba,NBA,2025-04-05 02:10:00+00:00,Golden State Warriors,Denver Nuggets,False,2025-04-05
+dd7cec46d65fbdcee6b9e8cbb9da17e8,basketball_nba,NBA,2025-04-05 02:40:00+00:00,Los Angeles Lakers,New Orleans Pelicans,False,2025-04-05
+8b3771336f4f2f29a315e91f71496582,basketball_nba,NBA,2025-04-05 02:40:00+00:00,Los Angeles Clippers,Dallas Mavericks,False,2025-04-05
+a3338cdcbd6d0d5acd1a920f15d25391,basketball_nba,NBA,2025-04-05 19:10:00+00:00,Atlanta Hawks,New York Knicks,False,2025-04-05
+4b9d197d2bd268a63deff5f8b7d78683,basketball_nba,NBA,2025-04-05 23:10:00+00:00,Detroit Pistons,Memphis Grizzlies,False,2025-04-05
+001c06cc46987260c99d1af68b8bad0c,basketball_nba,NBA,2025-04-05 23:10:00+00:00,Philadelphia 76ers,Minnesota Timberwolves,False,2025-04-05
+cccae2226cf80a09c84f81293020da04,basketball_nba,NBA,2025-04-06 00:10:00+00:00,Miami Heat,Milwaukee Bucks,False,2025-04-06
+fec416124020c2eabc2dccadefe3ec93,basketball_nba,NBA,2025-04-06 02:40:00+00:00,Los Angeles Clippers,Dallas Mavericks,False,2025-04-06
+da030cf93b827cec27dad6fa16fdba4b,basketball_nba,NBA,2025-04-06 17:10:00+00:00,Charlotte Hornets,Chicago Bulls,False,2025-04-06
+fbedf11bd10d3974c5e59cfbf5be4d75,basketball_nba,NBA,2025-04-06 19:40:00+00:00,Brooklyn Nets,Toronto Raptors,False,2025-04-06
+ba52e4b4cf9bc5b1e764c62579196887,basketball_nba,NBA,2025-04-06 19:40:00+00:00,Oklahoma City Thunder,Los Angeles Lakers,False,2025-04-06
+c5f31c84b42ec3ca5f5a26ccbd408420,basketball_nba,NBA,2025-04-06 22:10:00+00:00,Portland Trail Blazers,San Antonio Spurs,False,2025-04-06
+ef4f52957cad1e367474d3a1493c774b,basketball_nba,NBA,2025-04-06 22:10:00+00:00,Cleveland Cavaliers,Sacramento Kings,False,2025-04-06
+860812e24aec436b9e87056071b17c4c,basketball_nba,NBA,2025-04-06 22:10:00+00:00,Boston Celtics,Washington Wizards,False,2025-04-06
+9606baadc7950c5182357849dbad8d31,basketball_nba,NBA,2025-04-06 22:10:00+00:00,Atlanta Hawks,Utah Jazz,False,2025-04-06
+7930c0f8ba267a364c102cf71fddcbe2,basketball_nba,NBA,2025-04-06 23:10:00+00:00,New York Knicks,Phoenix Suns,False,2025-04-06
+024a6bcda2332ba2bfcc74eb212de61d,basketball_nba,NBA,2025-04-07 00:10:00+00:00,Denver Nuggets,Indiana Pacers,False,2025-04-07
+f0d6c858f8d4fa694fa46f336027c721,basketball_nba,NBA,2025-04-07 00:30:00+00:00,New Orleans Pelicans,Milwaukee Bucks,False,2025-04-07
+39be07cec5bc30ecd00297327976cef1,basketball_nba,NBA,2025-04-07 00:40:00+00:00,Golden State Warriors,Houston Rockets,False,2025-04-07
+62d9403a4b884ead0926ca4c0674e1f1,basketball_nba,NBA,2025-04-07 23:10:00+00:00,Detroit Pistons,Sacramento Kings,False,2025-04-07
+ed94773a6e0ed7b9ad7dfd6431ed80b0,basketball_nba,NBA,2025-04-07 23:40:00+00:00,Miami Heat,Philadelphia 76ers,False,2025-04-07
+17b10d4425b4741b0c5ae86a8dfed112,basketball_nba,NBA,2025-04-08 23:10:00+00:00,Indiana Pacers,Washington Wizards,False,2025-04-08
+2fbf82565fe41441e129845eac84dc8d,basketball_nba,NBA,2025-04-08 23:10:00+00:00,Cleveland Cavaliers,Chicago Bulls,False,2025-04-08
+fad71575fd9759dae5820a1af4d0cc46,basketball_nba,NBA,2025-04-08 23:10:00+00:00,Orlando Magic,Atlanta Hawks,False,2025-04-08
+0a627c5170c3cbe1838d20797c318495,basketball_nba,NBA,2025-04-08 23:10:00+00:00,Charlotte Hornets,Memphis Grizzlies,False,2025-04-08
+cedb10a80312941d8485be96f11aa7de,basketball_nba,NBA,2025-04-08 23:30:00+00:00,New York Knicks,Boston Celtics,False,2025-04-08
+f7f0ae65ca3c3e82bba3fad7b0936e52,basketball_nba,NBA,2025-04-08 23:40:00+00:00,Brooklyn Nets,New Orleans Pelicans,False,2025-04-08
+f2e3ed087aaeb77569f8aa67a866e76d,basketball_nba,NBA,2025-04-09 00:10:00+00:00,Oklahoma City Thunder,Los Angeles Lakers,False,2025-04-09
+8aed4c001b2c7428c6ab5f506e940dd3,basketball_nba,NBA,2025-04-09 00:10:00+00:00,Milwaukee Bucks,Minnesota Timberwolves,False,2025-04-09
+290cbcccd4af9b8fc674499f2a079d31,basketball_nba,NBA,2025-04-09 02:00:00+00:00,Phoenix Suns,Golden State Warriors,False,2025-04-09
+93998895c7bdc051f1e251c230692296,basketball_nba,NBA,2025-04-09 02:40:00+00:00,Los Angeles Clippers,San Antonio Spurs,False,2025-04-09
+9dfae0ca946fecfe33eed88fd6056fd2,basketball_nba,NBA,2025-04-09 23:10:00+00:00,Washington Wizards,Philadelphia 76ers,False,2025-04-09
+0ad952ba90ad3f9319d8ec0c8eede1ac,basketball_nba,NBA,2025-04-09 23:10:00+00:00,Orlando Magic,Boston Celtics,False,2025-04-09
+88ab25bbf01a28d3f999b2c44a9ea52b,basketball_nba,NBA,2025-04-09 23:40:00+00:00,Toronto Raptors,Charlotte Hornets,False,2025-04-09
+2f2d69768c491fa3befbaceb2f4da649,basketball_nba,NBA,2025-04-09 23:40:00+00:00,Dallas Mavericks,Los Angeles Lakers,False,2025-04-09
+c27f91e504c093ff0b43e83bccfb9732,basketball_nba,NBA,2025-04-10 00:10:00+00:00,Chicago Bulls,Miami Heat,False,2025-04-10
+ab9fd4195cdd64ed05f3c2f03d82f570,basketball_nba,NBA,2025-04-10 01:10:00+00:00,Utah Jazz,Portland Trail Blazers,False,2025-04-10
+46fb9a5147ba9f093b79502ffe6c2cf1,basketball_nba,NBA,2025-04-10 02:10:00+00:00,Golden State Warriors,San Antonio Spurs,False,2025-04-10
+ffce12b85dddb0d0a0c240614c2b37ab,basketball_nba,NBA,2025-04-10 02:10:00+00:00,Phoenix Suns,Oklahoma City Thunder,False,2025-04-10
+6dd480253123576fa5f109589d71f5a7,basketball_nba,NBA,2025-04-10 02:10:00+00:00,Sacramento Kings,Denver Nuggets,False,2025-04-10
+903978b1b42e2d4808980f67584b1ec4,basketball_nba,NBA,2025-04-10 02:40:00+00:00,Los Angeles Clippers,Houston Rockets,False,2025-04-10
+7aa9f4f6bb59b6a4453db958e2aa9f31,basketball_nba,NBA,2025-04-10 23:10:00+00:00,Detroit Pistons,New York Knicks,False,2025-04-10
+2d7c114ac266d890852c5a00d0a09c1c,basketball_nba,NBA,2025-04-10 23:10:00+00:00,Indiana Pacers,Cleveland Cavaliers,False,2025-04-10
+c015dac4afa8286578bbfe4271eb4515,basketball_nba,NBA,2025-04-10 23:40:00+00:00,Brooklyn Nets,Atlanta Hawks,False,2025-04-10
+d11984b0f1bb2d351140900d0d64c28e,basketball_nba,NBA,2025-04-11 00:10:00+00:00,Milwaukee Bucks,New Orleans Pelicans,False,2025-04-11
+77d0c83170f202a956ae2cee0db9a53b,basketball_nba,NBA,2025-04-11 01:30:00+00:00,Memphis Grizzlies,Minnesota Timberwolves,False,2025-04-11
+f9a891268b916c9d2abb2749f6924549,basketball_nba,NBA,2025-04-11 23:10:00+00:00,Philadelphia 76ers,Atlanta Hawks,False,2025-04-11
+85661dc8891e70b42eafcd3a014657c9,basketball_nba,NBA,2025-04-11 23:10:00+00:00,Detroit Pistons,Milwaukee Bucks,False,2025-04-11
+fdc86c504dde5873f06ccb73771c8930,basketball_nba,NBA,2025-04-11 23:10:00+00:00,Indiana Pacers,Orlando Magic,False,2025-04-11
+3a515f8d33b78f5c76242d62a61939fc,basketball_nba,NBA,2025-04-11 23:40:00+00:00,Boston Celtics,Charlotte Hornets,False,2025-04-11
+2721fe208e6a174ed5e416652a0534d9,basketball_nba,NBA,2025-04-11 23:40:00+00:00,New York Knicks,Cleveland Cavaliers,False,2025-04-11
+1b44b84738ab10d1e6a134096b5a3e96,basketball_nba,NBA,2025-04-12 00:10:00+00:00,New Orleans Pelicans,Miami Heat,False,2025-04-12
+975c0a7ea2939348c79037e6e045d61d,basketball_nba,NBA,2025-04-12 00:10:00+00:00,Chicago Bulls,Washington Wizards,False,2025-04-12
+e63e1102c71c054d4375f86db51e3cb1,basketball_nba,NBA,2025-04-12 00:40:00+00:00,Dallas Mavericks,Toronto Raptors,False,2025-04-12
+4ff0af3adc5b6374baa460699df0b9ad,basketball_nba,NBA,2025-04-12 01:10:00+00:00,Minnesota Timberwolves,Brooklyn Nets,False,2025-04-12
+7cf495458cd35623ba5e973bfe7127bc,basketball_nba,NBA,2025-04-12 01:10:00+00:00,Denver Nuggets,Memphis Grizzlies,False,2025-04-12
+ba26c324b46d3c4f0c9a649cdf58c448,basketball_nba,NBA,2025-04-12 01:40:00+00:00,Utah Jazz,Oklahoma City Thunder,False,2025-04-12
+f8a8d891449b1dd4554534fa1beb9bb4,basketball_nba,NBA,2025-04-12 02:10:00+00:00,Portland Trail Blazers,Golden State Warriors,False,2025-04-12
+7a84c22909eb8bd4d425b05ea65b2d44,basketball_nba,NBA,2025-04-12 02:10:00+00:00,Sacramento Kings,Los Angeles Clippers,False,2025-04-12
+8f31764433afacce24b22c453ccd28aa,basketball_nba,NBA,2025-04-12 02:10:00+00:00,Phoenix Suns,San Antonio Spurs,False,2025-04-12
+a979e2e5555ce917d702f0859095d33c,basketball_nba,NBA,2025-04-12 02:40:00+00:00,Los Angeles Lakers,Houston Rockets,False,2025-04-12
+7307a6f028c3e4f75afafe709e349ae7,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Milwaukee Bucks,Detroit Pistons,False,2025-04-13
+977c0d3f8c45c574ec11a3bddd663a2a,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Miami Heat,Washington Wizards,False,2025-04-13
+e3e1b13bbb7653ee6d8c6b267e092e2e,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Cleveland Cavaliers,Indiana Pacers,False,2025-04-13
+f060a0ca11a68d67ca71af888e602bf7,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Atlanta Hawks,Orlando Magic,False,2025-04-13
+6fb513ff4683c28451c399a6f5b120f9,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Brooklyn Nets,New York Knicks,False,2025-04-13
+7316bee74ec71500b1fa0efa896b4c50,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Boston Celtics,Charlotte Hornets,False,2025-04-13
+0b974c5823fdb0fde39fb43ca45fdc2e,basketball_nba,NBA,2025-04-13 17:10:00+00:00,Philadelphia 76ers,Chicago Bulls,False,2025-04-13
+2e9da98e76a5b665386f10ebc840883a,basketball_nba,NBA,2025-04-13 19:40:00+00:00,Memphis Grizzlies,Dallas Mavericks,False,2025-04-13
+2e71218fb7a525751e7ee44bf942a7ce,basketball_nba,NBA,2025-04-13 19:40:00+00:00,Houston Rockets,Denver Nuggets,False,2025-04-13
+85d8ce495d552918d4ac47c5116c9c3b,basketball_nba,NBA,2025-04-13 19:40:00+00:00,Golden State Warriors,Los Angeles Clippers,False,2025-04-13
+6d06e2eb78e51da81f25a460ebcb4bf3,basketball_nba,NBA,2025-04-13 19:40:00+00:00,Portland Trail Blazers,Los Angeles Lakers,False,2025-04-13
+44121a9b30b5cefc38487a04410c5cbc,basketball_nba,NBA,2025-04-13 19:40:00+00:00,Minnesota Timberwolves,Utah Jazz,False,2025-04-13
+0c04e505aa3ba1d8b30b1d934911ce31,basketball_nba,NBA,2025-04-13 19:40:00+00:00,New Orleans Pelicans,Oklahoma City Thunder,False,2025-04-13
+e80b26b3aa9459acfde5b7beb9839d03,basketball_nba,NBA,2025-04-13 19:40:00+00:00,Sacramento Kings,Phoenix Suns,False,2025-04-13
+7442c2aac086fa9fa50493a73d5803bd,basketball_nba,NBA,2025-04-13 19:40:00+00:00,San Antonio Spurs,Toronto Raptors,False,2025-04-13
+12b46f184c1fdead46e57fbcea9406ad,basketball_nba,NBA,2025-04-15 23:40:00+00:00,Orlando Magic,Atlanta Hawks,False,2025-04-15
+8b5bcf5d08d87972e11a5d1a36d46367,basketball_nba,NBA,2025-04-16 02:10:00+00:00,Golden State Warriors,Memphis Grizzlies,False,2025-04-16
+bd807e6a63c25eaf7a43a16336214448,basketball_nba,NBA,2025-04-16 23:30:00+00:00,Chicago Bulls,Miami Heat,False,2025-04-16
+a22635f3bf66e2b73ef464e660fa3f41,basketball_nba,NBA,2025-04-17 02:00:00+00:00,Sacramento Kings,Dallas Mavericks,False,2025-04-17
+12dc44254241ed056efce1e548888c26,basketball_nba,NBA,2025-04-18 23:00:00+00:00,Atlanta Hawks,Miami Heat,False,2025-04-18
+788fb38defa5d0362ec330415a902b54,basketball_nba,NBA,2025-04-19 01:30:00+00:00,Memphis Grizzlies,Dallas Mavericks,False,2025-04-19
+dd4fe49dffbd03c82bc2ab06ea1caaac,basketball_nba,NBA,2025-04-19 17:00:00+00:00,Indiana Pacers,Milwaukee Bucks,False,2025-04-19
+9af0bd13c98119058a3c2f75cbf455bb,basketball_nba,NBA,2025-04-19 19:30:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2025-04-19
+c4de550e514303c8312d6220eb4e7b81,basketball_nba,NBA,2025-04-19 22:00:00+00:00,New York Knicks,Detroit Pistons,False,2025-04-19
+2f0b3222f0e1cd291139398fbbadafff,basketball_nba,NBA,2025-04-19 23:00:00+00:00,Houston Rockets,Golden State Warriors,False,2025-04-19
+c019c951794fe3ac022feda8e4c52310,basketball_nba,NBA,2025-04-20 00:30:00+00:00,Los Angeles Lakers,Minnesota Timberwolves,False,2025-04-20
+884a1d2984a58125b5d143dca0ace0f2,basketball_nba,NBA,2025-04-20 17:10:00+00:00,Oklahoma City Thunder,Memphis Grizzlies,False,2025-04-20
+0bc467cf6cb245debf4950400bc8512e,basketball_nba,NBA,2025-04-20 19:30:00+00:00,Boston Celtics,Orlando Magic,False,2025-04-20
+10d6902a9faa1843f88a61c425f51660,basketball_nba,NBA,2025-04-20 23:10:00+00:00,Cleveland Cavaliers,Miami Heat,False,2025-04-20
+57ca84685194cc0890033c8b36e66fc5,basketball_nba,NBA,2025-04-21 01:30:00+00:00,Houston Rockets,Golden State Warriors,False,2025-04-21
+15bca8e5b08f7b8602a8e3967667c740,basketball_nba,NBA,2025-04-21 23:30:00+00:00,New York Knicks,Detroit Pistons,False,2025-04-21
+1814ec22a3248bb5467aa1a2bee18f98,basketball_nba,NBA,2025-04-22 02:00:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2025-04-22
+bd3c0c5aac8b6ce41690e86011740d3b,basketball_nba,NBA,2025-04-22 23:10:00+00:00,Indiana Pacers,Milwaukee Bucks,False,2025-04-22
+84fcb7d4f3ea128bf6e2ac2247fa236b,basketball_nba,NBA,2025-04-22 23:30:00+00:00,Oklahoma City Thunder,Memphis Grizzlies,False,2025-04-22
+5cd2c4c92f51a4c9b79e8f1e7b6fe4ab,basketball_nba,NBA,2025-04-23 02:00:00+00:00,Los Angeles Lakers,Minnesota Timberwolves,False,2025-04-23
+7a618b29a0b9af8b895940149badce7b,basketball_nba,NBA,2025-04-23 23:00:00+00:00,Boston Celtics,Orlando Magic,False,2025-04-23
+14a3b88a3d45b7afa6622d6f960e0b09,basketball_nba,NBA,2025-04-23 23:40:00+00:00,Cleveland Cavaliers,Miami Heat,False,2025-04-23
+280a8379b89f8ad370276332b30328d6,basketball_nba,NBA,2025-04-24 01:30:00+00:00,Houston Rockets,Golden State Warriors,False,2025-04-24
+3bc5054ad4bc0f2c50cd87a3fcb8cd45,basketball_nba,NBA,2025-04-24 23:05:00+00:00,Detroit Pistons,New York Knicks,False,2025-04-24
+f39fff52133794a10c16ba61d2c0eeda,basketball_nba,NBA,2025-04-25 01:35:00+00:00,Memphis Grizzlies,Oklahoma City Thunder,False,2025-04-25
+19aca5a6e1fa8b1aa68505d3f1d75b37,basketball_nba,NBA,2025-04-25 02:05:00+00:00,Los Angeles Clippers,Denver Nuggets,False,2025-04-25
+5a935d4f284b3fcf84515f522e9079f9,basketball_nba,NBA,2025-04-25 23:05:00+00:00,Orlando Magic,Boston Celtics,False,2025-04-25
+8af134619ff871a0b76992d76de7e224,basketball_nba,NBA,2025-04-26 00:05:00+00:00,Milwaukee Bucks,Indiana Pacers,False,2025-04-26
+cce8a5bd08230e0c507ec925508889bc,basketball_nba,NBA,2025-04-26 01:30:00+00:00,Minnesota Timberwolves,Los Angeles Lakers,False,2025-04-26
+5ed30106dccf7db288641b620e248242,basketball_nba,NBA,2025-04-26 17:05:00+00:00,Miami Heat,Cleveland Cavaliers,False,2025-04-26
+c1f70941e477df98e94d9c55421d7b71,basketball_nba,NBA,2025-04-26 19:35:00+00:00,Memphis Grizzlies,Oklahoma City Thunder,False,2025-04-26
+b6d5576873db12b6da0e7f6062b3e71d,basketball_nba,NBA,2025-04-26 22:05:00+00:00,Los Angeles Clippers,Denver Nuggets,False,2025-04-26
+64727ecb83898fd5fa4ba086945dd594,basketball_nba,NBA,2025-04-27 00:30:00+00:00,Golden State Warriors,Houston Rockets,False,2025-04-27
+97c436574586a603abfb5d3d649633a6,basketball_nba,NBA,2025-04-27 17:05:00+00:00,Detroit Pistons,New York Knicks,False,2025-04-27
+700aede8724030d06159df96613b775d,basketball_nba,NBA,2025-04-27 19:35:00+00:00,Minnesota Timberwolves,Los Angeles Lakers,False,2025-04-27
+d3aa100c8b388c2759a377cbd2f4640f,basketball_nba,NBA,2025-04-27 23:05:00+00:00,Orlando Magic,Boston Celtics,False,2025-04-27
+d1b9fe3922bd203db8c1d44358c1fb30,basketball_nba,NBA,2025-04-28 01:35:00+00:00,Milwaukee Bucks,Indiana Pacers,False,2025-04-28
+32d285715ef87d49b04641e1d07538fd,basketball_nba,NBA,2025-04-28 23:35:00+00:00,Miami Heat,Cleveland Cavaliers,False,2025-04-28
+a8e5f48bdd920b6bcabd4414b6260f9e,basketball_nba,NBA,2025-04-29 02:00:00+00:00,Golden State Warriors,Houston Rockets,False,2025-04-29
+77d182acedfaf699262ad3044c42006f,basketball_nba,NBA,2025-04-29 22:05:00+00:00,Indiana Pacers,Milwaukee Bucks,False,2025-04-29
+ba7255619a1f97a9977062123b5bccb3,basketball_nba,NBA,2025-04-29 23:35:00+00:00,New York Knicks,Detroit Pistons,False,2025-04-29
+cb6833ff56f57c6976ff613b5956fc2e,basketball_nba,NBA,2025-04-30 00:35:00+00:00,Boston Celtics,Orlando Magic,False,2025-04-30
+c9b1aeff36a750b0da0cd84d27f3f07e,basketball_nba,NBA,2025-04-30 02:05:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2025-04-30
+2e21146d8cd6ca6c712c950397066e76,basketball_nba,NBA,2025-04-30 23:35:00+00:00,Houston Rockets,Golden State Warriors,False,2025-04-30
+9f7417ad5e20b22efc8e94fa32cc144f,basketball_nba,NBA,2025-05-01 02:05:00+00:00,Los Angeles Lakers,Minnesota Timberwolves,False,2025-05-01
+fe05d03a1aeffcd6e3caf63513080fbd,basketball_nba,NBA,2025-05-01 23:35:00+00:00,Detroit Pistons,New York Knicks,False,2025-05-01
+540e1ce6de3ffba9b4d0feacd11eb735,basketball_nba,NBA,2025-05-02 02:05:00+00:00,Los Angeles Clippers,Denver Nuggets,False,2025-05-02
+de0b04366a130a0ece7c2e89e616196e,basketball_nba,NBA,2025-05-03 01:05:00+00:00,Golden State Warriors,Houston Rockets,False,2025-05-03
+182d1841e9110168d87f11e17dad1ac4,basketball_nba,NBA,2025-05-03 23:35:00+00:00,Denver Nuggets,Los Angeles Clippers,False,2025-05-03
+9f19850ed54df371086eac90d3e8064d,basketball_nba,NBA,2025-05-04 22:05:00+00:00,Cleveland Cavaliers,Indiana Pacers,False,2025-05-04
+b407c42ae4db1592a3e921df4844262e,basketball_nba,NBA,2025-05-05 00:35:00+00:00,Houston Rockets,Golden State Warriors,False,2025-05-05
+32d9bbae3043bcc064c52a3b98167a9a,basketball_nba,NBA,2025-05-05 23:00:00+00:00,Cleveland Cavaliers,Indiana Pacers,False,2025-05-05
+df2b12f9f194f39c1118cf888d54f5bf,basketball_nba,NBA,2025-05-05 23:05:00+00:00,Boston Celtics,New York Knicks,False,2025-05-05
+f6612a85d6a6fc48e5bca4120ce124e5,basketball_nba,NBA,2025-05-06 01:35:00+00:00,Oklahoma City Thunder,Denver Nuggets,False,2025-05-06
+c9332faaae1e65f4235ea5cacfe1cdc1,basketball_nba,NBA,2025-05-06 23:05:00+00:00,Cleveland Cavaliers,Indiana Pacers,False,2025-05-06
+6c21d822a58fb471d674113df3b8af57,basketball_nba,NBA,2025-05-07 01:35:00+00:00,Minnesota Timberwolves,Golden State Warriors,False,2025-05-07
+5c25f7e8df3df0a81bbc8e82c06b3275,basketball_nba,NBA,2025-05-07 23:05:00+00:00,Boston Celtics,New York Knicks,False,2025-05-07
+06f119cfcc8308a429374d041e864b8a,basketball_nba,NBA,2025-05-08 01:30:00+00:00,Oklahoma City Thunder,Denver Nuggets,False,2025-05-08
+22e737f4ba0084666d3393962b06c3b1,basketball_nba,NBA,2025-05-09 00:30:00+00:00,Minnesota Timberwolves,Golden State Warriors,False,2025-05-09
+34e829d65b6a0cbb49573338a86772ec,basketball_nba,NBA,2025-05-09 23:35:00+00:00,Indiana Pacers,Cleveland Cavaliers,False,2025-05-09
+57675a019ab81bbf046093942697c7e1,basketball_nba,NBA,2025-05-10 02:05:00+00:00,Denver Nuggets,Oklahoma City Thunder,False,2025-05-10
+87073ecdaedc9200c7468b70625a7ea8,basketball_nba,NBA,2025-05-10 19:30:00+00:00,New York Knicks,Boston Celtics,False,2025-05-10
+a72d8efa957a31155a3d4aa1dd2a6b13,basketball_nba,NBA,2025-05-11 00:35:00+00:00,Golden State Warriors,Minnesota Timberwolves,False,2025-05-11
+5e3b869b9c20aeb27c069111f69bb825,basketball_nba,NBA,2025-05-11 19:35:00+00:00,Denver Nuggets,Oklahoma City Thunder,False,2025-05-11
+3aeb77299e031d5b0b35e26048a29c48,basketball_nba,NBA,2025-05-12 00:00:00+00:00,Indiana Pacers,Cleveland Cavaliers,False,2025-05-12
+16cb0525e908d238a3407ade6a978c6b,basketball_nba,NBA,2025-05-12 23:35:00+00:00,New York Knicks,Boston Celtics,False,2025-05-12
+20752d4ddb00e71eb57379806aa7693f,basketball_nba,NBA,2025-05-13 02:05:00+00:00,Golden State Warriors,Minnesota Timberwolves,False,2025-05-13
+c584e30b1f28d1442b0e65d2b74440d9,basketball_nba,NBA,2025-05-13 23:00:00+00:00,Cleveland Cavaliers,Indiana Pacers,False,2025-05-13
+e2702a54a8a4edb4d21c090b7d79902e,basketball_nba,NBA,2025-05-14 01:35:00+00:00,Oklahoma City Thunder,Denver Nuggets,False,2025-05-14
+9257238b369a40521569c6cc2b147d7f,basketball_nba,NBA,2025-05-14 23:05:00+00:00,Boston Celtics,New York Knicks,False,2025-05-14
+551a4b401ac8558669eaa7a0a801718b,basketball_nba,NBA,2025-05-15 01:35:00+00:00,Minnesota Timberwolves,Golden State Warriors,False,2025-05-15
+ffb40afc9c271f7ef381067c257da2a0,basketball_nba,NBA,2025-05-16 00:40:00+00:00,Denver Nuggets,Oklahoma City Thunder,False,2025-05-16
+1689cf573c6a092366dd268fec29fa17,basketball_nba,NBA,2025-05-17 00:05:00+00:00,New York Knicks,Boston Celtics,False,2025-05-17
+f6e46359690cf5f8453710918da5ef07,basketball_nba,NBA,2025-05-18 19:40:00+00:00,Oklahoma City Thunder,Denver Nuggets,False,2025-05-18
+93dfb7992d1dacd6870906bffb91afc2,basketball_nba,NBA,2025-05-21 00:40:00+00:00,Oklahoma City Thunder,Minnesota Timberwolves,False,2025-05-21
+d8df18d13a93eeaa5c8242289a517c4b,basketball_nba,NBA,2025-05-22 00:05:00+00:00,New York Knicks,Indiana Pacers,False,2025-05-22
+2066c605a729491bce972c57e275108e,basketball_nba,NBA,2025-05-23 00:40:00+00:00,Oklahoma City Thunder,Minnesota Timberwolves,False,2025-05-23
+080d0b9da8881cde793f5251b94c2e2b,basketball_nba,NBA,2025-05-24 00:05:00+00:00,New York Knicks,Indiana Pacers,False,2025-05-24
+d31ca7c144ed365b47413870ec4c311a,basketball_nba,NBA,2025-05-25 00:30:00+00:00,Minnesota Timberwolves,Oklahoma City Thunder,False,2025-05-25
+55cfba1e2fab74c5fc7d57c977e0e3b8,basketball_nba,NBA,2025-05-26 00:05:00+00:00,Indiana Pacers,New York Knicks,False,2025-05-26
+ce8ef98fd6abf0a382429cb13cda8b69,basketball_nba,NBA,2025-05-27 00:30:00+00:00,Minnesota Timberwolves,Oklahoma City Thunder,False,2025-05-27
+489ebe4bfe555790c22904d280a12dfc,basketball_nba,NBA,2025-05-28 00:00:00+00:00,Indiana Pacers,New York Knicks,False,2025-05-28
+20868fae97d3419b114035f8e41f3b9a,basketball_nba,NBA,2025-05-29 00:40:00+00:00,Oklahoma City Thunder,Minnesota Timberwolves,False,2025-05-29
+e2c462af53b3a3c606c5696830a173eb,basketball_nba,NBA,2025-05-30 00:05:00+00:00,New York Knicks,Indiana Pacers,False,2025-05-30
+14cf463e0e627a3b36b65ec923f253ea,basketball_nba,NBA,2025-06-01 00:00:00+00:00,Indiana Pacers,New York Knicks,False,2025-06-01
+c551e57315cc318feea2aea6a316457b,basketball_nba,NBA,2025-06-06 00:30:00+00:00,Oklahoma City Thunder,Indiana Pacers,False,2025-06-06
+46824344ea7ec8ac8ae11661eb812d50,basketball_nba,NBA,2025-06-09 00:00:00+00:00,Oklahoma City Thunder,Indiana Pacers,False,2025-06-09
+fbb23bfdbb36b9582628067a17266910,basketball_nba,NBA,2025-06-12 00:35:00+00:00,Indiana Pacers,Oklahoma City Thunder,False,2025-06-12
+b3341893e40e1357ab9fcd9c362d7401,basketball_nba,NBA,2025-06-14 00:30:00+00:00,Indiana Pacers,Oklahoma City Thunder,False,2025-06-14
+aa4b036621875e4870ae8bdbca0dfc50,basketball_nba,NBA,2025-06-17 00:35:00+00:00,Oklahoma City Thunder,Indiana Pacers,False,2025-06-17
+97df12d0f134e8f46273fdd584d361c6,basketball_nba,NBA,2025-06-20 00:35:00+00:00,Indiana Pacers,Oklahoma City Thunder,False,2025-06-20
+23f0d7b9d3eacb4b0693e473d178d46b,basketball_nba,NBA,2025-06-23 00:00:00+00:00,Oklahoma City Thunder,Indiana Pacers,False,2025-06-23

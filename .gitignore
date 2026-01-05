@@ -42,8 +42,9 @@ secrets/*
 # Data directories
 data/raw/
 data/processed/
-data/historical/the_odds/
-data/historical/exports/
+# Historical data is COMMITTED and PROTECTED - do not ignore
+# data/historical/the_odds/  # REMOVED - historical data must be preserved
+# data/historical/exports/   # REMOVED - historical data must be preserved
 !data/processed/.gitkeep
 !data/raw/.gitkeep
 !data/historical/.gitkeep

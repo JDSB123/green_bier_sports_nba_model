@@ -1,0 +1,71 @@
+{
+  "timestamp": "2023-02-24T11:55:39Z",
+  "previous_timestamp": "2023-02-24T11:50:38Z",
+  "next_timestamp": "2023-02-24T12:00:39Z",
+  "data": [
+    {
+      "id": "5ee5b9337bfbe734d0d621fdfd16c263",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "4d6129cb9e2e7efd96c78fe15ad6920d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T00:30:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "5448135c5cf5f47bd71cba69cad45839",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T00:40:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "c546979cbe17a1666b535c14d7347ade",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T01:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "c24b19910fb17d181a580e842542b0ed",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T01:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "bb6835d3784e8ffbff31b2b948e42305",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "edb10ed2c38a36ce6485601a5fad9166",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T03:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "39cc03ed02b9dc65546686427a28fe09",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-02-25T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Sacramento Kings"
+    }
+  ]
+}

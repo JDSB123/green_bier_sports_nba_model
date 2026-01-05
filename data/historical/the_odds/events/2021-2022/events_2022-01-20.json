@@ -1,0 +1,31 @@
+{
+  "timestamp": "2022-01-20T11:55:00Z",
+  "previous_timestamp": "2022-01-20T11:45:00Z",
+  "next_timestamp": "2022-01-20T12:05:00Z",
+  "data": [
+    {
+      "id": "d006be203437857ae5d14560f5b01e14",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-21T00:30:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "cafa1431b688064e198dc09ea8ea11aa",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-21T00:35:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "New Orleans Pelicans"
+    },
+    {
+      "id": "9a7cc500ef069685dd97c83fb3f1ac5e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-21T03:00:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Indiana Pacers"
+    }
+  ]
+}

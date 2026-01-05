@@ -1,0 +1,15 @@
+{
+  "timestamp": "2023-05-29T11:55:39Z",
+  "previous_timestamp": "2023-05-29T11:50:39Z",
+  "next_timestamp": "2023-05-29T12:00:38Z",
+  "data": [
+    {
+      "id": "df65d43286f345b284c706cffd7ba17e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-30T00:30:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Miami Heat"
+    }
+  ]
+}

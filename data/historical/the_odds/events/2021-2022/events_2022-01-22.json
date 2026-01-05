@@ -1,0 +1,31 @@
+{
+  "timestamp": "2022-01-22T11:55:00Z",
+  "previous_timestamp": "2022-01-22T11:45:00Z",
+  "next_timestamp": "2022-01-22T12:05:00Z",
+  "data": [
+    {
+      "id": "9bf4c3482e9b711dda167b120eddc439",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-23T00:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Sacramento Kings"
+    },
+    {
+      "id": "98b12353fc7c38a78bf5c3afea59e4fd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-23T01:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "6b8a7e830854c766076da4809a455f87",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-23T02:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Indiana Pacers"
+    }
+  ]
+}

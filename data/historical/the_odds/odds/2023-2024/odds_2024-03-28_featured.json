@@ -1,0 +1,1444 @@
+{
+  "timestamp": "2024-03-28T11:55:40Z",
+  "previous_timestamp": "2024-03-28T11:50:39Z",
+  "next_timestamp": "2024-03-28T12:00:39Z",
+  "data": [
+    {
+      "id": "10c80191d15083974a1bd1bdb73afe97",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-28T23:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Boston Celtics",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 950
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1650
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-03-28T11:54:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 1000
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1698
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-03-28T11:54:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 875
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -2000
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-03-28T11:54:14Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 980
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1800
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 950
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1786
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -106,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -102,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-03-28T11:54:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 950
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1800
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 1050
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -2000
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -113,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 1050
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -2000
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -108,
+                  "point": 17.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -113,
+                  "point": -17.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-03-28T11:51:52Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 950
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1700
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 1050
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -2500
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2024-03-28T11:54:14Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 1250
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -2500
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 800
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -1600
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": 17.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -17.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 17.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -17.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8ac20ed02f951167bdc199360ad7a305",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-29T00:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Milwaukee Bucks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -106,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -106,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-03-28T11:54:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-03-28T11:54:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-03-28T11:54:12Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -125
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 105
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -1.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:12Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-03-28T11:54:14Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-03-28T11:51:52Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:51:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "superbook",
+          "title": "SuperBook",
+          "last_update": "2024-03-28T11:54:15Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:15Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:15Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:15Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -135
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -105,
+                  "point": -2.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -115,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 224.5
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 224.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -125
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 107
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -114,
+                  "point": -1.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -107,
+                  "point": 1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-03-28T11:54:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -125
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 107
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -107,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -114,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 223.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 223.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2024-03-28T11:54:14Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -130
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": 112
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-03-28T11:54:14Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

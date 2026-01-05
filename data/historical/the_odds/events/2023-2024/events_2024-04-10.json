@@ -1,0 +1,71 @@
+{
+  "timestamp": "2024-04-10T11:55:39Z",
+  "previous_timestamp": "2024-04-10T11:50:39Z",
+  "next_timestamp": "2024-04-10T12:00:39Z",
+  "data": [
+    {
+      "id": "eef78bee2f630d615486f953ca851264",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-10T23:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "3bdb24f1cef3bfe0cbbebd42c723dade",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-10T23:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "56c600606969850bed474189ec9fb86e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-10T23:40:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "812108414079da95bac7102479a69df1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-10T23:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "a00f81ba5c58d9646d7cfc95a3ce3904",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-11T00:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "304b81b74762027a3798c88910179e11",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-11T00:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "7f12f126cd8d2b554b709ade5d43c5cd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-11T02:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "34506e7cab6e157af8028b83278af200",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-11T02:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

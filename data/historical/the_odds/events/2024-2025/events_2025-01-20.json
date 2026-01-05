@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-01-20T11:55:38Z",
+  "previous_timestamp": "2025-01-20T11:50:38Z",
+  "next_timestamp": "2025-01-20T12:00:38Z",
+  "data": [
+    {
+      "id": "018bca38c1fc33355f7dfc20ad69b2ee",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T17:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "648497f8f49bde0d229d66eb1e3c27d3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T19:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "499a4015cf50b478efb61409fa0786d5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T19:40:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "b736883206d52bd2d7f89ed1d3c89f62",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T20:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "78c8db06b7974d20983f9b3c9bc1b678",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T20:40:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "173d7d5f2bf8881f4bc4a2179fdf895f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-20T22:00:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "20515d2b43e180979c39074d4f7bcb3f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-21T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "570c8e2909c0bc3a600aff932287d50f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-21T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Chicago Bulls"
+    }
+  ]
+}

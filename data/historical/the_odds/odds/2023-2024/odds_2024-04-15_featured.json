@@ -1,0 +1,4543 @@
+{
+  "timestamp": "2024-04-15T11:55:38Z",
+  "previous_timestamp": "2024-04-15T11:50:38Z",
+  "next_timestamp": "2024-04-15T12:00:38Z",
+  "data": [
+    {
+      "id": "298f43b988d512301f1283f58465be55",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-16T23:40:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Los Angeles Lakers",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115,
+                  "point": 1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -106
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -108,
+                  "point": -1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -112,
+                  "point": 1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115,
+                  "point": 1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -103
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": -1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -103
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": -1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -107
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -113
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -106,
+                  "point": 1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -106,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -107
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -113
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": -1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": 1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -105
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -114
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -111
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 1.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -105
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115,
+                  "point": 1.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c0b61bf137d5bf5aafe6ade79b6800a1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-17T02:00:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Golden State Warriors",
+      "bookmakers": [
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -134
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 114
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -109,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -112,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -134
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 114
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -109,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -112,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -145
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 122
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -115,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -105,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -138
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 118
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -112,
+                  "point": -2.0
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -108,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -140
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -145
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -106,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -106,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -145
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -139
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 109
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -142
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -112,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -108,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -145
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f13eb486120d8466fc3d004f69280112",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-17T23:10:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Miami Heat",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 160
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -192
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 164
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -196
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -106,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -114,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 165
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 175
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 207.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 207.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 175
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -106,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -106,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -102,
+                  "point": 207.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 207.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 150
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -192
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 170
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -105,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -115,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 175
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 150
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -180
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 4.0
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -112,
+                  "point": -4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 208.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 208.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 150
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -180
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -109,
+                  "point": 4.0
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -112,
+                  "point": -4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 208.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 208.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": 165
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 4.5
+                },
+                {
+                  "name": "Philadelphia 76ers",
+                  "price": -110,
+                  "point": -4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c87df77d60f9110b769f8e3f4fcc83c6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-18T01:40:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Atlanta Hawks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 124
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -148
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 124
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -146
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 130
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -155
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 135
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -115,
+                  "point": 3.5
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -105,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 219.0
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 219.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 128
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -152
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -109,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -112,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 219.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 219.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 128
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -152
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -109,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -112,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 219.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 219.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 120
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -154
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 130
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 132
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -152
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -115,
+                  "point": 3.5
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -105,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 132
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -152
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -111,
+                  "point": 3.5
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -101,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 218.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 218.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 125
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -155
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -115,
+                  "point": 3.5
+                },
+                {
+                  "name": "Chicago Bulls",
+                  "price": -105,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 218.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 218.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0fd3e3ee6cadcae1adf05b0b3fcd1692",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-20T18:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Orlando Magic",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -180
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 150
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -190
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 208.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 208.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -200
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 208.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 208.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -175
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 150
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -195
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -108,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -113,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -195
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -108,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -113,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -185
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 150
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -190
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 158
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -115,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -105,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -111,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -101,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 207.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 207.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "58fe88d816c30e8186084fd60e8bc1fe",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-20T21:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Phoenix Suns",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -120
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -1.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -124
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 106
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -108,
+                  "point": -2.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -112,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -130
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -130
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -130
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.0
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -130
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -120
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 100
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -1.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -130
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": 105
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": -2.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -115,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -106,
+                  "point": -2.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -106,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -2.5
+                },
+                {
+                  "name": "Phoenix Suns",
+                  "price": -110,
+                  "point": 2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f7f057cf81218f5e8225e433a330401c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-20T23:00:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Dallas Mavericks",
+      "bookmakers": [
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 106
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -113,
+                  "point": 2.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 226.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 226.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 106
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -113,
+                  "point": 2.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 226.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 226.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 105
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -130
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6346671cfa4bbd07005770e13f5888ae",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-20T23:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Indiana Pacers",
+      "bookmakers": [
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2024-04-15T11:55:04Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 140
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -167
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 4.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -108,
+                  "point": -4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 238.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2024-04-15T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 140
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -167
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 4.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -108,
+                  "point": -4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 238.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7611315f3f28327571d9f58212774a99",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-21T18:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Indiana Pacers",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 136
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -162
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -108,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -112,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 135
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 130
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -155
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -106,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -106,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 237.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 126
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -148
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 238.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 238.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 130
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 4.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2024-04-15T11:53:16Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 135
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 3.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:16Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 237.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 237.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7aa3ab404262a55d4c5473372324c52a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-21T21:10:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Dallas Mavericks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 110
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -130
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 2.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2024-04-15T11:53:38Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:53:38Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2024-04-15T11:54:33Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 110
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -130
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 2.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:33Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2024-04-15T11:52:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 110
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -130
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:52:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2024-04-15T11:54:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2024-04-15T11:55:18Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -106,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -106,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:55:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2024-04-15T11:54:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": 110
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -130
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": 2.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2024-04-15T11:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

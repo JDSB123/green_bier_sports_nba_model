@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-05-12T11:55:38Z",
+  "previous_timestamp": "2025-05-12T11:50:38Z",
+  "next_timestamp": "2025-05-12T12:00:37Z",
+  "data": [
+    {
+      "id": "16cb0525e908d238a3407ade6a978c6b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-05-12T23:35:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "20752d4ddb00e71eb57379806aa7693f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-05-13T02:05:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "c584e30b1f28d1442b0e65d2b74440d9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-05-13T23:00:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "e2702a54a8a4edb4d21c090b7d79902e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-05-14T01:35:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Denver Nuggets"
+    }
+  ]
+}

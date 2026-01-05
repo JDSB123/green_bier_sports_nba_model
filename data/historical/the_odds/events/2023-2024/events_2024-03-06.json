@@ -1,0 +1,71 @@
+{
+  "timestamp": "2024-03-06T11:55:39Z",
+  "previous_timestamp": "2024-03-06T11:50:38Z",
+  "next_timestamp": "2024-03-06T12:00:39Z",
+  "data": [
+    {
+      "id": "fdd137330111c44ff0e65e014723480d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "c3dee32711c68f93c75549836115f334",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T00:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "827bed6b078ff6ffad3e5cb5ff75c01e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T00:40:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "939bc5ec699ebad1d13a780e8a339e7d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T00:40:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "78b5b9c45d27d06e0be2ab258b2ec102",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T02:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "ad573989eea644c71f5ba1585e8317d4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T03:00:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "7f43dbe5080b44ae90836bbcbc659677",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "589eed81cc5543b6147d9b6b1c973c08",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-07T03:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Sacramento Kings"
+    }
+  ]
+}

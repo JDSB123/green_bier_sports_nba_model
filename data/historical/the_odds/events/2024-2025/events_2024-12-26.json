@@ -1,0 +1,79 @@
+{
+  "timestamp": "2024-12-26T11:55:38Z",
+  "previous_timestamp": "2024-12-26T11:50:38Z",
+  "next_timestamp": "2024-12-26T12:00:38Z",
+  "data": [
+    {
+      "id": "4bfd5b23c0d4cad658d4a20ea0f06955",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T00:00:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "e39267d11691e68e77ef431e52fdb11e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T00:00:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "e21b40ce22364256e88f6c0ad7193033",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "af06375b9911e15a6f5d2b3de8705daf",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T00:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "f90f5c23b0fa7053a26e7a0568c8fa39",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T01:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "db1120a8a9bf3cb147989817bc5bdaad",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "cbe24b9f6a6dd3e656d4dd1eb7850341",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "6d8fe26d7672819d7668680ebe499cc1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "419d8d371201cc9b15e2784811c98d1c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-12-27T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Utah Jazz"
+    }
+  ]
+}

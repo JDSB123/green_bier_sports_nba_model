@@ -1,0 +1,39 @@
+{
+  "timestamp": "2023-01-17T11:55:38Z",
+  "previous_timestamp": "2023-01-17T11:50:38Z",
+  "next_timestamp": "2023-01-17T12:00:39Z",
+  "data": [
+    {
+      "id": "79b4b0c19612b9e2d9164bcdd8146492",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-18T00:30:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "9dcd9b0310405ef8ca23813693f7f85e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-18T01:10:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "c5d8685f7a03f1a1290e2e6c673886bd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-18T02:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "cbead29c507c07f22b59155438be3698",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-18T03:00:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Philadelphia 76ers"
+    }
+  ]
+}

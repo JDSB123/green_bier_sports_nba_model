@@ -1,0 +1,23 @@
+{
+  "timestamp": "2023-05-18T11:55:40Z",
+  "previous_timestamp": "2023-05-18T11:50:40Z",
+  "next_timestamp": "2023-05-18T12:00:40Z",
+  "data": [
+    {
+      "id": "d154a9750193e03818b451d4570d5cd9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-19T00:30:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "a57c57a5c1d6581cf5b9fff6737827ce",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-05-20T00:30:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Miami Heat"
+    }
+  ]
+}

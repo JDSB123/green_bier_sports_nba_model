@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-03-30T11:55:38Z",
+  "previous_timestamp": "2025-03-30T11:50:38Z",
+  "next_timestamp": "2025-03-30T12:00:38Z",
+  "data": [
+    {
+      "id": "3089f727bed6fa0465c44c7bb8ca6bcd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T19:40:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "59cfad43e3d449b38c1d11157a9afa8c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T22:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "c4ba8c96363891704cd952471518ca88",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T23:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "de58ad659249abc19e286ab0d189dca5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T23:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "215490bffdceaf0e93fb23adbfcac6a7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T23:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "e8ddad03ee26d356a3d329c650b869fa",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T23:10:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "a1e42c49952c0afdea58a60e9427eb11",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-30T23:40:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "16bd71ad044e86536fab0ad403bb9a18",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-31T01:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Houston Rockets"
+    }
+  ]
+}

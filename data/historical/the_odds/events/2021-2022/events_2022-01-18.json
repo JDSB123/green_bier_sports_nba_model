@@ -1,0 +1,23 @@
+{
+  "timestamp": "2022-01-18T11:55:00Z",
+  "previous_timestamp": "2022-01-18T11:45:00Z",
+  "next_timestamp": "2022-01-18T12:05:00Z",
+  "data": [
+    {
+      "id": "bfe74710daa250b004b7bec293cda844",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-19T00:40:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "3697132d8bb0dd023ec08521bf99dbdd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-19T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Detroit Pistons"
+    }
+  ]
+}

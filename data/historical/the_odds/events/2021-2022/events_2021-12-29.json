@@ -1,0 +1,79 @@
+{
+  "timestamp": "2021-12-29T11:55:00Z",
+  "previous_timestamp": "2021-12-29T11:45:00Z",
+  "next_timestamp": "2021-12-29T12:05:00Z",
+  "data": [
+    {
+      "id": "813f5f74e331d95701d7de8411e18c5f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "e6a66c15cfa611085014efba2da6305b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T01:40:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "5a8665a8fed2f4ddb8d7f12f1ce96c25",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T02:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "1ddf4cfcabea6e304f95e8b8d05db67e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "1f2c65aa2a5044389b5b27d05b04d203",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T00:40:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "a434b420370b6e824981574bf6b31b56",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "95f780f37e4802b3a1983a7618e0ab79",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "453881244c740fc01ed342814bcccbd3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T01:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "80085a1dea94f2301f9a975e9fb59b8c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-30T03:40:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Dallas Mavericks"
+    }
+  ]
+}
