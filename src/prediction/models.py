@@ -104,19 +104,29 @@ def load_first_half_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
     Raises:
         FileNotFoundError: If model not found
     """
-    model_path = models_dir / "1h_spread_model.pkl"
-    features_path = models_dir / "1h_spread_features.pkl"
+    # Standardized .joblib format (combined model + features)
+    model_path = models_dir / "1h_spread_model.joblib"
 
-    if not model_path.exists():
+    # Fallback to legacy .pkl format for backwards compatibility
+    legacy_model_path = models_dir / "1h_spread_model.pkl"
+    legacy_features_path = models_dir / "1h_spread_features.pkl"
+
+    if model_path.exists():
+        # New combined format
+        model_data = joblib.load(model_path)
+        model = model_data.get("pipeline") or model_data.get("model")
+        feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+        return model, feature_cols
+    elif legacy_model_path.exists():
+        # Legacy separate files format
+        model = joblib.load(legacy_model_path)
+        feature_cols = joblib.load(legacy_features_path) if legacy_features_path.exists() else []
+        return model, feature_cols
+    else:
         raise FileNotFoundError(
-            f"1H spread model not found at {model_path}. "
-            f"Run: python scripts/train_first_half_models.py"
+            f"1H spread model not found at {model_path} or {legacy_model_path}. "
+            f"Run: python scripts/train_models.py --market 1h"
         )
-
-    model = joblib.load(model_path)
-    feature_cols = joblib.load(features_path)
-
-    return model, feature_cols
 
 
 def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
@@ -132,18 +142,28 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
     Raises:
         FileNotFoundError: If model not found
     """
-    model_path = models_dir / "1h_total_model.pkl"
-    features_path = models_dir / "1h_total_features.pkl"
+    # Standardized .joblib format (combined model + features)
+    model_path = models_dir / "1h_total_model.joblib"
 
-    if not model_path.exists():
+    # Fallback to legacy .pkl format for backwards compatibility
+    legacy_model_path = models_dir / "1h_total_model.pkl"
+    legacy_features_path = models_dir / "1h_total_features.pkl"
+
+    if model_path.exists():
+        # New combined format
+        model_data = joblib.load(model_path)
+        model = model_data.get("pipeline") or model_data.get("model")
+        feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+        return model, feature_cols
+    elif legacy_model_path.exists():
+        # Legacy separate files format
+        model = joblib.load(legacy_model_path)
+        feature_cols = joblib.load(legacy_features_path) if legacy_features_path.exists() else []
+        return model, feature_cols
+    else:
         raise FileNotFoundError(
-            f"1H total model not found at {model_path}. "
-            f"Run: python scripts/train_first_half_models.py"
+            f"1H total model not found at {model_path} or {legacy_model_path}. "
+            f"Run: python scripts/train_models.py --market 1h"
         )
-
-    model = joblib.load(model_path)
-    feature_cols = joblib.load(features_path)
-
-    return model, feature_cols
 
 

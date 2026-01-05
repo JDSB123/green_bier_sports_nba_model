@@ -88,14 +88,14 @@ MARKET_CONFIG = {
         "period": "fg",
         "output_file": "fg_total_model.joblib",
     },
-    # First Half Markets
+    # First Half Markets (standardized to .joblib format)
     "1h_spread": {
         "name": "First Half Spread",
         "model_class": FirstHalfSpreadsModel,
         "label_col": "1h_spread_covered",
         "line_col": "1h_spread_line",
         "period": "1h",
-        "output_file": "1h_spread_model.pkl",
+        "output_file": "1h_spread_model.joblib",
     },
     "1h_total": {
         "name": "First Half Total",
@@ -103,7 +103,7 @@ MARKET_CONFIG = {
         "label_col": "1h_total_over",
         "line_col": "1h_total_line",
         "period": "1h",
-        "output_file": "1h_total_model.pkl",
+        "output_file": "1h_total_model.joblib",
     },
 }
 
@@ -230,9 +230,6 @@ def train_single_market(
     Returns:
         Test ModelMetrics if successful, None otherwise
     """
-    import pickle
-    import joblib
-    
     config = MARKET_CONFIG.get(market_key)
     if not config:
         print(f"  [ERROR] Unknown market: {market_key}")
@@ -348,21 +345,10 @@ def train_single_market(
         except Exception as e:
             logger.debug(f"Could not compute high-conf stats: {e}")
     
-    # Save model
+    # Save model (standardized .joblib format for all models)
     model_path = os.path.join(output_dir, output_file)
-    
-    if output_file.endswith(".pkl"):
-        # Save as pkl with separate features file
-        with open(model_path, "wb") as f:
-            pickle.dump(model.pipeline, f)
-        features_path = os.path.join(output_dir, output_file.replace("_model.pkl", "_features.pkl"))
-        with open(features_path, "wb") as f:
-            pickle.dump(model.feature_columns, f)
-        print(f"  Saved: {model_path} + {features_path}")
-    else:
-        # Save as joblib
-        model.save(model_path)
-        print(f"  Saved: {model_path}")
+    model.save(model_path)
+    print(f"  Saved: {model_path}")
     
     # Register version
     try:

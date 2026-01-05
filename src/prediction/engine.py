@@ -265,15 +265,16 @@ class PeriodPredictor:
         # =====================================================================
         predicted_margin = feature_payload.get(margin_key)
 
-        # CRITICAL: Log and warn when predicted margin is missing, but keep processing
+        # CRITICAL: predicted_margin is REQUIRED - do not allow defaults
         if predicted_margin is None:
-            logger.warning(
-                f"[{self.period}_spread] MISSING predicted_margin feature (key: {margin_key}). "
-                f"Defaulting to 0. This may affect edge calculation accuracy. "
-                f"Available features with 'margin': {[k for k in features.keys() if 'margin' in k.lower()]}"
+            available_margin_keys = [k for k in features.keys() if 'margin' in k.lower()]
+            raise ValueError(
+                f"[{self.period}_spread] MISSING REQUIRED predicted_margin feature (key: {margin_key}). "
+                f"Cannot proceed without margin calculation. "
+                f"Available features with 'margin': {available_margin_keys}. "
+                f"Fix feature pipeline to ensure {margin_key} is always computed."
             )
-            predicted_margin = 0
-        elif predicted_margin == 0:
+        if predicted_margin == 0:
             # Log when margin is exactly 0 (might be intentional or might indicate issue)
             logger.debug(f"[{self.period}_spread] predicted_margin is exactly 0 (may be intentional)")
 
@@ -393,14 +394,15 @@ class PeriodPredictor:
         # =====================================================================
         predicted_total = feature_payload.get(total_key)
 
-        # CRITICAL: Log and warn when predicted total is missing, but keep processing
+        # CRITICAL: predicted_total is REQUIRED - do not allow defaults
         if predicted_total is None:
-            logger.warning(
-                f"[{self.period}_total] MISSING predicted_total feature (key: {total_key}). "
-                f"Defaulting to market line ({total_line}). This may affect edge calculation. "
-                f"Available features with 'total': {[k for k in features.keys() if 'total' in k.lower()]}"
+            available_total_keys = [k for k in features.keys() if 'total' in k.lower()]
+            raise ValueError(
+                f"[{self.period}_total] MISSING REQUIRED predicted_total feature (key: {total_key}). "
+                f"Cannot proceed without total calculation. "
+                f"Available features with 'total': {available_total_keys}. "
+                f"Fix feature pipeline to ensure {total_key} is always computed."
             )
-            predicted_total = total_line
         elif predicted_total == total_line:
             # Log when predicted exactly matches line (edge will be 0)
             logger.debug(f"[{self.period}_total] predicted_total equals market line ({total_line})")
