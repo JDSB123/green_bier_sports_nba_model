@@ -7,6 +7,7 @@ This script checks:
 """
 import os
 import sys
+import argparse
 from typing import List, Tuple
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,9 +68,7 @@ def check_training_data_leakage(training_path: str = None) -> Tuple[bool, List[s
     - Features are computed from past data only
     - Targets match actual outcomes
     """
-    training_path = training_path or os.path.join(
-        settings.data_processed_dir, "training_data.csv"
-    )
+    training_path = training_path or os.path.join(settings.data_processed_dir, "training_data.csv")
     
     if not os.path.exists(training_path):
         print(f"[WARN] Training data not found: {training_path}")
@@ -100,19 +99,47 @@ def check_training_data_leakage(training_path: str = None) -> Tuple[bool, List[s
             if first_10 > overall * 2:
                 issues.append("Early games have unusually high PPG variance (possible leakage)")
     
-    # Check target validity
-    if "spread_covered" in df.columns and "home_margin" in df.columns and "spread_line" in df.columns:
-        # Verify target calculation
-        df["_expected_covered"] = (df["home_margin"] > -df["spread_line"]).astype(int)
-        mismatch = (df["spread_covered"] != df["_expected_covered"]).sum()
-        if mismatch > 0:
-            issues.append(f"spread_covered mismatch with actual margin: {mismatch} games")
+    # Check target validity (only where line + label are present)
+    if "spread_covered" in df.columns and "spread_line" in df.columns:
+        # Prefer explicit realized margin columns if present
+        if "actual_margin" in df.columns:
+            margin_col = "actual_margin"
+        elif "home_score" in df.columns and "away_score" in df.columns:
+            df["_actual_margin_tmp"] = df["home_score"] - df["away_score"]
+            margin_col = "_actual_margin_tmp"
+        else:
+            margin_col = None
+
+        if margin_col:
+            m = df["spread_line"].notna() & df[margin_col].notna() & df["spread_covered"].notna()
+            if m.any():
+                df.loc[m, "_expected_covered"] = (df.loc[m, margin_col] > -df.loc[m, "spread_line"]).astype(int)
+                mismatch = (
+                    df.loc[m, "spread_covered"].astype(int)
+                    != df.loc[m, "_expected_covered"].astype(int)
+                ).sum()
+                if mismatch > 0:
+                    issues.append(f"spread_covered mismatch with actual margin: {mismatch} games")
     
-    if "went_over" in df.columns and "total_score" in df.columns and "total_line" in df.columns:
-        df["_expected_over"] = (df["total_score"] > df["total_line"]).astype(int)
-        mismatch = (df["went_over"] != df["_expected_over"]).sum()
-        if mismatch > 0:
-            issues.append(f"went_over mismatch with actual total: {mismatch} games")
+    if "total_over" in df.columns and "total_line" in df.columns:
+        if "actual_total" in df.columns:
+            total_col = "actual_total"
+        elif "home_score" in df.columns and "away_score" in df.columns:
+            df["_actual_total_tmp"] = df["home_score"] + df["away_score"]
+            total_col = "_actual_total_tmp"
+        else:
+            total_col = None
+
+        if total_col:
+            m = df["total_line"].notna() & df[total_col].notna() & df["total_over"].notna()
+            if m.any():
+                df.loc[m, "_expected_over"] = (df.loc[m, total_col] > df.loc[m, "total_line"]).astype(int)
+                mismatch = (
+                    df.loc[m, "total_over"].astype(int)
+                    != df.loc[m, "_expected_over"].astype(int)
+                ).sum()
+                if mismatch > 0:
+                    issues.append(f"total_over mismatch with actual total: {mismatch} games")
     
     return len(issues) == 0, issues
 
@@ -138,6 +165,15 @@ def check_feature_temporal_integrity() -> bool:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Validate models and data for leakage")
+    parser.add_argument(
+        "--training-path",
+        type=str,
+        default=None,
+        help="Optional path to training CSV (defaults to data/processed/training_data.csv)",
+    )
+    args = parser.parse_args()
+
     print("=" * 60)
     print("DATA LEAKAGE VALIDATION")
     print("=" * 60)
@@ -151,7 +187,7 @@ def main():
     
     # Check training data
     print("\n2. Training Data Validation:")
-    data_ok, issues = check_training_data_leakage()
+    data_ok, issues = check_training_data_leakage(args.training_path)
     if data_ok:
         print("[OK] Training data passed leakage checks")
     else:

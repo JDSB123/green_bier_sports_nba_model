@@ -27,7 +27,8 @@ Usage:
     python scripts/backtest.py --strict                     # Fail on any error
 
 Output:
-    data/processed/all_markets_backtest_results.csv
+    data/backtest_results/all_markets_backtest_results_<tag>_<timestamp>.csv
+    data/backtest_results/ALL_MARKETS_BACKTEST_RESULTS_<tag>_<timestamp>.md
 """
 import argparse
 import sys
@@ -220,9 +221,12 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
             df["1h_spread_line"] = df["fh_spread_line"]
         elif "1h_spread_line" not in df.columns:
             df["1h_spread_line"] = np.nan
-        if "spread_line" in df.columns:
-            mask = df["1h_spread_line"].isna()
-            df.loc[mask, "1h_spread_line"] = df.loc[mask, "spread_line"] / 2
+
+        # STRICT MODE: NO approximation fallbacks (prevents polluted 1H backtests)
+        if not (strict or STRICT_MODE):
+            if "spread_line" in df.columns:
+                mask = df["1h_spread_line"].isna()
+                df.loc[mask, "1h_spread_line"] = df.loc[mask, "spread_line"] / 2
         # Only compute if we have valid line data
         if df["1h_spread_line"].notna().any():
             df["1h_spread_covered"] = np.where(
@@ -237,9 +241,12 @@ def load_training_data(data_file: str = None, strict: bool = False) -> pd.DataFr
             df["1h_total_line"] = df["fh_total_line"]
         elif "1h_total_line" not in df.columns:
             df["1h_total_line"] = np.nan
-        if "total_line" in df.columns:
-            mask = df["1h_total_line"].isna()
-            df.loc[mask, "1h_total_line"] = df.loc[mask, "total_line"] / 2
+
+        # STRICT MODE: NO approximation fallbacks (prevents polluted 1H backtests)
+        if not (strict or STRICT_MODE):
+            if "total_line" in df.columns:
+                mask = df["1h_total_line"].isna()
+                df.loc[mask, "1h_total_line"] = df.loc[mask, "total_line"] / 2
         # Only compute if we have valid line data
         if df["1h_total_line"].notna().any():
             df["1h_total_over"] = np.where(
@@ -279,6 +286,7 @@ def backtest_market(
     df: pd.DataFrame,
     market_key: str,
     min_training: int = 80,
+    model_type: str = "logistic",
 ) -> pd.DataFrame:
     """
     Run walk-forward backtest for a single market.
@@ -376,7 +384,7 @@ def backtest_market(
 
             # Train model
             model = ModelClass(
-                model_type="logistic",
+                model_type=model_type,
                 use_calibration=True,
             )
 
@@ -609,6 +617,13 @@ def main():
         help="Minimum games before first prediction",
     )
     parser.add_argument(
+        "--model-type",
+        type=str,
+        default="logistic",
+        choices=["logistic", "gradient_boosting"],
+        help="Model type to train in walk-forward (leakage-safe)",
+    )
+    parser.add_argument(
         "--data",
         type=str,
         default=None,
@@ -618,6 +633,18 @@ def main():
         "--strict",
         action="store_true",
         help="Strict mode: fail on any error instead of continuing",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=str(DATA_DIR / "backtest_results"),
+        help="Directory to write timestamped backtest outputs",
+    )
+    parser.add_argument(
+        "--tag",
+        type=str,
+        default="",
+        help="Optional tag to include in output filenames (e.g. theodds_logistic)",
     )
     args = parser.parse_args()
     
@@ -631,6 +658,7 @@ def main():
     print("ALL MARKETS BACKTEST")
     print("=" * 60)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    run_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # Determine which markets to test
     if args.markets == "all":
@@ -639,6 +667,7 @@ def main():
         markets_to_test = [m.strip() for m in args.markets.split(",")]
     
     print(f"Markets: {', '.join(markets_to_test)}")
+    print(f"Model type: {args.model_type}")
     if args.data:
         print(f"Data file: {args.data}")
     
@@ -658,7 +687,7 @@ def main():
             print(f"[WARN] Unknown market: {market_key}. Skipping.")
             continue
         
-        results_df = backtest_market(df, market_key, args.min_training)
+        results_df = backtest_market(df, market_key, args.min_training, model_type=args.model_type)
         
         if len(results_df) > 0:
             all_results.append(results_df)
@@ -675,13 +704,20 @@ def main():
     # Save combined results
     if all_results:
         combined = pd.concat(all_results, ignore_index=True)
-        output_path = PROCESSED_DIR / "all_markets_backtest_results.csv"
+        tag = f"{args.tag}_" if args.tag else ""
+        out_dir = Path(args.output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        output_path = out_dir / f"all_markets_backtest_results_{tag}{run_ts}.csv"
         combined.to_csv(output_path, index=False)
         print(f"\n[OK] Results saved to {output_path}")
     
     # Generate and save report
     report = generate_summary_report(all_summaries)
-    report_path = PROJECT_ROOT / "ALL_MARKETS_BACKTEST_RESULTS.md"
+    tag = f"{args.tag}_" if args.tag else ""
+    out_dir = Path(args.output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    report_path = out_dir / f"ALL_MARKETS_BACKTEST_RESULTS_{tag}{run_ts}.md"
     with open(report_path, "w") as f:
         f.write(report)
     print(f"[OK] Report saved to {report_path}")
