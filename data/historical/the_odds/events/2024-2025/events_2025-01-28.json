@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-01-28T11:55:38Z",
+  "previous_timestamp": "2025-01-28T11:50:38Z",
+  "next_timestamp": "2025-01-28T12:00:38Z",
+  "data": [
+    {
+      "id": "0ab77208feec99c7bb5f8990cb81739d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-29T00:30:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "699f111aa87fc2cea90b0362b93b928e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-29T00:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "02a0097a3e442dbca988e6145e43b9c2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-29T03:00:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "cd1d3bb2519f27ba9d884e0dbbcd55bd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-01-29T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Utah Jazz"
+    }
+  ]
+}

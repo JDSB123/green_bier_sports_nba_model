@@ -1,0 +1,71 @@
+{
+  "timestamp": "2024-02-29T11:55:39Z",
+  "previous_timestamp": "2024-02-29T11:50:40Z",
+  "next_timestamp": "2024-02-29T12:00:40Z",
+  "data": [
+    {
+      "id": "fcda06bc2a83a0217ab849d1bb4d3948",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "7f08fc48ef523faffd8887735e0569e5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T00:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "554fa5d7a8c0bc1dc6d530da8bcae897",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T00:40:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "970b569f0856f6b15aec17fa03f5d06d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T00:40:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "ab53164c0ecff645afc12ff93ec8cb7c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T01:40:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "ccd2aca52cf2857294c757be6af23bae",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T02:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "a7185a3b4d40f2ad73c1f497670f3991",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T03:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "48c5ac221cd2d1d5302aac47eea58849",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-03-01T03:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Washington Wizards"
+    }
+  ]
+}

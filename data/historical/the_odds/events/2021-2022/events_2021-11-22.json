@@ -1,0 +1,127 @@
+{
+  "timestamp": "2021-11-22T11:55:00Z",
+  "previous_timestamp": "2021-11-22T11:45:00Z",
+  "next_timestamp": "2021-11-22T12:05:00Z",
+  "data": [
+    {
+      "id": "c4acf0087c5c1c5773131790f1ded291",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-25T17:00:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "de6765e3631b1f9b61396c7348e1ea9a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-25T22:00:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "927cafe41beb96b769c7f146fc52e957",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-26T01:00:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "87d85899740919564d9bce59814cb9e7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-26T03:30:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "f710b144d576f85b196af94a143c40fb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-25T19:30:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "6465e29a517858c606f7c468c7c925ab",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "f9a3048cc9223ebda9308446ad4a4d63",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T00:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "e90b54cd3c105170a4ebdce70b15406e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T01:40:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "98338439f93214dda885c13e63a53e84",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T00:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "507748f48d7e0441938d3a9e752ef237",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T00:40:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "c0614c55e170227994c3d2f231fcac15",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "a41dfd4abe33561229465e4dc767ad3d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T01:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "504ac1d0a699d30c2a6289e8a96fea37",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T01:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "33827c9b77006e9ced0c78494694d78b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T02:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "b980098cd5f854df0932f6de415d3a9c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-11-23T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Philadelphia 76ers"
+    }
+  ]
+}

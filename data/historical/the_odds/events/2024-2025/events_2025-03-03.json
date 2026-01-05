@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-03-03T11:55:38Z",
+  "previous_timestamp": "2025-03-03T11:50:38Z",
+  "next_timestamp": "2025-03-03T12:00:38Z",
+  "data": [
+    {
+      "id": "88ec7352b864871886a86b3bcb559179",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "d9ffe1f98222bd3881003a3eb3bf3178",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T00:10:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "01703ec69023c48dec6d3a5cef234cfb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T00:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "7d360fe51d388cd45d67ca0791a15e4d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "6a1800f3e3f9e432e58d100a1ed1408d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T01:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "16012c27cfc786cfc9825a4c23b045f0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T01:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Sacramento Kings"
+    },
+    {
+      "id": "a2656e442abab0ceb73d1043afaddc31",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-04T02:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "0e1dde121b5be88b7c95e744d43c877f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-26T00:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Golden State Warriors"
+    }
+  ]
+}

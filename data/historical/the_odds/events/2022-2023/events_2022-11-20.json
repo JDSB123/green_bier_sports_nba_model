@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-11-20T11:55:38Z",
+  "previous_timestamp": "2022-11-20T11:50:37Z",
+  "next_timestamp": "2022-11-20T12:00:37Z",
+  "data": [
+    {
+      "id": "ea6aa3f68aa43163cc75065af06b67f3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-20T20:40:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "81268797b8fd8b1ee8cdbbc734b3c895",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-20T23:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "01c5a4006f9ca15648249a72e5a60d00",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-20T23:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "ff49e65f526e25a1c12cee92c83ad053",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-21T00:10:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "c79b8ad3b86dae0f21634b216600d151",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-21T00:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "f83afb380455fd78a41305365d62b932",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-21T00:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "25fbc001a5665104740114e4216e2f17",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-21T00:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "d2cd829e7e6d6d5ccc3d8056057aee81",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-21T02:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "San Antonio Spurs"
+    }
+  ]
+}

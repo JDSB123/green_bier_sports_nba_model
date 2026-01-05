@@ -1,0 +1,71 @@
+{
+  "timestamp": "2024-04-26T11:55:40Z",
+  "previous_timestamp": "2024-04-26T11:50:39Z",
+  "next_timestamp": "2024-04-26T12:00:39Z",
+  "data": [
+    {
+      "id": "c624e8df3e1ed2f056e136f35393e0c3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-26T21:40:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "f0da12d0c820feb7b579848ef79439c5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-27T00:10:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "321e48ab720ff532b9ce0e3da0ca68d8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-27T02:40:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "37271f2957e33cd2ef3b60f761f77210",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-27T17:00:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "74953bba72a636be63551b7c634cab47",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-27T19:40:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "f7f7cf9c4f3d3fbacf2c37b46d8b61f6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-27T22:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "7c9b2969ab478afbc428fee6245463f1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-28T00:30:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "478a49b68ba272606e9e1ca9ec8c4339",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-28T17:00:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "New York Knicks"
+    }
+  ]
+}

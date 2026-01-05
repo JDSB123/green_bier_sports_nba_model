@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-12-04T11:55:37Z",
+  "previous_timestamp": "2022-12-04T11:50:37Z",
+  "next_timestamp": "2022-12-04T12:00:37Z",
+  "data": [
+    {
+      "id": "c09c54431440ed3f57171eef7f81a11a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T20:40:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "ee66cff57da8d0eac2d197a5bb77f2c5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T21:10:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "06171136916c5d37037b935fe29df774",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T23:10:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "c6ca70c0183abdd399e7dfc18d07436f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T23:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "1410326402d2c558c5e8b670857f0b59",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T23:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "42f6f3c1924f9ea71a0d278edfb3f8ee",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T23:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "ec9292f8edd4fceae363aec97d701403",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-04T23:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "f1bb425c4b9ea3481b08f70899f66e22",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-05T02:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Indiana Pacers"
+    }
+  ]
+}

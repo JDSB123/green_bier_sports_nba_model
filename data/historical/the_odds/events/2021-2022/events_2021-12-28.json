@@ -1,0 +1,71 @@
+{
+  "timestamp": "2021-12-28T11:55:00Z",
+  "previous_timestamp": "2021-12-28T11:45:00Z",
+  "next_timestamp": "2021-12-28T12:05:00Z",
+  "data": [
+    {
+      "id": "9db8578887e7db31836442029426b87a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T00:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "93b2cb390ce6d41bcbff1de82f4de00d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T00:40:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "50fd2e4327f030755a5a02dc233f4f27",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T00:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "e4134c1f86805248ef4b00a7f63cddf9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T01:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "24d8d023277018374280f3473aa0a7b3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T01:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "68e797b185864374f11d6c0b63e0a409",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "f12429ed497d37c7302769670d1adde4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "f2ecd25afe323610e1eaa712fffc75ea",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2021-12-29T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Oklahoma City Thunder"
+    }
+  ]
+}

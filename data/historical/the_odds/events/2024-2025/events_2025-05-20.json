@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-05-20T11:55:37Z",
+  "previous_timestamp": "2025-05-20T11:50:37Z",
+  "next_timestamp": "2025-05-20T12:00:37Z",
+  "data": [
+    {
+      "id": "93dfb7992d1dacd6870906bffb91afc2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-05-21T00:40:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "d8df18d13a93eeaa5c8242289a517c4b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-05-22T00:05:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Indiana Pacers"
+    }
+  ]
+}

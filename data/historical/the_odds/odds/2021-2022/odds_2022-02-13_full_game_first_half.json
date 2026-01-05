@@ -1,0 +1,1403 @@
+{
+  "timestamp": "2022-02-13T11:55:00Z",
+  "data": [
+    {
+      "id": "f544fc70078e27dcb36ac2310035a63c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-13T19:10:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Atlanta Hawks",
+      "bookmakers": [
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-02-13T11:48:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-02-13T11:48:17Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:17Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:17Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 100,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -118,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:48:17Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 205
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -278
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-02-13T11:46:49Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 220
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -278
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-02-13T11:48:18Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 210
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -256
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-02-13T11:46:49Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-02-13T11:49:52Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-02-13T11:48:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-02-13T11:45:09Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:45:09Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:45:09Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -250
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-02-13T11:49:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 195
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-02-13T11:49:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 185
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-02-13T11:49:52Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-02-13T11:49:50Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-02-13T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 250
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -222
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -244
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-02-13T11:49:49Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:49Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:49Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": 200
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -238
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-02-13T11:48:21Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-02-13T11:48:22Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:22Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": 6.0
+                },
+                {
+                  "name": "Boston Celtics",
+                  "price": -115,
+                  "point": -6.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3a209fc5c896cdeab45c750d31440bd0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-02-13T20:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Minnesota Timberwolves",
+      "bookmakers": [
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-02-13T11:45:09Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:45:09Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:45:09Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -250
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-02-13T11:49:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 190
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -233
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-02-13T11:49:52Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -263
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -114,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 235.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-02-13T11:48:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2022-02-13T11:48:17Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:17Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 236.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 236.0
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:17Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 100,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -118,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:48:17Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 205
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -278
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-02-13T11:46:49Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 220
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -278
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-02-13T11:49:52Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -114,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:52Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -263
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-02-13T11:48:18Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -256
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-02-13T11:49:49Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:49Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:49Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -263
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-02-13T11:46:49Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:46:49Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-02-13T11:48:22Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:22Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-02-13T11:48:18Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -114,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:48:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -263
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-02-13T11:49:53Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -114,
+                  "point": 235.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 235.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:53Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 210
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -263
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-02-13T11:49:50Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-02-13T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 260
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -217
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-02-13T11:49:50Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 200
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -250
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-02-13T11:48:21Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-02-13T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 236.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 236.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-02-13T11:48:21Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": -6.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

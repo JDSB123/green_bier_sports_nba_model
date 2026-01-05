@@ -1,0 +1,3903 @@
+{
+  "timestamp": "2025-04-21T11:55:38Z",
+  "previous_timestamp": "2025-04-21T11:50:38Z",
+  "next_timestamp": "2025-04-21T12:00:38Z",
+  "data": [
+    {
+      "id": "15bca8e5b08f7b8602a8e3967667c740",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-21T23:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Detroit Pistons",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 205
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -250
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -108,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -112,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 220
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -101,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -111,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 220
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 230
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -106,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -114,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 220
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -115,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 235
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 221.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 221.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 220
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -115,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 207
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -263
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-04-21T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 230
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -115,
+                  "point": 7.0
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -105,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": 218
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -260
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 6.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -115,
+                  "point": -6.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 220.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 220.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1814ec22a3248bb5467aa1a2bee18f98",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-22T02:00:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Los Angeles Clippers",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -102
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -118
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -108,
+                  "point": 1.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -112,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 100
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -109,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -103,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 217.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -105
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 1.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-04-21T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -115,
+                  "point": 1.0
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -105,
+                  "point": -1.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -102
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -118
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -115,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -105,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 100
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -113,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -107,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 100
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -118
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 217.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 217.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 100
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -118
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -113,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 217.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -102
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": 100
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Denver Nuggets",
+                  "price": -110,
+                  "point": 1.5
+                },
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -1.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 217.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 217.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bd3c0c5aac8b6ce41690e86011740d3b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-22T23:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Milwaukee Bucks",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -194
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 162
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -114,
+                  "point": -4.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -106,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 228.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 228.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -192
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -112,
+                  "point": -4.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -108,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -200
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 228.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 228.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-04-21T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -195
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 100,
+                  "point": -5.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -120,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 228.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 228.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -190
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 155
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -107,
+                  "point": -5.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -114,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 228.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 228.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -182
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 162
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -106,
+                  "point": -4.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -106,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 228.0
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 228.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -182
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 162
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 228.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 228.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -190
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 155
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 228.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 228.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -192
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": 156
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": -4.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 228.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 228.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "84fcb7d4f3ea128bf6e2ac2247fa236b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-22T23:30:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Memphis Grizzlies",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 750
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 15.0
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -15.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 700
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1100
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 14.5
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -14.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 675
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1050
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 15.0
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -15.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 651
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1111
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 14.5
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -14.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 700
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1100
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 14.5
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -14.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 700
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1100
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -106,
+                  "point": 14.5
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -106,
+                  "point": -14.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -106,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-04-21T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 700
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 14.5
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -14.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 700
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1100
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 14.5
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -110,
+                  "point": -14.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 228.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 228.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 700
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -1115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -109,
+                  "point": 15.0
+                },
+                {
+                  "name": "Oklahoma City Thunder",
+                  "price": -112,
+                  "point": -15.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5cd2c4c92f51a4c9b79e8f1e7b6fe4ab",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-23T02:00:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Minnesota Timberwolves",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -250
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -108,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -245
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -108,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -245
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -109,
+                  "point": -6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -112,
+                  "point": 6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-04-21T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -250
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -235
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 214.5
+                },
+                {
+                  "name": "Under",
+                  "price": -115,
+                  "point": 214.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -260
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -111,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -109,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -250
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 200
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -115,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -260
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -107,
+                  "point": -5.5
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -105,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -263
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": 207
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": -6.0
+                },
+                {
+                  "name": "Minnesota Timberwolves",
+                  "price": -110,
+                  "point": 6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 214.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 214.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7a618b29a0b9af8b895940149badce7b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-23T23:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Orlando Magic",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -800
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 560
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -108,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 201.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 201.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -750
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 525
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -750
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 525
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -770
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 550
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -112,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -109,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 201.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 201.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -750
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 550
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -750
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 550
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -106,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -102,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-04-21T11:54:26Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -850
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 550
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:26Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -115,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -800
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 550
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -833
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": 498
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Orlando Magic",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 200.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 200.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "14a3b88a3d45b7afa6622d6f960e0b09",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-23T23:40:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Miami Heat",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -675
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 490
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -12.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 12.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -700
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 500
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -108,
+                  "point": -12.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -112,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -650
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 500
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -105,
+                  "point": -12.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -115,
+                  "point": 12.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -650
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 500
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -101,
+                  "point": -12.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -111,
+                  "point": 12.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 215.0
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 215.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -700
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 475
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -12.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 12.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -700
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 500
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -105,
+                  "point": -12.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -115,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -770
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 525
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -12.5
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 12.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 216.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 216.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -714
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": 444
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Cleveland Cavaliers",
+                  "price": -110,
+                  "point": -12.0
+                },
+                {
+                  "name": "Miami Heat",
+                  "price": -110,
+                  "point": 12.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 215.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 215.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "280a8379b89f8ad370276332b30328d6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-04-24T01:30:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Golden State Warriors",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 114
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -135
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -105,
+                  "point": 2.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -115,
+                  "point": -2.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 204.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 204.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 125
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -150
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -105,
+                  "point": 2.5
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -115,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 205.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 205.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanatics",
+          "title": "Fanatics",
+          "last_update": "2025-04-21T11:54:24Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 120
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -145
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:24Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 205.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 205.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -150
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -106,
+                  "point": 3.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -106,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -107,
+                  "point": 205.5
+                },
+                {
+                  "name": "Under",
+                  "price": -107,
+                  "point": 205.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -150
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 205.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 205.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-04-21T11:54:23Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 118
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -141
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -108,
+                  "point": 2.5
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -113,
+                  "point": -2.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:23Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 205.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 205.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-04-21T11:53:13Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -154
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -112,
+                  "point": 3.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -108,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:53:13Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 205.0
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 205.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-04-21T11:54:22Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": 123
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -159
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.0
+                },
+                {
+                  "name": "Houston Rockets",
+                  "price": -110,
+                  "point": -3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2025-04-21T11:54:22Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 206.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 206.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

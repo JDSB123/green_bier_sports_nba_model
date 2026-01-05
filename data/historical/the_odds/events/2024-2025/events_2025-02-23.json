@@ -1,0 +1,103 @@
+{
+  "timestamp": "2025-02-23T11:55:38Z",
+  "previous_timestamp": "2025-02-23T11:50:37Z",
+  "next_timestamp": "2025-02-23T12:00:38Z",
+  "data": [
+    {
+      "id": "8297f74b64d0145a81dee3d17264b516",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T18:10:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "7d8110c8ff0ac605dde0de67287bbd12",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T20:40:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "04fda3fdafac1d66db732460419a8b43",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T22:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "ee9d28e78fff13487a9f01a8184e72c5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T23:10:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "35a3c525d1c51e630e73702784fb52a3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T23:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "3ed8120684eb7fdac50ed872bebe3ea7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T23:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "7813b6e2069178e4c51d660271acc548",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-23T23:10:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "1166f6a605e0dcf7bc63732b1bf90eb2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-24T00:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "15c8383aab9662c352df20ace8e303c2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-24T00:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "4b9d32579272dee4c7b077688a46efe0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-24T02:40:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "8c5dfc09221b32ad1835ce0e5c426454",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-02-26T03:00:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "0e1dde121b5be88b7c95e744d43c877f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-26T00:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Golden State Warriors"
+    }
+  ]
+}

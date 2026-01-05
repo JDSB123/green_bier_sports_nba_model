@@ -1,0 +1,71 @@
+{
+  "timestamp": "2023-04-21T11:55:40Z",
+  "previous_timestamp": "2023-04-21T11:50:40Z",
+  "next_timestamp": "2023-04-21T12:00:40Z",
+  "data": [
+    {
+      "id": "6b03fe42c299d0bf305f86c3c1f08656",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-21T23:00:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "6e8e63cedab9836611c658978e85b9e2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-22T00:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "dd97839e8bcccf7dd40f5e9f8e14ae0c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-22T01:30:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "2aff8d40ac497916b2e60ae6e1a189d0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-22T17:00:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "c95c1c4b85e4852963a94599551cea18",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-22T19:30:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "a3c4cdb5f8e7416d7381924beaa8f284",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-22T23:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "b33ec77fc59ba8b723ff3f8cc0c20d90",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-23T02:00:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "0b3130f7cc981cc4b1711993884a3a0c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-23T19:30:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Sacramento Kings"
+    }
+  ]
+}

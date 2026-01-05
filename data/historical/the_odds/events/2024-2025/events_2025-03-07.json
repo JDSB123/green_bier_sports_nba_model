@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-03-07T11:55:39Z",
+  "previous_timestamp": "2025-03-07T11:50:38Z",
+  "next_timestamp": "2025-03-07T12:00:39Z",
+  "data": [
+    {
+      "id": "cda2918dff5bd991f43e658102c65f52",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "b85eb9d4af06a276c5add2446354ed97",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T00:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "6955224dd4719260b131ace9f7ea53b4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T00:40:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "fbb83feef66e9aee7ee9bbe38ba92b91",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T01:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "8e7eeb371fad9058c14138128c4cf02d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T01:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "fbf0d3997ce376d205847d3248d5b208",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T03:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "f880e059bbee7b5b9e4af4d17bcee511",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "6169dbe021254c66d3c3c246d48d1c7e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2025-03-08T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "New York Knicks"
+    }
+  ]
+}

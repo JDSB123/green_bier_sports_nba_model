@@ -1,0 +1,79 @@
+{
+  "timestamp": "2022-01-25T11:55:00Z",
+  "previous_timestamp": "2022-01-25T11:45:00Z",
+  "next_timestamp": "2022-01-25T12:05:00Z",
+  "data": [
+    {
+      "id": "8d1cc1753424104625cb84d33e3265ef",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "d8f791f18ef9f5e8062bb554c79e3aeb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "08dd1d7e5043979502ed99d057048986",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T00:10:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "986d6ea22dc626196e8404defa76c0b2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T00:30:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "52d5ffc80bb5e240f832791f3d933ef2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T00:40:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Sacramento Kings"
+    },
+    {
+      "id": "7cb02a8451129a45831fba7dfb9ffe7e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T00:10:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "New Orleans Pelicans"
+    },
+    {
+      "id": "17a12bf98b48331ab9784eb0ae5c0d83",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T01:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "4d6389065664bc91c3c7530d0cd0323c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T03:00:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "2fc5d8a28cae3b806c8c2d6677f80c0d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-26T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Minnesota Timberwolves"
+    }
+  ]
+}

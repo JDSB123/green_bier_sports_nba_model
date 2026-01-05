@@ -1,0 +1,79 @@
+{
+  "timestamp": "2022-11-27T11:55:37Z",
+  "previous_timestamp": "2022-11-27T11:50:37Z",
+  "next_timestamp": "2022-11-27T12:00:37Z",
+  "data": [
+    {
+      "id": "231be0e8401d2a256469f003813589c4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T20:00:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "5caa3822f45c596a567caa3f2d0fe1bb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T20:30:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "e6d83b844f4323b62d9897ce188a9df8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T21:00:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "5883b35e4dd64dc3aa9643f7ce7e3349",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T22:00:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "47431b7d67664f37f2a68e7c07788aa1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T23:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "91edc24153d788d4afd1fa6ac23e358a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T23:00:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "483ca94087442831daed984138916c0b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T23:00:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "230a2b356815cf6d4bb31810f561b17a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-27T23:00:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "e9781c315c102a9bb9a8d6c603476e60",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-28T01:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Dallas Mavericks"
+    }
+  ]
+}

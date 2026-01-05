@@ -1,0 +1,39 @@
+{
+  "timestamp": "2022-10-25T11:55:39Z",
+  "previous_timestamp": "2022-10-25T11:50:39Z",
+  "next_timestamp": "2022-10-25T12:00:39Z",
+  "data": [
+    {
+      "id": "0bc1dcd63c39092886b379086ffc54db",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-10-25T23:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "3aad635f824c97e24d75dc75a7be76be",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-10-25T23:30:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "011884b7c52d4f6176445e2b1591e1de",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-10-26T00:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "a43f44f385103a2c344aa701012b7263",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-10-26T02:00:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Golden State Warriors"
+    }
+  ]
+}

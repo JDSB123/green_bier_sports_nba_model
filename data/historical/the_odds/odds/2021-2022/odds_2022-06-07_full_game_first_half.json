@@ -1,0 +1,951 @@
+{
+  "timestamp": "2022-06-07T11:55:00Z",
+  "data": [
+    {
+      "id": "46a46e44b4a8e2ff486dcddab9f3795f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-06-09T01:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Golden State Warriors",
+      "bookmakers": [
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2022-06-07T11:46:52Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:52Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:52Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:52Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -161
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 140
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2022-06-07T11:46:19Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:19Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:19Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:19Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -161
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 140
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2022-06-07T11:45:21Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:45:21Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:45:21Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:45:21Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -161
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2022-06-07T11:48:45Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:48:45Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -161
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2022-06-07T11:45:43Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:45:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:45:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:45:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -156
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 133
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2022-06-07T11:46:46Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:46Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:46Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -161
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:46Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2022-06-07T11:46:04Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:04Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:04Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -156
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 133
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2022-06-07T11:46:56Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:56Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -111,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -111,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:56Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:56Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -156
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2022-06-07T11:46:04Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:04Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:04Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:04Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -156
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 133
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2022-06-07T11:46:50Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:50Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -106,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -114,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:50Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:50Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -154
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2022-06-07T11:46:17Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:46:17Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -105,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -105,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:46:17Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:46:17Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -154
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet",
+          "title": "Unibet",
+          "last_update": "2022-06-07T11:47:25Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:47:25Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:47:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:47:25Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -156
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 133
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2022-06-07T11:49:15Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:49:15Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:49:15Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:49:15Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -154
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 135
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2022-06-07T11:49:17Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:49:17Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:49:17Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:49:17Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -154
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2022-06-07T11:47:39Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:47:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:47:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:47:39Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -156
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 133
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betfair",
+          "title": "Betfair",
+          "last_update": "2022-06-07T11:44:43Z",
+          "markets": [
+            {
+              "key": "h2h_lay",
+              "last_update": "2022-06-07T11:44:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -145
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 146
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:44:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -147
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 144
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2022-06-07T11:48:36Z",
+          "markets": [
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -108,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:48:36Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -159
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 130
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "gtbets",
+          "title": "GTbets",
+          "last_update": "2022-06-07T11:50:03Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2022-06-07T11:50:03Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -109,
+                  "point": -3.5
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": -109,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2022-06-07T11:50:03Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 212.5
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 212.5
+                }
+              ]
+            },
+            {
+              "key": "h2h",
+              "last_update": "2022-06-07T11:50:03Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -161
+                },
+                {
+                  "name": "Golden State Warriors",
+                  "price": 140
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

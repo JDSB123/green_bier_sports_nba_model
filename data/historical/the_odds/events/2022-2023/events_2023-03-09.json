@@ -1,0 +1,55 @@
+{
+  "timestamp": "2023-03-09T11:55:39Z",
+  "previous_timestamp": "2023-03-09T11:50:39Z",
+  "next_timestamp": "2023-03-09T12:00:39Z",
+  "data": [
+    {
+      "id": "f4840ff0db3d9df575492625a842d525",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-10T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "ed71aee12cba0bc1f439e7fafb2afba4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-10T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "8655eb09b8324ccc5c3ae90ffa3ca630",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-10T00:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "be0fbcc05552149b25754fd7dfdc058d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-10T00:30:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "67cf37ec1fb9969fc994254ea6a6237e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-10T01:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "84acf41251042b8003790bd6626e6e1a",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-10T03:00:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "New York Knicks"
+    }
+  ]
+}

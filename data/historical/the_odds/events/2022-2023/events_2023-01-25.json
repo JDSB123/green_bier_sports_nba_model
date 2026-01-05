@@ -1,0 +1,87 @@
+{
+  "timestamp": "2023-01-25T11:55:38Z",
+  "previous_timestamp": "2023-01-25T11:50:38Z",
+  "next_timestamp": "2023-01-25T12:00:38Z",
+  "data": [
+    {
+      "id": "4e28e2b6ff50e54018c736ecf4ea7c52",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T00:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "902751db4163bcfadac4ff43d800c11b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T00:40:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "63b67a5dc039bb9fe5d1ce7cf86d59eb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T01:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "6e6bec25209d2c9e64e7c7ee8a0f9132",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T01:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "67a8fce92fd73ba216abaae0aff451f2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T01:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "d04107fa28e2726501e0d0620a364b0c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "53e5361412fbf5fd8d43b949fd593d38",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "daf5674805b3a8972fbe8aa15e44421d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "3fe36bce8c9fa8f8b3f214f15e791f98",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "8721df31ee0a5cdc2e8d18124f7c684e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-26T03:40:00Z",
+      "home_team": "Los Angeles Lakers",
+      "away_team": "San Antonio Spurs"
+    }
+  ]
+}

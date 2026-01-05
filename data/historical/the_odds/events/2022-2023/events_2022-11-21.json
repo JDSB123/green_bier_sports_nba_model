@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-11-21T11:55:38Z",
+  "previous_timestamp": "2022-11-21T11:50:40Z",
+  "next_timestamp": "2022-11-21T12:00:38Z",
+  "data": [
+    {
+      "id": "723658634ed339fcc8c7baa7e473770f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T00:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "fa9d4340754b43aa9112dbbfe20868e9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "afcbe3d6f9558de85207dc3abb686fd3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T01:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "bff71caf058e3dd3bc42188073aedded",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "ce16568b6b88baa6117693bbb25d3bb8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T01:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "263f64f6b3177b121c62586f0ce0d78f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T01:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "9b291f8ed4c0cf4590a89fc242a94633",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T01:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "57dd9f4d60d84bdd4489603076cb5679",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-11-22T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Utah Jazz"
+    }
+  ]
+}

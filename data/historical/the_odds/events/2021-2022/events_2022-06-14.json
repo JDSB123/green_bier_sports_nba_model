@@ -1,0 +1,15 @@
+{
+  "timestamp": "2022-06-14T11:55:00Z",
+  "previous_timestamp": "2022-06-14T11:45:00Z",
+  "next_timestamp": "2022-06-14T12:05:00Z",
+  "data": [
+    {
+      "id": "ce5fc1ca74ed88e508d33872b241c286",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-06-17T01:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Golden State Warriors"
+    }
+  ]
+}

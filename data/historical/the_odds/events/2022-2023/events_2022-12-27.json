@@ -1,0 +1,87 @@
+{
+  "timestamp": "2022-12-27T11:55:39Z",
+  "previous_timestamp": "2022-12-27T11:50:39Z",
+  "next_timestamp": "2022-12-27T12:00:39Z",
+  "data": [
+    {
+      "id": "066aa4c604d177adc145976864d73fe8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T00:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "de864f0c31c0f20e3e801f3315708069",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "3b4313e55f942d8014f3c8690133881c",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T00:40:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "be42158a1e692c17345401d64c750916",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T00:40:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "daccbf9833ac0188ef9c64f445a401e7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T00:40:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "a7b31f1fae18dd3642655d4e9db52bf5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "94ca872df0384023e770e60cba92bfc4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T01:10:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "e3ad9d91f06f29fb92cec0e621de8bf1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T01:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "New York Knicks"
+    },
+    {
+      "id": "10b634d861b103b35c46ea17509468cb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T03:10:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "e2331e2170b85528b1531ab1740f7dd7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-28T03:10:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Denver Nuggets"
+    }
+  ]
+}

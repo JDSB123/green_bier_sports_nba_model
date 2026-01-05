@@ -1,0 +1,55 @@
+{
+  "timestamp": "2022-01-11T11:55:00Z",
+  "previous_timestamp": "2022-01-11T11:45:00Z",
+  "next_timestamp": "2022-01-11T12:05:00Z",
+  "data": [
+    {
+      "id": "0623090aa5bb18df09731d8849dbfdaf",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-12T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "b26a7f829e89981d66033877a1be13c9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-12T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "f424f6ddd48a5e977f708b806cd9fbcd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-12T01:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "4d7e3a3faa8528ff5f7e667b44d364c0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-12T01:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "637522682a63b22cc754b72d6237c6b7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-12T00:40:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "778b4f4d60af4e500e513f4a2a83a633",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-01-12T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Denver Nuggets"
+    }
+  ]
+}

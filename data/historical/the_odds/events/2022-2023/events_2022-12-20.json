@@ -1,0 +1,71 @@
+{
+  "timestamp": "2022-12-20T11:55:39Z",
+  "previous_timestamp": "2022-12-20T11:50:39Z",
+  "next_timestamp": "2022-12-20T12:00:39Z",
+  "data": [
+    {
+      "id": "6efedceb3481c40739798f3291657530",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-21T00:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "c8c79dea820e936f9c3320cadbd5e983",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-21T00:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "ba6290e25cae4233980af3f0d1204dcd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-21T00:40:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "ab355e6fd3288936cb3d4eefe9850763",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-21T02:10:00Z",
+      "home_team": "Phoenix Suns",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "6989c0b9961a20f404877e64ec967c95",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-21T03:10:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "6e4ed630044d883a893d87d0559561c4",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-25T17:00:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "4910213b955f389fb9da7b897802cf65",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-25T22:00:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "66e506fafbee92f9e6903de8e106f5ea",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-26T03:30:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

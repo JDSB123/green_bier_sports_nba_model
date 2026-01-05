@@ -1,0 +1,15 @@
+{
+  "timestamp": "2022-05-28T11:55:00Z",
+  "previous_timestamp": "2022-05-28T11:45:00Z",
+  "next_timestamp": "2022-05-28T12:05:00Z",
+  "data": [
+    {
+      "id": "210460bbdf021cf167c346cfa5a63b63",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-05-30T00:30:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Boston Celtics"
+    }
+  ]
+}

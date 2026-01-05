@@ -1,0 +1,39 @@
+{
+  "timestamp": "2022-03-22T11:55:00Z",
+  "previous_timestamp": "2022-03-22T11:45:00Z",
+  "next_timestamp": "2022-03-22T12:05:00Z",
+  "data": [
+    {
+      "id": "b10b7896ab0d19ef59a54a0fbf4e8f51",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-03-22T23:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "6598b62b5dc239fa19c1df94ea6a9293",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-03-22T23:30:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "a480e4d083a9ede715da71d5b89922f1",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-03-23T00:10:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "1471e6e9323b01bdc516bd87b178536f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-03-23T02:00:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Los Angeles Clippers"
+    }
+  ]
+}

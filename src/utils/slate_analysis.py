@@ -81,6 +81,9 @@ async def fetch_team_records_from_odds_api(
             return {}
         
         # Calculate W-L for each team
+        # NOTE: Scores from the_odds.fetch_scores() are standardized to ESPN format
+        # via standardize_game_data(), so team names are already normalized.
+        # Records dictionary uses ESPN team names as keys (e.g., "Los Angeles Lakers").
         team_records: Dict[str, Dict[str, int]] = {}
         
         for game in scores:
@@ -141,30 +144,96 @@ async def fetch_team_records_from_odds_api(
         raise ValueError(f"Cannot calculate unified team records: {e}")
 
 
+def _lookup_team_record_with_synonyms(
+    team_name: str,
+    records: Dict[str, Dict[str, int]]
+) -> Dict[str, int]:
+    """
+    Look up team record with synonym-aware matching.
+    
+    NO SILENT FALLBACKS: Raises ValueError if record cannot be found.
+    
+    Args:
+        team_name: Team name to look up
+        records: Dictionary of team records (team name -> {"wins": int, "losses": int})
+    
+    Returns:
+        Dictionary with "wins" and "losses" keys
+    
+    Raises:
+        ValueError: If team record cannot be found (even after synonym matching)
+    """
+    from src.ingestion.standardize import normalize_team_to_espn
+    from src.utils.team_names import normalize_team_name, get_canonical_name
+    
+    # Try exact match first
+    if team_name in records:
+        return records[team_name]
+    
+    # Normalize team name to standard format
+    normalized_name, is_valid = normalize_team_to_espn(team_name, source="unified_records")
+    
+    if not is_valid:
+        available_teams = list(records.keys())[:10]
+        raise ValueError(
+            f"INVALID TEAM NAME: '{team_name}' cannot be normalized. "
+            f"Available teams: {available_teams}"
+        )
+    
+    # Try exact match with normalized name
+    if normalized_name in records:
+        return records[normalized_name]
+    
+    # Handle team name synonyms (e.g., "LA Clippers" <-> "Los Angeles Clippers")
+    # Some teams have multiple valid standard format names. Both normalize to the same
+    # canonical ID, so we check all records keys that map to the same canonical ID.
+    canonical_id = normalize_team_name(normalized_name)
+    if canonical_id.startswith("nba_"):
+        canonical_form = get_canonical_name(canonical_id)
+        # Try canonical form if different from normalized (MASTER db canonical)
+        if canonical_form != normalized_name and canonical_form in records:
+            return records[canonical_form]
+        
+        # Check all record keys to find ones that normalize to the same canonical ID
+        # This handles synonyms like "LA Clippers" <-> "Los Angeles Clippers"
+        for record_key in records:
+            record_canonical_id = normalize_team_name(record_key)
+            if record_canonical_id == canonical_id:
+                # Found a synonym - return its record
+                return records[record_key]
+    
+    # NO SILENT FALLBACK: Fail loudly if record cannot be found
+    available_teams = list(records.keys())[:10]
+    raise ValueError(
+        f"MISSING TEAM RECORD: No record found for '{team_name}' "
+        f"(normalized: '{normalized_name}', canonical_id: '{canonical_id}'). "
+        f"Available teams in records: {available_teams}. "
+        f"This indicates a data integrity issue - team name mismatch between odds and records."
+    )
+
+
 async def get_unified_team_record(team_name: str) -> Tuple[int, int]:
     """
     Get wins and losses for a team from The Odds API.
     
     UNIFIED DATA SOURCE: Returns record from same source as odds.
     
+    QA/QC: Both odds and records use standardized team names, but some teams have
+    multiple valid forms (e.g., "LA Clippers" vs "Los Angeles Clippers"). This
+    function handles synonym matching to ensure lookups succeed.
+    
     Args:
-        team_name: Team name (ESPN standardized format)
+        team_name: Team name (standardized format)
     
     Returns:
         Tuple of (wins, losses)
+    
+    Raises:
+        ValueError: If team record cannot be found (no silent fallback)
     """
     records = await fetch_team_records_from_odds_api()
-    
-    if team_name in records:
-        return records[team_name]["wins"], records[team_name]["losses"]
-    
-    # Try partial match (in case of name variations)
-    for name, record in records.items():
-        if team_name.lower() in name.lower() or name.lower() in team_name.lower():
-            return record["wins"], record["losses"]
-    
-    logger.warning(f"[UNIFIED] No record found for {team_name} in The Odds API scores")
-    return 0, 0
+    record_dict = _lookup_team_record_with_synonyms(team_name, records)
+    return record_dict["wins"], record_dict["losses"]
 
 
 async def validate_data_integrity(
@@ -211,7 +280,7 @@ def get_cst_now() -> datetime:
 def parse_utc_time(iso_string: str) -> datetime:
     """Parse ISO UTC time string to datetime."""
     if iso_string.endswith("Z"):
-        iso_string = iso_string[:-1] + "+00:00"
+        iso_string = f"{iso_string[:-1]}+00:00"
     dt = datetime.fromisoformat(iso_string).replace(tzinfo=timezone.utc)
     # Round to nearest 5 minutes if odd
     minutes = dt.minute
@@ -311,21 +380,32 @@ async def fetch_todays_games(
                 logger.warning(f"Could not fetch 1H odds for event {event_id}: {e}")
         
         # UNIFIED: Add team records from The Odds API (same source as odds)
+        # NO SILENT FALLBACKS: Use synonym-aware lookup, fail loudly if records missing
         if include_records and unified_records:
-            home_record = unified_records.get(home_team, {"wins": 0, "losses": 0})
-            away_record = unified_records.get(away_team, {"wins": 0, "losses": 0})
-            
-            game["home_team_record"] = {
-                "wins": home_record.get("wins", 0),
-                "losses": home_record.get("losses", 0),
-                "source": "the_odds_api"  # QA/QC: Document data source
-            }
-            game["away_team_record"] = {
-                "wins": away_record.get("wins", 0),
-                "losses": away_record.get("losses", 0),
-                "source": "the_odds_api"  # QA/QC: Document data source
-            }
-            game["_data_unified"] = True  # Flag indicating unified source
+            try:
+                home_record = _lookup_team_record_with_synonyms(home_team, unified_records)
+                away_record = _lookup_team_record_with_synonyms(away_team, unified_records)
+                
+                game["home_team_record"] = {
+                    "wins": home_record["wins"],
+                    "losses": home_record["losses"],
+                    "source": "the_odds_api"  # QA/QC: Document data source
+                }
+                game["away_team_record"] = {
+                    "wins": away_record["wins"],
+                    "losses": away_record["losses"],
+                    "source": "the_odds_api"  # QA/QC: Document data source
+                }
+                game["_data_unified"] = True  # Flag indicating unified source
+            except ValueError as e:
+                # NO SILENT FALLBACK: Log ERROR and skip game if records cannot be found
+                logger.error(
+                    f"[UNIFIED RECORDS] FAILED to lookup team records for game "
+                    f"{away_team} @ {home_team}: {e}. "
+                    f"Skipping game - NO PLACEHOLDER DATA."
+                )
+                # Skip this game - don't add it to enriched_games
+                continue
         
         enriched_games.append(game)
     

@@ -1,0 +1,79 @@
+{
+  "timestamp": "2022-04-11T11:55:00Z",
+  "previous_timestamp": "2022-04-11T11:45:00Z",
+  "next_timestamp": "2022-04-11T12:05:00Z",
+  "data": [
+    {
+      "id": "797ba6277d31d5b5021a9fd57f37219b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-13T01:30:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Los Angeles Clippers"
+    },
+    {
+      "id": "95324c30dfcbdef0ddc9ef9ea9163fdd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-14T01:30:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "San Antonio Spurs"
+    },
+    {
+      "id": "a5f7ee0e082201793e24ec39da5003ab",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-12T23:00:00Z",
+      "home_team": "Brooklyn Nets",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "f4f4958f958fe8529fc8137fecc60040",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-13T23:00:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "313f1e3a12f28182bf16045cc36a50bd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-16T22:00:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "8703293a4eedcd53d7e47a7d4b6c8de2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-18T02:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "d3d7f848492b501db285bfd0d909b827",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-17T00:30:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "4d9d3ef86cfc82a4867ee33aabfc68f5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-16T17:00:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "eb1122d218c41aa92c5c98ebc5320590",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-17T17:00:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Chicago Bulls"
+    }
+  ]
+}

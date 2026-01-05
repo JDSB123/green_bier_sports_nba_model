@@ -1,0 +1,15 @@
+{
+  "timestamp": "2024-06-14T11:55:38Z",
+  "previous_timestamp": "2024-06-14T11:50:38Z",
+  "next_timestamp": "2024-06-14T12:00:38Z",
+  "data": [
+    {
+      "id": "eb90f40ab42acfdd17d5f44d692daf73",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-06-15T00:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Boston Celtics"
+    }
+  ]
+}

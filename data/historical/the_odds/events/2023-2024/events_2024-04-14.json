@@ -1,0 +1,143 @@
+{
+  "timestamp": "2024-04-14T11:55:38Z",
+  "previous_timestamp": "2024-04-14T11:50:38Z",
+  "next_timestamp": "2024-04-14T12:00:38Z",
+  "data": [
+    {
+      "id": "7bfcffc01e243389c316a31c31f7d69d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "79e787694fe62ef689c8c411d66532ae",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "5b7acbdd6effa02631607e96f229736d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "Philadelphia 76ers",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "bd546c94f0a090cf395cd54b200a0100",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "Cleveland Cavaliers",
+      "away_team": "Charlotte Hornets"
+    },
+    {
+      "id": "d4ad4414fcfca542a6017ad4310a8563",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Chicago Bulls"
+    },
+    {
+      "id": "292672f8101776d527ebad5318461b26",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Toronto Raptors"
+    },
+    {
+      "id": "407740e03749e1cf1c1c78f0e3248898",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T17:10:00Z",
+      "home_team": "Orlando Magic",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "9b0397797b87a5a02627e54fea3678b7",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "Oklahoma City Thunder",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "9d326b305d989db5cac8597bbe3eac28",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "b94652450e239d8dd1a52daecdb3e1c8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "San Antonio Spurs",
+      "away_team": "Detroit Pistons"
+    },
+    {
+      "id": "f49318ca2a6e61d91aa79e7b5e043798",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "Golden State Warriors",
+      "away_team": "Utah Jazz"
+    },
+    {
+      "id": "1b14ab976a04ed84acbed402bbaebcac",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Houston Rockets"
+    },
+    {
+      "id": "9002136b1230baba93f6c57134e214d6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Los Angeles Lakers"
+    },
+    {
+      "id": "866d2f5245ad5ad4ba3293827607df0e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Phoenix Suns"
+    },
+    {
+      "id": "92ce6851144aa55ed075904a3ba33eaf",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-14T19:40:00Z",
+      "home_team": "Sacramento Kings",
+      "away_team": "Portland Trail Blazers"
+    },
+    {
+      "id": "04a429162cbac45dfe05de7e503ceeb6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-16T23:00:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "c87df77d60f9110b769f8e3f4fcc83c6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-04-17T23:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Atlanta Hawks"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "timestamp": "2023-03-18T11:55:38Z",
+  "previous_timestamp": "2023-03-18T11:50:38Z",
+  "next_timestamp": "2023-03-18T12:00:39Z",
+  "data": [
+    {
+      "id": "fe985b76609557eaa4a3a7d3b955d80f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-18T17:10:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Denver Nuggets"
+    },
+    {
+      "id": "3c3c300771e52bc5aee53f8b1d0630cf",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-18T19:10:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Orlando Magic"
+    },
+    {
+      "id": "f0a9b1ba2f685c45ad447dc2085435bd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-18T23:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "bb255852d19e08358a4456b66f3934a0",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-18T23:10:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Minnesota Timberwolves"
+    },
+    {
+      "id": "cc4a618542b23b5c539a6863ee44bdbb",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-19T00:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "0b9f233f7a56a7a273854f47b6d7ab61",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-19T00:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Golden State Warriors"
+    },
+    {
+      "id": "221f80836f4d05cb27328b4be0e85842",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-19T00:10:00Z",
+      "home_team": "Washington Wizards",
+      "away_team": "Sacramento Kings"
+    },
+    {
+      "id": "0a46917921892cb68dd2df06f3dff1cc",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-03-19T01:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Boston Celtics"
+    }
+  ]
+}

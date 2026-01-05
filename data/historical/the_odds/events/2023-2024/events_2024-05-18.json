@@ -1,0 +1,31 @@
+{
+  "timestamp": "2024-05-18T11:55:39Z",
+  "previous_timestamp": "2024-05-18T11:50:39Z",
+  "next_timestamp": "2024-05-18T12:00:38Z",
+  "data": [
+    {
+      "id": "127b8c3c6f1fada94c4a10873fdac809",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-05-19T00:05:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "4e389cc85cf2c0f58130b65cb60f6710",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-05-19T19:40:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Indiana Pacers"
+    },
+    {
+      "id": "40ae64b29f051a3ace031cd92c5ff655",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-05-20T00:05:00Z",
+      "home_team": "Denver Nuggets",
+      "away_team": "Minnesota Timberwolves"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "timestamp": "2022-12-15T11:55:39Z",
+  "previous_timestamp": "2022-12-15T11:50:38Z",
+  "next_timestamp": "2022-12-15T12:00:38Z",
+  "data": [
+    {
+      "id": "9c5326d9497a026d7564696f11164949",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-16T01:10:00Z",
+      "home_team": "Houston Rockets",
+      "away_team": "Miami Heat"
+    },
+    {
+      "id": "5beef06da41f050826bc783f48f51857",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-16T01:10:00Z",
+      "home_team": "Memphis Grizzlies",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "0c71261cc5577646cfe21ee3e6ee6d8b",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-16T02:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "New Orleans Pelicans"
+    },
+    {
+      "id": "6b5ace30a6ba523cfa6f1927e514a214",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-12-16T03:40:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

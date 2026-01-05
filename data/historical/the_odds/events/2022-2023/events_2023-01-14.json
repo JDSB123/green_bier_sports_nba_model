@@ -1,0 +1,63 @@
+{
+  "timestamp": "2023-01-14T11:55:39Z",
+  "previous_timestamp": "2023-01-14T11:50:39Z",
+  "next_timestamp": "2023-01-14T12:00:40Z",
+  "data": [
+    {
+      "id": "9f9402f67c779c9e1993fc212628d22f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-14T18:10:00Z",
+      "home_team": "Miami Heat",
+      "away_team": "Milwaukee Bucks"
+    },
+    {
+      "id": "e3d40d92f841e7b9d262f9a52c2291d6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-15T00:10:00Z",
+      "home_team": "Charlotte Hornets",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "84206d86862749e2137f704944eaea34",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-15T00:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "Memphis Grizzlies"
+    },
+    {
+      "id": "6899a0042540b6f52528eb7cad4708f6",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-15T00:40:00Z",
+      "home_team": "Toronto Raptors",
+      "away_team": "Atlanta Hawks"
+    },
+    {
+      "id": "ce208a86b07bc267647a15a8a8740b2f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-15T01:10:00Z",
+      "home_team": "Minnesota Timberwolves",
+      "away_team": "Cleveland Cavaliers"
+    },
+    {
+      "id": "60feb94d34f09263d4329056ac5413dd",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-15T02:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Philadelphia 76ers"
+    },
+    {
+      "id": "fad1e2929adffffa396e220d8a0eb60e",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-01-15T03:10:00Z",
+      "home_team": "Portland Trail Blazers",
+      "away_team": "Dallas Mavericks"
+    }
+  ]
+}

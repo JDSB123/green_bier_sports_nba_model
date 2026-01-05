@@ -1,0 +1,6846 @@
+{
+  "timestamp": "2023-04-05T11:55:39Z",
+  "data": [
+    {
+      "id": "8aa4612b180d52ecb170150491f9a34d",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-05T23:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Brooklyn Nets",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -500
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 400
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -526
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 382
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -11.0
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -500
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 395
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -115,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -500
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 395
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 100,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -550
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 400
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -556
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 395
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -115,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -105,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -550
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 400
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -480
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 370
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -108,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -112,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -450
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 333
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 224.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 224.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -550
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -500
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -500
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -500
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -530
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -530
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 390
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -556
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": 333
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -105,
+                  "point": -11.0
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -118,
+                  "point": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 222.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 222.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "circasports",
+          "title": "Circa Sports",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Brooklyn Nets",
+                  "price": -106,
+                  "point": -11.5
+                },
+                {
+                  "name": "Detroit Pistons",
+                  "price": -115,
+                  "point": 11.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -113,
+                  "point": 221.5
+                },
+                {
+                  "name": "Under",
+                  "price": -108,
+                  "point": 221.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4d9609ca01bf58461253e05bb49d190f",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-05T23:10:00Z",
+      "home_team": "Indiana Pacers",
+      "away_team": "New York Knicks",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 300
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -365
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 295
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -370
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 300
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -380
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 295
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -370
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 278
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -355
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -350
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -105,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -105,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -357
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -111,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -111,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -350
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 260
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -350
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 290
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -380
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -360
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -108,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -360
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -108,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -360
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -108,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -360
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -108,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -360
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -113,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -108,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 235.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 235.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 260
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -400
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "circasports",
+          "title": "Circa Sports",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.0
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": 280
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -370
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Indiana Pacers",
+                  "price": -110,
+                  "point": 8.5
+                },
+                {
+                  "name": "New York Knicks",
+                  "price": -110,
+                  "point": -8.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 234.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 234.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "70da6e9abd9a9f81b179980be95bd6b9",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-05T23:40:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Washington Wizards",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -550
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -112,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -108,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -560
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 430
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -600
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 430
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -11.0
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 11.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -600
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 450
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -11.0
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 11.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -600
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 425
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -550
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 425
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -560
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -113,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -108,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -560
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -113,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -108,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -560
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -113,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -108,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -560
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -113,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -108,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -560
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 410
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -113,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -108,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -833
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 425
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -10.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 10.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -600
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": 425
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -110,
+                  "point": -11.0
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -110,
+                  "point": 11.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -111,
+                  "point": -11.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -111,
+                  "point": 11.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Atlanta Hawks",
+                  "price": -105,
+                  "point": -11.5
+                },
+                {
+                  "name": "Washington Wizards",
+                  "price": -105,
+                  "point": 11.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "308b15069cf24bbcf690d89ede0816e3",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-05T23:40:00Z",
+      "home_team": "Boston Celtics",
+      "away_team": "Toronto Raptors",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -200
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 170
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -235
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 194
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -205
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 170
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 227.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 227.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -210
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 175
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 226.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 226.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -210
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 170
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -208
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 168
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -195
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -113,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -195
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -113,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -195
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -113,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -195
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -113,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -195
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -108,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -113,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 225.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 225.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -227
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 160
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -118,
+                  "point": 226.5
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 226.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "circasports",
+          "title": "Circa Sports",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -200
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 170
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -208
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 175
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -111,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -111,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -205
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 175
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -105,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -105,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -200
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 165
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -204
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": 170
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Boston Celtics",
+                  "price": -110,
+                  "point": -5.0
+                },
+                {
+                  "name": "Toronto Raptors",
+                  "price": -110,
+                  "point": 5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 225.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 225.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a17e408133957d4ae1ed63309487fda8",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-05T23:40:00Z",
+      "home_team": "Milwaukee Bucks",
+      "away_team": "Chicago Bulls",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 230
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -275
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 240
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -290
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 230
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 240
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -300
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 240
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -305
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 245
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -300
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -108,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -112,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 230
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -300
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 230
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.5
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 230
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -357
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -286
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -111,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -111,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 235
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -280
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -105,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -105,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": 238
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -294
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Chicago Bulls",
+                  "price": -110,
+                  "point": 7.0
+                },
+                {
+                  "name": "Milwaukee Bucks",
+                  "price": -110,
+                  "point": -7.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9392fd9d4a2fa0b69851ebbcb0fc5fb2",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-06T00:10:00Z",
+      "home_team": "New Orleans Pelicans",
+      "away_team": "Memphis Grizzlies",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 185
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -215
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 170
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 184
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -210
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 180
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -225
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -115,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 180
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -109,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 180
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -109,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 180
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -109,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 180
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -109,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 180
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -220
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -112,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -109,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -108,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -113,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 170
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -250
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.5
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 232.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 232.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -208
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -111,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -111,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -205
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -105,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -105,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": 175
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -213
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Memphis Grizzlies",
+                  "price": -110,
+                  "point": 5.0
+                },
+                {
+                  "name": "New Orleans Pelicans",
+                  "price": -110,
+                  "point": -5.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "24a2ddf7b81cda9fa0a99bdeeccdc5f5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-06T00:40:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Sacramento Kings",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -225
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -6.0
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -240
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 198
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -108,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 244.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 244.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -225
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -105,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -115,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -220
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 180
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -109,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -109,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -109,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -109,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -230
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -112,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -109,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -109,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -112,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -250
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 170
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -105,
+                  "point": -6.0
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -118,
+                  "point": 6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 244.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 244.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -225
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 185
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -256
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 215
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -115,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -105,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -235
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -255
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 215
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 100,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -220
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 180
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -110,
+                  "point": -6.0
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -110,
+                  "point": 6.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -244
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": 195
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Dallas Mavericks",
+                  "price": -115,
+                  "point": -5.5
+                },
+                {
+                  "name": "Sacramento Kings",
+                  "price": -105,
+                  "point": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 245.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 245.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1f9ee5bd515a2f6b235ad23a56493b44",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2023-04-06T02:10:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Los Angeles Lakers",
+      "bookmakers": [
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2023-04-05T11:50:43Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -158
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 134
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:43Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -3.5
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -112,
+                  "point": 3.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2023-04-05T11:54:59Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -155
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 135
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:59Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -145
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -115,
+                  "point": -3.5
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -105,
+                  "point": 3.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2023-04-05T11:55:00Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -140
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 120
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:00Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.5
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "barstool",
+          "title": "Barstool Sportsbook",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -167
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 143
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -113,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -167
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 143
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -113,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "sugarhouse",
+          "title": "SugarHouse",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -167
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 143
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -113,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "twinspires",
+          "title": "TwinSpires",
+          "last_update": "2023-04-05T11:52:29Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -167
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -113,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:29Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "unibet_us",
+          "title": "Unibet",
+          "last_update": "2023-04-05T11:52:30Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -167
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -108,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -113,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:52:30Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -112,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -109,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "William Hill (US)",
+          "last_update": "2023-04-05T11:45:37Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -165
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:45:37Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 231.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 231.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2023-04-05T11:50:44Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -170
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 145
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:50:44Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "foxbet",
+          "title": "FOX Bet",
+          "last_update": "2023-04-05T11:53:47Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -161
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 115
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:53:47Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2023-04-05T11:45:18Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -150
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 130
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:45:18Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -3.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 3.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2023-04-05T11:55:35Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -161
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -111,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -111,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -111,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -111,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2023-04-05T11:51:55Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -160
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -105,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -105,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:51:55Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -105,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -105,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "pointsbetus",
+          "title": "PointsBet (US)",
+          "last_update": "2023-04-05T11:54:31Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -150
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 125
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -3.5
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 3.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:31Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 230.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 230.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "wynnbet",
+          "title": "WynnBET",
+          "last_update": "2023-04-05T11:54:32Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -164
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": 140
+                }
+              ]
+            },
+            {
+              "key": "spreads",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Los Angeles Clippers",
+                  "price": -110,
+                  "point": -4.0
+                },
+                {
+                  "name": "Los Angeles Lakers",
+                  "price": -110,
+                  "point": 4.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2023-04-05T11:54:32Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": -110,
+                  "point": 229.0
+                },
+                {
+                  "name": "Under",
+                  "price": -110,
+                  "point": 229.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

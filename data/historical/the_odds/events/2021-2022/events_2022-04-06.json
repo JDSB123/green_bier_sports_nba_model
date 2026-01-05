@@ -1,0 +1,55 @@
+{
+  "timestamp": "2022-04-06T11:55:00Z",
+  "previous_timestamp": "2022-04-06T11:45:00Z",
+  "next_timestamp": "2022-04-06T12:05:00Z",
+  "data": [
+    {
+      "id": "a49739298abda3f53490516f08715908",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-06T23:10:00Z",
+      "home_team": "Detroit Pistons",
+      "away_team": "Dallas Mavericks"
+    },
+    {
+      "id": "e2ab084d38439a87706107357411b5ff",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-06T23:40:00Z",
+      "home_team": "New York Knicks",
+      "away_team": "Brooklyn Nets"
+    },
+    {
+      "id": "cd3a493ca37518b44f6cd93861c213ce",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-07T00:10:00Z",
+      "home_team": "Atlanta Hawks",
+      "away_team": "Washington Wizards"
+    },
+    {
+      "id": "aa357226c5d8ef94a50f5e99ff90e641",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-07T00:10:00Z",
+      "home_team": "Chicago Bulls",
+      "away_team": "Boston Celtics"
+    },
+    {
+      "id": "75ca7c2820b7b0476a8af4c1ee95fb20",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-07T01:10:00Z",
+      "home_team": "Utah Jazz",
+      "away_team": "Oklahoma City Thunder"
+    },
+    {
+      "id": "f9376f49f87923e30c344679402e6112",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2022-04-07T02:10:00Z",
+      "home_team": "Los Angeles Clippers",
+      "away_team": "Phoenix Suns"
+    }
+  ]
+}

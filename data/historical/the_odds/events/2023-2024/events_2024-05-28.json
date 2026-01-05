@@ -1,0 +1,15 @@
+{
+  "timestamp": "2024-05-28T11:55:38Z",
+  "previous_timestamp": "2024-05-28T11:50:38Z",
+  "next_timestamp": "2024-05-28T12:00:38Z",
+  "data": [
+    {
+      "id": "95f111559bfa3f45411eb5fd17f55cf5",
+      "sport_key": "basketball_nba",
+      "sport_title": "NBA",
+      "commence_time": "2024-05-29T00:35:00Z",
+      "home_team": "Dallas Mavericks",
+      "away_team": "Minnesota Timberwolves"
+    }
+  ]
+}
