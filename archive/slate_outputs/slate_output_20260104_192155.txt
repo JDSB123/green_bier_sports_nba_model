@@ -1,0 +1,173 @@
+
+====================================================================================================
+NBA PREDICTIONS - TODAY
+Generated: 2026-01-04 07:21 PM CST
+====================================================================================================
+
+Found 5 game(s)
+
+===========================================================================================================================================================
+                                                                     RECOMMENDED PICKS                                                                     
+===========================================================================================================================================================
+Time (CST)   | Matchup                                    | Pick                   | Odds    | Prediction   | Line     | Edge     | EV%     | Fire
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+05:10 PM CST | Minnesota Timberwolves  @ Washington Wizards  | Washington Wizards +27.0 | -117    | MIN by 3.4   | +27.0    | +23.6 pts | -37.3%  | 🔥🔥🔥🔥
+             |                                            | UNDER 256.5            | -139    | 230.0        | 256.5    | -26.5 pts | -100.0% | 🔥🔥🔥🔥🔥
+             |                                            | Washington Wizards +11.0 | -115    | WAS by 0.9   | +11.0    | +11.9 pts | +75.3%  | 🔥🔥🔥🔥
+             |                                            | UNDER 126.0            | -120    | 118.8        | 126.0    | -7.2 pts | -80.3%  | 🔥🔥🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+05:15 PM CST | New Orleans Pelicans  @ Miami Heat         | New Orleans Pelicans +17.5 | -108    | MIA by 11.2  | +17.5    | -6.3 pts | +11.7%  | 🔥🔥
+             |                                            | OVER 232.0             | -105    | 233.5        | 232.0    | +1.5 pts | +95.2%  | 🔥🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+07:10 PM CST | Oklahoma City Thunder  @ Phoenix Suns      | Phoenix Suns +12.5     | -115    | OKL by 1.4   | +12.5    | +11.1 pts | -9.3%   | 🔥🔥🔥🔥
+             |                                            | UNDER 228.75           | -113    | 223.1        | 228.8    | -5.7 pts | -100.0% | 🔥🔥🔥🔥
+             |                                            | Phoenix Suns +9.5      | -115    | PHO by 0.4   | +9.5     | +9.9 pts | +79.0%  | 🔥🔥🔥🔥
+             |                                            | OVER 110.0             | -111    | 121.1        | 110.0    | +11.1 pts | +31.9%  | 🔥🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+08:10 PM CST | Milwaukee Bucks  @ Sacramento Kings        | Sacramento Kings +3.5  | -110    | MIL by 0.4   | +3.5     | +3.1 pts | -70.1%  | 🔥🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+08:40 PM CST | Memphis Grizzlies  @ Los Angeles Lakers    | Memphis Grizzlies +5.5 | -110    | LOS by 1.0   | +5.5     | -4.5 pts | +10.8%  | 🔥
+             |                                            | UNDER 239.5            | -110    | 227.9        | 239.5    | -11.6 pts | -100.0% | 🔥🔥🔥🔥🔥
+             |                                            | Memphis Grizzlies +3.0 | -110    | LOS by 1.9   | +3.0     | -1.1 pts | -98.6%  | 🔥
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+====================================================================================================
+DETAILED RATIONALE
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+GAME: Minnesota Timberwolves  @ Washington Wizards 
+TIME: 05:10 PM CST
+
+  FULL GAME:
+    SPREAD: Washington Wizards +27.0 (-117)
+       Model predicts: Minnesota Timberwolves wins by 3.4 pts
+       Market line: Washington Wizards +27.0
+       Edge: +23.6 pts of value
+       Rationale: Model says Washington Wizards by 3.4, getting +27.0 → 23.6 pts edge
+       Confidence: 51%  |  🔥🔥🔥🔥
+       EV: -37.3%  |  Kelly: 0.00
+    TOTAL: UNDER 256.5 (-139)
+       Model predicts: 230.0 total points
+       Market line: 256.5
+       Edge: 26.5 pts of value
+       Rationale: Model (230.0) < Line (256.5) by 26.5 pts → UNDER
+       Confidence: 95%  |  🔥🔥🔥🔥🔥
+       EV: -100.0%  |  Kelly: 0.00
+
+  FIRST HALF:
+    1H SPREAD: Washington Wizards +11.0 (-115)
+       Model predicts: Washington Wizards leads by 0.9 at half
+       Market line: Washington Wizards +11.0
+       Edge: +11.9 pts of value
+       Confidence: 70%  |  🔥🔥🔥🔥
+       EV: +75.3%  |  Kelly: 0.43
+    1H TOTAL: UNDER 126.0 (-120)
+       Model predicts: 118.8 1H points
+       Market line: 126.0
+       Edge: 7.2 pts of value
+       Rationale: Model (118.8) < Line (126.0) → UNDER
+       Confidence: 70%  |  🔥🔥🔥🔥
+       EV: -80.3%  |  Kelly: 0.00
+
+----------------------------------------------------------------------------------------------------
+GAME: New Orleans Pelicans  @ Miami Heat 
+TIME: 05:15 PM CST
+
+  FULL GAME:
+    SPREAD: New Orleans Pelicans +17.5 (-108)
+       Model predicts: Miami Heat wins by 11.2 pts
+       Market line: New Orleans Pelicans +17.5
+       Edge: -6.3 pts of value
+       Rationale: Model says Miami Heat by 11.2, but getting New Orleans Pelicans +17.5 → -6.3 pts edge
+       Confidence: 50%  |  🔥🔥
+       EV: +11.7%  |  Kelly: 0.06
+    TOTAL: OVER 232.0 (-105)
+       Model predicts: 233.5 total points
+       Market line: 232.0
+       Edge: 1.5 pts of value
+       Rationale: Model (233.5) > Line (232.0) by 1.5 pts → OVER
+       Confidence: 95%  |  🔥🔥🔥
+       EV: +95.2%  |  Kelly: 0.50
+
+----------------------------------------------------------------------------------------------------
+GAME: Oklahoma City Thunder  @ Phoenix Suns 
+TIME: 07:10 PM CST
+
+  FULL GAME:
+    SPREAD: Phoenix Suns +12.5 (-115)
+       Model predicts: Oklahoma City Thunder wins by 1.4 pts
+       Market line: Phoenix Suns +12.5
+       Edge: +11.1 pts of value
+       Rationale: Model says Phoenix Suns by 1.4, getting +12.5 → 11.1 pts edge
+       Confidence: 50%  |  🔥🔥🔥🔥
+       EV: -9.3%  |  Kelly: 0.00
+    TOTAL: UNDER 228.8 (-113)
+       Model predicts: 223.1 total points
+       Market line: 228.8
+       Edge: 5.7 pts of value
+       Rationale: Model (223.1) < Line (228.8) by 5.7 pts → UNDER
+       Confidence: 95%  |  🔥🔥🔥🔥
+       EV: -100.0%  |  Kelly: 0.00
+
+  FIRST HALF:
+    1H SPREAD: Phoenix Suns +9.5 (-115)
+       Model predicts: Phoenix Suns leads by 0.4 at half
+       Market line: Phoenix Suns +9.5
+       Edge: +9.9 pts of value
+       Confidence: 70%  |  🔥🔥🔥🔥
+       EV: +79.0%  |  Kelly: 0.45
+    1H TOTAL: OVER 110.0 (-111)
+       Model predicts: 121.1 1H points
+       Market line: 110.0
+       Edge: 11.1 pts of value
+       Rationale: Model (121.1) > Line (110.0) → OVER
+       Confidence: 39%  |  🔥🔥🔥
+       EV: +31.9%  |  Kelly: 0.18
+
+----------------------------------------------------------------------------------------------------
+GAME: Milwaukee Bucks  @ Sacramento Kings 
+TIME: 08:10 PM CST
+
+  FULL GAME:
+
+  FIRST HALF:
+    1H SPREAD: Sacramento Kings +3.5 (-110)
+       Model predicts: Milwaukee Bucks leads by 0.4 at half
+       Market line: Sacramento Kings +3.5
+       Edge: +3.1 pts of value
+       Confidence: 69%  |  🔥🔥
+       EV: -70.1%  |  Kelly: 0.00
+
+----------------------------------------------------------------------------------------------------
+GAME: Memphis Grizzlies  @ Los Angeles Lakers 
+TIME: 08:40 PM CST
+
+  FULL GAME:
+    SPREAD: Memphis Grizzlies +5.5 (-110)
+       Model predicts: Los Angeles Lakers wins by 1.0 pts
+       Market line: Memphis Grizzlies +5.5
+       Edge: -4.5 pts of value
+       Rationale: Model says Los Angeles Lakers by 1.0, but getting Memphis Grizzlies +5.5 → -4.5 pts edge
+       Confidence: 50%  |  🔥
+       EV: +10.8%  |  Kelly: 0.06
+    TOTAL: UNDER 239.5 (-110)
+       Model predicts: 227.9 total points
+       Market line: 239.5
+       Edge: 11.6 pts of value
+       Rationale: Model (227.9) < Line (239.5) by 11.6 pts → UNDER
+       Confidence: 95%  |  🔥🔥🔥🔥🔥
+       EV: -100.0%  |  Kelly: 0.00
+
+  FIRST HALF:
+    1H SPREAD: Memphis Grizzlies +3.0 (-110)
+       Model predicts: Los Angeles Lakers leads by 1.9 at half
+       Market line: Memphis Grizzlies +3.0
+       Edge: -1.1 pts of value
+       Confidence: 70%  |  🔥
+       EV: -98.6%  |  Kelly: 0.00
+
+====================================================================================================
+Analysis complete
+   More fires = stronger pick (5 fires = best)
+====================================================================================================

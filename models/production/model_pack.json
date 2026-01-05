@@ -61,19 +61,19 @@
     },
     "1h_spread": {
       "status": "production",
-      "model_file": "1h_spread_model.pkl",
-      "features_file": "1h_spread_features.pkl",
-      "features": 58,
-      "feature_source": "separate pkl file",
-      "note": "Uses FG-style features (not 1H-specific suffixes)"
+      "model_file": "1h_spread_model.joblib",
+      "features": 10,
+      "feature_source": "bundled in joblib",
+      "note": "Uses 1H-specific features (home_ppg_1h, etc.)",
+      "retrained": "2026-01-04"
     },
     "1h_total": {
       "status": "production",
-      "model_file": "1h_total_model.pkl",
-      "features_file": "1h_total_features.pkl",
-      "features": 58,
-      "feature_source": "separate pkl file",
-      "note": "Uses FG-style features (not 1H-specific suffixes)"
+      "model_file": "1h_total_model.joblib",
+      "features": 10,
+      "feature_source": "bundled in joblib",
+      "note": "Uses 1H-specific features (home_ppg_1h, etc.)",
+      "retrained": "2026-01-04"
     }
   },
   "filter_thresholds": {
