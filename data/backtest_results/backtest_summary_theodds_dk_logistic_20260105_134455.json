@@ -1,0 +1,55 @@
+{
+  "generated_at": "20260105_134455",
+  "data": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\data\\processed\\training_data_theodds.csv",
+  "model_type": "logistic",
+  "min_train": 800,
+  "step": 200,
+  "calibrate": false,
+  "high_conf": 0.6,
+  "summaries": [
+    {
+      "market": "1h_spread",
+      "model_type": "logistic",
+      "n_bets": 438,
+      "accuracy": 0.4657534246575342,
+      "roi": -0.11083437110834371,
+      "profit": -48.54545454545455,
+      "high_conf_n": 187,
+      "high_conf_accuracy": 0.44919786096256686,
+      "high_conf_roi": -0.14244044725328145
+    },
+    {
+      "market": "1h_total",
+      "model_type": "logistic",
+      "n_bets": 438,
+      "accuracy": 0.4840182648401826,
+      "roi": -0.07596513075965129,
+      "profit": -33.272727272727266,
+      "high_conf_n": 233,
+      "high_conf_accuracy": 0.47639484978540775,
+      "high_conf_roi": -0.09051892313694888
+    },
+    {
+      "market": "fg_spread",
+      "model_type": "logistic",
+      "n_bets": 6298,
+      "accuracy": 0.5130200063512226,
+      "roi": -0.020598169693120467,
+      "profit": -129.7272727272727,
+      "high_conf_n": 731,
+      "high_conf_accuracy": 0.5239398084815321,
+      "high_conf_roi": 0.0002487252829250091
+    },
+    {
+      "market": "fg_total",
+      "model_type": "logistic",
+      "n_bets": 6301,
+      "accuracy": 0.5078558958895414,
+      "roi": -0.03045692602905743,
+      "profit": -191.90909090909085,
+      "high_conf_n": 668,
+      "high_conf_accuracy": 0.5119760479041916,
+      "high_conf_roi": -0.022591181273816003
+    }
+  ]
+}

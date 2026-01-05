@@ -1,0 +1,55 @@
+{
+  "generated_at": "20260105_135223",
+  "data": "C:\\Users\\JB\\green-bier-ventures\\NBA_main\\green_bier_sports_nba_model-1\\data\\processed\\training_data_theodds.csv",
+  "model_type": "gradient_boosting",
+  "min_train": 800,
+  "step": 200,
+  "calibrate": false,
+  "high_conf": 0.6,
+  "summaries": [
+    {
+      "market": "1h_spread",
+      "model_type": "gradient_boosting",
+      "n_bets": 2200,
+      "accuracy": 0.5059090909090909,
+      "roi": -0.03417355371900825,
+      "profit": -75.18181818181816,
+      "high_conf_n": 1223,
+      "high_conf_accuracy": 0.5102207686017989,
+      "high_conf_roi": -0.02594216903292945
+    },
+    {
+      "market": "1h_total",
+      "model_type": "gradient_boosting",
+      "n_bets": 2200,
+      "accuracy": 0.505,
+      "roi": -0.035909090909090904,
+      "profit": -78.99999999999999,
+      "high_conf_n": 1209,
+      "high_conf_accuracy": 0.5078577336641853,
+      "high_conf_roi": -0.03045341755019173
+    },
+    {
+      "market": "fg_spread",
+      "model_type": "gradient_boosting",
+      "n_bets": 6298,
+      "accuracy": 0.507621467132423,
+      "roi": -0.030904471838101553,
+      "profit": -194.63636363636357,
+      "high_conf_n": 2186,
+      "high_conf_accuracy": 0.5,
+      "high_conf_roi": -0.04545454545454545
+    },
+    {
+      "market": "fg_total",
+      "model_type": "gradient_boosting",
+      "n_bets": 6301,
+      "accuracy": 0.5059514362799555,
+      "roi": -0.03409271255644846,
+      "profit": -214.81818181818176,
+      "high_conf_n": 2274,
+      "high_conf_accuracy": 0.534740545294635,
+      "high_conf_roi": 0.02086831374430319
+    }
+  ]
+}
