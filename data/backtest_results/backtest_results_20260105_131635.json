@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-01-05T19:16:35.521878+00:00",
+  "markets_tested": 2,
+  "algorithms_tested": [
+    "random_forest"
+  ],
+  "results": [
+    {
+      "algorithm": "random_forest",
+      "market": "fg_spread",
+      "accuracy": 0.5486058779201206,
+      "precision": 0.5740740740740741,
+      "recall": 0.5352517985611511,
+      "f1_score": 0.5539836187639613,
+      "roc_auc": 0.5802898187778891,
+      "total_bets": 1327,
+      "profitable_bets": "728",
+      "roi_pct": 4.860587792012061,
+      "max_drawdown": -5.0,
+      "sharpe_ratio": 0.8,
+      "hyperparameters": {},
+      "feature_importance": {
+        "spread_line": 0.23921081044273124,
+        "day_of_week": 0.09266409353492365,
+        "month": 0.1058689260193448,
+        "is_weekend": 0.01778301310012667,
+        "predicted_margin_leakage_free": 0.5444731569028737
+      },
+      "confusion_matrix": [
+        [
+          356,
+          276
+        ],
+        [
+          323,
+          372
+        ]
+      ]
+    },
+    {
+      "algorithm": "random_forest",
+      "market": "fg_total",
+      "accuracy": 0.5995065789473685,
+      "precision": 0.544392523364486,
+      "recall": 0.4438095238095238,
+      "f1_score": 0.48898216159496327,
+      "roc_auc": 0.6264240920680862,
+      "total_bets": 1216,
+      "profitable_bets": "729",
+      "roi_pct": 9.950657894736848,
+      "max_drawdown": -5.0,
+      "sharpe_ratio": 0.8,
+      "hyperparameters": {},
+      "feature_importance": {
+        "total_line": 0.34586939095958213,
+        "day_of_week": 0.09093622432279312,
+        "month": 0.10044442894225088,
+        "is_weekend": 0.014685569578099418,
+        "predicted_total_leakage_free": 0.4480643861972743
+      },
+      "confusion_matrix": [
+        [
+          496,
+          195
+        ],
+        [
+          292,
+          233
+        ]
+      ]
+    }
+  ]
+}
