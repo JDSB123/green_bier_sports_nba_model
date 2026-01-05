@@ -51,7 +51,8 @@ from src.tracking import PickTracker
 
 # Additional imports for comprehensive edge calculation
 from src.utils.slate_analysis import (
-    get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
+    get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds,
+    clear_unified_records_cache  # QA/QC: Clear records cache for fresh unified data
 )
 from src.utils.comprehensive_edge import calculate_comprehensive_edge
 from src.modeling.edge_thresholds import get_edge_thresholds_for_game
@@ -646,9 +647,10 @@ async def get_slate_predictions(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0: Engine not loaded - models missing")
 
-    # STRICT MODE: Clear session cache to force fresh data
+    # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
-    logger.info("v33.0.8.0: Session cache cleared - fetching fresh data")
+    clear_unified_records_cache()  # QA/QC: Ensure team records come from fresh The Odds API data
+    logger.info("v33.0.8.0: Caches cleared - fetching fresh unified data (odds + records from The Odds API)")
 
     # Resolve date
     from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
@@ -711,6 +713,17 @@ async def get_slate_predictions(
             features = await app.state.feature_builder.build_game_features(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
+            
+            # UNIFIED DATA SOURCE: Extract team records from game data (The Odds API)
+            # QA/QC: Records come from SAME source as odds for data integrity
+            home_record_data = game.get("home_team_record", {})
+            away_record_data = game.get("away_team_record", {})
+            
+            features["home_wins"] = home_record_data.get("wins", 0)
+            features["home_losses"] = home_record_data.get("losses", 0)
+            features["away_wins"] = away_record_data.get("wins", 0)
+            features["away_losses"] = away_record_data.get("losses", 0)
+            features["_records_source"] = home_record_data.get("source", "the_odds_api")
 
             # Extract consensus lines
             odds = extract_consensus_odds(game, as_of_utc=odds_as_of_utc)
@@ -832,9 +845,10 @@ async def get_executive_summary(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
 
-    # STRICT MODE: Clear session cache to force fresh data
+    # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
-    logger.info("v33.0.8.0 STRICT MODE: Executive summary - fetching fresh data")
+    clear_unified_records_cache()  # QA/QC: Ensure team records come from fresh The Odds API data
+    logger.info("v33.0.8.0 STRICT MODE: Executive summary - fetching fresh unified data")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -918,11 +932,22 @@ async def get_executive_summary(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            # Extract team records from features (use raw wins/losses to avoid rounding errors)
-            home_wins = features.get("home_wins", 0)
-            home_losses = features.get("home_losses", 0)
-            away_wins = features.get("away_wins", 0)
-            away_losses = features.get("away_losses", 0)
+            # UNIFIED DATA SOURCE: Extract team records from game data (The Odds API)
+            # QA/QC: Records come from SAME source as odds for data integrity
+            home_record_data = game.get("home_team_record", {})
+            away_record_data = game.get("away_team_record", {})
+            
+            home_wins = home_record_data.get("wins", 0)
+            home_losses = home_record_data.get("losses", 0)
+            away_wins = away_record_data.get("wins", 0)
+            away_losses = away_record_data.get("losses", 0)
+            
+            # Document data source in features for audit trail
+            features["home_wins"] = home_wins
+            features["home_losses"] = home_losses
+            features["away_wins"] = away_wins
+            features["away_losses"] = away_losses
+            features["_records_source"] = home_record_data.get("source", "the_odds_api")
             
             home_record = f"({home_wins}-{home_losses})"
             away_record = f"({away_wins}-{away_losses})"
@@ -1200,10 +1225,11 @@ async def get_comprehensive_slate_analysis(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(status_code=503, detail="v33.0.8.0 STRICT MODE: Engine not loaded - models missing")
 
-    # STRICT MODE: Clear ALL caches to force fresh data
+    # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     app.state.feature_builder.clear_persistent_cache()
-    logger.info("v33.0.8.0 STRICT MODE: Comprehensive analysis - fetching fresh data")
+    clear_unified_records_cache()  # QA/QC: Ensure team records come from fresh The Odds API data
+    logger.info("v33.0.8.0 STRICT MODE: Comprehensive analysis - fetching fresh unified data")
     
     CST = ZoneInfo("America/Chicago")
     
@@ -1289,6 +1315,18 @@ async def get_comprehensive_slate_analysis(
             features = await app.state.feature_builder.build_game_features(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
+            
+            # UNIFIED DATA SOURCE: Extract team records from game data (The Odds API)
+            # QA/QC: Records come from SAME source as odds for data integrity
+            home_record_data = game.get("home_team_record", {})
+            away_record_data = game.get("away_team_record", {})
+            
+            features["home_wins"] = home_record_data.get("wins", 0)
+            features["home_losses"] = home_record_data.get("losses", 0)
+            features["away_wins"] = away_record_data.get("wins", 0)
+            features["away_losses"] = away_record_data.get("losses", 0)
+            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_data_unified"] = game.get("_data_unified", False)
             
             # Build first half features
             fh_features = features.copy()

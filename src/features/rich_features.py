@@ -3,6 +3,19 @@ Build rich features from API-Basketball endpoints.
 
 FRESH DATA ONLY - No file caching, no silent fallbacks.
 
+DATA SOURCE ARCHITECTURE (QA/QC):
+================================
+This module uses API-Basketball for INTERNAL feature calculations:
+- Team statistics, H2H history, standings position
+- Recent form, efficiency ratings, pace factors
+
+IMPORTANT: For OUTPUT/DISPLAY purposes (team records shown with picks),
+the serving layer (app.py) uses The Odds API scores to calculate
+team W-L records. This ensures DATA INTEGRITY by keeping odds and
+records from the SAME source (The Odds API).
+
+See src/utils/slate_analysis.py for unified data source implementation.
+
 Inspired by proven NBA models (FiveThirtyEight, DRatings, Cleaning the Glass):
 - Tempo-free efficiency ratings (ORtg/DRtg)
 - Pace adjustment for matchups
@@ -33,6 +46,7 @@ import pandas as pd
 from src.config import settings
 from src.ingestion import api_basketball
 from src.ingestion.api_basketball import normalize_standings_response
+from src.ingestion.espn import fetch_espn_standings
 from src.modeling.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
