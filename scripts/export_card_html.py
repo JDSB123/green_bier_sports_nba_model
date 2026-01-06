@@ -11,6 +11,7 @@ import json
 import sys
 import os
 import argparse
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from urllib.request import Request, urlopen
@@ -20,6 +21,28 @@ from urllib.error import URLError
 TEAMS_WEBHOOK_URL = os.getenv("TEAMS_WEBHOOK_URL", "")
 API_PORT = os.getenv("NBA_API_PORT", "8090")
 API_BASE = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
+
+# Team name to 3-letter abbreviation mapping
+TEAM_ABBREV = {
+    "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN",
+    "Charlotte Hornets": "CHA", "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE",
+    "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN", "Detroit Pistons": "DET",
+    "Golden State Warriors": "GSW", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
+    "LA Clippers": "LAC", "Los Angeles Clippers": "LAC", "Los Angeles Lakers": "LAL",
+    "Memphis Grizzlies": "MEM", "Miami Heat": "MIA", "Milwaukee Bucks": "MIL",
+    "Minnesota Timberwolves": "MIN", "New Orleans Pelicans": "NOP", "New York Knicks": "NYK",
+    "Oklahoma City Thunder": "OKC", "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI",
+    "Phoenix Suns": "PHX", "Portland Trail Blazers": "POR", "Sacramento Kings": "SAC",
+    "San Antonio Spurs": "SAS", "Toronto Raptors": "TOR", "Utah Jazz": "UTA",
+    "Washington Wizards": "WAS"
+}
+
+
+def get_team_abbrev(team_name: str) -> str:
+    """Get 3-letter abbreviation for team name."""
+    # Remove record from name like "Boston Celtics (25-10)"
+    clean_name = team_name.split("(")[0].strip()
+    return TEAM_ABBREV.get(clean_name, clean_name[:3].upper())
 
 
 def fetch_executive_data(date: str = "today", api_base: str = None) -> dict:
@@ -36,16 +59,59 @@ def fetch_executive_data(date: str = "today", api_base: str = None) -> dict:
         sys.exit(1)
 
 
-def get_fire_tier(rating: str) -> str:
-    """Convert fire emoji rating to tier name."""
-    fire_count = rating.count("\U0001F525")  # Count fire emojis
-    if fire_count >= 3:
+def get_fire_tier(rating) -> str:
+    """Convert fire rating to tier name.
+    
+    Handles both integer ratings (1-5) from API and legacy emoji strings.
+    """
+    if isinstance(rating, int):
+        fire_count = rating
+    elif isinstance(rating, str):
+        # Legacy: count fire emojis if present
+        fire_count = rating.count("\U0001F525")
+        # Or try to parse as integer
+        if fire_count == 0 and rating.isdigit():
+            fire_count = int(rating)
+    else:
+        fire_count = 0
+    
+    if fire_count >= 4:
         return "ELITE"
-    elif fire_count == 2:
+    elif fire_count == 3:
         return "STRONG"
-    elif fire_count == 1:
+    elif fire_count == 2:
         return "GOOD"
+    elif fire_count == 1:
+        return "FAIR"
     return "WATCH"
+
+
+def _get_fire_count(rating) -> int:
+    """Extract fire count from rating (int or string)."""
+    if isinstance(rating, int):
+        return rating
+    elif isinstance(rating, str):
+        fire_count = rating.count("\U0001F525")
+        if fire_count == 0 and rating.isdigit():
+            return int(rating)
+        return fire_count
+    return 0
+
+
+def _get_fire_emoji(rating) -> str:
+    """Convert fire rating to emoji string."""
+    count = _get_fire_count(rating)
+    return "🔥" * min(count, 5)
+
+
+def _parse_edge(edge_str) -> float:
+    """Parse edge value from string like '+4.2 pts'."""
+    if isinstance(edge_str, (int, float)):
+        return float(edge_str)
+    if not edge_str:
+        return 0.0
+    match = re.search(r'([+-]?\d+\.?\d*)', str(edge_str))
+    return float(match.group(1)) if match else 0.0
 
 
 def format_teams_message(data: dict) -> dict:
@@ -57,14 +123,14 @@ def format_teams_message(data: dict) -> dict:
     title = f"🏀 NBA PICKS - {now_cst.strftime('%m/%d/%Y')} @ {now_cst.strftime('%I:%M %p').lower()} CST"
     
     # Count by tier
-    elite = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
-    strong = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"]
-    good = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "GOOD"]
+    elite = [p for p in plays if get_fire_tier(p.get("fire_rating", 0)) == "ELITE"]
+    strong = [p for p in plays if get_fire_tier(p.get("fire_rating", 0)) == "STRONG"]
+    good = [p for p in plays if get_fire_tier(p.get("fire_rating", 0)) == "GOOD"]
     
     # Sort by fire rating (most fires first), then by edge
     sorted_plays = sorted(plays, key=lambda p: (
-        -p.get("fire_rating", "").count("\U0001F525"),
-        -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
+        -_get_fire_count(p.get("fire_rating", 0)),
+        -_parse_edge(p.get("edge", "0"))
     ))
     
     # Build Adaptive Card with improved formatting
@@ -115,21 +181,34 @@ def format_teams_message(data: dict) -> dict:
     for p in sorted_plays:
         # Extract data
         matchup_raw = p.get("matchup", "").strip()
-        # Clean up: "Miami Heat (15-17) @ Boston Celtics (18-12)" -> "MIA @ BOS"
-        teams = matchup_raw.split(" @ ") if " @ " in matchup_raw else ["", ""]
-        away = teams[0].split("(")[0].strip()[:10] if len(teams) > 0 else ""
-        home = teams[1].split("(")[0].strip()[:10] if len(teams) > 1 else ""
+        # Parse: "Miami Heat (15-17) @ Boston Celtics (18-12)" -> "MIA @ BOS"
+        if " @ " in matchup_raw:
+            away_full, home_full = matchup_raw.split(" @ ", 1)
+            away = get_team_abbrev(away_full)
+            home = get_team_abbrev(home_full)
+        else:
+            away = matchup_raw[:3].upper()
+            home = "TBD"
         
         period = p.get("period", "FG").upper()
-        pick = p.get("pick", "").strip()
+        pick_raw = p.get("pick", "").strip()
         confidence = p.get("model_confidence", p.get("confidence", ""))
+        
+        # Abbreviate team name in pick display
+        # "Denver Nuggets +8.5" -> "DEN +8.5", "OVER 228.5" stays as is
+        pick = pick_raw
+        if not pick.startswith("OVER") and not pick.startswith("UNDER"):
+            # It's a spread pick with team name - abbreviate
+            for team_name, abbrev in TEAM_ABBREV.items():
+                if team_name in pick:
+                    pick = pick.replace(team_name, abbrev)
+                    break
         
         # Extract confidence percentage
         conf_pct = ""
         if confidence:
             if isinstance(confidence, str):
                 # Extract number from string like "55.2%"
-                import re
                 match = re.search(r'(\d+\.?\d*)', str(confidence))
                 if match:
                     conf_pct = f"{float(match.group(1)):.0f}%"
@@ -137,29 +216,23 @@ def format_teams_message(data: dict) -> dict:
                 conf_pct = f"{float(confidence):.0f}%"
         
         market = p.get("market", "").strip()
-        market_line = p.get("pick_odds", p.get("market_line", "N/A"))
+        market_line = p.get("market_line", "N/A")
+        pick_odds = p.get("pick_odds", "-110")
         
-        # Edge calculation: model line vs market line
+        # Edge display - API returns formatted like "+4.2 pts"
         edge_str = p.get("edge", "")
-        # Standardize edge to points: extract numeric value
-        import re
-        edge_match = re.search(r'([+-]?\d+\.?\d*)', str(edge_str))
-        if edge_match:
-            edge_val = float(edge_match.group(1))
-            if "%" in str(edge_str):
-                # If it's a percentage, convert (rough estimate: divide by 10)
-                edge_pts = f"+{edge_val/10:.1f}pts" if edge_val > 0 else f"{edge_val/10:.1f}pts"
-            else:
-                edge_pts = f"+{edge_val:.1f}pts" if edge_val > 0 else f"{edge_val:.1f}pts"
+        if isinstance(edge_str, str) and edge_str:
+            edge_display = edge_str.replace(" pts", "")  # Keep the +X.X format
         else:
-            edge_pts = "N/A"
+            edge_display = f"{_parse_edge(edge_str):+.1f}"
         
-        fire_rating = p.get("fire_rating", "")
+        # Fire rating handling - API returns integer 1-5
+        fire_rating = p.get("fire_rating", 0)
         tier = get_fire_tier(fire_rating)
+        fire_emoji = _get_fire_emoji(fire_rating)
         
-        # Tier color
-        tier_color = "Attention" if tier == "ELITE" else "Warning" if tier == "STRONG" else "Good"
-        tier_emoji = "🔥🔥🔥" if tier == "ELITE" else "🔥🔥" if tier == "STRONG" else "🔥"
+        # Tier color based on rating
+        tier_color = "Attention" if tier == "ELITE" else "Warning" if tier == "STRONG" else "Good" if tier == "GOOD" else "Default"
         
         # Combine pick + confidence
         pick_with_conf = f"{pick}" + (f"\n({conf_pct})" if conf_pct else "")
@@ -170,8 +243,8 @@ def format_teams_message(data: dict) -> dict:
                 {"type": "Column", "width": "40", "items": [{"type": "TextBlock", "text": period, "size": "Small", "weight": "Bolder"}]},
                 {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": f"{away}\n@\n{home}", "size": "Small", "weight": "Bolder", "wrap": True}]},
                 {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": pick_with_conf, "size": "Small", "weight": "Bolder", "color": "Accent", "wrap": True}]},
-                {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": str(market_line)[:15], "size": "Small", "wrap": True}]},
-                {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": f"{edge_pts}\n{tier_emoji}", "size": "Small", "weight": "Bolder", "color": tier_color, "wrap": True}]}
+                {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": f"{market_line} ({pick_odds})", "size": "Small", "wrap": True}]},
+                {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": f"{edge_display}\n{fire_emoji}", "size": "Small", "weight": "Bolder", "color": tier_color, "wrap": True}]}
             ],
             "spacing": "Small",
             "separator": True
