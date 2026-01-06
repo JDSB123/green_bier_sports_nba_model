@@ -27,6 +27,25 @@ if not TEAMS_WEBHOOK_URL:
 # For Azure: export NBA_API_URL=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv | xargs -I{} echo "https://{}")
 API_PORT = os.getenv("NBA_API_PORT", "8090")
 API_BASE = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
+NBA_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "").strip()
+MODEL_PACK_PATH = os.getenv("NBA_MODEL_PACK_PATH", "models/production/model_pack.json")
+
+
+def load_model_timestamp(path: str = MODEL_PACK_PATH) -> str:
+    """
+    Get the model updated timestamp (CST) from model_pack.json.
+    Returns empty string if not available.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        ts = data.get("created_at") or ""
+        if ts:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(ZoneInfo("America/Chicago"))
+            return dt.strftime("%Y-%m-%d %I:%M %p CST")
+    except Exception:
+        pass
+    return ""
 
 
 def fetch_executive_data(date: str = "today", api_base: str = None) -> dict:
@@ -58,10 +77,16 @@ def get_fire_tier(rating: str) -> str:
 def format_teams_message(data: dict) -> dict:
     """Format betting card as Teams Adaptive Card."""
     plays = data.get("plays", [])
-    
+    model_version = NBA_MODEL_VERSION or data.get("version") or "unknown"
+    model_updated_cst = load_model_timestamp()
+
     # Generate title with CST timestamp
     now_cst = datetime.now(ZoneInfo("America/Chicago"))
     title = f"🏀 NBA PICKS - {now_cst.strftime('%m/%d/%Y')} @ {now_cst.strftime('%I:%M %p').lower()} CST"
+    subtitle_parts = [f"Model: {model_version}"]
+    if model_updated_cst:
+        subtitle_parts.append(f"Model updated: {model_updated_cst}")
+    subtitle = " | ".join(subtitle_parts)
     
     # Count by tier
     elite = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
@@ -98,6 +123,14 @@ def format_teams_message(data: dict) -> dict:
                         "spacing": "Small",
                         "color": "Light",
                         "size": "Medium"
+                    },
+                    {
+                        "type": "TextBlock",
+                        "text": subtitle,
+                        "spacing": "Small",
+                        "color": "Light",
+                        "size": "Small",
+                        "wrap": True
                     }
                 ],
                 "bleed": True
