@@ -3,7 +3,7 @@
 Bump version across all files in the NBA prediction repository.
 
 Usage:
-    python scripts/bump_version.py NBA_v33.0.10.0
+    python scripts/bump_version.py NBA_v33.0.11.0
     python scripts/bump_version.py NBA_v33.1.0.0 --dry-run
 """
 import argparse
@@ -77,7 +77,7 @@ def find_and_replace(file_path: Path, pattern: str, replacement: str, new_versio
 
 def main():
     parser = argparse.ArgumentParser(description="Bump NBA model version across all files")
-    parser.add_argument("version", help="New version (e.g., NBA_v33.0.10.0)")
+    parser.add_argument("version", help="New version (e.g., NBA_v33.0.11.0)")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be changed without modifying files")
     args = parser.parse_args()
     
@@ -85,7 +85,7 @@ def main():
     if not validate_version(args.version):
         print(f"[ERROR] Invalid version format: {args.version}")
         print("   Expected format: NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>")
-        print("   Example: NBA_v33.0.10.0")
+        print("   Example: NBA_v33.0.11.0")
         sys.exit(1)
     
     print("=" * 80)
@@ -159,3 +159,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

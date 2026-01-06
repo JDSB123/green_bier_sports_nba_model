@@ -45,7 +45,7 @@ infra/
 pwsh ./infra/nba/deploy.ps1
 
 # With specific tag
-pwsh ./infra/nba/deploy.ps1 -Tag NBA_v33.0.10.0
+pwsh ./infra/nba/deploy.ps1 -Tag NBA_v33.0.11.0
 
 # Preview changes (what-if)
 pwsh ./infra/nba/deploy.ps1 -WhatIf
@@ -75,3 +75,4 @@ powershell -File scripts/export_rg_baseline.ps1 -ResourceGroupName nba-gbsv-mode
 # Audit tags
 powershell -File scripts/rg_compliance_report.ps1 -ResourceGroupName nba-gbsv-model-rg
 ```
+

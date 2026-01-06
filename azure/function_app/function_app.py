@@ -1,7 +1,7 @@
 """
 Azure Function: NBA Picks Trigger - Green Bier Sport Ventures
 
-v33.0.10.0 STRICT MODE: Always fetches FRESH data before predictions.
+v33.0.11.0 STRICT MODE: Always fetches FRESH data before predictions.
 
 Triggers the NBA prediction API and posts results to Teams.
 Supports interactive commands via Teams messages or direct HTTP calls.
@@ -619,11 +619,11 @@ def menu(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="health", methods=["GET"])
 def health(req: func.HttpRequest) -> func.HttpResponse:
-    """Health check endpoint - v33.0.10.0 STRICT MODE."""
+    """Health check endpoint - v33.0.11.0 STRICT MODE."""
     return func.HttpResponse(
         json.dumps({
             "status": "ok",
-            "version": "v33.0.10.0",
+            "version": "v33.0.11.0",
             "mode": "STRICT",
             "service": "nba-picks-trigger",
             "api_url": _get_nba_api_url(),
@@ -655,7 +655,7 @@ def weekly_lineup_nba(req: func.HttpRequest) -> func.HttpResponse:
         "sport": "NBA",
         "date": "2025-12-25",
         "generated_at": "2025-12-25T10:30:00Z",
-        "version": "v33.0.10.0",
+        "version": "v33.0.11.0",
         "summary": {"total": 12, "elite": 3, "strong": 5, "good": 4},
         "picks": [...]
     }
@@ -735,7 +735,7 @@ def weekly_lineup_nba(req: func.HttpRequest) -> func.HttpResponse:
         "sport": "NBA",
         "date": date,
         "generated_at": datetime.utcnow().isoformat() + "Z",
-        "version": "v33.0.10.0",
+        "version": "v33.0.11.0",
         "summary": {
             "total": len(all_plays),
             "elite": elite_count,
@@ -1312,5 +1312,6 @@ def csv_download(req: func.HttpRequest) -> func.HttpResponse:
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
 
 

@@ -1,4 +1,4 @@
-# NBA v33.0.10.0 - Docker Compose Production Configuration (4 Independent Markets)
+# NBA v33.0.11.0 - Docker Compose Production Configuration (4 Independent Markets)
 #
 # CONFIGURATION (via .env file or environment):
 #   NBA_API_PORT - External port (default: 8090)
@@ -20,7 +20,7 @@ version: "3.8"
 
 services:
   # ==========================================================================
-  # NBA v33.0.10.0 - Production API (4 Independent Markets)
+  # NBA v33.0.11.0 - Production API (4 Independent Markets)
   # ==========================================================================
   nba-v33-api:
     build:
@@ -52,8 +52,8 @@ services:
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
 
-      # v33.0.10.0 configuration (4 independent markets - 1H + FG)
-      - NBA_MODEL_VERSION=NBA_v33.0.10.0
+      # v33.0.11.0 configuration (4 independent markets - 1H + FG)
+      - NBA_MODEL_VERSION=NBA_v33.0.11.0
       - NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
       - NBA_PERIODS=first_half,full_game
 
@@ -105,4 +105,6 @@ services:
 # volumes:
 #   nba-outputs:
 #     driver: local
+
+
 

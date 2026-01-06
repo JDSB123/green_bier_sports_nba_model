@@ -17,7 +17,7 @@
 
 .EXAMPLE
     .\deploy.ps1
-    .\deploy.ps1 -Tag NBA_v33.0.10.0
+    .\deploy.ps1 -Tag NBA_v33.0.11.0
     .\deploy.ps1 -WhatIf
 #>
 
@@ -110,3 +110,4 @@ if ($LASTEXITCODE -eq 0) {
     Write-Error "Deployment failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
 }
+

@@ -1,4 +1,4 @@
-# NBA_v33.0.10.0 - Production Container - STRICT MODE
+# NBA_v33.0.11.0 - Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
 #
 # STRICT MODE: FRESH DATA ONLY
@@ -45,7 +45,7 @@ FROM python:3.11.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="NBA_v33.0.10.0"
+LABEL version="NBA_v33.0.11.0"
 LABEL description="NBA Production Picks Model - STRICT MODE - 4 Independent Markets (1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app
@@ -77,7 +77,7 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 
 # Verify ALL 4 REQUIRED model files exist (fail fast if missing)
 # 4 markets: 1H (2) + FG (2), with 1H having separate feature files
-RUN echo "=== NBA_v33.0.10.0 Model Verification ===" && \
+RUN echo "=== NBA_v33.0.11.0 Model Verification ===" && \
     echo "Checking for 4 independent market models (1H + FG)..." && \
     ls -la /app/data/processed/models/ && \
     echo "" && \
@@ -131,7 +131,7 @@ ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV ALLOWED_ORIGINS=*
 
 # STRICT MODE - All 4 markets required, FRESH DATA ONLY (baked-in env defaults)
-ENV NBA_MODEL_VERSION=NBA_v33.0.10.0
+ENV NBA_MODEL_VERSION=NBA_v33.0.11.0
 ENV NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
 ENV NBA_PERIODS=first_half,full_game
 ENV NBA_STRICT_MODE=true
@@ -163,3 +163,4 @@ EXPOSE 8080
 # Run with read-only filesystem support
 # Model outputs should be written to mounted volume or /app/outputs
 CMD ["uvicorn", "src.serving.app:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "2"]
+

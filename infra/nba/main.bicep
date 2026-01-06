@@ -21,7 +21,7 @@ param location string = resourceGroup().location
 param environment string = 'prod'
 
 @description('NBA app semantic version (tag + resource tagging)')
-param versionTag string = 'NBA_v33.0.10.0'
+param versionTag string = 'NBA_v33.0.11.0'
 
 @description('Container image tag (defaults to versionTag)')
 param imageTag string = versionTag
@@ -364,3 +364,4 @@ output keyVaultUri string = keyVault.properties.vaultUri
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
 output functionAppUrl string = deployTeamsBot ? 'https://${functionApp.properties.defaultHostName}' : ''
 output botEndpoint string = deployTeamsBot && microsoftAppId != '' ? 'https://${functionApp.properties.defaultHostName}/api/bot' : ''
+

@@ -1,4 +1,4 @@
-"""Tests for the FastAPI serving application - v33.0.10.0 STRICT MODE.
+"""Tests for the FastAPI serving application - v33.0.11.0 STRICT MODE.
 
 Active markets: 1H + FG (spreads, totals). Q1 is disabled.
 """
@@ -62,7 +62,7 @@ def mock_engine():
     }
     # Mock get_model_info for health endpoint
     engine.get_model_info.return_value = {
-                        "version": "NBA_v33.0.10.0",
+                                "version": "NBA_v33.0.11.0",
         "architecture": "1H + FG spreads/totals only",
         "markets": 4,
         "markets_list": [
@@ -141,10 +141,10 @@ def test_health_endpoint_without_engine():
     assert data["engine_loaded"] is False
 
 def test_predict_game_success(app_with_engine):
-    """Test successful single game prediction - v33.0.10.0 (1H + FG)."""
+    """Test successful single game prediction - v33.0.11.0 (1H + FG)."""
     client = TestClient(app_with_engine)
 
-    # v33.0.10.0: Full game lines required, 1H optional
+    # v33.0.11.0: Full game lines required, 1H optional
     request_data = {
         "home_team": "Cleveland Cavaliers",
         "away_team": "Chicago Bulls",
@@ -228,3 +228,4 @@ def test_predict_game_with_only_fg_lines(app_with_engine):
     assert response.status_code == 200
     data = response.json()
     assert "full_game" in data
+

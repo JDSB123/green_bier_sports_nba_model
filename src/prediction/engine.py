@@ -1,5 +1,5 @@
 """
-NBA v33.0.10.0 - Unified Prediction Engine
+NBA v33.0.11.0 - Unified Prediction Engine
 
 PRODUCTION: 4 INDEPENDENT Markets (1H + FG spreads/totals)
 
@@ -15,7 +15,7 @@ ARCHITECTURE: Each period has INDEPENDENT models trained on period-specific
 features. No cross-period dependencies. Uses matchup-based formulas for
 predicted totals (not scaled from FG).
 
-v33.0.10.0 FIXES:
+v33.0.11.0 FIXES:
     - bet_side now based on EDGE calculation, not classifier
     - Added classifier sanity check to detect data drift (extreme probabilities)
     - FIXED: 1H models now use 1H-specific features (not FG features)
@@ -33,7 +33,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 # Single source of truth for version - read from environment variable
-MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.10.0")
+MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.11.0")
 
 import logging
 import joblib
@@ -290,7 +290,7 @@ class PeriodPredictor:
         edge = predicted_margin + spread_line
         prediction_side = "home" if edge > 0 else "away"
 
-        # v33.0.10.0 FIX: Classifier sanity check - detect broken/drifted models
+        # v33.0.11.0 FIX: Classifier sanity check - detect broken/drifted models
         # If classifier outputs extreme probability (>99% or <1%), it's unreliable
         classifier_extreme = (home_cover_prob > 0.99 or home_cover_prob < 0.01)
         if classifier_extreme:
@@ -299,7 +299,7 @@ class PeriodPredictor:
                 f"Model may have data drift."
             )
 
-        # v33.0.10.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
+        # v33.0.11.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
         # The edge calculation is more robust than a potentially drifted classifier
         bet_side = prediction_side
 
@@ -422,7 +422,7 @@ class PeriodPredictor:
         edge = predicted_total - total_line
         prediction_side = "over" if edge > 0 else "under"
 
-        # v33.0.10.0 FIX: Classifier sanity check - detect broken/drifted models
+        # v33.0.11.0 FIX: Classifier sanity check - detect broken/drifted models
         # If classifier outputs extreme probability (>99% or <1%), it's unreliable
         # This catches the FG Total model data drift issue (always outputs 100% over)
         classifier_extreme = (over_prob > 0.99 or over_prob < 0.01)
@@ -432,7 +432,7 @@ class PeriodPredictor:
                 f"Model may have data drift."
             )
 
-        # v33.0.10.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
+        # v33.0.11.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
         # The edge calculation is more robust than a potentially drifted classifier
         bet_side = prediction_side
 
@@ -539,7 +539,7 @@ class UnifiedPredictionEngine:
         self.h1_predictor: Optional[PeriodPredictor] = None
         self.fg_predictor: Optional[PeriodPredictor] = None
 
-        logger.info("[v33.0.10.0] Loading 1H + FG models (spread/total only)...")
+        logger.info("[v33.0.11.0] Loading 1H + FG models (spread/total only)...")
 
         # Load 1H models - spread/total required
         logger.info("Loading 1H models (spread, total)...")
@@ -556,7 +556,7 @@ class UnifiedPredictionEngine:
         # Legacy predictors for backwards compatibility
         self._init_legacy_predictors()
 
-        # Verify loaded models (v33.0.10.0 expects spreads/totals)
+        # Verify loaded models (v33.0.11.0 expects spreads/totals)
         loaded_count = sum(
             1
             for k, v in self.loaded_models.items()
@@ -710,7 +710,7 @@ class UnifiedPredictionEngine:
         """
         Initialize legacy predictors for backwards compatibility.
 
-        DEPRECATED (v33.0.10.0): These predictors are NOT used by any production code path.
+        DEPRECATED (v33.0.11.0): These predictors are NOT used by any production code path.
         All predictions go through PeriodPredictor.predict_spread/predict_total.
         Keeping for API stability but may be removed in v34.0.
         """
@@ -848,3 +848,4 @@ class UnifiedPredictionEngine:
                 "fg": self.fg_predictor is not None,
             },
         }
+

@@ -23,7 +23,7 @@ import gzip
 logger = logging.getLogger(__name__)
 
 # Model version from central source
-_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.10.0")
+_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.11.0")
 
 
 @dataclass

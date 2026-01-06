@@ -111,3 +111,4 @@ nba_picks_*.html
 *.tmp
 temp/
 .claude/
+telegram_tracker.md

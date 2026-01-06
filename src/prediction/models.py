@@ -1,7 +1,7 @@
 """
 Model loading and management for predictions.
 
-NBA v33.0.10.0: 4 independent markets (1H + FG spreads/totals)
+NBA v33.0.11.0: 4 independent markets (1H + FG spreads/totals)
 """
 from pathlib import Path
 from typing import Tuple, Any, List
@@ -165,5 +165,6 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
             f"1H total model not found at {model_path} or {legacy_model_path}. "
             f"Run: python scripts/train_models.py --market 1h"
         )
+
 
 

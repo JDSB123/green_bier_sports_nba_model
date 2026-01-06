@@ -119,7 +119,7 @@ class TotalPredictor:
         # Check dual-signal agreement
         signals_agree = (classifier_side == prediction_side)
 
-        # v33.0.10.0: Classifier sanity check - detect broken/drifted models
+        # v33.0.11.0: Classifier sanity check - detect broken/drifted models
         classifier_extreme = (over_prob > 0.99 or over_prob < 0.01)
 
         passes_filter, filter_reason = self.fg_filter.should_bet(confidence=confidence)
@@ -145,7 +145,7 @@ class TotalPredictor:
             "classifier_side": classifier_side,  # What the ML classifier said
             "prediction_side": prediction_side,  # What the point prediction said
             "signals_agree": signals_agree,
-            "classifier_extreme": classifier_extreme,  # v33.0.10.0: True if classifier unreliable
+            "classifier_extreme": classifier_extreme,  # v33.0.11.0: True if classifier unreliable
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
@@ -229,3 +229,4 @@ class TotalPredictor:
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
         }
+

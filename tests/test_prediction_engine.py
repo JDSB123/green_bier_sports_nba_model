@@ -1,4 +1,4 @@
-"""Tests for the UnifiedPredictionEngine and PeriodPredictor - v33.0.10.0.
+"""Tests for the UnifiedPredictionEngine and PeriodPredictor - v33.0.11.0.
 
 Active markets: First Half and Full Game (spreads, totals).
 """
@@ -311,3 +311,4 @@ class TestFilterThresholds:
         # Large edge (11.5 > 1.0 threshold) - should pass both filters
         assert result["passes_filter"] is True
         assert result["filter_reason"] is None
+

@@ -41,6 +41,7 @@ from src.prediction.models import (
     load_first_half_spread_model,
     load_first_half_total_model,
 )
+from src.modeling.unified_features import get_feature_defaults
 # RichFeatureBuilder not needed for verification
 
 
@@ -56,10 +57,8 @@ def verify_model_files(models_dir: Path) -> dict:
     required_models = {
         "fg_spread_model.joblib": "Full Game Spread",
         "fg_total_model.joblib": "Full Game Total",
-        "1h_spread_model.pkl": "First Half Spread",
-        "1h_spread_features.pkl": "First Half Spread Features",
-        "1h_total_model.pkl": "First Half Total",
-        "1h_total_features.pkl": "First Half Total Features",
+        "1h_spread_model.joblib": "First Half Spread",
+        "1h_total_model.joblib": "First Half Total",
     }
     
     for filename, description in required_models.items():
@@ -136,64 +135,45 @@ def verify_prediction_pipeline(models_dir: Path) -> dict:
     try:
         engine = UnifiedPredictionEngine(models_dir)
         
-        # Create test features
-        test_features = {
-            "home_ppg": 115.0,
-            "away_ppg": 112.0,
-            "home_papg": 110.0,
-            "away_papg": 115.0,
+        # Create test features based on model-required columns
+        model_feature_lists = []
+        for predictor in (getattr(engine, "fg_predictor", None), getattr(engine, "h1_predictor", None)):
+            if predictor:
+                model_feature_lists.append(getattr(predictor, "spread_features", []) or [])
+                model_feature_lists.append(getattr(predictor, "total_features", []) or [])
+
+        required = set()
+        for feats in model_feature_lists:
+            required.update(feats)
+
+        if not required:
+            required = set(get_feature_defaults().keys())
+
+        defaults = get_feature_defaults()
+        overrides = {
             "predicted_margin": 3.0,
             "predicted_total": 227.0,
             "predicted_margin_1h": 1.5,
             "predicted_total_1h": 113.5,
             "home_win_pct": 0.6,
             "away_win_pct": 0.4,
-            "home_avg_margin": 2.0,
-            "away_avg_margin": -1.0,
-            "home_rest_days": 2,
-            "away_rest_days": 1,
-            "home_b2b": 0,
-            "away_b2b": 0,
-            "dynamic_hca": 3.0,
-            "h2h_win_pct": 0.5,
-            "h2h_avg_margin": 0.0,
-            # Added missing features for verification
-            "away_ats_pct": 0.5,
-            "away_elo": 1500,
-            "away_injury_spread_impact": 0.0,
-            "away_star_out": 0,
-            "elo_diff": 0,
-            "home_ats_pct": 0.5,
-            "home_elo": 1500,
-            "home_injury_spread_impact": 0.0,
-            "home_star_out": 0,
-            "injury_spread_diff": 0.0,
-            "home_last_10_avg_margin": 2.0,
-            "away_last_10_avg_margin": -1.0,
-            "home_last_10_win_pct": 0.6,
-            "away_last_10_win_pct": 0.4,
-            "home_home_win_pct": 0.7,
-            "away_away_win_pct": 0.3,
-            "home_home_avg_margin": 4.0,
-            "away_away_avg_margin": -3.0,
-            # FG spread additional features
-            "ppg_diff": 3.0,
-            "win_pct_diff": 0.2,
-            "rest_advantage": 1,
-            "is_rlm_spread": 0,
-            "sharp_side_spread": 0,
-            "spread_movement": 0.0,
+            "home_margin": 2.0,
+            "away_margin": -1.0,
+            "home_rest": 2.0,
+            "away_rest": 1.0,
+            "home_b2b": 0.0,
+            "away_b2b": 0.0,
+            "spread_line": -3.5,
+            "total_line": 225.0,
             "spread_public_home_pct": 50.0,
             "spread_ticket_money_diff": 0.0,
-            # FG total additional features
-            "home_total_ppg": 225.0,
-            "away_total_ppg": 227.0,
-            "is_rlm_total": 0,
-            "sharp_side_total": 0,
-            # Rest day aliases
-            "home_days_rest": 2,
-            "away_days_rest": 1,
+            "has_real_splits": 0.0,
+            "dynamic_hca": 3.0,
         }
+        defaults.update(overrides)
+        test_features = {name: defaults.get(name, 0.0) for name in required}
+        test_features.setdefault("predicted_margin_1h", overrides["predicted_margin_1h"])
+        test_features.setdefault("predicted_total_1h", overrides["predicted_total_1h"])
         
         # Test full game predictions
         try:
@@ -230,36 +210,20 @@ def verify_feature_alignment(models_dir: Path) -> dict:
         "errors": []
     }
 
-    import pickle
+    import joblib
     import asyncio
 
     # Load model feature requirements
     model_features = {}
 
     feature_files = [
-        ("1h_spread", "1h_spread_features.pkl"),
-        ("1h_total", "1h_total_features.pkl"),
-    ]
-
-    for model_name, filename in feature_files:
-        filepath = models_dir / filename
-        if filepath.exists():
-            try:
-                with open(filepath, 'rb') as f:
-                    features = pickle.load(f)
-                model_features[model_name] = set(features)
-                results["models_checked"].append(model_name)
-            except Exception as e:
-                results["errors"].append(f"Failed to load {filename}: {e}")
-
-    # FG models stored differently - get from model dict
-    import joblib
-    fg_files = [
+        ("1h_spread", "1h_spread_model.joblib"),
+        ("1h_total", "1h_total_model.joblib"),
         ("fg_spread", "fg_spread_model.joblib"),
         ("fg_total", "fg_total_model.joblib"),
     ]
 
-    for model_name, filename in fg_files:
+    for model_name, filename in feature_files:
         filepath = models_dir / filename
         if filepath.exists():
             try:

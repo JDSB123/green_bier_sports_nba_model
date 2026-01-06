@@ -67,7 +67,7 @@ from src.modeling.period_features import MODEL_CONFIGS, get_model_features
 
 
 # Model version for tracking
-MODEL_VERSION = "33.0.10.0"
+MODEL_VERSION = "33.0.11.0"
 
 # Market configurations mapping
 MARKET_CONFIG = {
@@ -1068,3 +1068,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

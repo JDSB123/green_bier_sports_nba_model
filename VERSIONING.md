@@ -12,7 +12,7 @@
 NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
 ```
 
-Example: `NBA_v33.0.10.0`
+Example: `NBA_v33.0.11.0`
 
 - **MAJOR (33)**: Model architecture generation or breaking API changes
 - **MINOR (0)**: New features, market additions, major logic changes
@@ -58,7 +58,7 @@ Example: `NBA_v33.0.10.0`
 - Adding archiving to predictions ✅
 - Fixing Docker secrets handling ✅
 
-### BUILD (v33.0.10.0 → v33.0.10.1)
+### BUILD (v33.0.11.0 → v33.0.10.1)
 - Hotfixes for critical production issues
 - Docker configuration changes only
 - No code changes, just rebuild
@@ -82,12 +82,12 @@ Example: `NBA_v33.0.10.0`
 
 1. **Update VERSION file:**
    ```bash
-   echo "NBA_v33.0.10.0" > VERSION
+   echo "NBA_v33.0.11.0" > VERSION
    ```
 
 2. **Update all references (use script below):**
    ```powershell
-   python scripts/bump_version.py NBA_v33.0.10.0
+   python scripts/bump_version.py NBA_v33.0.11.0
    ```
    This updates:
    - [src/serving/app.py](src/serving/app.py)
@@ -101,13 +101,13 @@ Example: `NBA_v33.0.10.0`
 3. **Commit with semantic message:**
    ```bash
    git add VERSION src/ models/ tests/ .github/ README.md infra/
-   git commit -m "chore: bump version to NBA_v33.0.10.0
+   git commit -m "chore: bump version to NBA_v33.0.11.0
    
    - Fixed spread calculation bug
    - Added archive folder for historical tracking
    - Updated deployment docs"
    
-   git tag NBA_v33.0.10.0
+   git tag NBA_v33.0.11.0
    git push origin main --tags
    ```
 
@@ -202,3 +202,5 @@ A: No. Only bump when merging to `main`. Experimental branches keep the current 
 - [README.md](README.md) - Project overview
 - [.github/copilot-instructions.md](.github/copilot-instructions.md) - Deployment pipeline
 - [models/production/model_pack.json](models/production/model_pack.json) - Model metadata
+
+

@@ -1,4 +1,4 @@
-# NBA Basketball Prediction System v33.0.10.0
+# NBA Basketball Prediction System v33.0.11.0
 
 Production-grade containerized system for NBA betting predictions with **4 independent markets**.
 
@@ -32,7 +32,7 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 > **📖 Single Source of Truth:** See [`docs/STACK_FLOW_AND_VERIFICATION.md`](docs/STACK_FLOW_AND_VERIFICATION.md) for the master reference.
 
-**Versioning:** `VERSION` is the canonical release identifier (current: `NBA_v33.0.10.0`). Keep `pyproject.toml`, Dockerfiles, `docker-compose.yml`, and `scripts/train_models.py` in sync with this file before building or deploying.
+**Versioning:** `VERSION` is the canonical release identifier (current: `NBA_v33.0.11.0`). Keep `pyproject.toml`, Dockerfiles, `docker-compose.yml`, and `scripts/train_models.py` in sync with this file before building or deploying.
 
 ## Architecture Overview
 
@@ -311,3 +311,4 @@ curl http://localhost:8090/health
 # View container logs
 docker compose logs -f strict-api
 ```
+

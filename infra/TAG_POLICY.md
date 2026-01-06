@@ -7,7 +7,7 @@ Required tags (applied in Bicep modules):
 - `owner`: accountable team (e.g., `sports-analytics`, `platform-eng`)
 - `cost_center`: cost tracking (e.g., `sports-nba`, `platform-shared`)
 - `compliance`: data/process requirement (e.g., `internal`, `pii-none`)
-- `version`: semantic version sourced from repo/pipeline (e.g., `NBA_v33.0.10.0`)
+- `version`: semantic version sourced from repo/pipeline (e.g., `NBA_v33.0.11.0`)
 - `managedBy`: deployment mechanism (`bicep`)
 
 Optional tags (merged via `extraTags`):
@@ -27,3 +27,4 @@ How version flows:
 Validation:
 - CI `what-if` ensures tags are present before deploy.
 - `scripts/rg_compliance_report.ps1` can flag missing/incorrect tags.
+
