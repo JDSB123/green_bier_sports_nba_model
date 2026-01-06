@@ -45,6 +45,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read version from VERSION file
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(cat VERSION | tr -d '\n')
+          echo "ver=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Detected version: ${VERSION}"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -99,6 +108,7 @@ jobs:
           file: ./Dockerfile.combined
           push: true
           tags: |
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
           provenance: false
@@ -108,9 +118,10 @@ jobs:
         with:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
-          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
           environmentVariables: |
             REQUIRE_API_AUTH=false
+            NBA_MODEL_VERSION=${{ steps.version.outputs.ver }}
 
       - name: Smoke tests
         run: |
