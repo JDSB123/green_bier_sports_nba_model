@@ -872,6 +872,10 @@ class RichFeatureBuilder:
         hca_1h = 1.5  # Approximate 1H HCA
         predicted_margin_1h = (home_1h_margin - away_1h_margin) / 2 + hca_1h
 
+        # Form trend proxies (recent vs longer-term performance)
+        home_form_trend = home_form.get("l5_margin", 0.0) - home_form.get("l10_margin", 0.0)
+        away_form_trend = away_form.get("l5_margin", 0.0) - away_form.get("l10_margin", 0.0)
+
         # Build feature dict
         features = {
             # Team averages (raw)
@@ -898,6 +902,10 @@ class RichFeatureBuilder:
             "away_expected_pts": away_expected_pts,
             "predicted_margin": predicted_margin_nba,
             "predicted_total": predicted_total_nba,
+            "spread_line": 0.0,
+            "total_line": 0.0,
+            "spread_vs_predicted": 0.0,
+            "total_vs_predicted": 0.0,
 
             # Legacy derived (for compatibility)
             "home_avg_margin": home_ppg - home_papg,
@@ -928,6 +936,8 @@ class RichFeatureBuilder:
             "away_l5_margin": away_form["l5_margin"],
             "home_l10_margin": home_form["l10_margin"],
             "away_l10_margin": away_form["l10_margin"],
+            "home_form_trend": home_form_trend,
+            "away_form_trend": away_form_trend,
 
             # 1H-specific features (first half stats from recent form)
             "home_ppg_1h": home_form["l5_ppg_1h"],
