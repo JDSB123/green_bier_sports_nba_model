@@ -109,6 +109,13 @@ def format_teams_message(data: dict) -> dict:
             {
                 "type": "Container",
                 "style": "emphasis",
+                "bleed": True,
+                "backgroundImage": {
+                    "url": "",
+                    "fillMode": "cover",
+                    "horizontalAlignment": "center",
+                    "verticalAlignment": "center",
+                },
                 "items": [
                     {
                         "type": "TextBlock",
@@ -150,7 +157,7 @@ def format_teams_message(data: dict) -> dict:
             }
         ]
     }
-    
+
     # Add rows - one per pick
     for p in sorted_plays:
         # Extract data
@@ -217,6 +224,19 @@ def format_teams_message(data: dict) -> dict:
             "separator": True
         }
         card["body"].append(row)
+
+    # Footer with model/time stamp (CST)
+    footer_text = f"Generated {now_cst.strftime('%Y-%m-%d %I:%M %p')} CST | Model {model_version}"
+    if model_updated_cst:
+        footer_text += f" | Model updated {model_updated_cst}"
+    card["body"].append({
+        "type": "TextBlock",
+        "text": footer_text,
+        "spacing": "Medium",
+        "isSubtle": True,
+        "size": "Small",
+        "wrap": True
+    })
     
     # Wrap in Teams message format
     message = {
