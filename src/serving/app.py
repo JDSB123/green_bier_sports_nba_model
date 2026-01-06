@@ -16,15 +16,22 @@ Full Game (FG):
 STRICT MODE: Every request fetches fresh data from APIs.
 No assumptions, no defaults - all data must be explicitly provided.
 """
+import base64
+import csv
+import hashlib
+import hmac
+import io
 import os
 import json
 import logging
 import numpy as np
+import re
 import sys
 import uuid
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path as PathLib
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Path, Request
@@ -79,6 +86,102 @@ def convert_numpy_types(obj):
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     return obj
+
+
+_TEAM_KEYWORDS = {
+    "lakers": "lakers", "lal": "lakers",
+    "celtics": "celtics", "bos": "celtics",
+    "warriors": "warriors", "gsw": "warriors",
+    "nets": "nets", "bkn": "nets",
+    "knicks": "knicks", "nyk": "knicks",
+    "heat": "heat", "mia": "heat",
+    "bucks": "bucks", "mil": "bucks",
+    "sixers": "76ers", "76ers": "76ers", "phi": "76ers",
+    "suns": "suns", "phx": "suns",
+    "mavs": "mavericks", "mavericks": "mavericks", "dal": "mavericks",
+    "nuggets": "nuggets", "den": "nuggets",
+    "clippers": "clippers", "lac": "clippers",
+    "thunder": "thunder", "okc": "thunder",
+    "cavs": "cavaliers", "cavaliers": "cavaliers", "cle": "cavaliers",
+    "bulls": "bulls", "chi": "bulls",
+    "hawks": "hawks", "atl": "hawks",
+    "raptors": "raptors", "tor": "raptors",
+    "magic": "magic", "orl": "magic",
+    "pacers": "pacers", "ind": "pacers",
+    "hornets": "hornets", "cha": "hornets",
+    "wizards": "wizards", "was": "wizards",
+    "pistons": "pistons", "det": "pistons",
+    "rockets": "rockets", "hou": "rockets",
+    "spurs": "spurs", "sas": "spurs",
+    "kings": "kings", "sac": "kings",
+    "blazers": "blazers", "trailblazers": "blazers", "por": "blazers",
+    "jazz": "jazz", "uta": "jazz",
+    "wolves": "timberwolves", "timberwolves": "timberwolves", "min": "timberwolves",
+    "pelicans": "pelicans", "nop": "pelicans",
+    "grizzlies": "grizzlies", "mem": "grizzlies",
+}
+
+
+async def _validate_teams_outgoing_webhook(request: Request) -> None:
+    """Validate Teams outgoing webhook signature if configured."""
+    webhook_secret = os.environ.get("TEAMS_WEBHOOK_SECRET", "").strip()
+    if not webhook_secret:
+        logger.warning("TEAMS_WEBHOOK_SECRET not set - skipping Teams outgoing webhook validation")
+        return
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("HMAC "):
+        logger.error("Missing HMAC Authorization header for Teams outgoing webhook")
+        raise HTTPException(status_code=401, detail="Unauthorized - missing HMAC signature")
+
+    try:
+        secret_bytes = base64.b64decode(webhook_secret)
+    except Exception:
+        logger.error("Invalid TEAMS_WEBHOOK_SECRET - expected base64")
+        raise HTTPException(status_code=500, detail="Server configuration error")
+
+    body = await request.body()
+    computed_hash = hmac.new(secret_bytes, body, hashlib.sha256)
+    computed_signature = base64.b64encode(computed_hash.digest()).decode("utf-8")
+    provided_signature = auth_header[5:]
+    if not hmac.compare_digest(provided_signature, computed_signature):
+        logger.error("HMAC validation failed for Teams outgoing webhook")
+        raise HTTPException(status_code=401, detail="Unauthorized - invalid signature")
+
+
+def _parse_teams_command(text: str) -> dict:
+    """Parse Teams outgoing webhook commands into filters."""
+    normalized = text.lower().strip()
+    result = {"date": "today", "team_filter": None, "elite_only": False, "show_menu": False}
+
+    if not normalized or "help" in normalized or "menu" in normalized or "options" in normalized:
+        result["show_menu"] = True
+        return result
+
+    if "elite" in normalized or "best" in normalized or "top" in normalized:
+        result["elite_only"] = True
+
+    if "tomorrow" in normalized:
+        tomorrow = datetime.now() + timedelta(days=1)
+        result["date"] = tomorrow.strftime("%Y-%m-%d")
+
+    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", normalized)
+    if date_match:
+        result["date"] = date_match.group(1)
+    else:
+        date_match = re.search(r"(\d{1,2})/(\d{1,2})", normalized)
+        if date_match:
+            month, day = int(date_match.group(1)), int(date_match.group(2))
+            if 1 <= month <= 12 and 1 <= day <= 31:
+                year = datetime.now().year
+                result["date"] = f"{year}-{month:02d}-{day:02d}"
+
+    for key, team_keyword in _TEAM_KEYWORDS.items():
+        if key in normalized:
+            result["team_filter"] = team_keyword
+            break
+
+    return result
 
 
 # Prometheus metrics
@@ -1209,6 +1312,138 @@ async def get_executive_summary(
     })
 
 
+@app.post("/teams/outgoing")
+@limiter.limit("30/minute")
+async def teams_outgoing_webhook(request: Request):
+    """Teams outgoing webhook handler (ACA-hosted)."""
+    await _validate_teams_outgoing_webhook(request)
+
+    try:
+        body = await request.json()
+    except Exception as e:
+        logger.error("Failed to parse Teams outgoing webhook body: %s", e)
+        return JSONResponse(status_code=200, content={"text": "Invalid request body."})
+
+    raw_text = body.get("text", "") if isinstance(body, dict) else ""
+    command_text = re.sub(r"<at>.*?</at>\s*", "", raw_text).strip()
+    parsed = _parse_teams_command(command_text)
+
+    if parsed["show_menu"]:
+        help_text = (
+            "Commands: picks, picks tomorrow, picks YYYY-MM-DD, "
+            "picks lakers, elite, help"
+        )
+        return JSONResponse(status_code=200, content={"text": help_text})
+
+    try:
+        data = await get_executive_summary(request, date=parsed["date"], use_splits=True)
+    except HTTPException as e:
+        logger.error("Teams outgoing webhook request failed: %s", e.detail)
+        return JSONResponse(status_code=200, content={"text": f"Error: {e.detail}"})
+    except Exception as e:
+        logger.error("Teams outgoing webhook request failed: %s", e)
+        return JSONResponse(status_code=200, content={"text": "Failed to fetch picks."})
+
+    if not isinstance(data, dict):
+        return JSONResponse(status_code=200, content={"text": "No picks available."})
+
+    plays = data.get("plays", [])
+    total_plays = data.get("total_plays", len(plays))
+    if not plays:
+        date_label = data.get("date", parsed["date"])
+        return JSONResponse(status_code=200, content={"text": f"No picks available for {date_label}."})
+
+    team_filter = parsed["team_filter"]
+    if team_filter:
+        plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
+
+    if parsed["elite_only"]:
+        def _fire_rating_value(value) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        plays = [p for p in plays if _fire_rating_value(p.get("fire_rating")) >= 4]
+
+    if not plays:
+        parts = []
+        if parsed["elite_only"]:
+            parts.append("elite")
+        if team_filter:
+            parts.append(f"for {team_filter}")
+        label = " ".join(parts).strip()
+        label = f"{label} " if label else ""
+        date_label = data.get("date", parsed["date"])
+        return JSONResponse(status_code=200, content={"text": f"No {label}picks found for {date_label}."})
+
+    max_items = 10
+    trimmed = plays[:max_items]
+    date_label = data.get("date", parsed["date"])
+    label_parts = []
+    if parsed["elite_only"]:
+        label_parts.append("elite only")
+    if team_filter:
+        label_parts.append(team_filter)
+    label = f" ({', '.join(label_parts)})" if label_parts else ""
+    lineup_params = {"date": date_label}
+    if team_filter:
+        lineup_params["team"] = team_filter
+    if parsed["elite_only"]:
+        lineup_params["elite"] = "true"
+    lineup_url = f"{str(request.base_url).rstrip('/')}/weekly-lineup/html?{urlencode(lineup_params)}"
+    csv_url = f"{str(request.base_url).rstrip('/')}/weekly-lineup/csv?{urlencode(lineup_params)}"
+
+    def _fmt_cell(value: str, width: int) -> str:
+        text = str(value or "")
+        if len(text) <= width:
+            return text.ljust(width)
+        if width <= 3:
+            return text[:width]
+        return text[:width - 3] + "..."
+
+    columns = [
+        ("TIME", 14),
+        ("MATCHUP", 34),
+        ("SEG", 3),
+        ("PICK", 24),
+        ("EDGE", 8),
+        ("CONF", 6),
+        ("FIRE", 4),
+    ]
+    header = " ".join(_fmt_cell(label, width) for label, width in columns)
+    divider = " ".join("-" * width for _, width in columns)
+
+    lines_before = [
+        f"NBA picks for {date_label}{label}",
+        f"Showing {len(plays)} picks (sorted by EV%)",
+        "```",
+    ]
+    lines_after = [
+        "```",
+        f"CSV: {csv_url}",
+        f"HTML: {lineup_url}",
+        "Tip: use 'help' for commands.",
+    ]
+    table_lines = [header, divider]
+    for p in plays:
+        row_values = [
+            p.get("time_cst", ""),
+            p.get("matchup", ""),
+            p.get("period", ""),
+            p.get("pick", ""),
+            p.get("edge", ""),
+            p.get("confidence", ""),
+            p.get("fire_rating", ""),
+        ]
+        row = " ".join(_fmt_cell(value, width) for value, (_, width) in zip(row_values, columns))
+        table_lines.append(row)
+
+    lines = lines_before + ["\n".join(table_lines)] + lines_after
+
+    return JSONResponse(status_code=200, content={"text": "\n".join(lines)})
+
+
 @app.get("/slate/{date}/comprehensive")
 @limiter.limit("20/minute")
 async def get_comprehensive_slate_analysis(
@@ -1878,3 +2113,366 @@ async def get_picks_html(
         </body>
         </html>
         """
+
+
+@app.get("/weekly-lineup/html", response_class=HTMLResponse, tags=["Display"])
+@limiter.limit("20/minute")
+async def get_weekly_lineup_html(
+    request: Request,
+    date: Optional[str] = Query(None, description="Date (YYYY-MM-DD), defaults to today"),
+    team: Optional[str] = Query(None, description="Filter by team name/abbreviation"),
+    elite: bool = Query(False, description="Elite picks only")
+):
+    """Render full weekly lineup as sortable HTML."""
+    try:
+        from datetime import datetime as dt
+
+        if not date:
+            date = dt.now().strftime("%Y-%m-%d")
+
+        summary = await get_executive_summary(request, date=date)
+        plays = summary.get("plays", []) if isinstance(summary, dict) else []
+
+        def _fire_value(value) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        if team:
+            team_filter = team.lower().strip()
+            plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
+
+        if elite:
+            plays = [p for p in plays if _fire_value(p.get("fire_rating")) >= 4]
+
+        if not plays:
+            return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Lineup - NBA</title>
+    <style>
+        body {{ font-family: 'Segoe UI', sans-serif; background: #111827; color: #fff; padding: 40px; }}
+        .card {{ background: #1f2937; border-radius: 12px; padding: 24px; max-width: 700px; margin: 0 auto; }}
+        h1 {{ margin: 0 0 10px 0; font-size: 24px; }}
+        p {{ margin: 0; color: #9ca3af; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Weekly Lineup</h1>
+        <p>No picks available for {date}.</p>
+    </div>
+</body>
+</html>"""
+
+        def _edge_value(edge_text: str) -> float:
+            if not edge_text:
+                return 0.0
+            cleaned = edge_text.replace("pts", "").replace("%", "").replace("+", "").strip()
+            try:
+                return float(cleaned)
+            except ValueError:
+                return 0.0
+
+        def _confidence_value(conf_text: str) -> float:
+            if not conf_text:
+                return 0.0
+            cleaned = str(conf_text).replace("%", "").strip()
+            try:
+                return float(cleaned)
+            except ValueError:
+                return 0.0
+
+        def _fire_label(value: int) -> str:
+            if value >= 4:
+                return "ELITE"
+            if value == 3:
+                return "STRONG"
+            if value == 2:
+                return "GOOD"
+            return "NONE"
+
+        rows_html = ""
+        for p in plays:
+            time_cst = p.get("time_cst", "")
+            matchup = p.get("matchup", "")
+            period = p.get("period", "")
+            pick = p.get("pick", "")
+            model_prediction = p.get("model_prediction", "")
+            market_line = p.get("market_line", "")
+            edge = p.get("edge", "")
+            confidence = p.get("confidence", "")
+            fire_raw = p.get("fire_rating", 0)
+            fire_value = _fire_value(fire_raw)
+
+            rows_html += f"""
+            <tr>
+                <td data-value="{time_cst}">{time_cst}</td>
+                <td data-value="{matchup}">{matchup}</td>
+                <td data-value="{period}">{period}</td>
+                <td data-value="{pick}">{pick}</td>
+                <td data-value="{model_prediction}">{model_prediction}</td>
+                <td data-value="{market_line}">{market_line}</td>
+                <td data-value="{_edge_value(edge)}">{edge}</td>
+                <td data-value="{_confidence_value(confidence)}">{confidence}</td>
+                <td data-value="{fire_value}">{_fire_label(fire_value)}</td>
+            </tr>
+            """
+
+        filters = []
+        if team:
+            filters.append(f"Team: {team}")
+        if elite:
+            filters.append("Elite only")
+        filters_text = " | ".join(filters) if filters else "All picks"
+        generated_at = summary.get("generated_at", "")
+
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Lineup - NBA</title>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e5e7eb;
+            padding: 24px;
+        }}
+        .wrap {{
+            max-width: 1200px;
+            margin: 0 auto;
+        }}
+        .header {{
+            background: #0f172a;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }}
+        .header h1 {{
+            font-size: 24px;
+            margin-bottom: 6px;
+            color: #f9fafb;
+        }}
+        .meta {{
+            font-size: 13px;
+            color: #94a3b8;
+        }}
+        .table-card {{
+            background: #0b1220;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
+            overflow: hidden;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+        }}
+        thead {{
+            background: #111827;
+        }}
+        th, td {{
+            padding: 12px 10px;
+            border-bottom: 1px solid #1f2937;
+            font-size: 13px;
+            text-align: left;
+        }}
+        th.sortable {{
+            cursor: pointer;
+            user-select: none;
+        }}
+        th.sortable::after {{
+            content: 'v';
+            margin-left: 6px;
+            font-size: 10px;
+            color: #4b5563;
+        }}
+        th.sortable.asc::after {{
+            content: '^';
+            color: #e5e7eb;
+        }}
+        th.sortable.desc::after {{
+            content: 'v';
+            color: #e5e7eb;
+        }}
+        tbody tr:hover {{
+            background: rgba(148, 163, 184, 0.08);
+        }}
+        .badge {{
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #1f2937;
+            color: #e5e7eb;
+        }}
+        .footer {{
+            margin-top: 16px;
+            font-size: 12px;
+            color: #9ca3af;
+        }}
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="header">
+            <h1>Weekly Lineup - NBA</h1>
+            <div class="meta">{generated_at} | {filters_text} | {len(plays)} picks</div>
+        </div>
+        <div class="table-card">
+            <table id="picks-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-type="text">Time (CST)</th>
+                        <th class="sortable" data-type="text">Matchup</th>
+                        <th class="sortable" data-type="text">Seg</th>
+                        <th class="sortable" data-type="text">Pick</th>
+                        <th class="sortable" data-type="text">Model</th>
+                        <th class="sortable" data-type="text">Market</th>
+                        <th class="sortable" data-type="number">Edge</th>
+                        <th class="sortable" data-type="number">Conf</th>
+                        <th class="sortable" data-type="number">Fire</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">Click any column header to sort.</div>
+    </div>
+    <script>
+        const table = document.getElementById('picks-table');
+        const headers = Array.from(table.querySelectorAll('th.sortable'));
+
+        function getCellValue(row, index) {{
+            const cell = row.children[index];
+            const value = cell.getAttribute('data-value');
+            return value !== null ? value : cell.textContent.trim();
+        }}
+
+        function compareValues(a, b, type) {{
+            if (type === 'number') {{
+                const numA = parseFloat(a);
+                const numB = parseFloat(b);
+                return (isNaN(numA) ? 0 : numA) - (isNaN(numB) ? 0 : numB);
+            }}
+            return a.localeCompare(b);
+        }}
+
+        headers.forEach((header, index) => {{
+            header.addEventListener('click', () => {{
+                const currentAsc = header.classList.contains('asc');
+                headers.forEach(h => h.classList.remove('asc', 'desc'));
+                header.classList.add(currentAsc ? 'desc' : 'asc');
+                const ascending = !currentAsc;
+                const type = header.getAttribute('data-type') || 'text';
+
+                const rows = Array.from(table.tBodies[0].rows);
+                rows.sort((rowA, rowB) => {{
+                    const valA = getCellValue(rowA, index);
+                    const valB = getCellValue(rowB, index);
+                    const result = compareValues(valA, valB, type);
+                    return ascending ? result : -result;
+                }});
+                rows.forEach(row => table.tBodies[0].appendChild(row));
+            }});
+        }});
+    </script>
+</body>
+</html>"""
+
+        return html_content
+    except Exception as e:
+        logger.error(f"Error rendering weekly lineup HTML: {str(e)}", exc_info=True)
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Lineup - Error</title>
+    <style>
+        body {{ font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f9fafb; padding: 32px; }}
+        .card {{ background: #1f2937; border-radius: 12px; padding: 20px; }}
+        h1 {{ margin: 0 0 12px 0; }}
+        p {{ color: #e5e7eb; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Error rendering weekly lineup</h1>
+        <p>{str(e)}</p>
+    </div>
+</body>
+</html>"""
+
+
+@app.get("/weekly-lineup/csv")
+@limiter.limit("20/minute")
+async def get_weekly_lineup_csv(
+    request: Request,
+    date: Optional[str] = Query(None, description="Date (YYYY-MM-DD), defaults to today"),
+    team: Optional[str] = Query(None, description="Filter by team name/abbreviation"),
+    elite: bool = Query(False, description="Elite picks only")
+):
+    """Download weekly lineup picks as CSV."""
+    try:
+        from datetime import datetime as dt
+
+        if not date:
+            date = dt.now().strftime("%Y-%m-%d")
+
+        summary = await get_executive_summary(request, date=date)
+        plays = summary.get("plays", []) if isinstance(summary, dict) else []
+
+        def _fire_value(value) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        if team:
+            team_filter = team.lower().strip()
+            plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
+
+        if elite:
+            plays = [p for p in plays if _fire_value(p.get("fire_rating")) >= 4]
+
+        buffer = io.StringIO()
+        writer = csv.writer(buffer, lineterminator="\n")
+        writer.writerow([
+            "Time (CST)", "Matchup", "Segment", "Pick", "Model", "Market",
+            "Edge", "Confidence", "Fire Rating"
+        ])
+        for p in plays:
+            writer.writerow([
+                p.get("time_cst", ""),
+                p.get("matchup", ""),
+                p.get("period", ""),
+                p.get("pick", ""),
+                p.get("model_prediction", ""),
+                p.get("market_line", ""),
+                p.get("edge", ""),
+                p.get("confidence", ""),
+                p.get("fire_rating", ""),
+            ])
+
+        filename = f"NBA_Picks_{date}.csv"
+        return Response(
+            content=buffer.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        logger.error(f"Error generating weekly lineup CSV: {str(e)}", exc_info=True)
+        return Response(
+            content="Failed to generate CSV",
+            media_type="text/plain",
+            status_code=500
+        )
