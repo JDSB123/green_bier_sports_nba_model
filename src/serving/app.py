@@ -59,7 +59,7 @@ from src.tracking import PickTracker
 # Additional imports for comprehensive edge calculation
 from src.utils.slate_analysis import (
     get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds,
-    clear_unified_records_cache  # QA/QC: Clear records cache for fresh unified data
+    clear_unified_records_cache  # QA/QC: Clear records cache for fresh data
 )
 from src.utils.comprehensive_edge import calculate_comprehensive_edge
 from src.modeling.edge_thresholds import get_edge_thresholds_for_game
@@ -182,6 +182,32 @@ def _parse_teams_command(text: str) -> dict:
             break
 
     return result
+
+
+async def _get_espn_standings() -> dict:
+    """Fetch ESPN standings for accurate W-L records."""
+    from src.ingestion.espn import fetch_espn_standings
+    return await fetch_espn_standings()
+
+
+def _lookup_espn_record(team_name: str, standings: dict) -> dict | None:
+    """Lookup ESPN record for a team name, returning wins/losses."""
+    if not standings:
+        return None
+
+    standing = standings.get(team_name)
+    if standing:
+        return {"wins": standing.wins, "losses": standing.losses, "source": "espn"}
+
+    from src.ingestion.standardize import normalize_team_to_espn
+
+    normalized_name, is_valid = normalize_team_to_espn(team_name, source="espn_records")
+    if is_valid:
+        standing = standings.get(normalized_name)
+        if standing:
+            return {"wins": standing.wins, "losses": standing.losses, "source": "espn"}
+
+    return None
 
 
 # Prometheus metrics
@@ -752,7 +778,7 @@ async def get_slate_predictions(
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
-    clear_unified_records_cache()  # QA/QC: Ensure team records come from fresh The Odds API data
+    clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
     logger.info("v33.0.10.0: Caches cleared - fetching fresh unified data (odds + records from The Odds API)")
 
     # Resolve date
@@ -764,7 +790,7 @@ async def get_slate_predictions(
 
     # Fetch games
     try:
-        games = await fetch_todays_games(target_date)
+        games = await fetch_todays_games(target_date, include_records=False)
     except Exception as e:
         logger.error("Error fetching odds for %s: %s", target_date, e, exc_info=True)
         fallback_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -778,6 +804,12 @@ async def get_slate_predictions(
 
     if not games:
         return SlateResponse(date=str(target_date), predictions=[], total_plays=0)
+
+    try:
+        espn_standings = await _get_espn_standings()
+    except Exception as e:
+        logger.error("Failed to fetch ESPN standings: %s", e)
+        raise HTTPException(status_code=503, detail="ESPN standings unavailable")
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
@@ -817,16 +849,22 @@ async def get_slate_predictions(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            # UNIFIED DATA SOURCE: Extract team records from game data (The Odds API)
-            # QA/QC: Records come from SAME source as odds for data integrity
-            home_record_data = game.get("home_team_record", {})
-            away_record_data = game.get("away_team_record", {})
+            home_record_data = _lookup_espn_record(home_team, espn_standings)
+            away_record_data = _lookup_espn_record(away_team, espn_standings)
+
+            if not home_record_data:
+                logger.warning("Missing ESPN record for home team: %s", home_team)
+                home_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
+
+            if not away_record_data:
+                logger.warning("Missing ESPN record for away team: %s", away_team)
+                away_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
             
             features["home_wins"] = home_record_data.get("wins", 0)
             features["home_losses"] = home_record_data.get("losses", 0)
             features["away_wins"] = away_record_data.get("wins", 0)
             features["away_losses"] = away_record_data.get("losses", 0)
-            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_records_source"] = home_record_data.get("source", "espn")
 
             # Extract consensus lines
             odds = extract_consensus_odds(game, as_of_utc=odds_as_of_utc)
@@ -950,7 +988,7 @@ async def get_executive_summary(
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
-    clear_unified_records_cache()  # QA/QC: Ensure team records come from fresh The Odds API data
+    clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
     logger.info("v33.0.10.0 STRICT MODE: Executive summary - fetching fresh unified data")
 
     from src.utils.slate_analysis import (
@@ -968,7 +1006,7 @@ async def get_executive_summary(
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
     # Fetch games
-    games = await fetch_todays_games(target_date)
+    games = await fetch_todays_games(target_date, include_records=False)
     if not games:
         return {
             "date": str(target_date),
@@ -980,6 +1018,11 @@ async def get_executive_summary(
         }
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    try:
+        espn_standings = await _get_espn_standings()
+    except Exception as e:
+        logger.error("Failed to fetch ESPN standings: %s", e)
+        raise HTTPException(status_code=503, detail="ESPN standings unavailable")
     odds_snapshot_path = None
     odds_archive_path = None
     try:
@@ -1035,10 +1078,16 @@ async def get_executive_summary(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            # UNIFIED DATA SOURCE: Extract team records from game data (The Odds API)
-            # QA/QC: Records come from SAME source as odds for data integrity
-            home_record_data = game.get("home_team_record", {})
-            away_record_data = game.get("away_team_record", {})
+            home_record_data = _lookup_espn_record(home_team, espn_standings)
+            away_record_data = _lookup_espn_record(away_team, espn_standings)
+
+            if not home_record_data:
+                logger.warning("Missing ESPN record for home team: %s", home_team)
+                home_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
+
+            if not away_record_data:
+                logger.warning("Missing ESPN record for away team: %s", away_team)
+                away_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
             
             home_wins = home_record_data.get("wins", 0)
             home_losses = home_record_data.get("losses", 0)
@@ -1050,7 +1099,7 @@ async def get_executive_summary(
             features["home_losses"] = home_losses
             features["away_wins"] = away_wins
             features["away_losses"] = away_losses
-            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_records_source"] = home_record_data.get("source", "espn")
             
             home_record = f"({home_wins}-{home_losses})"
             away_record = f"({away_wins}-{away_losses})"
@@ -1377,8 +1426,6 @@ async def teams_outgoing_webhook(request: Request):
         date_label = data.get("date", parsed["date"])
         return JSONResponse(status_code=200, content={"text": f"No {label}picks found for {date_label}."})
 
-    max_items = 10
-    trimmed = plays[:max_items]
     date_label = data.get("date", parsed["date"])
     label_parts = []
     if parsed["elite_only"]:
@@ -1403,16 +1450,15 @@ async def teams_outgoing_webhook(request: Request):
         return text[:width - 3] + "..."
 
     columns = [
-        ("TIME", 14),
-        ("MATCHUP", 34),
-        ("SEG", 3),
+        ("TIME", 12),
+        ("MATCHUP", 38),
+        ("SEG", 9),
         ("PICK", 24),
-        ("EDGE", 8),
-        ("CONF", 6),
-        ("FIRE", 4),
+        ("EDGE", 9),
+        ("FIRE", 6),
     ]
-    header = " ".join(_fmt_cell(label, width) for label, width in columns)
-    divider = " ".join("-" * width for _, width in columns)
+    header = " | ".join(_fmt_cell(label, width) for label, width in columns)
+    divider = "-+-".join("-" * width for _, width in columns)
 
     lines_before = [
         f"NBA picks for {date_label}{label}",
@@ -1425,18 +1471,25 @@ async def teams_outgoing_webhook(request: Request):
         f"HTML: {lineup_url}",
         "Tip: use 'help' for commands.",
     ]
+    def _fire_display(value: object) -> str:
+        try:
+            rating = int(value)
+        except (TypeError, ValueError):
+            rating = 0
+        return "\U0001F525" * rating if rating > 0 else "-"
+
     table_lines = [header, divider]
     for p in plays:
+        segment = f"{p.get('period', '')} {p.get('market', '')}".strip()
         row_values = [
             p.get("time_cst", ""),
             p.get("matchup", ""),
-            p.get("period", ""),
+            segment,
             p.get("pick", ""),
             p.get("edge", ""),
-            p.get("confidence", ""),
-            p.get("fire_rating", ""),
+            _fire_display(p.get("fire_rating", "")),
         ]
-        row = " ".join(_fmt_cell(value, width) for value, (_, width) in zip(row_values, columns))
+        row = " | ".join(_fmt_cell(value, width) for value, (_, width) in zip(row_values, columns))
         table_lines.append(row)
 
     lines = lines_before + ["\n".join(table_lines)] + lines_after
@@ -1463,7 +1516,7 @@ async def get_comprehensive_slate_analysis(
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     app.state.feature_builder.clear_persistent_cache()
-    clear_unified_records_cache()  # QA/QC: Ensure team records come from fresh The Odds API data
+    clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
     logger.info("v33.0.10.0 STRICT MODE: Comprehensive analysis - fetching fresh unified data")
     
     CST = ZoneInfo("America/Chicago")
@@ -1504,9 +1557,15 @@ async def get_comprehensive_slate_analysis(
         }
 
     # Fetch games
-    games = await fetch_todays_games(target_date)
+    games = await fetch_todays_games(target_date, include_records=False)
     if not games:
         return {"date": str(target_date), "analysis": [], "summary": "No games found"}
+
+    try:
+        espn_standings = await _get_espn_standings()
+    except Exception as e:
+        logger.error("Failed to fetch ESPN standings: %s", e)
+        raise HTTPException(status_code=503, detail="ESPN standings unavailable")
 
     odds_as_of_utc = request_started_utc
     odds_snapshot_path = None
@@ -1551,16 +1610,22 @@ async def get_comprehensive_slate_analysis(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            # UNIFIED DATA SOURCE: Extract team records from game data (The Odds API)
-            # QA/QC: Records come from SAME source as odds for data integrity
-            home_record_data = game.get("home_team_record", {})
-            away_record_data = game.get("away_team_record", {})
+            home_record_data = _lookup_espn_record(home_team, espn_standings)
+            away_record_data = _lookup_espn_record(away_team, espn_standings)
+
+            if not home_record_data:
+                logger.warning("Missing ESPN record for home team: %s", home_team)
+                home_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
+
+            if not away_record_data:
+                logger.warning("Missing ESPN record for away team: %s", away_team)
+                away_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
             
             features["home_wins"] = home_record_data.get("wins", 0)
             features["home_losses"] = home_record_data.get("losses", 0)
             features["away_wins"] = away_record_data.get("wins", 0)
             features["away_losses"] = away_record_data.get("losses", 0)
-            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_records_source"] = home_record_data.get("source", "espn")
             features["_data_unified"] = game.get("_data_unified", False)
             
             # Build first half features
