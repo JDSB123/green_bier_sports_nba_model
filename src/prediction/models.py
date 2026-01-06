@@ -1,7 +1,7 @@
 """
 Model loading and management for predictions.
 
-NBA v33.0.8.0: 4 independent markets (1H + FG spreads/totals)
+NBA v33.0.10.0: 4 independent markets (1H + FG spreads/totals)
 """
 from pathlib import Path
 from typing import Tuple, Any, List

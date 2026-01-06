@@ -156,7 +156,7 @@ See [docs/DOCKER_SECRETS.md](docs/DOCKER_SECRETS.md) for details.
 ### Build Images
 ```powershell
 # Build combined API + model image
-docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.8.0 -f Dockerfile.combined .
+docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.10.0 -f Dockerfile.combined .
 
 # Build backtest image
 docker build -t nba-backtest:latest -f Dockerfile.backtest .
@@ -269,4 +269,4 @@ Thank you for contributing to the NBA prediction system! Your efforts help maint
 ---
 
 **Last Updated:** 2025-12-29
-**Version:** NBA_v33.0.8.0
+**Version:** NBA_v33.0.10.0

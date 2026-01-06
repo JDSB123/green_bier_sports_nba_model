@@ -1,6 +1,6 @@
 # NBA Model Versioning Strategy
 
-**Current Version:** See [VERSION](VERSION) file - `NBA_v33.0.8.0`
+**Current Version:** See [VERSION](VERSION) file.
 
 **Single Source of Truth:** The `VERSION` file at the repository root is the ONLY authoritative version identifier.
 
@@ -12,11 +12,11 @@
 NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
 ```
 
-Example: `NBA_v33.0.8.0`
+Example: `NBA_v33.0.10.0`
 
 - **MAJOR (33)**: Model architecture generation or breaking API changes
 - **MINOR (0)**: New features, market additions, major logic changes
-- **PATCH (8)**: Bug fixes, calibration tweaks, small improvements
+- **PATCH (10)**: Bug fixes, calibration tweaks, small improvements
 - **BUILD (0)**: Build number for hotfixes within same patch (rarely used)
 
 ---
@@ -45,7 +45,7 @@ Example: `NBA_v33.0.8.0`
 - Adding betting splits integration ✅
 - New `/slate/comprehensive` endpoint ✅
 
-### PATCH (v33.0.8 → v33.0.9)
+### PATCH (v33.0.10 → v33.0.11)
 - Bug fixes (prediction errors, calculation bugs)
 - Calibration adjustments
 - Edge threshold tuning
@@ -58,7 +58,7 @@ Example: `NBA_v33.0.8.0`
 - Adding archiving to predictions ✅
 - Fixing Docker secrets handling ✅
 
-### BUILD (v33.0.8.0 → v33.0.8.1)
+### BUILD (v33.0.10.0 → v33.0.10.1)
 - Hotfixes for critical production issues
 - Docker configuration changes only
 - No code changes, just rebuild
@@ -82,12 +82,12 @@ Example: `NBA_v33.0.8.0`
 
 1. **Update VERSION file:**
    ```bash
-   echo "NBA_v33.0.9.0" > VERSION
+   echo "NBA_v33.0.10.0" > VERSION
    ```
 
 2. **Update all references (use script below):**
    ```powershell
-   python scripts/bump_version.py NBA_v33.0.9.0
+   python scripts/bump_version.py NBA_v33.0.10.0
    ```
    This updates:
    - [src/serving/app.py](src/serving/app.py)
@@ -101,13 +101,13 @@ Example: `NBA_v33.0.8.0`
 3. **Commit with semantic message:**
    ```bash
    git add VERSION src/ models/ tests/ .github/ README.md infra/
-   git commit -m "chore: bump version to NBA_v33.0.9.0
+   git commit -m "chore: bump version to NBA_v33.0.10.0
    
    - Fixed spread calculation bug
    - Added archive folder for historical tracking
    - Updated deployment docs"
    
-   git tag NBA_v33.0.9.0
+   git tag NBA_v33.0.10.0
    git push origin main --tags
    ```
 

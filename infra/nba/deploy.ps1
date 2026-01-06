@@ -17,7 +17,7 @@
 
 .EXAMPLE
     .\deploy.ps1
-    .\deploy.ps1 -Tag NBA_v33.0.8.0
+    .\deploy.ps1 -Tag NBA_v33.0.10.0
     .\deploy.ps1 -WhatIf
 #>
 

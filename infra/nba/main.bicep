@@ -21,7 +21,7 @@ param location string = resourceGroup().location
 param environment string = 'prod'
 
 @description('NBA app semantic version (tag + resource tagging)')
-param versionTag string = 'NBA_v33.0.8.0'
+param versionTag string = 'NBA_v33.0.10.0'
 
 @description('Container image tag (defaults to versionTag)')
 param imageTag string = versionTag

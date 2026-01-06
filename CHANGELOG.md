@@ -7,6 +7,14 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 
 ---
 
+## [NBA_v33.0.10.0] - 2026-01-05
+
+### Changed
+- Version sync to NBA_v33.0.10.0 across runtime, docs, and deployment config.
+- Deployment tags aligned to VERSION for ACR/ACA.
+
+---
+
 ## [NBA_v33.0.9.0] - 2026-01-05
 
 ### Added
@@ -115,4 +123,4 @@ See [VERSIONING.md](VERSIONING.md) for:
 
 ---
 
-**Latest Release:** [NBA_v33.0.8.0](https://github.com/JDSB123/green_bier_sports_nba_model/releases/tag/NBA_v33.0.8.0)
+**Latest Release:** [NBA_v33.0.10.0](https://github.com/JDSB123/green_bier_sports_nba_model/releases/tag/NBA_v33.0.10.0)

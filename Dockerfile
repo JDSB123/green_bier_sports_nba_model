@@ -1,4 +1,4 @@
-# NBA_v33.0.8.0 - Production Container - STRICT MODE
+# NBA_v33.0.10.0 - Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
 #
 # STRICT MODE: FRESH DATA ONLY
@@ -45,7 +45,7 @@ FROM python:3.11.11-slim
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="NBA_v33.0.8.0"
+LABEL version="NBA_v33.0.10.0"
 LABEL description="NBA Production Picks Model - STRICT MODE - 4 Independent Markets (1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app
@@ -77,23 +77,21 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 
 # Verify ALL 4 REQUIRED model files exist (fail fast if missing)
 # 4 markets: 1H (2) + FG (2), with 1H having separate feature files
-RUN echo "=== NBA_v33.0.8.0 Model Verification ===" && \
+RUN echo "=== NBA_v33.0.10.0 Model Verification ===" && \
     echo "Checking for 4 independent market models (1H + FG)..." && \
     ls -la /app/data/processed/models/ && \
     echo "" && \
-    echo "First Half Models (2 models, 4 files):" && \
-    test -f /app/data/processed/models/1h_spread_model.pkl && \
-    test -f /app/data/processed/models/1h_spread_features.pkl && \
-    echo "  û 1h_spread_model.pkl (55.9% acc, +8.2% ROI)" && \
-    test -f /app/data/processed/models/1h_total_model.pkl && \
-    test -f /app/data/processed/models/1h_total_features.pkl && \
-    echo "  û 1h_total_model.pkl (58.1% acc, +11.4% ROI)" && \
+    echo "First Half Models (2 models):" && \
+    test -f /app/data/processed/models/1h_spread_model.joblib && \
+    echo "  ✓ 1h_spread_model.joblib (55.9% acc, +8.2% ROI)" && \
+    test -f /app/data/processed/models/1h_total_model.joblib && \
+    echo "  ✓ 1h_total_model.joblib (58.1% acc, +11.4% ROI)" && \
     echo "" && \
     echo "Full Game Models (2):" && \
     test -f /app/data/processed/models/fg_spread_model.joblib && \
-    echo "  û fg_spread_model.joblib (60.6% acc, +15.7% ROI)" && \
+    echo "  ✓ fg_spread_model.joblib (60.6% acc, +15.7% ROI)" && \
     test -f /app/data/processed/models/fg_total_model.joblib && \
-    echo "  û fg_total_model.joblib (59.2% acc, +13.1% ROI)" && \
+    echo "  ✓ fg_total_model.joblib (59.2% acc, +13.1% ROI)" && \
     echo "" && \
     echo "=== All 4 independent market models verified! ==="
 
@@ -133,7 +131,7 @@ ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV ALLOWED_ORIGINS=*
 
 # STRICT MODE - All 4 markets required, FRESH DATA ONLY (baked-in env defaults)
-ENV NBA_MODEL_VERSION=NBA_v33.0.8.0
+ENV NBA_MODEL_VERSION=NBA_v33.0.10.0
 ENV NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
 ENV NBA_PERIODS=first_half,full_game
 ENV NBA_STRICT_MODE=true

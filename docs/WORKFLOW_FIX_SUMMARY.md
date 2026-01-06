@@ -97,7 +97,7 @@ Deploy to nba-picks-trigger Function App
 **For manual rollback to specific image:**
 ```bash
 gh workflow run "Deploy NBA Image to Azure Container Apps" \
-  -f tag=NBA_v33.0.8.0
+  -f tag=NBA_v33.0.10.0
 ```
 
 ---

@@ -54,7 +54,7 @@ os.environ.setdefault('PREDICTION_FEATURE_MODE', 'warn')
 
 # Optional Configuration (matches Dockerfile)
 os.environ.setdefault('ALLOWED_ORIGINS', '*')
-os.environ.setdefault('NBA_MODEL_VERSION', 'NBA_v33.0.8.0')
+os.environ.setdefault('NBA_MODEL_VERSION', 'NBA_v33.0.10.0')
 os.environ.setdefault('NBA_MARKETS', '1h_spread,1h_total,fg_spread,fg_total')
 os.environ.setdefault('NBA_PERIODS', 'first_half,full_game')
 os.environ.setdefault('NBA_STRICT_MODE', 'true')
