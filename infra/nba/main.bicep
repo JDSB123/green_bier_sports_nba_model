@@ -98,6 +98,60 @@ param databaseUrl string = ''
 @description('Website domain for CORS')
 param websiteDomain string = 'greenbiersportventures.com'
 
+@description('Comma-separated origins for app-level CORS (matches ACA ingress)')
+param allowedOrigins string = 'https://${websiteDomain},https://www.${websiteDomain}'
+
+// Application security/auth
+@description('Require API authentication for the service. Defaults to false for safety. If set to true, serviceApiKey MUST be provided or deployment will fail at runtime.')
+param requireApiAuth bool = false
+
+@description('Service API key for authenticated access. REQUIRED if requireApiAuth=true. If requireApiAuth=true and this is empty, the application will fail to start with a validation error.')
+@secure()
+param serviceApiKey string = ''
+
+// Application runtime configuration
+@description('Current NBA season (e.g., 2025-2026)')
+param currentSeason string = '2025-2026'
+
+@description('Comma-separated list of seasons to process')
+param seasonsToProcess string = '2024-2025,2025-2026'
+
+@description('Prediction feature validation mode: strict|warn|silent')
+param predictionFeatureMode string = 'strict'
+
+// Filter thresholds (string values passed as env vars)
+@description('Min confidence for FG spreads (e.g., 0.62)')
+param filterSpreadMinConfidence string = '0.62'
+
+@description('Min edge (points) for FG spreads (e.g., 2.0)')
+param filterSpreadMinEdge string = '2.0'
+
+@description('Min confidence for FG totals (e.g., 0.72)')
+param filterTotalMinConfidence string = '0.72'
+
+@description('Min edge (points) for FG totals (e.g., 3.0)')
+param filterTotalMinEdge string = '3.0'
+
+@description('Min confidence for 1H spreads (e.g., 0.68)')
+param filter1hSpreadMinConfidence string = '0.68'
+
+@description('Min edge (points) for 1H spreads (e.g., 1.5)')
+param filter1hSpreadMinEdge string = '1.5'
+
+@description('Min confidence for 1H totals (e.g., 0.66)')
+param filter1hTotalMinConfidence string = '0.66'
+
+@description('Min edge (points) for 1H totals (e.g., 2.0)')
+param filter1hTotalMinEdge string = '2.0'
+
+// Optional premium integrations
+@description('Action Network username (optional)')
+param actionNetworkUsername string = ''
+
+@description('Action Network password (optional)')
+@secure()
+param actionNetworkPassword string = ''
+
 // Scaling
 @description('Minimum replicas')
 param minReplicas int = 1
@@ -216,7 +270,7 @@ module storage '../modules/storage.bicep' = {
     environment: environment
     location: location
     tags: tags
-    containers: ['models', 'predictions', 'results']
+    containers: ['models', 'predictions', 'results', 'nbahistoricaldata']
   }
 }
 
@@ -232,7 +286,10 @@ var apiSecrets = concat(
     { name: 'api-basketball-key', value: apiBasketballKey }
     { name: 'app-insights-connection-string', value: appInsights.properties.ConnectionString }
   ],
-  databaseUrl == '' ? [] : [{ name: 'database-url', value: databaseUrl }]
+  databaseUrl == '' ? [] : [{ name: 'database-url', value: databaseUrl }],
+  serviceApiKey == '' ? [] : [{ name: 'service-api-key', value: serviceApiKey }],
+  actionNetworkUsername == '' ? [] : [{ name: 'action-network-username', value: actionNetworkUsername }],
+  actionNetworkPassword == '' ? [] : [{ name: 'action-network-password', value: actionNetworkPassword }]
 )
 
 // Environment variables
@@ -241,13 +298,31 @@ var appEnvVars = concat(
     { name: 'THE_ODDS_API_KEY', secretRef: 'the-odds-api-key' }
     { name: 'API_BASKETBALL_KEY', secretRef: 'api-basketball-key' }
     { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'app-insights-connection-string' }
+    { name: 'ALLOWED_ORIGINS', value: allowedOrigins }
+    { name: 'REQUIRE_API_AUTH', value: string(requireApiAuth) }
     { name: 'GBS_SPORT', value: 'nba' }
     { name: 'NBA_MODEL_VERSION', value: versionTag }
     { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
     { name: 'NBA_PERIODS', value: 'first_half,full_game' }
     { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
+    { name: 'CURRENT_SEASON', value: currentSeason }
+    { name: 'SEASONS_TO_PROCESS', value: seasonsToProcess }
+    { name: 'PREDICTION_FEATURE_MODE', value: predictionFeatureMode }
+    // FG thresholds
+    { name: 'FILTER_SPREAD_MIN_CONFIDENCE', value: filterSpreadMinConfidence }
+    { name: 'FILTER_SPREAD_MIN_EDGE', value: filterSpreadMinEdge }
+    { name: 'FILTER_TOTAL_MIN_CONFIDENCE', value: filterTotalMinConfidence }
+    { name: 'FILTER_TOTAL_MIN_EDGE', value: filterTotalMinEdge }
+    // 1H thresholds
+    { name: 'FILTER_1H_SPREAD_MIN_CONFIDENCE', value: filter1hSpreadMinConfidence }
+    { name: 'FILTER_1H_SPREAD_MIN_EDGE', value: filter1hSpreadMinEdge }
+    { name: 'FILTER_1H_TOTAL_MIN_CONFIDENCE', value: filter1hTotalMinConfidence }
+    { name: 'FILTER_1H_TOTAL_MIN_EDGE', value: filter1hTotalMinEdge }
   ],
-  databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]
+  databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }],
+  serviceApiKey == '' ? [] : [{ name: 'SERVICE_API_KEY', secretRef: 'service-api-key' }],
+  actionNetworkUsername == '' ? [] : [{ name: 'ACTION_NETWORK_USERNAME', secretRef: 'action-network-username' }],
+  actionNetworkPassword == '' ? [] : [{ name: 'ACTION_NETWORK_PASSWORD', secretRef: 'action-network-password' }]
 )
 
 module containerApp '../modules/containerApp.bicep' = {

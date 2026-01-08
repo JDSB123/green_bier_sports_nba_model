@@ -15,7 +15,7 @@ Resource Group: nba-gbsv-model-rg
   │
   ├─ DATA
   │   └─ Storage Account: nbagbsvstrg
-  │       └─ Containers: models, predictions, results
+  │       └─ Containers: models, predictions, results, nbahistoricaldata
   │
   ├─ COMPUTE (Container Apps)
   │   ├─ Environment: nba-gbsv-model-env
@@ -43,6 +43,7 @@ Resource Group: nba-gbsv-model-rg
 | Container Registry | `nbagbsacr` |
 | Key Vault | `nbagbs-keyvault` |
 | Storage Account | `nbagbsvstrg` |
+| Storage Containers | `models`, `predictions`, `results`, `nbahistoricaldata` |
 | Log Analytics | `gbs-logs-prod` |
 | App Insights | `gbs-insights-prod` |
 | Function App (Teams Bot) | `nba-picks-trigger` |
@@ -120,6 +121,20 @@ Semantic tag `NBA_v33.0.11.0` should be pushed for releases (manual or scripted)
 | `/slate/{date}/comprehensive` | Full edge analysis |
 | `/predict/game` | Single-game predictions |
 
+## Historical Data Storage
+
+The `nbahistoricaldata` container stores:
+- **Archived picks**: Picks with timestamps/versions before front-end overwrites
+- **Historical data**: Historical odds and events ingestion
+- **Backtest models**: Model artifacts and results for reproducibility
+
+**Storage Organization**:
+- `archived_picks/{date}/` - Picks organized by date with versioning
+- `historical/the_odds/` - Historical odds data by season
+- `models/backtest/{version}/{date}/` - Backtest model artifacts
+
+See [Historical Data Storage Guide](./HISTORICAL_DATA_STORAGE.md) for detailed usage.
+
 ## Important Files
 
 | File | Purpose |
@@ -131,4 +146,7 @@ Semantic tag `NBA_v33.0.11.0` should be pushed for releases (manual or scripted)
 | `Dockerfile.combined` | Combined API + Function image |
 | `azure/function_app/function_app.py` | Azure Function / Teams integration |
 | `.env.example` | Environment variable template |
+| `scripts/archive_picks_to_azure.ps1` | Archive picks to blob storage |
+| `scripts/sync_historical_data_to_azure.ps1` | Sync historical data to blob storage |
+| `scripts/store_backtest_model.ps1` | Store backtest models |
 
