@@ -404,6 +404,28 @@ app.add_middleware(
 )
 
 
+# API prefix stripping middleware - allows routes to work with or without /api prefix
+# This enables Azure Static Web App linked backend proxying (sends /api/*)
+@app.middleware("http")
+async def strip_api_prefix_middleware(request: Request, call_next):
+    # If path starts with /api/, strip it for routing
+    # This allows www.greenbiersportventures.com/api/health to route to /health
+    if request.url.path.startswith("/api/"):
+        # Create new scope with modified path
+        new_path = request.url.path[4:]  # Remove "/api" prefix
+        request.scope["path"] = new_path
+        # Also update raw_path if present
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = new_path.encode()
+    elif request.url.path == "/api":
+        # Handle bare /api as /
+        request.scope["path"] = "/"
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = b"/"
+    
+    return await call_next(request)
+
+
 # Request ID middleware for distributed tracing
 @app.middleware("http")
 async def request_id_middleware(request: Request, call_next):
