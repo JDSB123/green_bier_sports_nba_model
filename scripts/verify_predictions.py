@@ -6,6 +6,7 @@ import urllib.request
 import urllib.error
 import sys
 
+from src.utils.version import resolve_version
 # API URL from environment variable with fallback to localhost
 API_PORT = os.getenv("NBA_API_PORT", "8090")
 API_URL = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
@@ -157,7 +158,7 @@ def verify():
     print("=" * 80)
     print()
     print("Data Source: Live API (Azure Container App)")
-    print("Model Version: NBA_v33.0.7.0")
+    print(f"Model Version: {resolve_version()}")
     print()
     print("Edge Calculation:")
     print("  - Spread Edge = Model Predicted Margin - Market Line")

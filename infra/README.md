@@ -45,7 +45,7 @@ infra/
 pwsh ./infra/nba/deploy.ps1
 
 # With specific tag
-pwsh ./infra/nba/deploy.ps1 -Tag NBA_v33.0.11.0
+pwsh ./infra/nba/deploy.ps1 -Tag (Get-Content VERSION -Raw).Trim()
 
 # Preview changes (what-if)
 pwsh ./infra/nba/deploy.ps1 -WhatIf

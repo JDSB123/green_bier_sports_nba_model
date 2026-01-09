@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 import json
-import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field, asdict
@@ -20,10 +19,12 @@ from pathlib import Path
 from threading import Lock
 import gzip
 
+from src.utils.version import resolve_version
+
 logger = logging.getLogger(__name__)
 
 # Model version from central source
-_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.11.0")
+_MODEL_VERSION = resolve_version()
 
 
 @dataclass

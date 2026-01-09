@@ -45,24 +45,6 @@ jobs:
           
           FAILED=0
           
-          # Check src/serving/app.py
-          echo "Checking src/serving/app.py..."
-          if ! grep -q "\"NBA_MODEL_VERSION\", \"$VERSION\"" src/serving/app.py; then
-            echo "❌ Version mismatch in src/serving/app.py"
-            FAILED=1
-          else
-            echo "✅ src/serving/app.py"
-          fi
-          
-          # Check src/prediction/engine.py
-          echo "Checking src/prediction/engine.py..."
-          if ! grep -q "\"NBA_MODEL_VERSION\", \"$VERSION\"" src/prediction/engine.py; then
-            echo "❌ Version mismatch in src/prediction/engine.py"
-            FAILED=1
-          else
-            echo "✅ src/prediction/engine.py"
-          fi
-          
           # Check models/production/model_pack.json
           echo "Checking models/production/model_pack.json..."
           if ! grep -q "\"version\": \"$VERSION\"" models/production/model_pack.json; then
@@ -72,22 +54,29 @@ jobs:
             echo "✅ models/production/model_pack.json"
           fi
           
-          # Check tests/test_serving.py
-          echo "Checking tests/test_serving.py..."
-          if ! grep -q "\"version\": \"$VERSION\"" tests/test_serving.py; then
-            echo "❌ Version mismatch in tests/test_serving.py"
+          echo "Checking model_pack git_tag..."
+          if ! grep -q "\"git_tag\": \"$VERSION\"" models/production/model_pack.json; then
+            echo "❌ git_tag mismatch in models/production/model_pack.json"
             FAILED=1
           else
-            echo "✅ tests/test_serving.py"
+            echo "✅ model_pack git_tag"
           fi
           
-          # Check .github/copilot-instructions.md
-          echo "Checking .github/copilot-instructions.md..."
-          if ! grep -q "nba-gbsv-api:$VERSION" .github/copilot-instructions.md; then
-            echo "❌ Version mismatch in .github/copilot-instructions.md"
+          echo "Checking model_pack ACR tag..."
+          if ! grep -q "nba-gbsv-api:$VERSION" models/production/model_pack.json; then
+            echo "❌ ACR tag mismatch in models/production/model_pack.json"
             FAILED=1
           else
-            echo "✅ .github/copilot-instructions.md"
+            echo "✅ model_pack ACR tag"
+          fi
+          
+          # Check models/production/feature_importance.json
+          echo "Checking models/production/feature_importance.json..."
+          if ! grep -q "\"version\": \"$VERSION\"" models/production/feature_importance.json; then
+            echo "❌ Version mismatch in models/production/feature_importance.json"
+            FAILED=1
+          else
+            echo "✅ models/production/feature_importance.json"
           fi
           
           echo ""

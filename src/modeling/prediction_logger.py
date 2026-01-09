@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from src.config import settings
+from src.utils.version import resolve_version
 
 
 def get_model_version_info() -> Dict[str, Any]:
@@ -24,7 +25,7 @@ def get_model_version_info() -> Dict[str, Any]:
         Dict with version, git_commit, and model_pack info
     """
     version_info = {
-        "version": os.getenv("NBA_MODEL_VERSION", "unknown"),
+        "version": resolve_version(),
         "git_commit": None,
         "model_pack_version": None,
     }

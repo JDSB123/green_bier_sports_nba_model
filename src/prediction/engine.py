@@ -29,11 +29,12 @@ FEATURE VALIDATION:
 
     See src/prediction/feature_validation.py for details.
 """
-import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
-# Single source of truth for version - read from environment variable
-MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.11.0")
+from src.utils.version import resolve_version
+
+# Single source of truth for version - env overrides VERSION file
+MODEL_VERSION = resolve_version()
 
 import logging
 import joblib

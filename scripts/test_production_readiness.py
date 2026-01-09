@@ -26,6 +26,13 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import traceback
 
+# Read VERSION file for local defaults (keeps in sync with production tagging)
+def _resolve_local_version() -> str:
+    version_path = Path(__file__).parent.parent / "VERSION"
+    if version_path.exists():
+        return version_path.read_text(encoding="utf-8").strip()
+    return ""
+
 # ============================================================================
 # ENVIRONMENT VARIABLES - MATCHES DOCKERFILE EXACTLY (lines 113-140)
 # ============================================================================
@@ -54,7 +61,7 @@ os.environ.setdefault('PREDICTION_FEATURE_MODE', 'warn')
 
 # Optional Configuration (matches Dockerfile)
 os.environ.setdefault('ALLOWED_ORIGINS', '*')
-os.environ.setdefault('NBA_MODEL_VERSION', 'NBA_v33.0.11.0')
+os.environ.setdefault('NBA_MODEL_VERSION', _resolve_local_version() or 'unknown')
 os.environ.setdefault('NBA_MARKETS', '1h_spread,1h_total,fg_spread,fg_total')
 os.environ.setdefault('NBA_PERIODS', 'first_half,full_game')
 os.environ.setdefault('NBA_STRICT_MODE', 'true')

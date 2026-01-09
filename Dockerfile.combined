@@ -1,13 +1,14 @@
-# NBA NBA_v33.0.11.0 - Combined Model API + Bot - Production Container
+# NBA Combined Model API + Bot - Production Container
 # Single container with:
 # - Port 8090: ML Model Prediction API (uvicorn)
 # - Port 8080: Azure Functions Bot / Teams Integration (func host)
 #
-# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0 .
+# Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:<VERSION> .
 
 # =============================================================================
 # Stage 1: Builder
 # =============================================================================
+ARG MODEL_VERSION=unknown
 FROM python:3.11.11-slim AS builder
 
 WORKDIR /app
@@ -25,8 +26,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt && \
 # Stage 2: Runtime
 # =============================================================================
 FROM python:3.11.11-slim
+ARG MODEL_VERSION=unknown
 
-LABEL maintainer="Green Bier Ventures" version="NBA_v33.0.11.0"
+LABEL maintainer="Green Bier Ventures" version="$MODEL_VERSION"
 
 WORKDIR /app
 
@@ -44,6 +46,7 @@ COPY --chown=appuser:appuser scripts/ ./scripts/
 COPY --chown=appuser:appuser azure/function_app/ ./function_host/
 COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 COPY --chown=appuser:appuser models/production/model_pack.json /app/models/production/model_pack.json
+COPY --chown=appuser:appuser VERSION /app/VERSION
 
 # Environment
 ENV PATH=/home/appuser/.local/bin:$PATH
@@ -60,14 +63,14 @@ ENV FILTER_SPREAD_MIN_EDGE=1.0
 ENV FILTER_TOTAL_MIN_CONFIDENCE=0.55
 ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV ALLOWED_ORIGINS=*
-ENV NBA_MODEL_VERSION=NBA_v33.0.11.0
+ENV NBA_MODEL_VERSION=$MODEL_VERSION
 ENV NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
 ENV FUNCTIONS_WORKER_RUNTIME=python
 ENV FUNCTIONS_EXTENSION_VERSION=~4
 ENV SEASONS_TO_PROCESS=2025-2026
 
 # Verify models directory (4 markets: 1H + FG only)
-RUN echo "=== NBA_v33.0.11.0 Models ===" && \
+RUN echo "=== NBA Models (${MODEL_VERSION}) ===" && \
     if [ -d /app/data/processed/models ]; then \
       echo "✓ Models directory exists"; \
     else \

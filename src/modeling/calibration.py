@@ -205,7 +205,7 @@ def validate_calibration_assumption(
     """
     Validate the assumption that X points of edge = Y% probability.
 
-    NBA_v33.0.1.0: This function CALCULATES the optimal edge-to-probability
+    This function CALCULATES the optimal edge-to-probability
     conversion from actual historical data rather than using hardcoded values.
     The result should be used to configure the edge_per_point parameter.
 

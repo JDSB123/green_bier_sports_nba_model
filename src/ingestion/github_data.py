@@ -88,7 +88,7 @@ class GitHubDataFetcher:
     def _is_cached(self, url: str, max_age_hours: int = 12) -> bool:
         """Check if URL is cached and still fresh.
 
-        NBA_v33.0.1.0: TTL 12h - historical ELO/stats updated once daily max.
+        TTL 12h - historical ELO/stats updated once daily max.
         """
         cache_path = self._get_cache_path(url)
         if not cache_path.exists():

@@ -1,5 +1,5 @@
 """
-NBA_v33.0.11.0 - FastAPI Prediction Server - STRICT MODE
+NBA - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
@@ -50,6 +50,7 @@ from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
 from src.features import RichFeatureBuilder
 from src.utils.logging import get_logger
+from src.utils.version import resolve_version
 from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.markets import get_market_catalog
 from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegrityError
@@ -69,7 +70,7 @@ from zoneinfo import ZoneInfo
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.11.0")
+RELEASE_VERSION = resolve_version()
 
 
 def convert_numpy_types(obj):
@@ -228,7 +229,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - NBA_v33.0.11.0 ---
+# --- Request/Response Models ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 4 markets (1H + FG spreads/totals)."""
@@ -276,7 +277,7 @@ class MarketsResponse(BaseModel):
     model_pack_path: Optional[str] = None
 
 
-# --- API Setup - NBA_v33.0.11.0 ---
+# --- API Setup ---
 
 def _models_dir() -> PathLib:
     """
@@ -312,7 +313,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.11.0: 4 markets (1H+FG for Spread, Total). Q1 removed.
+    Production: 4 markets (1H+FG for Spread, Total). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -336,7 +337,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"v33.0.11.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -349,12 +350,12 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("v33.0.11.0 STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
     # NO FILE CACHING - all data fetched fresh from APIs per request
-    logger.info("v33.0.11.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -364,16 +365,16 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"v33.0.11.0 initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}")
+    logger.info(f"{RELEASE_VERSION} initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
     # === SHUTDOWN ===
-    logger.info("v33.0.11.0 shutting down")
+    logger.info(f"{RELEASE_VERSION} shutting down")
 
 
 app = FastAPI(
-    title="NBA v33.0.11.0 - STRICT MODE Production Picks",
+    title=f"NBA {RELEASE_VERSION} - STRICT MODE Production Picks",
     description="4 INDEPENDENT Markets: 1H+FG for Spread and Total. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan
@@ -446,7 +447,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v33.0.11.0 with 4 markets (spread/total only)."""
+    """Check API health - 4 markets (spread/total only)."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -598,7 +599,7 @@ async def clear_cache(request: Request):
     """
     Clear all session caches to force fresh API data.
 
-    v33.0.11.0 STRICT MODE: No file caching exists - only clears session memory caches.
+    STRICT MODE: No file caching exists - only clears session memory caches.
     Use this before fetching new predictions to ensure fresh data.
     """
     cleared = {"session_cache": False, "api_cache": 0}
@@ -615,7 +616,7 @@ async def clear_cache(request: Request):
     except Exception:
         pass  # API cache may not be configured
 
-    logger.info(f"v33.0.11.0 STRICT MODE: Session cache cleared")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Session cache cleared")
 
     return {
         "status": "success",
@@ -664,7 +665,7 @@ def verify_integrity(request: Request):
     """
     Verify model integrity and component usage.
 
-    v33.0.11.0: Verifies 4 independent models (1H + FG for spread, total)
+    Verifies 4 independent models (1H + FG for spread, total)
     """
     results = {
         "status": "pass",
@@ -799,16 +800,16 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v33.0.11.0: 4 markets (1H + FG spreads/totals). Q1 removed entirely.
+    4 markets (1H + FG spreads/totals). Q1 removed entirely.
     Returns 1H/FG for spread and total when available.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION}: Engine not loaded - models missing")
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info("v33.0.11.0: Caches cleared - fetching fresh unified data (odds + records from The Odds API)")
+    logger.info(f"{RELEASE_VERSION}: Caches cleared - fetching fresh unified data (odds + records from The Odds API)")
 
     # Resolve date
     from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
@@ -961,7 +962,7 @@ async def get_slate_predictions(
             })
 
         except ValueError as e:
-            logger.warning(f"v33.0.11.0: Skipping {home_team} vs {away_team} - {e}")
+            logger.warning(f"{RELEASE_VERSION}: Skipping {home_team} vs {away_team} - {e}")
             continue
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
@@ -1008,17 +1009,17 @@ async def get_executive_summary(
     """
     BLUF (Bottom Line Up Front) Executive Summary.
 
-    v33.0.11.0 STRICT MODE: Fetches fresh data from all APIs.
+    STRICT MODE: Fetches fresh data from all APIs.
     Returns a clean actionable betting card with all picks that pass filters.
     Sorted by EV% (desc), then game time.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info("v33.0.11.0 STRICT MODE: Executive summary - fetching fresh unified data")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Executive summary - fetching fresh unified data")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -1536,17 +1537,17 @@ async def get_comprehensive_slate_analysis(
     """
     Get comprehensive slate analysis with full edge calculations.
 
-    v33.0.11.0 STRICT MODE: Fetches fresh data from all APIs.
+    STRICT MODE: Fetches fresh data from all APIs.
     Full analysis for all 4 markets (1H + FG spreads/totals).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     app.state.feature_builder.clear_persistent_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info("v33.0.11.0 STRICT MODE: Comprehensive analysis - fetching fresh unified data")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Comprehensive analysis - fetching fresh unified data")
     
     CST = ZoneInfo("America/Chicago")
     
@@ -1765,11 +1766,11 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     """
     Generate predictions for a specific matchup.
 
-    v33.0.11.0: STRICT MODE - Fetches fresh data from all APIs.
+    STRICT MODE - Fetches fresh data from all APIs.
     4 markets (1H+FG for Spread, Total).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
@@ -1790,13 +1791,13 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         )
         return preds
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"v33.0.11.0: {e}")
+        raise HTTPException(status_code=400, detail=f"{RELEASE_VERSION}: {e}")
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # =============================================================================
-# LIVE PICK TRACKING ENDPOINTS - v33.0.11.0
+# LIVE PICK TRACKING ENDPOINTS
 # =============================================================================
 
 @app.get("/tracking/summary")

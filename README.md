@@ -32,7 +32,7 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 
 > **📖 Single Source of Truth:** See [`docs/STACK_FLOW_AND_VERIFICATION.md`](docs/STACK_FLOW_AND_VERIFICATION.md) for the master reference.
 
-**Versioning:** `VERSION` is the canonical release identifier (current: `NBA_v33.0.11.0`). Keep `pyproject.toml`, Dockerfiles, `docker-compose.yml`, and `scripts/train_models.py` in sync with this file before building or deploying.
+**Versioning:** `VERSION` is the canonical release identifier (current: see `VERSION`). Runtime and tooling read `VERSION` (or `NBA_MODEL_VERSION` if set), so code and deploy configs no longer hard-code versions.
 
 ## Architecture Overview
 

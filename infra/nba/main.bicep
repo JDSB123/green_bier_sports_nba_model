@@ -20,11 +20,8 @@ param location string = resourceGroup().location
 @allowed(['dev', 'staging', 'prod'])
 param environment string = 'prod'
 
-@description('NBA app semantic version (tag + resource tagging)')
-param versionTag string = 'NBA_v33.0.11.0'
-
-@description('Container image tag (defaults to versionTag)')
-param imageTag string = versionTag
+@description('Container image tag (used for version tagging + deployment)')
+param imageTag string
 
 @description('Application identifier for tagging')
 param appTag string = 'nba-model'
@@ -125,7 +122,7 @@ var requiredTags = {
   owner: ownerTag
   cost_center: costCenterTag
   compliance: complianceTag
-  version: versionTag
+  version: imageTag
   managedBy: 'bicep'
 }
 
@@ -242,7 +239,7 @@ var appEnvVars = concat(
     { name: 'API_BASKETBALL_KEY', secretRef: 'api-basketball-key' }
     { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'app-insights-connection-string' }
     { name: 'GBS_SPORT', value: 'nba' }
-    { name: 'NBA_MODEL_VERSION', value: versionTag }
+    { name: 'NBA_MODEL_VERSION', value: imageTag }
     { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
     { name: 'NBA_PERIODS', value: 'first_half,full_game' }
     { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
