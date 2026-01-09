@@ -64,12 +64,10 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **GBS NBA - Build & Deploy** | Auto on `push` to main | Build Docker image + deploy to Container Apps |
-| **GBS NBA - Deploy Function** | Auto on `azure/function_app/**` changes | Deploy Function App |
 | **ACR Retention** | Weekly schedule + manual | Clean up old image tags |
 
 **Standard Flow:**
-1. **Push code** → `GBS NBA - Build & Deploy` auto-triggers → builds + deploys
-2. **Function updates** → `GBS NBA - Deploy Function` auto-triggers → deploys Function App
+1. **Push code** → `GBS NBA - Build & Deploy` auto-triggers → builds + deploys to Container App
 
 Quick verify (production):
 

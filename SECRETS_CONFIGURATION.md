@@ -72,17 +72,6 @@ param apiBasketballKey string
 }
 ```
 
-### 4. Azure Functions (Environment Variables)
-```json
-// azure/function_app/local.settings.json - References environment variables
-{
-  "NBA_API_URL": "Set via Azure Portal or CLI",
-  "TEAMS_WEBHOOK_URL": "Set via Azure Portal or CLI"
-}
-
-// Function app reads API keys from Azure Key Vault via managed identity
-```
-
 ---
 
 ## 🔍 VERIFICATION: NO HARDCODED VALUES ANYWHERE
@@ -91,7 +80,6 @@ param apiBasketballKey string
 - ✅ `src/**/*.py` - All API keys read from environment/config
 - ✅ `Dockerfile` - Environment variables only, no baked-in secrets
 - ✅ `docker-compose.yml` - References environment variables
-- ✅ `azure/**/*.py` - Environment variables for configuration
 - ✅ `infra/**/*.bicep` - Parameterized secrets only
 - ✅ `scripts/**/*.py` - Uses config/settings for all credentials
 

@@ -2573,3 +2573,147 @@ async def get_weekly_lineup_csv(
         )
 
 
+# =============================================================================
+# WEBSITE INTEGRATION - JSON API for greenbiersportventures.com
+# =============================================================================
+
+def _get_fire_tier(fire_rating) -> str:
+    """Convert fire rating to tier name. Handles both numeric and string formats."""
+    if not fire_rating:
+        return "NONE"
+    
+    # Handle string format (GOOD, STRONG, ELITE)
+    if isinstance(fire_rating, str):
+        rating_upper = fire_rating.upper().strip()
+        if rating_upper in ["ELITE", "STRONG", "GOOD"]:
+            return rating_upper
+    
+    # Handle numeric format (fire count)
+    try:
+        fire_count = int(fire_rating)
+        if fire_count >= 4:
+            return "ELITE"
+        elif fire_count >= 3:
+            return "STRONG"
+        elif fire_count >= 1:
+            return "GOOD"
+    except (TypeError, ValueError):
+        pass
+    
+    return "NONE"
+
+
+@app.get("/weekly-lineup/nba", tags=["Website"])
+@limiter.limit("60/minute")
+async def get_weekly_lineup_nba_json(
+    request: Request,
+    date: str = Query("today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query("all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'")
+):
+    """
+    Website integration endpoint for greenbiersportventures.com/weekly-lineup.
+
+    Returns NBA picks in a format optimized for the website dashboard.
+    Supports CORS for cross-origin requests from the website.
+
+    Query params:
+      - date: YYYY-MM-DD, 'today', or 'tomorrow' (default: today)
+      - tier: 'elite', 'strong', 'good', or 'all' (default: all)
+
+    Response format:
+    {
+        "sport": "NBA",
+        "date": "2025-12-25",
+        "generated_at": "2025-12-25T10:30:00Z",
+        "version": "v33.0.11.0",
+        "summary": {"total": 12, "elite": 3, "strong": 5, "good": 4},
+        "picks": [...]
+    }
+    """
+    try:
+        # Resolve date
+        if date == "tomorrow":
+            resolved_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        elif date == "today":
+            resolved_date = datetime.now().strftime("%Y-%m-%d")
+        else:
+            resolved_date = date
+        
+        # Fetch predictions using the existing executive summary endpoint
+        data = await get_executive_summary(request, date=resolved_date, use_splits=True)
+        
+        if not data or not isinstance(data, dict):
+            return JSONResponse(
+                content={
+                    "sport": "NBA",
+                    "error": "Failed to fetch predictions",
+                    "date": resolved_date
+                },
+                status_code=500
+            )
+        
+        all_plays = data.get("plays", [])
+        tier_filter = tier.lower().strip()
+        
+        # Apply tier filter
+        if tier_filter == "elite":
+            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
+        elif tier_filter == "strong":
+            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG"]]
+        elif tier_filter == "good":
+            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG", "GOOD"]]
+        else:
+            plays = all_plays
+        
+        # Count tiers
+        elite_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
+        strong_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
+        good_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
+        
+        # Format picks for website
+        formatted_picks = []
+        for p in plays:
+            formatted_picks.append({
+                "time": p.get("time_cst", ""),
+                "matchup": p.get("matchup", ""),
+                "period": p.get("period", "FG"),
+                "market": p.get("market", ""),
+                "pick": p.get("pick", ""),
+                "odds": p.get("pick_odds", "N/A"),
+                "model_prediction": p.get("model_prediction", ""),
+                "market_line": p.get("market_line", ""),
+                "edge": p.get("edge", "N/A"),
+                "confidence": p.get("confidence", ""),
+                "tier": _get_fire_tier(p.get("fire_rating", "")),
+                "fire_rating": p.get("fire_rating", "")
+            })
+        
+        result = {
+            "sport": "NBA",
+            "date": resolved_date,
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "version": RELEASE_VERSION,
+            "summary": {
+                "total": len(all_plays),
+                "elite": elite_count,
+                "strong": strong_count,
+                "good": good_count,
+                "filtered": len(formatted_picks)
+            },
+            "picks": formatted_picks
+        }
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Error in weekly-lineup/nba: {str(e)}", exc_info=True)
+        return JSONResponse(
+            content={
+                "sport": "NBA",
+                "error": str(e),
+                "date": date
+            },
+            status_code=500
+        )
+
+
