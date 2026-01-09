@@ -1765,6 +1765,44 @@ async def get_meta_info():
         "python_version": sys.version
     }
 
+@app.get("/registry", tags=["Meta"])
+def get_registry(request: Request):
+    """Compatibility registry for web clients expecting /api/registry."""
+    base_url = str(request.base_url).rstrip("/")
+    paths = {
+        "health": "/health",
+        "meta": "/meta",
+        "markets": "/markets",
+        "picks": "/api/v1/picks",
+        "picks_v1": "/api/v1/picks",
+        "weekly_lineup": "/weekly-lineup/nba",
+        "slate": "/slate/{date}",
+        "executive": "/slate/{date}/executive",
+        "registry": "/api/registry"
+    }
+    endpoints = {key: f"{base_url}{path}" for key, path in paths.items()}
+
+    return {
+        "status": "ok",
+        "service": "nba-picks",
+        "version": RELEASE_VERSION,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "api_base_url": base_url,
+        "apiBaseUrl": base_url,
+        "baseUrl": base_url,
+        "paths": paths,
+        "endpoints": endpoints,
+        "api": {
+            "v1": {
+                "picks": endpoints["picks_v1"]
+            }
+        },
+        "defaults": {
+            "sport": "nba",
+            "date": "today"
+        }
+    }
+
 
 @app.get("/markets", response_model=MarketsResponse, tags=["Meta"])
 def get_markets(request: Request):
@@ -2624,6 +2662,82 @@ def _get_fire_tier(fire_rating) -> str:
     
     return "NONE"
 
+async def _build_weekly_lineup_payload(
+    request: Request,
+    date: str,
+    tier: str = "all",
+    team: Optional[str] = None,
+    elite: bool = False
+) -> dict:
+    if date == "tomorrow":
+        resolved_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    elif date == "today":
+        resolved_date = datetime.now().strftime("%Y-%m-%d")
+    else:
+        resolved_date = date
+
+    data = await get_executive_summary(request, date=resolved_date, use_splits=True)
+
+    if not data or not isinstance(data, dict):
+        return {
+            "sport": "NBA",
+            "error": "Failed to fetch predictions",
+            "date": resolved_date
+        }
+
+    all_plays = data.get("plays", [])
+    tier_filter = (tier or "all").lower().strip()
+    if elite:
+        tier_filter = "elite"
+
+    plays = all_plays
+    if team:
+        team_filter = team.lower().strip()
+        plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
+
+    if tier_filter == "elite":
+        plays = [p for p in plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
+    elif tier_filter == "strong":
+        plays = [p for p in plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG"]]
+    elif tier_filter == "good":
+        plays = [p for p in plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG", "GOOD"]]
+
+    elite_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
+    strong_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
+    good_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
+
+    formatted_picks = []
+    for p in plays:
+        formatted_picks.append({
+            "time": p.get("time_cst", ""),
+            "matchup": p.get("matchup", ""),
+            "period": p.get("period", "FG"),
+            "market": p.get("market", ""),
+            "pick": p.get("pick", ""),
+            "odds": p.get("pick_odds", "N/A"),
+            "model_prediction": p.get("model_prediction", ""),
+            "market_line": p.get("market_line", ""),
+            "edge": p.get("edge", "N/A"),
+            "confidence": p.get("confidence", ""),
+            "tier": _get_fire_tier(p.get("fire_rating", "")),
+            "fire_rating": p.get("fire_rating", "")
+        })
+
+    return {
+        "sport": "NBA",
+        "date": resolved_date,
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "version": RELEASE_VERSION,
+        "summary": {
+            "total": len(all_plays),
+            "elite": elite_count,
+            "strong": strong_count,
+            "good": good_count,
+            "filtered": len(formatted_picks)
+        },
+        "picks": formatted_picks
+    }
+
 
 @app.get("/weekly-lineup/nba", tags=["Website"])
 @limiter.limit("60/minute")
@@ -2653,78 +2767,16 @@ async def get_weekly_lineup_nba_json(
     }
     """
     try:
-        # Resolve date
-        if date == "tomorrow":
-            resolved_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-        elif date == "today":
-            resolved_date = datetime.now().strftime("%Y-%m-%d")
-        else:
-            resolved_date = date
-        
-        # Fetch predictions using the existing executive summary endpoint
-        data = await get_executive_summary(request, date=resolved_date, use_splits=True)
-        
-        if not data or not isinstance(data, dict):
+        result = await _build_weekly_lineup_payload(request, date=date, tier=tier)
+        if not isinstance(result, dict) or result.get("error"):
             return JSONResponse(
-                content={
+                content=result if isinstance(result, dict) else {
                     "sport": "NBA",
                     "error": "Failed to fetch predictions",
-                    "date": resolved_date
+                    "date": date
                 },
                 status_code=500
             )
-        
-        all_plays = data.get("plays", [])
-        tier_filter = tier.lower().strip()
-        
-        # Apply tier filter
-        if tier_filter == "elite":
-            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
-        elif tier_filter == "strong":
-            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG"]]
-        elif tier_filter == "good":
-            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG", "GOOD"]]
-        else:
-            plays = all_plays
-        
-        # Count tiers
-        elite_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
-        strong_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
-        good_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
-        
-        # Format picks for website
-        formatted_picks = []
-        for p in plays:
-            formatted_picks.append({
-                "time": p.get("time_cst", ""),
-                "matchup": p.get("matchup", ""),
-                "period": p.get("period", "FG"),
-                "market": p.get("market", ""),
-                "pick": p.get("pick", ""),
-                "odds": p.get("pick_odds", "N/A"),
-                "model_prediction": p.get("model_prediction", ""),
-                "market_line": p.get("market_line", ""),
-                "edge": p.get("edge", "N/A"),
-                "confidence": p.get("confidence", ""),
-                "tier": _get_fire_tier(p.get("fire_rating", "")),
-                "fire_rating": p.get("fire_rating", "")
-            })
-        
-        result = {
-            "sport": "NBA",
-            "date": resolved_date,
-            "generated_at": datetime.utcnow().isoformat() + "Z",
-            "version": RELEASE_VERSION,
-            "summary": {
-                "total": len(all_plays),
-                "elite": elite_count,
-                "strong": strong_count,
-                "good": good_count,
-                "filtered": len(formatted_picks)
-            },
-            "picks": formatted_picks
-        }
-        
         return JSONResponse(content=result)
         
     except Exception as e:
@@ -2738,4 +2790,54 @@ async def get_weekly_lineup_nba_json(
             status_code=500
         )
 
+@app.get("/v1/picks", tags=["Website"])
+@limiter.limit("60/minute")
+async def get_v1_picks(
+    request: Request,
+    date: str = Query("today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query("all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'"),
+    team: Optional[str] = Query(None, description="Filter by team name or abbreviation"),
+    elite: bool = Query(False, description="Elite picks only (overrides tier)")
+):
+    """
+    Legacy compatibility endpoint for clients expecting /api/v1/picks.
+    """
+    try:
+        result = await _build_weekly_lineup_payload(
+            request,
+            date=date,
+            tier=tier,
+            team=team,
+            elite=elite
+        )
+        if not isinstance(result, dict) or result.get("error"):
+            return JSONResponse(
+                content=result if isinstance(result, dict) else {
+                    "sport": "NBA",
+                    "error": "Failed to fetch predictions",
+                    "date": date
+                },
+                status_code=500
+            )
+
+        result = dict(result)
+        result["api_version"] = "v1"
+        if team or elite or (tier and tier.lower().strip() != "all"):
+            result["filters"] = {
+                "date": date,
+                "tier": tier,
+                "team": team,
+                "elite": elite
+            }
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error in v1/picks: {str(e)}", exc_info=True)
+        return JSONResponse(
+            content={
+                "sport": "NBA",
+                "error": str(e),
+                "date": date
+            },
+            status_code=500
+        )
 
