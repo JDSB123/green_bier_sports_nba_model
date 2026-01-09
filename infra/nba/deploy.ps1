@@ -17,7 +17,7 @@
 
 .EXAMPLE
     .\deploy.ps1
-    .\deploy.ps1 -Tag NBA_v33.0.11.0
+    .\deploy.ps1 -Tag (Get-Content VERSION -Raw).Trim()
     .\deploy.ps1 -WhatIf
 #>
 

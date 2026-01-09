@@ -1,8 +1,8 @@
-# Deployment Checklist - NBA_v33.0.11.0
+# Deployment Checklist
 
 **Branch:** `prepare-deployment`  
 **Date:** December 29, 2025  
-**Version:** NBA_v33.0.11.0
+**Version:** See `VERSION`
 
 ---
 
@@ -28,17 +28,15 @@ This verifies:
 ### 1. Code Verification ✅
 
 - [x] All code changes committed
-- [x] Version consistent (`NBA_v33.0.11.0`)
+- [x] Version consistent (matches `VERSION`)
 - [x] No uncommitted changes
 - [x] Branch is `prepare-deployment` (ready for PR)
 
 ### 2. Version Consistency ✅
 
-- [x] `VERSION` file: `NBA_v33.0.11.0`
-- [x] `Dockerfile.combined`: Version referenced
-- [x] `Dockerfile`: Version referenced
-- [x] `src/serving/app.py`: Version referenced
-- [x] `pyproject.toml`: Version `33.0.11.0` (matches)
+- [x] `VERSION` file populated
+- [x] `models/production/model_pack.json` matches `VERSION`
+- [x] `models/production/feature_importance.json` matches `VERSION`
 
 ### 3. Required Files ✅
 
@@ -85,16 +83,17 @@ git push origin main
 
 ```powershell
 # 1. Build Docker image
-docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0 -f Dockerfile.combined .
+$VERSION = (Get-Content VERSION -Raw).Trim()
+docker build --build-arg MODEL_VERSION=$VERSION -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined .
 
 # 2. Login to ACR
 az acr login -n nbagbsacr
 
 # 3. Push image
-docker push nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0
+docker push nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
 
 # 4. Deploy to Azure
-az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0
+az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
 ```
 
 ### Step 3: Verify Deployment
@@ -122,7 +121,7 @@ az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --tail 50
 ```json
 {
   "status": "ok",
-  "version": "NBA_v33.0.11.0",
+  "version": "<VERSION>",
   "engine_loaded": true,
   "markets": 4,
   "markets_list": ["1h_spread", "1h_total", "fg_spread", "fg_total"]
@@ -164,7 +163,7 @@ az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image <previous-im
 - **API Keys:** Must be configured in Azure Container App environment variables
 - **Secrets:** Managed via Azure Key Vault or Container App secrets
 - **CI/CD:** Automatic deployment on push to `main` branch
-- **Version:** NBA_v33.0.11.0 (4 markets: 1H + FG spreads/totals)
+- **Version:** See `VERSION` (4 markets: 1H + FG spreads/totals)
 
 ---
 

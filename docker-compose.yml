@@ -1,4 +1,4 @@
-# NBA v33.0.11.0 - Docker Compose Production Configuration (4 Independent Markets)
+# NBA - Docker Compose Production Configuration (4 Independent Markets)
 #
 # CONFIGURATION (via .env file or environment):
 #   NBA_API_PORT - External port (default: 8090)
@@ -14,20 +14,20 @@
 #   Build:   docker compose build
 #   Run:     docker compose up -d
 #   Run with custom port: NBA_API_PORT=9000 docker compose up -d
-#   Export:  docker save nba-v33:latest | gzip > nba_v33.0_model.tar.gz
+#   Export:  docker save nba-gbsv-api:${NBA_IMAGE_TAG:-local} | gzip > nba_model.tar.gz
 
 version: "3.8"
 
 services:
   # ==========================================================================
-  # NBA v33.0.11.0 - Production API (4 Independent Markets)
+  # Production API (4 Independent Markets)
   # ==========================================================================
   nba-v33-api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: nba-v33-10:latest
-    container_name: nba-v33
+    image: nba-gbsv-api:${NBA_IMAGE_TAG:-local}
+    container_name: nba-gbsv-api
     
     # Security: Read-only root filesystem
     read_only: true
@@ -52,8 +52,8 @@ services:
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
 
-      # v33.0.11.0 configuration (4 independent markets - 1H + FG)
-      - NBA_MODEL_VERSION=NBA_v33.0.11.0
+      # Configuration (4 independent markets - 1H + FG)
+      - NBA_MODEL_VERSION=${NBA_MODEL_VERSION:-}
       - NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
       - NBA_PERIODS=first_half,full_game
 

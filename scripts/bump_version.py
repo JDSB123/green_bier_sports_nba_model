@@ -3,8 +3,8 @@
 Bump version across all files in the NBA prediction repository.
 
 Usage:
-    python scripts/bump_version.py NBA_v33.0.11.0
-    python scripts/bump_version.py NBA_v33.1.0.0 --dry-run
+    python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+    python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD> --dry-run
 """
 import argparse
 import re
@@ -18,12 +18,6 @@ PROJECT_ROOT = Path(__file__).parent.parent
 # Files that need version updates
 VERSION_FILES = [
     ("VERSION", r"NBA_v\d+\.\d+\.\d+\.\d+", "{version}"),
-    ("src/serving/app.py", r'RELEASE_VERSION = os\.getenv\("NBA_MODEL_VERSION", "NBA_v\d+\.\d+\.\d+\.\d+"\)',
-     'RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "{version}")'),
-    ("src/prediction/engine.py", r'MODEL_VERSION = os\.getenv\("NBA_MODEL_VERSION", "NBA_v\d+\.\d+\.\d+\.\d+"\)',
-     'MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "{version}")'),
-    ("src/monitoring/prediction_logger.py", r'_MODEL_VERSION = os\.getenv\("NBA_MODEL_VERSION", "NBA_v\d+\.\d+\.\d+\.\d+"\)',
-     '_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "{version}")'),
     ("models/production/model_pack.json", r'"version":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
      '  "version": "{version}"'),
     ("models/production/model_pack.json", r'"git_tag":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
@@ -32,14 +26,6 @@ VERSION_FILES = [
      '    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:{version}"'),
     ("models/production/feature_importance.json", r'"version":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
      '  "version": "{version}"'),
-    ("tests/test_serving.py", r'"version":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
-     '        "version": "{version}"'),
-    (".github/copilot-instructions.md", r"nba-gbsv-api:NBA_v\d+\.\d+\.\d+\.\d+",
-     "nba-gbsv-api:{version}"),
-    ("README.md", r"current:\s*`NBA_v\d+\.\d+\.\d+\.\d+`",
-     "current: `{version}`"),
-    ("infra/nba/main.json", r'"defaultValue":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
-     '      "defaultValue": "{version}"'),
 ]
 
 
@@ -77,7 +63,7 @@ def find_and_replace(file_path: Path, pattern: str, replacement: str, new_versio
 
 def main():
     parser = argparse.ArgumentParser(description="Bump NBA model version across all files")
-    parser.add_argument("version", help="New version (e.g., NBA_v33.0.11.0)")
+    parser.add_argument("version", help="New version (e.g., NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>)")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be changed without modifying files")
     args = parser.parse_args()
     
@@ -85,7 +71,7 @@ def main():
     if not validate_version(args.version):
         print(f"[ERROR] Invalid version format: {args.version}")
         print("   Expected format: NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>")
-        print("   Example: NBA_v33.0.11.0")
+        print("   Example: NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>")
         sys.exit(1)
     
     print("=" * 80)

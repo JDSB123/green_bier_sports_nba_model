@@ -23,10 +23,10 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 
 **STEPS TO DEPLOY (DO NOT SKIP):**
 1. Commit and push to GitHub: `git push origin main` ✅ **ALWAYS do this first**
-2. Build Docker image: `docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0 -f Dockerfile.combined .`
-3. Push to ACR: `az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0`
-4. Deploy to Azure: `az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0`
-5. Verify: `curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
+2. Build Docker image: `VERSION=$(cat VERSION) && docker build --build-arg MODEL_VERSION=$VERSION -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined .`
+3. Push to ACR: `VERSION=$(cat VERSION) && az acr login -n nbagbsacr && docker push nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION`
+4. Deploy to Azure: `VERSION=$(cat VERSION) && az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION`
+5. Verify: `FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv) && curl https://$FQDN/health`
 
 **⚠️ CRITICAL RULE:** Never let the local workspace drift more than one commit ahead of GitHub. Always push before building Docker images.
 
@@ -35,7 +35,7 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 ## **Azure Resource → GitHub Source Code Mapping (nba-gbsv-model-rg)**
 | Azure Resource | Type | GitHub Repo | Branch | Current Image |
 |----------------|------|-------------|--------|-------|
-| `nba-gbsv-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0` |
+| `nba-gbsv-api` | Container App | `JDSB123/green_bier_sports_nba_model` | `main` | `nbagbsacr.azurecr.io/nba-gbsv-api:<VERSION>` |
 | `nbagbsacr` | Container Registry | — | — | Hosts NBA model images |
 | `nbagbs-keyvault` | Key Vault | — | — | Stores: THE-ODDS-API-KEY, API-BASKETBALL-KEY |
 | `nba-gbsv-model-env` | Container Apps Environment | — | — | Hosts nba-gbsv-api |
@@ -60,12 +60,14 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 - `scripts/` — Utility & deployment scripts (see `scripts/README.md`)
 - `tests/` — pytest test suite
 - `docs/` — Full architecture and operational documentation
-- `azure/` — Azure Functions & Teams integration code (supplementary)
+- `azure/teams-app/` — Teams app manifest (optional)
 - `models/production/` — Trained model files (large, usually git-lfs)
 - `data/` — Raw and processed data
 - `Dockerfile` / `Dockerfile.backtest` / `Dockerfile.combined` — Container definitions
 - `docker-compose.yml` / `docker-compose.backtest.yml` — Service orchestration
 - `pyproject.toml` / `requirements.txt` — Python dependencies
+
+**Note:** All API endpoints (including website integration, Teams webhook, and CSV downloads) are served directly from the Container App via `src/serving/app.py`. No separate Azure Function App is used.
 
 ## **Development Workflow**
 1. Make code changes in local workspace
@@ -92,7 +94,7 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 ## **Testing & Verification**
 - Local: run `pytest tests -v` or use VS Code task "Run Tests"
 - Container health: `curl http://localhost:8090/health`
-- Production health: `curl https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health`
+- Production health: `FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv) && curl https://$FQDN/health`
 - Logs: `docker compose logs -f nba-v60-api` (local) or `az containerapp logs -n nba-gbsv-api -g nba-gbsv-model-rg` (Azure)
 
 ## **Common Pitfalls to Avoid**

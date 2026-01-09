@@ -72,8 +72,11 @@ curl "$NBA_API_URL/health"
 ## Quick Commands
 
 ```bash
+# Read version once for all commands
+VERSION=$(cat VERSION)
+
 # Deploy new version (semantic tag)
-pwsh ./infra/nba/deploy.ps1 -Tag NBA_v33.0.11.0
+pwsh ./infra/nba/deploy.ps1 -Tag $VERSION
 
 # What-if mode (preview changes)
 pwsh ./infra/nba/deploy.ps1 -WhatIf
@@ -83,12 +86,12 @@ az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --follow
 
 # Update container app image
 az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
-  --image nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0
+  --image nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
 
 # Build and push new image
-docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0 -f Dockerfile.combined .
+docker build --build-arg MODEL_VERSION=$VERSION -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined .
 az acr login -n nbagbsacr
-docker push nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.11.0
+docker push nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
 
 # Run locally with custom port
 NBA_API_PORT=9000 docker compose up -d
@@ -104,11 +107,11 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 - `.github/workflows/iac.yml` - Infrastructure deployment (Bicep) with what-if on PRs
 - Container image builds use `Dockerfile.combined`, push to `nbagbsacr.azurecr.io/nba-gbsv-api:<sha>`
 
-Semantic tag `NBA_v33.0.11.0` should be pushed for releases (manual or scripted).
+Semantic tag from `VERSION` should be pushed for releases (manual or scripted).
 
 ## Model Version
 
-- **Target:** NBA_v33.0.11.0 (4 markets: 1H + FG spreads/totals)
+- **Target:** See `VERSION` (4 markets: 1H + FG spreads/totals)
 - **Markets:** 1h_spread, 1h_total, fg_spread, fg_total
 - **Dockerfile:** `Dockerfile.combined`
 

@@ -12,7 +12,7 @@
 NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
 ```
 
-Example: `NBA_v33.0.11.0`
+Example: `NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>`
 
 - **MAJOR (33)**: Model architecture generation or breaking API changes
 - **MINOR (0)**: New features, market additions, major logic changes
@@ -23,7 +23,7 @@ Example: `NBA_v33.0.11.0`
 
 ## When to Bump Versions
 
-### MAJOR (v33 → v34)
+### MAJOR (v<MAJOR> -> v<MAJOR+1>)
 - Complete model retraining with new architecture
 - Breaking API changes (removed endpoints, changed response schemas)
 - Market structure changes (e.g., Q1/Q2/Q3 → 1H/FG)
@@ -34,7 +34,7 @@ Example: `NBA_v33.0.11.0`
 - Changing from XGBoost to Neural Network ✅
 - Removing deprecated `/predict/v2` endpoint ✅
 
-### MINOR (v33.0 → v33.1)
+### MINOR (v<MAJOR>.<MINOR> -> v<MAJOR>.<MINOR+1>)
 - Adding new markets (e.g., adding player props)
 - New endpoints (e.g., `/backtest`, `/compare`)
 - Feature engineering improvements
@@ -45,7 +45,7 @@ Example: `NBA_v33.0.11.0`
 - Adding betting splits integration ✅
 - New `/slate/comprehensive` endpoint ✅
 
-### PATCH (v33.0.10 → v33.0.11)
+### PATCH (v<MAJOR>.<MINOR>.<PATCH> -> v<MAJOR>.<MINOR>.<PATCH+1>)
 - Bug fixes (prediction errors, calculation bugs)
 - Calibration adjustments
 - Edge threshold tuning
@@ -58,7 +58,7 @@ Example: `NBA_v33.0.11.0`
 - Adding archiving to predictions ✅
 - Fixing Docker secrets handling ✅
 
-### BUILD (v33.0.11.0 → v33.0.10.1)
+### BUILD (v<MAJOR>.<MINOR>.<PATCH>.<BUILD> -> v<MAJOR>.<MINOR>.<PATCH>.<BUILD+1>)
 - Hotfixes for critical production issues
 - Docker configuration changes only
 - No code changes, just rebuild
@@ -82,32 +82,28 @@ Example: `NBA_v33.0.11.0`
 
 1. **Update VERSION file:**
    ```bash
-   echo "NBA_v33.0.11.0" > VERSION
+   echo "NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>" > VERSION
    ```
 
 2. **Update all references (use script below):**
    ```powershell
-   python scripts/bump_version.py NBA_v33.0.11.0
+   python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
    ```
    This updates:
-   - [src/serving/app.py](src/serving/app.py)
-   - [src/prediction/engine.py](src/prediction/engine.py)
+   - [VERSION](VERSION)
    - [models/production/model_pack.json](models/production/model_pack.json)
-   - [tests/test_serving.py](tests/test_serving.py)
-   - [.github/copilot-instructions.md](.github/copilot-instructions.md)
-   - [README.md](README.md)
-   - [infra/nba/main.json](infra/nba/main.json)
+   - [models/production/feature_importance.json](models/production/feature_importance.json)
 
 3. **Commit with semantic message:**
    ```bash
-   git add VERSION src/ models/ tests/ .github/ README.md infra/
-   git commit -m "chore: bump version to NBA_v33.0.11.0
+   git add VERSION models/production/model_pack.json models/production/feature_importance.json
+   git commit -m "chore: bump version to NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
    
    - Fixed spread calculation bug
    - Added archive folder for historical tracking
    - Updated deployment docs"
    
-   git tag NBA_v33.0.11.0
+   git tag NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
    git push origin main --tags
    ```
 
@@ -136,15 +132,11 @@ Example: `NBA_v33.0.11.0`
 | File | Line/Field | Purpose |
 |------|------------|---------|
 | `VERSION` | Line 1 | **CANONICAL SOURCE** |
-| `src/serving/app.py` | `RELEASE_VERSION` | API version reporting |
-| `src/prediction/engine.py` | `MODEL_VERSION` | Model tracking |
 | `models/production/model_pack.json` | `version`, `git_tag`, `acr` | Model metadata |
-| `tests/test_serving.py` | `test_health_check` | Integration tests |
-| `.github/copilot-instructions.md` | Deployment steps | AI agent guidance |
-| `README.md` | Versioning section | Documentation |
-| `infra/nba/main.json` | `defaultValue` | Azure deployment |
+| `models/production/feature_importance.json` | `version` | Model metadata |
 
-**⚠️ CRITICAL:** Version drift between these files causes deployment failures and confusion.
+**CRITICAL:** Version drift between these files causes deployment failures and confusion.
+Runtime reads `VERSION` (or `NBA_MODEL_VERSION` if set) to avoid hard-coded strings elsewhere.
 
 ---
 
@@ -154,7 +146,7 @@ Example: `NBA_v33.0.11.0`
 
 1. **Version Validation** (`.github/workflows/version-check.yml`)
    - Trigger: On every PR
-   - Action: Verify VERSION matches all references
+   - Action: Verify VERSION matches model_pack and feature importance metadata
    - Block merge if mismatched
 
 2. **Auto-Tag on Merge** (`.github/workflows/tag-release.yml`)

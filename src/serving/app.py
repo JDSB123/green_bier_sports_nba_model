@@ -1,5 +1,5 @@
 """
-NBA_v33.0.11.0 - FastAPI Prediction Server - STRICT MODE
+NBA - FastAPI Prediction Server - STRICT MODE
 
 FRESH DATA ONLY: No file caching, no silent fallbacks, no placeholders.
 
@@ -50,6 +50,7 @@ from src.ingestion import the_odds
 from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
 from src.features import RichFeatureBuilder
 from src.utils.logging import get_logger
+from src.utils.version import resolve_version
 from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.markets import get_market_catalog
 from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegrityError
@@ -69,7 +70,7 @@ from zoneinfo import ZoneInfo
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
-RELEASE_VERSION = os.getenv("NBA_MODEL_VERSION", "NBA_v33.0.11.0")
+RELEASE_VERSION = resolve_version()
 
 
 def convert_numpy_types(obj):
@@ -228,7 +229,7 @@ REQUEST_DURATION = Histogram(
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Request/Response Models - NBA_v33.0.11.0 ---
+# --- Request/Response Models ---
 
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 4 markets (1H + FG spreads/totals)."""
@@ -276,7 +277,7 @@ class MarketsResponse(BaseModel):
     model_pack_path: Optional[str] = None
 
 
-# --- API Setup - NBA_v33.0.11.0 ---
+# --- API Setup ---
 
 def _models_dir() -> PathLib:
     """
@@ -312,7 +313,7 @@ async def lifespan(app: FastAPI):
     Application lifespan context manager.
 
     Startup: Initialize the prediction engine.
-    NBA_v33.0.11.0: 4 markets (1H+FG for Spread, Total). Q1 removed.
+    Production: 4 markets (1H+FG for Spread, Total). Q1 removed.
     Fails LOUDLY if models are missing or API keys are invalid.
     """
     # === STARTUP ===
@@ -336,7 +337,7 @@ async def lifespan(app: FastAPI):
     app.state.premium_features = premium_features
 
     models_dir = _models_dir()
-    logger.info(f"v33.0.11.0 STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -349,12 +350,12 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info("v33.0.11.0 STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
     app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
 
     # NO FILE CACHING - all data fetched fresh from APIs per request
-    logger.info("v33.0.11.0 STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: File caching DISABLED - all data fetched fresh per request")
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -364,16 +365,16 @@ async def lifespan(app: FastAPI):
 
     # Log model info
     model_info = app.state.engine.get_model_info()
-    logger.info(f"v33.0.11.0 initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}")
+    logger.info(f"{RELEASE_VERSION} initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}")
 
     yield  # Application runs here
 
     # === SHUTDOWN ===
-    logger.info("v33.0.11.0 shutting down")
+    logger.info(f"{RELEASE_VERSION} shutting down")
 
 
 app = FastAPI(
-    title="NBA v33.0.11.0 - STRICT MODE Production Picks",
+    title=f"NBA {RELEASE_VERSION} - STRICT MODE Production Picks",
     description="4 INDEPENDENT Markets: 1H+FG for Spread and Total. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
     lifespan=lifespan
@@ -401,6 +402,28 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*", "X-API-Key"],
 )
+
+
+# API prefix stripping middleware - allows routes to work with or without /api prefix
+# This enables Azure Static Web App linked backend proxying (sends /api/*)
+@app.middleware("http")
+async def strip_api_prefix_middleware(request: Request, call_next):
+    # If path starts with /api/, strip it for routing
+    # This allows www.greenbiersportventures.com/api/health to route to /health
+    if request.url.path.startswith("/api/"):
+        # Create new scope with modified path
+        new_path = request.url.path[4:]  # Remove "/api" prefix
+        request.scope["path"] = new_path
+        # Also update raw_path if present
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = new_path.encode()
+    elif request.url.path == "/api":
+        # Handle bare /api as /
+        request.scope["path"] = "/"
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = b"/"
+    
+    return await call_next(request)
 
 
 # Request ID middleware for distributed tracing
@@ -446,7 +469,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
-    """Check API health - v33.0.11.0 with 4 markets (spread/total only)."""
+    """Check API health - 4 markets (spread/total only)."""
     engine_loaded = hasattr(app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
 
@@ -598,7 +621,7 @@ async def clear_cache(request: Request):
     """
     Clear all session caches to force fresh API data.
 
-    v33.0.11.0 STRICT MODE: No file caching exists - only clears session memory caches.
+    STRICT MODE: No file caching exists - only clears session memory caches.
     Use this before fetching new predictions to ensure fresh data.
     """
     cleared = {"session_cache": False, "api_cache": 0}
@@ -615,7 +638,7 @@ async def clear_cache(request: Request):
     except Exception:
         pass  # API cache may not be configured
 
-    logger.info(f"v33.0.11.0 STRICT MODE: Session cache cleared")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Session cache cleared")
 
     return {
         "status": "success",
@@ -664,7 +687,7 @@ def verify_integrity(request: Request):
     """
     Verify model integrity and component usage.
 
-    v33.0.11.0: Verifies 4 independent models (1H + FG for spread, total)
+    Verifies 4 independent models (1H + FG for spread, total)
     """
     results = {
         "status": "pass",
@@ -799,16 +822,16 @@ async def get_slate_predictions(
     """
     Get all predictions for a full day's slate.
 
-    v33.0.11.0: 4 markets (1H + FG spreads/totals). Q1 removed entirely.
+    4 markets (1H + FG spreads/totals). Q1 removed entirely.
     Returns 1H/FG for spread and total when available.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION}: Engine not loaded - models missing")
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info("v33.0.11.0: Caches cleared - fetching fresh unified data (odds + records from The Odds API)")
+    logger.info(f"{RELEASE_VERSION}: Caches cleared - fetching fresh unified data (odds + records from The Odds API)")
 
     # Resolve date
     from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
@@ -961,7 +984,7 @@ async def get_slate_predictions(
             })
 
         except ValueError as e:
-            logger.warning(f"v33.0.11.0: Skipping {home_team} vs {away_team} - {e}")
+            logger.warning(f"{RELEASE_VERSION}: Skipping {home_team} vs {away_team} - {e}")
             continue
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
@@ -1008,17 +1031,17 @@ async def get_executive_summary(
     """
     BLUF (Bottom Line Up Front) Executive Summary.
 
-    v33.0.11.0 STRICT MODE: Fetches fresh data from all APIs.
+    STRICT MODE: Fetches fresh data from all APIs.
     Returns a clean actionable betting card with all picks that pass filters.
     Sorted by EV% (desc), then game time.
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info("v33.0.11.0 STRICT MODE: Executive summary - fetching fresh unified data")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Executive summary - fetching fresh unified data")
 
     from src.utils.slate_analysis import (
         get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
@@ -1536,17 +1559,17 @@ async def get_comprehensive_slate_analysis(
     """
     Get comprehensive slate analysis with full edge calculations.
 
-    v33.0.11.0 STRICT MODE: Fetches fresh data from all APIs.
+    STRICT MODE: Fetches fresh data from all APIs.
     Full analysis for all 4 markets (1H + FG spreads/totals).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     app.state.feature_builder.clear_persistent_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info("v33.0.11.0 STRICT MODE: Comprehensive analysis - fetching fresh unified data")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Comprehensive analysis - fetching fresh unified data")
     
     CST = ZoneInfo("America/Chicago")
     
@@ -1765,11 +1788,11 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     """
     Generate predictions for a specific matchup.
 
-    v33.0.11.0: STRICT MODE - Fetches fresh data from all APIs.
+    STRICT MODE - Fetches fresh data from all APIs.
     4 markets (1H+FG for Spread, Total).
     """
     if not hasattr(app.state, 'engine') or app.state.engine is None:
-        raise HTTPException(status_code=503, detail="v33.0.11.0 STRICT MODE: Engine not loaded - models missing")
+        raise HTTPException(status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
@@ -1790,13 +1813,13 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         )
         return preds
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"v33.0.11.0: {e}")
+        raise HTTPException(status_code=400, detail=f"{RELEASE_VERSION}: {e}")
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # =============================================================================
-# LIVE PICK TRACKING ENDPOINTS - v33.0.11.0
+# LIVE PICK TRACKING ENDPOINTS
 # =============================================================================
 
 @app.get("/tracking/summary")
@@ -2568,6 +2591,150 @@ async def get_weekly_lineup_csv(
         return Response(
             content="Failed to generate CSV",
             media_type="text/plain",
+            status_code=500
+        )
+
+
+# =============================================================================
+# WEBSITE INTEGRATION - JSON API for greenbiersportventures.com
+# =============================================================================
+
+def _get_fire_tier(fire_rating) -> str:
+    """Convert fire rating to tier name. Handles both numeric and string formats."""
+    if not fire_rating:
+        return "NONE"
+    
+    # Handle string format (GOOD, STRONG, ELITE)
+    if isinstance(fire_rating, str):
+        rating_upper = fire_rating.upper().strip()
+        if rating_upper in ["ELITE", "STRONG", "GOOD"]:
+            return rating_upper
+    
+    # Handle numeric format (fire count)
+    try:
+        fire_count = int(fire_rating)
+        if fire_count >= 4:
+            return "ELITE"
+        elif fire_count >= 3:
+            return "STRONG"
+        elif fire_count >= 1:
+            return "GOOD"
+    except (TypeError, ValueError):
+        pass
+    
+    return "NONE"
+
+
+@app.get("/weekly-lineup/nba", tags=["Website"])
+@limiter.limit("60/minute")
+async def get_weekly_lineup_nba_json(
+    request: Request,
+    date: str = Query("today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query("all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'")
+):
+    """
+    Website integration endpoint for greenbiersportventures.com/weekly-lineup.
+
+    Returns NBA picks in a format optimized for the website dashboard.
+    Supports CORS for cross-origin requests from the website.
+
+    Query params:
+      - date: YYYY-MM-DD, 'today', or 'tomorrow' (default: today)
+      - tier: 'elite', 'strong', 'good', or 'all' (default: all)
+
+    Response format:
+    {
+        "sport": "NBA",
+        "date": "2025-12-25",
+        "generated_at": "2025-12-25T10:30:00Z",
+        "version": "v33.0.11.0",
+        "summary": {"total": 12, "elite": 3, "strong": 5, "good": 4},
+        "picks": [...]
+    }
+    """
+    try:
+        # Resolve date
+        if date == "tomorrow":
+            resolved_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        elif date == "today":
+            resolved_date = datetime.now().strftime("%Y-%m-%d")
+        else:
+            resolved_date = date
+        
+        # Fetch predictions using the existing executive summary endpoint
+        data = await get_executive_summary(request, date=resolved_date, use_splits=True)
+        
+        if not data or not isinstance(data, dict):
+            return JSONResponse(
+                content={
+                    "sport": "NBA",
+                    "error": "Failed to fetch predictions",
+                    "date": resolved_date
+                },
+                status_code=500
+            )
+        
+        all_plays = data.get("plays", [])
+        tier_filter = tier.lower().strip()
+        
+        # Apply tier filter
+        if tier_filter == "elite":
+            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
+        elif tier_filter == "strong":
+            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG"]]
+        elif tier_filter == "good":
+            plays = [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG", "GOOD"]]
+        else:
+            plays = all_plays
+        
+        # Count tiers
+        elite_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
+        strong_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
+        good_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
+        
+        # Format picks for website
+        formatted_picks = []
+        for p in plays:
+            formatted_picks.append({
+                "time": p.get("time_cst", ""),
+                "matchup": p.get("matchup", ""),
+                "period": p.get("period", "FG"),
+                "market": p.get("market", ""),
+                "pick": p.get("pick", ""),
+                "odds": p.get("pick_odds", "N/A"),
+                "model_prediction": p.get("model_prediction", ""),
+                "market_line": p.get("market_line", ""),
+                "edge": p.get("edge", "N/A"),
+                "confidence": p.get("confidence", ""),
+                "tier": _get_fire_tier(p.get("fire_rating", "")),
+                "fire_rating": p.get("fire_rating", "")
+            })
+        
+        result = {
+            "sport": "NBA",
+            "date": resolved_date,
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "version": RELEASE_VERSION,
+            "summary": {
+                "total": len(all_plays),
+                "elite": elite_count,
+                "strong": strong_count,
+                "good": good_count,
+                "filtered": len(formatted_picks)
+            },
+            "picks": formatted_picks
+        }
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Error in weekly-lineup/nba: {str(e)}", exc_info=True)
+        return JSONResponse(
+            content={
+                "sport": "NBA",
+                "error": str(e),
+                "date": date
+            },
             status_code=500
         )
 

@@ -1,4 +1,4 @@
-# NBA_v33.0.11.0 - Production Container - STRICT MODE
+# NBA Production Container - STRICT MODE
 # Hardened, read-only image with baked-in models
 #
 # STRICT MODE: FRESH DATA ONLY
@@ -20,11 +20,12 @@
 #
 # Build: docker build -f Dockerfile -t nba-v33:latest .
 # Run:   docker compose up -d  (uses docker-compose.yml with read-only and secrets)
-# Export: docker save nba-v33:latest | gzip > nba_v33.0.1.0_model.tar.gz
+# Export: docker save nba-gbsv-api:<TAG> | gzip > nba_model.tar.gz
 
 # =============================================================================
 # Stage 1: Builder - Install dependencies
 # =============================================================================
+ARG MODEL_VERSION=unknown
 FROM python:3.11.11-slim AS builder
 
 WORKDIR /app
@@ -42,10 +43,11 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 # Stage 2: Production Runtime - Read-only optimized
 # =============================================================================
 FROM python:3.11.11-slim
+ARG MODEL_VERSION=unknown
 
 # Labels for container identification
 LABEL maintainer="Green Bier Ventures"
-LABEL version="NBA_v33.0.11.0"
+LABEL version="$MODEL_VERSION"
 LABEL description="NBA Production Picks Model - STRICT MODE - 4 Independent Markets (1H+FG) - FRESH DATA ONLY"
 
 WORKDIR /app
@@ -63,6 +65,7 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 # Copy application source code (read-only in production)
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser scripts/ ./scripts/
+COPY --chown=appuser:appuser VERSION /app/VERSION
 
 # =============================================================================
 # Bake in production models (immutable in container)
@@ -77,7 +80,7 @@ COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 
 # Verify ALL 4 REQUIRED model files exist (fail fast if missing)
 # 4 markets: 1H (2) + FG (2), with 1H having separate feature files
-RUN echo "=== NBA_v33.0.11.0 Model Verification ===" && \
+RUN echo "=== NBA Model Verification (${MODEL_VERSION}) ===" && \
     echo "Checking for 4 independent market models (1H + FG)..." && \
     ls -la /app/data/processed/models/ && \
     echo "" && \
@@ -131,7 +134,7 @@ ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV ALLOWED_ORIGINS=*
 
 # STRICT MODE - All 4 markets required, FRESH DATA ONLY (baked-in env defaults)
-ENV NBA_MODEL_VERSION=NBA_v33.0.11.0
+ENV NBA_MODEL_VERSION=$MODEL_VERSION
 ENV NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
 ENV NBA_PERIODS=first_half,full_game
 ENV NBA_STRICT_MODE=true

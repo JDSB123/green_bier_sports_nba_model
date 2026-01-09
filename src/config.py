@@ -100,7 +100,7 @@ class FilterThresholds:
     - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.58)
     - FILTER_TOTAL_MIN_EDGE (default: 3.0)
 
-    NBA_v33.0.1.0: 4 markets only (1H + FG spreads/totals).
+    4 markets only (1H + FG spreads/totals).
     """
     # Spread thresholds
     spread_min_confidence: float = field(

@@ -13,7 +13,7 @@ on:
         default: 'today'
 
 env:
-  ACA_ENDPOINT: https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io
+  ACA_ENDPOINT: https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io
   SHAREPOINT_SITE: greenbiercapital.sharepoint.com
   SHAREPOINT_SITE_PATH: /sites/EarlyStageSportVentures
   UPLOAD_FOLDER: NBA Picks
@@ -43,7 +43,7 @@ jobs:
           echo "Fetching predictions for ${{ steps.date.outputs.target_date }}..."
 
           # Primary endpoint
-          ACA_URL="https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io"
+          ACA_URL="https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io"
 
           # First, wake up the ACA with a health check (handles cold start)
           echo "Waking up ACA..."

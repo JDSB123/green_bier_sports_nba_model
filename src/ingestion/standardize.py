@@ -48,13 +48,13 @@ logger = get_logger(__name__)
 _VARIANT_OVERRIDE_CACHE_PATH = Path(settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
 _VARIANT_OVERRIDE_CACHE: dict[str, str] | None = None
 _VARIANT_OVERRIDE_CACHE_LOADED_AT: float | None = None
-_VARIANT_OVERRIDE_CACHE_TTL_HOURS = 24  # NBA_v33.0.1.0: Team names rarely change, 24h TTL
+_VARIANT_OVERRIDE_CACHE_TTL_HOURS = 24  # Team names rarely change, 24h TTL
 
 
 def _load_variant_override_cache() -> dict[str, str]:
     """Load variant override cache with TTL check.
 
-    NBA_v33.0.1.0: Added TTL to prevent stale cache issues.
+    Added TTL to prevent stale cache issues.
     """
     global _VARIANT_OVERRIDE_CACHE, _VARIANT_OVERRIDE_CACHE_LOADED_AT
     import time

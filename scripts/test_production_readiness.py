@@ -26,6 +26,13 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import traceback
 
+# Read VERSION file for local defaults (keeps in sync with production tagging)
+def _resolve_local_version() -> str:
+    version_path = Path(__file__).parent.parent / "VERSION"
+    if version_path.exists():
+        return version_path.read_text(encoding="utf-8").strip()
+    return ""
+
 # ============================================================================
 # ENVIRONMENT VARIABLES - MATCHES DOCKERFILE EXACTLY (lines 113-140)
 # ============================================================================
@@ -54,7 +61,7 @@ os.environ.setdefault('PREDICTION_FEATURE_MODE', 'warn')
 
 # Optional Configuration (matches Dockerfile)
 os.environ.setdefault('ALLOWED_ORIGINS', '*')
-os.environ.setdefault('NBA_MODEL_VERSION', 'NBA_v33.0.11.0')
+os.environ.setdefault('NBA_MODEL_VERSION', _resolve_local_version() or 'unknown')
 os.environ.setdefault('NBA_MARKETS', '1h_spread,1h_total,fg_spread,fg_total')
 os.environ.setdefault('NBA_PERIODS', 'first_half,full_game')
 os.environ.setdefault('NBA_STRICT_MODE', 'true')
@@ -680,58 +687,45 @@ def test_error_handling():
 
 
 # ============================================================================
-# 8. AZURE FUNCTION TESTS
+# 8. CONTAINER APP WEBSITE INTEGRATION TESTS
 # ============================================================================
 
-def test_azure_function():
-    """Test Azure Function endpoints."""
+def test_container_app_endpoints():
+    """Test Container App website integration endpoints in app.py."""
     print("\n" + "=" * 70)
-    print("8. AZURE FUNCTION ENDPOINTS")
+    print("8. CONTAINER APP WEBSITE INTEGRATION")
     print("=" * 70)
     
     # Track failures within this test suite
     failures_before = len(test_results["failed"])
     
     try:
-        # Check that function_app.py exists and has required endpoints
-        func_file = PROJECT_ROOT / "azure" / "function_app" / "function_app.py"
+        # Check that app.py exists and has required endpoints
+        app_file = PROJECT_ROOT / "src" / "serving" / "app.py"
         
-        if not func_file.exists():
-            log_test("Function App File", "fail", f"Does not exist: {func_file}")
+        if not app_file.exists():
+            log_test("Container App File", "fail", f"Does not exist: {app_file}")
             return False
         
-        log_test("Function App File", "pass", f"Exists: {func_file}")
+        log_test("Container App File", "pass", f"Exists: {app_file}")
         
         # Read file and check for endpoints
-        content = func_file.read_text()
+        content = app_file.read_text(encoding="utf-8", errors="replace")
         
         expected_endpoints = [
-            ("nba-picks", "Main trigger endpoint"),
-            ("menu", "Menu endpoint"),
-            ("health", "Health check"),
-            ("weekly-lineup/nba", "Website integration"),
-            ("bot", "Teams bot endpoint"),
+            ("/health", "Health check"),
+            ("/slate/{date}/executive", "Executive summary"),
+            ("/weekly-lineup/nba", "Website integration"),
+            ("/weekly-lineup/csv", "CSV download"),
+            ("/teams/outgoing", "Teams webhook"),
         ]
         
         for endpoint, description in expected_endpoints:
-            if f'route="{endpoint}"' in content or f"route='{endpoint}'" in content:
-                log_test(f"Function: {endpoint}", "pass", description)
+            # Check for FastAPI decorator patterns
+            if f'"{endpoint}"' in content or f"'{endpoint}'" in content:
+                log_test(f"Endpoint: {endpoint}", "pass", description)
             else:
-                log_test(f"Function: {endpoint}", "fail", f"Not found: {description}")
-        
-        # Check for required functions
-        required_functions = [
-            "fetch_predictions",
-            "clear_api_cache",
-            "format_teams_card",
-            "post_to_teams",
-        ]
-        
-        for func_name in required_functions:
-            if f"def {func_name}" in content:
-                log_test(f"Function: {func_name}", "pass", "Defined")
-            else:
-                log_test(f"Function: {func_name}", "fail", "Not defined")
+                log_test(f"Endpoint: {endpoint}", "fail", f"Not found: {description}")
         
         # Check if any failures were logged during this test suite
         failures_after = len(test_results["failed"])
@@ -740,8 +734,9 @@ def test_azure_function():
         return not has_failures
         
     except Exception as e:
-        log_test("Azure Function", "fail", f"Exception: {e}", traceback.format_exc())
+        log_test("Container App Endpoints", "fail", f"Exception: {e}", traceback.format_exc())
         return False
+
 
 
 # ============================================================================
@@ -769,7 +764,7 @@ async def main():
         ("Data Ingestion", test_data_ingestion, True),
         ("Feature Engineering", test_feature_engineering, True),
         ("Error Handling", test_error_handling, False),
-        ("Azure Function", test_azure_function, False),
+        ("Container App Endpoints", test_container_app_endpoints, False),
     ]
     
     results = {}

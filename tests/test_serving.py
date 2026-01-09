@@ -1,7 +1,8 @@
-"""Tests for the FastAPI serving application - v33.0.11.0 STRICT MODE.
+"""Tests for the FastAPI serving application - STRICT MODE.
 
 Active markets: 1H + FG (spreads, totals). Q1 is disabled.
 """
+from pathlib import Path
 import pytest
 from unittest.mock import Mock, MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
@@ -62,7 +63,7 @@ def mock_engine():
     }
     # Mock get_model_info for health endpoint
     engine.get_model_info.return_value = {
-                                "version": "NBA_v33.0.11.0",
+        "version": _read_version(),
         "architecture": "1H + FG spreads/totals only",
         "markets": 4,
         "markets_list": [
@@ -229,3 +230,5 @@ def test_predict_game_with_only_fg_lines(app_with_engine):
     data = response.json()
     assert "full_game" in data
 
+def _read_version() -> str:
+    return (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip()

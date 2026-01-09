@@ -7,7 +7,7 @@ Required tags (applied in Bicep modules):
 - `owner`: accountable team (e.g., `sports-analytics`, `platform-eng`)
 - `cost_center`: cost tracking (e.g., `sports-nba`, `platform-shared`)
 - `compliance`: data/process requirement (e.g., `internal`, `pii-none`)
-- `version`: semantic version sourced from repo/pipeline (e.g., `NBA_v33.0.11.0`)
+- `version`: semantic version sourced from repo/pipeline (e.g., `NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>`)
 - `managedBy`: deployment mechanism (`bicep`)
 
 Optional tags (merged via `extraTags`):
@@ -20,7 +20,7 @@ Defaults are defined in:
 - NBA stack: `infra/nba/main.bicep`
 
 How version flows:
-1) `VERSION` file (repo) → pipeline reads and injects `versionTag`/`imageTag`.
+1) `VERSION` file (repo) -> pipeline reads and injects `imageTag`.
 2) Bicep modules propagate `version` tag to all resources and set env vars.
 3) Deployment outputs reflect the exact version applied.
 

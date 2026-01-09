@@ -97,7 +97,7 @@ Deploy to nba-picks-trigger Function App
 **For manual rollback to specific image:**
 ```bash
 gh workflow run "Deploy NBA Image to Azure Container Apps" \
-  -f tag=NBA_v33.0.11.0
+  -f tag=<VERSION>
 ```
 
 ---
@@ -133,13 +133,13 @@ gh workflow run "Deploy NBA Image to Azure Container Apps" \
 
 **Why keep it:**
 - Useful for **rollbacks** without rebuilding
-- Example: If deployment was bad, quickly revert to `NBA_v33.0.7.0`
+- Example: If deployment was bad, quickly revert to `<VERSION>`
 - No dependencies on code—just redeploy existing image
 
 **Usage for rollback:**
 ```bash
 gh workflow run "Deploy NBA Image to Azure Container Apps" \
-  -f tag=NBA_v33.0.7.0
+  -f tag=<VERSION>
 ```
 
 ---

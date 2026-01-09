@@ -117,7 +117,6 @@ def check_required_files():
         ("requirements.txt", PROJECT_ROOT / "requirements.txt"),
         ("src/serving/app.py", PROJECT_ROOT / "src" / "serving" / "app.py"),
         ("src/prediction/engine.py", PROJECT_ROOT / "src" / "prediction" / "engine.py"),
-        ("azure/function_app/function_app.py", PROJECT_ROOT / "azure" / "function_app" / "function_app.py"),
     ]
     
     for name, path in required_files:
@@ -246,46 +245,33 @@ def check_code_quality():
 
 
 def check_azure_configuration():
-    """Check Azure Function configuration."""
+    """Check Container App website integration endpoints."""
     print("\n" + "=" * 70)
-    print("5. AZURE FUNCTION CHECK")
+    print("5. CONTAINER APP ENDPOINTS CHECK")
     print("=" * 70)
     
-    func_file = PROJECT_ROOT / "azure" / "function_app" / "function_app.py"
-    if func_file.exists():
+    app_file = PROJECT_ROOT / "src" / "serving" / "app.py"
+    if app_file.exists():
         try:
-            content = func_file.read_text(encoding='utf-8', errors='ignore')
+            content = app_file.read_text(encoding='utf-8', errors='ignore')
             
-            # Check for required endpoints
+            # Check for required website integration endpoints
             required_endpoints = [
-                "nba-picks",
-                "health",
-                "weekly-lineup/nba",
+                "/health",
+                "/weekly-lineup/nba",
+                "/weekly-lineup/csv",
             ]
             
             for endpoint in required_endpoints:
-                if f'route="{endpoint}"' in content or f"route='{endpoint}'" in content:
-                    check(f"Function endpoint: {endpoint}", True, "Defined")
+                if f'"{endpoint}"' in content or f"'{endpoint}'" in content:
+                    check(f"Endpoint: {endpoint}", True, "Defined in app.py")
                 else:
-                    check(f"Function endpoint: {endpoint}", False, "Not found")
+                    check(f"Endpoint: {endpoint}", False, "Not found in app.py")
             
-            # Check for required functions
-            required_functions = [
-                "fetch_predictions",
-                "clear_api_cache",
-                "format_teams_card",
-                "post_to_teams",
-            ]
-            
-            for func_name in required_functions:
-                if f"def {func_name}" in content:
-                    check(f"Function: {func_name}", True, "Defined")
-                else:
-                    check(f"Function: {func_name}", False, "Not found")
         except Exception as e:
-            check("Azure Function file read", False, f"Error reading: {e}")
+            check("Container App file read", False, f"Error reading: {e}")
     else:
-        check("Azure Function file", False, "function_app.py not found")
+        check("Container App file", False, "app.py not found")
     
     return len(checks_failed) == 0
 
