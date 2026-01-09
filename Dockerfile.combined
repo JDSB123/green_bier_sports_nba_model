@@ -1,7 +1,6 @@
-# NBA Combined Model API + Bot - Production Container
+# NBA Model API - Production Container
 # Single container with:
-# - Port 8090: ML Model Prediction API (uvicorn)
-# - Port 8080: Azure Functions Bot / Teams Integration (func host)
+# - Port 8090: ML Model Prediction API (uvicorn) - serves all endpoints including Teams webhook
 #
 # Build: docker build -f Dockerfile.combined -t nbagbsacr.azurecr.io/nba-gbsv-api:<VERSION> .
 
@@ -17,10 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt pyproject.toml ./
-COPY ./azure/function_app/requirements.txt ./requirements-func.txt
 
-RUN pip install --no-cache-dir --user -r requirements.txt && \
-    pip install --no-cache-dir --user -r requirements-func.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
 # =============================================================================
 # Stage 2: Runtime
@@ -35,7 +32,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl bash && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 -s /bin/bash appuser && \
-    mkdir -p /app/data/processed/models /app/outputs /app/function_host /app/models/production && \
+    mkdir -p /app/data/processed/models /app/outputs /app/models/production && \
     chown -R appuser:appuser /app
 
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
@@ -43,7 +40,6 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 # Copy application code
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser scripts/ ./scripts/
-COPY --chown=appuser:appuser azure/function_app/ ./function_host/
 COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
 COPY --chown=appuser:appuser models/production/model_pack.json /app/models/production/model_pack.json
 COPY --chown=appuser:appuser VERSION /app/VERSION
@@ -65,8 +61,6 @@ ENV FILTER_TOTAL_MIN_EDGE=1.5
 ENV ALLOWED_ORIGINS=*
 ENV NBA_MODEL_VERSION=$MODEL_VERSION
 ENV NBA_MARKETS=1h_spread,1h_total,fg_spread,fg_total
-ENV FUNCTIONS_WORKER_RUNTIME=python
-ENV FUNCTIONS_EXTENSION_VERSION=~4
 ENV SEASONS_TO_PROCESS=2025-2026
 
 # Verify models directory (4 markets: 1H + FG only)
@@ -77,11 +71,11 @@ RUN echo "=== NBA Models (${MODEL_VERSION}) ===" && \
       echo "⚠ Models directory not found - will download at runtime"; \
     fi
 
-# Entrypoint script - using printf to avoid heredoc issues
-RUN printf '#!/bin/sh\nset -e\necho "[Startup] Starting NBA Container (Model API + Bot)..."\npython -m uvicorn src.serving.app:app --host 0.0.0.0 --port 8090 --workers 2 &\nMODEL_PID=$!\ncd /app/function_host\nfunc host start --port 8080 &\nBOT_PID=$!\ntrap "kill $MODEL_PID $BOT_PID 2>/dev/null" EXIT\nwait\n' > /app/start.sh && chmod +x /app/start.sh
+# Entrypoint - simplified to just run uvicorn (all endpoints now in app.py)
+RUN printf '#!/bin/sh\nset -e\necho "[Startup] Starting NBA Model API..."\nexec python -m uvicorn src.serving.app:app --host 0.0.0.0 --port 8090 --workers 2\n' > /app/start.sh && chmod +x /app/start.sh
 
 USER appuser
-EXPOSE 8090 8080
+EXPOSE 8090
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -s http://localhost:8090/health || exit 1
 ENTRYPOINT ["/app/start.sh"]
