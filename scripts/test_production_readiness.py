@@ -710,7 +710,7 @@ def test_azure_function():
         log_test("Function App File", "pass", f"Exists: {func_file}")
         
         # Read file and check for endpoints
-        content = func_file.read_text()
+        content = func_file.read_text(encoding="utf-8", errors="replace")
         
         expected_endpoints = [
             ("nba-picks", "Main trigger endpoint"),
