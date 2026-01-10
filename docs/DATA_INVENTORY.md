@@ -11,7 +11,8 @@
 | 1H Betting Lines | TheOdds API | 2023-05+ | 77% (2023+) | **COMPLETE** |
 | Box Scores (historic) | wyattowalsh/basketball | 1946 to 2023-06-12 | 65,698 games | **COMPLETE** |
 | Box Scores (2023-24) | nba_api (NBA.com) | 2023-10 to 2024-06 | 1,230 games | **COMPLETE** |
-| Box Scores (2024-25) | nba_api (NBA.com) | 2024-10 to 2025-04 | 1,230 games | **COMPLETE** |
+| Box Scores (2024-25) | nba_api (NBA.com) | 2024-10 to 2025-06 | 1,230 games | **COMPLETE** |
+| Box Scores (2025-26) | nba_api (NBA.com) | 2025-10 to 2026-01-10 | 567 games | **COMPLETE** |
 | ELO Ratings | Computed from results | All games | 100% | **COMPLETE** |
 | Line Movement | TheOdds exports | 2023-10+ | 77% | **COMPLETE** |
 
