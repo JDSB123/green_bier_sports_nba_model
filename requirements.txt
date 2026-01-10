@@ -42,4 +42,7 @@ uvicorn[standard]==0.31.0
 
 # String matching
 rapidfuzz==3.10.0
-kagglehub
+
+# Data sources
+kagglehub>=0.3.0
+nba_api>=1.11.3
