@@ -10,8 +10,8 @@
 | FG Betting Lines | Kaggle + TheOdds | 2007+ | 100% | **COMPLETE** |
 | 1H Betting Lines | TheOdds API | 2023-05+ | 77% (2023+) | **COMPLETE** |
 | Box Scores (historic) | wyattowalsh/basketball | 1946 to 2023-06-12 | 65,698 games | **COMPLETE** |
-| Box Scores (2023-24) | nba_api (NBA.com) | 2023-10 to 2024-06 | ~1,230 games | **FETCHING** |
-| Box Scores (2024-25) | nba_api (NBA.com) | 2024-10 to present | ~1,230 games | **FETCHING** |
+| Box Scores (2023-24) | nba_api (NBA.com) | 2023-10 to 2024-06 | 1,230 games | **COMPLETE** |
+| Box Scores (2024-25) | nba_api (NBA.com) | 2024-10 to 2025-04 | 1,230 games | **COMPLETE** |
 | ELO Ratings | Computed from results | All games | 100% | **COMPLETE** |
 | Line Movement | TheOdds exports | 2023-10+ | 77% | **COMPLETE** |
 
@@ -79,7 +79,7 @@ Opening and closing lines for calculating line movement.
 | box_scores_2023_24.csv | 2023-24 season team box scores |
 | box_scores_2024_25.csv | 2024-25 season team box scores |
 
-**Status**: FETCHING via `scripts/fetch_nba_box_scores.py`
+**Status**: COMPLETE - fetched via `scripts/fetch_nba_box_scores.py`
 
 ---
 
@@ -92,7 +92,7 @@ Opening and closing lines for calculating line movement.
 | 1H spread/total | 77% | TheOdds only (from May 2023) |
 | Q1 spread/total | 77% | TheOdds only (from May 2023) |
 | Line movement | 77% | Featured exports |
-| Box scores (FG%, REB, AST, TOV) | 22% -> 100% | After nba_api fetch |
+| Box scores (FG%, REB, AST, TOV) | 100% | nba_api fetch COMPLETE |
 | ELO ratings | 100% | Computed from game results |
 | Rolling stats (PPG, PAPG, etc.) | 100% | Computed from scores |
 | Rest days / B2B | 100% | Computed from schedule |
