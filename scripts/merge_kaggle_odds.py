@@ -100,10 +100,16 @@ def load_kaggle_data(filepath: Path) -> pd.DataFrame:
     df["total_line"] = df["total"]
 
 
-    # First half lines (h2 appears to be second half, so estimate 1H)
-    # Using standard NBA scaling: 1H ~ 50% of FG
-    df["fh_spread_line"] = df["spread_line"] / 2
-    df["fh_total_line"] = df["total_line"] / 2
+    # First half lines from Kaggle h2_spread and h2_total columns
+    # NOTE: Despite the confusing name, "h2" means FIRST HALF in Kaggle data
+    # Verified by: h2_total/total ratio = 0.497 (exactly half)
+    # And: 1H spread covered is ~50% when properly signed (market efficient)
+    df["fh_spread_line"] = df.apply(
+        lambda r: -r["h2_spread"] if r["whos_favored"] == "home" else r["h2_spread"]
+        if pd.notna(r.get("h2_spread")) else None,
+        axis=1
+    )
+    df["fh_total_line"] = df["h2_total"]
 
     # Q1 lines (estimate: Q1 ~ 25% of FG)
     df["q1_spread_line"] = df["spread_line"] / 4
