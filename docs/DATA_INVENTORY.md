@@ -8,7 +8,8 @@
 |-----------|--------|------------|----------|--------|
 | Games & Scores | Kaggle nba_2008-2025 | 2007-10-30 to 2025-06-22 | 23,118 games | **COMPLETE** |
 | FG Betting Lines | Kaggle + TheOdds | 2007+ | 100% | **COMPLETE** |
-| 1H Betting Lines | TheOdds API | 2023-05+ | 77% (2023+) | **COMPLETE** |
+| FG Betting Lines (2025-26) | TheOdds API | 2025-10-21 to 2026-01-20 | 578 games | **COMPLETE** |
+| 1H Betting Lines | TheOdds API | 2023-05 to 2024-06 | 146,348 rows | **COMPLETE** |
 | Box Scores (historic) | wyattowalsh/basketball | 1946 to 2023-06-12 | 65,698 games | **COMPLETE** |
 | Box Scores (2023-24) | nba_api (NBA.com) | 2023-10 to 2024-06 | 1,230 games | **COMPLETE** |
 | Box Scores (2024-25) | nba_api (NBA.com) | 2024-10 to 2025-06 | 1,230 games | **COMPLETE** |
@@ -79,8 +80,28 @@ Opening and closing lines for calculating line movement.
 |------|-------------|
 | box_scores_2023_24.csv | 2023-24 season team box scores |
 | box_scores_2024_25.csv | 2024-25 season team box scores |
+| box_scores_2025_26.csv | 2025-26 season team box scores (current) |
 
 **Status**: COMPLETE - fetched via `scripts/fetch_nba_box_scores.py`
+
+### 7. TheOdds API 2025-26 Season (PREMIER SUBSCRIPTION)
+**Location**: `data/historical/the_odds/2025-2026/`
+
+| File | Description |
+|------|-------------|
+| 2025-2026_all_markets.csv | ALL markets: FG, 1H, Q1, alternates (576 games) |
+| 2025-2026_all_markets.json | Raw JSON with all bookmaker data |
+| 2025-2026_odds_fg.csv | Full game h2h/spreads/totals (578 games) |
+
+**Market Coverage**:
+- Full Game (h2h, spreads, totals): 576 games (100%)
+- First Half (h2h_h1, spreads_h1, totals_h1): 495 games (85.9%)
+- First Quarter (h2h_q1, spreads_q1, totals_q1): 494 games (85.8%)
+- Alternate Lines: 576 games (100%)
+
+**Date Range**: 2025-10-22 to 2026-01-20
+
+**Bookmakers**: DraftKings, FanDuel, BetMGM, Caesars, BetRivers, Bovada, and 5 more
 
 ---
 

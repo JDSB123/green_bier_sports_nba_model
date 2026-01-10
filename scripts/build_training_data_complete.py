@@ -46,7 +46,13 @@ FEAT_EXPORTS = [
     DATA_DIR / "historical" / "exports" / "2023-2024_odds_featured.csv",
     DATA_DIR / "historical" / "exports" / "2024-2025_odds_featured.csv",
 ]
+THEODDS_2025_26 = DATA_DIR / "historical" / "the_odds" / "2025-2026" / "2025-2026_odds_fg.csv"
 BOX_SCORES = DATA_DIR / "external" / "nba_database" / "game.csv"
+NBA_API_BOX_SCORES = [
+    DATA_DIR / "raw" / "nba_api" / "box_scores_2023_24.csv",
+    DATA_DIR / "raw" / "nba_api" / "box_scores_2024_25.csv",
+    DATA_DIR / "raw" / "nba_api" / "box_scores_2025_26.csv",
+]
 OUTPUT_DIR = DATA_DIR / "processed"
 
 
@@ -139,6 +145,37 @@ def load_theodds_derived() -> pd.DataFrame:
         "fh_ml_home": "to_1h_ml_home",
         "fh_ml_away": "to_1h_ml_away",
     })
+    
+    print(f"       Games: {len(df):,}")
+    return df
+
+
+def load_theodds_2025_26() -> pd.DataFrame:
+    """Load 2025-26 FG odds from TheOdds API fetch."""
+    print("\n[2b/8] Loading TheOdds 2025-26 odds...")
+    
+    if not THEODDS_2025_26.exists():
+        print("       [SKIP] Not found")
+        return pd.DataFrame()
+    
+    df = pd.read_csv(THEODDS_2025_26)
+    df["commence_time"] = pd.to_datetime(df["commence_time"])
+    df["home_team"] = df["home_team"].apply(standardize_team_name)
+    df["away_team"] = df["away_team"].apply(standardize_team_name)
+    df["match_key"] = df.apply(
+        lambda r: generate_match_key(r["commence_time"], r["home_team"], r["away_team"], source_is_utc=True),
+        axis=1
+    )
+    
+    # Extract consensus lines from bookmakers (median across available)
+    spread_cols = [c for c in df.columns if "spreads" in c and "point" in c and "Home" in c]
+    total_cols = [c for c in df.columns if "totals" in c and "point" in c and "Over" in c]
+    ml_home_cols = [c for c in df.columns if "h2h" in c and "price" in c and "Home" not in c]
+    
+    if spread_cols:
+        df["to_fg_spread"] = df[spread_cols].median(axis=1)
+    if total_cols:
+        df["to_fg_total"] = df[total_cols].median(axis=1)
     
     print(f"       Games: {len(df):,}")
     return df
@@ -517,14 +554,20 @@ def print_summary(df: pd.DataFrame):
 
 def main(start_date: str = "2023-01-01"):
     print("\n" + "="*80)
-    print(" BUILDING COMPLETE TRAINING DATA (2023-2025)")
+    print(" BUILDING COMPLETE TRAINING DATA (2023-2026)")
     print("="*80)
     
     kaggle = load_kaggle(start_date)
     theodds = load_theodds_derived()
+    theodds_2526 = load_theodds_2025_26()
     h1_exp = load_h1_exports()
     movement = load_line_movement()
     box = load_box_scores()
+    
+    # Combine theodds (2021-2025) with theodds_2526 (2025-26)
+    if not theodds_2526.empty:
+        theodds = pd.concat([theodds, theodds_2526], ignore_index=True).drop_duplicates(subset=["match_key"], keep="last")
+        print(f"\n       Combined TheOdds: {len(theodds):,} games")
     
     df = merge_all(kaggle, theodds, h1_exp, movement, box)
     df = compute_elo(df)
