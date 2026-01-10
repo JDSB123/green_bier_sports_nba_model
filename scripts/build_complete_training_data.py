@@ -2,21 +2,15 @@
 """
 Build COMPLETE training dataset with ALL available features.
 
+USES SINGLE SOURCE OF TRUTH:
+- src.data.standardization for team names and timezone (CST)
+
 Data Sources:
 - Kaggle betting: Q1-Q4 scores, FG lines, moneylines
 - The Odds API: FG + 1H lines (multi-bookmaker consensus)
-- The Odds API Historical: Fill gaps via API calls
 - FiveThirtyEight: ELO ratings
-- API-Basketball: Team stats (if available)
 
-Features:
-- Rolling team stats (PPG, PAPG, margins)
-- ELO ratings and differentials
-- Home/away splits
-- Rest days / back-to-back detection
-- Season progression
-- Win streaks
-- Head-to-head history
+All dates/times are converted to CST (Central Standard Time).
 
 Usage:
     python scripts/build_complete_training_data.py --start-date 2023-01-01
@@ -38,6 +32,15 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.utils.logging import get_logger
+from src.data.standardization import (
+    standardize_team_name,
+    to_cst,
+    to_cst_date,
+    to_cst_local,
+    to_cst_date_local,
+    generate_match_key,
+    CST,
+)
 
 logger = get_logger(__name__)
 
@@ -48,50 +51,30 @@ THEODDS_DIR = DATA_DIR / "historical" / "the_odds"
 ELO_FILE = DATA_DIR / "raw" / "github" / "raw.githubusercontent.com_fivethirtyeight_data_master_nba-elo_nbaallelo.csv"
 OUTPUT_DIR = DATA_DIR / "processed"
 
-# Team abbreviation mapping
-TEAM_ABBREV_MAP = {
-    "atl": "Atlanta Hawks", "bos": "Boston Celtics", "bkn": "Brooklyn Nets",
-    "cha": "Charlotte Hornets", "chi": "Chicago Bulls", "cle": "Cleveland Cavaliers",
-    "dal": "Dallas Mavericks", "den": "Denver Nuggets", "det": "Detroit Pistons",
-    "gs": "Golden State Warriors", "gsw": "Golden State Warriors",
-    "hou": "Houston Rockets", "ind": "Indiana Pacers",
-    "lac": "Los Angeles Clippers", "lal": "Los Angeles Lakers",
-    "mem": "Memphis Grizzlies", "mia": "Miami Heat", "mil": "Milwaukee Bucks",
-    "min": "Minnesota Timberwolves", "no": "New Orleans Pelicans",
-    "nop": "New Orleans Pelicans", "nyk": "New York Knicks", "ny": "New York Knicks",
-    "okc": "Oklahoma City Thunder", "orl": "Orlando Magic",
-    "phi": "Philadelphia 76ers", "phx": "Phoenix Suns",
-    "por": "Portland Trail Blazers", "sac": "Sacramento Kings",
-    "sa": "San Antonio Spurs", "sas": "San Antonio Spurs",
-    "tor": "Toronto Raptors", "utah": "Utah Jazz", "uta": "Utah Jazz",
-    "was": "Washington Wizards", "wsh": "Washington Wizards",
-    "nj": "Brooklyn Nets", "njn": "Brooklyn Nets", "sea": "Oklahoma City Thunder",
-    "noh": "New Orleans Pelicans", "nok": "New Orleans Pelicans",
-}
-
-
-def map_team_name(abbrev: str) -> str:
-    """Map team abbreviation to full name."""
-    return TEAM_ABBREV_MAP.get(abbrev.lower().strip(), abbrev)
-
 
 # =============================================================================
 # DATA LOADING
 # =============================================================================
 
 def load_kaggle_data(start_date: str) -> pd.DataFrame:
-    """Load Kaggle NBA data with Q1-Q4 scores and betting lines."""
+    """Load Kaggle NBA data with Q1-Q4 scores and betting lines.
+    
+    Uses SINGLE SOURCE OF TRUTH for team name standardization.
+    Dates are converted to CST.
+    """
     if not KAGGLE_FILE.exists():
         logger.error(f"Kaggle file not found: {KAGGLE_FILE}")
         return pd.DataFrame()
     
     df = pd.read_csv(KAGGLE_FILE)
+    
+    # Convert dates (Kaggle dates are in local US time, NOT UTC)
     df["game_date"] = pd.to_datetime(df["date"])
     df = df[df["game_date"] >= start_date].copy()
     
-    # Map team names
-    df["home_team"] = df["home"].apply(map_team_name)
-    df["away_team"] = df["away"].apply(map_team_name)
+    # Standardize team names using SINGLE SOURCE OF TRUTH
+    df["home_team"] = df["home"].apply(standardize_team_name)
+    df["away_team"] = df["away"].apply(standardize_team_name)
     
     # Scores
     df["home_score"] = df["score_home"]
@@ -118,12 +101,11 @@ def load_kaggle_data(start_date: str) -> pd.DataFrame:
     df["fg_ml_home"] = df["moneyline_home"]
     df["fg_ml_away"] = df["moneyline_away"]
     
-    # Match keys
+    # Generate match keys - Kaggle dates are LOCAL (not UTC)
     df["date_str"] = df["game_date"].dt.strftime("%Y-%m-%d")
-    df["match_key"] = (
-        df["date_str"] + "_" +
-        df["home_team"].str.lower().str.strip() + "_" +
-        df["away_team"].str.lower().str.strip()
+    df["match_key"] = df.apply(
+        lambda r: generate_match_key(r["game_date"], r["home_team"], r["away_team"], source_is_utc=False),
+        axis=1
     )
     
     logger.info(f"Loaded {len(df)} games from Kaggle (from {start_date})")
@@ -131,7 +113,10 @@ def load_kaggle_data(start_date: str) -> pd.DataFrame:
 
 
 def load_theodds_odds(odds_dir: Path) -> pd.DataFrame:
-    """Load ALL odds from The Odds API (FG markets)."""
+    """Load ALL odds from The Odds API (FG markets).
+    
+    Uses SINGLE SOURCE OF TRUTH for team names and CST timezone.
+    """
     rows = []
     
     for season_dir in sorted(odds_dir.glob("*")):
@@ -146,12 +131,16 @@ def load_theodds_odds(odds_dir: Path) -> pd.DataFrame:
                 events = data if isinstance(data, list) else data.get("data", [])
                 
                 for event in events:
-                    home = event.get("home_team", "")
-                    away = event.get("away_team", "")
+                    home_raw = event.get("home_team", "")
+                    away_raw = event.get("away_team", "")
                     commence = event.get("commence_time", "")
                     
-                    if not all([home, away, commence]):
+                    if not all([home_raw, away_raw, commence]):
                         continue
+                    
+                    # Standardize team names
+                    home = standardize_team_name(home_raw)
+                    away = standardize_team_name(away_raw)
                     
                     # Collect lines from all bookmakers
                     spreads = []
@@ -166,7 +155,7 @@ def load_theodds_odds(odds_dir: Path) -> pd.DataFrame:
                             
                             if key == "spreads":
                                 for o in outcomes:
-                                    if o.get("name") == home and o.get("point") is not None:
+                                    if o.get("name") == home_raw and o.get("point") is not None:
                                         spreads.append(o.get("point"))
                             elif key == "totals":
                                 for o in outcomes:
@@ -174,16 +163,24 @@ def load_theodds_odds(odds_dir: Path) -> pd.DataFrame:
                                         totals.append(o.get("point"))
                             elif key == "h2h":
                                 for o in outcomes:
-                                    if o.get("name") == home and o.get("price") is not None:
+                                    if o.get("name") == home_raw and o.get("price") is not None:
                                         ml_home.append(o.get("price"))
-                                    elif o.get("name") == away and o.get("price") is not None:
+                                    elif o.get("name") == away_raw and o.get("price") is not None:
                                         ml_away.append(o.get("price"))
                     
                     if spreads or totals:
+                        # Convert to CST and generate match key
+                        game_date_cst = to_cst(commence)
+                        date_str = to_cst_date(commence)
+                        match_key = generate_match_key(commence, home, away)
+                        
                         rows.append({
                             "commence_time": commence,
+                            "game_date_cst": game_date_cst,
+                            "date_str": date_str,
                             "home_team": home,
                             "away_team": away,
+                            "match_key": match_key,
                             "theodds_fg_spread": _safe_median(spreads),
                             "theodds_fg_total": _safe_median(totals),
                             "theodds_fg_ml_home": _safe_median(ml_home),
@@ -197,20 +194,15 @@ def load_theodds_odds(odds_dir: Path) -> pd.DataFrame:
         return pd.DataFrame()
     
     df = pd.DataFrame(rows)
-    df["game_date"] = pd.to_datetime(df["commence_time"]).dt.tz_localize(None)
-    df["date_str"] = df["game_date"].dt.strftime("%Y-%m-%d")
-    df["match_key"] = (
-        df["date_str"] + "_" +
-        df["home_team"].str.lower().str.strip() + "_" +
-        df["away_team"].str.lower().str.strip()
-    )
-    
     logger.info(f"Loaded {len(df)} FG odds from The Odds API")
     return df
 
 
 def load_theodds_1h(period_dir: Path) -> pd.DataFrame:
-    """Load 1H odds from The Odds API."""
+    """Load 1H odds from The Odds API.
+    
+    Uses SINGLE SOURCE OF TRUTH for team names and CST timezone.
+    """
     rows = []
     
     for season_dir in sorted(period_dir.glob("*")):
@@ -229,12 +221,16 @@ def load_theodds_1h(period_dir: Path) -> pd.DataFrame:
                     if not event:
                         continue
                     
-                    home = event.get("home_team", "")
-                    away = event.get("away_team", "")
+                    home_raw = event.get("home_team", "")
+                    away_raw = event.get("away_team", "")
                     commence = event.get("commence_time", "")
                     
-                    if not all([home, away, commence]):
+                    if not all([home_raw, away_raw, commence]):
                         continue
+                    
+                    # Standardize team names
+                    home = standardize_team_name(home_raw)
+                    away = standardize_team_name(away_raw)
                     
                     spreads_h1 = []
                     totals_h1 = []
@@ -248,7 +244,7 @@ def load_theodds_1h(period_dir: Path) -> pd.DataFrame:
                             
                             if key == "spreads_h1":
                                 for o in outcomes:
-                                    if o.get("name") == home and o.get("point") is not None:
+                                    if o.get("name") == home_raw and o.get("point") is not None:
                                         spreads_h1.append(o.get("point"))
                             elif key == "totals_h1":
                                 for o in outcomes:
@@ -256,15 +252,23 @@ def load_theodds_1h(period_dir: Path) -> pd.DataFrame:
                                         totals_h1.append(o.get("point"))
                             elif key == "h2h_h1":
                                 for o in outcomes:
-                                    if o.get("name") == home and o.get("price") is not None:
+                                    if o.get("name") == home_raw and o.get("price") is not None:
                                         ml_home_h1.append(o.get("price"))
-                                    elif o.get("name") == away and o.get("price") is not None:
+                                    elif o.get("name") == away_raw and o.get("price") is not None:
                                         ml_away_h1.append(o.get("price"))
+                    
+                    # Convert to CST and generate match key
+                    game_date_cst = to_cst(commence)
+                    date_str = to_cst_date(commence)
+                    match_key = generate_match_key(commence, home, away)
                     
                     rows.append({
                         "commence_time": commence,
+                        "game_date_cst": game_date_cst,
+                        "date_str": date_str,
                         "home_team": home,
                         "away_team": away,
+                        "match_key": match_key,
                         "1h_spread_line": _safe_median(spreads_h1),
                         "1h_total_line": _safe_median(totals_h1),
                         "1h_ml_home": _safe_median(ml_home_h1),
@@ -277,14 +281,6 @@ def load_theodds_1h(period_dir: Path) -> pd.DataFrame:
         return pd.DataFrame()
     
     df = pd.DataFrame(rows)
-    df["game_date"] = pd.to_datetime(df["commence_time"]).dt.tz_localize(None)
-    df["date_str"] = df["game_date"].dt.strftime("%Y-%m-%d")
-    df["match_key"] = (
-        df["date_str"] + "_" +
-        df["home_team"].str.lower().str.strip() + "_" +
-        df["away_team"].str.lower().str.strip()
-    )
-    
     logger.info(f"Loaded {len(df)} 1H odds from The Odds API")
     return df
 
