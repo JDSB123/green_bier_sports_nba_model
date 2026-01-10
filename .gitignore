@@ -115,3 +115,4 @@ nba_picks_*.html
 temp/
 .claude/
 telegram_tracker.md
+data/external/nba_database/

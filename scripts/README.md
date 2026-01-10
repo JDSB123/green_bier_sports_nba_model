@@ -22,6 +22,7 @@ This directory contains operational scripts for the NBA prediction system.
 | `fetch_injuries.py` | Fetch injury reports |
 | `fetch_github_data.py` | Fetch backup data from GitHub |
 | `ingest_all.py` | Run full data ingestion pipeline |
+| `ingest_nba_database.py` | **NEW** - Ingest comprehensive NBA database (wyattowalsh/basketball) with 65K+ games, Q1-Q4 scores, 13.6M play-by-play events |
 
 ### Training Data
 | Script | Description |

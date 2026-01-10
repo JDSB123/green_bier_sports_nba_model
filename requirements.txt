@@ -42,3 +42,4 @@ uvicorn[standard]==0.31.0
 
 # String matching
 rapidfuzz==3.10.0
+kagglehub
