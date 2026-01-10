@@ -100,20 +100,24 @@ def load_kaggle_data(filepath: Path) -> pd.DataFrame:
     df["total_line"] = df["total"]
 
 
-    # First half lines from Kaggle h2_spread and h2_total columns
-    # NOTE: Despite the confusing name, "h2" means FIRST HALF in Kaggle data
-    # Verified by: h2_total/total ratio = 0.497 (exactly half)
-    # And: 1H spread covered is ~50% when properly signed (market efficient)
-    df["fh_spread_line"] = df.apply(
-        lambda r: -r["h2_spread"] if r["whos_favored"] == "home" else r["h2_spread"]
-        if pd.notna(r.get("h2_spread")) else None,
-        axis=1
-    )
-    df["fh_total_line"] = df["h2_total"]
+    # CRITICAL: Kaggle h2_spread and h2_total are SECOND HALF lines (H2 = Half 2)
+    # These are set AT HALFTIME by sportsbooks, NOT pre-game first half lines!
+    # Per betting industry standard: H1 = first half, H2 = second half
+    # We CANNOT use these for 1H model backtesting - they are not pre-game odds
+    # 
+    # For real 1H pre-game lines, use The Odds API (available from May 2023):
+    # - h2h_h1 (first half moneyline)
+    # - spreads_h1 (first half spread)
+    # - totals_h1 (first half total)
+    #
+    # Set 1H lines to None for Kaggle data
+    df["fh_spread_line"] = None
+    df["fh_total_line"] = None
 
-    # Q1 lines (estimate: Q1 ~ 25% of FG)
-    df["q1_spread_line"] = df["spread_line"] / 4
-    df["q1_total_line"] = df["total_line"] / 4
+    # Q1 lines (estimate: Q1 ~ 25% of FG) - also not reliable for backtesting
+    # Real Q1 lines available from The Odds API
+    df["q1_spread_line"] = None
+    df["q1_total_line"] = None
 
     return df
 

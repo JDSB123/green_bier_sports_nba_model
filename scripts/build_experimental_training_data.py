@@ -122,14 +122,15 @@ def load_kaggle_data() -> pd.DataFrame:
     df["fg_margin"] = df["score_home"] - df["score_away"]  # Home perspective
     
     # Rename Kaggle columns to standardized names
-    # NOTE: Kaggle "h2_spread" and "h2_total" are FIRST HALF lines (despite confusing name)
-    # Verified by: h2_total/total ratio = 0.497 (exactly half)
-    # And: home covers h2_spread 50% of time when properly signed
+    # CRITICAL: Kaggle "h2_spread" and "h2_total" are SECOND HALF lines (H2 = Half 2)
+    # These are set AT HALFTIME, NOT pre-game first half lines!
+    # Per web research: H1 = first half, H2 = second half in betting terminology
+    # We CANNOT use these for 1H model backtesting - they're not pre-game odds
     df = df.rename(columns={
         "spread": "fg_spread_line",
         "total": "fg_total_line",
-        "h2_spread": "fh_spread_line",  # First half spread (absolute value)
-        "h2_total": "fh_total_line",    # First half total
+        # DO NOT rename h2_spread/h2_total - they are SECOND HALF (set at halftime)
+        # Real 1H lines only available from The Odds API (May 2023+)
     })
     
     # Kaggle stores spreads as ABSOLUTE VALUES
@@ -142,11 +143,10 @@ def load_kaggle_data() -> pd.DataFrame:
         axis=1
     )
     
-    # First half spread sign adjustment (same direction as full game)
-    df["fh_spread_line"] = df.apply(
-        lambda row: -row["fh_spread_line"] if row["whos_favored"] == "home" else row["fh_spread_line"],
-        axis=1
-    )
+    # 1H lines set to NaN for Kaggle data - we don't have real pre-game 1H lines
+    # Real 1H lines must come from The Odds API (2023+)
+    df["fh_spread_line"] = np.nan
+    df["fh_total_line"] = np.nan
     
     # Create outcome labels
     # Spread covered: home team beats the spread
@@ -156,18 +156,10 @@ def load_kaggle_data() -> pd.DataFrame:
     # Total over: actual total > line
     df["fg_total_over"] = df["fg_total_actual"] > df["fg_total_line"]
     
-    # 1H outcomes (properly signed, with NaN handling)
-    # Use np.where to preserve NaN when line is missing
-    df["1h_spread_covered"] = np.where(
-        df["fh_spread_line"].notna(),
-        (df["1h_margin"] + df["fh_spread_line"]) > 0,
-        np.nan
-    )
-    df["1h_total_over"] = np.where(
-        df["fh_total_line"].notna(),
-        df["1h_total_actual"] > df["fh_total_line"],
-        np.nan
-    )
+    # 1H outcomes set to NaN - no real 1H lines available in Kaggle
+    # 1H models must use The Odds API data (2023-2025)
+    df["1h_spread_covered"] = np.nan
+    df["1h_total_over"] = np.nan
     
     return df
 

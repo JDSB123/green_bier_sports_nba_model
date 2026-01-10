@@ -177,10 +177,10 @@ async def fetch_odds(
 
 # All available period/alt markets for NBA
 ALL_PERIOD_MARKETS = (
-    # First Half
-    "spreads_h1,totals_h1,"
+    # First Half (H1 = pre-game first half lines)
+    "h2h_h1,spreads_h1,totals_h1,"
     # First Quarter
-    "spreads_q1,totals_q1,"
+    "h2h_q1,spreads_q1,totals_q1,"
     # Second Quarter
     "spreads_q2,totals_q2,"
     # Third Quarter
