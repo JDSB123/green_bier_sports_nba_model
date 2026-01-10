@@ -47,7 +47,6 @@ Walk-forward validation on 2025-26 season data (Oct 2 - Dec 20, 2025):
 ### Quick Spread/Total Backtest
 
 ```powershell
-cd nba_v5.1_model_FINAL
 python scripts/quick_period_backtest.py --markets fg_spread,fg_total,1h_spread,1h_total
 ```
 

@@ -225,7 +225,7 @@ This script connects to the running Docker container and generates comprehensive
 ## Project Structure
 
 ```
-nba_v5.1_model_FINAL/
+NBA_main/
 ├── src/                         # Core Python prediction code
 │   ├── ingestion/               # Data ingestion modules
 │   ├── modeling/                # ML models and features
