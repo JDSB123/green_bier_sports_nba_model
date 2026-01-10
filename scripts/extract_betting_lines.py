@@ -80,35 +80,60 @@ def summarize_event(
             key = (market.get("key") or market.get("market") or "").lower()
             outcomes = market.get("outcomes") or []
 
-            if key == "spreads":
+            # Full Game Moneyline (h2h)
+            if key == "h2h":
+                for outcome in outcomes:
+                    if outcome.get("name") == home:
+                        accumulator["fg_ml_home"].append(outcome.get("price"))
+                    elif outcome.get("name") == away:
+                        accumulator["fg_ml_away"].append(outcome.get("price"))
+
+            # Full Game Spreads
+            elif key == "spreads":
                 for outcome in outcomes:
                     if outcome.get("name") == home:
                         accumulator["fg_spread_line"].append(outcome.get("point"))
                         accumulator["fg_spread_price"].append(outcome.get("price"))
                     elif outcome.get("name") == away:
                         accumulator["fg_spread_line_away"].append(outcome.get("point"))
+
+            # Full Game Totals
             elif key == "totals":
                 for outcome in outcomes:
                     if outcome.get("name") == "Over":
                         accumulator["fg_total_line"].append(outcome.get("point"))
                         accumulator["fg_total_price"].append(outcome.get("price"))
 
+            # First Half Moneyline (h2h_h1)
+            elif key == "h2h_h1":
+                for outcome in outcomes:
+                    if outcome.get("name") == home:
+                        accumulator["fh_ml_home"].append(outcome.get("price"))
+                    elif outcome.get("name") == away:
+                        accumulator["fh_ml_away"].append(outcome.get("price"))
+
+            # First Half Spreads
             elif key == "spreads_h1":
                 for outcome in outcomes:
                     if outcome.get("name") == home:
                         accumulator["fh_spread_line"].append(outcome.get("point"))
                         accumulator["fh_spread_price"].append(outcome.get("price"))
+
+            # First Half Totals
             elif key == "totals_h1":
                 for outcome in outcomes:
                     if outcome.get("name") == "Over":
                         accumulator["fh_total_line"].append(outcome.get("point"))
                         accumulator["fh_total_price"].append(outcome.get("price"))
 
+            # Q1 Spreads (keeping for backwards compatibility, but not used in model)
             elif key == "spreads_q1":
                 for outcome in outcomes:
                     if outcome.get("name") == home:
                         accumulator["q1_spread_line"].append(outcome.get("point"))
                         accumulator["q1_spread_price"].append(outcome.get("price"))
+
+            # Q1 Totals (keeping for backwards compatibility, but not used in model)
             elif key == "totals_q1":
                 for outcome in outcomes:
                     if outcome.get("name") == "Over":
