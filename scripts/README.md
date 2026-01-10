@@ -48,6 +48,13 @@ This directory contains operational scripts for the NBA prediction system.
 | `analyze_spread_performance.py` | Spread-specific analysis |
 | `calculate_pick_results.py` | Calculate pick outcomes |
 
+### Experimental Model Development
+| Script | Description |
+|--------|-------------|
+| `build_experimental_training_data.py` | Build training data from ALL 17 seasons (Kaggle) |
+| `train_experimental_models.py` | Train models in isolated `models/experimental/` directory |
+| `compare_experimental_to_production.py` | Compare experimental vs production with significance testing |
+
 ### Validation
 | Script | Description |
 |--------|-------------|

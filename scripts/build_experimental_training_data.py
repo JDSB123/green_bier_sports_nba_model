@@ -80,6 +80,8 @@ TEAM_ABBREV_TO_NAME = {
     "sea": "Oklahoma City Thunder",  # Seattle Supersonics -> OKC
     "cha_old": "Charlotte Hornets",  # Bobcats era
     "van": "Memphis Grizzlies",  # Vancouver Grizzlies -> Memphis
+    "ny": "New York Knicks",  # Alternative abbreviation
+    "nyk": "New York Knicks",
 }
 
 
@@ -182,15 +184,24 @@ def calculate_rolling_features(df: pd.DataFrame, window: int = 10) -> pd.DataFra
     team_games["margin"] = team_games["points_for"] - team_games["points_against"]
     
     # Rolling calculations per team
-    team_rolling = team_games.groupby("team").apply(
-        lambda x: x.assign(
-            rolling_ppg=x["points_for"].rolling(window, min_periods=3).mean(),
-            rolling_papg=x["points_against"].rolling(window, min_periods=3).mean(),
-            rolling_win_pct=x["win"].rolling(window, min_periods=3).mean(),
-            rolling_margin=x["margin"].rolling(window, min_periods=3).mean(),
-        ),
-        include_groups=False
-    ).reset_index(drop=True)
+    team_games = team_games.sort_values(["team", "game_date"]).reset_index(drop=True)
+    
+    # Calculate rolling stats using transform (keeps original index)
+    for col, source in [
+        ("rolling_ppg", "points_for"),
+        ("rolling_papg", "points_against"),
+        ("rolling_win_pct", "win"),
+        ("rolling_margin", "margin"),
+    ]:
+        team_games[col] = team_games.groupby("team")[source].transform(
+            lambda x: x.rolling(window, min_periods=3).mean()
+        )
+    
+    # Shift to avoid data leakage (use only past data)
+    for col in ["rolling_ppg", "rolling_papg", "rolling_win_pct", "rolling_margin"]:
+        team_games[col] = team_games.groupby("team")[col].shift(1)
+    
+    team_rolling = team_games
     
     # Calculate rest days
     team_rolling["prev_game_date"] = team_rolling.groupby("team")["game_date"].shift(1)

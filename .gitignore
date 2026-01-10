@@ -42,6 +42,7 @@ secrets/*
 # Data directories
 data/raw/
 data/processed/
+data/experimental/  # Regenerated from scripts/build_experimental_training_data.py
 # Historical data is COMMITTED and PROTECTED - do not ignore
 # data/historical/the_odds/  # REMOVED - historical data must be preserved
 # data/historical/exports/   # REMOVED - historical data must be preserved
@@ -54,6 +55,8 @@ data/processed/
 *.pkl
 *.h5
 *.pt
+# Experimental models are NOT committed (iterate locally, promote to production)
+models/experimental/
 # Exception: Production model pack must be committed for reproducible builds
 !models/production/*.joblib
 !models/production/*.pkl
