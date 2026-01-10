@@ -122,12 +122,19 @@ def load_kaggle_data() -> pd.DataFrame:
     df["fg_margin"] = df["score_home"] - df["score_away"]  # Home perspective
     
     # Rename Kaggle columns to standardized names
+    # NOTE: Kaggle h2_spread and h2_total are SECOND HALF lines (not first half!)
+    # They are NOT usable for 1H model training - only The Odds API has real 1H lines
     df = df.rename(columns={
         "spread": "fg_spread_line",
         "total": "fg_total_line",
-        "h2_spread": "fh_spread_line",  # Kaggle has "h2" but it's actually 1H
-        "h2_total": "fh_total_line",
+        # DO NOT use h2_spread/h2_total - they are 2H lines, not 1H
+        # "h2_spread": "fh_spread_line",  # WRONG - this is 2nd half
+        # "h2_total": "fh_total_line",    # WRONG - this is 2nd half
     })
+    
+    # Set 1H lines to NaN for Kaggle data (we don't have real 1H lines)
+    df["fh_spread_line"] = np.nan
+    df["fh_total_line"] = np.nan
     
     # Adjust spread sign (Kaggle: positive = home favorite, we want negative = home favorite)
     # Based on "whos_favored" column
@@ -144,9 +151,10 @@ def load_kaggle_data() -> pd.DataFrame:
     # Total over: actual total > line
     df["fg_total_over"] = df["fg_total_actual"] > df["fg_total_line"]
     
-    # 1H outcomes (where 1H lines exist)
-    df["1h_spread_covered"] = (df["1h_margin"] + df["fh_spread_line"]) > 0
-    df["1h_total_over"] = df["1h_total_actual"] > df["fh_total_line"]
+    # 1H outcomes - set to NaN since we don't have real 1H lines from Kaggle
+    # 1H models should ONLY be trained on data with real 1H lines (The Odds API 2023-2025)
+    df["1h_spread_covered"] = np.nan
+    df["1h_total_over"] = np.nan
     
     return df
 

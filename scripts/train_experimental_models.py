@@ -146,7 +146,13 @@ class ExperimentalModel:
         y_proba = self.predict_proba(X)
         
         accuracy = accuracy_score(y, y_pred)
-        logloss = log_loss(y, y_proba)
+        
+        # Handle single-class edge case for log_loss
+        unique_classes = y.unique()
+        if len(unique_classes) < 2:
+            logloss = float('inf')
+        else:
+            logloss = log_loss(y, y_proba)
         
         # Calculate ROI assuming -110 odds
         correct = (y_pred == y).astype(int)
@@ -280,6 +286,11 @@ def train_market_model(
     valid_df[label_col] = valid_df[label_col].astype(int)
     
     logger.info(f"\n  Training {market.upper()} model on {len(valid_df):,} games")
+    
+    # Skip if no valid data
+    if len(valid_df) < 100:
+        logger.warning(f"  Skipping {market} - insufficient data ({len(valid_df)} games)")
+        return None
     
     # Walk-forward validation
     wf_results = walk_forward_validation(
