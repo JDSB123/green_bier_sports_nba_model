@@ -726,6 +726,151 @@ def compute_rolling(df: pd.DataFrame, windows=[5, 10, 20]) -> pd.DataFrame:
     return df
 
 
+def compute_fg_features(df: pd.DataFrame, min_games: int = 3) -> pd.DataFrame:
+    """Leak-safe team form features from final scores (FG only)."""
+    print("\n[8b/8] Computing FG team form features...")
+
+    df = df.sort_values("game_date").copy()
+    df["_game_idx"] = range(len(df))
+    df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce")
+    feature_cols = [
+        "home_ppg", "home_papg", "home_avg_margin", "home_win_pct",
+        "away_ppg", "away_papg", "away_avg_margin", "away_win_pct",
+    ]
+
+    team_rows = []
+    for _, row in df.iterrows():
+        game_date = row["game_date"]
+        home_score = row.get("home_score")
+        away_score = row.get("away_score")
+        if pd.isna(game_date):
+            continue
+
+        margin = (home_score - away_score) if pd.notna(home_score) and pd.notna(away_score) else np.nan
+
+        team_rows.append({
+            "game_idx": row["_game_idx"],
+            "team": row["home_team"],
+            "side": "home",
+            "game_date": game_date,
+            "points_for": home_score,
+            "points_against": away_score,
+            "margin": margin,
+            "win": 1 if pd.notna(margin) and margin > 0 else (0 if pd.notna(margin) else np.nan),
+        })
+        team_rows.append({
+            "game_idx": row["_game_idx"],
+            "team": row["away_team"],
+            "side": "away",
+            "game_date": game_date,
+            "points_for": away_score,
+            "points_against": home_score,
+            "margin": -margin if pd.notna(margin) else np.nan,
+            "win": 1 if pd.notna(margin) and margin < 0 else (0 if pd.notna(margin) else np.nan),
+        })
+
+    if not team_rows:
+        return df.drop(columns=["_game_idx"])
+
+    team_df = pd.DataFrame(team_rows).sort_values(["team", "game_date"])
+
+    # Expanding means with a one-game lookback to prevent leakage
+    team_df["ppg"] = team_df.groupby("team")["points_for"].transform(
+        lambda s: s.shift(1).expanding(min_periods=min_games).mean()
+    )
+    team_df["papg"] = team_df.groupby("team")["points_against"].transform(
+        lambda s: s.shift(1).expanding(min_periods=min_games).mean()
+    )
+    team_df["avg_margin"] = team_df.groupby("team")["margin"].transform(
+        lambda s: s.shift(1).expanding(min_periods=min_games).mean()
+    )
+    team_df["win_pct"] = team_df.groupby("team")["win"].transform(
+        lambda s: s.shift(1).expanding(min_periods=min_games).mean()
+    )
+
+    # Split back into home/away columns
+    home_feats = team_df[team_df["side"] == "home"][["game_idx", "ppg", "papg", "avg_margin", "win_pct"]].rename(
+        columns={
+            "game_idx": "_game_idx",
+            "ppg": "home_ppg",
+            "papg": "home_papg",
+            "avg_margin": "home_avg_margin",
+            "win_pct": "home_win_pct",
+        }
+    )
+    away_feats = team_df[team_df["side"] == "away"][["game_idx", "ppg", "papg", "avg_margin", "win_pct"]].rename(
+        columns={
+            "game_idx": "_game_idx",
+            "ppg": "away_ppg",
+            "papg": "away_papg",
+            "avg_margin": "away_avg_margin",
+            "win_pct": "away_win_pct",
+        }
+    )
+
+    # Replace placeholder columns with leak-safe features
+    df = df.drop(columns=[c for c in feature_cols if c in df.columns], errors="ignore")
+    df = df.merge(home_feats, on="_game_idx", how="left")
+    df = df.merge(away_feats, on="_game_idx", how="left")
+    df = df.sort_values("_game_idx").drop(columns=["_game_idx"])
+    return df
+
+
+def standardize_core_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize core columns to expected names (FG/1H only; drop Q1 confusion)."""
+    df = df.copy()
+
+    # Game ID fallback
+    if "game_id" not in df.columns:
+        df["game_id"] = pd.NA
+    df["game_id"] = df["game_id"].fillna(df.get("match_key"))
+
+    # FG spread/total lines
+    spread_candidates = ["spread_line", "fg_spread_line", "to_fg_spread", "kaggle_fg_spread", "spread"]
+    total_candidates = ["total_line", "fg_total_line", "to_fg_total", "kaggle_fg_total", "total"]
+    for target, cands in [("spread_line", spread_candidates), ("total_line", total_candidates)]:
+        if target not in df.columns:
+            df[target] = pd.NA
+        for c in cands:
+            if c in df.columns:
+                df[target] = df[target].fillna(df[c])
+
+    # 1H lines
+    h1_spread_candidates = ["1h_spread_line", "to_1h_spread", "h1_spread"]
+    h1_total_candidates = ["1h_total_line", "to_1h_total", "h1_total"]
+    for target, cands in [("1h_spread_line", h1_spread_candidates), ("1h_total_line", h1_total_candidates)]:
+        if target not in df.columns:
+            df[target] = pd.NA
+        for c in cands:
+            if c in df.columns:
+                df[target] = df[target].fillna(df[c])
+
+    # Normalize date
+    if "date" not in df.columns:
+        df["date"] = pd.NA
+    if "game_date" in df.columns:
+        df["date"] = df["date"].fillna(df["game_date"])
+    # Force date to plain date (strip time)
+    date_parsed = pd.to_datetime(df["date"], errors="coerce", format="mixed")
+    df["date"] = date_parsed.dt.date.astype(str)
+
+    # Drop Q1 line/label noise
+    q1_cols = [c for c in df.columns if c.startswith("q1_") or c.startswith("to_q1_")]
+    if q1_cols:
+        df = df.drop(columns=q1_cols)
+
+    # Ensure core FG feature columns exist (fill NaN if not derivable here)
+    fg_features = [
+        "home_ppg", "home_papg", "home_avg_margin", "home_win_pct",
+        "away_ppg", "away_papg", "away_avg_margin", "away_win_pct",
+    ]
+    for col in fg_features:
+        if col not in df.columns:
+            df[col] = pd.NA
+
+    return df
+
+
 def compute_situational(df: pd.DataFrame) -> pd.DataFrame:
     """Compute rest, B2B, streaks."""
     df = df.sort_values("game_date").copy()
@@ -765,9 +910,22 @@ def compute_situational(df: pd.DataFrame) -> pd.DataFrame:
 
 def compute_labels(df: pd.DataFrame) -> pd.DataFrame:
     """Compute betting outcomes."""
-    df["fg_spread_covered"] = np.where(df["fg_spread_line"].notna(), (df["fg_margin"] + df["fg_spread_line"] > 0).astype(int), np.nan)
-    df["fg_total_over"] = np.where(df["fg_total_line"].notna(), (df["fg_total_actual"] > df["fg_total_line"]).astype(int), np.nan)
-    df["fg_home_win"] = (df["fg_margin"] > 0).astype(int)
+    # Normalize line column names (FG/1H only)
+    if "spread_line" in df.columns:
+        df["fg_spread_line"] = df.get("fg_spread_line", pd.NA)
+        df["fg_spread_line"] = df["fg_spread_line"].fillna(df["spread_line"])
+    if "total_line" in df.columns:
+        df["fg_total_line"] = df.get("fg_total_line", pd.NA)
+        df["fg_total_line"] = df["fg_total_line"].fillna(df["total_line"])
+    if "1h_spread_line" in df.columns:
+        df["1h_spread_line"] = df["1h_spread_line"]
+    if "1h_total_line" in df.columns:
+        df["1h_total_line"] = df["1h_total_line"]
+
+    # Labels (FG + 1H)
+    df["home_win"] = (df["fg_margin"] > 0).astype(int)
+    df["spread_covered"] = np.where(df["fg_spread_line"].notna(), (df["fg_margin"] + df["fg_spread_line"] > 0).astype(int), np.nan)
+    df["total_over"] = np.where(df["fg_total_line"].notna(), (df["fg_total_actual"] > df["fg_total_line"]).astype(int), np.nan)
     df["1h_spread_covered"] = np.where(df["1h_spread_line"].notna(), (df["1h_margin"] + df["1h_spread_line"] > 0).astype(int), np.nan)
     df["1h_total_over"] = np.where(df["1h_total_line"].notna(), (df["1h_total_actual"] > df["1h_total_line"]).astype(int), np.nan)
     df["1h_home_win"] = (df["1h_margin"] > 0).astype(int)
@@ -841,6 +999,8 @@ def main(start_date: str = "2023-01-01", cutoff_date: str = None, sync_from_azur
     box_new = load_nba_api_box_scores()
 
     df = merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new)
+    # Normalize core columns (FG/1H only, no Q1 confusion)
+    df = standardize_core_columns(df)
     
     # Apply cutoff date to prevent data leakage
     if cutoff_date:
@@ -865,6 +1025,7 @@ def main(start_date: str = "2023-01-01", cutoff_date: str = None, sync_from_azur
     
     df = compute_elo(df)
     df = compute_rolling(df)
+    df = compute_fg_features(df)
     df = compute_situational(df)
     df = compute_labels(df)
 

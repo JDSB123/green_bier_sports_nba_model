@@ -48,8 +48,6 @@ REQUIRED_COLUMNS = {
     ],
     "1h_labels": ["1h_spread_covered", "1h_total_over"],
     "1h_lines": ["1h_spread_line", "1h_total_line"],
-    "q1_labels": ["q1_spread_covered", "q1_total_over"],
-    "q1_lines": ["q1_spread_line", "q1_total_line"],
 }
 
 # Valid ranges for numeric columns
@@ -214,7 +212,6 @@ def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     label_cols = (
         REQUIRED_COLUMNS["fg_labels"]
         + REQUIRED_COLUMNS["1h_labels"]
-        + REQUIRED_COLUMNS["q1_labels"]
     )
 
     for col in label_cols:
