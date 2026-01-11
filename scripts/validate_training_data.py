@@ -268,7 +268,15 @@ def run_validation(strict: bool = False) -> tuple[bool, dict]:
 
     # Load data
     print("\nLoading training data...")
-    df = pd.read_csv(TRAINING_DATA_PATH)
+    df = pd.read_csv(
+        TRAINING_DATA_PATH,
+        low_memory=False,
+        dtype={
+            "game_id": "string",
+            "home_team": "string",
+            "away_team": "string",
+        },
+    )
     print(f"{OK} Loaded {len(df)} rows, {len(df.columns)} columns")
 
     # Schema validation
