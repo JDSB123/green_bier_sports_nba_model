@@ -142,13 +142,6 @@ training_data/
 
 ---
 
-## Archive
-
-Deprecated scripts moved to `scripts/archive/` (27 scripts total).
-See `scripts/archive/` for full list.
-
----
-
 ## Quick Start
 
 ```bash
