@@ -189,7 +189,7 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
 
 async def fetch_injuries_api_basketball(
     league: int = 12,  # NBA
-    season: str = None,
+    seasons: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Fetch injury data from API-Basketball.
@@ -204,63 +204,72 @@ async def fetch_injuries_api_basketball(
     
     logger = get_logger(__name__)
     
-    if season is None:
-        season = settings.current_season
+    if seasons is None:
+        # Try all configured seasons to capture historical injuries (2023+)
+        seasons = settings.seasons_to_process or [settings.current_season]
+        # Ensure unique ordering
+        seasons = list(dict.fromkeys(seasons))
     if not settings.api_basketball_key:
         logger.debug("API-Basketball key not configured, skipping")
         return []
     
     headers = {"x-apisports-key": settings.api_basketball_key}
     url = f"{settings.api_basketball_base_url}/injuries"
-    params = {"league": league, "season": season}
     
+    injuries: List[Dict[str, Any]] = []
     try:
         async with httpx.AsyncClient(timeout=30, headers=headers) as client:
-            resp = await client.get(url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-            
-            injuries = []
-            for item in data.get("response", []):
-                player = item.get("player", {})
-                team = item.get("team", {})
-                
-                player_name = player.get("name")
-                team_name = team.get("name")
-                
-                # Skip if required fields are missing - no placeholder values
-                if not player_name:
-                    logger.warning(f"Skipping injury data with missing player name from API-Basketball")
+            for season in seasons:
+                params = {"league": league, "season": season}
+                resp = await client.get(url, params=params)
+                resp_text = resp.text[:500] if resp.text else ""
+                try:
+                    resp.raise_for_status()
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"HTTP error fetching API-Basketball injuries: {e.response.status_code} {e.response.reason_phrase}. URL: {url} season={season} body_snip={resp_text}")
                     continue
-                if not team_name:
-                    logger.warning(f"Skipping injury data with missing team name for player {player_name} from API-Basketball")
+
+                data = resp.json()
+                if not data.get("response"):
+                    logger.info(f"API-Basketball empty response for season {season}. body_snip={resp_text}")
                     continue
-                
-                player_id = player.get("id")
-                if not player_id:
-                    logger.warning(f"Skipping injury for player {player_name} with missing player_id from API-Basketball")
-                    continue
-                
-                injuries.append({
-                    "player_id": str(player_id),
-                    "player_name": player_name,
-                    "team": normalize_team(team_name),
-                    "team_id": str(team.get("id", "")) if team.get("id") else None,
-                    "status": normalize_status(item.get("status", "questionable")),
-                    "injury_type": item.get("reason"),
-                    "report_date": item.get("date"),
-                    "source": "api_basketball",
-                })
-            
-            if injuries:
-                logger.info(f"Fetched {len(injuries)} injuries from API-Basketball")
-            else:
-                logger.debug("API-Basketball returned empty injury data")
-            return injuries
-    except httpx.HTTPStatusError as e:
-        logger.error(f"HTTP error fetching API-Basketball injuries: {e.response.status_code} {e.response.reason_phrase}. URL: {url}")
-        # Explicit failure - log and return empty, do not raise (other sources may succeed)
-        return []
+
+                for item in data.get("response", []):
+                    player = item.get("player", {})
+                    team = item.get("team", {})
+                    
+                    player_name = player.get("name")
+                    team_name = team.get("name")
+                    
+                    # Skip if required fields are missing - no placeholder values
+                    if not player_name:
+                        logger.warning(f"Skipping injury data with missing player name from API-Basketball")
+                        continue
+                    if not team_name:
+                        logger.warning(f"Skipping injury data with missing team name for player {player_name} from API-Basketball")
+                        continue
+                    
+                    player_id = player.get("id")
+                    if not player_id:
+                        logger.warning(f"Skipping injury for player {player_name} with missing player_id from API-Basketball")
+                        continue
+                    
+                    injuries.append({
+                        "player_id": str(player_id),
+                        "player_name": player_name,
+                        "team": normalize_team(team_name),
+                        "team_id": str(team.get("id", "")) if team.get("id") else None,
+                        "status": normalize_status(item.get("status", "questionable")),
+                        "injury_type": item.get("reason"),
+                        "report_date": item.get("date"),
+                        "source": "api_basketball",
+                    })
+
+        if injuries:
+            logger.info(f"Fetched {len(injuries)} injuries from API-Basketball across seasons {seasons}")
+        else:
+            logger.debug(f"API-Basketball returned empty injury data across seasons {seasons}")
+        return injuries
     except httpx.RequestError as e:
         logger.error(f"Request error fetching API-Basketball injuries: {e}. URL: {url}")
         # Explicit failure - log and return empty, do not raise (other sources may succeed)

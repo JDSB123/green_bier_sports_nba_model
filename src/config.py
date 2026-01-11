@@ -163,7 +163,7 @@ class Settings:
     # Season Configuration (with defaults for import compatibility)
     current_season: str = field(default_factory=lambda: _env_optional("CURRENT_SEASON", "2025-2026"))
     seasons_to_process: list[str] = field(
-        default_factory=lambda: _env_optional("SEASONS_TO_PROCESS", "2024-2025,2025-2026").split(",")
+        default_factory=lambda: _env_optional("SEASONS_TO_PROCESS", "2023-2024,2024-2025,2025-2026").split(",")
     )
 
     # Data directories (with defaults for import compatibility)
