@@ -10,12 +10,13 @@ This document defines the authoritative data sources and pipeline for the NBA pr
 
 ### Master File
 ```
-data/processed/training_data_complete_2023.csv
+data/processed/training_data_complete_2023_with_injuries.csv
 ```
 
-**Date Range:** 2023-01-01 to present  
-**Games:** 3,969+  
-**Columns:** 324  
+**Date Range:** 2023-01-01 to 2026-01-08  
+**Games:** 3,969  
+**Columns:** 327  
+**Injury Coverage:** 95.4% (3,788 games)
 **Model Features:** 55/55 (100% coverage)
 
 ### How to Rebuild
@@ -80,6 +81,20 @@ This master script:
 **Contents:**
 - Team ELO ratings
 
+### 6. Kaggle eoinamoore (Player Box Scores)
+**Location:** `data/external/kaggle_nba/`  
+**Dataset:** `eoinamoore/historical-nba-data-and-player-box-scores`  
+**Coverage:** 1947-present (updated daily!)  
+**Files:**
+| File | Size | Contents |
+|------|------|----------|
+| `PlayerStatistics.csv` | 305 MB | Player box scores (1.6M records) |
+| `Players.csv` | 0.5 MB | Player biographical info (6,681 players) |
+| `Games.csv` | 10 MB | All NBA games (72K+) |
+| `LeagueSchedule24_25.csv` | 0.1 MB | Current season schedule |
+
+**Purpose:** Infer inactive players by comparing "who played" vs "who should have played"
+
 ---
 
 ## Feature Coverage
@@ -103,15 +118,42 @@ This master script:
 |---------|----------|-------|
 | Moneylines | 69.5% | Best available from TheOdds |
 | Travel features | 0% | team_factors module needs fix |
-| **Injury Impact** | **19.3%** | nba_database covers through June 2023 |
+| **Injury Impact** | **95.4%** | nba_database + Kaggle-inferred |
 
 ### Injury Impact Calculation
-Uses `inactive_players.csv` + `common_player_info.csv`:
-- **768 games** with injury data (2023 season from nba_database)
-- **140 games** with star players out (67 home, 73 away)
-- Impact scoring: `season_exp * 0.3 + draft_bonus + greatest_75_bonus`
-- Draft bonus: 1st round = 2.0, Top 5 = 3.0, #1 overall = 4.0
-- Greatest 75 = +5.0 bonus
+
+**Data Sources (Combined):**
+1. `data/external/nba_database/inactive_players.csv` - 110K records (through June 2023)
+2. `data/processed/inactive_players_kaggle_supplement.csv` - 19K records (July 2023-present, inferred from Kaggle box scores)
+
+**Coverage by Year:**
+| Year | Games | With Injury Data |
+|------|-------|------------------|
+| 2023 | 1,255 | 92.9% |
+| 2024 | 1,323 | 98.1% |
+| 2025 | 1,330 | 95.0% |
+| 2026 | 61 | 98.4% |
+
+**Impact Scoring:**
+- PPG component (max 5 pts): 20+ PPG = 5 points
+- MPG component (max 2 pts): 30+ MPG = 2 points
+- Draft component (max 3 pts): 1st round = 2.0, Top 5 = 2.5, #1 overall = 3.0
+
+**Pipeline:**
+```bash
+# Download Kaggle box scores (daily-updated)
+python scripts/download_kaggle_player_data.py
+
+# Infer inactive players from box scores
+python scripts/infer_inactive_from_kaggle.py
+
+# Merge all sources and update training data
+python scripts/merge_injury_data_and_rebuild.py
+```
+
+**Output:**
+- `data/processed/inactive_players_merged.csv` - Combined inactive players
+- `data/processed/training_data_complete_2023_with_injuries.csv` - Training data with injury features
 
 ### Real-Time Only (Defaults for Historical)
 | Feature | Status | Notes |
