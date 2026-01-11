@@ -13,6 +13,11 @@ from src.modeling.team_factors import (
     calculate_travel_fatigue,
 )
 from src.modeling.period_features import PERIOD_SCALING
+from src.modeling.season_utils import (
+    is_crossing_offseason,
+    compute_effective_rest_days,
+    MAX_REST_DAYS_SEASON_START,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -443,19 +448,20 @@ class FeatureEngineer:
     ) -> int:
         """
         Days since last game (0 = back-to-back).
+        
+        Handles NBA offseason appropriately - if the gap crosses a season
+        boundary, rest days are capped at MAX_REST_DAYS_SEASON_START rather
+        than returning 100+ days.
 
         Args:
             games_df: Historical games DataFrame
             team: Team name
             game_date: Date of current game
             default_rest: Rest days to return if no previous games found.
-                          If None, raises ValueError instead.
+                          If None, uses MAX_REST_DAYS_SEASON_START.
 
         Returns:
-            Number of rest days (0 = back-to-back)
-
-        Raises:
-            ValueError: If no previous games found and default_rest is None
+            Number of rest days (0 = back-to-back, capped at season start)
         """
         mask = ((games_df["home_team"] == team) | (games_df["away_team"] == team)) & (
             games_df["date"] < game_date
@@ -463,27 +469,19 @@ class FeatureEngineer:
         team_games = games_df[mask].sort_values("date", ascending=False)
 
         if len(team_games) == 0:
-            if default_rest is None:
-                raise ValueError(
-                    f"No previous games found for {team} before {game_date}. "
-                    f"Cannot compute rest days. Set default_rest parameter or ensure historical data exists."
-                )
-            logger.warning(
+            # No previous games - this is start of data for this team
+            # Return default or season start cap
+            effective_default = default_rest if default_rest is not None else MAX_REST_DAYS_SEASON_START
+            logger.debug(
                 f"No previous games for {team} before {game_date}. "
-                f"Using default rest days: {default_rest}"
+                f"Using default rest days: {effective_default}"
             )
-            return default_rest
+            return effective_default
 
         last_game = team_games.iloc[0]["date"]
-        rest_days = max(0, (game_date - last_game).days - 1)
-
-        # Sanity check: extremely long rest is suspicious
-        if rest_days > 30:
-            logger.warning(
-                f"Unusually long rest for {team}: {rest_days} days "
-                f"(last game: {last_game}, current: {game_date}). "
-                f"Possible data gap or incorrect date?"
-            )
+        
+        # Use season-aware rest calculation
+        rest_days = compute_effective_rest_days(last_game, game_date)
 
         return rest_days
 

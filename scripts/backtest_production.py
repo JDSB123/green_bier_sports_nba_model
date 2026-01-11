@@ -86,6 +86,7 @@ def run_backtest(
     spread_juice: int = -110,
     total_juice: int = -110,
     min_train_games: int = 100,
+    max_games: Optional[int] = None,
 ) -> Dict[str, List[BetResult]]:
     """
     Run walk-forward backtest using production models and feature engineering.
@@ -114,21 +115,37 @@ def run_backtest(
     # Load data
     df = pd.read_csv(data_path, low_memory=False)
     
-    # Ensure date column
-    date_col = "game_date" if "game_date" in df.columns else "date"
-    df["date"] = pd.to_datetime(df[date_col], errors="coerce")
+    # Ensure date column - prefer game_date as primary
+    if "game_date" in df.columns:
+        df["date"] = pd.to_datetime(df["game_date"], format="mixed", errors="coerce")
+    elif "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"], format="mixed", errors="coerce")
+    else:
+        raise ValueError("No date column found in data!")
+    
     df = df.dropna(subset=["date"])
     df = df.sort_values("date").reset_index(drop=True)
     
     print(f"Loaded {len(df)} games from {df['date'].min()} to {df['date'].max()}")
     
-    # Filter date range
-    if start_date:
-        df = df[df["date"] >= pd.to_datetime(start_date)]
-    if end_date:
-        df = df[df["date"] <= pd.to_datetime(end_date)]
+    # IMPORTANT: Keep full dataset for historical reference
+    # Only filter the games we PREDICT on, not the historical data
+    full_historical_df = df.copy()
     
-    print(f"After date filter: {len(df)} games")
+    # Filter date range for PREDICTION targets only
+    predict_df = df.copy()
+    if start_date:
+        predict_df = predict_df[predict_df["date"] >= pd.to_datetime(start_date)]
+    if end_date:
+        predict_df = predict_df[predict_df["date"] <= pd.to_datetime(end_date)]
+    
+    print(f"Games to predict: {len(predict_df)}")
+    print(f"Historical games available: {len(full_historical_df)}")
+    
+    # Limit games if specified
+    if max_games is not None and len(predict_df) > max_games:
+        predict_df = predict_df.head(max_games)
+        print(f"Limited to first {max_games} games for testing")
     
     # Standardize column names
     col_mapping = {
@@ -152,8 +169,8 @@ def run_backtest(
     markets = {}
     
     model_configs = [
-        ("fg_spread", "fg_spread_model.joblib", "spread_covered", "fg_spread_line", spread_juice),
-        ("fg_total", "fg_total_model.joblib", "total_over", "fg_total_line", total_juice),
+        ("fg_spread", "fg_spread_model.joblib", "fg_spread_covered", "fg_spread_line", spread_juice),
+        ("fg_total", "fg_total_model.joblib", "fg_total_over", "fg_total_line", total_juice),
         ("1h_spread", "1h_spread_model.joblib", "1h_spread_covered", "1h_spread_line", spread_juice),
         ("1h_total", "1h_total_model.joblib", "1h_total_over", "1h_total_line", total_juice),
     ]
@@ -184,11 +201,11 @@ def run_backtest(
     
     print(f"\nRunning walk-forward backtest...")
     
-    for idx, game in df.iterrows():
+    for idx, game in predict_df.iterrows():
         game_date = game["date"]
         
-        # Get historical data (games before this one)
-        historical = df[df["date"] < game_date].copy()
+        # Get historical data (games before this one) from FULL dataset
+        historical = full_historical_df[full_historical_df["date"] < game_date].copy()
         
         # Need minimum games for feature computation
         if len(historical) < min_train_games:
@@ -309,14 +326,34 @@ def run_backtest(
             ))
         
         # Progress
-        if idx % 500 == 0 and idx > 0:
-            print(f"  Processed {idx} games...")
+        if len(results["fg_spread"]) % 50 == 0 and len(results["fg_spread"]) > 0:
+            fg_bets = len(results["fg_spread"])
+            print(f"  Made {fg_bets} FG spread bets so far...")
     
     return results
 
 
-def print_summary(results: Dict[str, List[BetResult]]) -> None:
-    """Print backtest summary."""
+def get_season_from_date(date_str: str) -> str:
+    """
+    Get NBA season string from date.
+    
+    NBA seasons run Oct-Jun, so:
+    - 2024-11-15 -> 2024-2025
+    - 2025-02-01 -> 2024-2025
+    """
+    from datetime import datetime
+    dt = datetime.strptime(date_str, "%Y-%m-%d") if isinstance(date_str, str) else date_str
+    year = dt.year
+    month = dt.month
+    
+    if month >= 10:  # Oct-Dec
+        return f"{year}-{year+1}"
+    else:  # Jan-Jun
+        return f"{year-1}-{year}"
+
+
+def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str] = None) -> Dict:
+    """Print backtest summary and optionally save to JSON."""
     print("\n" + "=" * 70)
     print("BACKTEST RESULTS")
     print("=" * 70)
@@ -324,6 +361,8 @@ def print_summary(results: Dict[str, List[BetResult]]) -> None:
     total_bets = 0
     total_wins = 0
     total_profit = 0.0
+    
+    summary = {"markets": {}, "by_season": {}}
     
     for market, bets in results.items():
         if not bets:
@@ -352,6 +391,20 @@ def print_summary(results: Dict[str, List[BetResult]]) -> None:
         if high_conf_bets:
             print(f"  High-conf(60%+): {len(high_conf_bets):4d} bets, {hc_acc:5.1%} acc, {hc_roi:+6.1f}% ROI, {hc_profit:+7.1f} units")
         
+        summary["markets"][market] = {
+            "n_bets": n_bets,
+            "wins": n_wins,
+            "accuracy": accuracy,
+            "roi": roi,
+            "profit": profit,
+            "high_conf": {
+                "n_bets": len(high_conf_bets),
+                "wins": hc_wins,
+                "accuracy": hc_acc if high_conf_bets else 0,
+                "roi": hc_roi if high_conf_bets else 0,
+            }
+        }
+        
         total_bets += n_bets
         total_wins += n_wins
         total_profit += profit
@@ -359,14 +412,86 @@ def print_summary(results: Dict[str, List[BetResult]]) -> None:
     print("\n" + "-" * 70)
     if total_bets > 0:
         print(f"TOTAL: {total_bets} bets, {total_wins/total_bets:.1%} accuracy, {total_profit/total_bets*100:+.1f}% ROI, {total_profit:+.1f} units")
+    
+    # === BY SEASON BREAKDOWN ===
+    print("\n" + "=" * 70)
+    print("RESULTS BY SEASON")
+    print("=" * 70)
+    
+    # Collect all seasons
+    all_bets = []
+    for market, bets in results.items():
+        for bet in bets:
+            bet_dict = {
+                "date": bet.date,
+                "market": bet.market,
+                "won": bet.won,
+                "profit": bet.profit,
+                "confidence": bet.confidence,
+            }
+            all_bets.append(bet_dict)
+    
+    if all_bets:
+        # Group by season
+        season_data: Dict[str, Dict[str, List]] = {}
+        for bet in all_bets:
+            season = get_season_from_date(bet["date"])
+            if season not in season_data:
+                season_data[season] = {"bets": [], "markets": {}}
+            season_data[season]["bets"].append(bet)
+        
+        # Print header
+        print(f"\n{'Season':<12} | {'FG Spread':^15} | {'FG Total':^15} | {'1H Spread':^15} | {'1H Total':^15}")
+        print("-" * 80)
+        
+        for season in sorted(season_data.keys()):
+            bets_in_season = season_data[season]["bets"]
+            
+            # Calculate per-market stats
+            market_stats = {}
+            for market in ["fg_spread", "fg_total", "1h_spread", "1h_total"]:
+                market_bets = [b for b in bets_in_season if b["market"] == market]
+                if market_bets:
+                    wins = sum(1 for b in market_bets if b["won"])
+                    acc = wins / len(market_bets) * 100
+                    market_stats[market] = f"{acc:.1f}% ({len(market_bets)})"
+                else:
+                    market_stats[market] = "--"
+            
+            print(f"{season:<12} | {market_stats.get('fg_spread', '--'):^15} | {market_stats.get('fg_total', '--'):^15} | {market_stats.get('1h_spread', '--'):^15} | {market_stats.get('1h_total', '--'):^15}")
+            
+            # Store in summary
+            summary["by_season"][season] = {
+                "total_bets": len(bets_in_season),
+                "wins": sum(1 for b in bets_in_season if b["won"]),
+                "profit": sum(b["profit"] for b in bets_in_season),
+            }
+            for market in ["fg_spread", "fg_total", "1h_spread", "1h_total"]:
+                market_bets = [b for b in bets_in_season if b["market"] == market]
+                if market_bets:
+                    summary["by_season"][season][market] = {
+                        "n_bets": len(market_bets),
+                        "accuracy": sum(1 for b in market_bets if b["won"]) / len(market_bets),
+                    }
+    
+    # Save to JSON if requested
+    if output_json:
+        import json
+        output_path = Path(output_json)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(summary, f, indent=2)
+        print(f"\nResults saved to: {output_json}")
+    
+    return summary
 
 
 def main():
     parser = argparse.ArgumentParser(description="Backtest production models on historical data")
     parser.add_argument(
         "--data",
-        default="data/processed/training_data_complete_2023.csv",
-        help="Path to training data CSV",
+        default="data/processed/training_data_all_seasons.csv",
+        help="Path to training data CSV (default: merged all seasons file)",
     )
     parser.add_argument(
         "--models-dir",
@@ -399,6 +524,17 @@ def main():
         default=100,
         help="Minimum historical games before predicting",
     )
+    parser.add_argument(
+        "--output-json",
+        default="data/backtest_results/production_backtest_results.json",
+        help="Path to save JSON results",
+    )
+    parser.add_argument(
+        "--max-games",
+        type=int,
+        default=None,
+        help="Maximum games to process (for quick testing)",
+    )
     args = parser.parse_args()
     
     results = run_backtest(
@@ -409,9 +545,10 @@ def main():
         spread_juice=args.spread_juice,
         total_juice=args.total_juice,
         min_train_games=args.min_train,
+        max_games=args.max_games,
     )
     
-    print_summary(results)
+    print_summary(results, output_json=args.output_json)
 
 
 if __name__ == "__main__":

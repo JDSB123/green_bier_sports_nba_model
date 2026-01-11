@@ -18,29 +18,33 @@
 
 ## Final Training Data
 
-### PRIMARY: `data/processed/training_data_complete_2023.csv`
+### PRIMARY: `data/processed/training_data_all_seasons.csv`
 
 **THE single source of truth for all training and backtesting.**
 
 | Metric | Value |
 |--------|-------|
-| **Games** | 3,990 |
-| **Date Range** | 2023-01-01 to 2026-01-20 |
-| **Columns** | 267 |
+| **Games** | 4,456 |
+| **Date Range** | 2023-01-01 to 2026-01-19 |
+| **Columns** | 270+ |
 
 **Coverage**:
-- FG spread/total: 100%
-- 1H spread/total: 78.4% (3,127 games)
+- FG spread/total: ~99%
+- 1H spread/total: ~70%
 - Box scores: 100%
 - ELO ratings: 100%
 - Rolling stats: 100%
 - Line movement: 66.2%
 
-**Seasons Included**:
-- 2022-23 (partial): 479 games with 1H
-- 2023-24: 1,320 games with 1H (99.8%)
-- 2024-25: 833 games with 1H (62.8%)
-- 2025-26: 495 games with 1H (86.0%)
+**Seasons Included** (NBA seasons run Oct-Jun):
+- 2022-23: 774 games
+- 2023-24: 1,319 games
+- 2024-25: 1,321 games
+- 2025-26: 1,042 games (in progress)
+
+### LEGACY: `data/processed/training_data_complete_2023.csv`
+
+Original merged file (3,979 games). Superseded by `training_data_all_seasons.csv`.
 
 ### SECONDARY: `data/processed/training_data_2025_26.csv`
 
