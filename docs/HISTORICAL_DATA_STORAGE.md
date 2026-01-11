@@ -31,7 +31,7 @@ The historical data storage system consists of:
 - After standardization the data lands in `data/processed/` and updates `data_manifest.json` with schema, coverage, checksums, and the earliest/latest timestamp.
 
 ### QA/QC & Anti-Leakage Controls
-- `scripts/verify_data_standardization.py` and `scripts/validate_training_data.py` enforce canonical team names, schema expectations, checksums, and row counts before any backtest or training job consumes the files.
+- `scripts/validate_training_data.py` and `scripts/validate_training_data.py` enforce canonical team names, schema expectations, checksums, and row counts before any backtest or training job consumes the files.
 - Backtesting reads the latest standardized dataset, but only up to `today() - 3 days` so models never see future games. If any season/source lacks complete data, the manifest flags it and the backtest falls back to fewer features for that period.
 - Each historical backtest run is anchored to this standardized, single-source dataset—no staging copies or ad hoc merges are permitted—so version control and anti-leakage rules remain intact.
 
@@ -291,7 +291,7 @@ az storage blob list `
 
 ```powershell
 # 1. Ingest historical data (saves locally)
-python scripts/ingest_historical_odds.py --season 2024-2025
+python scripts/ingest_historical_period_odds.py --season 2024-2025
 
 # 2. Sync to Azure for backup
 .\scripts\sync_historical_data_to_azure.ps1 -Season "2024-2025"

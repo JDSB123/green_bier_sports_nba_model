@@ -137,7 +137,7 @@ The NBA prediction system uses a **multi-source data ingestion pipeline** that c
 - Skipped games tracked and reported in logs
 
 **Historical Line Capture:**
-- `scripts/collect_historical_lines.py` captures daily snapshots (FG/1H markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
+- `scripts/ingest_historical_period_odds.py` captures daily snapshots (FG/1H markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
 - `scripts/extract_betting_lines.py` converts the raw snapshots into consensus lines (`data/processed/betting_lines.csv`) using median aggregation per market.
 
 ---
@@ -370,7 +370,7 @@ python scripts/ingest_all.py --essential
 
 ### Step 2: Process Raw Data
 
-**Script:** `scripts/build_training_dataset.py`
+**Script:** `scripts/build_training_data_complete.py`
 
 **Process:**
 1. Load standardized odds from `odds_the_odds.csv`
@@ -527,13 +527,13 @@ python scripts/collect_api_basketball.py
 
 ```bash
 # Build training dataset
-python scripts/build_training_dataset.py
+python scripts/build_training_data_complete.py
 
 # Build complete training data (from multiple sources)
-python scripts/build_complete_training_data.py
+python scripts/build_training_data_complete.py
 
 # Import Kaggle data (historical)
-python scripts/import_kaggle_betting_data.py
+python scripts/download_kaggle_player_data.py
 ```
 
 ### Validation
@@ -543,10 +543,10 @@ python scripts/import_kaggle_betting_data.py
 python scripts/validate_production_readiness.py
 
 # Check data quality
-python scripts/check_data_quality.py
+python scripts/validate_training_data.py
 
 # Reconcile team names
-python scripts/reconcile_team_names.py
+python scripts/validate_training_data.py
 ```
 
 ---

@@ -80,29 +80,29 @@ data/historical/
 
 ```bash
 # Full 2023-2024 season (featured + period markets)
-python scripts/ingest_historical_odds.py --season 2023-2024
+python scripts/ingest_historical_period_odds.py --season 2023-2024
 
 # Both seasons
-python scripts/ingest_historical_odds.py --season 2023-2024
-python scripts/ingest_historical_odds.py --season 2024-2025
+python scripts/ingest_historical_period_odds.py --season 2023-2024
+python scripts/ingest_historical_period_odds.py --season 2024-2025
 
 # Specific date range
-python scripts/ingest_historical_odds.py --start-date 2024-01-01 --end-date 2024-01-31
+python scripts/ingest_historical_period_odds.py --start-date 2024-01-01 --end-date 2024-01-31
 
 # Include all markets (more API credits)
-python scripts/ingest_historical_odds.py --season 2023-2024 --markets all
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --markets all
 
 # Include player props (expensive)
-python scripts/ingest_historical_odds.py --season 2023-2024 --include-props
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --include-props
 
 # Dry run to estimate costs
-python scripts/ingest_historical_odds.py --season 2023-2024 --dry-run
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --dry-run
 
 # Resume interrupted ingestion
-python scripts/ingest_historical_odds.py --season 2023-2024 --resume
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --resume
 
 # Check current status
-python scripts/ingest_historical_odds.py --season 2023-2024 --show-summary
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --show-summary
 ```
 
 ### 2. Exporting Data
@@ -151,7 +151,7 @@ For a full NBA season (~180 game days):
 Always use `--dry-run` first to estimate costs:
 
 ```bash
-python scripts/ingest_historical_odds.py --season 2023-2024 --dry-run
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --dry-run
 ```
 
 ## Data Isolation (Model Integrity)
@@ -239,19 +239,19 @@ Use `--resume` to continue from the last checkpoint if interrupted.
 ### 1. Start Small
 ```bash
 # Test with a small date range first
-python scripts/ingest_historical_odds.py --start-date 2024-01-01 --end-date 2024-01-07 --dry-run
+python scripts/ingest_historical_period_odds.py --start-date 2024-01-01 --end-date 2024-01-07 --dry-run
 ```
 
 ### 2. Use Resume
 If ingestion is interrupted, always use `--resume`:
 ```bash
-python scripts/ingest_historical_odds.py --season 2023-2024 --resume
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --resume
 ```
 
 ### 3. Rate Limiting
 The default rate limit is 1 request/second. Adjust if needed:
 ```bash
-python scripts/ingest_historical_odds.py --season 2023-2024 --rate-limit 2.0
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --rate-limit 2.0
 ```
 
 ### 4. Export After Ingestion
@@ -289,13 +289,13 @@ Historical endpoints require a paid plan. Check your Odds API subscription.
 ### Rate Limit Exceeded
 Increase the rate limit interval:
 ```bash
-python scripts/ingest_historical_odds.py --season 2023-2024 --rate-limit 2.0
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --rate-limit 2.0
 ```
 
 ### Incomplete Data
 Use `--show-summary` to check progress:
 ```bash
-python scripts/ingest_historical_odds.py --season 2023-2024 --show-summary
+python scripts/ingest_historical_period_odds.py --season 2023-2024 --show-summary
 ```
 
 ## Integration with Model

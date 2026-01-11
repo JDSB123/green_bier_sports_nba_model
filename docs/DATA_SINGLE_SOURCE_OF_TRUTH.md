@@ -186,10 +186,10 @@ This master script:
 python scripts/download_kaggle_player_data.py
 
 # Infer inactive players from box scores
-python scripts/infer_inactive_from_kaggle.py
+python scripts/download_kaggle_player_data.py
 
 # Merge all sources and update training data
-python scripts/merge_injury_data_and_rebuild.py
+python scripts/build_training_data_complete.py
 ```
 
 **Output:**
@@ -255,7 +255,7 @@ python scripts/run_slate.py          # Generate predictions
 ### Weekly (Optional)
 ```bash
 python scripts/fetch_quarter_scores.py  # Update quarter scores
-python scripts/fetch_box_scores_parallel.py  # Update box scores
+python scripts/fetch_nba_box_scores.py  # Update box scores
 ```
 
 ### After Season / Major Updates

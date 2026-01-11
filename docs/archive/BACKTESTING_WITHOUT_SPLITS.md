@@ -104,7 +104,7 @@ if splits:
 
 ```bash
 # Run backtest WITHOUT requiring splits
-python scripts/backtest_production_model.py \
+python scripts/backtest_production.py \
     --start-date 2024-10-01 \
     --end-date 2025-01-01 \
     --allow-no-splits  # Use this flag if available

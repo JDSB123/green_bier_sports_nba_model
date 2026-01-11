@@ -15,7 +15,7 @@ Even when the system says it's "ready", you need to verify:
 
 ### 1. Run Model Integrity Script
 ```powershell
-python scripts/verify_model_integrity.py
+python scripts/validate_model.py
 ```
 
 This checks:
@@ -61,7 +61,7 @@ This returns:
 
 Before trusting predictions, verify:
 
-- [ ] `python scripts/verify_model_integrity.py` passes all checks
+- [ ] `python scripts/validate_model.py` passes all checks
 - [ ] `/verify` endpoint returns `"status": "pass"`
 - [ ] Test prediction generates valid outputs
 - [ ] Comprehensive edge function accepts `engine_predictions` parameter

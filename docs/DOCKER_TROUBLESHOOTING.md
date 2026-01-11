@@ -179,8 +179,8 @@ The `docker-entrypoint-backtest.sh` script:
 
 1. **Validates environment** - Checks for required API keys
 2. **Validates Python** - Tests critical imports
-3. **Fetches data** (if `data` or `full` command) - Calls `build_fresh_training_data.py`
-4. **Runs backtest** (if `backtest` or `full` command) - Calls `backtest.py`
+3. **Fetches data** (if `data` or `full` command) - Calls `build_training_data_complete.py`
+4. **Runs backtest** (if `backtest` or `full` command) - Calls `backtest_production.py`
 5. **Validates data** (if `validate` command) - Checks training data integrity
 
 ## Recent Improvements

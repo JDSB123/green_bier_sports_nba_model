@@ -133,14 +133,14 @@ Azure Blob Storage (nbagbsvstrg)
 
 ```powershell
 # Step 1: Ingest on LOCAL
-python scripts/ingest_historical_odds.py --season 2024-2025
+python scripts/ingest_historical_period_odds.py --season 2024-2025
 
 # Step 2: Export to analysis-ready format
 python scripts/export_historical_odds.py
 python scripts/export_period_odds_to_csv.py
 
 # Step 3: Rebuild derived lines
-python scripts/rebuild_derived_lines.py
+python scripts/export_period_odds_to_csv.py
 
 # Step 4: Commit to Git (protect the data)
 git add data/historical/
@@ -155,13 +155,13 @@ git push
 
 ```powershell
 # Step 1: Build training data from historical
-python scripts/build_complete_training_data.py
+python scripts/build_training_data_complete.py
 
 # Step 2: Train models
-python scripts/train_production_models.py
+python scripts/train_models.py
 
 # Step 3: Run backtest
-python scripts/backtest_production_model.py \
+python scripts/backtest_production.py \
     --start-date 2024-10-01 \
     --end-date 2025-01-01
 
@@ -345,12 +345,12 @@ Container: nbahistoricaldata
 
 | Purpose | Script |
 |---------|--------|
-| Ingest historical odds | `scripts/ingest_historical_odds.py` |
+| Ingest historical odds | `scripts/ingest_historical_period_odds.py` |
 | Export to CSV | `scripts/export_historical_odds.py` |
 | Export 1H to CSV | `scripts/export_period_odds_to_csv.py` |
-| Rebuild derived lines | `scripts/rebuild_derived_lines.py` |
-| Train models | `scripts/train_production_models.py` |
-| Run backtest | `scripts/backtest_production_model.py` |
+| Rebuild derived lines | `scripts/export_period_odds_to_csv.py` |
+| Train models | `scripts/train_models.py` |
+| Run backtest | `scripts/backtest_production.py` |
 | Sync to Azure | `scripts/sync_historical_data_to_azure.ps1` |
 | Archive picks | `scripts/archive_picks_to_azure.ps1` |
 

@@ -19,7 +19,7 @@
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  STEP 1: FETCH GAME OUTCOMES                                    │
-│  scripts/build_fresh_training_data.py                           │
+│  scripts/build_training_data_complete.py                           │
 │  └─ FreshDataPipeline.fetch_game_outcomes()                     │
 │     ├─ For each season:                                         │
 │     │  ├─ APIBasketballClient.ingest_essential()                │
@@ -91,7 +91,7 @@
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  STEP 7: RUN BACKTEST                                           │
-│  scripts/backtest.py                                            │
+│  scripts/backtest_production.py                                            │
 │  ├─ load_training_data() → Load training_data.csv               │
 │  ├─ For each market (fg_spread, fg_total, etc.):                │
 │  │  ├─ Walk-forward validation (train on past, predict next)    │

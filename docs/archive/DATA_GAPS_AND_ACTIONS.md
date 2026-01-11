@@ -91,7 +91,7 @@ python scripts/verify_data_standardization.py
 python scripts/audit_all_available_data.py
 
 # Build maximum training data
-python scripts/build_maximum_training_data.py --start-date 2023-01-01
+python scripts/build_training_data_complete.py --start-date 2023-01-01
 ```
 
 ---
@@ -101,7 +101,7 @@ python scripts/build_maximum_training_data.py --start-date 2023-01-01
 | File | Purpose |
 |------|---------|
 | `src/data/standardization.py` | SINGLE SOURCE OF TRUTH for team names, CST timezone |
-| `scripts/build_maximum_training_data.py` | Builds training data with all features |
+| `scripts/build_training_data_complete.py` | Builds training data with all features |
 | `scripts/verify_data_standardization.py` | Verifies data integrity |
 | `scripts/audit_all_available_data.py` | Audits all available data sources |
 | `data/processed/training_data_maximum_2023.csv` | Output training data |

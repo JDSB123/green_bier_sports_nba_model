@@ -210,17 +210,17 @@ MARKETS=all          # Or: fg_spread,fg_total,1h_spread,1h_total
 MIN_TRAINING=80      # Minimum training games before predictions
 ```
 
-## Analyzing Slates (Docker Only)
+## Analyzing Slates
 
-Use the Docker-only analysis script:
+Use the main prediction script to analyze slates:
 
 ```powershell
-python scripts/analyze_slate_docker.py --date today
-python scripts/analyze_slate_docker.py --date tomorrow
-python scripts/analyze_slate_docker.py --date 2025-12-18
+python scripts/run_slate.py               # Today's games
+python scripts/run_slate.py --date tomorrow
+python scripts/run_slate.py --date 2025-12-18
 ```
 
-This script connects to the running Docker container and generates comprehensive analysis.
+This generates comprehensive predictions and analysis for the specified date.
 
 ## Project Structure
 
