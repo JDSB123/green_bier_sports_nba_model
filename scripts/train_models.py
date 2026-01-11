@@ -75,16 +75,16 @@ MARKET_CONFIG = {
     "fg_spread": {
         "name": "Full Game Spread",
         "model_class": SpreadsModel,
-        "label_col": "spread_covered",
-        "line_col": "spread_line",
+        "label_col": "fg_spread_covered",
+        "line_col": "fg_spread_line",
         "period": "fg",
         "output_file": "fg_spread_model.joblib",
     },
     "fg_total": {
         "name": "Full Game Total",
         "model_class": TotalsModel,
-        "label_col": "total_over",
-        "line_col": "total_line",
+        "label_col": "fg_total_over",
+        "line_col": "fg_total_line",
         "period": "fg",
         "output_file": "fg_total_model.joblib",
     },
@@ -385,6 +385,8 @@ def train_all_markets(
     test_size: float = 0.2,
     output_dir: Optional[str] = None,
     markets: Optional[List[str]] = None,
+    cutoff_date: Optional[str] = None,
+    data_file: Optional[str] = None,
 ) -> Dict[str, ModelMetrics]:
     """
     Train all 4 independent market models.
@@ -420,21 +422,37 @@ def train_all_markets(
     print("\nLoading supplementary data...")
     injuries_df, splits_df = load_supplementary_data(settings.data_processed_dir)
     
-    training_path = os.path.join(settings.data_processed_dir, "training_data.csv")
-    fh_path = os.path.join(settings.data_processed_dir, "training_data_fh.csv")
-    
-    if os.path.exists(fh_path):
-        print(f"Using first-half augmented training file: {fh_path}")
-        training_path = fh_path
+    # Check for custom data file first
+    if data_file and os.path.exists(data_file):
+        training_path = data_file
+        print(f"Using custom training file: {training_path}")
+    else:
+        training_path = os.path.join(settings.data_processed_dir, "training_data.csv")
+        fh_path = os.path.join(settings.data_processed_dir, "training_data_fh.csv")
+        
+        # Try merged all-seasons file first
+        all_seasons_path = os.path.join(settings.data_processed_dir, "training_data_all_seasons.csv")
+        if os.path.exists(all_seasons_path):
+            print(f"Using merged all-seasons training file: {all_seasons_path}")
+            training_path = all_seasons_path
+        elif os.path.exists(fh_path):
+            print(f"Using first-half augmented training file: {fh_path}")
+            training_path = fh_path
     
     if not os.path.exists(training_path):
         print("\nNo training data available!")
-        print("Run: python scripts/build_fresh_training_data.py")
+        print("Run: python scripts/merge_training_data.py")
         return {}
+
+    training_df = pd.read_csv(training_path, low_memory=False)
     
-    training_df = pd.read_csv(training_path)
-    training_df["date"] = pd.to_datetime(training_df["date"], errors="coerce")
-    
+    # Handle date column naming (game_date vs date)
+    if "game_date" in training_df.columns and "date" not in training_df.columns:
+        training_df["date"] = pd.to_datetime(training_df["game_date"], format="mixed", errors="coerce")
+    else:
+        training_df["date"] = pd.to_datetime(training_df["date"], format="mixed", errors="coerce")
+    training_df = training_df.dropna(subset=["date"])
+
     if training_df.empty:
         print("Training data file is empty!")
         return {}
@@ -451,11 +469,21 @@ def train_all_markets(
     
     # Temporal split
     training_df = training_df.sort_values("date")
-    split_idx = int(len(training_df) * (1 - test_size))
-    train_df = training_df.iloc[:split_idx]
-    test_df = training_df.iloc[split_idx:]
     
-    print(f"\nTrain size: {len(train_df)}, Test size: {len(test_df)}")
+    if cutoff_date:
+        # Date-based temporal split (more robust)
+        cutoff = pd.to_datetime(cutoff_date)
+        train_df = training_df[training_df["date"] < cutoff].copy()
+        test_df = training_df[training_df["date"] >= cutoff].copy()
+        print(f"\nTemporal split at {cutoff_date}")
+        print(f"  Train: {len(train_df)} games ({train_df['date'].min().date()} to {train_df['date'].max().date()})")
+        print(f"  Test:  {len(test_df)} games ({test_df['date'].min().date()} to {test_df['date'].max().date()})")
+    else:
+        # Percentage-based split (legacy)
+        split_idx = int(len(training_df) * (1 - test_size))
+        train_df = training_df.iloc[:split_idx]
+        test_df = training_df.iloc[split_idx:]
+        print(f"\nTrain size: {len(train_df)}, Test size: {len(test_df)}")
     
     # Train each market
     results = {}
@@ -569,8 +597,14 @@ def train_models(
         print("  python scripts/generate_training_data.py")
         return
 
-    training_df = pd.read_csv(training_path)
-    training_df["date"] = pd.to_datetime(training_df["date"], errors="coerce")
+    training_df = pd.read_csv(training_path, low_memory=False)
+    
+    # Handle date column naming (game_date vs date)
+    if "game_date" in training_df.columns and "date" not in training_df.columns:
+        training_df["date"] = pd.to_datetime(training_df["game_date"], format="mixed", errors="coerce")
+    else:
+        training_df["date"] = pd.to_datetime(training_df["date"], format="mixed", errors="coerce")
+    training_df = training_df.dropna(subset=["date"])
 
     if training_df.empty:
         print("Training data file is empty!")
@@ -1011,6 +1045,18 @@ def main():
         action="store_true",
         help="Use legacy training mode (train_models + train_first_half_models)",
     )
+    parser.add_argument(
+        "--cutoff-date",
+        type=str,
+        default=None,
+        help="Date for temporal split (train on data before, test on data after). Format: YYYY-MM-DD",
+    )
+    parser.add_argument(
+        "--data-file",
+        type=str,
+        default=None,
+        help="Path to training data CSV (overrides default)",
+    )
     args = parser.parse_args()
 
     # Determine which markets to train
@@ -1049,6 +1095,8 @@ def main():
             test_size=args.test_size,
             output_dir=args.output_dir,
             markets=markets,
+            cutoff_date=args.cutoff_date,
+            data_file=args.data_file,
         )
         print("\n>>> Training with gradient boosting...")
         train_all_markets(
@@ -1056,6 +1104,8 @@ def main():
             test_size=args.test_size,
             output_dir=args.output_dir,
             markets=markets,
+            cutoff_date=args.cutoff_date,
+            data_file=args.data_file,
         )
     else:
         train_all_markets(
@@ -1063,6 +1113,8 @@ def main():
             test_size=args.test_size,
             output_dir=args.output_dir,
             markets=markets,
+            cutoff_date=args.cutoff_date,
+            data_file=args.data_file,
         )
 
 
