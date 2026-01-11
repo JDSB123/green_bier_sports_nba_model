@@ -891,8 +891,9 @@ class FeatureEngineer:
         features["adj_defensive_diff"] = away_stats.get("adj_defensive_rating", 110) - home_stats.get("adj_defensive_rating", 110)  # Lower is better for defense
 
         # Rest days
-        home_rest = self.compute_rest_days(historical_df, home_team, game_date)
-        away_rest = self.compute_rest_days(historical_df, away_team, game_date)
+        # Use default_rest=3 for production safety (early season games may lack history)
+        home_rest = self.compute_rest_days(historical_df, home_team, game_date, default_rest=3)
+        away_rest = self.compute_rest_days(historical_df, away_team, game_date, default_rest=3)
         features["home_rest"] = home_rest
         features["away_rest"] = away_rest
         features["rest_diff"] = home_rest - away_rest
