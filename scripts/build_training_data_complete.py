@@ -1053,6 +1053,34 @@ def main(start_date: str = "2023-01-01", cutoff_date: str = None, sync_from_azur
     df.to_csv(out, index=False)
     print(f"\n  Saved: {out}")
 
+    # ==== POST-PROCESSING: Fix gaps and complete features ====
+    print("\n" + "=" * 70)
+    print("POST-PROCESSING: Fixing gaps and completing features...")
+    print("=" * 70)
+    
+    # Run fix_training_data_gaps.py
+    try:
+        from scripts.fix_training_data_gaps import main as fix_gaps
+        print("\n[POST-1] Running fix_training_data_gaps...")
+        fix_gaps()
+    except Exception as e:
+        print(f"[WARN] fix_training_data_gaps failed: {e}")
+        # Fall back to subprocess
+        import subprocess
+        subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "fix_training_data_gaps.py")])
+    
+    # Run complete_training_features.py
+    try:
+        print("\n[POST-2] Running complete_training_features...")
+        import subprocess
+        subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "complete_training_features.py")])
+    except Exception as e:
+        print(f"[WARN] complete_training_features failed: {e}")
+    
+    print("\n" + "=" * 70)
+    print("BUILD COMPLETE - All gaps fixed, all features computed")
+    print("=" * 70)
+
     return df
 
 
@@ -1064,5 +1092,6 @@ if __name__ == "__main__":
     parser.add_argument("--sync-from-azure", action="store_true", help="Pull historical/raw data from Azure blob (single source of truth) before building")
     parser.add_argument("--blob-account", default="nbagbsvstrg", help="Azure Storage account name")
     parser.add_argument("--blob-container", default="nbahistoricaldata", help="Azure blob container name")
+    parser.add_argument("--skip-post-processing", action="store_true", help="Skip gap fixes and feature completion")
     args = parser.parse_args()
     main(args.start_date, args.cutoff_date, args.sync_from_azure, args.blob_account, args.blob_container)
