@@ -923,12 +923,30 @@ def compute_labels(df: pd.DataFrame) -> pd.DataFrame:
         df["1h_total_line"] = df["1h_total_line"]
 
     # Labels (FG + 1H)
+    # IMPORTANT: Must check BOTH line AND actual are present to compute valid labels
+    # If actual is NaN, comparison returns False (incorrectly labeled as 0)
     df["home_win"] = (df["fg_margin"] > 0).astype(int)
-    df["spread_covered"] = np.where(df["fg_spread_line"].notna(), (df["fg_margin"] + df["fg_spread_line"] > 0).astype(int), np.nan)
-    df["total_over"] = np.where(df["fg_total_line"].notna(), (df["fg_total_actual"] > df["fg_total_line"]).astype(int), np.nan)
-    df["1h_spread_covered"] = np.where(df["1h_spread_line"].notna(), (df["1h_margin"] + df["1h_spread_line"] > 0).astype(int), np.nan)
-    df["1h_total_over"] = np.where(df["1h_total_line"].notna(), (df["1h_total_actual"] > df["1h_total_line"]).astype(int), np.nan)
-    df["1h_home_win"] = (df["1h_margin"] > 0).astype(int)
+    df["spread_covered"] = np.where(
+        df["fg_spread_line"].notna() & df["fg_margin"].notna(),
+        (df["fg_margin"] + df["fg_spread_line"] > 0).astype(int),
+        np.nan
+    )
+    df["total_over"] = np.where(
+        df["fg_total_line"].notna() & df["fg_total_actual"].notna(),
+        (df["fg_total_actual"] > df["fg_total_line"]).astype(int),
+        np.nan
+    )
+    df["1h_spread_covered"] = np.where(
+        df["1h_spread_line"].notna() & df["1h_margin"].notna(),
+        (df["1h_margin"] + df["1h_spread_line"] > 0).astype(int),
+        np.nan
+    )
+    df["1h_total_over"] = np.where(
+        df["1h_total_line"].notna() & df["1h_total_actual"].notna(),
+        (df["1h_total_actual"] > df["1h_total_line"]).astype(int),
+        np.nan
+    )
+    df["1h_home_win"] = np.where(df["1h_margin"].notna(), (df["1h_margin"] > 0).astype(int), np.nan)
     return df
 
 

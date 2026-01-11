@@ -537,11 +537,25 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors="coerce")
         
-        df["home_1h_score"] = df["home_q1"].fillna(0) + df["home_q2"].fillna(0)
-        df["away_1h_score"] = df["away_q1"].fillna(0) + df["away_q2"].fillna(0)
+        # IMPORTANT: Don't use fillna(0) - preserve NaN when quarter scores missing
+        # Only compute 1H score when BOTH quarters are present
+        df["home_1h_score"] = np.where(
+            df["home_q1"].notna() & df["home_q2"].notna(),
+            df["home_q1"] + df["home_q2"],
+            np.nan
+        )
+        df["away_1h_score"] = np.where(
+            df["away_q1"].notna() & df["away_q2"].notna(),
+            df["away_q1"] + df["away_q2"],
+            np.nan
+        )
         
         if "home_1h_win" not in df.columns:
-            df["home_1h_win"] = (df["home_1h_score"] > df["away_1h_score"]).astype(int)
+            df["home_1h_win"] = np.where(
+                df["home_1h_score"].notna() & df["away_1h_score"].notna(),
+                (df["home_1h_score"] > df["away_1h_score"]).astype(int),
+                np.nan
+            )
         
         if "actual_1h_margin" not in df.columns:
             df["actual_1h_margin"] = df["home_1h_score"] - df["away_1h_score"]
@@ -550,14 +564,14 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
         if "1h_spread_covered" not in df.columns and "1h_spread_line" in df.columns:
             df["1h_spread_covered"] = df.apply(
                 lambda r: int(r["actual_1h_margin"] > -r["1h_spread_line"])
-                if pd.notna(r.get("1h_spread_line")) else None,
+                if pd.notna(r.get("1h_spread_line")) and pd.notna(r.get("actual_1h_margin")) else None,
                 axis=1
             )
         
         if "1h_total_over" not in df.columns and "1h_total_line" in df.columns:
             df["1h_total_over"] = df.apply(
                 lambda r: int(r["actual_1h_total"] > r["1h_total_line"])
-                if pd.notna(r.get("1h_total_line")) else None,
+                if pd.notna(r.get("1h_total_line")) and pd.notna(r.get("actual_1h_total")) else None,
                 axis=1
             )
     
