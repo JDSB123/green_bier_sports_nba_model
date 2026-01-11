@@ -10,6 +10,37 @@ The historical data storage system consists of:
 2. **Azure Blob Storage**: Container `nbahistoricaldata` in storage account `nbagbsvstrg`
 3. **Versioning**: All data includes timestamps and model versions to prevent overwrites
 
+## Data Ingestion Workflow
+
+### Raw Data Sources
+- **The Odds API** | primary: spreads, totals, betting splits, and event metadata that power FG + 1H markets.
+- **API-Basketball** | secondary: canonical game outcomes, team stats, box scores, and schedules when The Odds API lacks coverage.
+- **Kaggle / NCAA dumps** | archival snapshots used to seed seasons and cross-check derived metrics for integrity.
+- **Open-source GitHub feeds** | curated exports (schedules, advanced stats) that fill gaps or provide alternate naming references.
+- **NCAAr institutional files** | localized downloads ingested alongside the other sources to keep season coverage complete.
+
+### Single Source of Storage Truth
+- Every NBA ingestion pipeline writes its raw snapshot and normalized export to Azure Blob Storage before any downstream logic runs: `nbahistoricaldata` inside `nbagbsvstrg`/`nba-gbsv-model-rg`.
+- Historical NBA backtests, production models, and QA tooling read directly from that container (or the synced git repo) so all scripts reference the same canonical dataset. No additional copies are created that could drift.
+- Each upload includes metadata (source, season, timestamp, manifest hash) so downstream tooling can prove which blob/backtest file corresponds to a specific NBA season/version.
+
+### Raw → Standardized Source of Truth
+- Raw files are stored season-by-season (2023-2024, 2024-2025, 2025-2026) and truncated to `today() - 3 days` to prevent leakage into live predictions/backtesting.
+- Before merging, every source is canonicalized: team-name variants map to the single-purpose team variant database (add only new teams/variants, no wholesale rewrites), timestamps convert to CST, and match keys stay consistent.
+- Season coverage is annotated. If a source offers only partial data for a given season (e.g., missing 1H odds), the manifest records the gap so downstream backtests know to restrict the metrics used and avoid leakage.
+- After standardization the data lands in `data/processed/` and updates `data_manifest.json` with schema, coverage, checksums, and the earliest/latest timestamp.
+
+### QA/QC & Anti-Leakage Controls
+- `scripts/verify_data_standardization.py` and `scripts/validate_training_data.py` enforce canonical team names, schema expectations, checksums, and row counts before any backtest or training job consumes the files.
+- Backtesting reads the latest standardized dataset, but only up to `today() - 3 days` so models never see future games. If any season/source lacks complete data, the manifest flags it and the backtest falls back to fewer features for that period.
+- Each historical backtest run is anchored to this standardized, single-source dataset—no staging copies or ad hoc merges are permitted—so version control and anti-leakage rules remain intact.
+
+### Endpoint Coverage (Prod vs Historical)
+- **Production/predictions:** Use the comprehensive ingestion pipeline (`scripts/ingest_all.py` → `ComprehensiveIngestion`) so ALL live endpoints are hit: The Odds API (events, FG/1H/Q1 odds, participants, betting splits), API-Basketball (teams/games/stats/standings), ESPN injuries (plus API-Basketball injuries when keys exist), Action Network splits, and BetsAPI live/alt odds where available.
+- **Historical backtesting:** Use only stored, time-bound datasets (The Odds historical/derived lines, API/NBA box scores, Kaggle/archival feeds). Betting splits are not available historically; they are excluded from backtests, and manifests must note that absence so feature expectations stay consistent.
+- **Policy:** If an endpoint is unavailable for a season (e.g., splits historically), record the gap in the manifest and proceed with the remaining features; do not silently inject placeholders.
+- **Blob as single source:** Run builders with `--sync-from-azure` (e.g., `build_training_data_complete.py`, `merge_training_data.py`) to pull odds/exports/raw feeds from `nbahistoricaldata` before processing. No local-only historical snapshots should be assumed; everything should originate from the blob, and manifests should reflect what was actually present there.
+
 ## Architecture
 
 ```

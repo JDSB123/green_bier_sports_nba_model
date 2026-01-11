@@ -21,6 +21,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+import subprocess
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -54,6 +55,68 @@ NBA_API_BOX_SCORES = [
     DATA_DIR / "raw" / "nba_api" / "box_scores_2025_26.csv",
 ]
 OUTPUT_DIR = DATA_DIR / "processed"
+
+
+# =============================================================================
+# AZURE BLOB SYNC (SINGLE SOURCE OF TRUTH)
+# =============================================================================
+
+def _run_az_cli(cmd: list[str]) -> None:
+    """Run az cli command with basic error handling."""
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        if result.stdout:
+            print(result.stdout.strip())
+    except FileNotFoundError:
+        print("[WARN] Azure CLI (az) not found; skipping blob sync")
+    except subprocess.CalledProcessError as e:
+        print(f"[WARN] az command failed: {' '.join(cmd)}")
+        if e.stdout:
+            print(e.stdout.strip())
+        if e.stderr:
+            print(e.stderr.strip())
+
+
+def sync_from_blob(account: str, container: str, prefixes: List[str]) -> None:
+    """
+    Sync required historical assets from the Azure blob single source of truth.
+
+    Notes:
+    - This does not fetch betting splits historically (not available).
+    - Requires `az login` or a SAS env configuration.
+    """
+    for prefix in prefixes:
+        print(f"[SYNC] Downloading '{prefix}' from {container}@{account} -> data/")
+        cmd = [
+            "az", "storage", "blob", "download-batch",
+            "--account-name", account,
+            "--source", container,
+            "--destination", str(DATA_DIR),
+            "--pattern", f"{prefix}/*",
+        ]
+        _run_az_cli(cmd)
+
+
+def require_historical_inputs_or_exit():
+    """
+    Ensure historical inputs exist locally (used only when --sync-from-azure is NOT provided).
+
+    If missing, instruct the user to rerun with --sync-from-azure so the single source
+    of truth (blob) is used instead of assuming stale local copies.
+    """
+    required = [
+        DATA_DIR / "historical",
+        DATA_DIR / "raw" / "nba_api",
+        DATA_DIR / "external" / "kaggle",
+    ]
+    missing = [str(p) for p in required if not p.exists()]
+    if missing:
+        msg = (
+            "[FAIL] Historical inputs not found locally:\n"
+            f"  Missing: {missing}\n"
+            "  Re-run with --sync-from-azure to pull from the single source of truth."
+        )
+        raise SystemExit(msg)
 
 
 def safe_median(values: list) -> Optional[float]:
@@ -735,7 +798,8 @@ def print_summary(df: pd.DataFrame):
             print(f"    {lab}: {n:,} games")
 
 
-def main(start_date: str = "2023-01-01", cutoff_date: str = None):
+def main(start_date: str = "2023-01-01", cutoff_date: str = None, sync_from_azure: bool = False,
+         blob_account: str = "nbagbsvstrg", blob_container: str = "nbahistoricaldata"):
     """
     Build training data with optional cutoff date to prevent data leakage.
     
@@ -743,12 +807,30 @@ def main(start_date: str = "2023-01-01", cutoff_date: str = None):
         start_date: First date to include (default: 2023-01-01)
         cutoff_date: Last date to include (default: None = include all)
                      Use this to exclude future games that don't have real scores.
+        sync_from_azure: If True, pull historical/raw datasets from Azure blob first.
+        blob_account: Azure Storage account name (single source of truth)
+        blob_container: Azure blob container name (single source of truth)
     """
     print("\n" + "="*80)
     print(" BUILDING COMPLETE TRAINING DATA (2023-2026)")
     if cutoff_date:
         print(f" CUTOFF DATE: {cutoff_date} (excludes games after this date)")
     print("="*80)
+
+    prefixes = [
+        "historical/the_odds",
+        "historical/derived",
+        "historical/exports",
+        "raw/nba_api",
+        "external/kaggle",
+    ]
+
+    if sync_from_azure:
+        # Historical odds/exports/raw data only; betting splits are not available historically.
+        sync_from_blob(account=blob_account, container=blob_container, prefixes=prefixes)
+    else:
+        # Enforce single-source-of-truth discipline: if local cache missing, fail fast.
+        require_historical_inputs_or_exit()
 
     kaggle = load_kaggle(start_date)
     theodds = load_theodds_derived()
@@ -800,5 +882,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--start-date", default="2023-01-01", help="First date to include")
     parser.add_argument("--cutoff-date", default=None, help="Last date to include (CST). Use to exclude future games.")
+    parser.add_argument("--sync-from-azure", action="store_true", help="Pull historical/raw data from Azure blob (single source of truth) before building")
+    parser.add_argument("--blob-account", default="nbagbsvstrg", help="Azure Storage account name")
+    parser.add_argument("--blob-container", default="nbahistoricaldata", help="Azure blob container name")
     args = parser.parse_args()
-    main(args.start_date, args.cutoff_date)
+    main(args.start_date, args.cutoff_date, args.sync_from_azure, args.blob_account, args.blob_container)

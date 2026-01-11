@@ -15,6 +15,7 @@ Handles:
 
 import argparse
 import logging
+import subprocess
 from pathlib import Path
 from typing import Set, Tuple
 
@@ -27,6 +28,67 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# AZURE BLOB SYNC (SINGLE SOURCE OF TRUTH)
+# =============================================================================
+
+def _run_az_cli(cmd: list[str]) -> None:
+    """Run az cli command with basic error handling."""
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        if result.stdout:
+            print(result.stdout.strip())
+    except FileNotFoundError:
+        print("[WARN] Azure CLI (az) not found; skipping blob sync")
+    except subprocess.CalledProcessError as e:
+        print(f"[WARN] az command failed: {' '.join(cmd)}")
+        if e.stdout:
+            print(e.stdout.strip())
+        if e.stderr:
+            print(e.stderr.strip())
+
+
+def sync_from_blob(account: str, container: str, prefixes: list[str]) -> None:
+    """
+    Sync required historical assets from the Azure blob single source of truth.
+
+    Betting splits are not available historically; this only pulls odds/exports/raw feeds.
+    """
+    data_dir = Path("data")
+    for prefix in prefixes:
+        print(f"[SYNC] Downloading '{prefix}' from {container}@{account} -> data/")
+        cmd = [
+            "az", "storage", "blob", "download-batch",
+            "--account-name", account,
+            "--source", container,
+            "--destination", str(data_dir),
+            "--pattern", f"{prefix}/*",
+        ]
+        _run_az_cli(cmd)
+
+
+def require_historical_inputs_or_exit():
+    """
+    Ensure historical inputs exist locally (used only when --sync-from-azure is NOT provided).
+
+    If missing, instruct the user to rerun with --sync-from-azure so the single source
+    of truth (blob) is used instead of assuming stale local copies.
+    """
+    required = [
+        Path("data/historical"),
+        Path("data/raw/nba_api"),
+        Path("data/external/kaggle"),
+    ]
+    missing = [str(p) for p in required if not p.exists()]
+    if missing:
+        msg = (
+            "[FAIL] Historical inputs not found locally:\n"
+            f"  Missing: {missing}\n"
+            "  Re-run with --sync-from-azure to pull from the single source of truth."
+        )
+        raise SystemExit(msg)
 
 
 def load_main_file(path: Path) -> pd.DataFrame:
@@ -208,8 +270,37 @@ def main():
         action='store_true',
         help='Analyze files without writing output'
     )
+    parser.add_argument(
+        '--sync-from-azure',
+        action='store_true',
+        help='Pull historical/raw data from Azure blob before merging'
+    )
+    parser.add_argument(
+        '--blob-account',
+        type=str,
+        default='nbagbsvstrg',
+        help='Azure Storage account name'
+    )
+    parser.add_argument(
+        '--blob-container',
+        type=str,
+        default='nbahistoricaldata',
+        help='Azure blob container name'
+    )
     args = parser.parse_args()
     
+    if args.sync_from_azure:
+        prefixes = [
+            "historical/the_odds",
+            "historical/derived",
+            "historical/exports",
+            "raw/nba_api",
+            "external/kaggle",
+        ]
+        sync_from_blob(args.blob_account, args.blob_container, prefixes)
+    else:
+        require_historical_inputs_or_exit()
+
     # Define file paths
     main_path = Path('data/processed/training_data_complete_2023.csv')
     s26_path = Path('data/processed/training_data_2025_26.csv')
