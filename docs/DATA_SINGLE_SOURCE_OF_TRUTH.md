@@ -6,17 +6,58 @@ This document defines the authoritative data sources and pipeline for the NBA pr
 
 ---
 
+## 🔒 Azure Blob Storage (CANONICAL SOURCE)
+
+Training data is stored in Azure Blob Storage as the **single source of truth** with quality gates enforced before upload.
+
+### Location
+```
+Storage Account: nbagbsvstrg
+Container:       nbahistoricaldata
+Blob Prefix:     training_data/
+```
+
+### Versioned Data
+| Path | Description |
+|------|-------------|
+| `training_data/v2026.01.11/` | Version-stamped release |
+| `training_data/latest/` | Always points to latest validated version |
+
+### Quality Gates (enforced before upload)
+- ✅ Minimum 3,000 games
+- ✅ Minimum 50 features/columns
+- ✅ 80%+ injury coverage
+- ✅ 90%+ odds coverage
+- ✅ No nulls in critical columns (game_id, teams, scores)
+- ✅ Score ranges validated (50-200)
+- ✅ SHA256 checksum in manifest
+
+### Scripts
+```bash
+# Upload quality-checked data to Azure
+python scripts/upload_training_data_to_azure.py --force --version v2026.01.XX
+
+# Download from Azure (single source of truth)
+python scripts/download_training_data_from_azure.py --version latest --verify
+
+# List available versions
+python scripts/download_training_data_from_azure.py --list
+```
+
+---
+
 ## Training Data
 
-### Master File
+### Master File (Local)
 ```
 data/processed/training_data_complete_2023_with_injuries.csv
 ```
 
-**Date Range:** 2023-01-01 to 2026-01-08  
+**Date Range:** 2023-01-01 to 2026-01-09  
 **Games:** 3,969  
 **Columns:** 327  
-**Injury Coverage:** 95.4% (3,788 games)
+**Injury Coverage:** 100% (via Kaggle inference)
+**Odds Coverage:** 100%
 **Model Features:** 55/55 (100% coverage)
 
 ### How to Rebuild
