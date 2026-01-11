@@ -103,12 +103,20 @@ This master script:
 |---------|----------|-------|
 | Moneylines | 69.5% | Best available from TheOdds |
 | Travel features | 0% | team_factors module needs fix |
+| **Injury Impact** | **19.3%** | nba_database covers through June 2023 |
 
-### Not Available Historically
+### Injury Impact Calculation
+Uses `inactive_players.csv` + `common_player_info.csv`:
+- **768 games** with injury data (2023 season from nba_database)
+- **140 games** with star players out (67 home, 73 away)
+- Impact scoring: `season_exp * 0.3 + draft_bonus + greatest_75_bonus`
+- Draft bonus: 1st round = 2.0, Top 5 = 3.0, #1 overall = 4.0
+- Greatest 75 = +5.0 bonus
+
+### Real-Time Only (Defaults for Historical)
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Betting splits | Defaults | Real-time only, set to neutral |
-| Injury impact (PPG) | Defaults | No player-level stats available |
 
 ---
 
@@ -121,8 +129,9 @@ This master script:
 
 ### 2. Player Impact/Injuries
 - `inactive_players.csv` has 110K records of who was inactive
-- **Missing:** Player PPG/stats to calculate impact
-- Currently set to neutral defaults (0 impact)
+- `common_player_info.csv` has player metadata (season_exp, draft_position, greatest_75_flag)
+- **Coverage:** 19.3% of training data (games through June 2023)
+- **For 2023-24, 2024-25, 2025-26:** Need to refresh nba_database or use alternative source
 
 ### 3. Pace Features
 - `game.csv` has possessions data (FGA, FTA, OREB, TOV)
@@ -184,6 +193,50 @@ Run: `python scripts/fix_training_data_gaps.py`
 
 ### "Need to rebuild everything"
 Run: `python scripts/build_training_data_complete.py --start-date 2023-01-01`
+
+### "Data looks stale"
+1. Check `data/processed/training_data_complete_2023.csv` modification date
+2. Rebuild if needed: `python scripts/build_training_data_complete.py`
+
+---
+
+## Archive Policy (Azure Blob Storage)
+
+**Archives are stored in Azure Blob Storage, NOT gitignored locally.**
+
+### What Gets Archived
+| Local Path | Azure Path | Contents |
+|------------|------------|----------|
+| `scripts/archive/` | `archives/scripts/` | Deprecated scripts |
+| `archive/picks/` | `archives/picks/` | Historical pick outputs |
+| `archive/predictions/` | `archives/predictions/` | Prediction history |
+| `archive/slate_outputs/` | `archives/slate_outputs/` | Slate outputs |
+| `archive/odds_snapshots/` | `archives/odds_snapshots/` | Odds snapshots |
+| `data/external/nba_database/` | `external/nba_database/` | Large external datasets |
+
+### Sync Archives
+```powershell
+# Sync all archives to Azure (keeps local copies)
+.\scripts\sync_archives_to_azure.ps1
+
+# Sync and delete local copies
+.\scripts\sync_archives_to_azure.ps1 -Cleanup
+```
+
+### Download Archives
+```bash
+az storage blob download-batch \
+  --account-name nbagbsvstrg \
+  --source nbahistoricaldata \
+  --destination . \
+  --pattern 'archives/*'
+```
+
+### Why Azure Blob?
+1. **Single source of truth** - One authoritative location
+2. **No git bloat** - Large files don't slow down repo
+3. **Version tracking** - Blob versioning for audit trail
+4. **Team access** - Anyone with Azure access can retrieve
 
 ### "Data looks stale"
 1. Check `data/processed/training_data_complete_2023.csv` modification date
