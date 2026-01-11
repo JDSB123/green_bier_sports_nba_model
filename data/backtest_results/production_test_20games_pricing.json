@@ -1,0 +1,45 @@
+{
+  "markets": {
+    "fg_spread": {
+      "n_bets": 19,
+      "wins": 9,
+      "accuracy": 0.47368421052631576,
+      "roi": -9.569377990430624,
+      "profit": -1.8181818181818183,
+      "high_conf": {
+        "n_bets": 1,
+        "wins": 0,
+        "accuracy": 0.0,
+        "roi": -100.0
+      }
+    },
+    "fg_total": {
+      "n_bets": 20,
+      "wins": 11,
+      "accuracy": 0.55,
+      "roi": 4.999999999999998,
+      "profit": 0.9999999999999997,
+      "high_conf": {
+        "n_bets": 3,
+        "wins": 2,
+        "accuracy": 0.6666666666666666,
+        "roi": 27.27272727272727
+      }
+    }
+  },
+  "by_season": {
+    "2025-2026": {
+      "total_bets": 39,
+      "wins": 20,
+      "profit": -0.8181818181818188,
+      "fg_spread": {
+        "n_bets": 19,
+        "accuracy": 0.47368421052631576
+      },
+      "fg_total": {
+        "n_bets": 20,
+        "accuracy": 0.55
+      }
+    }
+  }
+}
