@@ -34,6 +34,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 from zoneinfo import ZoneInfo
+from src.utils.version import resolve_version
 
 # Fix Windows console encoding
 import io
@@ -315,7 +316,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
     <div class="container">
         <header>
             <h1>🏀 NBA PREDICTIONS</h1>
-            <p class="subtitle">{date_str.upper()} | Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')} | v33.0.11.0</p>
+            <p class="subtitle">{date_str.upper()} | Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')} | {resolve_version().replace("NBA_v", "v")}</p>
         </header>
 
         <div class="summary-box">
@@ -459,7 +460,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
         </table>
 
         <footer>
-            <p>🔥 = Pick strength (5 fires = strongest) | Model v33.0.11.0</p>
+            <p>🔥 = Pick strength (5 fires = strongest) | Model {resolve_version().replace("NBA_v", "v")}</p>
         </footer>
     </div>
 </body>
@@ -829,7 +830,7 @@ def main():
     args = parser.parse_args()
     
     print("\n" + "="*80)
-    print("🏀 NBA PREDICTION SYSTEM v33.0.11.0 (4 markets: 1H + FG)")
+    print(f"🏀 NBA PREDICTION SYSTEM {resolve_version().replace('NBA_v', 'v')} (4 markets: 1H + FG)")
     print("="*80)
     
     # Step 1: Check Docker

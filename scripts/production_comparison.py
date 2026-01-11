@@ -20,7 +20,7 @@ def print_comparison():
     with open(manifest_path) as f:
         prod_data = json.load(f)
 
-    print("\n[PRODUCTION] NBA v33.0.11.0 RESULTS")
+    print("\n[PRODUCTION] NBA NBA_v33.0.15.0 RESULTS")
     print("   Backtested on: 2025-10-02 to 2025-12-20 (464 games)")
     print("   Source: docs/BACKTEST_STATUS.md")
     print()

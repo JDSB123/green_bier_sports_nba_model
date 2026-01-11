@@ -2761,7 +2761,7 @@ async def get_weekly_lineup_nba_json(
         "sport": "NBA",
         "date": "2025-12-25",
         "generated_at": "2025-12-25T10:30:00Z",
-        "version": "v33.0.11.0",
+        "version": "v33.0.15.0",
         "summary": {"total": 12, "elite": 3, "strong": 5, "good": 4},
         "picks": [...]
     }
