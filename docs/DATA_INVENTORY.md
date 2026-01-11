@@ -8,14 +8,90 @@
 |-----------|--------|------------|----------|--------|
 | Games & Scores | Kaggle nba_2008-2025 | 2007-10-30 to 2025-06-22 | 23,118 games | **COMPLETE** |
 | FG Betting Lines | Kaggle + TheOdds | 2007+ | 100% | **COMPLETE** |
-| FG Betting Lines (2025-26) | TheOdds API | 2025-10-21 to 2026-01-20 | 578 games | **COMPLETE** |
-| 1H Betting Lines | TheOdds API | 2023-05 to 2024-06 | 146,348 rows | **COMPLETE** |
+| 1H Betting Lines | TheOdds API | 2023-05+ | 78.4% | **COMPLETE** |
 | Box Scores (historic) | wyattowalsh/basketball | 1946 to 2023-06-12 | 65,698 games | **COMPLETE** |
-| Box Scores (2023-24) | nba_api (NBA.com) | 2023-10 to 2024-06 | 1,230 games | **COMPLETE** |
-| Box Scores (2024-25) | nba_api (NBA.com) | 2024-10 to 2025-06 | 1,230 games | **COMPLETE** |
-| Box Scores (2025-26) | nba_api (NBA.com) | 2025-10 to 2026-01-10 | 567 games | **COMPLETE** |
+| Box Scores (2023-26) | nba_api (NBA.com) | 2023-10 to present | 2,990 games | **COMPLETE** |
 | ELO Ratings | Computed from results | All games | 100% | **COMPLETE** |
-| Line Movement | TheOdds exports | 2023-10+ | 77% | **COMPLETE** |
+| Line Movement | TheOdds exports | 2023-10+ | 66% | **COMPLETE** |
+
+---
+
+## Final Training Data
+
+### PRIMARY: `data/processed/training_data_complete_2023.csv`
+
+**THE single source of truth for all training and backtesting.**
+
+| Metric | Value |
+|--------|-------|
+| **Games** | 3,990 |
+| **Date Range** | 2023-01-01 to 2026-01-20 |
+| **Columns** | 267 |
+
+**Coverage**:
+- FG spread/total: 100%
+- 1H spread/total: 78.4% (3,127 games)
+- Box scores: 100%
+- ELO ratings: 100%
+- Rolling stats: 100%
+- Line movement: 66.2%
+
+**Seasons Included**:
+- 2022-23 (partial): 479 games with 1H
+- 2023-24: 1,320 games with 1H (99.8%)
+- 2024-25: 833 games with 1H (62.8%)
+- 2025-26: 495 games with 1H (86.0%)
+
+### SECONDARY: `data/processed/training_data_2025_26.csv`
+
+2025-26 season focused file with box score integration (576 games, 99.3% box score coverage).
+
+---
+
+## Data Storage Structure
+
+```
+data/
+├── processed/                    # FINAL OUTPUT
+│   ├── training_data_complete_2023.csv   # ← USE THIS
+│   ├── training_data_2025_26.csv         # 2025-26 focused
+│   ├── data_manifest.json
+│   └── models/                   # Trained model artifacts
+│       └── model_pack.json
+│
+├── raw/                          # API fetches
+│   ├── nba_api/
+│   │   ├── box_scores_2023_24.csv  (2,386 rows)
+│   │   ├── box_scores_2024_25.csv  (2,460 rows)
+│   │   └── box_scores_2025_26.csv  (1,134 rows)
+│   └── github/
+│       └── fivethirtyeight_elo.csv
+│
+├── external/                     # Third-party datasets
+│   └── kaggle/
+│       └── nba_2008-2025.csv     # Primary scores/lines source
+│
+├── historical/                   # TheOdds API historical data
+│   ├── derived/
+│   │   └── theodds_lines.csv     # Aggregated FG/1H lines 2021-2025
+│   ├── exports/
+│   │   ├── 2023-2024_odds_1h.csv    (86,512 rows)
+│   │   ├── 2024-2025_odds_1h.csv    (59,836 rows)
+│   │   ├── 2023-2024_odds_featured.csv  (line movement)
+│   │   └── 2024-2025_odds_featured.csv
+│   ├── the_odds/
+│   │   ├── 2025-2026/
+│   │   │   ├── 2025-2026_all_markets.csv   # FG/1H/Q1/alts
+│   │   │   └── 2025-2026_all_markets.json  # Raw bookmaker data
+│   │   ├── events/        (859 JSON files)
+│   │   ├── odds/          (773 JSON files)
+│   │   └── metadata/
+│   └── elo/
+│       └── fivethirtyeight_elo_historical.csv
+│
+└── backtest_results/             # Backtest outputs
+    └── *.csv, *.json
+```
 
 ---
 
@@ -27,124 +103,66 @@
 | Field | Description |
 |-------|-------------|
 | date, home_team, away_team | Game identification |
-| home_score, away_score | Final scores |
-| q1_home_score through q4_home_score | Quarter scores |
-| home_spread_line, away_spread_line | Pre-game spread |
-| total_line | Pre-game over/under |
-| home_moneyline, away_moneyline | Moneyline odds |
+| score_home, score_away | Final scores |
+| q1_home through q4_home | Quarter scores |
+| spread, total | Pre-game lines |
+| moneyline_home, moneyline_away | Moneyline odds |
 
-**Date Range**: 2007-10-30 to 2025-06-22
+**Date Range**: 2007-10-30 to 2025-06-22 (23,118 games)
 
-### 2. TheOdds API Derived Lines
-**Location**: `data/historical/derived/theodds_lines.csv`
-
-| Field | Description |
-|-------|-------------|
-| commence_time | Game start time (UTC) |
-| home_team, away_team | Teams |
-| fg_spread_*, fg_total_*, fg_ml_* | Full game lines |
-| fh_spread_*, fh_total_* | First half lines |
-| q1_spread_*, q1_total_* | First quarter lines |
-
-**Date Range**: 2023-10-24 to 2025-06-23
-
-### 3. TheOdds API 1H Exports
-**Location**: `data/historical/exports/*_odds_1h.csv`
-
-Explicit first-half odds exports for individual bookmakers.
-
-**Date Range**: May 2023+
-
-### 4. TheOdds API Featured Exports (Line Movement)
-**Location**: `data/historical/exports/*_odds_featured.csv`
-
-Opening and closing lines for calculating line movement.
-
-**Date Range**: 2023-10+
-
-### 5. wyattowalsh/basketball (KaggleHub)
-**Location**: `data/external/nba_database/`
-
-| File | Description |
-|------|-------------|
-| game.csv | Game-level box scores |
-| line_score.csv | Quarter-by-quarter scores |
-| team_game_log.csv | Team game logs |
-
-**Date Range**: 1946-11-01 to 2023-06-12
-
-### 6. NBA.com API (nba_api)
-**Location**: `data/raw/nba_api/`
-
-| File | Description |
-|------|-------------|
-| box_scores_2023_24.csv | 2023-24 season team box scores |
-| box_scores_2024_25.csv | 2024-25 season team box scores |
-| box_scores_2025_26.csv | 2025-26 season team box scores (current) |
-
-**Status**: COMPLETE - fetched via `scripts/fetch_nba_box_scores.py`
-
-### 7. TheOdds API 2025-26 Season (PREMIER SUBSCRIPTION)
+### 2. TheOdds API (PREMIER SUBSCRIPTION)
 **Location**: `data/historical/the_odds/2025-2026/`
 
 | File | Description |
 |------|-------------|
-| 2025-2026_all_markets.csv | ALL markets: FG, 1H, Q1, alternates (576 games) |
+| 2025-2026_all_markets.csv | ALL markets: FG, 1H, Q1, alternates |
 | 2025-2026_all_markets.json | Raw JSON with all bookmaker data |
-| 2025-2026_odds_fg.csv | Full game h2h/spreads/totals (578 games) |
 
-**Market Coverage**:
+**Market Coverage** (2025-26 season):
 - Full Game (h2h, spreads, totals): 576 games (100%)
-- First Half (h2h_h1, spreads_h1, totals_h1): 495 games (85.9%)
-- First Quarter (h2h_q1, spreads_q1, totals_q1): 494 games (85.8%)
+- First Half (h2h_h1, spreads_h1, totals_h1): 495 games (86%)
+- First Quarter (h2h_q1, spreads_q1, totals_q1): 494 games (86%)
 - Alternate Lines: 576 games (100%)
 
-**Date Range**: 2025-10-22 to 2026-01-20
+**Bookmakers**: DraftKings, FanDuel, BetMGM, Caesars, BetRivers, Bovada, +5 more
 
-**Bookmakers**: DraftKings, FanDuel, BetMGM, Caesars, BetRivers, Bovada, and 5 more
+### 3. NBA.com API (nba_api)
+**Location**: `data/raw/nba_api/`
 
----
+| File | Games | Description |
+|------|-------|-------------|
+| box_scores_2023_24.csv | 1,193 | Full team box scores |
+| box_scores_2024_25.csv | 1,230 | Full team box scores |
+| box_scores_2025_26.csv | 567 | Full team box scores (current) |
 
-## Feature Coverage for Backtesting (2023-01-01 to present)
+**Stats Included**: FGM/FGA, FG3M/FG3A, FTM/FTA, OREB/DREB, AST, STL, BLK, TO, PF, PTS
 
-| Feature Category | Coverage | Notes |
-|------------------|----------|-------|
-| Game scores (FG, Q1-Q4) | 100% | Kaggle source |
-| Full game spread/total | 100% | Kaggle + TheOdds |
-| 1H spread/total | 77% | TheOdds only (from May 2023) |
-| Q1 spread/total | 77% | TheOdds only (from May 2023) |
-| Line movement | 77% | Featured exports |
-| Box scores (FG%, REB, AST, TOV) | 100% | nba_api fetch COMPLETE |
-| ELO ratings | 100% | Computed from game results |
-| Rolling stats (PPG, PAPG, etc.) | 100% | Computed from scores |
-| Rest days / B2B | 100% | Computed from schedule |
+### 4. wyattowalsh/basketball (KaggleHub)
+**Location**: `data/external/nba_database/` (if downloaded)
+
+Historical box scores from 1946 to 2023-06-12 (65,642 games).
 
 ---
 
-## GitHub Resources (Referenced but not yet integrated)
+## Feature Categories in Training Data
 
-### NBA-Machine-Learning-Sports-Betting
-- URL: github.com/... 
-- Features: Neural networks, XGBoost, odds integration, bankroll management
-- Potential value: Model architectures, evaluation strategies
-
-### NBA-DATASET
-- URL: github.com/...
-- Features: LeagueSchedule24_25.csv, LeagueSchedule25_26.csv
-- Potential value: Schedule data for 2024-25 and 2025-26 seasons
-
-### nba-betting-model
-- URL: github.com/...
-- Features: XGBoost, Ridge Regression, Streamlit interface
-- Potential value: Alternative modeling approaches
+| Category | Columns | Description |
+|----------|---------|-------------|
+| Core | 5 | match_key, game_date, home/away_team, season |
+| FG Scores | 20 | home/away_score, margins, Q1-Q4 |
+| FG Lines | 15 | Kaggle + TheOdds spreads/totals/MLs |
+| 1H Lines | 15 | TheOdds 1H spreads/totals/MLs |
+| Box Score | 33 | eFG%, 3P rate, FT rate, TOV%, OREB%, Off/Def/Net Rating |
+| ELO | 4 | home_elo, away_elo, elo_diff, elo_prob |
+| Rolling Stats | 126 | 5/10/20-game windows for all metrics |
+| Labels | 6 | fg/1h spread_covered, total_over, home_win |
 
 ---
 
-## Data Quality Notes
+## Data Quality
 
-1. **Team Name Standardization**: All data sources use `src/data/standardization.py` for consistent team names
-2. **Timezone**: All dates converted to CST (America/Chicago)
-3. **Match Keys**: Format `YYYY-MM-DD_home_away` for joining across sources
-4. **API Limits**: 
-   - TheOdds API: Usage-based (we have subscription)
-   - nba_api: Free, rate-limited (0.6s delay between calls)
+1. **Team Name Standardization**: All sources use `src/data/standardization.py`
+2. **Timezone**: All dates in CST (America/Chicago)
+3. **Match Keys**: Format `YYYY-MM-DD_home_away` for cross-source joins
+4. **No Data Leakage**: Features computed using only prior games
+5. **API Rate Limiting**: Implemented for nba_api (0.6s delay)

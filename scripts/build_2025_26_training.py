@@ -23,15 +23,15 @@ from src.data.standardization import standardize_team_name, generate_match_key, 
 
 # Paths
 DATA_DIR = PROJECT_ROOT / "data"
-THEODDS_2526 = DATA_DIR / "historical" / "the_odds" / "2025-2026" / "2025-2026_odds_fg.csv"
+THEODDS_2526 = DATA_DIR / "historical" / "the_odds" / "2025-2026" / "2025-2026_all_markets.csv"
 BOX_SCORES = DATA_DIR / "raw" / "nba_api" / "box_scores_2025_26.csv"
 OUTPUT_DIR = DATA_DIR / "processed"
 
 
 def load_theodds_2526():
-    """Load 2025-26 odds with game info."""
-    print("\n[1/5] Loading TheOdds 2025-26 odds...", flush=True)
-    
+    """Load 2025-26 odds (FG + 1H) with game info."""
+    print("\n[1/5] Loading TheOdds 2025-26 odds (FG + 1H)...", flush=True)
+
     df = pd.read_csv(THEODDS_2526)
     df["game_date"] = pd.to_datetime(df["commence_time"]).dt.tz_convert(CST).dt.date
     df["game_date"] = pd.to_datetime(df["game_date"])
@@ -41,25 +41,31 @@ def load_theodds_2526():
         lambda r: generate_match_key(r["game_date"], r["home_team"], r["away_team"], source_is_utc=False),
         axis=1
     )
-    
-    # Extract median lines from bookmakers
-    spread_cols = [c for c in df.columns if "spreads_" in c and "_point" in c]
-    total_cols = [c for c in df.columns if "totals_" in c and "_point" in c and "Over" in c]
-    h2h_home_cols = [c for c in df.columns if "h2h_" in c and "_price" in c]
-    
-    if spread_cols:
-        # Get home team spread (negative = favorite)
-        home_spread_cols = [c for c in spread_cols if df["home_team"].iloc[0] in c or "Home" not in c]
-        if home_spread_cols:
-            df["fg_spread_line"] = df[home_spread_cols].median(axis=1)
-    
-    if total_cols:
-        df["fg_total_line"] = df[total_cols].median(axis=1)
-    
+
+    # all_markets.csv already has pre-computed consensus lines
+    rename_map = {
+        "fg_spread": "fg_spread_line",
+        "fg_total": "fg_total_line",
+        "h1_spread": "1h_spread_line",
+        "h1_total": "1h_total_line",
+    }
+    for old, new in rename_map.items():
+        if old in df.columns:
+            df[new] = df[old]
+
+    fg_count = df["fg_spread_line"].notna().sum() if "fg_spread_line" in df.columns else 0
+    h1_count = df["1h_spread_line"].notna().sum() if "1h_spread_line" in df.columns else 0
+
     print(f"       Games: {len(df)}", flush=True)
+    print(f"       FG: {fg_count}, 1H: {h1_count}", flush=True)
     print(f"       Date range: {df['game_date'].min().date()} to {df['game_date'].max().date()}", flush=True)
+
+    cols = ["match_key", "game_date", "home_team", "away_team", "commence_time",
+            "fg_spread_line", "fg_total_line"]
+    if "1h_spread_line" in df.columns:
+        cols.extend(["1h_spread_line", "1h_total_line"])
     
-    return df[["match_key", "game_date", "home_team", "away_team", "fg_spread_line", "fg_total_line", "commence_time"]].copy()
+    return df[[c for c in cols if c in df.columns]].copy()
 
 
 def load_box_scores():
