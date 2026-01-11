@@ -1,0 +1,501 @@
+{
+  "version": "33.0.15.0",
+  "generated_at": "2026-01-10T19:55:47.490344",
+  "config": {
+    "data_path": "data/processed/training_data_complete_2023.csv",
+    "start_date": null,
+    "end_date": null,
+    "markets": [
+      "fg_spread",
+      "fg_total",
+      "fg_moneyline"
+    ],
+    "min_train_games": 200,
+    "model_type": "logistic"
+  },
+  "markets": {
+    "fg_spread": {
+      "performance": {
+        "market": "fg_spread",
+        "n_bets": 2392,
+        "accuracy": 0.0,
+        "roi": 0.0,
+        "total_profit": 0.0,
+        "accuracy_ci": [
+          0.0,
+          0.0
+        ],
+        "roi_ci": [
+          0.0,
+          0.0
+        ],
+        "vs_random_pvalue": 0.0,
+        "vs_vig_pvalue": 0.0,
+        "is_significant": true,
+        "is_profitable": "True",
+        "sharpe_ratio": 0.0,
+        "sortino_ratio": 0.0,
+        "calmar_ratio": 0,
+        "max_drawdown": 0.0,
+        "max_drawdown_pct": 0.0,
+        "max_drawdown_duration": 0,
+        "avg_drawdown": 0.0,
+        "kelly_fraction": 0.0,
+        "kelly_growth_rate": 0.0,
+        "half_kelly_fraction": 0.0,
+        "longest_win_streak": 0,
+        "longest_lose_streak": 2392,
+        "avg_win_streak": 0.0,
+        "avg_lose_streak": 2392.0,
+        "high_conf_accuracy": 0.0,
+        "high_conf_roi": 0.0,
+        "high_conf_n": 139,
+        "first_half_roi": 0.0,
+        "second_half_roi": 0.0
+      },
+      "statistics": {
+        "market": "fg_spread",
+        "n_samples": 2392,
+        "mean_accuracy": 0.5238294314381271,
+        "median_accuracy": 1.0,
+        "mean_roi": 0.0,
+        "median_roi": 0.0,
+        "std_accuracy": 0.49943183538630737,
+        "std_roi": 0.0,
+        "iqr_roi": 0.0,
+        "skewness": NaN,
+        "kurtosis": NaN,
+        "is_normal": "True",
+        "normality_pvalue": 1.0,
+        "tests": [
+          {
+            "test_name": "t-test vs random",
+            "null_hypothesis": "Win rate = 50%",
+            "alternative_hypothesis": "Win rate \u2260 50%",
+            "statistic": 2.3330671898575783,
+            "p_value": 0.019727154874614614,
+            "is_significant": "True",
+            "conclusion": "Win rate (52.4%) significantly > 50%",
+            "effect_size": 0.047713080644318936,
+            "confidence_interval": [
+              0.5038146106447123,
+              0.5438442522315419
+            ]
+          },
+          {
+            "test_name": "t-test vs profitable threshold",
+            "null_hypothesis": "Win rate <= 52.4%",
+            "alternative_hypothesis": "Win rate > 52.4%",
+            "statistic": 0.0028815426344876815,
+            "p_value": 0.49885055259293204,
+            "is_significant": "False",
+            "conclusion": "Win rate (52.4%) not significantly > profitable threshold",
+            "effect_size": null,
+            "confidence_interval": null
+          },
+          {
+            "test_name": "t-test ROI vs break-even",
+            "null_hypothesis": "ROI <= -4.55%",
+            "alternative_hypothesis": "ROI > -4.55%",
+            "statistic": Infinity,
+            "p_value": 0.0,
+            "is_significant": "True",
+            "conclusion": "ROI (0.0%) significantly > break-even",
+            "effect_size": null,
+            "confidence_interval": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "test_name": "t-test ROI positive",
+            "null_hypothesis": "ROI <= 0",
+            "alternative_hypothesis": "ROI > 0",
+            "statistic": NaN,
+            "p_value": NaN,
+            "is_significant": "False",
+            "conclusion": "ROI (0.0%) not significantly positive",
+            "effect_size": null,
+            "confidence_interval": null
+          },
+          {
+            "test_name": "Binomial exact test",
+            "null_hypothesis": "Win probability = 50%",
+            "alternative_hypothesis": "Win probability \u2260 50%",
+            "statistic": 1253.0,
+            "p_value": 0.020843558355509443,
+            "is_significant": "True",
+            "conclusion": "Win rate (1253/2392 = 52.4%) significantly \u2260 50%",
+            "effect_size": null,
+            "confidence_interval": [
+              0.5035870996001135,
+              0.544013336763392
+            ]
+          },
+          {
+            "test_name": "Runs test",
+            "null_hypothesis": "Outcomes are independent",
+            "alternative_hypothesis": "Outcomes show patterns",
+            "statistic": -0.7905199651857127,
+            "p_value": 0.4292241671018384,
+            "is_significant": "False",
+            "conclusion": "Outcomes appear independent (no significant pattern)",
+            "effect_size": null,
+            "confidence_interval": null
+          }
+        ],
+        "is_statistically_significant": "True",
+        "is_economically_significant": true,
+        "recommendation": "RECOMMEND WITH CAUTION: Significant edge but smaller than ideal"
+      },
+      "monte_carlo": {
+        "n_simulations": 1000,
+        "n_bets": 1000,
+        "initial_bankroll": 1000.0,
+        "bet_size_type": "flat",
+        "bet_size_value": 10.0,
+        "mean_final_bankroll": -9000.0,
+        "median_final_bankroll": -9000.0,
+        "std_final_bankroll": 0.0,
+        "min_final_bankroll": -9000.0,
+        "max_final_bankroll": -9000.0,
+        "percentile_5": -9000.0,
+        "percentile_25": -9000.0,
+        "percentile_75": -9000.0,
+        "percentile_95": -9000.0,
+        "probability_of_ruin": 1.0,
+        "probability_of_loss": 1.0,
+        "probability_of_profit": 0.0,
+        "probability_double": 0.0,
+        "expected_roi": -10.0,
+        "expected_growth_rate": NaN,
+        "mean_max_drawdown": 9990.0,
+        "median_max_drawdown": 9990.0,
+        "worst_max_drawdown": 9990.0,
+        "mean_time_to_ruin": 99.0
+      }
+    },
+    "fg_total": {
+      "performance": {
+        "market": "fg_total",
+        "n_bets": 2392,
+        "accuracy": 0.0,
+        "roi": 0.0,
+        "total_profit": 0.0,
+        "accuracy_ci": [
+          0.0,
+          0.0
+        ],
+        "roi_ci": [
+          0.0,
+          0.0
+        ],
+        "vs_random_pvalue": 0.0,
+        "vs_vig_pvalue": 0.0,
+        "is_significant": true,
+        "is_profitable": "True",
+        "sharpe_ratio": 0.0,
+        "sortino_ratio": 0.0,
+        "calmar_ratio": 0,
+        "max_drawdown": 0.0,
+        "max_drawdown_pct": 0.0,
+        "max_drawdown_duration": 0,
+        "avg_drawdown": 0.0,
+        "kelly_fraction": 0.0,
+        "kelly_growth_rate": 0.0,
+        "half_kelly_fraction": 0.0,
+        "longest_win_streak": 0,
+        "longest_lose_streak": 2392,
+        "avg_win_streak": 0.0,
+        "avg_lose_streak": 2392.0,
+        "high_conf_accuracy": 0.0,
+        "high_conf_roi": 0.0,
+        "high_conf_n": 200,
+        "first_half_roi": 0.0,
+        "second_half_roi": 0.0
+      },
+      "statistics": {
+        "market": "fg_total",
+        "n_samples": 2392,
+        "mean_accuracy": 0.544732441471572,
+        "median_accuracy": 1.0,
+        "mean_roi": 0.0,
+        "median_roi": 0.0,
+        "std_accuracy": 0.49799498860931557,
+        "std_roi": 0.0,
+        "iqr_roi": 0.0,
+        "skewness": NaN,
+        "kurtosis": NaN,
+        "is_normal": "True",
+        "normality_pvalue": 1.0,
+        "tests": [
+          {
+            "test_name": "t-test vs random",
+            "null_hypothesis": "Win rate = 50%",
+            "alternative_hypothesis": "Win rate \u2260 50%",
+            "statistic": 4.392253706617564,
+            "p_value": 1.1706984799526155e-05,
+            "is_significant": "True",
+            "conclusion": "Win rate (54.5%) significantly > 50%",
+            "effect_size": 0.0898250835746165,
+            "confidence_interval": [
+              0.5247752025716439,
+              0.5646896803715
+            ]
+          },
+          {
+            "test_name": "t-test vs profitable threshold",
+            "null_hypothesis": "Win rate <= 52.4%",
+            "alternative_hypothesis": "Win rate > 52.4%",
+            "statistic": 2.055344859736672,
+            "p_value": 0.019977051328917132,
+            "is_significant": "True",
+            "conclusion": "Win rate (54.5%) significantly > profitable threshold",
+            "effect_size": null,
+            "confidence_interval": null
+          },
+          {
+            "test_name": "t-test ROI vs break-even",
+            "null_hypothesis": "ROI <= -4.55%",
+            "alternative_hypothesis": "ROI > -4.55%",
+            "statistic": Infinity,
+            "p_value": 0.0,
+            "is_significant": "True",
+            "conclusion": "ROI (0.0%) significantly > break-even",
+            "effect_size": null,
+            "confidence_interval": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "test_name": "t-test ROI positive",
+            "null_hypothesis": "ROI <= 0",
+            "alternative_hypothesis": "ROI > 0",
+            "statistic": NaN,
+            "p_value": NaN,
+            "is_significant": "False",
+            "conclusion": "ROI (0.0%) not significantly positive",
+            "effect_size": null,
+            "confidence_interval": null
+          },
+          {
+            "test_name": "Binomial exact test",
+            "null_hypothesis": "Win probability = 50%",
+            "alternative_hypothesis": "Win probability \u2260 50%",
+            "statistic": 1303.0,
+            "p_value": 1.3135070557851474e-05,
+            "is_significant": "True",
+            "conclusion": "Win rate (1303/2392 = 54.5%) significantly \u2260 50%",
+            "effect_size": null,
+            "confidence_interval": [
+              0.5245220022457006,
+              0.5648331985844275
+            ]
+          },
+          {
+            "test_name": "Runs test",
+            "null_hypothesis": "Outcomes are independent",
+            "alternative_hypothesis": "Outcomes show patterns",
+            "statistic": 0.18854217785257105,
+            "p_value": 0.8504516551947972,
+            "is_significant": "False",
+            "conclusion": "Outcomes appear independent (no significant pattern)",
+            "effect_size": null,
+            "confidence_interval": null
+          }
+        ],
+        "is_statistically_significant": "True",
+        "is_economically_significant": true,
+        "recommendation": "RECOMMEND WITH CAUTION: Significant edge but smaller than ideal"
+      },
+      "monte_carlo": {
+        "n_simulations": 1000,
+        "n_bets": 1000,
+        "initial_bankroll": 1000.0,
+        "bet_size_type": "flat",
+        "bet_size_value": 10.0,
+        "mean_final_bankroll": -9000.0,
+        "median_final_bankroll": -9000.0,
+        "std_final_bankroll": 0.0,
+        "min_final_bankroll": -9000.0,
+        "max_final_bankroll": -9000.0,
+        "percentile_5": -9000.0,
+        "percentile_25": -9000.0,
+        "percentile_75": -9000.0,
+        "percentile_95": -9000.0,
+        "probability_of_ruin": 1.0,
+        "probability_of_loss": 1.0,
+        "probability_of_profit": 0.0,
+        "probability_double": 0.0,
+        "expected_roi": -10.0,
+        "expected_growth_rate": NaN,
+        "mean_max_drawdown": 9990.0,
+        "median_max_drawdown": 9990.0,
+        "worst_max_drawdown": 9990.0,
+        "mean_time_to_ruin": 99.0
+      }
+    },
+    "fg_moneyline": {
+      "performance": {
+        "market": "fg_moneyline",
+        "n_bets": 2409,
+        "accuracy": 0.676214196762142,
+        "roi": 0.04734712174887436,
+        "total_profit": 114.05921629303833,
+        "accuracy_ci": [
+          0.6571191365711914,
+          0.6944790369447904
+        ],
+        "roi_ci": [
+          -0.017432373921235148,
+          0.14908594165764094
+        ],
+        "vs_random_pvalue": 2.064603456040868e-71,
+        "vs_vig_pvalue": 0.01841923972588773,
+        "is_significant": true,
+        "is_profitable": "True",
+        "sharpe_ratio": 0.02170577762738434,
+        "sortino_ratio": Infinity,
+        "calmar_ratio": 0.16451534402757645,
+        "max_drawdown": 40.757804298073424,
+        "max_drawdown_pct": 0.2877976034924616,
+        "max_drawdown_duration": 937,
+        "avg_drawdown": 17.237138566391067,
+        "kelly_fraction": 0.32004981320049825,
+        "kelly_growth_rate": 0.04779702325386806,
+        "half_kelly_fraction": 0.16002490660024912,
+        "longest_win_streak": 23,
+        "longest_lose_streak": 6,
+        "avg_win_streak": 3.1206896551724137,
+        "avg_lose_streak": 1.4942528735632183,
+        "high_conf_accuracy": 0.8019125683060109,
+        "high_conf_roi": 0.03986607868102238,
+        "high_conf_n": 732,
+        "first_half_roi": 0.029819333476406244,
+        "second_half_roi": 0.06486036413895868
+      },
+      "statistics": {
+        "market": "fg_moneyline",
+        "n_samples": 2409,
+        "mean_accuracy": 0.6766293067662931,
+        "median_accuracy": 1.0,
+        "mean_roi": 0.04734712174887436,
+        "median_roi": 0.2074688796680498,
+        "std_accuracy": 0.46776285443722304,
+        "std_roi": 2.1813142363137685,
+        "iqr_roi": 1.5,
+        "skewness": 39.93794881476727,
+        "kurtosis": 1827.120783858713,
+        "is_normal": "False",
+        "normality_pvalue": 1.312352641405726e-73,
+        "tests": [
+          {
+            "test_name": "t-test vs random",
+            "null_hypothesis": "Win rate = 50%",
+            "alternative_hypothesis": "Win rate \u2260 50%",
+            "statistic": 18.5295671645408,
+            "p_value": 9.202569114687463e-72,
+            "is_significant": "True",
+            "conclusion": "Win rate (67.7%) significantly > 50%",
+            "effect_size": 0.37760438882818115,
+            "confidence_interval": [
+              0.6579498861112074,
+              0.6953087274213787
+            ]
+          },
+          {
+            "test_name": "t-test vs profitable threshold",
+            "null_hypothesis": "Win rate <= 52.4%",
+            "alternative_hypothesis": "Win rate > 52.4%",
+            "statistic": 16.03279181853559,
+            "p_value": 2.405896994986725e-55,
+            "is_significant": "True",
+            "conclusion": "Win rate (67.7%) significantly > profitable threshold",
+            "effect_size": null,
+            "confidence_interval": null
+          },
+          {
+            "test_name": "t-test ROI vs break-even",
+            "null_hypothesis": "ROI <= -4.55%",
+            "alternative_hypothesis": "ROI > -4.55%",
+            "statistic": 2.0887114751160656,
+            "p_value": 0.01841923972588773,
+            "is_significant": "True",
+            "conclusion": "ROI (4.7%) significantly > break-even",
+            "effect_size": null,
+            "confidence_interval": [
+              -0.03976044956534172,
+              0.13445469306309044
+            ]
+          },
+          {
+            "test_name": "t-test ROI positive",
+            "null_hypothesis": "ROI <= 0",
+            "alternative_hypothesis": "ROI > 0",
+            "statistic": 1.0651323880353918,
+            "p_value": 0.1434614063387896,
+            "is_significant": "False",
+            "conclusion": "ROI (4.7%) not significantly positive",
+            "effect_size": null,
+            "confidence_interval": null
+          },
+          {
+            "test_name": "Binomial exact test",
+            "null_hypothesis": "Win probability = 50%",
+            "alternative_hypothesis": "Win probability \u2260 50%",
+            "statistic": 1630.0,
+            "p_value": 1.2953619824449215e-68,
+            "is_significant": "True",
+            "conclusion": "Win rate (1630/2409 = 67.7%) significantly \u2260 50%",
+            "effect_size": null,
+            "confidence_interval": [
+              0.6575363948564771,
+              0.69529183095578
+            ]
+          },
+          {
+            "test_name": "Runs test",
+            "null_hypothesis": "Outcomes are independent",
+            "alternative_hypothesis": "Outcomes show patterns",
+            "statistic": -0.6142004794191134,
+            "p_value": 0.5390828566112416,
+            "is_significant": "False",
+            "conclusion": "Outcomes appear independent (no significant pattern)",
+            "effect_size": null,
+            "confidence_interval": null
+          }
+        ],
+        "is_statistically_significant": "True",
+        "is_economically_significant": true,
+        "recommendation": "RECOMMEND WITH CAUTION: Significant edge but smaller than ideal"
+      },
+      "monte_carlo": {
+        "n_simulations": 1000,
+        "n_bets": 1000,
+        "initial_bankroll": 1000.0,
+        "bet_size_type": "flat",
+        "bet_size_value": 10.0,
+        "mean_final_bankroll": 3913.9690909090573,
+        "median_final_bankroll": 3924.545454545417,
+        "std_final_bankroll": 273.35960943310545,
+        "min_final_bankroll": 2893.6363636363467,
+        "max_final_bankroll": 4974.5454545454095,
+        "percentile_5": 3466.363636363608,
+        "percentile_25": 3733.636363636334,
+        "percentile_75": 4096.3636363636,
+        "percentile_95": 4345.499999999962,
+        "probability_of_ruin": 0.0,
+        "probability_of_loss": 0.0,
+        "probability_of_profit": 1.0,
+        "probability_double": 1.0,
+        "expected_roi": 2.9139690909090574,
+        "expected_growth_rate": 1.362095050714208,
+        "mean_max_drawdown": 79.36000000000033,
+        "median_max_drawdown": 74.54545454545541,
+        "worst_max_drawdown": 160.0000000000009,
+        "mean_time_to_ruin": null
+      }
+    }
+  }
+}
