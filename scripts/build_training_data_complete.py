@@ -735,9 +735,19 @@ def print_summary(df: pd.DataFrame):
             print(f"    {lab}: {n:,} games")
 
 
-def main(start_date: str = "2023-01-01"):
+def main(start_date: str = "2023-01-01", cutoff_date: str = None):
+    """
+    Build training data with optional cutoff date to prevent data leakage.
+    
+    Args:
+        start_date: First date to include (default: 2023-01-01)
+        cutoff_date: Last date to include (default: None = include all)
+                     Use this to exclude future games that don't have real scores.
+    """
     print("\n" + "="*80)
     print(" BUILDING COMPLETE TRAINING DATA (2023-2026)")
+    if cutoff_date:
+        print(f" CUTOFF DATE: {cutoff_date} (excludes games after this date)")
     print("="*80)
 
     kaggle = load_kaggle(start_date)
@@ -749,6 +759,28 @@ def main(start_date: str = "2023-01-01"):
     box_new = load_nba_api_box_scores()
 
     df = merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new)
+    
+    # Apply cutoff date to prevent data leakage
+    if cutoff_date:
+        import pytz
+        CST = pytz.timezone("America/Chicago")
+        UTC = pytz.UTC
+        
+        df["game_date"] = pd.to_datetime(df["game_date"], format="mixed")
+        # Convert to CST for accurate date comparison
+        df["_game_date_utc"] = df["game_date"].dt.tz_localize(UTC)
+        df["_cst_date"] = df["_game_date_utc"].dt.tz_convert(CST).dt.date
+        
+        cutoff = pd.to_datetime(cutoff_date).date()
+        before_cutoff = len(df)
+        df = df[df["_cst_date"] <= cutoff].copy()
+        after_cutoff = len(df)
+        
+        # Clean up temp columns
+        df = df.drop(columns=["_game_date_utc", "_cst_date"])
+        
+        print(f"\n  [CUTOFF] Filtered {before_cutoff:,} -> {after_cutoff:,} games (excluded {before_cutoff - after_cutoff} after {cutoff_date})")
+    
     df = compute_elo(df)
     df = compute_rolling(df)
     df = compute_situational(df)
@@ -766,6 +798,7 @@ def main(start_date: str = "2023-01-01"):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--start-date", default="2023-01-01")
+    parser.add_argument("--start-date", default="2023-01-01", help="First date to include")
+    parser.add_argument("--cutoff-date", default=None, help="Last date to include (CST). Use to exclude future games.")
     args = parser.parse_args()
-    main(args.start_date)
+    main(args.start_date, args.cutoff_date)
