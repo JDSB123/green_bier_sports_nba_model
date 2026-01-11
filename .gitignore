@@ -117,3 +117,6 @@ telegram_tracker.md
 # data/external/nba_database/ - Contains 110K+ records, too large for git
 # Use: az storage blob upload-batch to sync to Azure
 data/external/nba_database/*.csv
+
+# Large Kaggle dataset (download via scripts/download_kaggle_player_data.py)
+data/external/kaggle_nba/
