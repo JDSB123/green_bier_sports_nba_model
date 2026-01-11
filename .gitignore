@@ -91,13 +91,10 @@ htmlcov/
 *_OLD.*
 *.bak
 
-# Archived scripts
-scripts/archive/
-scripts/archived/
-
-# Archive folder: historical outputs for audit trail (COMMIT TO GIT)
-# archive/ is intentionally tracked for ROI verification and historical analysis
-# DO NOT ignore archive/ - it provides audit trail for predictions
+# Archive folders: DO NOT gitignore - sync to Azure Blob instead
+# scripts/archive/ - deprecated scripts (sync to blob then delete locally)
+# archive/ - historical outputs (sync to blob for audit trail)
+# Use scripts/sync_archives_to_azure.ps1 to sync before cleanup
 
 # Azure Function App
 azure/function_app/local.settings.json
@@ -115,4 +112,8 @@ nba_picks_*.html
 temp/
 .claude/
 telegram_tracker.md
-data/external/nba_database/
+
+# Large external datasets - sync to Azure Blob, not git
+# data/external/nba_database/ - Contains 110K+ records, too large for git
+# Use: az storage blob upload-batch to sync to Azure
+data/external/nba_database/*.csv

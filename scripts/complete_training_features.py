@@ -143,19 +143,181 @@ def add_betting_splits_defaults(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def add_injury_defaults(df: pd.DataFrame) -> pd.DataFrame:
-    """Add default values for injury features (not available historically)."""
-    print("\n[4/8] Adding injury feature defaults...")
+def compute_injury_impact(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute injury impact from inactive_players.csv and common_player_info.csv.
     
-    # These require real-time injury data which isn't available historically
-    df["home_injury_spread_impact"] = 0.0
-    df["away_injury_spread_impact"] = 0.0
-    df["injury_spread_diff"] = 0.0
-    df["home_star_out"] = 0
-    df["away_star_out"] = 0
-    df["has_injury_data"] = 0  # Indicates no real injury data
+    Impact scoring:
+    - Each inactive player = base impact
+    - Higher experience (season_exp) = higher impact
+    - Low draft picks (1st round) = higher impact
+    - Greatest 75 flag = max impact
+    """
+    print("\n[4/8] Computing injury impact from inactive players...")
     
-    print("      Set all injury features to defaults")
+    INACTIVE_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "inactive_players.csv"
+    PLAYER_INFO_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "common_player_info.csv"
+    GAME_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "game.csv"
+    
+    if not INACTIVE_CSV.exists() or not PLAYER_INFO_CSV.exists():
+        print("      [SKIP] Missing inactive_players.csv or common_player_info.csv")
+        df["home_injury_spread_impact"] = 0.0
+        df["away_injury_spread_impact"] = 0.0
+        df["injury_spread_diff"] = 0.0
+        df["home_star_out"] = 0
+        df["away_star_out"] = 0
+        df["has_injury_data"] = 0
+        return df
+    
+    # Load data
+    inact = pd.read_csv(INACTIVE_CSV)
+    player_info = pd.read_csv(PLAYER_INFO_CSV)
+    
+    print(f"      Loaded {len(inact):,} inactive records, {len(player_info):,} player profiles")
+    
+    # Build player impact scores
+    # Impact = season_exp * 0.5 + draft_bonus + star_bonus
+    player_info["impact_score"] = 0.0
+    
+    # Experience bonus (more experience = higher impact when out)
+    player_info["impact_score"] += pd.to_numeric(player_info["season_exp"], errors="coerce").fillna(0) * 0.3
+    
+    # Convert draft columns to numeric
+    player_info["draft_round_num"] = pd.to_numeric(player_info["draft_round"], errors="coerce").fillna(99)
+    player_info["draft_number_num"] = pd.to_numeric(player_info["draft_number"], errors="coerce").fillna(99)
+    
+    # Draft position bonus (1st round picks are higher impact)
+    player_info["draft_bonus"] = 0.0
+    player_info.loc[player_info["draft_round_num"] == 1, "draft_bonus"] = 2.0
+    player_info.loc[player_info["draft_number_num"] <= 5, "draft_bonus"] = 3.0  # Top 5 picks
+    player_info.loc[player_info["draft_number_num"] == 1, "draft_bonus"] = 4.0  # #1 overall
+    player_info["impact_score"] += player_info["draft_bonus"]
+    
+    # Greatest 75 bonus (all-time greats)
+    player_info.loc[player_info["greatest_75_flag"] == "Y", "impact_score"] += 5.0
+    
+    # Normalize to 0-10 scale (max reasonable impact per player = 10 PPG equivalent)
+    max_impact = player_info["impact_score"].max()
+    if max_impact > 0:
+        player_info["impact_score"] = (player_info["impact_score"] / max_impact) * 10.0
+    
+    # Create lookup: player_id -> impact_score
+    impact_lookup = player_info.set_index("person_id")["impact_score"].to_dict()
+    
+    # Load game data for game_id -> date/teams mapping
+    if GAME_CSV.exists():
+        game_df = pd.read_csv(GAME_CSV, low_memory=False)
+        game_df["game_date"] = pd.to_datetime(game_df["game_date"])
+        game_df = game_df[game_df["game_date"] >= "2023-01-01"]
+        
+        # Build game lookup: game_id -> (date, home_abbr, away_abbr)
+        game_lookup = {}
+        for _, row in game_df.iterrows():
+            game_lookup[row["game_id"]] = {
+                "date": row["game_date"],
+                "home": row["team_abbreviation_home"],
+                "away": row["team_abbreviation_away"]
+            }
+        print(f"      Game lookup built: {len(game_lookup)} games")
+    else:
+        game_lookup = {}
+    
+    # Compute impact per game per team
+    inact["impact"] = inact["player_id"].map(impact_lookup).fillna(0.5)  # Default 0.5 for unknown
+    
+    # Aggregate by game + team
+    team_impact = inact.groupby(["game_id", "team_abbreviation"]).agg({
+        "impact": "sum",
+        "player_id": "count"
+    }).reset_index()
+    team_impact.columns = ["game_id", "team_abbr", "total_impact", "inactive_count"]
+    
+    # Build lookup: (game_id, team_abbr) -> (total_impact, inactive_count, has_star)
+    # Star = impact > 5 (top tier player)
+    inact["is_star"] = inact["impact"] > 5.0
+    star_out = inact.groupby(["game_id", "team_abbreviation"])["is_star"].max().reset_index()
+    star_out.columns = ["game_id", "team_abbr", "star_out"]
+    
+    team_impact = team_impact.merge(star_out, on=["game_id", "team_abbr"], how="left")
+    team_impact["star_out"] = team_impact["star_out"].fillna(False).astype(int)
+    
+    impact_lookup_game = {}
+    for _, row in team_impact.iterrows():
+        key = (row["game_id"], row["team_abbr"])
+        impact_lookup_game[key] = {
+            "impact": row["total_impact"],
+            "count": row["inactive_count"],
+            "star_out": row["star_out"]
+        }
+    
+    print(f"      Built impact lookup for {len(impact_lookup_game)} game-team pairs")
+    
+    # Map to training data
+    # Need to match by date + team since game_ids may differ
+    home_impact = []
+    away_impact = []
+    home_star = []
+    away_star = []
+    has_data = []
+    
+    # Build team abbr normalization
+    TEAM_ABBR_MAP = {
+        "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN",
+        "Charlotte Hornets": "CHA", "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE",
+        "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN", "Detroit Pistons": "DET",
+        "Golden State Warriors": "GSW", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
+        "Los Angeles Clippers": "LAC", "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM",
+        "Miami Heat": "MIA", "Milwaukee Bucks": "MIL", "Minnesota Timberwolves": "MIN",
+        "New Orleans Pelicans": "NOP", "New York Knicks": "NYK", "Oklahoma City Thunder": "OKC",
+        "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI", "Phoenix Suns": "PHX",
+        "Portland Trail Blazers": "POR", "Sacramento Kings": "SAC", "San Antonio Spurs": "SAS",
+        "Toronto Raptors": "TOR", "Utah Jazz": "UTA", "Washington Wizards": "WAS"
+    }
+    
+    matched = 0
+    for _, row in df.iterrows():
+        home_abbr = TEAM_ABBR_MAP.get(row["home_team"], "")
+        away_abbr = TEAM_ABBR_MAP.get(row["away_team"], "")
+        
+        # Try to match by game_id from game_lookup via date
+        game_date = pd.to_datetime(row["game_date"])
+        found_home = None
+        found_away = None
+        
+        # Search game_lookup for matching date + teams
+        for gid, ginfo in game_lookup.items():
+            if ginfo["date"].date() == game_date.date():
+                if ginfo["home"] == home_abbr and ginfo["away"] == away_abbr:
+                    found_home = impact_lookup_game.get((gid, home_abbr), {})
+                    found_away = impact_lookup_game.get((gid, away_abbr), {})
+                    matched += 1
+                    break
+        
+        if found_home or found_away:
+            home_impact.append(found_home.get("impact", 0) if found_home else 0)
+            away_impact.append(found_away.get("impact", 0) if found_away else 0)
+            home_star.append(found_home.get("star_out", 0) if found_home else 0)
+            away_star.append(found_away.get("star_out", 0) if found_away else 0)
+            has_data.append(1)
+        else:
+            home_impact.append(0)
+            away_impact.append(0)
+            home_star.append(0)
+            away_star.append(0)
+            has_data.append(0)
+    
+    df["home_injury_spread_impact"] = home_impact
+    df["away_injury_spread_impact"] = away_impact
+    df["injury_spread_diff"] = df["home_injury_spread_impact"] - df["away_injury_spread_impact"]
+    df["home_star_out"] = home_star
+    df["away_star_out"] = away_star
+    df["has_injury_data"] = has_data
+    
+    print(f"      Matched injury data: {matched}/{len(df)} games ({matched/len(df)*100:.1f}%)")
+    print(f"      home_injury_spread_impact: mean={df['home_injury_spread_impact'].mean():.2f}")
+    print(f"      away_injury_spread_impact: mean={df['away_injury_spread_impact'].mean():.2f}")
+    print(f"      Stars out: home={df['home_star_out'].sum()}, away={df['away_star_out'].sum()}")
+    
     return df
 
 
@@ -420,8 +582,8 @@ def main():
     # Add betting splits defaults
     df = add_betting_splits_defaults(df)
     
-    # Add injury defaults
-    df = add_injury_defaults(df)
+    # Compute injury impact from inactive_players.csv
+    df = compute_injury_impact(df)
     
     # Compute derived features (ppg_diff, win_pct_diff, etc.)
     df = compute_derived_features(df)
