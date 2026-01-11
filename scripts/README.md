@@ -91,21 +91,54 @@ python scripts/build_training_data_complete.py --start-date 2023-01-01
 
 ---
 
+### ☁️ AZURE BLOB STORAGE (Single Source of Truth)
+| Script | Description |
+|--------|-------------|
+| `upload_training_data_to_azure.py` | **Quality-gate upload** - Validates data then uploads to Azure |
+| `download_training_data_from_azure.py` | Download canonical training data from Azure |
+
+### 🏥 INJURY DATA PIPELINE
+| Script | Description |
+|--------|-------------|
+| `download_kaggle_player_data.py` | Download Kaggle NBA player box scores |
+| `infer_inactive_from_kaggle.py` | Infer inactive players from box scores |
+| `merge_injury_data_and_rebuild.py` | Merge injury sources and update training data |
+
+---
+
 ## Data Coverage (as of 2026-01-11)
 
 | Data Type | Coverage | Notes |
 |-----------|----------|-------|
-| **Training Data** | 2023-01-01 to 2026-01-09 | 3,969 games, 324 columns |
+| **Training Data** | 2023-01-01 to 2026-01-09 | 3,969 games, 327 columns |
 | **FG Labels** | 100% | spread_covered, total_over, home_win |
 | **1H Labels** | 100% | 1h_spread_covered, 1h_total_over |
 | **Model Features** | 55/55 (100%) | All required features present |
-| **Moneylines** | 69.5% | Best available from TheOdds |
-| **Injury Impact** | Baseline only | inactive_players.csv exists but no PPG data |
+| **Odds Coverage** | 100% | Spread + total for all games |
+| **Injury Impact** | 100% | Via Kaggle box score inference |
+
+## Azure Blob Storage
+
+Training data is stored in Azure as the single source of truth:
+```
+Storage Account: nbagbsvstrg
+Container: nbahistoricaldata
+Prefix: training_data/
+
+training_data/
+├── v2026.01.11/                    # Versioned release
+│   ├── training_data_complete_2023_with_injuries.csv
+│   └── manifest.json
+└── latest/                         # Always points to validated version
+    ├── training_data_complete_2023_with_injuries.csv
+    └── manifest.json
+```
 
 ## Archive
 
 Deprecated scripts moved to `scripts/archive/`:
 - `prepare_kaggle_training_data.py` - Superseded by build_training_data_complete.py
+- `fetch_player_inactive_data.py` - Superseded by infer_inactive_from_kaggle.py
 
 ---
 
