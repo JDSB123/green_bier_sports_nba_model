@@ -81,7 +81,7 @@ This master script:
 ## Data Sources
 
 ### 1. Kaggle (nba_2008-2025.csv)
-**Location:** `data/external/kaggle/`  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and local cache when pulled  
 **Coverage:** 2008-2025 seasons  
 **Contents:**
 - Final scores (home_score, away_score)
@@ -90,7 +90,7 @@ This master script:
 - First half lines (h2_spread, h2_total)
 
 ### 2. TheOdds API
-**Location:** `data/historical/derived/`, `data/historical/exports/`, `data/historical/the_odds/`  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/the_odds/` and `historical/exports/`); pull to temp for use  
 **Coverage:** 2021-present  
 **Contents:**
 - Full game lines (FG spread, total, moneyline)
@@ -99,7 +99,7 @@ This master script:
 - Per-bookmaker odds
 
 ### 3. nba_database (wyattowalsh/basketball)
-**Location:** `data/external/nba_database/`  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and temp local cache when needed  
 **Coverage:** 1946-2023 (historical), ongoing updates  
 **Files:**
 | File | Records | Contents |
@@ -110,20 +110,20 @@ This master script:
 | `common_player_info.csv` | 3,632 | Player metadata (no stats) |
 
 ### 4. NBA API (nba_api)
-**Location:** `data/raw/nba_api/`  
+**Location:** Generated locally per run (not stored long term); upload derived outputs to Azure if persisted  
 **Coverage:** 2023-present  
 **Contents:**
 - Box scores (per season)
 - Quarter scores (2025-26)
 
 ### 5. FiveThirtyEight ELO
-**Location:** `data/external/fivethirtyeight/`  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/elo/`) and temp local cache when needed  
 **Coverage:** Historical  
 **Contents:**
 - Team ELO ratings
 
 ### 6. Kaggle eoinamoore (Player Box Scores)
-**Location:** `data/external/kaggle_nba/`  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and temp local cache when needed  
 **Dataset:** `eoinamoore/historical-nba-data-and-player-box-scores`  
 **Coverage:** 1947-present (updated daily!)  
 **Files:**
