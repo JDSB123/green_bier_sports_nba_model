@@ -285,28 +285,10 @@ Run: `python scripts/build_training_data_complete.py --start-date 2023-01-01`
 
 ## Archive Policy (Azure Blob Storage)
 
-**Archives are stored in Azure Blob Storage, NOT gitignored locally.**
-
-### What Gets Archived
-| Local Path | Azure Path | Contents |
-|------------|------------|----------|
-| `scripts/archive/` | `archives/scripts/` | Deprecated scripts |
-| `archive/picks/` | `archives/picks/` | Historical pick outputs |
-| `archive/predictions/` | `archives/predictions/` | Prediction history |
-| `archive/slate_outputs/` | `archives/slate_outputs/` | Slate outputs |
-| `archive/odds_snapshots/` | `archives/odds_snapshots/` | Odds snapshots |
-| `data/external/nba_database/` | `external/nba_database/` | Large external datasets |
-
-### Sync Archives
-```powershell
-# Sync all archives to Azure (keeps local copies)
-.\scripts\sync_archives_to_azure.ps1
-
-# Sync and delete local copies
-.\scripts\sync_archives_to_azure.ps1 -Cleanup
-```
-
-### Download Archives
+- Archives live in Azure Blob (`nbagbsvstrg`/`nbahistoricaldata/archives/`), not in git.
+- Local archive folder is gitignored; use it only as a temp staging area.
+- Upload archives with `.\scripts\sync_archives_to_azure.ps1`; add `-Cleanup` to delete local after upload.
+- Download if needed:
 ```bash
 az storage blob download-batch \
   --account-name nbagbsvstrg \
@@ -314,13 +296,4 @@ az storage blob download-batch \
   --destination . \
   --pattern 'archives/*'
 ```
-
-### Why Azure Blob?
-1. **Single source of truth** - One authoritative location
-2. **No git bloat** - Large files don't slow down repo
-3. **Version tracking** - Blob versioning for audit trail
-4. **Team access** - Anyone with Azure access can retrieve
-
-### "Data looks stale"
-1. Check `data/processed/training_data_complete_2023.csv` modification date
-2. Rebuild if needed: `python scripts/build_training_data_complete.py`
+Goal: Azure is the single source; local copies are temporary.

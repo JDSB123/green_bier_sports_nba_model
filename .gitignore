@@ -88,10 +88,7 @@ htmlcov/
 *_OLD.*
 *.bak
 
-# Archive folders: DO NOT gitignore - sync to Azure Blob instead
-# scripts/archive/ - deprecated scripts (sync to blob then delete locally)
-# archive/ - historical outputs (sync to blob for audit trail)
-# Use scripts/sync_archives_to_azure.ps1 to sync before cleanup
+archive/
 
 # Azure Function App
 azure/function_app/local.settings.json
