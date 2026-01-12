@@ -95,6 +95,9 @@ param databaseUrl string = ''
 @description('Website domain for CORS')
 param websiteDomain string = 'greenbiersportventures.com'
 
+@description('Require API authentication for the container app')
+param requireApiAuth bool = false
+
 // Scaling
 @description('Minimum replicas')
 param minReplicas int = 1
@@ -242,6 +245,7 @@ var appEnvVars = concat(
     { name: 'NBA_MODEL_VERSION', value: imageTag }
     { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
     { name: 'NBA_PERIODS', value: 'first_half,full_game' }
+    { name: 'REQUIRE_API_AUTH', value: string(requireApiAuth) }
     { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
   ],
   databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]

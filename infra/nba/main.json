@@ -5,13 +5,15 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "9153181311192432550"
+      "templateHash": "7186083248103104406"
     }
   },
   "parameters": {
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
+      "minLength": 1,
+      "maxLength": 50,
       "metadata": {
         "description": "Azure region"
       }
@@ -31,21 +33,105 @@
     "imageTag": {
       "type": "string",
       "metadata": {
-        "description": "Container image tag"
+        "description": "Container image tag (used for version tagging + deployment)"
       }
     },
-    "databaseUrl": {
-      "type": "securestring",
-      "defaultValue": "",
+    "appTag": {
+      "type": "string",
+      "defaultValue": "nba-model",
       "metadata": {
-        "description": "Database URL (optional)"
+        "description": "Application identifier for tagging"
       }
     },
-    "appInsightsConnectionString": {
-      "type": "securestring",
-      "defaultValue": "",
+    "ownerTag": {
+      "type": "string",
+      "defaultValue": "sports-analytics",
       "metadata": {
-        "description": "Application Insights connection string (optional)"
+        "description": "Owner tag value"
+      }
+    },
+    "costCenterTag": {
+      "type": "string",
+      "defaultValue": "sports-nba",
+      "metadata": {
+        "description": "Cost center tag value"
+      }
+    },
+    "complianceTag": {
+      "type": "string",
+      "defaultValue": "internal",
+      "metadata": {
+        "description": "Compliance tag value"
+      }
+    },
+    "extraTags": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "Additional tags to merge onto all resources"
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "nba-gbsv-api",
+      "metadata": {
+        "description": "Container App name"
+      }
+    },
+    "containerAppEnvName": {
+      "type": "string",
+      "defaultValue": "nba-gbsv-model-env",
+      "metadata": {
+        "description": "Container Apps Environment name"
+      }
+    },
+    "acrName": {
+      "type": "string",
+      "defaultValue": "nbagbsacr",
+      "metadata": {
+        "description": "Container Registry name"
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "nbagbs-keyvault",
+      "metadata": {
+        "description": "Key Vault name"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "nbagbsvstrg",
+      "metadata": {
+        "description": "Storage account name"
+      }
+    },
+    "functionAppName": {
+      "type": "string",
+      "defaultValue": "nba-picks-trigger",
+      "metadata": {
+        "description": "Function App name for Teams bot trigger"
+      }
+    },
+    "botServiceName": {
+      "type": "string",
+      "defaultValue": "nba-picks-bot",
+      "metadata": {
+        "description": "Bot Service name"
+      }
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "nba-gbsv-func-plan",
+      "metadata": {
+        "description": "App Service Plan name for Function App"
+      }
+    },
+    "deployTeamsBot": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Deploy Teams Bot resources (Function App, Bot Service). Requires Azure quota for Dynamic VMs."
       }
     },
     "theOddsApiKey": {
@@ -60,189 +146,776 @@
         "description": "API-Basketball Key (required)"
       }
     },
+    "microsoftAppId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Microsoft App ID for Teams Bot"
+      }
+    },
+    "microsoftAppTenantId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Microsoft App Tenant ID for Teams Bot"
+      }
+    },
+    "microsoftAppPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Microsoft App Password for Teams Bot"
+      }
+    },
+    "databaseUrl": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Database URL (optional)"
+      }
+    },
     "websiteDomain": {
       "type": "string",
       "defaultValue": "greenbiersportventures.com",
       "metadata": {
-        "description": "Website domain for CORS (e.g., greenbiersportventures.com)"
+        "description": "Website domain for CORS"
+      }
+    },
+    "requireApiAuth": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Require API authentication for the container app"
+      }
+    },
+    "minReplicas": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Minimum replicas"
+      }
+    },
+    "maxReplicas": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "Maximum replicas"
+      }
+    },
+    "concurrentRequests": {
+      "type": "string",
+      "defaultValue": "50",
+      "metadata": {
+        "description": "Concurrent requests per replica before scaling out"
+      }
+    },
+    "containerCpu": {
+      "type": "string",
+      "defaultValue": "0.5",
+      "metadata": {
+        "description": "CPU cores for the container"
+      }
+    },
+    "containerMemory": {
+      "type": "string",
+      "defaultValue": "1Gi",
+      "metadata": {
+        "description": "Memory for the container"
       }
     }
   },
   "variables": {
-    "sport": "nba",
-    "tags": {
+    "requiredTags": {
       "enterprise": "green-bier-sports-ventures",
-      "sport": "[variables('sport')]",
+      "app": "[parameters('appTag')]",
       "environment": "[parameters('environment')]",
+      "owner": "[parameters('ownerTag')]",
+      "cost_center": "[parameters('costCenterTag')]",
+      "compliance": "[parameters('complianceTag')]",
+      "version": "[parameters('imageTag')]",
       "managedBy": "bicep"
-    }
+    },
+    "tags": "[union(variables('requiredTags'), parameters('extraTags'))]"
   },
   "resources": [
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2023-01-01",
-      "name": "[format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id))]",
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2023-07-01",
+      "name": "[parameters('acrName')]",
       "location": "[parameters('location')]",
       "tags": "[variables('tags')]",
       "sku": {
-        "name": "Standard_LRS"
+        "name": "Basic"
       },
-      "kind": "StorageV2",
       "properties": {
-        "supportsHttpsTrafficOnly": true,
-        "minimumTlsVersion": "TLS1_2",
-        "accessTier": "Hot"
+        "adminUserEnabled": true
       }
     },
     {
-      "type": "Microsoft.Storage/storageAccounts/blobServices",
-      "apiVersion": "2023-01-01",
-      "name": "[format('{0}/{1}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-      "apiVersion": "2023-01-01",
-      "name": "[format('{0}/{1}/{2}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default', 'models')]",
-      "properties": {
-        "publicAccess": "None"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default')]"
-      ]
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-      "apiVersion": "2023-01-01",
-      "name": "[format('{0}/{1}/{2}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default', 'predictions')]",
-      "properties": {
-        "publicAccess": "None"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default')]"
-      ]
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-      "apiVersion": "2023-01-01",
-      "name": "[format('{0}/{1}/{2}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default', 'results')]",
-      "properties": {
-        "publicAccess": "None"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), 'default')]"
-      ]
-    },
-    {
-      "type": "Microsoft.App/containerApps",
-      "apiVersion": "2023-05-01",
-      "name": "nba-gbsv-api",
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[parameters('keyVaultName')]",
       "location": "[parameters('location')]",
       "tags": "[variables('tags')]",
-      "identity": {
-        "type": "SystemAssigned"
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 7,
+        "enablePurgeProtection": true
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[format('gbs-logs-{0}', parameters('environment'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[format('gbs-insights-{0}', parameters('environment'))]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('gbs-logs-{0}', parameters('environment')))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('gbs-logs-{0}', parameters('environment')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2023-05-01",
+      "name": "[parameters('containerAppEnvName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', format('gbs-logs-{0}', parameters('environment'))), '2022-10-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('gbs-logs-{0}', parameters('environment'))), '2022-10-01').primarySharedKey]"
+          }
+        },
+        "workloadProfiles": [
+          {
+            "name": "Consumption",
+            "workloadProfileType": "Consumption"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('gbs-logs-{0}', parameters('environment')))]"
+      ]
+    },
+    {
+      "condition": "[parameters('deployTeamsBot')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2023-01-01",
+      "name": "[parameters('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "functionapp",
+      "sku": {
+        "name": "Y1",
+        "tier": "Dynamic",
+        "size": "Y1",
+        "family": "Y",
+        "capacity": 0
       },
       "properties": {
-        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', 'nbagbsvmodel-env')]",
-        "configuration": {
-          "ingress": {
-            "external": true,
-            "targetPort": 8080,
-            "transport": "auto",
-            "corsPolicy": {
-              "allowedOrigins": [
-                "http://localhost:3000",
-                "https://*.azurewebsites.net",
-                "https://*.greenbier.com",
-                "[format('https://{0}', parameters('websiteDomain'))]",
-                "[format('https://www.{0}', parameters('websiteDomain'))]"
-              ],
-              "allowedMethods": [
-                "GET",
-                "POST",
-                "OPTIONS"
-              ],
-              "allowedHeaders": [
-                "*"
-              ]
-            }
-          },
-          "registries": [
+        "reserved": true
+      }
+    },
+    {
+      "condition": "[parameters('deployTeamsBot')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-01-01",
+      "name": "[parameters('functionAppName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "functionapp,linux",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "reserved": true,
+        "siteConfig": {
+          "linuxFxVersion": "Python|3.11",
+          "appSettings": [
             {
-              "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').loginServer]",
-              "username": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').username]",
-              "passwordSecretRef": "acr-password"
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "python"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[reference(resourceId('Microsoft.Resources/deployments', 'data-storage'), '2025-04-01').outputs.connectionString.value]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment'))), '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "NBA_API_URL",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.Resources/deployments', 'compute-app'), '2025-04-01').outputs.containerAppFqdn.value)]"
+            },
+            {
+              "name": "MICROSOFT_APP_ID",
+              "value": "[parameters('microsoftAppId')]"
+            },
+            {
+              "name": "MICROSOFT_APP_TENANT_ID",
+              "value": "[parameters('microsoftAppTenantId')]"
+            },
+            {
+              "name": "MICROSOFT_APP_PASSWORD",
+              "value": "[parameters('microsoftAppPassword')]"
             }
-          ],
-          "secrets": "[concat(createArray(createObject('name', 'acr-password', 'value', listCredentials(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').passwords[0].value), createObject('name', 'the-odds-api-key', 'value', parameters('theOddsApiKey')), createObject('name', 'api-basketball-key', 'value', parameters('apiBasketballKey'))), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'database-url', 'value', parameters('databaseUrl')))), if(equals(parameters('appInsightsConnectionString'), ''), createArray(), createArray(createObject('name', 'app-insights-connection-string', 'value', parameters('appInsightsConnectionString')))))]"
+          ]
+        },
+        "httpsOnly": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'compute-app')]",
+        "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'data-storage')]"
+      ]
+    },
+    {
+      "condition": "[and(parameters('deployTeamsBot'), not(equals(parameters('microsoftAppId'), '')))]",
+      "type": "Microsoft.BotService/botServices",
+      "apiVersion": "2022-09-15",
+      "name": "[parameters('botServiceName')]",
+      "location": "global",
+      "tags": "[variables('tags')]",
+      "kind": "azurebot",
+      "sku": {
+        "name": "F0"
+      },
+      "properties": {
+        "displayName": "NBA Picks Bot",
+        "endpoint": "[format('https://{0}/api/bot', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-01-01').defaultHostName)]",
+        "msaAppId": "[parameters('microsoftAppId')]",
+        "msaAppTenantId": "[parameters('microsoftAppTenantId')]",
+        "msaAppType": "SingleTenant"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "data-storage",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "app": {
+            "value": "nba"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "containers": {
+            "value": [
+              "models",
+              "predictions",
+              "results"
+            ]
+          }
         },
         "template": {
-          "containers": [
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "10607476698922302036"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional override for the storage account name"
+              }
+            },
+            "app": {
+              "type": "string",
+              "metadata": {
+                "description": "Application identifier for naming (e.g., nba)"
+              }
+            },
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "Environment (dev/staging/prod)"
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Tags to apply to all resources"
+              }
+            },
+            "containers": {
+              "type": "array",
+              "defaultValue": [
+                "models",
+                "predictions",
+                "results"
+              ],
+              "metadata": {
+                "description": "Blob container names to create"
+              }
+            },
+            "skuName": {
+              "type": "string",
+              "defaultValue": "Standard_LRS",
+              "metadata": {
+                "description": "Storage SKU (default Standard_LRS)"
+              }
+            },
+            "accessTier": {
+              "type": "string",
+              "defaultValue": "Hot",
+              "metadata": {
+                "description": "Storage account access tier"
+              }
+            }
+          },
+          "variables": {
+            "resolvedName": "[if(empty(parameters('name')), format('gbs{0}data{1}', parameters('app'), uniqueString(resourceGroup().id)), toLower(parameters('name')))]"
+          },
+          "resources": [
             {
-              "name": "gbs-nba-api",
-              "image": "[format('{0}/nba-gbsv-api:{1}', reference(resourceId('Microsoft.ContainerRegistry/registries', 'nbagbsacr'), '2023-07-01').loginServer, parameters('imageTag'))]",
-              "resources": {
-                "cpu": "[json('0.5')]",
-                "memory": "1Gi"
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-01-01",
+              "name": "[variables('resolvedName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "[parameters('skuName')]"
               },
-              "env": "[concat(createArray(createObject('name', 'THE_ODDS_API_KEY', 'secretRef', 'the-odds-api-key'), createObject('name', 'API_BASKETBALL_KEY', 'secretRef', 'api-basketball-key'), createObject('name', 'GBS_SPORT', 'value', 'nba'), createObject('name', 'NBA_MODEL_VERSION', 'value', parameters('imageTag')), createObject('name', 'NBA_MARKETS', 'value', '1h_spread,1h_total,fg_spread,fg_total'), createObject('name', 'NBA_PERIODS', 'value', 'first_half,full_game'), createObject('name', 'AZURE_STORAGE_CONNECTION_STRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id))), '2023-01-01').keys[0].value))), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'DATABASE_URL', 'secretRef', 'database-url'))), if(equals(parameters('appInsightsConnectionString'), ''), createArray(), createArray(createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'))))]",
-              "probes": [
-                {
-                  "type": "Liveness",
-                  "httpGet": {
-                    "path": "/health",
-                    "port": 8080
-                  },
-                  "initialDelaySeconds": 10,
-                  "periodSeconds": 30
-                },
-                {
-                  "type": "Readiness",
-                  "httpGet": {
-                    "path": "/health",
-                    "port": 8080
-                  },
-                  "initialDelaySeconds": 5,
-                  "periodSeconds": 10
-                }
+              "kind": "StorageV2",
+              "properties": {
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2",
+                "accessTier": "[parameters('accessTier')]"
+              }
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices",
+              "apiVersion": "2023-01-01",
+              "name": "[format('{0}/{1}', variables('resolvedName'), 'default')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('resolvedName'))]"
+              ]
+            },
+            {
+              "copy": {
+                "name": "blobContainers",
+                "count": "[length(parameters('containers'))]"
+              },
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2023-01-01",
+              "name": "[format('{0}/{1}/{2}', variables('resolvedName'), 'default', parameters('containers')[copyIndex()])]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('resolvedName'), 'default')]"
               ]
             }
           ],
-          "scale": {
-            "minReplicas": 1,
-            "maxReplicas": 3,
-            "rules": [
+          "outputs": {
+            "storageAccountName": {
+              "type": "string",
+              "value": "[variables('resolvedName')]"
+            },
+            "connectionString": {
+              "type": "string",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('resolvedName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('resolvedName')), '2023-01-01').keys[0].value)]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "compute-app",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[parameters('appName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "managedEnvironmentId": {
+            "value": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppEnvName'))]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "image": {
+            "value": "[format('{0}/nba-gbsv-api:{1}', reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').loginServer, parameters('imageTag'))]"
+          },
+          "envVars": {
+            "value": "[concat(createArray(createObject('name', 'THE_ODDS_API_KEY', 'secretRef', 'the-odds-api-key'), createObject('name', 'API_BASKETBALL_KEY', 'secretRef', 'api-basketball-key'), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'), createObject('name', 'GBS_SPORT', 'value', 'nba'), createObject('name', 'NBA_MODEL_VERSION', 'value', parameters('imageTag')), createObject('name', 'NBA_MARKETS', 'value', '1h_spread,1h_total,fg_spread,fg_total'), createObject('name', 'NBA_PERIODS', 'value', 'first_half,full_game'), createObject('name', 'REQUIRE_API_AUTH', 'value', string(parameters('requireApiAuth'))), createObject('name', 'AZURE_STORAGE_CONNECTION_STRING', 'value', reference(resourceId('Microsoft.Resources/deployments', 'data-storage'), '2025-04-01').outputs.connectionString.value)), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'DATABASE_URL', 'secretRef', 'database-url'))))]"
+          },
+          "secrets": {
+            "value": "[concat(createArray(createObject('name', 'acr-password', 'value', listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').passwords[0].value), createObject('name', 'the-odds-api-key', 'value', parameters('theOddsApiKey')), createObject('name', 'api-basketball-key', 'value', parameters('apiBasketballKey')), createObject('name', 'app-insights-connection-string', 'value', reference(resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment'))), '2020-02-02').ConnectionString)), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'database-url', 'value', parameters('databaseUrl')))))]"
+          },
+          "registries": {
+            "value": [
               {
-                "name": "http-rule",
-                "http": {
-                  "metadata": {
-                    "concurrentRequests": "50"
+                "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').loginServer]",
+                "username": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').username]",
+                "passwordSecretRef": "acr-password"
+              }
+            ]
+          },
+          "ingressOrigins": {
+            "value": [
+              "http://localhost:3000",
+              "https://*.azurewebsites.net",
+              "[format('https://{0}', parameters('websiteDomain'))]",
+              "[format('https://www.{0}', parameters('websiteDomain'))]"
+            ]
+          },
+          "targetPort": {
+            "value": 8090
+          },
+          "transport": {
+            "value": "auto"
+          },
+          "minReplicas": {
+            "value": "[parameters('minReplicas')]"
+          },
+          "maxReplicas": {
+            "value": "[parameters('maxReplicas')]"
+          },
+          "httpConcurrentRequests": {
+            "value": "[parameters('concurrentRequests')]"
+          },
+          "cpu": {
+            "value": "[parameters('containerCpu')]"
+          },
+          "memory": {
+            "value": "[parameters('containerMemory')]"
+          },
+          "activeRevisionsMode": {
+            "value": "Single"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "437798482756026501"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "metadata": {
+                "description": "Container App name"
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region"
+              }
+            },
+            "managedEnvironmentId": {
+              "type": "string",
+              "metadata": {
+                "description": "Managed Environment resource ID"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Tags to apply to the container app"
+              }
+            },
+            "image": {
+              "type": "string",
+              "metadata": {
+                "description": "Container image (registry/repository:tag)"
+              }
+            },
+            "envVars": {
+              "type": "array",
+              "metadata": {
+                "description": "Container environment variables (name/value or name/secretRef objects)"
+              }
+            },
+            "secrets": {
+              "type": "array",
+              "metadata": {
+                "description": "Container app secrets array [{ name, value }]"
+              }
+            },
+            "registries": {
+              "type": "array",
+              "metadata": {
+                "description": "Registry configuration array [{ server, username, passwordSecretRef }]"
+              }
+            },
+            "ingressOrigins": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "Ingress allowed origins for CORS"
+              }
+            },
+            "targetPort": {
+              "type": "int",
+              "defaultValue": 8080,
+              "metadata": {
+                "description": "Ingress target port"
+              }
+            },
+            "transport": {
+              "type": "string",
+              "defaultValue": "auto",
+              "metadata": {
+                "description": "Ingress transport"
+              }
+            },
+            "minReplicas": {
+              "type": "int",
+              "defaultValue": 1,
+              "metadata": {
+                "description": "Minimum replicas"
+              }
+            },
+            "maxReplicas": {
+              "type": "int",
+              "defaultValue": 3,
+              "metadata": {
+                "description": "Maximum replicas"
+              }
+            },
+            "httpConcurrentRequests": {
+              "type": "string",
+              "defaultValue": "50",
+              "metadata": {
+                "description": "Concurrent HTTP requests per replica for scale rules"
+              }
+            },
+            "cpu": {
+              "type": "string",
+              "defaultValue": "0.5",
+              "metadata": {
+                "description": "CPU cores"
+              }
+            },
+            "memory": {
+              "type": "string",
+              "defaultValue": "1Gi",
+              "metadata": {
+                "description": "Memory allocation"
+              }
+            },
+            "activeRevisionsMode": {
+              "type": "string",
+              "defaultValue": "Single",
+              "metadata": {
+                "description": "Active revisions mode (Single or Multiple)"
+              }
+            },
+            "identityType": {
+              "type": "string",
+              "defaultValue": "SystemAssigned",
+              "metadata": {
+                "description": "Identity type"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('name')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "identity": {
+                "type": "[parameters('identityType')]"
+              },
+              "properties": {
+                "managedEnvironmentId": "[parameters('managedEnvironmentId')]",
+                "configuration": {
+                  "ingress": {
+                    "external": true,
+                    "targetPort": "[parameters('targetPort')]",
+                    "transport": "[parameters('transport')]",
+                    "corsPolicy": {
+                      "allowedOrigins": "[parameters('ingressOrigins')]",
+                      "allowedMethods": [
+                        "GET",
+                        "POST",
+                        "OPTIONS"
+                      ],
+                      "allowedHeaders": [
+                        "*"
+                      ]
+                    }
+                  },
+                  "registries": "[parameters('registries')]",
+                  "secrets": "[parameters('secrets')]",
+                  "activeRevisionsMode": "[parameters('activeRevisionsMode')]"
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "[parameters('name')]",
+                      "image": "[parameters('image')]",
+                      "resources": {
+                        "cpu": "[json(parameters('cpu'))]",
+                        "memory": "[parameters('memory')]"
+                      },
+                      "env": "[parameters('envVars')]",
+                      "probes": [
+                        {
+                          "type": "Liveness",
+                          "httpGet": {
+                            "path": "/health",
+                            "port": "[parameters('targetPort')]"
+                          },
+                          "initialDelaySeconds": 10,
+                          "periodSeconds": 30
+                        },
+                        {
+                          "type": "Readiness",
+                          "httpGet": {
+                            "path": "/health",
+                            "port": "[parameters('targetPort')]"
+                          },
+                          "initialDelaySeconds": 5,
+                          "periodSeconds": 10
+                        }
+                      ]
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": "[parameters('minReplicas')]",
+                    "maxReplicas": "[parameters('maxReplicas')]",
+                    "rules": [
+                      {
+                        "name": "http-rule",
+                        "http": {
+                          "metadata": {
+                            "concurrentRequests": "[parameters('httpConcurrentRequests')]"
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               }
-            ]
+            }
+          ],
+          "outputs": {
+            "containerAppFqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "containerAppUrl": {
+              "type": "string",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2023-05-01').configuration.ingress.fqdn)]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id)))]"
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
+        "[resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment')))]",
+        "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppEnvName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'data-storage')]"
       ]
     }
   ],
   "outputs": {
     "containerAppFqdn": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.App/containerApps', 'nba-gbsv-api'), '2023-05-01').configuration.ingress.fqdn]"
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'compute-app'), '2025-04-01').outputs.containerAppFqdn.value]"
     },
     "containerAppUrl": {
       "type": "string",
-      "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', 'nba-gbsv-api'), '2023-05-01').configuration.ingress.fqdn)]"
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'compute-app'), '2025-04-01').outputs.containerAppUrl.value]"
     },
     "storageAccountName": {
       "type": "string",
-      "value": "[format('gbs{0}data{1}', variables('sport'), uniqueString(resourceGroup().id))]"
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'data-storage'), '2025-04-01').outputs.storageAccountName.value]"
+    },
+    "acrLoginServer": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').loginServer]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), '2023-07-01').vaultUri]"
+    },
+    "appInsightsConnectionString": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment'))), '2020-02-02').ConnectionString]"
+    },
+    "functionAppUrl": {
+      "type": "string",
+      "value": "[if(parameters('deployTeamsBot'), format('https://{0}', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-01-01').defaultHostName), '')]"
+    },
+    "botEndpoint": {
+      "type": "string",
+      "value": "[if(and(parameters('deployTeamsBot'), not(equals(parameters('microsoftAppId'), ''))), format('https://{0}/api/bot', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-01-01').defaultHostName), '')]"
     }
   }
 }

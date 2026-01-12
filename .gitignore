@@ -43,12 +43,9 @@ secrets/*
 data/raw/
 data/processed/
 data/experimental/  # Regenerated from scripts/build_experimental_training_data.py
-# Historical data is COMMITTED and PROTECTED - do not ignore
-# data/historical/the_odds/  # REMOVED - historical data must be preserved
-# data/historical/exports/   # REMOVED - historical data must be preserved
+data/historical/
 !data/processed/.gitkeep
 !data/raw/.gitkeep
-!data/historical/.gitkeep
 
 # Model artifacts (exclude from data/processed, but include production models)
 *.joblib

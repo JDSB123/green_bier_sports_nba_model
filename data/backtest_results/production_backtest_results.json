@@ -1,112 +1,133 @@
 {
   "markets": {
     "fg_spread": {
-      "n_bets": 3082,
-      "wins": 1573,
-      "accuracy": 0.5103828682673589,
-      "roi": -2.563270603504219,
-      "profit": -79.00000000000004,
+      "n_bets": 3868,
+      "wins": 2180,
+      "accuracy": 0.5635987590486039,
+      "roi": null,
+      "profit": null,
       "high_conf": {
-        "n_bets": 1293,
-        "wins": 661,
-        "accuracy": 0.5112142304717711,
-        "roi": -2.4045560008437055
+        "n_bets": 2945,
+        "wins": 1704,
+        "accuracy": 0.5786078098471986,
+        "roi": null
       }
     },
     "fg_total": {
-      "n_bets": 3106,
-      "wins": 1576,
-      "accuracy": 0.5074050225370251,
-      "roi": -3.131768424749753,
-      "profit": -97.27272727272732,
+      "n_bets": 3868,
+      "wins": 1796,
+      "accuracy": 0.4643226473629783,
+      "roi": null,
+      "profit": null,
       "high_conf": {
-        "n_bets": 1462,
-        "wins": 731,
-        "accuracy": 0.5,
-        "roi": -4.545454545454547
+        "n_bets": 2992,
+        "wins": 1342,
+        "accuracy": 0.4485294117647059,
+        "roi": null
       }
     },
     "1h_spread": {
-      "n_bets": 2529,
-      "wins": 1287,
-      "accuracy": 0.5088967971530249,
-      "roi": -2.846975088967973,
-      "profit": -72.00000000000004,
+      "n_bets": 3108,
+      "wins": 1548,
+      "accuracy": 0.4980694980694981,
+      "roi": null,
+      "profit": null,
       "high_conf": {
-        "n_bets": 1819,
-        "wins": 934,
-        "accuracy": 0.5134689389774602,
-        "roi": -1.9741116497576106
+        "n_bets": 2620,
+        "wins": 1309,
+        "accuracy": 0.499618320610687,
+        "roi": null
       }
     },
     "1h_total": {
-      "n_bets": 2524,
-      "wins": 1265,
-      "accuracy": 0.501188589540412,
-      "roi": -4.3185419968304295,
-      "profit": -109.00000000000004,
+      "n_bets": 3108,
+      "wins": 1536,
+      "accuracy": 0.4942084942084942,
+      "roi": null,
+      "profit": null,
       "high_conf": {
-        "n_bets": 830,
-        "wins": 412,
-        "accuracy": 0.4963855421686747,
-        "roi": -5.235487404162105
+        "n_bets": 2682,
+        "wins": 1321,
+        "accuracy": 0.4925428784489187,
+        "roi": null
       }
     }
   },
   "by_season": {
     "2022-2023": {
-      "total_bets": 1138,
-      "wins": 602,
-      "profit": 11.272727272727254,
+      "total_bets": 1346,
+      "wins": 689,
+      "profit": null,
       "fg_spread": {
-        "n_bets": 569,
-        "accuracy": 0.5131810193321616
+        "n_bets": 673,
+        "accuracy": 0.5052005943536404
       },
       "fg_total": {
-        "n_bets": 569,
-        "accuracy": 0.5448154657293497
+        "n_bets": 673,
+        "accuracy": 0.5185735512630015
       }
     },
     "2023-2024": {
-      "total_bets": 5202,
-      "wins": 2644,
-      "profit": -154.36363636363643,
+      "total_bets": 5266,
+      "wins": 2684,
+      "profit": null,
       "fg_spread": {
-        "n_bets": 1294,
-        "accuracy": 0.51854714064915
+        "n_bets": 1319,
+        "accuracy": 0.5253980288097043
       },
       "fg_total": {
-        "n_bets": 1307,
-        "accuracy": 0.495026778882938
+        "n_bets": 1319,
+        "accuracy": 0.5163002274450341
       },
       "1h_spread": {
-        "n_bets": 1301,
-        "accuracy": 0.5180630284396618
+        "n_bets": 1314,
+        "accuracy": 0.5060882800608828
       },
       "1h_total": {
-        "n_bets": 1300,
-        "accuracy": 0.5015384615384615
+        "n_bets": 1314,
+        "accuracy": 0.4908675799086758
       }
     },
     "2024-2025": {
-      "total_bets": 4901,
-      "wins": 2455,
-      "profit": -214.18181818181824,
+      "total_bets": 5278,
+      "wins": 2686,
+      "profit": null,
       "fg_spread": {
-        "n_bets": 1219,
-        "accuracy": 0.5004101722723544
+        "n_bets": 1321,
+        "accuracy": 0.514004542013626
       },
       "fg_total": {
-        "n_bets": 1230,
-        "accuracy": 0.5032520325203252
+        "n_bets": 1321,
+        "accuracy": 0.5200605601816806
       },
       "1h_spread": {
-        "n_bets": 1228,
-        "accuracy": 0.499185667752443
+        "n_bets": 1318,
+        "accuracy": 0.4992412746585736
       },
       "1h_total": {
-        "n_bets": 1224,
-        "accuracy": 0.5008169934640523
+        "n_bets": 1318,
+        "accuracy": 0.5022761760242792
+      }
+    },
+    "2025-2026": {
+      "total_bets": 2062,
+      "wins": 1001,
+      "profit": null,
+      "fg_spread": {
+        "n_bets": 555,
+        "accuracy": 0.8432432432432433
+      },
+      "fg_total": {
+        "n_bets": 555,
+        "accuracy": 0.14234234234234233
+      },
+      "1h_spread": {
+        "n_bets": 476,
+        "accuracy": 0.4726890756302521
+      },
+      "1h_total": {
+        "n_bets": 476,
+        "accuracy": 0.4810924369747899
       }
     }
   }

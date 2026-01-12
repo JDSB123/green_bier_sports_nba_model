@@ -54,9 +54,13 @@ pwsh ./infra/nba/deploy.ps1 -WhatIf
 az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep `
   -p theOddsApiKey=<secret> `
      apiBasketballKey=<secret> `
+     requireApiAuth=<true|false> `
      microsoftAppId=<bot-app-id> `
      microsoftAppTenantId=<tenant-id> `
      microsoftAppPassword=<bot-secret>
+
+# Optional parameters
+- `requireApiAuth` (default `false`): toggles the `REQUIRE_API_AUTH` env var on the container app
 ```
 
 ## CI/CD (GitHub Actions)
