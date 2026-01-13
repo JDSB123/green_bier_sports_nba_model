@@ -120,6 +120,7 @@ NBA_API_BOX_SCORES = [
     DATA_DIR / "raw" / "nba_api" / "box_scores_2024_25.csv",
     DATA_DIR / "raw" / "nba_api" / "box_scores_2025_26.csv",
 ]
+QUARTER_SCORES_2526 = DATA_DIR / "raw" / "nba_api" / "quarter_scores_2025_26.csv"
 OUTPUT_DIR = DATA_DIR / "processed"
 
 
@@ -129,12 +130,29 @@ OUTPUT_DIR = DATA_DIR / "processed"
 
 def _run_az_cli(cmd: list[str]) -> None:
     """Run az cli command with basic error handling."""
+    # On Windows, `az` often resolves to `az.cmd`.
+    # `subprocess.run([...])` cannot reliably execute .cmd without going through cmd.exe.
+    # Prefer the no-extension az launcher in the same install directory when available.
+    if cmd and cmd[0].lower() == "az":
+        try:
+            import shutil
+
+            resolved = shutil.which("az")
+            if resolved and resolved.lower().endswith(".cmd"):
+                # Batch/cmd scripts must be run via cmd.exe
+                cmd = ["cmd.exe", "/c", resolved, *cmd[1:]]
+        except Exception:
+            # Best-effort only; fallback to original cmd
+            pass
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         if result.stdout:
             print(result.stdout.strip())
     except FileNotFoundError:
-        print("[WARN] Azure CLI (az) not found; skipping blob sync")
+        raise RuntimeError(
+            "Azure CLI (az) not found, but --sync-from-azure was requested. "
+            "Install Azure CLI and run `az login`, then re-run the build."
+        )
     except subprocess.CalledProcessError as e:
         print(f"[WARN] az command failed: {' '.join(cmd)}")
         if e.stdout:
@@ -156,9 +174,11 @@ def sync_from_blob(account: str, container: str, prefixes: List[str]) -> None:
         cmd = [
             "az", "storage", "blob", "download-batch",
             "--account-name", account,
+            "--auth-mode", "login",
             "--source", container,
             "--destination", str(DATA_DIR),
             "--pattern", f"{prefix}/*",
+            "--overwrite", "true",
         ]
         _run_az_cli(cmd)
 
@@ -569,11 +589,33 @@ def load_nba_api_box_scores() -> pd.DataFrame:
     return result
 
 
+def load_quarter_scores() -> pd.DataFrame:
+    """Load 2025-26 quarter scores for 1H computation."""
+    print("\n[5c/8] Loading quarter scores (2025-26)...")
+    if not QUARTER_SCORES_2526.exists():
+        print("       [SKIP] quarter_scores_2025_26.csv not found")
+        return pd.DataFrame()
+    
+    df = pd.read_csv(QUARTER_SCORES_2526)
+    df["game_date"] = pd.to_datetime(df["game_date"])
+    df["home_team"] = df["home_team"].apply(standardize_team_name)
+    df["away_team"] = df["away_team"].apply(standardize_team_name)
+    df["match_key"] = df.apply(
+        lambda r: generate_match_key(r["game_date"], r["home_team"], r["away_team"], source_is_utc=True),
+        axis=1
+    )
+    # Compute 1H scores
+    df["home_1h"] = df["home_q1"] + df["home_q2"]
+    df["away_1h"] = df["away_q1"] + df["away_q2"]
+    print(f"       Loaded {len(df):,} games, 1H scores computed")
+    return df
+
+
 # =============================================================================
 # MERGE ALL SOURCES
 # =============================================================================
 
-def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new) -> pd.DataFrame:
+def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new, quarters=None) -> pd.DataFrame:
     """Merge all data sources including 2025-26 as new rows."""
     print("\n[6/8] Merging all sources...")
     
@@ -679,6 +721,19 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new)
         
         m = df["home_efg_pct"].notna().sum() if "home_efg_pct" in df.columns else 0
         print(f"       Box scores (nba_api): {m:,}/{n:,} ({m/n*100:.1f}%)")
+
+    # Quarter scores for 1H (2025-26)
+    if quarters is not None and not quarters.empty:
+        q_cols = ["match_key", "home_q1", "home_q2", "home_q3", "home_q4", "away_q1", "away_q2", "away_q3", "away_q4", "home_1h", "away_1h"]
+        q_merge = quarters[[c for c in q_cols if c in quarters.columns]].drop_duplicates("match_key")
+        df = df.merge(q_merge, on="match_key", how="left", suffixes=("", "_qtr"))
+        # Fill missing quarter scores from merge
+        for col in ["home_q1", "home_q2", "home_q3", "home_q4", "away_q1", "away_q2", "away_q3", "away_q4", "home_1h", "away_1h"]:
+            if f"{col}_qtr" in df.columns:
+                df[col] = df[col].fillna(df[f"{col}_qtr"])
+                df = df.drop(columns=[f"{col}_qtr"])
+        h1_count = df["home_1h"].notna().sum()
+        print(f"       Quarter scores (1H): {h1_count:,}/{n:,} ({h1_count/n*100:.1f}%)")
 
     # Consolidate lines
     if "kaggle_fg_spread" in df.columns:
@@ -998,30 +1053,40 @@ def compute_labels(df: pd.DataFrame) -> pd.DataFrame:
         df["1h_total_line"] = df["1h_total_line"]
 
     # Labels (FG + 1H)
-    # IMPORTANT: Must check BOTH line AND actual are present to compute valid labels
-    # If actual is NaN, comparison returns False (incorrectly labeled as 0)
-    df["home_win"] = (df["fg_margin"] > 0).astype(int)
+    # IMPORTANT: Coerce to numeric before comparisons to avoid pandas.NA boolean ambiguity.
+    fg_margin = pd.to_numeric(df.get("fg_margin"), errors="coerce")
+    fg_total_actual = pd.to_numeric(df.get("fg_total_actual"), errors="coerce")
+    fg_spread_line = pd.to_numeric(df.get("fg_spread_line"), errors="coerce")
+    fg_total_line = pd.to_numeric(df.get("fg_total_line"), errors="coerce")
+
+    h1_margin = pd.to_numeric(df.get("1h_margin"), errors="coerce")
+    h1_total_actual = pd.to_numeric(df.get("1h_total_actual"), errors="coerce")
+    h1_spread_line = pd.to_numeric(df.get("1h_spread_line"), errors="coerce")
+    h1_total_line = pd.to_numeric(df.get("1h_total_line"), errors="coerce")
+
+    # If actual is NaN, comparison would be wrong (False -> 0), so we guard with notna().
+    df["home_win"] = (fg_margin > 0).astype(int)
     df["spread_covered"] = np.where(
-        df["fg_spread_line"].notna() & df["fg_margin"].notna(),
-        (df["fg_margin"] + df["fg_spread_line"] > 0).astype(int),
-        np.nan
+        fg_spread_line.notna() & fg_margin.notna(),
+        (fg_margin + fg_spread_line > 0).astype(int),
+        np.nan,
     )
     df["total_over"] = np.where(
-        df["fg_total_line"].notna() & df["fg_total_actual"].notna(),
-        (df["fg_total_actual"] > df["fg_total_line"]).astype(int),
-        np.nan
+        fg_total_line.notna() & fg_total_actual.notna(),
+        (fg_total_actual > fg_total_line).astype(int),
+        np.nan,
     )
     df["1h_spread_covered"] = np.where(
-        df["1h_spread_line"].notna() & df["1h_margin"].notna(),
-        (df["1h_margin"] + df["1h_spread_line"] > 0).astype(int),
-        np.nan
+        h1_spread_line.notna() & h1_margin.notna(),
+        (h1_margin + h1_spread_line > 0).astype(int),
+        np.nan,
     )
     df["1h_total_over"] = np.where(
-        df["1h_total_line"].notna() & df["1h_total_actual"].notna(),
-        (df["1h_total_actual"] > df["1h_total_line"]).astype(int),
-        np.nan
+        h1_total_line.notna() & h1_total_actual.notna(),
+        (h1_total_actual > h1_total_line).astype(int),
+        np.nan,
     )
-    df["1h_home_win"] = np.where(df["1h_margin"].notna(), (df["1h_margin"] > 0).astype(int), np.nan)
+    df["1h_home_win"] = np.where(h1_margin.notna(), (h1_margin > 0).astype(int), np.nan)
     return df
 
 
@@ -1109,8 +1174,9 @@ def main(
     movement = load_line_movement()
     box_old = load_box_scores()
     box_new = load_nba_api_box_scores()
+    quarters = load_quarter_scores()
 
-    df = merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new)
+    df = merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new, quarters)
     # Normalize core columns (FG/1H only, no Q1 confusion)
     df = standardize_core_columns(df)
 
@@ -1170,60 +1236,67 @@ def main(
         print("POST-PROCESSING: Fixing gaps and completing features...")
         print("=" * 70)
 
-        # Run fix_training_data_gaps.py
-        try:
-            from scripts.fix_training_data_gaps import main as fix_gaps
-            print("\n[POST-1] Running fix_training_data_gaps...")
-            fix_gaps(data_file=out)
-        except Exception as e:
-            print(f"[WARN] fix_training_data_gaps failed: {e}")
-            # Fall back to subprocess
-            import subprocess
-            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "fix_training_data_gaps.py"), "--data-file", str(out)])
+        # Run fix_training_data_gaps.py (STRICT: fail if this step fails)
+        from scripts.fix_training_data_gaps import main as fix_gaps
+        print("\n[POST-1] Running fix_training_data_gaps...")
+        fix_gaps(data_file=out)
 
-        # Run complete_training_features.py
-        try:
-            print("\n[POST-2] Running complete_training_features...")
-            import subprocess
-            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "complete_training_features.py"), "--training-file", str(out)])
-        except Exception as e:
-            print(f"[WARN] complete_training_features failed: {e}")
+        # Run complete_training_features.py (STRICT: fail if this step fails)
+        print("\n[POST-2] Running complete_training_features...")
+        import subprocess
+        subprocess.run(
+            [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "complete_training_features.py"),
+                "--training-file",
+                str(out),
+            ],
+            check=True,
+        )
 
     # ==== FINAL VALIDATION (STRICT, NO PLACEHOLDERS) ====
-    # Avoid global dropna() across hundreds of optional/rolling features.
-    # Instead, enforce completeness for core backtest fields and drop rows missing those.
+    # Strict means:
+    # - Do NOT silently drop rows to "make it pass"
+    # - Fail fast if required market fields are missing
+    # We keep the written CSVs intact for auditing.
     final_df = pd.read_csv(out, low_memory=False)
-    core_required = [
+
+    # Validate base + all market-required columns (FG + 1H x spread/total/moneyline)
+    try:
+        from src.backtesting.data_loader import MARKET_CONFIGS
+        market_required_cols = sorted({c for cfg in MARKET_CONFIGS.values() for c in cfg.required_columns})
+    except Exception:
+        # Fallback if import paths are unavailable
+        market_required_cols = []
+
+    base_required = [
         "game_date",
         "home_team",
         "away_team",
         "home_score",
         "away_score",
-        "fg_spread_line",
-        "fg_total_line",
-        "fg_ml_home",
-        "fg_ml_away",
     ]
-    missing_core_cols = [c for c in core_required if c not in final_df.columns]
-    if missing_core_cols:
-        raise ValueError(f"Missing required core columns in output: {missing_core_cols}")
+    required_cols = sorted(set(base_required + market_required_cols))
+    missing_required_cols = [c for c in required_cols if c not in final_df.columns]
+    if missing_required_cols:
+        raise ValueError(
+            "Missing required columns in output (cannot backtest all markets in strict mode): "
+            f"{missing_required_cols}"
+        )
 
-    core_null_fraction = final_df[core_required].isna().mean().sort_values(ascending=False)
-    worst = core_null_fraction[core_null_fraction > 0]
+    null_frac = final_df[required_cols].isna().mean().sort_values(ascending=False)
+    worst = null_frac[null_frac > 0]
     if not worst.empty:
         print("\n" + "=" * 70)
-        print("FINAL CHECK: Core column nulls detected")
+        print("FINAL CHECK FAILED: Required column nulls detected")
         print("=" * 70)
         for col, frac in worst.items():
             print(f"  {col}: {frac:.2%} null")
+        raise ValueError(
+            "Required market/base fields contain nulls. "
+            "Fix upstream inputs/matching (do not impute or silently drop) before backtesting."
+        )
 
-        before = len(final_df)
-        final_df = final_df.dropna(subset=core_required).reset_index(drop=True)
-        after = len(final_df)
-        print(f"\n  Dropped rows missing core fields: {before:,} -> {after:,} (removed {before - after:,})")
-        final_df.to_csv(out, index=False)
-        print(f"  Saved cleaned dataset (core-complete): {out}")
-    
     print("\n" + "=" * 70)
     print("BUILD COMPLETE - All gaps fixed, all features computed")
     print("=" * 70)

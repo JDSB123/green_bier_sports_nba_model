@@ -238,7 +238,7 @@ def _write_markdown(report: Dict[str, Any], path: Path) -> None:
             lines.append(f"| {pair} | MISSING | MISSING | MISSING | MISSING |")
         else:
             lines.append(
-                f"| {pair} | {info['rows_with_both']:,} | {info['conflict_rows']:,} | {pct(info.get('conflict_pct_of_both', 0.0))} | {info['threshold']} |"
+                f"| {pair} | {info['rows_with_both']:,} | {info['conflict_rows']:,} | {pct(info.get('conflict_pct_of_both', 0.0))} | {info.get('threshold', 'N/A')} |"
             )
 
     lines.append("")

@@ -192,6 +192,9 @@ def save_key_tables(db_path: Path, output_dir: Path):
         "line_score", "linescores", "line_scores",
         "team", "teams",
         "player", "players",
+        # Injury / availability tables (required for strict injury features)
+        "inactive_players",
+        "common_player_info",
         "game_summary",
         "other_stats",
     ]
