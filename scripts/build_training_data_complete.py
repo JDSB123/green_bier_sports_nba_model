@@ -320,6 +320,11 @@ def load_theodds_2025_26() -> pd.DataFrame:
     df["commence_time"] = pd.to_datetime(df["commence_time"])
     df["game_date"] = df["commence_time"].dt.tz_convert(CST).dt.date
     df["game_date"] = pd.to_datetime(df["game_date"])
+    
+    # Keep raw team names for h2h column lookup BEFORE standardization
+    raw_home = df["home_team"].copy()
+    raw_away = df["away_team"].copy()
+    
     df["home_team"] = df["home_team"].apply(standardize_team_name)
     df["away_team"] = df["away_team"].apply(standardize_team_name)
     df["match_key"] = df.apply(
@@ -327,17 +332,40 @@ def load_theodds_2025_26() -> pd.DataFrame:
         axis=1
     )
 
-    # The all_markets.csv already has extracted consensus lines
-    # Rename to match expected column names
+    # Extract h2h (moneyline) from team-specific columns
+    # Columns are: h2h_<team_name>_price, h2h_h1_<team_name>_price
+    fg_ml_home_vals = []
+    fg_ml_away_vals = []
+    h1_ml_home_vals = []
+    h1_ml_away_vals = []
+    
+    for idx, row in df.iterrows():
+        home_raw = raw_home.iloc[idx]
+        away_raw = raw_away.iloc[idx]
+        
+        # FG moneyline (h2h)
+        h2h_home_col = f"h2h_{home_raw}_price"
+        h2h_away_col = f"h2h_{away_raw}_price"
+        fg_ml_home_vals.append(row.get(h2h_home_col) if h2h_home_col in df.columns else np.nan)
+        fg_ml_away_vals.append(row.get(h2h_away_col) if h2h_away_col in df.columns else np.nan)
+        
+        # 1H moneyline (h2h_h1)
+        h2h_h1_home_col = f"h2h_h1_{home_raw}_price"
+        h2h_h1_away_col = f"h2h_h1_{away_raw}_price"
+        h1_ml_home_vals.append(row.get(h2h_h1_home_col) if h2h_h1_home_col in df.columns else np.nan)
+        h1_ml_away_vals.append(row.get(h2h_h1_away_col) if h2h_h1_away_col in df.columns else np.nan)
+    
+    df["to_fg_ml_home"] = fg_ml_home_vals
+    df["to_fg_ml_away"] = fg_ml_away_vals
+    df["to_1h_ml_home"] = h1_ml_home_vals
+    df["to_1h_ml_away"] = h1_ml_away_vals
+
+    # Rename spread/total columns
     rename_map = {
         "fg_spread": "to_fg_spread",
         "fg_total": "to_fg_total",
-        "fg_ml_home": "to_fg_ml_home",
-        "fg_ml_away": "to_fg_ml_away",
         "h1_spread": "to_1h_spread",
         "h1_total": "to_1h_total",
-        "h1_ml_home": "to_1h_ml_home",
-        "h1_ml_away": "to_1h_ml_away",
         "q1_spread": "to_q1_spread",
         "q1_total": "to_q1_total",
     }
@@ -346,11 +374,12 @@ def load_theodds_2025_26() -> pd.DataFrame:
             df[new] = df[old]
 
     fg_count = df["to_fg_spread"].notna().sum() if "to_fg_spread" in df.columns else 0
+    fg_ml_count = df["to_fg_ml_home"].notna().sum() if "to_fg_ml_home" in df.columns else 0
     h1_count = df["to_1h_spread"].notna().sum() if "to_1h_spread" in df.columns else 0
-    q1_count = df["to_q1_spread"].notna().sum() if "to_q1_spread" in df.columns else 0
-    print(f"       Games: {len(df):,} (FG: {fg_count}, 1H: {h1_count}, Q1: {q1_count})")
-    
-    # Print date range
+    h1_ml_count = df["to_1h_ml_home"].notna().sum() if "to_1h_ml_home" in df.columns else 0
+    print(f"       Games: {len(df):,}")
+    print(f"       FG: spread={fg_count}, ML={fg_ml_count}")
+    print(f"       1H: spread={h1_count}, ML={h1_ml_count}")
     print(f"       Date range: {df['game_date'].min().date()} to {df['game_date'].max().date()}")
     return df
 
@@ -639,12 +668,12 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
                     "season": "2025-26",
                     "to_fg_spread": row.get("to_fg_spread", row.get("fg_spread")),
                     "to_fg_total": row.get("to_fg_total", row.get("fg_total")),
-                    "to_fg_ml_home": row.get("fg_ml_home"),
-                    "to_fg_ml_away": row.get("fg_ml_away"),
+                    "to_fg_ml_home": row.get("to_fg_ml_home", row.get("fg_ml_home")),
+                    "to_fg_ml_away": row.get("to_fg_ml_away", row.get("fg_ml_away")),
                     "to_1h_spread": row.get("to_1h_spread", row.get("h1_spread")),
                     "to_1h_total": row.get("to_1h_total", row.get("h1_total")),
-                    "to_1h_ml_home": row.get("h1_ml_home"),
-                    "to_1h_ml_away": row.get("h1_ml_away"),
+                    "to_1h_ml_home": row.get("to_1h_ml_home", row.get("h1_ml_home")),
+                    "to_1h_ml_away": row.get("to_1h_ml_away", row.get("h1_ml_away")),
                 }
                 new_rows.append(new_row)
             
