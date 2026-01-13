@@ -13,8 +13,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -159,15 +159,246 @@ def compute_injury_impact(df: pd.DataFrame, *, min_match_fraction: float = 0.99,
     - Low draft picks (1st round) = higher impact
     - Greatest 75 flag = max impact
     """
-    print("\n[4/8] Computing injury impact from inactive players...")
+    print("\n[4/8] Computing injury impact...")
     
+    # Early exit if injury columns already exist with sufficient coverage
+    probe_col = "home_injury_spread_impact" if "home_injury_spread_impact" in df.columns else "home_injury_impact"
+    if probe_col in df.columns:
+        existing_coverage = df[probe_col].notna().sum() / len(df) if len(df) else 0
+        if existing_coverage >= min_match_fraction:
+            print(f"      Injury columns already present with {existing_coverage:.1%} coverage - skipping recompute")
+            return df
+
+    # Preferred (if available): a normalized per-date injury feed produced by scripts/fetch_injuries.py.
+    # This can be backed by API-Basketball (historical) or ESPN (current).
+    # Strict policy: if this input exists but does not overlap the training window, fail.
+    INJURIES_CSV = PROJECT_ROOT / "data" / "processed" / "injuries.csv"
+
     INACTIVE_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "inactive_players.csv"
     PLAYER_INFO_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "common_player_info.csv"
-    GAME_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "game.csv"
-    
+    GAME_CSV_NBA_DB = PROJECT_ROOT / "data" / "external" / "nba_database" / "game.csv"
+    GAME_CSV_KAGGLE_NBA = PROJECT_ROOT / "data" / "external" / "kaggle_nba" / "Games.csv"
+
+    train_min = pd.to_datetime(df["game_date"], errors="coerce").min()
+    train_max = pd.to_datetime(df["game_date"], errors="coerce").max()
+    if pd.isna(train_min) or pd.isna(train_max):
+        raise ValueError("Training data has invalid game_date values; cannot compute injury features.")
+
+    # Preferred path: reuse already-computed injury features if available.
+    # This repo commonly produces data/processed/training_data_complete_2023_with_injuries.csv which
+    # contains injury columns matched to the same match_key contract used in training_data.csv.
+    PRECOMPUTED_INJURY_TRAINING = PROJECT_ROOT / "data" / "processed" / "training_data_complete_2023_with_injuries.csv"
+    if PRECOMPUTED_INJURY_TRAINING.exists() and "match_key" in df.columns:
+        try:
+            header_cols = list(pd.read_csv(PRECOMPUTED_INJURY_TRAINING, nrows=0).columns)
+            injury_cols = [
+                "has_injury_data",
+                "home_injury_spread_impact",
+                "away_injury_spread_impact",
+                "injury_spread_diff",
+                "home_star_out",
+                "away_star_out",
+                "home_injury_impact",
+                "away_injury_impact",
+                "injury_impact_diff",
+                "home_injury_total_impact",
+                "away_injury_total_impact",
+                "injury_total_diff",
+            ]
+            usecols = ["match_key"] + [c for c in injury_cols if c in header_cols]
+            if len(usecols) > 1:
+                pre = pd.read_csv(PRECOMPUTED_INJURY_TRAINING, usecols=usecols, low_memory=False)
+                pre = pre.drop_duplicates(subset=["match_key"], keep="last")
+
+                merged = df.merge(pre, on="match_key", how="left")
+
+                # Determine match coverage using actual injury values (not stale has_injury_data flag).
+                probe_col = (
+                    "home_injury_spread_impact"
+                    if "home_injury_spread_impact" in merged.columns
+                    else "home_injury_impact"
+                )
+                if probe_col in merged.columns:
+                    # Coverage = rows where injury impact column is not NaN (merge succeeded)
+                    matched = int(merged[probe_col].notna().sum())
+                    match_fraction = matched / len(merged) if len(merged) else 0
+                    # Recalculate has_injury_data from actual values (flag in source may be stale)
+                    merged["has_injury_data"] = merged[probe_col].notna().astype(int)
+                else:
+                    matched = 0
+                    match_fraction = 0.0
+                    merged["has_injury_data"] = 0
+
+                print(
+                    f"      Using precomputed injury features: {PRECOMPUTED_INJURY_TRAINING.name} ; "
+                    f"matched {matched}/{len(merged)} games ({match_fraction*100:.1f}%)"
+                )
+
+                if match_fraction >= min_match_fraction:
+                    return merged
+
+                msg = (
+                    f"Precomputed injury match coverage too low: {match_fraction:.2%} < {min_match_fraction:.2%}. "
+                    "Fix inputs/matching before backtesting."
+                )
+                if drop_unmatched:
+                    before = len(merged)
+                    merged = merged[merged["has_injury_data"] == 1].copy()
+                    after = len(merged)
+                    print(f"      [STRICT] Dropped unmatched precomputed injury games: {before:,} -> {after:,}")
+                    if after == 0:
+                        raise ValueError(msg)
+                    return merged
+
+                raise ValueError(msg)
+        except Exception as e:
+            print(f"      [WARN] Failed to use precomputed injury features: {type(e).__name__}: {e}")
+
+    # Team abbreviation normalization (shared by both injury sources).
+    TEAM_ABBR_MAP = {
+        "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN",
+        "Charlotte Hornets": "CHA", "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE",
+        "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN", "Detroit Pistons": "DET",
+        "Golden State Warriors": "GSW", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
+        "Los Angeles Clippers": "LAC", "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM",
+        "Miami Heat": "MIA", "Milwaukee Bucks": "MIL", "Minnesota Timberwolves": "MIN",
+        "New Orleans Pelicans": "NOP", "New York Knicks": "NYK", "Oklahoma City Thunder": "OKC",
+        "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI", "Phoenix Suns": "PHX",
+        "Portland Trail Blazers": "POR", "Sacramento Kings": "SAC", "San Antonio Spurs": "SAS",
+        "Toronto Raptors": "TOR", "Utah Jazz": "UTA", "Washington Wizards": "WAS",
+    }
+    ABBR_TO_FULL = {abbr: full for full, abbr in TEAM_ABBR_MAP.items()}
+    ABBR_TO_SHORT = {
+        "ATL": "Hawks", "BOS": "Celtics", "BKN": "Nets", "CHA": "Hornets",
+        "CHI": "Bulls", "CLE": "Cavaliers", "DAL": "Mavericks", "DEN": "Nuggets",
+        "DET": "Pistons", "GSW": "Warriors", "HOU": "Rockets", "IND": "Pacers",
+        "LAC": "Clippers", "LAL": "Lakers", "MEM": "Grizzlies", "MIA": "Heat",
+        "MIL": "Bucks", "MIN": "Timberwolves", "NOP": "Pelicans", "NYK": "Knicks",
+        "OKC": "Thunder", "ORL": "Magic", "PHI": "76ers", "PHX": "Suns",
+        "POR": "Trail Blazers", "SAC": "Kings", "SAS": "Spurs", "TOR": "Raptors",
+        "UTA": "Jazz", "WAS": "Wizards",
+    }
+    SHORT_TO_ABBR = {short: abbr for abbr, short in ABBR_TO_SHORT.items()}
+
+    if INJURIES_CSV.exists():
+        print(f"      Using injuries feed: {INJURIES_CSV}")
+
+        inj = pd.read_csv(INJURIES_CSV, low_memory=False)
+        if inj.empty:
+            raise ValueError(f"Injuries feed is empty: {INJURIES_CSV}")
+
+        # Prefer API-Basketball's 'report_date' field; fall back to 'date' if present.
+        if "report_date" in inj.columns:
+            inj_date = pd.to_datetime(inj["report_date"], errors="coerce")
+        elif "date" in inj.columns:
+            inj_date = pd.to_datetime(inj["date"], errors="coerce")
+        else:
+            raise ValueError(
+                f"Injuries feed missing a usable date column (expected report_date or date): {INJURIES_CSV}"
+            )
+
+        inj["injury_date"] = inj_date.dt.date
+        inj = inj[inj["injury_date"].notna()].copy()
+
+        inj_min = pd.to_datetime(inj["injury_date"].min())
+        inj_max = pd.to_datetime(inj["injury_date"].max())
+        if inj_max < train_min or inj_min > train_max:
+            raise ValueError(
+                "Injuries feed does not cover the training date range. "
+                f"Training window: {train_min.date()}..{train_max.date()} ; "
+                f"injuries feed window: {inj_min.date()}..{inj_max.date()}. "
+                "Provide historical injury inputs (API-Basketball) or disable injury features for backtests."
+            )
+
+        if "team" not in inj.columns:
+            raise ValueError(f"Injuries feed missing required column 'team': {INJURIES_CSV}")
+
+        # Map team short names (e.g., "Lakers") or abbreviations (e.g., "LAL") to NBA abbreviations.
+        team_val = inj["team"].astype(str).str.strip()
+        team_val_upper = team_val.str.upper()
+        inj["team_abbr"] = team_val.map(SHORT_TO_ABBR)
+        inj.loc[inj["team_abbr"].isna() & team_val_upper.isin(ABBR_TO_FULL.keys()), "team_abbr"] = team_val_upper
+
+        # Strict: don't assume 0 PPG if not present.
+        inj["ppg_num"] = pd.to_numeric(inj["ppg"], errors="coerce") if "ppg" in inj.columns else np.nan
+        status_series = inj["status"].astype(str).str.lower() if "status" in inj.columns else ""
+        inj["is_star_out"] = (status_series == "out") & (inj["ppg_num"] > 15)
+
+        # Aggregate by (date, team). min_count=1 prevents accidental 0-fill when all ppg are NaN.
+        by_date_team = (
+            inj.groupby(["injury_date", "team_abbr"], dropna=False)
+            .agg(
+                total_ppg_out=("ppg_num", lambda s: s.sum(min_count=1)),
+                star_out=("is_star_out", "max"),
+                injury_count=("player_name", "count"),
+            )
+            .reset_index()
+        )
+        by_date_team["star_out"] = by_date_team["star_out"].fillna(False).astype(int)
+
+        # Join to games by date + team abbreviation.
+        game_dates = pd.to_datetime(df["game_date"], errors="coerce").dt.date
+        home_abbr = df["home_team"].map(TEAM_ABBR_MAP)
+        away_abbr = df["away_team"].map(TEAM_ABBR_MAP)
+
+        lookup = by_date_team.set_index(["injury_date", "team_abbr"]).to_dict("index")
+
+        home_imp = []
+        away_imp = []
+        home_star = []
+        away_star = []
+        has_data = []
+        matched = 0
+        for d, h, a in zip(game_dates, home_abbr, away_abbr):
+            hrow = lookup.get((d, h))
+            arow = lookup.get((d, a))
+            if hrow is not None or arow is not None:
+                matched += 1
+                home_imp.append(hrow.get("total_ppg_out", np.nan) if hrow else np.nan)
+                away_imp.append(arow.get("total_ppg_out", np.nan) if arow else np.nan)
+                home_star.append(hrow.get("star_out", np.nan) if hrow else np.nan)
+                away_star.append(arow.get("star_out", np.nan) if arow else np.nan)
+                has_data.append(1)
+            else:
+                home_imp.append(np.nan)
+                away_imp.append(np.nan)
+                home_star.append(np.nan)
+                away_star.append(np.nan)
+                has_data.append(0)
+
+        df["home_injury_spread_impact"] = home_imp
+        df["away_injury_spread_impact"] = away_imp
+        df["injury_spread_diff"] = df["home_injury_spread_impact"] - df["away_injury_spread_impact"]
+        df["home_star_out"] = home_star
+        df["away_star_out"] = away_star
+        df["has_injury_data"] = has_data
+
+        match_fraction = matched / len(df) if len(df) else 0
+        print(f"      Matched injuries feed: {matched}/{len(df)} games ({match_fraction*100:.1f}%)")
+        if match_fraction < min_match_fraction:
+            msg = (
+                f"Injury match coverage too low: {match_fraction:.2%} < {min_match_fraction:.2%}. "
+                "Fix inputs/matching before backtesting."
+            )
+            if drop_unmatched:
+                before = len(df)
+                df = df[df["has_injury_data"] == 1].copy()
+                after = len(df)
+                print(f"      [STRICT] Dropped unmatched injury games: {before:,} -> {after:,}")
+                if after == 0:
+                    raise ValueError(msg)
+            else:
+                raise ValueError(msg)
+
+        return df
+
+    # Fallback: inactive players dataset + player profiles.
+    print("      Using inactive players dataset (fallback)")
+
     if not INACTIVE_CSV.exists() or not PLAYER_INFO_CSV.exists():
         raise FileNotFoundError(
-            "Missing required injury inputs: inactive_players.csv and/or common_player_info.csv"
+            "Missing required injury inputs: inactive_players.csv and/or common_player_info.csv. "
+            "If you intended to use API-Basketball, first generate data/processed/injuries.csv via scripts/fetch_injuries.py."
         )
     
     # Load data
@@ -205,31 +436,74 @@ def compute_injury_impact(df: pd.DataFrame, *, min_match_fraction: float = 0.99,
     # Create lookup: player_id -> impact_score
     impact_lookup = player_info.set_index("person_id")["impact_score"].to_dict()
     
-    # Load game data for game_id -> date/teams mapping
-    if GAME_CSV.exists():
-        game_df = pd.read_csv(GAME_CSV, low_memory=False)
-        game_df["game_date"] = pd.to_datetime(game_df["game_date"])
-        game_df = game_df[game_df["game_date"] >= "2023-01-01"]
-        
-        # Build game lookup: game_id -> (date, home_abbr, away_abbr)
-        game_lookup = {}
-        for _, row in game_df.iterrows():
-            game_lookup[row["game_id"]] = {
-                "date": row["game_date"],
-                "home": row["team_abbreviation_home"],
-                "away": row["team_abbreviation_away"]
-            }
-        print(f"      Game lookup built: {len(game_lookup)} games")
+    # Load game data for game_id -> date/teams mapping.
+    # Prefer the nba_database mapping if it overlaps; otherwise use the kaggle_nba Games.csv mapping.
+    game_df = None
+    mapping_source = None
+    if GAME_CSV_NBA_DB.exists():
+        candidate = pd.read_csv(GAME_CSV_NBA_DB, low_memory=False)
+        candidate["game_date"] = pd.to_datetime(candidate["game_date"], errors="coerce")
+        if candidate["game_date"].notna().any():
+            cmin = candidate["game_date"].min()
+            cmax = candidate["game_date"].max()
+            if not (cmax < train_min or cmin > train_max):
+                game_df = candidate
+                mapping_source = GAME_CSV_NBA_DB
+
+    if game_df is None and GAME_CSV_KAGGLE_NBA.exists():
+        candidate = pd.read_csv(GAME_CSV_KAGGLE_NBA, low_memory=False)
+        candidate["game_date"] = pd.to_datetime(candidate["gameDateTimeEst"], errors="coerce")
+        if candidate["game_date"].notna().any():
+            cmin = candidate["game_date"].min()
+            cmax = candidate["game_date"].max()
+            if not (cmax < train_min or cmin > train_max):
+                game_df = candidate
+                mapping_source = GAME_CSV_KAGGLE_NBA
+
+    if game_df is None or mapping_source is None:
+        raise ValueError(
+            "No usable game mapping source found for injury matching. "
+            f"Tried: {GAME_CSV_NBA_DB} and {GAME_CSV_KAGGLE_NBA}."
+        )
+
+    # Build a fast lookup from (date, home_team, away_team) -> game_id.
+    if mapping_source == GAME_CSV_NBA_DB:
+        # Map NBA abbreviations to full names to align with training data.
+        abbr_to_full = {v: k for k, v in TEAM_ABBR_MAP.items()}
+        game_df = game_df[game_df["game_date"].notna()].copy()
+        game_df["game_day"] = game_df["game_date"].dt.date
+        game_df["home_team_full"] = game_df["team_abbreviation_home"].map(abbr_to_full)
+        game_df["away_team_full"] = game_df["team_abbreviation_away"].map(abbr_to_full)
+        game_df = game_df[game_df["home_team_full"].notna() & game_df["away_team_full"].notna()].copy()
+        game_df = game_df[(game_df["game_date"] >= train_min) & (game_df["game_date"] <= train_max)].copy()
+        game_key_to_id = {
+            (r["game_day"], r["home_team_full"], r["away_team_full"]): r["game_id"]
+            for _, r in game_df.iterrows()
+        }
+        game_id_to_date = game_df.set_index("game_id")["game_date"].to_dict()
     else:
-        game_lookup = {}
+        # Kaggle mapping is already team city+name; build the full names.
+        game_df = game_df[game_df["game_date"].notna()].copy()
+        game_df["game_day"] = game_df["game_date"].dt.date
+        game_df["home_team_full"] = (game_df["hometeamCity"].astype(str).str.strip() + " " + game_df["hometeamName"].astype(str).str.strip())
+        game_df["away_team_full"] = (game_df["awayteamCity"].astype(str).str.strip() + " " + game_df["awayteamName"].astype(str).str.strip())
+        game_df = game_df[(game_df["game_date"] >= train_min) & (game_df["game_date"] <= train_max)].copy()
+        game_key_to_id = {
+            (r["game_day"], r["home_team_full"], r["away_team_full"]): r["gameId"]
+            for _, r in game_df.iterrows()
+        }
+        game_id_to_date = game_df.set_index("gameId")["game_date"].to_dict()
+
+    print(f"      Game mapping source: {mapping_source.name} ; keys: {len(game_key_to_id):,}")
     
     # Compute impact per game per team
     # Strict: do not invent an impact for unknown players; leave as NaN.
     inact["impact"] = inact["player_id"].map(impact_lookup)
     
-    # Aggregate by game + team
+    # Aggregate by game + team.
+    # Strict: min_count=1 prevents treating all-NaN impact sets as 0.
     team_impact = inact.groupby(["game_id", "team_abbreviation"]).agg(
-        total_impact=("impact", "sum"),
+        total_impact=("impact", lambda s: s.sum(min_count=1)),
         inactive_count=("player_id", "count"),
     ).reset_index()
     team_impact = team_impact.rename(columns={"team_abbreviation": "team_abbr"})
@@ -276,24 +550,38 @@ def compute_injury_impact(df: pd.DataFrame, *, min_match_fraction: float = 0.99,
         "Toronto Raptors": "TOR", "Utah Jazz": "UTA", "Washington Wizards": "WAS"
     }
     
+    # Validate coverage window for the inactive records themselves (not just the game map).
+    inact_ids = pd.to_numeric(inact["game_id"], errors="coerce")
+    inact_dates = pd.to_datetime(pd.Series(inact_ids.map(game_id_to_date)), errors="coerce")
+    inact_min = inact_dates.min()
+    inact_max = inact_dates.max()
+    if pd.isna(inact_min) or pd.isna(inact_max) or (inact_max < train_min) or (inact_min > train_max):
+        raise ValueError(
+            "Inactive-player inputs do not cover the training date range. "
+            f"Training window: {train_min.date()}..{train_max.date()} ; "
+            f"inactive window: {inact_min.date() if pd.notna(inact_min) else 'NaT'}..{inact_max.date() if pd.notna(inact_max) else 'NaT'}. "
+            "Provide a refreshed inactive_players dataset for 2023+ (or generate data/processed/injuries.csv via API-Basketball)."
+        )
+
     matched = 0
     for _, row in df.iterrows():
         home_abbr = TEAM_ABBR_MAP.get(row["home_team"], "")
         away_abbr = TEAM_ABBR_MAP.get(row["away_team"], "")
-        
-        # Try to match by game_id from game_lookup via date
-        game_date = pd.to_datetime(row["game_date"])
-        found_home = None
-        found_away = None
-        
-        # Search game_lookup for matching date + teams
-        for gid, ginfo in game_lookup.items():
-            if ginfo["date"].date() == game_date.date():
-                if ginfo["home"] == home_abbr and ginfo["away"] == away_abbr:
-                    found_home = impact_lookup_game.get((gid, home_abbr), {})
-                    found_away = impact_lookup_game.get((gid, away_abbr), {})
-                    matched += 1
-                    break
+
+        game_date = pd.to_datetime(row["game_date"], errors="coerce")
+        if pd.isna(game_date):
+            home_impact.append(np.nan)
+            away_impact.append(np.nan)
+            home_star.append(np.nan)
+            away_star.append(np.nan)
+            has_data.append(0)
+            continue
+
+        gid = game_key_to_id.get((game_date.date(), row["home_team"], row["away_team"]))
+        found_home = impact_lookup_game.get((gid, home_abbr), {}) if gid is not None else None
+        found_away = impact_lookup_game.get((gid, away_abbr), {}) if gid is not None else None
+        if gid is not None:
+            matched += 1
         
         if found_home or found_away:
             home_impact.append(found_home.get("impact", np.nan) if found_home else np.nan)
@@ -648,9 +936,9 @@ def main():
     print(f"fg_ml_home coverage: {df['fg_ml_home'].notna().sum()}/{len(df)}")
     
     if all_present:
-        print("\n✅ All 55 model features are present!")
+        print("\n[OK] All 55 model features are present!")
     else:
-        print("\n⚠️ Some features still missing - check above")
+        print("\n[WARN] Some features still missing - check above")
 
 
 if __name__ == "__main__":
