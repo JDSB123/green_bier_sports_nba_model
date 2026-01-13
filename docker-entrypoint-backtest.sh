@@ -148,9 +148,28 @@ fetch_data() {
     # Ensure output directory exists
     mkdir -p /app/data/processed
     
-    python scripts/build_fresh_training_data.py \
-        --seasons "$SEASONS" \
-        --output /app/data/processed/training_data.csv
+    # Repo drift fix: build_training_data_complete.py is the canonical builder.
+    # It writes to /app/data/processed/training_data_complete_<YEAR>.csv; we also
+    # copy to the stable path expected by the backtest container.
+
+    # Derive a reasonable start-date from SEASONS (take the first year), falling back safely.
+    START_YEAR=$(echo "$SEASONS" | cut -d',' -f1 | cut -d'-' -f1)
+    if [ -z "$START_YEAR" ]; then
+        START_YEAR="2023"
+    fi
+
+    python scripts/build_training_data_complete.py \
+        --start-date "${START_YEAR}-01-01"
+
+    GENERATED_FILE="/app/data/processed/training_data_complete_${START_YEAR}.csv"
+    if [ ! -f "$GENERATED_FILE" ]; then
+        echo "ERROR: Expected training data file not found at $GENERATED_FILE"
+        echo "Available files in /app/data/processed:"
+        ls -lh /app/data/processed/ | head -50
+        exit 1
+    fi
+
+    cp "$GENERATED_FILE" /app/data/processed/training_data.csv
     
     if [ $? -ne 0 ]; then
         echo ""

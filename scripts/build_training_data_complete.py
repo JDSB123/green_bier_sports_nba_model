@@ -156,13 +156,22 @@ def load_kaggle(start_date: str) -> pd.DataFrame:
         df[f"away_q{q}"] = df[f"q{q}_away"]
     
     # Half scores
-    df["home_1h"] = df["home_q1"].fillna(0) + df["home_q2"].fillna(0)
-    df["away_1h"] = df["away_q1"].fillna(0) + df["away_q2"].fillna(0)
+    # NO FAKE DATA: do not treat missing quarter scores as 0.
+    home_1h_mask = df["home_q1"].notna() & df["home_q2"].notna()
+    away_1h_mask = df["away_q1"].notna() & df["away_q2"].notna()
+    df.loc[home_1h_mask, "home_1h"] = df.loc[home_1h_mask, "home_q1"] + df.loc[home_1h_mask, "home_q2"]
+    df.loc[~home_1h_mask, "home_1h"] = np.nan
+    df.loc[away_1h_mask, "away_1h"] = df.loc[away_1h_mask, "away_q1"] + df.loc[away_1h_mask, "away_q2"]
+    df.loc[~away_1h_mask, "away_1h"] = np.nan
     df["1h_total_actual"] = df["home_1h"] + df["away_1h"]
     df["1h_margin"] = df["home_1h"] - df["away_1h"]
     
-    df["home_2h"] = df["home_q3"].fillna(0) + df["home_q4"].fillna(0)
-    df["away_2h"] = df["away_q3"].fillna(0) + df["away_q4"].fillna(0)
+    home_2h_mask = df["home_q3"].notna() & df["home_q4"].notna()
+    away_2h_mask = df["away_q3"].notna() & df["away_q4"].notna()
+    df.loc[home_2h_mask, "home_2h"] = df.loc[home_2h_mask, "home_q3"] + df.loc[home_2h_mask, "home_q4"]
+    df.loc[~home_2h_mask, "home_2h"] = np.nan
+    df.loc[away_2h_mask, "away_2h"] = df.loc[away_2h_mask, "away_q3"] + df.loc[away_2h_mask, "away_q4"]
+    df.loc[~away_2h_mask, "away_2h"] = np.nan
     
     # FG lines
     df["kaggle_fg_spread"] = df.apply(
@@ -974,8 +983,14 @@ def print_summary(df: pd.DataFrame):
             print(f"    {lab}: {n:,} games")
 
 
-def main(start_date: str = "2023-01-01", cutoff_date: str = None, sync_from_azure: bool = False,
-         blob_account: str = "nbagbsvstrg", blob_container: str = "nbahistoricaldata"):
+def main(
+    start_date: str = "2023-01-01",
+    cutoff_date: str = None,
+    sync_from_azure: bool = False,
+    blob_account: str = "nbagbsvstrg",
+    blob_container: str = "nbahistoricaldata",
+    skip_post_processing: bool = False,
+):
     """
     Build training data with optional cutoff date to prevent data leakage.
     
@@ -1053,29 +1068,61 @@ def main(start_date: str = "2023-01-01", cutoff_date: str = None, sync_from_azur
     df.to_csv(out, index=False)
     print(f"\n  Saved: {out}")
 
-    # ==== POST-PROCESSING: Fix gaps and complete features ====
-    print("\n" + "=" * 70)
-    print("POST-PROCESSING: Fixing gaps and completing features...")
-    print("=" * 70)
-    
-    # Run fix_training_data_gaps.py
-    try:
-        from scripts.fix_training_data_gaps import main as fix_gaps
-        print("\n[POST-1] Running fix_training_data_gaps...")
-        fix_gaps()
-    except Exception as e:
-        print(f"[WARN] fix_training_data_gaps failed: {e}")
-        # Fall back to subprocess
-        import subprocess
-        subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "fix_training_data_gaps.py")])
-    
-    # Run complete_training_features.py
-    try:
-        print("\n[POST-2] Running complete_training_features...")
-        import subprocess
-        subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "complete_training_features.py")])
-    except Exception as e:
-        print(f"[WARN] complete_training_features failed: {e}")
+    if skip_post_processing:
+        print("\n[SKIP] Post-processing disabled (--skip-post-processing)")
+    else:
+        # ==== POST-PROCESSING: Fix gaps and complete features ====
+        print("\n" + "=" * 70)
+        print("POST-PROCESSING: Fixing gaps and completing features...")
+        print("=" * 70)
+
+        # Run fix_training_data_gaps.py
+        try:
+            from scripts.fix_training_data_gaps import main as fix_gaps
+            print("\n[POST-1] Running fix_training_data_gaps...")
+            fix_gaps()
+        except Exception as e:
+            print(f"[WARN] fix_training_data_gaps failed: {e}")
+            # Fall back to subprocess
+            import subprocess
+            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "fix_training_data_gaps.py")])
+
+        # Run complete_training_features.py
+        try:
+            print("\n[POST-2] Running complete_training_features...")
+            import subprocess
+            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "complete_training_features.py")])
+        except Exception as e:
+            print(f"[WARN] complete_training_features failed: {e}")
+
+    # ==== FINAL ENFORCEMENT: NO NaNs in exported dataset ====
+    # No synthetic filling; we drop incomplete rows so the dataset is strictly complete.
+    final_df = pd.read_csv(out, low_memory=False)
+    total_nan_cells = int(final_df.isna().sum().sum())
+    if total_nan_cells > 0:
+        rows_with_nan = int(final_df.isna().any(axis=1).sum())
+        top = final_df.isna().sum().sort_values(ascending=False)
+        top = top[top > 0].head(25)
+        print("\n" + "=" * 70)
+        print("FINAL CHECK: NaNs detected in training dataset")
+        print("=" * 70)
+        print(f"  Total NaN cells: {total_nan_cells:,}")
+        print(f"  Rows with any NaN: {rows_with_nan:,} / {len(final_df):,}")
+        print("  Top columns with NaNs:")
+        for col, ct in top.items():
+            print(f"    {col}: {int(ct):,}")
+
+        before = len(final_df)
+        final_df = final_df.dropna().reset_index(drop=True)
+        after = len(final_df)
+        print(f"\n  Dropped rows with NaNs: {before:,} -> {after:,} (removed {before - after:,})")
+
+        remaining = int(final_df.isna().sum().sum())
+        if remaining > 0:
+            raise ValueError(f"NaNs remain after dropna(): {remaining}")
+
+        final_df.to_csv(out, index=False)
+        print(f"  Saved cleaned (no-NaN) dataset: {out}")
     
     print("\n" + "=" * 70)
     print("BUILD COMPLETE - All gaps fixed, all features computed")
@@ -1094,4 +1141,11 @@ if __name__ == "__main__":
     parser.add_argument("--blob-container", default="nbahistoricaldata", help="Azure blob container name")
     parser.add_argument("--skip-post-processing", action="store_true", help="Skip gap fixes and feature completion")
     args = parser.parse_args()
-    main(args.start_date, args.cutoff_date, args.sync_from_azure, args.blob_account, args.blob_container)
+    main(
+        args.start_date,
+        args.cutoff_date,
+        args.sync_from_azure,
+        args.blob_account,
+        args.blob_container,
+        args.skip_post_processing,
+    )

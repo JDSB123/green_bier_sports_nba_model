@@ -339,8 +339,15 @@ def run_backtest(
             feature_df = pd.DataFrame([features])
             
             # Prepare features for model
-            # Fill missing features with 0 (model was trained this way)
-            X = feature_df.reindex(columns=model_features, fill_value=0)
+            # NO FAKE DATA: do not zero-fill missing features.
+            missing_model_features = [c for c in model_features if c not in feature_df.columns]
+            if missing_model_features:
+                continue
+
+            X = feature_df[model_features]
+            # Also skip if any required value is NaN (avoid implicit imputation downstream)
+            if X.isna().any().any():
+                continue
             
             # Get prediction
             try:
@@ -357,9 +364,13 @@ def run_backtest(
                     # 1H margin
                     if "home_1h" in game and "away_1h" in game:
                         actual_value = game["home_1h"] - game["away_1h"]
-                    elif "home_q1" in game and "home_q2" in game:
-                        home_1h = game.get("home_q1", 0) + game.get("home_q2", 0)
-                        away_1h = game.get("away_q1", 0) + game.get("away_q2", 0)
+                    elif (
+                        "home_q1" in game and "home_q2" in game and "away_q1" in game and "away_q2" in game
+                        and pd.notna(game.get("home_q1")) and pd.notna(game.get("home_q2"))
+                        and pd.notna(game.get("away_q1")) and pd.notna(game.get("away_q2"))
+                    ):
+                        home_1h = float(game["home_q1"]) + float(game["home_q2"])
+                        away_1h = float(game["away_q1"]) + float(game["away_q2"])
                         actual_value = home_1h - away_1h
                     else:
                         continue
@@ -374,9 +385,13 @@ def run_backtest(
                 if "1h" in market_key:
                     if "home_1h" in game and "away_1h" in game:
                         actual_value = game["home_1h"] + game["away_1h"]
-                    elif "home_q1" in game and "home_q2" in game:
-                        home_1h = game.get("home_q1", 0) + game.get("home_q2", 0)
-                        away_1h = game.get("away_q1", 0) + game.get("away_q2", 0)
+                    elif (
+                        "home_q1" in game and "home_q2" in game and "away_q1" in game and "away_q2" in game
+                        and pd.notna(game.get("home_q1")) and pd.notna(game.get("home_q2"))
+                        and pd.notna(game.get("away_q1")) and pd.notna(game.get("away_q2"))
+                    ):
+                        home_1h = float(game["home_q1"]) + float(game["home_q2"])
+                        away_1h = float(game["away_q1"]) + float(game["away_q2"])
                         actual_value = home_1h + away_1h
                     else:
                         continue

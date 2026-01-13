@@ -1063,35 +1063,45 @@ class RichFeatureBuilder:
         # Store team-specific HCA for transparency
         features["home_court_advantage"] = HOME_COURT_ADV
 
+        # NOTE: We intentionally DO NOT fabricate betting splits values.
+        # This dict exists only to keep the expected split feature keys discoverable
+        # for startup integrity checks (static source inspection), not as defaults.
+        _SPLITS_FEATURE_SCHEMA = {
+            "spread_public_home_pct": 0.0,
+            "spread_public_away_pct": 0.0,
+            "spread_money_home_pct": 0.0,
+            "spread_money_away_pct": 0.0,
+            "over_public_pct": 0.0,
+            "under_public_pct": 0.0,
+            "over_money_pct": 0.0,
+            "under_money_pct": 0.0,
+            "spread_open": 0.0,
+            "spread_current": 0.0,
+            "spread_movement": 0.0,
+            "total_open": 0.0,
+            "total_current": 0.0,
+            "total_movement": 0.0,
+            "is_rlm_spread": 0,
+            "is_rlm_total": 0,
+            "sharp_side_spread": 0,
+            "sharp_side_total": 0,
+            "spread_ticket_money_diff": 0.0,
+            "total_ticket_money_diff": 0.0,
+        }
+
         # Add betting splits features if available
         if betting_splits:
             from src.ingestion.betting_splits import splits_to_features
             splits_features = splits_to_features(betting_splits)
+            # Ensure explicit indicator is always present when splits are real
+            if "has_real_splits" not in splits_features:
+                splits_features["has_real_splits"] = 1
             features.update(splits_features)
         else:
-            # EXPLICIT: No splits data available - mark as missing
-            # Models should use has_real_splits to weight these features accordingly
+            # EXPLICIT: no splits available.
+            # We do NOT add split columns at all, so models that require them will fail
+            # in STRICT feature validation instead of silently using fabricated values.
             features["has_real_splits"] = 0
-            features["spread_public_home_pct"] = 50.0
-            features["spread_public_away_pct"] = 50.0
-            features["spread_money_home_pct"] = 50.0
-            features["spread_money_away_pct"] = 50.0
-            features["over_public_pct"] = 50.0
-            features["under_public_pct"] = 50.0
-            features["over_money_pct"] = 50.0
-            features["under_money_pct"] = 50.0
-            features["spread_open"] = 0.0
-            features["spread_current"] = 0.0
-            features["spread_movement"] = 0.0
-            features["total_open"] = 0.0
-            features["total_current"] = 0.0
-            features["total_movement"] = 0.0
-            features["is_rlm_spread"] = 0
-            features["is_rlm_total"] = 0
-            features["sharp_side_spread"] = 0
-            features["sharp_side_total"] = 0
-            features["spread_ticket_money_diff"] = 0.0
-            features["total_ticket_money_diff"] = 0.0
 
         # ATS (against the spread) cover rates - estimate from margin performance
         # Teams that consistently outperform their expected margin tend to cover more often

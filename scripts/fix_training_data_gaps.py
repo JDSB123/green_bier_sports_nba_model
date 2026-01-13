@@ -143,14 +143,16 @@ def main(
         if home in last_game:
             rest_h = (date - last_game[home]).days
         else:
-            rest_h = np.nan  # First game of dataset
+            # If the dataset window starts mid-season, the true rest is unknown.
+            # We treat this as a long-rest scenario (capped later) to avoid NaNs.
+            rest_h = 10
         home_rest.append(rest_h)
         
-        # Away rest  
+        # Away rest
         if away in last_game:
             rest_a = (date - last_game[away]).days
         else:
-            rest_a = np.nan
+            rest_a = 10
         away_rest.append(rest_a)
         
         # Update last game
