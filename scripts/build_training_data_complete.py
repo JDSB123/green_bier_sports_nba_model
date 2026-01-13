@@ -1117,7 +1117,7 @@ def print_summary(df: pd.DataFrame):
 def main(
     start_date: str = "2023-10-01",
     cutoff_date: str = None,
-    sync_from_azure: bool = False,
+    sync_from_azure: bool = True,
     blob_account: str = "nbagbsvstrg",
     blob_container: str = "nbahistoricaldata",
     skip_post_processing: bool = False,
@@ -1131,7 +1131,9 @@ def main(
         start_date: First date to include (default: 2023-01-01)
         cutoff_date: Last date to include (default: None = include all)
                      Use this to exclude future games that don't have real scores.
-        sync_from_azure: If True, pull historical/raw datasets from Azure blob first.
+        sync_from_azure: Pull historical/raw datasets from Azure blob (default: True).
+                         Azure Blob is the SINGLE SOURCE OF TRUTH for all data.
+                         Set to False only for local development with pre-cached data.
         blob_account: Azure Storage account name (single source of truth)
         blob_container: Azure blob container name (single source of truth)
     """
@@ -1306,10 +1308,18 @@ def main(
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Build training data from Azure Blob (single source of truth)"
+    )
     parser.add_argument("--start-date", default="2023-10-01", help="First date to include")
     parser.add_argument("--cutoff-date", default=None, help="Last date to include (CST). Use to exclude future games.")
-    parser.add_argument("--sync-from-azure", action="store_true", help="Pull historical/raw data from Azure blob (single source of truth) before building")
+    parser.add_argument(
+        "--no-azure-sync",
+        dest="sync_from_azure",
+        action="store_false",
+        default=True,
+        help="Skip Azure blob sync (use only for local dev with pre-cached data)"
+    )
     parser.add_argument("--blob-account", default="nbagbsvstrg", help="Azure Storage account name")
     parser.add_argument("--blob-container", default="nbahistoricaldata", help="Azure blob container name")
     parser.add_argument("--skip-post-processing", action="store_true", help="Skip gap fixes and feature completion")

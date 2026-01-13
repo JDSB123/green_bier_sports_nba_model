@@ -1,20 +1,30 @@
 # Data Single Source of Truth
 
-**Last Updated:** 2026-01-11
+**Last Updated:** 2026-01-12
 
 This document defines the authoritative data sources and pipeline for the NBA prediction system.
 
 ---
 
+## ⚠️ CRITICAL: Azure Blob is the ONLY Source
+
+**ALL historical data lives in Azure Blob Storage. NOT in git. NOT locally.**
+
+- ❌ Do NOT commit data files to git
+- ❌ Do NOT store historical data locally long-term
+- ❌ Do NOT clone/pull data from git
+- ✅ ALWAYS pull from Azure Blob via `--sync-from-azure` (now default)
+
+---
+
 ## 🔒 Azure Blob Storage (CANONICAL SOURCE)
 
-Training data is stored in Azure Blob Storage as the **single source of truth** with quality gates enforced before upload.
+Historical data is stored in Azure Blob Storage as the **single source of truth**.
 
 ### Location
 ```
 Storage Account: nbagbsvstrg
 Container:       nbahistoricaldata
-Blob Prefix:     training_data/
 ```
 
 ### Versioned Data
@@ -63,18 +73,23 @@ data/processed/training_data_complete_2023_with_injuries.csv
 ### How to Rebuild
 
 ```bash
-# ONLY WAY to build training data
-python scripts/build_training_data_complete.py --start-date 2023-01-01
+# Build training data (automatically syncs from Azure Blob)
+python scripts/build_training_data_complete.py
+
+# For local dev with pre-cached data only (NOT recommended for production)
+python scripts/build_training_data_complete.py --no-azure-sync
 ```
 
 This master script:
-1. Merges ALL data sources (see below)
-2. Computes ELO ratings, rolling stats, situational features
-3. Runs `fix_training_data_gaps.py` automatically
-4. Runs `complete_training_features.py` automatically
-5. Outputs complete training file with all 55 model features
+1. **Syncs from Azure Blob** (default behavior - pulls all historical data)
+2. Merges ALL data sources (see below)
+3. Computes ELO ratings, rolling stats, situational features
+4. Runs `fix_training_data_gaps.py` automatically
+5. Runs `complete_training_features.py` automatically
+6. Outputs canonical file: `data/processed/training_data.csv`
 
 **NEVER** run fix scripts or feature scripts independently during normal operations.
+**NEVER** assume local data is fresh - always sync from Azure.
 
 ---
 
