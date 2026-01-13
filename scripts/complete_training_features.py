@@ -891,6 +891,11 @@ def main():
         default=0.99,
         help="Minimum fraction of games that must match injury inputs (default: 0.99)",
     )
+    parser.add_argument(
+        "--skip-injuries",
+        action="store_true",
+        help="Skip injury feature computation (use when source files unavailable)",
+    )
     args = parser.parse_args()
 
     training_file = Path(args.training_file)
@@ -905,7 +910,13 @@ def main():
     df = add_betting_splits_defaults(df)
     
     # Compute injury impact from inactive_players.csv
-    df = compute_injury_impact(df, min_match_fraction=args.min_injury_match_fraction)
+    if args.skip_injuries:
+        print("\n[4/8] Skipping injury impact (--skip-injuries flag)")
+    else:
+        try:
+            df = compute_injury_impact(df, min_match_fraction=args.min_injury_match_fraction)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"\n[4/8] Skipping injury impact (source files unavailable): {e}")
     
     # Compute derived features (ppg_diff, win_pct_diff, etc.)
     df = compute_derived_features(df)

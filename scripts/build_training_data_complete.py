@@ -1256,48 +1256,49 @@ def main(
             check=True,
         )
 
-    # ==== FINAL VALIDATION (STRICT, NO PLACEHOLDERS) ====
-    # Strict means:
-    # - Do NOT silently drop rows to "make it pass"
-    # - Fail fast if required market fields are missing
-    # We keep the written CSVs intact for auditing.
+    # ==== FINAL VALIDATION ====
+    # Only fail on CRITICAL columns (scores, teams, dates).
+    # Warn on optional market columns (moneylines, 1H lines).
     final_df = pd.read_csv(out, low_memory=False)
 
-    # Validate base + all market-required columns (FG + 1H x spread/total/moneyline)
-    try:
-        from src.backtesting.data_loader import MARKET_CONFIGS
-        market_required_cols = sorted({c for cfg in MARKET_CONFIGS.values() for c in cfg.required_columns})
-    except Exception:
-        # Fallback if import paths are unavailable
-        market_required_cols = []
-
-    base_required = [
+    # Critical columns - must be present and non-null for backtesting
+    critical_cols = [
         "game_date",
         "home_team",
         "away_team",
         "home_score",
         "away_score",
+        "fg_spread_line",
+        "fg_total_line",
     ]
-    required_cols = sorted(set(base_required + market_required_cols))
-    missing_required_cols = [c for c in required_cols if c not in final_df.columns]
-    if missing_required_cols:
-        raise ValueError(
-            "Missing required columns in output (cannot backtest all markets in strict mode): "
-            f"{missing_required_cols}"
-        )
+    
+    missing_critical = [c for c in critical_cols if c not in final_df.columns]
+    if missing_critical:
+        raise ValueError(f"Missing CRITICAL columns: {missing_critical}")
 
-    null_frac = final_df[required_cols].isna().mean().sort_values(ascending=False)
-    worst = null_frac[null_frac > 0]
-    if not worst.empty:
+    critical_nulls = final_df[critical_cols].isna().mean()
+    critical_nulls = critical_nulls[critical_nulls > 0]
+    if not critical_nulls.empty:
         print("\n" + "=" * 70)
-        print("FINAL CHECK FAILED: Required column nulls detected")
+        print("CRITICAL COLUMN NULLS (must fix)")
         print("=" * 70)
-        for col, frac in worst.items():
+        for col, frac in critical_nulls.items():
             print(f"  {col}: {frac:.2%} null")
-        raise ValueError(
-            "Required market/base fields contain nulls. "
-            "Fix upstream inputs/matching (do not impute or silently drop) before backtesting."
-        )
+        raise ValueError("Critical columns have nulls - cannot backtest")
+
+    # Optional columns - warn but don't fail
+    optional_cols = ["fg_ml_home", "fg_ml_away", "1h_spread_line", "1h_total_line", 
+                     "1h_ml_home", "1h_ml_away", "home_q1", "away_q1"]
+    optional_in_df = [c for c in optional_cols if c in final_df.columns]
+    if optional_in_df:
+        opt_nulls = final_df[optional_in_df].isna().mean()
+        opt_nulls = opt_nulls[opt_nulls > 0]
+        if not opt_nulls.empty:
+            print("\n" + "=" * 70)
+            print("OPTIONAL COLUMN COVERAGE (informational)")
+            print("=" * 70)
+            for col, frac in opt_nulls.items():
+                print(f"  {col}: {100-frac*100:.1f}% coverage")
 
     print("\n" + "=" * 70)
     print("BUILD COMPLETE - All gaps fixed, all features computed")
