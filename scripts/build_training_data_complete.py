@@ -333,11 +333,13 @@ def load_theodds_2025_26() -> pd.DataFrame:
     )
 
     # Extract h2h (moneyline) from team-specific columns
-    # Columns are: h2h_<team_name>_price, h2h_h1_<team_name>_price
+    # Columns are: h2h_<team_name>_price, h2h_h1_<team_name>_price, h2h_q1_<team_name>_price
     fg_ml_home_vals = []
     fg_ml_away_vals = []
     h1_ml_home_vals = []
     h1_ml_away_vals = []
+    q1_ml_home_vals = []
+    q1_ml_away_vals = []
     
     for idx, row in df.iterrows():
         home_raw = raw_home.iloc[idx]
@@ -354,11 +356,19 @@ def load_theodds_2025_26() -> pd.DataFrame:
         h2h_h1_away_col = f"h2h_h1_{away_raw}_price"
         h1_ml_home_vals.append(row.get(h2h_h1_home_col) if h2h_h1_home_col in df.columns else np.nan)
         h1_ml_away_vals.append(row.get(h2h_h1_away_col) if h2h_h1_away_col in df.columns else np.nan)
+        
+        # Q1 moneyline (h2h_q1)
+        h2h_q1_home_col = f"h2h_q1_{home_raw}_price"
+        h2h_q1_away_col = f"h2h_q1_{away_raw}_price"
+        q1_ml_home_vals.append(row.get(h2h_q1_home_col) if h2h_q1_home_col in df.columns else np.nan)
+        q1_ml_away_vals.append(row.get(h2h_q1_away_col) if h2h_q1_away_col in df.columns else np.nan)
     
     df["to_fg_ml_home"] = fg_ml_home_vals
     df["to_fg_ml_away"] = fg_ml_away_vals
     df["to_1h_ml_home"] = h1_ml_home_vals
     df["to_1h_ml_away"] = h1_ml_away_vals
+    df["to_q1_ml_home"] = q1_ml_home_vals
+    df["to_q1_ml_away"] = q1_ml_away_vals
 
     # Rename spread/total columns
     rename_map = {
@@ -377,9 +387,12 @@ def load_theodds_2025_26() -> pd.DataFrame:
     fg_ml_count = df["to_fg_ml_home"].notna().sum() if "to_fg_ml_home" in df.columns else 0
     h1_count = df["to_1h_spread"].notna().sum() if "to_1h_spread" in df.columns else 0
     h1_ml_count = df["to_1h_ml_home"].notna().sum() if "to_1h_ml_home" in df.columns else 0
+    q1_count = df["to_q1_spread"].notna().sum() if "to_q1_spread" in df.columns else 0
+    q1_ml_count = df["to_q1_ml_home"].notna().sum() if "to_q1_ml_home" in df.columns else 0
     print(f"       Games: {len(df):,}")
     print(f"       FG: spread={fg_count}, ML={fg_ml_count}")
     print(f"       1H: spread={h1_count}, ML={h1_ml_count}")
+    print(f"       Q1: spread={q1_count}, ML={q1_ml_count}")
     print(f"       Date range: {df['game_date'].min().date()} to {df['game_date'].max().date()}")
     return df
 
@@ -674,6 +687,10 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
                     "to_1h_total": row.get("to_1h_total", row.get("h1_total")),
                     "to_1h_ml_home": row.get("to_1h_ml_home", row.get("h1_ml_home")),
                     "to_1h_ml_away": row.get("to_1h_ml_away", row.get("h1_ml_away")),
+                    "to_q1_spread": row.get("to_q1_spread", row.get("q1_spread")),
+                    "to_q1_total": row.get("to_q1_total", row.get("q1_total")),
+                    "to_q1_ml_home": row.get("to_q1_ml_home"),
+                    "to_q1_ml_away": row.get("to_q1_ml_away"),
                 }
                 new_rows.append(new_row)
             
@@ -686,12 +703,14 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
     # TheOdds derived (2021-2025)
     if not theodds.empty:
         cols = ["match_key", "to_fg_spread", "to_fg_total", "to_fg_ml_home", "to_fg_ml_away",
-                "to_1h_spread", "to_1h_total", "to_1h_ml_home", "to_1h_ml_away"]
+                "to_1h_spread", "to_1h_total", "to_1h_ml_home", "to_1h_ml_away",
+                "to_q1_spread", "to_q1_total", "to_q1_ml_home", "to_q1_ml_away"]
         theodds_merge = theodds[[c for c in cols if c in theodds.columns]].drop_duplicates("match_key")
         df = df.merge(theodds_merge, on="match_key", how="left", suffixes=("", "_dup"))
         # Fill missing with duplicate columns
         for col in ["to_fg_spread", "to_fg_total", "to_fg_ml_home", "to_fg_ml_away",
-                    "to_1h_spread", "to_1h_total", "to_1h_ml_home", "to_1h_ml_away"]:
+                    "to_1h_spread", "to_1h_total", "to_1h_ml_home", "to_1h_ml_away",
+                    "to_q1_spread", "to_q1_total", "to_q1_ml_home", "to_q1_ml_away"]:
             if f"{col}_dup" in df.columns:
                 df[col] = df[col].fillna(df[f"{col}_dup"])
                 df = df.drop(columns=[f"{col}_dup"])
@@ -800,6 +819,16 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
         df["1h_ml_away"] = df["exp_1h_ml_away"].fillna(df["to_1h_ml_away"])
     elif "to_1h_ml_away" in df.columns:
         df["1h_ml_away"] = df["to_1h_ml_away"]
+
+    # Q1 lines (only from TheOdds 2025-26 for now)
+    if "to_q1_spread" in df.columns:
+        df["q1_spread_line"] = df["to_q1_spread"]
+    if "to_q1_total" in df.columns:
+        df["q1_total_line"] = df["to_q1_total"]
+    if "to_q1_ml_home" in df.columns:
+        df["q1_ml_home"] = df["to_q1_ml_home"]
+    if "to_q1_ml_away" in df.columns:
+        df["q1_ml_away"] = df["to_q1_ml_away"]
 
     return df
 
@@ -976,7 +1005,7 @@ def compute_fg_features(df: pd.DataFrame, min_games: int = 3) -> pd.DataFrame:
 
 
 def standardize_core_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Normalize core columns to expected names (FG/1H only; drop Q1 confusion)."""
+    """Normalize core columns to expected names (FG/1H/Q1 all 9 markets)."""
     df = df.copy()
 
     # Game ID fallback
@@ -1004,6 +1033,26 @@ def standardize_core_columns(df: pd.DataFrame) -> pd.DataFrame:
             if c in df.columns:
                 df[target] = df[target].fillna(df[c])
 
+    # Q1 lines (from TheOdds 2025-26)
+    q1_spread_candidates = ["q1_spread_line", "to_q1_spread", "q1_spread"]
+    q1_total_candidates = ["q1_total_line", "to_q1_total", "q1_total"]
+    for target, cands in [("q1_spread_line", q1_spread_candidates), ("q1_total_line", q1_total_candidates)]:
+        if target not in df.columns:
+            df[target] = pd.NA
+        for c in cands:
+            if c in df.columns:
+                df[target] = df[target].fillna(df[c])
+
+    # Q1 moneylines
+    if "q1_ml_home" not in df.columns:
+        df["q1_ml_home"] = pd.NA
+    if "to_q1_ml_home" in df.columns:
+        df["q1_ml_home"] = df["q1_ml_home"].fillna(df["to_q1_ml_home"])
+    if "q1_ml_away" not in df.columns:
+        df["q1_ml_away"] = pd.NA
+    if "to_q1_ml_away" in df.columns:
+        df["q1_ml_away"] = df["q1_ml_away"].fillna(df["to_q1_ml_away"])
+
     # Normalize date
     if "date" not in df.columns:
         df["date"] = pd.NA
@@ -1012,11 +1061,6 @@ def standardize_core_columns(df: pd.DataFrame) -> pd.DataFrame:
     # Force date to plain date (strip time)
     date_parsed = pd.to_datetime(df["date"], errors="coerce", format="mixed")
     df["date"] = date_parsed.dt.date.astype(str)
-
-    # Drop Q1 line/label noise
-    q1_cols = [c for c in df.columns if c.startswith("q1_") or c.startswith("to_q1_")]
-    if q1_cols:
-        df = df.drop(columns=q1_cols)
 
     # Ensure core FG feature columns exist (fill NaN if not derivable here)
     fg_features = [

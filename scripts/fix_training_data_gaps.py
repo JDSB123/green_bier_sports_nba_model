@@ -58,7 +58,7 @@ def main(
     print("=" * 70)
     
     # Load data
-    print("\n[1/6] Loading training data...")
+    print("\n[1/8] Loading training data...")
     data_path = Path(data_file) if data_file is not None else DEFAULT_DATA_FILE
     df = pd.read_csv(data_path, low_memory=False)
     df["game_date"] = pd.to_datetime(df["game_date"], format="mixed")
@@ -66,7 +66,7 @@ def main(
     original_len = len(df)
     
     # ==== FIX 1: fg_total_actual ====
-    print("\n[2/6] Fixing fg_total_actual...")
+    print("\n[2/8] Fixing fg_total_actual...")
     score_home_col, score_away_col = _get_score_columns(df)
     print(f"      Using score columns: {score_home_col}, {score_away_col}")
     before = df["fg_total_actual"].notna().sum() if "fg_total_actual" in df.columns else 0
@@ -76,7 +76,7 @@ def main(
     _validate_not_too_many_nulls(df["fg_total_actual"], "fg_total_actual", max_null_fraction)
     
     # ==== FIX 2: FG margin ====
-    print("\n[3/6] Fixing fg_margin...")
+    print("\n[3/8] Fixing fg_margin...")
     before = df["fg_margin"].notna().sum() if "fg_margin" in df.columns else 0
     df["fg_margin"] = pd.to_numeric(df[score_home_col], errors="coerce") - pd.to_numeric(df[score_away_col], errors="coerce")
     after = df["fg_margin"].notna().sum()
@@ -84,7 +84,7 @@ def main(
     _validate_not_too_many_nulls(df["fg_margin"], "fg_margin", max_null_fraction)
     
     # ==== FIX 3: FG Labels (canonical names) ====
-    print("\n[4/6] Adding canonical FG label columns...")
+    print("\n[4/8] Adding canonical FG label columns...")
     
     # Labels should be computed from actual scores and lines.
     # Copying legacy label columns (spread_covered/total_over/home_win) is unsafe because those
@@ -125,8 +125,100 @@ def main(
         df["total_over"] = df["fg_total_over"]
         print("      Legacy labels overwritten (home_win, spread_covered, total_over)")
     
-    # ==== FIX 4: Rest days ====
-    print("\n[5/6] Computing rest days...")
+    # ==== FIX 4: 1H margin and labels ====
+    print("\n[5/8] Fixing 1H margin and labels...")
+    
+    # Compute 1h_margin from quarter scores (home_1h, away_1h)
+    # These quarter scores are merged from box_scores but 1h_margin may not have been computed
+    # for 2025-26 games that came from TheOdds source rather than Kaggle
+    if "home_1h" in df.columns and "away_1h" in df.columns:
+        before_margin = df["1h_margin"].notna().sum() if "1h_margin" in df.columns else 0
+        df["1h_margin"] = pd.to_numeric(df["home_1h"], errors="coerce") - pd.to_numeric(df["away_1h"], errors="coerce")
+        after_margin = df["1h_margin"].notna().sum()
+        print(f"      1h_margin: Before {before_margin}, After {after_margin}")
+        
+        before_total = df["1h_total_actual"].notna().sum() if "1h_total_actual" in df.columns else 0
+        df["1h_total_actual"] = pd.to_numeric(df["home_1h"], errors="coerce") + pd.to_numeric(df["away_1h"], errors="coerce")
+        after_total = df["1h_total_actual"].notna().sum()
+        print(f"      1h_total_actual: Before {before_total}, After {after_total}")
+    else:
+        print("      WARNING: home_1h/away_1h not found, skipping 1H margin computation")
+    
+    # Compute 1H labels from margin and lines
+    h1_spread_line_col = "1h_spread_line" if "1h_spread_line" in df.columns else None
+    h1_total_line_col = "1h_total_line" if "1h_total_line" in df.columns else None
+    
+    if h1_spread_line_col and "1h_margin" in df.columns:
+        df["1h_spread_covered"] = np.where(
+            df[h1_spread_line_col].notna() & df["1h_margin"].notna(),
+            (df["1h_margin"] + pd.to_numeric(df[h1_spread_line_col], errors="coerce") > 0).astype(float),
+            np.nan,
+        )
+        print(f"      1h_spread_covered: computed ({df['1h_spread_covered'].notna().sum()})")
+    
+    if h1_total_line_col and "1h_total_actual" in df.columns:
+        df["1h_total_over"] = np.where(
+            df[h1_total_line_col].notna() & df["1h_total_actual"].notna(),
+            (df["1h_total_actual"] > pd.to_numeric(df[h1_total_line_col], errors="coerce")).astype(float),
+            np.nan,
+        )
+        print(f"      1h_total_over: computed ({df['1h_total_over'].notna().sum()})")
+    
+    if "1h_margin" in df.columns:
+        df["1h_home_win"] = np.where(
+            df["1h_margin"].notna(),
+            (df["1h_margin"] > 0).astype(float),
+            np.nan,
+        )
+        print(f"      1h_home_win: computed ({df['1h_home_win'].notna().sum()})")
+    
+    # ==== FIX 5: Q1 margin and labels ====
+    print("\n[6/8] Fixing Q1 margin and labels...")
+    
+    # Compute q1_margin from quarter scores (home_q1, away_q1)
+    if "home_q1" in df.columns and "away_q1" in df.columns:
+        before_margin = df["q1_margin"].notna().sum() if "q1_margin" in df.columns else 0
+        df["q1_margin"] = pd.to_numeric(df["home_q1"], errors="coerce") - pd.to_numeric(df["away_q1"], errors="coerce")
+        after_margin = df["q1_margin"].notna().sum()
+        print(f"      q1_margin: Before {before_margin}, After {after_margin}")
+        
+        before_total = df["q1_total_actual"].notna().sum() if "q1_total_actual" in df.columns else 0
+        df["q1_total_actual"] = pd.to_numeric(df["home_q1"], errors="coerce") + pd.to_numeric(df["away_q1"], errors="coerce")
+        after_total = df["q1_total_actual"].notna().sum()
+        print(f"      q1_total_actual: Before {before_total}, After {after_total}")
+    else:
+        print("      WARNING: home_q1/away_q1 not found, skipping Q1 margin computation")
+    
+    # Compute Q1 labels from margin and lines
+    q1_spread_line_col = "q1_spread_line" if "q1_spread_line" in df.columns else None
+    q1_total_line_col = "q1_total_line" if "q1_total_line" in df.columns else None
+    
+    if q1_spread_line_col and "q1_margin" in df.columns:
+        df["q1_spread_covered"] = np.where(
+            df[q1_spread_line_col].notna() & df["q1_margin"].notna(),
+            (df["q1_margin"] + pd.to_numeric(df[q1_spread_line_col], errors="coerce") > 0).astype(float),
+            np.nan,
+        )
+        print(f"      q1_spread_covered: computed ({df['q1_spread_covered'].notna().sum()})")
+    
+    if q1_total_line_col and "q1_total_actual" in df.columns:
+        df["q1_total_over"] = np.where(
+            df[q1_total_line_col].notna() & df["q1_total_actual"].notna(),
+            (df["q1_total_actual"] > pd.to_numeric(df[q1_total_line_col], errors="coerce")).astype(float),
+            np.nan,
+        )
+        print(f"      q1_total_over: computed ({df['q1_total_over'].notna().sum()})")
+    
+    if "q1_margin" in df.columns:
+        df["q1_home_win"] = np.where(
+            df["q1_margin"].notna(),
+            (df["q1_margin"] > 0).astype(float),
+            np.nan,
+        )
+        print(f"      q1_home_win: computed ({df['q1_home_win'].notna().sum()})")
+    
+    # ==== FIX 6: Rest days ====
+    print("\n[7/8] Computing rest days...")
     df = df.sort_values(["game_date"]).reset_index(drop=True)
     
     # Track last game date for each team
@@ -173,7 +265,7 @@ def main(
         raise AssertionError(f"Row count changed from {original_len} to {len(df)} during processing")
     
     # ==== SAVE ====
-    print("\n[6/6] Saving...")
+    print("\n[8/8] Saving...")
     df.to_csv(data_path, index=False)
     print(f"      Saved to {data_path}")
     
@@ -195,13 +287,20 @@ def main(
             dist = df[col].value_counts(dropna=True).to_dict()
             print(f"  {col}: {ct}/{len(df)} dist={dist}")
     
+    print("\nQ1 Labels:")
+    for col in ["q1_spread_covered", "q1_total_over", "q1_home_win"]:
+        if col in df.columns:
+            ct = df[col].notna().sum()
+            dist = df[col].value_counts(dropna=True).to_dict()
+            print(f"  {col}: {ct}/{len(df)} dist={dist}")
+    
     print("\nRest Days:")
     print(f"  home_rest_days: mean={df['home_rest_days'].mean():.1f}, median={df['home_rest_days'].median():.1f}")
     print(f"  away_rest_days: mean={df['away_rest_days'].mean():.1f}, median={df['away_rest_days'].median():.1f}")
     
     print("\n2025-26 Check:")
     df26 = df[df["game_date"] >= "2025-10-01"]
-    for col in ["fg_spread_covered", "fg_total_over", "1h_spread_covered", "1h_total_over"]:
+    for col in ["fg_spread_covered", "fg_total_over", "1h_spread_covered", "1h_total_over", "q1_spread_covered", "q1_total_over"]:
         if col in df.columns:
             ct = df26[col].notna().sum()
             print(f"  {col}: {ct}/{len(df26)}")
