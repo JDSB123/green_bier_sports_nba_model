@@ -31,12 +31,16 @@ PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 
 
 def _derive_start_date_from_seasons(seasons: str) -> str:
-    """Convert e.g. "2024-2025,2025-2026" -> "2024-01-01"."""
+    """Convert e.g. "2023-2024,2024-2025" -> "2023-10-01".
+
+    NBA seasons run roughly Oct -> Jun. Using Oct 1 aligns the dataset to the
+    real season boundary and avoids accidentally including the prior season.
+    """
     first = (seasons or "").split(",")[0].strip()
     year = first.split("-")[0].strip() if first else "2023"
     if not year.isdigit():
         year = "2023"
-    return f"{year}-01-01"
+    return f"{year}-10-01"
 
 
 def main(seasons: str, output: str) -> Path:
@@ -46,7 +50,16 @@ def main(seasons: str, output: str) -> Path:
     start_date = _derive_start_date_from_seasons(seasons)
 
     # Delegate to the complete builder (historical + post-processing).
-    build_complete(start_date=start_date, cutoff_date=None, sync_from_azure=False, blob_account="nbagbsvstrg", blob_container="nbahistoricaldata")
+    # Seasons are enforced inside the builder to prevent older seasons from being included.
+    build_complete(
+        start_date=start_date,
+        cutoff_date=None,
+        sync_from_azure=False,
+        blob_account="nbagbsvstrg",
+        blob_container="nbahistoricaldata",
+        seasons=seasons,
+        leakage_days=3,
+    )
 
     generated = PROCESSED_DIR / f"training_data_complete_{start_date[:4]}.csv"
     if not generated.exists():
@@ -60,7 +73,11 @@ def main(seasons: str, output: str) -> Path:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seasons", default="2024-2025,2025-2026", help="Comma-separated seasons (used to derive start year)")
+    parser.add_argument(
+        "--seasons",
+        default="2023-2024,2024-2025,2025-2026",
+        help="Comma-separated seasons (used to derive start year)",
+    )
     parser.add_argument("--output", default=str(PROCESSED_DIR / "training_data.csv"), help="Output CSV path")
     args = parser.parse_args()
 

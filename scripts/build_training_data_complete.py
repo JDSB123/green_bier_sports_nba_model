@@ -35,6 +35,72 @@ from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+
+def season_label_for_game_date(dt: pd.Timestamp) -> str:
+    """Return NBA season label (e.g. '2023-2024') for a game datetime.
+
+    NBA regular season typically runs Oct -> Jun. We treat:
+    - Oct-Dec as season starting that calendar year
+    - Jan-Jun as season starting the previous calendar year
+    - Jul-Sep (offseason) as the upcoming season starting that calendar year
+
+    This keeps season labels aligned with real season boundaries.
+    """
+    if pd.isna(dt):
+        return "unknown"
+
+    year = int(dt.year)
+    month = int(dt.month)
+
+    if month >= 10:
+        start_year = year
+    elif month <= 6:
+        start_year = year - 1
+    else:
+        # Jul-Sep offseason: treat as upcoming season.
+        start_year = year
+
+    return f"{start_year}-{start_year + 1}"
+
+
+def _parse_seasons_arg(seasons: str) -> list[int]:
+    """Parse '2023-2024,2024-2025' -> [2023, 2024]."""
+    years: list[int] = []
+    for part in (seasons or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        start = part.split("-")[0].strip()
+        if start.isdigit():
+            years.append(int(start))
+    return sorted(set(years))
+
+
+def _default_leakage_cutoff_date(leakage_days: int) -> str:
+    """Return YYYY-MM-DD string for CST 'today - leakage_days'."""
+    # CST in this repo is a pytz timezone imported from src.data.standardization.
+    # Use timezone-aware now to avoid local machine timezone drift.
+    now_cst = datetime.now(CST)
+    cutoff = (now_cst.date() - timedelta(days=int(leakage_days)))
+    return cutoff.isoformat()
+
+
+def _filter_to_requested_seasons(df: pd.DataFrame, season_start_years: list[int]) -> pd.DataFrame:
+    if not season_start_years:
+        return df
+
+    df = df.copy()
+    df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce", format="mixed")
+    df = df[df["game_date"].notna()].copy()
+    df["season"] = df["game_date"].apply(season_label_for_game_date)
+
+    allowed = {f"{y}-{y+1}" for y in season_start_years}
+    before = len(df)
+    df = df[df["season"].isin(allowed)].copy()
+    after = len(df)
+    print(f"\n  [SEASONS] Filtered to seasons {sorted(allowed)}: {before:,} -> {after:,}")
+    return df
+
 # Paths
 DATA_DIR = PROJECT_ROOT / "data"
 KAGGLE_FILE = DATA_DIR / "external" / "kaggle" / "nba_2008-2025.csv"
@@ -984,12 +1050,14 @@ def print_summary(df: pd.DataFrame):
 
 
 def main(
-    start_date: str = "2023-01-01",
+    start_date: str = "2023-10-01",
     cutoff_date: str = None,
     sync_from_azure: bool = False,
     blob_account: str = "nbagbsvstrg",
     blob_container: str = "nbahistoricaldata",
     skip_post_processing: bool = False,
+    seasons: str | None = "2023-2024,2024-2025,2025-2026",
+    leakage_days: int = 3,
 ):
     """
     Build training data with optional cutoff date to prevent data leakage.
@@ -1003,7 +1071,9 @@ def main(
         blob_container: Azure blob container name (single source of truth)
     """
     print("\n" + "="*80)
-    print(" BUILDING COMPLETE TRAINING DATA (2023-2026)")
+    print(" BUILDING COMPLETE TRAINING DATA")
+    if seasons:
+        print(f" SEASONS: {seasons}")
     if cutoff_date:
         print(f" CUTOFF DATE: {cutoff_date} (excludes games after this date)")
     print("="*80)
@@ -1023,6 +1093,15 @@ def main(
         # Enforce single-source-of-truth discipline: if local cache missing, fail fast.
         require_historical_inputs_or_exit()
 
+    # Season-aware defaults:
+    # - If seasons are provided, we will filter the final merged dataset to those seasons.
+    # - For leakage safety, we default cutoff to (today - leakage_days) when seasons are provided.
+    season_years = _parse_seasons_arg(seasons) if seasons else []
+    if seasons and not cutoff_date:
+        cutoff_date = _default_leakage_cutoff_date(leakage_days)
+        print(f"\n  [LEAKAGE] Default cutoff applied: {cutoff_date} (CST today-{leakage_days})")
+
+    # Keep load_kaggle signature stable; we'll apply season filtering after merge.
     kaggle = load_kaggle(start_date)
     theodds = load_theodds_derived()
     theodds_2526 = load_theodds_2025_26()
@@ -1034,6 +1113,16 @@ def main(
     df = merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new)
     # Normalize core columns (FG/1H only, no Q1 confusion)
     df = standardize_core_columns(df)
+
+    # Ensure game_date is parsed and season labels are aligned to real NBA season boundaries.
+    df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce", format="mixed")
+    df = df[df["game_date"].notna()].copy()
+    df["season"] = df["game_date"].apply(season_label_for_game_date)
+
+    # Enforce season boundaries before any feature/label computation.
+    # This prevents older seasons from influencing rolling features and eliminates stale season references.
+    if seasons:
+        df = _filter_to_requested_seasons(df, season_years)
     
     # Apply cutoff date to prevent data leakage
     if cutoff_date:
@@ -1064,9 +1153,14 @@ def main(
 
     print_summary(df)
 
-    out = OUTPUT_DIR / f"training_data_complete_{start_date[:4]}.csv"
+    # Canonical output to eliminate filename drift across the repo.
+    # Keep a year-stamped snapshot for backwards compatibility / ad-hoc diffs.
+    out = OUTPUT_DIR / "training_data.csv"
+    snapshot_out = OUTPUT_DIR / f"training_data_complete_{start_date[:4]}.csv"
     df.to_csv(out, index=False)
-    print(f"\n  Saved: {out}")
+    df.to_csv(snapshot_out, index=False)
+    print(f"\n  Saved (canonical): {out}")
+    print(f"  Saved (snapshot): {snapshot_out}")
 
     if skip_post_processing:
         print("\n[SKIP] Post-processing disabled (--skip-post-processing)")
@@ -1080,49 +1174,55 @@ def main(
         try:
             from scripts.fix_training_data_gaps import main as fix_gaps
             print("\n[POST-1] Running fix_training_data_gaps...")
-            fix_gaps()
+            fix_gaps(data_file=out)
         except Exception as e:
             print(f"[WARN] fix_training_data_gaps failed: {e}")
             # Fall back to subprocess
             import subprocess
-            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "fix_training_data_gaps.py")])
+            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "fix_training_data_gaps.py"), "--data-file", str(out)])
 
         # Run complete_training_features.py
         try:
             print("\n[POST-2] Running complete_training_features...")
             import subprocess
-            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "complete_training_features.py")])
+            subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "complete_training_features.py"), "--training-file", str(out)])
         except Exception as e:
             print(f"[WARN] complete_training_features failed: {e}")
 
-    # ==== FINAL ENFORCEMENT: NO NaNs in exported dataset ====
-    # No synthetic filling; we drop incomplete rows so the dataset is strictly complete.
+    # ==== FINAL VALIDATION (STRICT, NO PLACEHOLDERS) ====
+    # Avoid global dropna() across hundreds of optional/rolling features.
+    # Instead, enforce completeness for core backtest fields and drop rows missing those.
     final_df = pd.read_csv(out, low_memory=False)
-    total_nan_cells = int(final_df.isna().sum().sum())
-    if total_nan_cells > 0:
-        rows_with_nan = int(final_df.isna().any(axis=1).sum())
-        top = final_df.isna().sum().sort_values(ascending=False)
-        top = top[top > 0].head(25)
+    core_required = [
+        "game_date",
+        "home_team",
+        "away_team",
+        "home_score",
+        "away_score",
+        "fg_spread_line",
+        "fg_total_line",
+        "fg_ml_home",
+        "fg_ml_away",
+    ]
+    missing_core_cols = [c for c in core_required if c not in final_df.columns]
+    if missing_core_cols:
+        raise ValueError(f"Missing required core columns in output: {missing_core_cols}")
+
+    core_null_fraction = final_df[core_required].isna().mean().sort_values(ascending=False)
+    worst = core_null_fraction[core_null_fraction > 0]
+    if not worst.empty:
         print("\n" + "=" * 70)
-        print("FINAL CHECK: NaNs detected in training dataset")
+        print("FINAL CHECK: Core column nulls detected")
         print("=" * 70)
-        print(f"  Total NaN cells: {total_nan_cells:,}")
-        print(f"  Rows with any NaN: {rows_with_nan:,} / {len(final_df):,}")
-        print("  Top columns with NaNs:")
-        for col, ct in top.items():
-            print(f"    {col}: {int(ct):,}")
+        for col, frac in worst.items():
+            print(f"  {col}: {frac:.2%} null")
 
         before = len(final_df)
-        final_df = final_df.dropna().reset_index(drop=True)
+        final_df = final_df.dropna(subset=core_required).reset_index(drop=True)
         after = len(final_df)
-        print(f"\n  Dropped rows with NaNs: {before:,} -> {after:,} (removed {before - after:,})")
-
-        remaining = int(final_df.isna().sum().sum())
-        if remaining > 0:
-            raise ValueError(f"NaNs remain after dropna(): {remaining}")
-
+        print(f"\n  Dropped rows missing core fields: {before:,} -> {after:,} (removed {before - after:,})")
         final_df.to_csv(out, index=False)
-        print(f"  Saved cleaned (no-NaN) dataset: {out}")
+        print(f"  Saved cleaned dataset (core-complete): {out}")
     
     print("\n" + "=" * 70)
     print("BUILD COMPLETE - All gaps fixed, all features computed")
@@ -1134,12 +1234,18 @@ def main(
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--start-date", default="2023-01-01", help="First date to include")
+    parser.add_argument("--start-date", default="2023-10-01", help="First date to include")
     parser.add_argument("--cutoff-date", default=None, help="Last date to include (CST). Use to exclude future games.")
     parser.add_argument("--sync-from-azure", action="store_true", help="Pull historical/raw data from Azure blob (single source of truth) before building")
     parser.add_argument("--blob-account", default="nbagbsvstrg", help="Azure Storage account name")
     parser.add_argument("--blob-container", default="nbahistoricaldata", help="Azure blob container name")
     parser.add_argument("--skip-post-processing", action="store_true", help="Skip gap fixes and feature completion")
+    parser.add_argument(
+        "--seasons",
+        default="2023-2024,2024-2025,2025-2026",
+        help="Comma-separated seasons to include (e.g. 2023-2024,2024-2025,2025-2026)",
+    )
+    parser.add_argument("--leakage-days", type=int, default=3, help="Exclude the most recent N days to avoid leakage (default: 3)")
     args = parser.parse_args()
     main(
         args.start_date,
@@ -1148,4 +1254,6 @@ if __name__ == "__main__":
         args.blob_account,
         args.blob_container,
         args.skip_post_processing,
+        args.seasons,
+        args.leakage_days,
     )

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""
-Complete training data with all features used by prediction models.
+"""scripts/complete_training_features.py
 
-Fills in:
-1. FG Moneylines from Kaggle
-2. Travel features (computed from team locations)
-3. Betting splits defaults (not available historically)
-4. Injury feature defaults (not available historically)
+Complete/enrich training data with additional features used by prediction/backtest.
 
-This ensures training data has all 55 features the model expects.
+Policy (strict, no placeholders):
+- Do not fabricate neutral defaults for unavailable data (e.g., betting splits).
+- Do not silently zero-fill when computation fails.
+- If a feature cannot be computed, leave as NaN so downstream strict filters can drop.
 """
 from __future__ import annotations
 
@@ -29,16 +27,16 @@ from src.modeling.team_factors import (
 )
 
 DATA_DIR = PROJECT_ROOT / "data"
-TRAINING_FILE = DATA_DIR / "processed" / "training_data_complete_2023.csv"
+TRAINING_FILE = DATA_DIR / "processed" / "training_data.csv"
 KAGGLE_FILE = DATA_DIR / "external" / "kaggle" / "nba_2008-2025.csv"
 
 
-def fill_moneylines():
+def fill_moneylines(training_file: Path) -> pd.DataFrame:
     """Fill missing moneylines from Kaggle data."""
     print("\n[1/4] Filling FG Moneylines from Kaggle...")
     
     # Load training data
-    df = pd.read_csv(TRAINING_FILE, low_memory=False)
+    df = pd.read_csv(training_file, low_memory=False)
     df["game_date"] = pd.to_datetime(df["game_date"], format="mixed")
     before = df["fg_ml_home"].notna().sum()
     
@@ -83,13 +81,14 @@ def compute_travel_features(df: pd.DataFrame) -> pd.DataFrame:
     print("\n[2/4] Computing travel features...")
     
     # Initialize columns
-    df["away_travel_distance"] = 0.0
-    df["away_timezone_change"] = 0
-    df["away_travel_fatigue"] = 0.0
-    df["is_away_cross_country"] = 0
-    df["is_away_long_trip"] = 0
-    df["away_b2b_travel_penalty"] = 0.0
-    df["travel_advantage"] = 0.0
+    # Strict: initialize to NaN, not neutral defaults.
+    df["away_travel_distance"] = np.nan
+    df["away_timezone_change"] = np.nan
+    df["away_travel_fatigue"] = np.nan
+    df["is_away_cross_country"] = np.nan
+    df["is_away_long_trip"] = np.nan
+    df["away_b2b_travel_penalty"] = np.nan
+    df["travel_advantage"] = np.nan
     
     computed = 0
     for idx, row in df.iterrows():
@@ -117,33 +116,40 @@ def compute_travel_features(df: pd.DataFrame) -> pd.DataFrame:
             df.at[idx, "travel_advantage"] = fatigue
             
             computed += 1
-        except Exception as e:
-            pass
+        except Exception:
+            # Leave as NaN; no silent 0-fill.
+            continue
     
     print(f"      Computed travel for {computed}/{len(df)} games")
     return df
 
 
 def add_betting_splits_defaults(df: pd.DataFrame) -> pd.DataFrame:
-    """Add default values for betting splits features (not available historically)."""
-    print("\n[3/4] Adding betting splits defaults...")
-    
-    # These are real-time features not available for backtesting
-    # Set to neutral defaults so model doesn't get confused
-    df["has_real_splits"] = 0  # Indicates no real splits data
-    df["is_rlm_spread"] = 0
-    df["sharp_side_spread"] = 0
-    df["spread_public_home_pct"] = 50  # Neutral
-    df["spread_ticket_money_diff"] = 0
-    df["spread_movement"] = 0.0
-    df["is_rlm_total"] = 0
-    df["sharp_side_total"] = 0
-    
-    print("      Set all splits features to neutral defaults")
+    """Add betting splits columns without fabricating values.
+
+    Splits are not available historically in this repo; we explicitly mark them as unavailable
+    and leave split-derived numeric features as NaN.
+    """
+    print("\n[3/4] Adding betting splits columns (no placeholders)...")
+
+    df["has_real_splits"] = 0
+    for col in [
+        "is_rlm_spread",
+        "sharp_side_spread",
+        "spread_public_home_pct",
+        "spread_ticket_money_diff",
+        "spread_movement",
+        "is_rlm_total",
+        "sharp_side_total",
+    ]:
+        if col not in df.columns:
+            df[col] = np.nan
+
+    print("      Marked splits as unavailable; left split features as NaN")
     return df
 
 
-def compute_injury_impact(df: pd.DataFrame) -> pd.DataFrame:
+def compute_injury_impact(df: pd.DataFrame, *, min_match_fraction: float = 0.99, drop_unmatched: bool = True) -> pd.DataFrame:
     """
     Compute injury impact from inactive_players.csv and common_player_info.csv.
     
@@ -160,14 +166,9 @@ def compute_injury_impact(df: pd.DataFrame) -> pd.DataFrame:
     GAME_CSV = PROJECT_ROOT / "data" / "external" / "nba_database" / "game.csv"
     
     if not INACTIVE_CSV.exists() or not PLAYER_INFO_CSV.exists():
-        print("      [SKIP] Missing inactive_players.csv or common_player_info.csv")
-        df["home_injury_spread_impact"] = 0.0
-        df["away_injury_spread_impact"] = 0.0
-        df["injury_spread_diff"] = 0.0
-        df["home_star_out"] = 0
-        df["away_star_out"] = 0
-        df["has_injury_data"] = 0
-        return df
+        raise FileNotFoundError(
+            "Missing required injury inputs: inactive_players.csv and/or common_player_info.csv"
+        )
     
     # Load data
     inact = pd.read_csv(INACTIVE_CSV)
@@ -223,18 +224,19 @@ def compute_injury_impact(df: pd.DataFrame) -> pd.DataFrame:
         game_lookup = {}
     
     # Compute impact per game per team
-    inact["impact"] = inact["player_id"].map(impact_lookup).fillna(0.5)  # Default 0.5 for unknown
+    # Strict: do not invent an impact for unknown players; leave as NaN.
+    inact["impact"] = inact["player_id"].map(impact_lookup)
     
     # Aggregate by game + team
-    team_impact = inact.groupby(["game_id", "team_abbreviation"]).agg({
-        "impact": "sum",
-        "player_id": "count"
-    }).reset_index()
-    team_impact.columns = ["game_id", "team_abbr", "total_impact", "inactive_count"]
+    team_impact = inact.groupby(["game_id", "team_abbreviation"]).agg(
+        total_impact=("impact", "sum"),
+        inactive_count=("player_id", "count"),
+    ).reset_index()
+    team_impact = team_impact.rename(columns={"team_abbreviation": "team_abbr"})
     
     # Build lookup: (game_id, team_abbr) -> (total_impact, inactive_count, has_star)
     # Star = impact > 5 (top tier player)
-    inact["is_star"] = inact["impact"] > 5.0
+    inact["is_star"] = inact["impact"].fillna(-1) > 5.0
     star_out = inact.groupby(["game_id", "team_abbreviation"])["is_star"].max().reset_index()
     star_out.columns = ["game_id", "team_abbr", "star_out"]
     
@@ -294,16 +296,16 @@ def compute_injury_impact(df: pd.DataFrame) -> pd.DataFrame:
                     break
         
         if found_home or found_away:
-            home_impact.append(found_home.get("impact", 0) if found_home else 0)
-            away_impact.append(found_away.get("impact", 0) if found_away else 0)
-            home_star.append(found_home.get("star_out", 0) if found_home else 0)
-            away_star.append(found_away.get("star_out", 0) if found_away else 0)
+            home_impact.append(found_home.get("impact", np.nan) if found_home else np.nan)
+            away_impact.append(found_away.get("impact", np.nan) if found_away else np.nan)
+            home_star.append(found_home.get("star_out", np.nan) if found_home else np.nan)
+            away_star.append(found_away.get("star_out", np.nan) if found_away else np.nan)
             has_data.append(1)
         else:
-            home_impact.append(0)
-            away_impact.append(0)
-            home_star.append(0)
-            away_star.append(0)
+            home_impact.append(np.nan)
+            away_impact.append(np.nan)
+            home_star.append(np.nan)
+            away_star.append(np.nan)
             has_data.append(0)
     
     df["home_injury_spread_impact"] = home_impact
@@ -313,11 +315,28 @@ def compute_injury_impact(df: pd.DataFrame) -> pd.DataFrame:
     df["away_star_out"] = away_star
     df["has_injury_data"] = has_data
     
-    print(f"      Matched injury data: {matched}/{len(df)} games ({matched/len(df)*100:.1f}%)")
+    match_fraction = matched / len(df) if len(df) else 0
+    print(f"      Matched injury data: {matched}/{len(df)} games ({match_fraction*100:.1f}%)")
     print(f"      home_injury_spread_impact: mean={df['home_injury_spread_impact'].mean():.2f}")
     print(f"      away_injury_spread_impact: mean={df['away_injury_spread_impact'].mean():.2f}")
     print(f"      Stars out: home={df['home_star_out'].sum()}, away={df['away_star_out'].sum()}")
     
+    # Enforce coverage: if we can't match injuries, don't silently keep fabricated zeros.
+    if match_fraction < min_match_fraction:
+        msg = (
+            f"Injury match coverage too low: {match_fraction:.2%} < {min_match_fraction:.2%}. "
+            "Fix inputs/matching before backtesting."
+        )
+        if drop_unmatched:
+            before = len(df)
+            df = df[df["has_injury_data"] == 1].copy()
+            after = len(df)
+            print(f"      [STRICT] Dropped unmatched injury games: {before:,} -> {after:,}")
+            if after == 0:
+                raise ValueError(msg)
+        else:
+            raise ValueError(msg)
+
     return df
 
 
@@ -354,18 +373,8 @@ def compute_derived_features(df: pd.DataFrame) -> pd.DataFrame:
         df["net_rating_diff"] = df["home_margin"] - df["away_margin"]
         print(f"      net_rating_diff: {df['net_rating_diff'].notna().sum()}/{len(df)}")
     
-    # home_court_advantage (constant baseline)
-    df["home_court_advantage"] = 3.5  # Historical average
-    print(f"      home_court_advantage: {len(df)} (constant 3.5)")
-    
-    # dynamic_hca (adjust by team strength)
-    df["dynamic_hca"] = 3.5 + df.get("win_pct_diff", pd.Series([0]*len(df))).fillna(0) * 2.0
-    print(f"      dynamic_hca: {df['dynamic_hca'].notna().sum()}/{len(df)}")
-    
-    # pace (default for historical)
-    df["home_pace"] = 100.0  # League average
-    df["away_pace"] = 100.0
-    print(f"      home_pace / away_pace: {len(df)} (default 100)")
+    # NOTE: Do not inject constant "baseline" features here.
+    # If pace/home-court are needed, they must come from real inputs or be computed elsewhere.
     
     return df
 
@@ -391,7 +400,7 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
         home = row["home_team"]
         away = row["away_team"]
         
-        # Home margin std (from last 10 games)
+        # Home rolling stats (strict: NaN until enough history)
         if home in team_margins and len(team_margins[home]) >= 5:
             home_margin_std.append(np.std(team_margins[home][-10:]))
             home_score_std.append(np.std(team_scores[home][-10:]))
@@ -399,11 +408,11 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
             l10 = np.mean(team_margins[home][-10:]) if len(team_margins[home]) >= 10 else l5
             home_form_trend.append(l5 - l10)
         else:
-            home_margin_std.append(6.0)  # League average std
-            home_score_std.append(8.0)
-            home_form_trend.append(0.0)
+            home_margin_std.append(np.nan)
+            home_score_std.append(np.nan)
+            home_form_trend.append(np.nan)
         
-        # Away margin std
+        # Away rolling stats
         if away in team_margins and len(team_margins[away]) >= 5:
             away_margin_std.append(np.std(team_margins[away][-10:]))
             away_score_std.append(np.std(team_scores[away][-10:]))
@@ -411,12 +420,14 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
             l10 = np.mean(team_margins[away][-10:]) if len(team_margins[away]) >= 10 else l5
             away_form_trend.append(l5 - l10)
         else:
-            away_margin_std.append(6.0)
-            away_score_std.append(8.0)
-            away_form_trend.append(0.0)
+            away_margin_std.append(np.nan)
+            away_score_std.append(np.nan)
+            away_form_trend.append(np.nan)
         
-        # Update history
-        margin = row["home_score"] - row["away_score"] if pd.notna(row.get("home_score")) else 0
+        # Update history (strict: only when scores are present)
+        home_score = row.get("home_score")
+        away_score = row.get("away_score")
+        margin = (home_score - away_score) if pd.notna(home_score) and pd.notna(away_score) else np.nan
         
         if home not in team_margins:
             team_margins[home] = []
@@ -425,10 +436,11 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
             team_margins[away] = []
             team_scores[away] = []
         
-        team_margins[home].append(margin)
-        team_margins[away].append(-margin)
-        team_scores[home].append(row.get("home_score", 110))
-        team_scores[away].append(row.get("away_score", 110))
+        if pd.notna(margin):
+            team_margins[home].append(float(margin))
+            team_margins[away].append(float(-margin))
+            team_scores[home].append(float(home_score))
+            team_scores[away].append(float(away_score))
     
     df["home_margin_std"] = home_margin_std
     df["away_margin_std"] = away_margin_std
@@ -437,12 +449,12 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
     df["home_form_trend"] = home_form_trend
     df["away_form_trend"] = away_form_trend
     
-    print(f"      home_margin_std: {(df['home_margin_std'] != 6.0).sum()}/{len(df)} computed")
-    print(f"      away_margin_std: {(df['away_margin_std'] != 6.0).sum()}/{len(df)} computed")
-    print(f"      home_score_std: {(df['home_score_std'] != 8.0).sum()}/{len(df)} computed")
-    print(f"      away_score_std: {(df['away_score_std'] != 8.0).sum()}/{len(df)} computed")
-    print(f"      home_form_trend: {(df['home_form_trend'] != 0.0).sum()}/{len(df)} computed")
-    print(f"      away_form_trend: {(df['away_form_trend'] != 0.0).sum()}/{len(df)} computed")
+    print(f"      home_margin_std: {df['home_margin_std'].notna().sum()}/{len(df)} computed")
+    print(f"      away_margin_std: {df['away_margin_std'].notna().sum()}/{len(df)} computed")
+    print(f"      home_score_std: {df['home_score_std'].notna().sum()}/{len(df)} computed")
+    print(f"      away_score_std: {df['away_score_std'].notna().sum()}/{len(df)} computed")
+    print(f"      home_form_trend: {df['home_form_trend'].notna().sum()}/{len(df)} computed")
+    print(f"      away_form_trend: {df['away_form_trend'].notna().sum()}/{len(df)} computed")
     
     return df
 
@@ -473,24 +485,27 @@ def compute_h2h_features(df: pd.DataFrame) -> pd.DataFrame:
                 h2h_margin.append(-np.mean(history[-5:]))
         else:
             h2h_games.append(0)
-            h2h_margin.append(0.0)
+            h2h_margin.append(np.nan)
         
-        # Update history
-        margin = row["home_score"] - row["away_score"] if pd.notna(row.get("home_score")) else 0
+        # Update history (strict: only when scores are present)
+        home_score = row.get("home_score")
+        away_score = row.get("away_score")
+        margin = (home_score - away_score) if pd.notna(home_score) and pd.notna(away_score) else np.nan
         if key not in matchup_history:
             matchup_history[key] = []
         
         # Store from first team's perspective
-        if home == key[0]:
-            matchup_history[key].append(margin)
-        else:
-            matchup_history[key].append(-margin)
+        if pd.notna(margin):
+            if home == key[0]:
+                matchup_history[key].append(float(margin))
+            else:
+                matchup_history[key].append(float(-margin))
     
     df["h2h_games"] = h2h_games
     df["h2h_margin"] = h2h_margin
     
     print(f"      h2h_games: {(df['h2h_games'] > 0).sum()}/{len(df)} with history")
-    print(f"      h2h_margin: {(df['h2h_margin'] != 0.0).sum()}/{len(df)} computed")
+    print(f"      h2h_margin: {df['h2h_margin'].notna().sum()}/{len(df)} computed")
     
     return df
 
@@ -499,30 +514,36 @@ def compute_predicted_features(df: pd.DataFrame) -> pd.DataFrame:
     """Compute predicted margin/total features."""
     print("\n[8/8] Computing predicted features...")
     
-    # Predicted margin: use spread line negated, or estimate from team stats
+    # Strict: do not estimate predicted_* values with baked-in constants.
+    # If a feature cannot be computed from real inputs, leave NaN.
     if "fg_spread_line" in df.columns:
-        df["predicted_margin"] = -df["fg_spread_line"].fillna(df.get("ppg_diff", 0) + 3.5)
-        print(f"      predicted_margin: {df['predicted_margin'].notna().sum()}/{len(df)}")
+        df["predicted_margin"] = -pd.to_numeric(df["fg_spread_line"], errors="coerce")
     else:
-        df["predicted_margin"] = df.get("ppg_diff", pd.Series([0]*len(df))).fillna(0) + 3.5
-        print(f"      predicted_margin (estimated): {len(df)}")
+        df["predicted_margin"] = np.nan
+    print(f"      predicted_margin: {df['predicted_margin'].notna().sum()}/{len(df)}")
     
-    # Predicted total: use total line, or estimate from PPG
     if "fg_total_line" in df.columns:
-        df["predicted_total"] = df["fg_total_line"].fillna(
-            df.get("home_ppg", 110).fillna(110) + df.get("away_ppg", 110).fillna(110)
-        )
-        print(f"      predicted_total: {df['predicted_total'].notna().sum()}/{len(df)}")
+        df["predicted_total"] = pd.to_numeric(df["fg_total_line"], errors="coerce")
     else:
-        df["predicted_total"] = df.get("home_ppg", 110) + df.get("away_ppg", 110)
-        print(f"      predicted_total (estimated): {len(df)}")
+        df["predicted_total"] = np.nan
+    print(f"      predicted_total: {df['predicted_total'].notna().sum()}/{len(df)}")
     
     # spread_vs_predicted
-    df["spread_vs_predicted"] = df["fg_spread_line"].fillna(0) - (-df["predicted_margin"].fillna(0))
+    if "fg_spread_line" in df.columns:
+        df["spread_vs_predicted"] = (
+            pd.to_numeric(df["fg_spread_line"], errors="coerce") - (-pd.to_numeric(df["predicted_margin"], errors="coerce"))
+        )
+    else:
+        df["spread_vs_predicted"] = np.nan
     print(f"      spread_vs_predicted: {df['spread_vs_predicted'].notna().sum()}/{len(df)}")
     
     # total_vs_predicted
-    df["total_vs_predicted"] = df["fg_total_line"].fillna(220) - df["predicted_total"].fillna(220)
+    if "fg_total_line" in df.columns:
+        df["total_vs_predicted"] = (
+            pd.to_numeric(df["fg_total_line"], errors="coerce") - pd.to_numeric(df["predicted_total"], errors="coerce")
+        )
+    else:
+        df["total_vs_predicted"] = np.nan
     print(f"      total_vs_predicted: {df['total_vs_predicted'].notna().sum()}/{len(df)}")
     
     return df
@@ -568,22 +589,35 @@ def main():
     print("COMPLETING TRAINING DATA FEATURES")
     print("=" * 70)
     
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--training-file",
+        default=str(TRAINING_FILE),
+        help=f"Path to training CSV to enrich (default: {TRAINING_FILE})",
+    )
+    parser.add_argument(
+        "--min-injury-match-fraction",
+        type=float,
+        default=0.99,
+        help="Minimum fraction of games that must match injury inputs (default: 0.99)",
+    )
+    args = parser.parse_args()
+
+    training_file = Path(args.training_file)
+
     # Fill moneylines
-    df = fill_moneylines()
+    df = fill_moneylines(training_file)
     
-    # Compute travel features (silently fail if team_factors not available)
-    try:
-        df = compute_travel_features(df)
-    except Exception as e:
-        print(f"\n[2/8] Computing travel features...")
-        print(f"      [SKIP] Travel module error: {e}")
-        df["travel_advantage"] = 0.0
+    # Compute travel features (no silent 0-fill)
+    df = compute_travel_features(df)
     
-    # Add betting splits defaults
+    # Add betting splits columns (no placeholders)
     df = add_betting_splits_defaults(df)
     
     # Compute injury impact from inactive_players.csv
-    df = compute_injury_impact(df)
+    df = compute_injury_impact(df, min_match_fraction=args.min_injury_match_fraction)
     
     # Compute derived features (ppg_diff, win_pct_diff, etc.)
     df = compute_derived_features(df)
@@ -599,8 +633,8 @@ def main():
     
     # Save
     print("\nSaving...")
-    df.to_csv(TRAINING_FILE, index=False)
-    print(f"Saved to {TRAINING_FILE}")
+    df.to_csv(training_file, index=False)
+    print(f"Saved to {training_file}")
     
     # Verify
     all_present = verify_model_features(df)

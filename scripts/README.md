@@ -19,7 +19,8 @@ python scripts/build_training_data_complete.py --start-date 2023-01-01
 # 1. Merges ALL data sources (Kaggle, TheOdds, nba_api, etc.)
 # 2. Automatically calls fix_training_data_gaps.py
 # 3. Automatically calls complete_training_features.py
-# 4. Outputs: data/processed/training_data_complete_2023.csv
+# 4. Outputs (canonical): data/processed/training_data.csv
+# 5. Outputs (snapshot): data/processed/training_data_complete_<YYYY>.csv
 ```
 
 ---

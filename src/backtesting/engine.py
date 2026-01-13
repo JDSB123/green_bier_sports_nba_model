@@ -40,7 +40,7 @@ class BacktestConfig:
     """Configuration for a complete backtest run."""
     
     # Data
-    data_path: str = "data/processed/training_data_complete_2023.csv"
+    data_path: str = "data/processed/training_data.csv"
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     
@@ -193,8 +193,8 @@ class BacktestEngine:
         """Get feature columns for a market based on available data."""
         config = MARKET_CONFIGS[market_key]
         
-        # Use features that exist in the training data
-        # These are based on the actual training_data_complete_2023.csv columns
+        # Use features that exist in the training data.
+        # Feature sets are derived from the canonical processed dataset.
         
         # Rolling stat features (5g, 10g, 20g windows)
         rolling_features = []

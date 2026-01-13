@@ -102,6 +102,12 @@ export/
 # Temporary output files
 nba_betting_card_*.txt
 nba_picks_*.html
+executive*.json
+comprehensive*.json
+executive*.html
+comprehensive*.html
+nba_weekly_executive.html
+data/diagnostics/
 *.tmp
 temp/
 .claude/

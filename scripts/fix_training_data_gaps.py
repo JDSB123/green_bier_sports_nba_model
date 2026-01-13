@@ -19,7 +19,7 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-DEFAULT_DATA_FILE = PROJECT_ROOT / "data" / "processed" / "training_data_complete_2023.csv"
+DEFAULT_DATA_FILE = PROJECT_ROOT / "data" / "processed" / "training_data.csv"
 MAX_NULL_FRACTION = 0.01  # fail fast if more than 1% of values are missing after repair
 
 
@@ -144,15 +144,15 @@ def main(
             rest_h = (date - last_game[home]).days
         else:
             # If the dataset window starts mid-season, the true rest is unknown.
-            # We treat this as a long-rest scenario (capped later) to avoid NaNs.
-            rest_h = 10
+            # Strict mode: do not fabricate rest; keep as NaN.
+            rest_h = np.nan
         home_rest.append(rest_h)
         
         # Away rest
         if away in last_game:
             rest_a = (date - last_game[away]).days
         else:
-            rest_a = 10
+            rest_a = np.nan
         away_rest.append(rest_a)
         
         # Update last game

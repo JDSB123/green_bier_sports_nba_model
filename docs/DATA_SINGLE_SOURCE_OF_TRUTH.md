@@ -278,7 +278,7 @@ Run: `python scripts/fix_training_data_gaps.py`
 Run: `python scripts/build_training_data_complete.py --start-date 2023-01-01`
 
 ### "Data looks stale"
-1. Check `data/processed/training_data_complete_2023.csv` modification date
+1. Check `data/processed/training_data.csv` modification date
 2. Rebuild if needed: `python scripts/build_training_data_complete.py`
 
 ---

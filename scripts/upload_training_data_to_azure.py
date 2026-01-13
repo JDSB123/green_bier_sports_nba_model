@@ -43,6 +43,7 @@ BLOB_PREFIX = "training_data"  # training_data/v1.0.0/training_data_complete.csv
 # Data paths
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 TRAINING_DATA_PATHS = [
+    DATA_DIR / "training_data.csv",
     DATA_DIR / "training_data_complete_2023_with_injuries.csv",
     DATA_DIR / "training_data_complete_2023.csv",
 ]
@@ -55,21 +56,24 @@ MIN_ODDS_COVERAGE = 0.90    # 90%
 
 # Required columns by category
 REQUIRED_COLUMNS = {
-    "identifiers": ["game_id", "game_date", "season", "home_team", "away_team"],
+    # NOTE: tolerate both legacy and canonical identifiers; quality check will accept either.
+    "identifiers": ["game_date", "season", "home_team", "away_team"],
     "scores": ["home_score", "away_score"],
     "labels": ["home_win", "spread_covered", "total_over"],
-    "fg_lines": ["spread_line", "total_line"],
+    # Canonical builder emits fg_*; some legacy datasets also contain spread_line/total_line.
+    "fg_lines": ["fg_spread_line", "fg_total_line"],
     "elo": ["home_elo", "away_elo", "elo_diff"],
     "rolling": ["home_ppg", "away_ppg"],
 }
 
 # Injury columns (if present)
 INJURY_COLUMNS = [
-    "home_injury_impact",
-    "away_injury_impact",
-    "home_injury_star_out",
-    "away_injury_star_out",
-    "injury_imbalance",
+    "has_injury_data",
+    "home_injury_spread_impact",
+    "away_injury_spread_impact",
+    "injury_spread_diff",
+    "home_star_out",
+    "away_star_out",
 ]
 
 # Status symbols
