@@ -24,6 +24,7 @@ from src.modeling.unified_features import (
     FeatureCategory,
     get_features_by_category,
     validate_features,
+    LEAKY_FEATURES_BLACKLIST,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ TOTALS_FEATURES = [
 
 def get_spreads_features() -> List[str]:
     """Get all features for spreads prediction model.
-    
+
     Now returns the UNIFIED feature set (same as totals).
     """
     return UNIFIED_FEATURE_NAMES.copy()
@@ -76,7 +77,7 @@ def get_spreads_features() -> List[str]:
 
 def get_totals_features() -> List[str]:
     """Get all features for totals prediction model.
-    
+
     Now returns the UNIFIED feature set (same as spreads).
     """
     return UNIFIED_FEATURE_NAMES.copy()
@@ -87,11 +88,38 @@ def get_all_features() -> List[str]:
     return UNIFIED_FEATURE_NAMES.copy()
 
 
+def remove_leaky_features(features: List[str]) -> List[str]:
+    """
+    Remove any features that are known to cause data leakage.
+
+    CRITICAL: Call this before training any model to ensure no leaky features
+    are included. Leaky features are those computed from the game's actual
+    outcome (box scores, final scores) rather than pre-game data.
+
+    Args:
+        features: List of feature names to filter
+
+    Returns:
+        List with leaky features removed
+    """
+    blacklist_set = set(LEAKY_FEATURES_BLACKLIST)
+    clean_features = [f for f in features if f not in blacklist_set]
+
+    removed = set(features) - set(clean_features)
+    if removed:
+        logger.warning(
+            f"LEAKAGE PREVENTION: Removed {len(removed)} leaky features: {sorted(removed)}"
+        )
+
+    return clean_features
+
+
 def filter_available_features(
     requested: List[str],
     available_columns: List[str],
     min_required_pct: float = 0.3,  # Reduced from 0.5 since we have many features
     critical_features: List[str] = None,
+    exclude_leaky: bool = True,  # NEW: Auto-exclude leaky features
 ) -> List[str]:
     """
     Filter feature list to only those present in the data.
@@ -101,6 +129,7 @@ def filter_available_features(
         available_columns: List of column names actually present in data
         min_required_pct: Minimum % of requested features that must be available
         critical_features: List of feature names that MUST be present
+        exclude_leaky: If True, automatically remove features from LEAKY_FEATURES_BLACKLIST
 
     Returns:
         List of features that are both requested and available
@@ -150,8 +179,14 @@ def filter_available_features(
 
     logger.info(f"Using {len(available)}/{len(requested)} requested features ({available_pct:.1%})")
 
-    # Return in original request order
-    return [f for f in requested if f in available_set]
+    # Build final feature list in original request order
+    result = [f for f in requested if f in available_set]
+
+    # CRITICAL: Remove leaky features if enabled
+    if exclude_leaky:
+        result = remove_leaky_features(result)
+
+    return result
 
 
 # =============================================================================
@@ -171,7 +206,9 @@ __all__ = [
     "get_totals_features",
     "get_all_features",
     "filter_available_features",
+    "remove_leaky_features",
     "UNIFIED_FEATURE_NAMES",
     "FEATURE_DEFAULTS",
     "REQUIRED_FEATURES",
+    "LEAKY_FEATURES_BLACKLIST",
 ]

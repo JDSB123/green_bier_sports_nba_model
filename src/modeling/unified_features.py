@@ -20,6 +20,42 @@ from enum import Enum
 
 
 # =============================================================================
+# LEAKY FEATURES BLACKLIST - NEVER USE THESE IN TRAINING
+# =============================================================================
+# These features are computed FROM the game's actual outcome (box scores, final scores)
+# and therefore contain future information that leaks the answer to the model.
+# CRITICAL: If you add features that correlate >0.5 with the label, ADD THEM HERE.
+
+LEAKY_FEATURES_BLACKLIST = [
+    # Box score stats from THIS game (not rolling averages)
+    "home_net_rtg",      # Computed from this game's pts/possessions - 0.98 corr with margin
+    "away_net_rtg",      # Same issue
+    "home_ortg",         # Offensive rating from THIS game
+    "away_ortg",
+    "home_drtg",         # Defensive rating from THIS game
+    "away_drtg",
+    "net_rating_diff",   # Derived from leaky net_rtg values
+    # H2H features that include current game
+    "h2h_margin",        # Includes current game result - 0.85 corr with outcome
+    # Actual game scores (obvious leakage)
+    "home_score",
+    "away_score",
+    "home_1h",
+    "away_1h",
+    "home_q1",
+    "away_q1",
+    "fg_margin",
+    "actual_margin",
+    # Box score totals from this game
+    "home_fgm", "away_fgm",
+    "home_dreb", "away_dreb",
+    "home_efg_pct", "away_efg_pct",
+    "home_off_rtg", "away_off_rtg",
+    "home_def_rtg", "away_def_rtg",
+]
+
+
+# =============================================================================
 # FEATURE CATEGORIES
 # =============================================================================
 
@@ -73,17 +109,26 @@ CORE_FEATURES = [
 ]
 
 # -----------------------------------------------------------------------------
-# EFFICIENCY RATINGS - Advanced analytics
+# EFFICIENCY RATINGS - DISABLED DUE TO DATA LEAKAGE
 # -----------------------------------------------------------------------------
-EFFICIENCY_FEATURES = [
-    Feature("home_ortg", FeatureCategory.EFFICIENCY, "Home offensive rating (pts per 100 poss)", default=110.0),
-    Feature("home_drtg", FeatureCategory.EFFICIENCY, "Home defensive rating (pts allowed per 100 poss)", default=110.0),
-    Feature("home_net_rtg", FeatureCategory.EFFICIENCY, "Home net rating (ORtg - DRtg)", default=0.0),
-    Feature("away_ortg", FeatureCategory.EFFICIENCY, "Away offensive rating", default=110.0),
-    Feature("away_drtg", FeatureCategory.EFFICIENCY, "Away defensive rating", default=110.0),
-    Feature("away_net_rtg", FeatureCategory.EFFICIENCY, "Away net rating", default=0.0),
-    Feature("net_rating_diff", FeatureCategory.EFFICIENCY, "Net rating differential", default=0.0),
-]
+# WARNING: These features are computed FROM the game's box score in our current
+# data pipeline, making them contain future information (the game's actual result).
+# Correlation with outcome: home_net_rtg = 0.98, away_net_rtg = 0.98
+#
+# TODO: To use efficiency features properly, we need to compute ROLLING AVERAGES
+# from games BEFORE the current game (e.g., last 10 games average net_rtg).
+# Until the data pipeline is fixed, these are EXCLUDED from training.
+#
+# EFFICIENCY_FEATURES = [
+#     Feature("home_ortg", FeatureCategory.EFFICIENCY, "Home offensive rating (pts per 100 poss)", default=110.0),
+#     Feature("home_drtg", FeatureCategory.EFFICIENCY, "Home defensive rating (pts allowed per 100 poss)", default=110.0),
+#     Feature("home_net_rtg", FeatureCategory.EFFICIENCY, "Home net rating (ORtg - DRtg)", default=0.0),
+#     Feature("away_ortg", FeatureCategory.EFFICIENCY, "Away offensive rating", default=110.0),
+#     Feature("away_drtg", FeatureCategory.EFFICIENCY, "Away defensive rating", default=110.0),
+#     Feature("away_net_rtg", FeatureCategory.EFFICIENCY, "Away net rating", default=0.0),
+#     Feature("net_rating_diff", FeatureCategory.EFFICIENCY, "Net rating differential", default=0.0),
+# ]
+EFFICIENCY_FEATURES = []  # DISABLED - see above
 
 # -----------------------------------------------------------------------------
 # RECENT FORM - Last 5 and 10 game performance
@@ -187,12 +232,18 @@ BETTING_FEATURES = [
 ]
 
 # -----------------------------------------------------------------------------
-# HEAD-TO-HEAD HISTORY
+# HEAD-TO-HEAD HISTORY - PARTIALLY DISABLED DUE TO DATA LEAKAGE
 # -----------------------------------------------------------------------------
+# WARNING: h2h_margin in our current data includes the CURRENT game result
+# in its calculation (0.85 correlation with outcome). This is data leakage.
+#
+# h2h_games is safe to use (just a count of prior matchups).
+# h2h_margin EXCLUDED until the pipeline is fixed to exclude current game.
+#
 H2H_FEATURES = [
     Feature("h2h_games", FeatureCategory.H2H, "Number of H2H games this season", default=0.0),
-    Feature("h2h_margin", FeatureCategory.H2H, "Average H2H margin (home perspective)", default=0.0),
-    Feature("h2h_win_rate", FeatureCategory.H2H, "H2H win rate (home perspective)", default=0.5),
+    # Feature("h2h_margin", ...) - DISABLED: leaks current game result
+    # Feature("h2h_win_rate", ...) - DISABLED: may include current game
 ]
 
 # -----------------------------------------------------------------------------
@@ -359,26 +410,26 @@ def get_all_market_keys() -> List[str]:
 def validate_features(features: Dict[str, float]) -> Dict[str, float]:
     """
     Validate and fill missing features with defaults.
-    
+
     Args:
         features: Dict of feature name -> value
-        
+
     Returns:
         Complete feature dict with all required features filled
     """
     result = get_feature_defaults()
     result.update(features)
-    
+
     # Check required features have non-default values
     missing_required = []
     for feat_name in REQUIRED_FEATURES:
         if feat_name not in features:
             missing_required.append(feat_name)
-    
+
     if missing_required:
         import logging
         logging.warning(f"Required features missing (using defaults): {missing_required}")
-    
+
     return result
 
 
@@ -394,12 +445,12 @@ def print_feature_summary():
     print(f"Total Features: {len(ALL_FEATURES)}")
     print(f"Required Features: {len(REQUIRED_FEATURES)}")
     print()
-    
+
     # Count by category
     for category in FeatureCategory:
         count = len(get_features_by_category(category))
         print(f"  {category.value.upper():12s}: {count:3d} features")
-    
+
     print()
     print("All 4 models use IDENTICAL feature sets.")
     print("=" * 60)

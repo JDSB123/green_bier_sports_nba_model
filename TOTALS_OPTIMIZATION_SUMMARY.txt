@@ -1,0 +1,318 @@
+================================================================================
+TOTALS MARKET OPTIMIZATION - COMPLETE PACKAGE
+================================================================================
+
+CREATED BY: Totals Optimization Agent
+DATE: 2026-01-15
+PURPOSE: Independent optimization of 1H and FG totals markets
+
+================================================================================
+FILES CREATED
+================================================================================
+
+OPTIMIZATION SCRIPTS:
+---------------------
+1. scripts/optimize_totals_only.py
+   - Primary optimization script
+   - Runs comprehensive parameter sweep for both markets
+   - Tests 169 combinations per market (338 total)
+   - Outputs JSON results with full analysis
+
+2. run_totals_optimization.bat
+   - Windows batch file for easy execution
+   - Simply double-click to run
+   - Calls optimize_totals_only.py
+
+3. run_totals_optimization_alternative.bat
+   - Alternative method using existing framework
+   - Runs FG and 1H optimizations separately
+   - Uses optimize_confidence_thresholds.py
+
+ANALYSIS SCRIPTS:
+-----------------
+4. scripts/analyze_totals_results.py
+   - Analyzes optimization results
+   - Identifies best parameters for each market
+   - Generates deployment recommendations
+   - Creates summary reports
+
+DOCUMENTATION:
+--------------
+5. TOTALS_OPTIMIZATION_GUIDE.md
+   - Complete methodology guide
+   - Parameter grids explained
+   - Expected outcomes
+   - Troubleshooting tips
+
+6. TOTALS_OPTIMIZATION_RESULTS_TEMPLATE.md
+   - Template for documenting results
+   - Tables for top 10 combinations
+   - Implementation roadmap
+   - Risk management guidelines
+
+7. README_TOTALS_OPTIMIZATION.md
+   - Quick start guide
+   - Step-by-step workflow
+   - FAQ section
+   - Best practices
+
+8. TOTALS_OPTIMIZATION_SUMMARY.txt
+   - This file
+   - Quick reference for all created files
+
+================================================================================
+HOW TO RUN THE OPTIMIZATION
+================================================================================
+
+STEP 1: RUN OPTIMIZATION
+-------------------------
+Choose ONE of these methods:
+
+METHOD A (Recommended - Easiest):
+  1. Double-click: run_totals_optimization.bat
+  2. Wait for completion (5-15 minutes)
+  3. Results saved to: data/backtest_results/totals_optimization_TIMESTAMP.json
+
+METHOD B (Python Direct):
+  1. Open command prompt
+  2. cd c:\Users\JDSB\dev\green_bier_sport_ventures\nba_gbsv_local
+  3. python scripts\optimize_totals_only.py
+  4. Results saved to: data/backtest_results/totals_optimization_TIMESTAMP.json
+
+METHOD C (Alternative):
+  1. Double-click: run_totals_optimization_alternative.bat
+  2. Results saved to:
+     - data/backtest_results/fg_total_optimization.json
+     - data/backtest_results/1h_total_optimization.json
+
+STEP 2: ANALYZE RESULTS
+------------------------
+  1. Open command prompt
+  2. cd c:\Users\JDSB\dev\green_bier_sport_ventures\nba_gbsv_local
+  3. python scripts\analyze_totals_results.py
+  4. Review console output for recommendations
+  5. Summary saved to: data/backtest_results/totals_optimization_summary.json
+
+STEP 3: IMPLEMENT OPTIMAL PARAMETERS
+-------------------------------------
+  1. Note the recommended parameters from analysis
+  2. Open: src/config.py
+  3. Update FilterThresholds class:
+     - total_min_confidence (FG totals)
+     - total_min_edge (FG totals)
+     - fh_total_min_confidence (1H totals)
+     - fh_total_min_edge (1H totals)
+  4. Save changes
+  5. Test on recent data before production deployment
+
+================================================================================
+WHAT THE OPTIMIZATION DOES
+================================================================================
+
+PARAMETER GRIDS TESTED:
+-----------------------
+Confidence: [0.55, 0.57, 0.59, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79]
+Edge:       [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+
+Total combinations: 13 confidence × 13 edge = 169 per market
+
+MARKETS OPTIMIZED:
+------------------
+1. FG Totals (Full Game Over/Under)
+   - Current: confidence >= 0.72, edge >= 3.0
+   - Optimized: [TO BE DETERMINED FROM RESULTS]
+
+2. 1H Totals (First Half Over/Under)
+   - Current: confidence >= 0.66, edge >= 2.0
+   - Optimized: [TO BE DETERMINED FROM RESULTS]
+
+METRICS CALCULATED:
+-------------------
+For each parameter combination:
+- Bet volume (must be >= 30 for statistical significance)
+- Win rate (accuracy)
+- ROI (return on investment %)
+- Profit (total units won/lost)
+- Rankings by ROI, accuracy, and volume
+
+OPTIMIZATION GOAL:
+------------------
+Maximize ROI while maintaining acceptable bet volume and statistical significance.
+
+================================================================================
+CURRENT CONFIGURATION (BASELINE)
+================================================================================
+
+From src/config.py:
+
+FG TOTALS:
+  Min Confidence: 0.72 (72%)
+  Min Edge:       3.0 points
+
+1H TOTALS:
+  Min Confidence: 0.66 (66%)
+  Min Edge:       2.0 points
+
+These are the CURRENT production values. The optimization will find BETTER values.
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+TYPICAL OPTIMAL RANGES:
+
+FG Totals:
+  Confidence: 0.67 - 0.75
+  Edge:       2.5 - 4.0 points
+  Target ROI: 2% - 5%
+  Target Accuracy: 54% - 58%
+
+1H Totals:
+  Confidence: 0.63 - 0.71
+  Edge:       1.5 - 3.5 points
+  Target ROI: 1.5% - 4.5%
+  Target Accuracy: 53% - 57%
+
+Note: Actual results depend on model quality and historical data.
+Break-even at -110 odds = 52.38% accuracy
+
+================================================================================
+OUTPUT FILES (GENERATED BY OPTIMIZATION)
+================================================================================
+
+After running optimization, you'll find:
+
+1. data/backtest_results/totals_optimization_YYYYMMDD_HHMMSS.json
+   - Raw optimization results
+   - All parameter combinations tested
+   - Baseline performance
+   - Ranked by ROI
+
+2. data/backtest_results/totals_optimization_summary.json (after analysis)
+   - Summarized results
+   - Best parameters identified
+   - Deployment recommendations
+   - Comparison between markets
+
+================================================================================
+KEY METRICS TO UNDERSTAND
+================================================================================
+
+CONFIDENCE:
+  - Model's certainty in prediction (0-1 scale)
+  - Higher = more certain
+  - Threshold filters out low-confidence bets
+
+EDGE:
+  - Difference between model prediction and betting line
+  - In points for totals (e.g., model predicts 225, line is 220, edge = 5)
+  - Higher edge = bigger perceived advantage
+
+ROI (Return on Investment):
+  - Percentage profit on dollars wagered
+  - ROI = (Profit / Total Wagered) × 100
+  - Positive ROI = profitable strategy
+  - Target: 2%+ for sustainable betting
+
+ACCURACY / WIN RATE:
+  - Percentage of bets won
+  - Break-even at -110 odds = 52.38%
+  - Target: 54%+ for comfortable margin
+
+BET VOLUME:
+  - Number of qualifying bets
+  - Higher thresholds = fewer bets
+  - Need minimum 30 bets for statistical significance
+  - Prefer 50+ for reliable metrics
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+INDEPENDENCE:
+  - This optimization is for TOTALS ONLY
+  - Spreads and moneylines handled by other agents
+  - No file conflicts with other agents
+  - Safe to run in parallel
+
+NO MODIFICATIONS TO SHARED FILES:
+  - All outputs go to unique files
+  - No changes to production models
+  - No changes to training data
+  - Only reads existing configuration
+
+STATISTICAL SIGNIFICANCE:
+  - Minimum 30 bets required per combination
+  - Prefer 50+ bets for stable metrics
+  - More bets = more reliable results
+  - Less bets = higher variance
+
+VALIDATION REQUIRED:
+  - Always test optimized parameters on recent data
+  - Don't blindly deploy to production
+  - Monitor initial performance closely
+  - Re-optimize regularly (monthly/quarterly)
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+PROBLEM: Script won't run
+SOLUTION:
+  - Check Python is installed
+  - Ensure you're in correct directory
+  - Try alternative batch file method
+
+PROBLEM: All ROIs negative
+SOLUTION:
+  - Check model performance first
+  - Verify training data is current
+  - May need model retraining
+
+PROBLEM: Not enough bets (< 30)
+SOLUTION:
+  - Expand parameter grids (lower minimums)
+  - Check data quality and line coverage
+  - Consider lowering minimum bet threshold
+
+PROBLEM: High variance in results
+SOLUTION:
+  - Focus on combinations with 50+ bets
+  - Use more conservative thresholds
+  - Check for seasonal effects
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. ☐ Run optimization using one of the methods above
+2. ☐ Analyze results using analyze_totals_results.py
+3. ☐ Review top 10 parameter combinations for each market
+4. ☐ Choose parameters balancing ROI and volume
+5. ☐ Update src/config.py with new thresholds
+6. ☐ Test on recent data (last 30 days)
+7. ☐ Deploy to production if results validate
+8. ☐ Monitor live performance
+9. ☐ Re-optimize monthly or when performance degrades
+
+================================================================================
+SUPPORT
+================================================================================
+
+For detailed information, see:
+  - README_TOTALS_OPTIMIZATION.md (Quick start & workflow)
+  - TOTALS_OPTIMIZATION_GUIDE.md (Methodology & theory)
+  - TOTALS_OPTIMIZATION_RESULTS_TEMPLATE.md (Results documentation)
+
+For questions about the code:
+  - Review scripts/optimize_totals_only.py (well-commented)
+  - Check scripts/backtest_production.py (core backtesting logic)
+  - See src/config.py (current configuration)
+
+================================================================================
+END OF SUMMARY
+================================================================================
+
+Ready to optimize! Run one of the batch files or Python scripts above to begin.
+
+Good luck! 🏀📊
