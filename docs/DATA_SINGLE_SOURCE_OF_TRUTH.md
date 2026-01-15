@@ -63,9 +63,9 @@ python scripts/download_training_data_from_azure.py --list
 data/processed/training_data_complete_2023_with_injuries.csv
 ```
 
-**Date Range:** 2023-01-01 to 2026-01-09  
-**Games:** 3,969  
-**Columns:** 327  
+**Date Range:** 2023-01-01 to 2026-01-09
+**Games:** 3,969
+**Columns:** 327
 **Injury Coverage:** 100% (via Kaggle inference)
 **Odds Coverage:** 100%
 **Model Features:** 55/55 (100% coverage)
@@ -96,17 +96,17 @@ This master script:
 ## Data Sources
 
 ### 1. Kaggle (nba_2008-2025.csv)
-**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and local cache when pulled  
-**Coverage:** 2008-2025 seasons  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and local cache when pulled
+**Coverage:** 2008-2025 seasons
 **Contents:**
 - Final scores (home_score, away_score)
 - Quarter scores (q1-q4)
 - Betting lines (spread, total, moneyline)
-- First half lines (h2_spread, h2_total)
+- First half lines (1h_spread, 1h_total)
 
 ### 2. TheOdds API
-**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/the_odds/` and `historical/exports/`); pull to temp for use  
-**Coverage:** 2021-present  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/the_odds/` and `historical/exports/`); pull to temp for use
+**Coverage:** 2021-present (Comprehensive for 2023+)
 **Contents:**
 - Full game lines (FG spread, total, moneyline)
 - First half lines (1H spread, total, moneyline)
@@ -114,8 +114,8 @@ This master script:
 - Per-bookmaker odds
 
 ### 3. nba_database (wyattowalsh/basketball)
-**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and temp local cache when needed  
-**Coverage:** 1946-2023 (historical), ongoing updates  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and temp local cache when needed
+**Coverage:** 1946-2023 (historical), ongoing updates
 **Files:**
 | File | Records | Contents |
 |------|---------|----------|
@@ -125,22 +125,22 @@ This master script:
 | `common_player_info.csv` | 3,632 | Player metadata (no stats) |
 
 ### 4. NBA API (nba_api)
-**Location:** Generated locally per run (not stored long term); upload derived outputs to Azure if persisted  
-**Coverage:** 2023-present  
+**Location:** Generated locally per run (not stored long term); upload derived outputs to Azure if persisted
+**Coverage:** 2023-present
 **Contents:**
 - Box scores (per season)
 - Quarter scores (2025-26)
 
 ### 5. FiveThirtyEight ELO
-**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/elo/`) and temp local cache when needed  
-**Coverage:** Historical  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/elo/`) and temp local cache when needed
+**Coverage:** Historical
 **Contents:**
 - Team ELO ratings
 
 ### 6. Kaggle eoinamoore (Player Box Scores)
-**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and temp local cache when needed  
-**Dataset:** `eoinamoore/historical-nba-data-and-player-box-scores`  
-**Coverage:** 1947-present (updated daily!)  
+**Location:** Azure Blob (`nbagbsvstrg/nbahistoricaldata/historical/exports/`) and temp local cache when needed
+**Dataset:** `eoinamoore/historical-nba-data-and-player-box-scores`
+**Coverage:** 1947-present (updated daily!)
 **Files:**
 | File | Size | Contents |
 |------|------|----------|
@@ -220,26 +220,26 @@ python scripts/build_training_data_complete.py
 
 ## Known Gaps & Limitations
 
-### 1. Moneylines (69.5% coverage)
-- TheOdds has best coverage at 69.5%
-- Kaggle has only ~3% for 2023+
-- **Cannot improve** without additional data source
+### 1. Moneylines (Partial Coverage ~70%)
+- **Spreads & Totals:** ✅ **100% Coverage** (Full Game) for 2023-Present.
+- **1st Half Markets:** ✅ **98%+ Coverage** since 2023-24 Season. (Jan-June 2023 has gaps).
+- **Moneylines:** ~70% coverage (TheOdds API has gaps in ML history).
+- **Impact:** Models rely primarily on Spread/Total data which is complete.
 
-### 2. Player Impact/Injuries
-- `inactive_players.csv` has 110K records of who was inactive
-- `common_player_info.csv` has player metadata (season_exp, draft_position, greatest_75_flag)
-- **Coverage:** 19.3% of training data (games through June 2023)
-- **For 2023-24, 2024-25, 2025-26:** Need to refresh nba_database or use alternative source
+### 2. Player Impact/Injuries (RESOLVED)
+- **Status:** ✅ **100% Coverage** for 2023-Present.
+- **Method:** `inactive_players_kaggle_supplement.csv` infers inactives from daily box scores.
+- **Feature:** `home_injury_impact` / `away_injury_impact` fully populated.
 
 ### 3. Pace Features
 - `game.csv` has possessions data (FGA, FTA, OREB, TOV)
 - **Computed:** Using league average (100) as baseline
 - **Improvement potential:** Compute rolling pace per team
 
-### 4. Travel Features
-- `team_factors.py` module has distance calculations
-- **Currently:** Set to 0 due to import/mapping issues
-- **Fix needed:** Update team name mappings
+### 4. Travel Features (RESOLVED)
+- **Status:** ✅ **100% Coverage**.
+- **Features:** `away_travel_distance`, `away_timezone_change`, `is_away_long_trip` fully populated.
+- **Method:** `team_factors.py` correctly calculates distance between stadiums.
 
 ---
 

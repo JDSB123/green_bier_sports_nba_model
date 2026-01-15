@@ -237,7 +237,6 @@
 │    - total_over = (actual_total > total_line)                               │
 │    - 1h_spread_covered = (actual_1h_margin > -1h_spread_line)              │
 │    - 1h_total_over = (actual_1h_total > 1h_total_line)                      │
-│    - 1h_spread_covered, 1h_total_over (if 1H data available)               │
 └────────────────────────────┬────────────────────────────────────────────────┘
                              │
                              ▼
@@ -574,7 +573,7 @@ Fetching betting lines for 180 unique dates...
 
 **Total Endpoints Used:** 12+ endpoints across 2 APIs
 
-**API-Basketball:** 4 essential endpoints (Tier 1) always called  
+**API-Basketball:** 4 essential endpoints (Tier 1) always called
 **The Odds API:** 5 endpoints (participants, odds, events, event-odds, splits)
 
 **All endpoints are now optimized and being used in the container pipeline!** ✅
