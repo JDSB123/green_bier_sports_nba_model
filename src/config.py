@@ -95,10 +95,14 @@ class FilterThresholds:
     A prediction must meet BOTH confidence AND edge thresholds to pass.
 
     Thresholds can be set via environment variables. Defaults provided for local development:
-    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.60)
+    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.62)
     - FILTER_SPREAD_MIN_EDGE (default: 2.0)
-    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.58)
+    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.72)
     - FILTER_TOTAL_MIN_EDGE (default: 3.0)
+    - FILTER_1H_SPREAD_MIN_CONFIDENCE (default: 0.68)
+    - FILTER_1H_SPREAD_MIN_EDGE (default: 1.5)
+    - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.66)
+    - FILTER_1H_TOTAL_MIN_EDGE (default: 2.0)
 
     4 markets only (1H + FG spreads/totals).
     """

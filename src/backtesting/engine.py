@@ -366,6 +366,24 @@ class BacktestEngine:
                     verbose=verbose,
                     configured_juice=market_juice,  # Explicit user-configured juice
                 )
+
+                # Apply optional confidence/edge filters to simulate betting thresholds.
+                if self.config.min_confidence > 0.0 or self.config.min_edge > 0.0:
+                    original_count = len(results)
+                    filtered = []
+                    for r in results:
+                        if self.config.min_confidence > 0.0 and r.confidence < self.config.min_confidence:
+                            continue
+                        if self.config.min_edge > 0.0:
+                            if r.edge is None or r.edge < self.config.min_edge:
+                                continue
+                        filtered.append(r)
+                    results = filtered
+                    if verbose:
+                        logger.info(
+                            f"{market_key}: filtered to {len(results)}/{original_count} bets "
+                            f"(min_confidence={self.config.min_confidence}, min_edge={self.config.min_edge})"
+                        )
                 
                 self.predictions[market_key] = results
                 

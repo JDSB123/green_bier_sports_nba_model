@@ -185,24 +185,10 @@ class BacktestDataLoader:
             raise FileNotFoundError(f"Training data not found: {self.data_path}")
         
         logger.info(f"Loading training data from {self.data_path}")
-        
-        # #region agent log
-        import json
-        import time
-        log_path = r"c:\Users\JB\green-bier-ventures\NBA_main\.cursor\debug.log"
-        # #endregion
-        
+
         # Load CSV
         df = pd.read_csv(self.data_path, low_memory=False)
-        
-        # #region agent log
-        odds_related_cols = [c for c in df.columns if any(term in c.lower() for term in ['odds', 'juice', 'vig', 'price', 'ml_', '_ml'])]
-        spread_cols = [c for c in df.columns if 'spread' in c.lower()]
-        total_cols = [c for c in df.columns if 'total' in c.lower()]
-        with open(log_path, 'a') as f:
-            f.write(json.dumps({"hypothesisId": "B,C", "location": "data_loader.py:load", "message": "Available odds columns in data", "data": {"odds_related": odds_related_cols, "spread_cols": spread_cols, "total_cols": total_cols, "all_columns_count": len(df.columns)}, "timestamp": int(time.time()*1000), "sessionId": "debug-session", "runId": "initial"}) + '\n')
-        # #endregion
-        
+
         # Parse dates - try game_date first, then date
         if "game_date" in df.columns:
             df["date"] = pd.to_datetime(df["game_date"], errors="coerce")

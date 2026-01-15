@@ -25,10 +25,14 @@ os.environ.setdefault('CURRENT_SEASON', '2025-2026')
 os.environ.setdefault('SEASONS_TO_PROCESS', '2024-2025,2025-2026')
 os.environ.setdefault('DATA_RAW_DIR', str(PROJECT_ROOT / 'data' / 'raw'))
 os.environ.setdefault('DATA_PROCESSED_DIR', str(PROJECT_ROOT / 'data' / 'processed'))
-os.environ.setdefault('FILTER_SPREAD_MIN_CONFIDENCE', '0.55')
-os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '1.0')
-os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.55')
-os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '1.5')
+os.environ.setdefault('FILTER_SPREAD_MIN_CONFIDENCE', '0.62')
+os.environ.setdefault('FILTER_SPREAD_MIN_EDGE', '2.0')
+os.environ.setdefault('FILTER_TOTAL_MIN_CONFIDENCE', '0.72')
+os.environ.setdefault('FILTER_TOTAL_MIN_EDGE', '3.0')
+os.environ.setdefault('FILTER_1H_SPREAD_MIN_CONFIDENCE', '0.68')
+os.environ.setdefault('FILTER_1H_SPREAD_MIN_EDGE', '1.5')
+os.environ.setdefault('FILTER_1H_TOTAL_MIN_CONFIDENCE', '0.66')
+os.environ.setdefault('FILTER_1H_TOTAL_MIN_EDGE', '2.0')
 
 checks_passed = []
 checks_failed = []
@@ -170,6 +174,10 @@ def check_docker_configuration():
                 "FILTER_SPREAD_MIN_EDGE",
                 "FILTER_TOTAL_MIN_CONFIDENCE",
                 "FILTER_TOTAL_MIN_EDGE",
+                "FILTER_1H_SPREAD_MIN_CONFIDENCE",
+                "FILTER_1H_SPREAD_MIN_EDGE",
+                "FILTER_1H_TOTAL_MIN_CONFIDENCE",
+                "FILTER_1H_TOTAL_MIN_EDGE",
             ]
             
             for env_var in required_env_vars:

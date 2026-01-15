@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from src.backtesting.data_loader import MARKET_CONFIGS, MarketConfig, StrictModeViolation
+from src.prediction.confidence import calculate_confidence_from_binary_probability
 
 logger = logging.getLogger(__name__)
 
@@ -144,13 +145,6 @@ class WalkForwardEngine:
         Returns:
             American odds (e.g., -110, +150) or None if unavailable
         """
-        # #region agent log
-        import json
-        log_path = r"c:\Users\JB\green-bier-ventures\NBA_main\.cursor\debug.log"
-        with open(log_path, 'a') as f:
-            f.write(json.dumps({"hypothesisId": "A,B,C", "location": "walk_forward.py:_get_bet_odds", "message": "Checking odds columns", "data": {"market_type": market_config.market_type, "period": market_config.period, "prediction": prediction, "available_cols": [c for c in row.index if 'odds' in c.lower() or 'juice' in c.lower() or 'vig' in c.lower() or (('spread' in c.lower() or 'total' in c.lower()) and 'line' not in c.lower())]}, "timestamp": int(__import__('time').time()*1000), "sessionId": "debug-session", "runId": "initial"}) + '\n')
-        # #endregion
-        
         period = market_config.period  # "fg" or "1h"
         market_type = market_config.market_type
         
@@ -174,12 +168,6 @@ class WalkForwardEngine:
             # Use user-configured juice for spread bets
             # This is NOT an assumption - user explicitly provides this value
             configured = getattr(self, '_configured_juice', None)
-            
-            # #region agent log
-            with open(log_path, 'a') as f:
-                f.write(json.dumps({"hypothesisId": "FIX", "location": "walk_forward.py:_get_bet_odds:spread", "message": "Using configured spread juice", "data": {"configured_juice": configured, "market_type": market_type}, "timestamp": int(__import__('time').time()*1000), "sessionId": "debug-session", "runId": "post-fix"}) + '\n')
-            # #endregion
-            
             # Return user-configured juice, or None if not provided
             return configured
         
@@ -187,12 +175,6 @@ class WalkForwardEngine:
             # Use user-configured juice for total bets
             # This is NOT an assumption - user explicitly provides this value
             configured = getattr(self, '_configured_juice', None)
-            
-            # #region agent log
-            with open(log_path, 'a') as f:
-                f.write(json.dumps({"hypothesisId": "FIX", "location": "walk_forward.py:_get_bet_odds:total", "message": "Using configured total juice", "data": {"configured_juice": configured, "market_type": market_type}, "timestamp": int(__import__('time').time()*1000), "sessionId": "debug-session", "runId": "post-fix"}) + '\n')
-            # #endregion
-            
             # Return user-configured juice, or None if not provided
             return configured
         
@@ -217,13 +199,6 @@ class WalkForwardEngine:
         Returns:
             Profit in units (positive = win, negative = loss)
         """
-        # #region agent log
-        import json
-        log_path = r"c:\Users\JB\green-bier-ventures\NBA_main\.cursor\debug.log"
-        if odds is None:
-            with open(log_path, 'a') as f:
-                f.write(json.dumps({"hypothesisId": "C,D", "location": "walk_forward.py:_calculate_profit", "message": "NO ODDS - profit=0", "data": {"market_type": market_type, "correct": correct, "odds": None}, "timestamp": int(__import__('time').time()*1000), "sessionId": "debug-session", "runId": "initial"}) + '\n')
-        # #endregion
         
         if odds is None:
             # NO FALLBACK - if no odds, profit is 0 (no bet placed)
@@ -395,8 +370,9 @@ class WalkForwardEngine:
                 actual = int(row[label_col])
                 correct = pred == actual
                 
-                # Confidence = distance from 50%
-                confidence = abs(prob - 0.5) * 2  # 0 to 1
+                # Confidence = calibrated probability of the predicted side
+                bet_prob = prob if pred == 1 else (1 - prob)
+                confidence = calculate_confidence_from_binary_probability(bet_prob)
                 
                 # Get line if available
                 line = None

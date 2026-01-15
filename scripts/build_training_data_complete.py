@@ -399,7 +399,7 @@ def load_theodds_2025_26() -> pd.DataFrame:
 
 def load_h1_exports() -> pd.DataFrame:
     """Load detailed 1H odds exports (SECONDARY SOURCE).
-    
+
     Priority hierarchy:
       1. theodds_lines.csv (consensus, PRIORITY)
       2. H1_EXPORTS (detailed exports, SECONDARY)
@@ -488,24 +488,71 @@ def load_line_movement() -> pd.DataFrame:
     for match_key, group in df.groupby("match_key"):
         group = group.sort_values("snapshot_timestamp")
         home_team = group.iloc[0]["home_team"]
+        away_team = group.iloc[0]["away_team"]
 
-        # Spreads
-        spread_rows = group[(group["market_key"] == "spreads") & (group["outcome_name"] == home_team)]
-        if len(spread_rows) > 0:
-            spread_rows = spread_rows.sort_values("snapshot_timestamp")
-            open_spread = spread_rows.iloc[0]["outcome_point"]
-            close_spread = spread_rows.iloc[-1]["outcome_point"]
+        # FG Spreads - home side (use OPENING price for walk-forward, no leakage)
+        spread_rows_home = group[(group["market_key"] == "spreads") & (group["outcome_name"] == home_team)]
+        spread_rows_away = group[(group["market_key"] == "spreads") & (group["outcome_name"] == away_team)]
+        if len(spread_rows_home) > 0:
+            spread_rows_home = spread_rows_home.sort_values("snapshot_timestamp")
+            open_spread = spread_rows_home.iloc[0]["outcome_point"]
+            close_spread = spread_rows_home.iloc[-1]["outcome_point"]
+            fg_spread_price_home = spread_rows_home.iloc[0]["outcome_price"]  # OPENING price
         else:
-            open_spread = close_spread = None
+            open_spread = close_spread = fg_spread_price_home = None
 
-        # Totals
-        total_rows = group[(group["market_key"] == "totals") & (group["outcome_name"] == "Over")]
-        if len(total_rows) > 0:
-            total_rows = total_rows.sort_values("snapshot_timestamp")
-            open_total = total_rows.iloc[0]["outcome_point"]
-            close_total = total_rows.iloc[-1]["outcome_point"]
+        if len(spread_rows_away) > 0:
+            spread_rows_away = spread_rows_away.sort_values("snapshot_timestamp")
+            fg_spread_price_away = spread_rows_away.iloc[0]["outcome_price"]  # OPENING price
         else:
-            open_total = close_total = None
+            fg_spread_price_away = None
+
+        # FG Totals (use OPENING price)
+        total_rows_over = group[(group["market_key"] == "totals") & (group["outcome_name"] == "Over")]
+        total_rows_under = group[(group["market_key"] == "totals") & (group["outcome_name"] == "Under")]
+        if len(total_rows_over) > 0:
+            total_rows_over = total_rows_over.sort_values("snapshot_timestamp")
+            open_total = total_rows_over.iloc[0]["outcome_point"]
+            close_total = total_rows_over.iloc[-1]["outcome_point"]
+            fg_total_price_over = total_rows_over.iloc[0]["outcome_price"]  # OPENING price
+        else:
+            open_total = close_total = fg_total_price_over = None
+
+        if len(total_rows_under) > 0:
+            total_rows_under = total_rows_under.sort_values("snapshot_timestamp")
+            fg_total_price_under = total_rows_under.iloc[0]["outcome_price"]  # OPENING price
+        else:
+            fg_total_price_under = None
+
+        # 1H Spreads (use OPENING price)
+        h1_spread_rows_home = group[(group["market_key"] == "spreads_h1") & (group["outcome_name"] == home_team)]
+        h1_spread_rows_away = group[(group["market_key"] == "spreads_h1") & (group["outcome_name"] == away_team)]
+        if len(h1_spread_rows_home) > 0:
+            h1_spread_rows_home = h1_spread_rows_home.sort_values("snapshot_timestamp")
+            h1_spread_price_home = h1_spread_rows_home.iloc[0]["outcome_price"]  # OPENING price
+        else:
+            h1_spread_price_home = None
+
+        if len(h1_spread_rows_away) > 0:
+            h1_spread_rows_away = h1_spread_rows_away.sort_values("snapshot_timestamp")
+            h1_spread_price_away = h1_spread_rows_away.iloc[0]["outcome_price"]  # OPENING price
+        else:
+            h1_spread_price_away = None
+
+        # 1H Totals (use OPENING price)
+        h1_total_rows_over = group[(group["market_key"] == "totals_h1") & (group["outcome_name"] == "Over")]
+        h1_total_rows_under = group[(group["market_key"] == "totals_h1") & (group["outcome_name"] == "Under")]
+        if len(h1_total_rows_over) > 0:
+            h1_total_rows_over = h1_total_rows_over.sort_values("snapshot_timestamp")
+            h1_total_price_over = h1_total_rows_over.iloc[0]["outcome_price"]  # OPENING price
+        else:
+            h1_total_price_over = None
+
+        if len(h1_total_rows_under) > 0:
+            h1_total_rows_under = h1_total_rows_under.sort_values("snapshot_timestamp")
+            h1_total_price_under = h1_total_rows_under.iloc[0]["outcome_price"]  # OPENING price
+        else:
+            h1_total_price_under = None
 
         movements.append({
             "match_key": match_key,
@@ -515,6 +562,15 @@ def load_line_movement() -> pd.DataFrame:
             "open_total": open_total,
             "close_total": close_total,
             "total_move": (close_total - open_total) if pd.notna(open_total) and pd.notna(close_total) else None,
+            # OPENING PRICES (pre-game, no leakage for walk-forward backtest)
+            "fg_spread_price_home": fg_spread_price_home,
+            "fg_spread_price_away": fg_spread_price_away,
+            "fg_total_price_over": fg_total_price_over,
+            "fg_total_price_under": fg_total_price_under,
+            "1h_spread_price_home": h1_spread_price_home,
+            "1h_spread_price_away": h1_spread_price_away,
+            "1h_total_price_over": h1_total_price_over,
+            "1h_total_price_under": h1_total_price_under,
         })
 
     result = pd.DataFrame(movements)
@@ -1223,7 +1279,7 @@ def print_summary(df: pd.DataFrame):
 def _download_prebuilt_training_data(blob_account: str = "nbagbsvstrg", version: str = "latest") -> Path:
     """Download pre-built training data from Azure training_data/ path.
 
-    This avoids expensive rebuilds from 8 raw sources during backtest runs.
+    This avoids expensive rebuilds from 8 raw sources when preparing canonical data.
     Uses validated, versioned training data instead of ephemeral rebuilds.
 
     Args:
@@ -1326,7 +1382,7 @@ def main(
         blob_account: Azure Storage account name (single source of truth)
         blob_container: Azure blob container name (single source of truth)
         use_prebuilt: If True, download validated training data from training_data/latest/
-                      instead of rebuilding from 8 raw sources (fast, for backtests).
+                      instead of rebuilding from 8 raw sources (fast for data engineering).
         prebuilt_version: Version of prebuilt data to download (default: "latest")
     """
     print("\n" + "="*80)
@@ -1469,7 +1525,7 @@ def main(
     # Warn on optional market columns (moneylines, 1H lines).
     final_df = pd.read_csv(out, low_memory=False)
 
-    # Critical columns - must be present and non-null for backtesting
+    # Critical columns - must be present and non-null for downstream modeling/backtests
     critical_cols = [
         "game_date",
         "home_team",
@@ -1492,7 +1548,7 @@ def main(
         print("=" * 70)
         for col, frac in critical_nulls.items():
             print(f"  {col}: {frac:.2%} null")
-        raise ValueError("Critical columns have nulls - cannot backtest")
+        raise ValueError("Critical columns have nulls - cannot proceed")
 
     # Optional columns - warn but don't fail
     optional_cols = ["fg_ml_home", "fg_ml_away", "1h_spread_line", "1h_total_line",
@@ -1541,7 +1597,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--use-prebuilt",
         action="store_true",
-        help="Download validated training data from training_data/latest/ instead of rebuilding from raw sources (fast for backtests)"
+        help="Download validated training data from training_data/latest/ instead of rebuilding from raw sources (fast for data engineering)"
     )
     parser.add_argument(
         "--prebuilt-version",

@@ -117,7 +117,6 @@ def calculate_comprehensive_edge(
     market_expected_margin = -fg_market_spread if fg_market_spread is not None else 0
     fg_spread_edge = fg_predicted_margin - market_expected_margin
     fg_spread_pick = home_team if fg_spread_edge > 0 else away_team
-    fg_spread_confidence = min(abs(fg_spread_edge) / 5.0, 0.90) if abs(fg_spread_edge) >= 1.0 else 0
     # NO SILENT FAILURES: Require ML Engine predictions for all markets
     # The system must have trained ML models available - no fallbacks to heuristics
     if not engine_predictions:
@@ -147,7 +146,7 @@ def calculate_comprehensive_edge(
             f"Model must provide calibrated probability != 0.5"
         )
 
-    # Use ML model confidence (entropy-based from calibrated classifier)
+    # Use ML model confidence from calibrated classifier
     fg_spread_confidence = fg_spread_pred.get("confidence")
     if fg_spread_confidence is None:
         raise ValueError(f"Missing confidence score from ML spread model for {home_team} vs {away_team}")
@@ -234,7 +233,7 @@ def calculate_comprehensive_edge(
             f"Model must provide calibrated probability != 0.5"
         )
 
-    # Use ML model confidence (entropy-based from calibrated classifier)
+    # Use ML model confidence from calibrated classifier
     fg_total_confidence = fg_total_pred.get("confidence")
     if fg_total_confidence is None:
         raise ValueError(f"Missing confidence score from ML total model for {home_team} vs {away_team}")
@@ -320,9 +319,11 @@ def calculate_comprehensive_edge(
         fh_spread_edge = fh_predicted_margin - fh_market_expected_margin
         fh_spread_pick = home_team if fh_spread_edge > 0 else away_team
 
-        # Use model's cover probability for confidence
-        fh_spread_confidence = abs(fh_cover_prob - 0.5) * 2  # Scale to 0-1
-        fh_spread_confidence = min(fh_spread_confidence, 0.70)
+        fh_spread_confidence = fh_spread_pred.get("confidence")
+        if fh_spread_confidence is None:
+            raise ValueError(
+                f"Missing confidence score from ML 1H spread model for {home_team} vs {away_team}"
+            )
         fh_spread_win_prob = fh_cover_prob if fh_spread_edge > 0 else (1 - fh_cover_prob)
         fh_spread_p_model = fh_cover_prob if fh_spread_pick == home_team else (1 - fh_cover_prob)
         fh_spread_std = estimate_spread_std(fh_features, "1h")
@@ -390,9 +391,11 @@ def calculate_comprehensive_edge(
         fh_total_edge = fh_predicted_total - fh_market_total
         fh_total_pick = "OVER" if fh_total_edge > 0 else "UNDER"
 
-        # Use model's over probability for confidence
-        fh_total_confidence = abs(fh_over_prob - 0.5) * 2  # Scale to 0-1
-        fh_total_confidence = min(fh_total_confidence, 0.70)
+        fh_total_confidence = fh_total_pred.get("confidence")
+        if fh_total_confidence is None:
+            raise ValueError(
+                f"Missing confidence score from ML 1H total model for {home_team} vs {away_team}"
+            )
         fh_total_win_prob = fh_over_prob if fh_total_edge > 0 else (1 - fh_over_prob)
         fh_total_p_model = fh_over_prob if fh_total_pick == "OVER" else (1 - fh_over_prob)
         fh_total_std = estimate_total_std(fh_features, "1h")
@@ -462,19 +465,17 @@ def calculate_comprehensive_edge(
                 edge_value = abs(market_data["edge"])
 
                 # Primary criteria: Model certainty + statistical significance
-                # Confidence represents information gain (certainty vs uncertainty)
+                # Confidence represents calibrated probability for the predicted side
                 # Edge represents magnitude of predicted deviation from market
                 model_certainty_and_significance = (
-                    confidence_score >= 0.75 and  # High certainty (75%+ confidence = strong signal)
-                    edge_value >= 2.5 and         # Statistically significant edge (2.5+ points)
-                    win_probability <= 0.35       # Conservative probability (≤35% for underdogs, ≥65% for favorites)
+                    confidence_score >= 0.75 and  # High certainty (75%+)
+                    edge_value >= 2.5             # Statistically significant edge (2.5+ points)
                 )
 
                 # Secondary criteria: Extreme market mismatch with reasonable certainty
                 extreme_market_mismatch = (
                     confidence_score >= 0.65 and  # Good certainty (65%+)
-                    edge_value >= 4.0 and         # Very large edge (4+ points = major mismatch)
-                    (win_probability <= 0.25 or win_probability >= 0.75)  # Very extreme probabilities
+                    edge_value >= 4.0             # Very large edge (4+ points)
                 )
 
                 # High confidence requires meeting statistical significance criteria

@@ -18,6 +18,7 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 - Updated model_pack.json with latest review (2026-01-14)
 - Added threshold optimization recommendations for 1H Spread market
 - Documented Azure Blob storage as single source of truth with audit status
+- Backtests now require canonical `data/processed/training_data.csv` (audited 2023+); legacy merge/prebuilt paths removed
 
 ### Reviewed
 - Backtest results from v33.0.15.0 validated:
@@ -37,13 +38,6 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 ---
 
 ## [NBA_v33.0.9.0] - 2026-01-05
-
-### Added
-- Historical **The Odds** line cache builder ([scripts/cache_theodds_lines.py](scripts/cache_theodds_lines.py))
-- Training-data merge utility for The Odds FG + 1H lines with strict label recomputation ([scripts/merge_theodds_lines_into_training_data.py](scripts/merge_theodds_lines_into_training_data.py))
-- Leakage-safe, fast walk-forward backtester using precomputed features ([scripts/walkforward_backtest_theodds.py](scripts/walkforward_backtest_theodds.py))
-- Confidence-threshold optimizer for ROI-based decisioning ([scripts/optimize_backtest_thresholds.py](scripts/optimize_backtest_thresholds.py))
-- Versioned backtest outputs and derived line cache committed under `data/backtest_results/` and `data/historical/derived/`
 
 ### Changed
 - Improved leakage validation ergonomics (can validate arbitrary training CSV via `--training-path`) ([scripts/validate_leakage.py](scripts/validate_leakage.py))

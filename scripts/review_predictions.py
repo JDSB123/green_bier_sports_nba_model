@@ -29,25 +29,6 @@ from src.utils.team_names import normalize_team_name, are_same_team
 
 CST = ZoneInfo("America/Chicago")
 
-# #region agent log
-DEBUG_LOG_PATH = Path(__file__).parent.parent / ".cursor" / "debug.log"
-def _debug_log(location: str, message: str, data: dict):
-    """Write debug log entry."""
-    try:
-        log_entry = {
-            "sessionId": "debug-session",
-            "runId": "review-debug",
-            "hypothesisId": "B",
-            "location": location,
-            "message": message,
-            "data": data,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_entry) + "\n")
-    except Exception:
-        pass  # Don't break execution if logging fails
-# #endregion
 
 
 def get_target_date(value: Optional[str]) -> date:
@@ -103,26 +84,6 @@ def sum_period(values: List[Optional[int]]) -> int:
 def build_scoreboard_map(target_date: date) -> Dict[Tuple[str, str], Dict[str, Any]]:
     games = load_raw_games()
     scoreboard: Dict[Tuple[str, str], Dict[str, Any]] = {}
-    # #region agent log
-    DEBUG_LOG_PATH = Path(__file__).parent.parent / ".cursor" / "debug.log"
-    def _debug_log(location: str, message: str, data: dict, hypothesisId: str = "C"):
-        try:
-            import json as json_lib
-            from datetime import datetime, timezone
-            log_entry = {
-                "sessionId": "debug-session",
-                "runId": "prediction-debug",
-                "hypothesisId": hypothesisId,
-                "location": location,
-                "message": message,
-                "data": data,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-            with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-                f.write(json_lib.dumps(log_entry) + "\n")
-        except Exception:
-            pass
-    # #endregion
     
     for game in games:
         iso = game.get("date")
@@ -141,20 +102,6 @@ def build_scoreboard_map(target_date: date) -> Dict[Tuple[str, str], Dict[str, A
         teams = game.get("teams") or {}
         home_name = (teams.get("home") or {}).get("name")
         away_name = (teams.get("away") or {}).get("name")
-        # #region agent log
-        _debug_log(
-            "review_predictions.py:130",
-            "Game loaded from API-Basketball",
-            {
-                "target_date": target_date.isoformat(),
-                "game_date": dt.date().isoformat(),
-                "home_team_api": home_name,
-                "away_team_api": away_name,
-                "status": status
-            },
-            hypothesisId="C"
-        )
-        # #endregion
         if not home_name or not away_name:
             continue
 
@@ -390,43 +337,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
         fg = comp_edge.get("full_game", {})
         fh = comp_edge.get("first_half", {})
 
-        # #region agent log
-        DEBUG_LOG_PATH = Path(__file__).parent.parent / ".cursor" / "debug.log"
-        def _debug_log(location: str, message: str, data: dict, hypothesisId: str = "C"):
-            try:
-                import json as json_lib
-                from datetime import datetime, timezone
-                log_entry = {
-                    "sessionId": "debug-session",
-                    "runId": "prediction-debug",
-                    "hypothesisId": hypothesisId,
-                    "location": location,
-                    "message": message,
-                    "data": data,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
-                with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-                    f.write(json_lib.dumps(log_entry) + "\n")
-            except Exception:
-                pass
-        # #endregion
         
         actual = find_game(scoreboard, home_team, away_team)
-        # #region agent log
-        _debug_log(
-            "review_predictions.py:411",
-            "Team name matching for game review",
-            {
-                "analysis_home_team": home_team,
-                "analysis_away_team": away_team,
-                "normalized_home": normalize_team_name(home_team),
-                "normalized_away": normalize_team_name(away_team),
-                "match_found": actual is not None,
-                "scoreboard_keys": list(scoreboard.keys())[:5] if scoreboard else []
-            },
-            hypothesisId="C"
-        )
-        # #endregion
         if actual is None:
             print(f"⚠️  Missing scoreboard match for {away_team} @ {home_team}")
             continue
@@ -453,30 +365,6 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
             home_team,
             away_team,
         )
-        # #region agent log
-        _debug_log(
-            "review_predictions.py:363",
-            "FG Spread evaluation",
-            {
-                "home_team": home_team,
-                "away_team": away_team,
-                "actual_margin": actual_margin,
-                "actual_home_score": actual["home_score"],
-                "actual_away_score": actual["away_score"],
-                "pick_line": pick_line,
-                "pick": pick,
-                "result": spread_result,
-                "model_margin": fg_spread.get("model_margin"),
-                "edge": fg_spread.get("edge"),
-                "market_line": fg_spread.get("market_line"),
-                "evaluation_logic": {
-                    "picked_home": pick == home_team if pick else None,
-                    "line_used": market_line,
-                    "check_condition": f"actual_margin >= {-market_line if market_line else 0}" if pick == home_team else f"actual_margin <= {-market_line if market_line else 0}" if pick == away_team else None
-                }
-            }
-        )
-        # #endregion
         record_outcome(metrics, "FG Spread", spread_result, fg_spread.get("pick_odds"))
         entry["picks"].append(
             {

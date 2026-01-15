@@ -429,19 +429,15 @@ def train_all_markets(
     else:
         training_path = os.path.join(settings.data_processed_dir, "training_data.csv")
         fh_path = os.path.join(settings.data_processed_dir, "training_data_fh.csv")
-        
-        # Try merged all-seasons file first
-        all_seasons_path = os.path.join(settings.data_processed_dir, "training_data_all_seasons.csv")
-        if os.path.exists(all_seasons_path):
-            print(f"Using merged all-seasons training file: {all_seasons_path}")
-            training_path = all_seasons_path
-        elif os.path.exists(fh_path):
+
+        if not os.path.exists(training_path) and os.path.exists(fh_path):
             print(f"Using first-half augmented training file: {fh_path}")
             training_path = fh_path
     
     if not os.path.exists(training_path):
         print("\nNo training data available!")
-        print("Run: python scripts/merge_training_data.py")
+        print("Expected data/processed/training_data.csv (canonical 2023+ dataset).")
+        print("Download or copy the audited training_data.csv into data/processed/.")
         return {}
 
     training_df = pd.read_csv(training_path, low_memory=False)

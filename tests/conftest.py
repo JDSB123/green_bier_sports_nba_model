@@ -39,10 +39,14 @@ TEST_ENV_VARS = {
     "DATA_PROCESSED_DIR": str(PROJECT_ROOT / "data" / "processed"),
     
     # Filter Thresholds (defaults for testing)
-    "FILTER_SPREAD_MIN_CONFIDENCE": "0.55",
-    "FILTER_SPREAD_MIN_EDGE": "1.0",
-    "FILTER_TOTAL_MIN_CONFIDENCE": "0.55",
-    "FILTER_TOTAL_MIN_EDGE": "1.5",
+    "FILTER_SPREAD_MIN_CONFIDENCE": "0.62",
+    "FILTER_SPREAD_MIN_EDGE": "2.0",
+    "FILTER_TOTAL_MIN_CONFIDENCE": "0.72",
+    "FILTER_TOTAL_MIN_EDGE": "3.0",
+    "FILTER_1H_SPREAD_MIN_CONFIDENCE": "0.68",
+    "FILTER_1H_SPREAD_MIN_EDGE": "1.5",
+    "FILTER_1H_TOTAL_MIN_CONFIDENCE": "0.66",
+    "FILTER_1H_TOTAL_MIN_EDGE": "2.0",
     
     # Optional (empty for tests)
     "BETSAPI_KEY": "",

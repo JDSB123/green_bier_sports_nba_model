@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from src.markets.base import BaseMarket, MarketPrediction
+from src.prediction.confidence import calculate_confidence_from_binary_probability
 
 
 class TotalMarket(BaseMarket):
@@ -95,7 +96,7 @@ class TotalMarket(BaseMarket):
             side = "under"
             probability = 1 - over_prob
         
-        confidence = abs(over_prob - 0.5) * 2  # 0 to 1 scale
+        confidence = calculate_confidence_from_binary_probability(probability)
         
         # Edge calculation
         edge = None

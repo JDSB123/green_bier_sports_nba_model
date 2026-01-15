@@ -207,15 +207,14 @@ class TestModelNotFoundError:
 class TestConfidenceCalculation:
     """Tests for confidence calculation utilities.
 
-    The confidence function uses entropy-based calculation, not simple probability.
-    It maps probability strength * certainty to a range [0.5, 0.95].
+    Confidence equals the calibrated probability of the predicted side.
     """
 
     def test_confidence_from_probabilities_balanced(self):
         """Test confidence calculation with balanced probabilities."""
         from src.prediction.confidence import calculate_confidence_from_probabilities
 
-        # 50/50 = maximum entropy = minimum confidence
+        # 50/50 = minimum confidence
         confidence = calculate_confidence_from_probabilities(0.5, 0.5)
         assert confidence == pytest.approx(0.5, rel=0.01)
 
@@ -282,7 +281,7 @@ class TestFilterThresholds:
         features = {"home_ppg": 110, "predicted_margin": 5}
         result = predictor.predict_spread(features, spread_line=-3.5)
 
-        # 52% confidence is below 55% threshold
+        # 52% confidence is below the configured threshold
         assert result["passes_filter"] is False
         assert "confidence" in result["filter_reason"].lower()
 
@@ -291,7 +290,7 @@ class TestFilterThresholds:
         from src.prediction.engine import PeriodPredictor
 
         # Create predictor with mock model that returns very high probability
-        # Entropy-based confidence at 0.90 prob gives ~0.72 confidence
+        # High model probability should pass confidence threshold
         mock_model = MagicMock()
         mock_model.predict_proba.return_value = np.array([[0.10, 0.90]])
 
@@ -307,8 +306,8 @@ class TestFilterThresholds:
         features = {"home_ppg": 110, "predicted_margin": 8}
         result = predictor.predict_spread(features, spread_line=-3.5)
 
-        # High confidence (90% model prob -> ~0.72 entropy-based confidence)
-        # Large edge (11.5 > 1.0 threshold) - should pass both filters
+        # High confidence (90% model prob)
+        # Large edge (11.5 > configured threshold) - should pass both filters
         assert result["passes_filter"] is True
         assert result["filter_reason"] is None
 

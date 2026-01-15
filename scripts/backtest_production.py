@@ -23,8 +23,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-import json
-import time
+
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,28 +45,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# region agent log
-_DEBUG_LOG_PATH = Path(__file__).resolve().parents[1] / ".cursor" / "debug.log"
-
-
-def _agent_log(run_id: str, hypothesis_id: str, location: str, message: str, data: dict) -> None:
-    try:
-        payload = {
-            "sessionId": "debug-session",
-            "runId": run_id,
-            "hypothesisId": hypothesis_id,
-            "location": location,
-            "message": message,
-            "data": data,
-            "timestamp": int(time.time() * 1000),
-        }
-        _DEBUG_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(_DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(payload) + "\n")
-    except Exception:
-        pass
-
-# endregion
 
 
 @dataclass
@@ -266,24 +243,6 @@ def run_backtest(
     df = df.dropna(subset=["date"])
     df = df.sort_values("date").reset_index(drop=True)
 
-    # region agent log
-    run_id = "run1"
-    s2526 = df["date"] >= pd.to_datetime("2025-10-01")
-    _agent_log(
-        run_id=run_id,
-        hypothesis_id="H1",
-        location="scripts/backtest_production.py:run_backtest:after_load",
-        message="Backtest input coverage for 1H scores/labels (2025-26 subset)",
-        data={
-            "rows": int(len(df)),
-            "rows_2526": int(s2526.sum()),
-            "home_1h_2526_non_null": int(df.loc[s2526, "home_1h"].notna().sum()) if "home_1h" in df.columns else None,
-            "home_q1_2526_non_null": int(df.loc[s2526, "home_q1"].notna().sum()) if "home_q1" in df.columns else None,
-            "1h_spread_covered_2526_non_null": int(df.loc[s2526, "1h_spread_covered"].notna().sum()) if "1h_spread_covered" in df.columns else None,
-            "1h_total_over_2526_non_null": int(df.loc[s2526, "1h_total_over"].notna().sum()) if "1h_total_over" in df.columns else None,
-        },
-    )
-    # endregion
     
     print(f"Loaded {len(df)} games from {df['date'].min()} to {df['date'].max()}")
     
@@ -659,8 +618,8 @@ def main():
     parser = argparse.ArgumentParser(description="Backtest production models on historical data")
     parser.add_argument(
         "--data",
-        default="data/processed/training_data_all_seasons.csv",
-        help="Path to training data CSV (default: merged all seasons file)",
+        default="data/processed/training_data.csv",
+        help="Path to training data CSV (default: canonical training_data.csv for 2023+)",
     )
     parser.add_argument(
         "--models-dir",

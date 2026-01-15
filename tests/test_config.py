@@ -90,12 +90,12 @@ class TestFilterThresholds:
         thresholds = FilterThresholds()
 
         # Spread defaults
-        assert thresholds.spread_min_confidence == 0.55
-        assert thresholds.spread_min_edge == 1.0
+        assert thresholds.spread_min_confidence == 0.62
+        assert thresholds.spread_min_edge == 2.0
 
         # Total defaults
-        assert thresholds.total_min_confidence == 0.55
-        assert thresholds.total_min_edge == 1.5
+        assert thresholds.total_min_confidence == 0.72
+        assert thresholds.total_min_edge == 3.0
 
 
     def test_filter_thresholds_from_env(self, monkeypatch):

@@ -2,10 +2,9 @@
 # Single source of truth for backtesting environment
 #
 # This container:
-#   1. Fetches fresh data from APIs (no placeholders)
-#   2. Builds training data with real betting lines
-#   3. Runs comprehensive backtests
-#   4. Outputs results to mounted volume
+#   1. Uses canonical training_data.csv (audited 2023+ odds)
+#   2. Runs comprehensive backtests
+#   3. Outputs results to mounted volume
 #
 # Usage:
 #   docker build -f Dockerfile.backtest -t nba-backtest .
@@ -16,7 +15,7 @@
 #   API_BASKETBALL_KEY    - For game outcomes
 #
 # Optional:
-#   SEASONS               - Comma-separated seasons (default: 2024-2025,2025-2026)
+#   SEASONS               - Comma-separated seasons (default: 2023-2024,2024-2025,2025-2026)
 #   MARKETS               - Comma-separated markets (default: all)
 
 # Multi-stage build for smaller, more secure images

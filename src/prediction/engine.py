@@ -308,7 +308,7 @@ class PeriodPredictor:
         edge_abs = abs(edge)
 
         # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
-        # Use entropy-based confidence from src/prediction/confidence.py for consistency
+        # Use calibrated probability from src/prediction/confidence.py for consistency
         if self.period == "1h":
             min_conf = filter_thresholds.fh_spread_min_confidence
             min_edge = filter_thresholds.fh_spread_min_edge

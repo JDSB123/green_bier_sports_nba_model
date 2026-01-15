@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from src.markets.base import BaseMarket, MarketPrediction
+from src.prediction.confidence import calculate_confidence_from_binary_probability
 
 
 class MoneylineMarket(BaseMarket):
@@ -85,7 +86,7 @@ class MoneylineMarket(BaseMarket):
             side = "away"
             probability = 1 - home_win_prob
         
-        confidence = abs(home_win_prob - 0.5) * 2  # 0 to 1 scale
+        confidence = calculate_confidence_from_binary_probability(probability)
         
         # Edge calculation
         edge = None
