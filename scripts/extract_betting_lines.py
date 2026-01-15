@@ -40,9 +40,29 @@ def american_to_implied_prob(american_odds: int | float | None) -> Optional[floa
 
 
 def _load_events(payload: Any) -> List[Dict[str, Any]]:
+    """
+    Load events from various payload formats:
+    - Direct list of events
+    - {"data": [...]} format
+    - {"events": [...]} format
+    - Period odds format: {"data": [{"data": {...event...}, ...}, ...]}
+    """
     if isinstance(payload, list):
         return payload
     if isinstance(payload, dict):
+        # Check for period_odds format (nested data -> data -> event)
+        if "data" in payload and "markets" in payload:
+            # This is the period_odds format
+            data = payload.get("data") or []
+            events = []
+            for item in data:
+                if isinstance(item, dict) and "data" in item:
+                    # The actual event is nested inside item['data']
+                    event = item.get("data")
+                    if isinstance(event, dict):
+                        events.append(event)
+            return events
+        # Standard format
         if "data" in payload:
             data = payload.get("data") or []
             if isinstance(data, list):
@@ -220,7 +240,33 @@ def main() -> int:
     df = pd.DataFrame(rows)
     df["commence_time"] = pd.to_datetime(df["commence_time"], errors="coerce")
     df = df.sort_values(["commence_time", "home_team", "away_team"])
-    df = df.drop_duplicates(subset=["commence_time", "home_team", "away_team"], keep="last")
+
+    # Merge duplicate games by event_id, combining non-null values from multiple sources
+    # This handles the case where FG data and 1H data come from different files
+    # with slightly different commence_times for the same event
+    numeric_cols = [c for c in df.columns if c not in
+                    ["event_id", "home_team", "away_team", "commence_time", "query_timestamp", "source_file"]]
+
+    # Custom aggregation that takes first non-null value
+    def first_valid(series):
+        valid = series.dropna()
+        return valid.iloc[0] if len(valid) > 0 else None
+
+    agg_dict = {
+        "home_team": "first",
+        "away_team": "first",
+        "commence_time": "first",  # Take the first (usually the FG odds file's time)
+        "query_timestamp": "last",
+        "source_file": "last",
+    }
+    # For numeric betting columns, take the first non-null value
+    for col in numeric_cols:
+        if col in df.columns:
+            agg_dict[col] = first_valid
+
+    # Group by event_id to merge FG and period odds for same game
+    df = df.groupby(["event_id"], as_index=False).agg(agg_dict)
+    df = df.sort_values(["commence_time", "home_team", "away_team"])
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.output, index=False)
