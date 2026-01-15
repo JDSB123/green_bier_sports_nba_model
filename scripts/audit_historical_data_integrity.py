@@ -26,15 +26,7 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-DEFAULT_DATA = (
-    _DEFAULT_PROCESSED_DIR / "training_data.csv"
-    if (_DEFAULT_PROCESSED_DIR / "training_data.csv").exists()
-    else (
-        _DEFAULT_PROCESSED_DIR / "training_data_complete_2023.csv"
-        if (_DEFAULT_PROCESSED_DIR / "training_data_complete_2023.csv").exists()
-        else _DEFAULT_PROCESSED_DIR / "training_data_complete_2023_with_injuries.csv"
-    )
-)
+DEFAULT_DATA = _DEFAULT_PROCESSED_DIR / "training_data.csv"
 OUTPUT_DIR = PROJECT_ROOT / "data" / "diagnostics"
 
 

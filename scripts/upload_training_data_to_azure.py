@@ -38,14 +38,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Configuration
 STORAGE_ACCOUNT = "nbagbsvstrg"
 CONTAINER = "nbahistoricaldata"
-BLOB_PREFIX = "training_data"  # training_data/v1.0.0/training_data_complete.csv
+BLOB_PREFIX = "training_data"  # training_data/v1.0.0/training_data.csv
 
 # Data paths
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 TRAINING_DATA_PATHS = [
     DATA_DIR / "training_data.csv",
-    DATA_DIR / "training_data_complete_2023_with_injuries.csv",
-    DATA_DIR / "training_data_complete_2023.csv",
 ]
 
 # Quality thresholds
@@ -59,7 +57,7 @@ REQUIRED_COLUMNS = {
     # NOTE: tolerate both legacy and canonical identifiers; quality check will accept either.
     "identifiers": ["game_date", "season", "home_team", "away_team"],
     "scores": ["home_score", "away_score"],
-    "labels": ["home_win", "spread_covered", "total_over"],
+    "labels": ["fg_home_win", "fg_spread_covered", "fg_total_over"],
     # Canonical builder emits fg_*; some legacy datasets also contain spread_line/total_line.
     "fg_lines": ["fg_spread_line", "fg_total_line"],
     "elo": ["home_elo", "away_elo", "elo_diff"],
@@ -202,12 +200,18 @@ class QualityChecker:
 
     def _check_odds_coverage(self) -> tuple[bool, str]:
         """Check odds coverage percentage."""
-        odds_cols = ["spread_line", "total_line"]
+        odds_cols = {
+            "spread": ["fg_spread_line", "spread_line"],
+            "total": ["fg_total_line", "total_line"],
+        }
         coverage = {}
-        for col in odds_cols:
-            if col in self.df.columns:
+        used = {}
+        for key, candidates in odds_cols.items():
+            col = next((c for c in candidates if c in self.df.columns), None)
+            if col:
                 non_null = self.df[col].notna().sum()
-                coverage[col] = non_null / len(self.df)
+                coverage[key] = non_null / len(self.df)
+                used[key] = col
 
         if not coverage:
             return False, "No odds columns found"
@@ -216,8 +220,8 @@ class QualityChecker:
         self.metrics["odds_coverage"] = avg_coverage
         
         if avg_coverage >= MIN_ODDS_COVERAGE:
-            return True, f"{avg_coverage:.1%} coverage"
-        return False, f"Only {avg_coverage:.1%} (need {MIN_ODDS_COVERAGE:.0%})"
+            return True, f"{avg_coverage:.1%} coverage ({used})"
+        return False, f"Only {avg_coverage:.1%} (need {MIN_ODDS_COVERAGE:.0%}) ({used})"
 
     def _check_injury_coverage(self) -> tuple[bool, str]:
         """Check injury data coverage."""
@@ -245,7 +249,7 @@ class QualityChecker:
         if "game_date" not in self.df.columns:
             return False, "No game_date column"
 
-        dates = pd.to_datetime(self.df["game_date"], format="mixed", utc=True)
+        dates = pd.to_datetime(self.df["game_date"], format="mixed")
         min_date = dates.min()
         max_date = dates.max()
 

@@ -1486,13 +1486,9 @@ def main(
     print_summary(df)
 
     # Canonical output to eliminate filename drift across the repo.
-    # Keep a year-stamped snapshot for backwards compatibility / ad-hoc diffs.
     out = OUTPUT_DIR / "training_data.csv"
-    snapshot_out = OUTPUT_DIR / f"training_data_complete_{start_date[:4]}.csv"
     df.to_csv(out, index=False)
-    df.to_csv(snapshot_out, index=False)
     print(f"\n  Saved (canonical): {out}")
-    print(f"  Saved (snapshot): {snapshot_out}")
 
     if skip_post_processing:
         print("\n[SKIP] Post-processing disabled (--skip-post-processing)")

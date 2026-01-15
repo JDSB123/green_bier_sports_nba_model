@@ -168,6 +168,36 @@ else:
     print(f"{FAIL} FAIL: Some moneylines missing - odds may be synthetic")
     all_checks_passed = False
 
+# Check 4: CST alignment (match_key date vs game_date/date)
+print("\n" + "=" * 80)
+print("CST ALIGNMENT CHECK")
+print("=" * 80)
+
+if "match_key" not in df.columns:
+    print(f"{WARN} match_key missing; cannot verify CST alignment")
+    all_checks_passed = False
+else:
+    mk_dates = pd.to_datetime(df["match_key"].astype(str).str.split("_").str[0], errors="coerce")
+    for col in ["game_date", "date"]:
+        if col not in df.columns:
+            print(f"{WARN} {col} missing; cannot verify CST alignment")
+            all_checks_passed = False
+            continue
+        parsed = pd.to_datetime(df[col], errors="coerce", format="mixed")
+        mk_date_only = mk_dates.dt.date
+        col_date_only = parsed.dt.date
+        mismatches = (
+            mk_date_only.notna()
+            & col_date_only.notna()
+            & (mk_date_only != col_date_only)
+        )
+        mismatch_count = int(mismatches.sum())
+        if mismatch_count > 0:
+            print(f"{WARN} {col} mismatches vs match_key: {mismatch_count}")
+            all_checks_passed = False
+        else:
+            print(f"{OK} {col} matches match_key dates")
+
 if all_checks_passed:
     print(f"\n{OK} ALL CHECKS PASSED: Using real, unique odds from actual sportsbooks")
 else:

@@ -34,14 +34,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 TRAINING_DATA_PATH = DATA_DIR / "training_data.csv"
-MANIFEST_PATH = DATA_DIR / "data_manifest.json"
+MANIFEST_PATH = DATA_DIR / "training_data_manifest.json"
 
 # Required columns for each model type
 REQUIRED_COLUMNS = {
-    "identifiers": ["game_id", "date", "season", "home_team", "away_team"],
+    "identifiers": ["game_id", "game_date", "season", "home_team", "away_team"],
     "scores": ["home_score", "away_score"],
-    "fg_labels": ["home_win", "spread_covered", "total_over"],
-    "fg_lines": ["spread_line", "total_line"],
+    "fg_labels": ["fg_home_win", "fg_spread_covered", "fg_total_over"],
+    "fg_lines": ["fg_spread_line", "fg_total_line"],
     "fg_features": [
         "home_ppg", "home_papg", "home_avg_margin", "home_win_pct",
         "away_ppg", "away_papg", "away_avg_margin", "away_win_pct",
@@ -54,8 +54,8 @@ REQUIRED_COLUMNS = {
 VALID_RANGES = {
     "home_score": (50, 200),
     "away_score": (50, 200),
-    "spread_line": (-30, 30),
-    "total_line": (180, 280),
+    "fg_spread_line": (-30, 30),
+    "fg_total_line": (180, 280),
     "home_ppg": (80, 140),
     "away_ppg": (80, 140),
     "home_win_pct": (0, 1),
@@ -96,7 +96,7 @@ def validate_checksum(manifest: dict | None) -> tuple[bool, str]:
     if not manifest:
         return True, f"{WARN} No manifest to check against"
 
-    expected = manifest.get("training_data", {}).get("sha256")
+    expected = manifest.get("sha256") or manifest.get("training_data", {}).get("sha256")
     if not expected:
         return True, f"{WARN} No checksum in manifest"
 
@@ -127,7 +127,10 @@ def validate_row_count(df: pd.DataFrame, manifest: dict | None) -> tuple[bool, s
     actual = len(df)
 
     if manifest:
-        expected = manifest.get("training_data", {}).get("rows", 0)
+        expected = (
+            manifest.get("quality_metrics", {}).get("total_games")
+            or manifest.get("training_data", {}).get("rows", 0)
+        )
         if expected > 0:
             diff = actual - expected
             if abs(diff) <= 100:  # Allow some variance
@@ -187,11 +190,12 @@ def validate_ranges(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
 def validate_dates(df: pd.DataFrame) -> tuple[bool, str]:
     """Validate date column."""
-    if "date" not in df.columns:
-        return False, f"{FAIL} No date column"
+    date_col = "game_date" if "game_date" in df.columns else ("date" if "date" in df.columns else None)
+    if not date_col:
+        return False, f"{FAIL} No game_date/date column"
 
     try:
-        dates = pd.to_datetime(df["date"])
+        dates = pd.to_datetime(df[date_col])
         min_date = dates.min()
         max_date = dates.max()
 
@@ -199,7 +203,7 @@ def validate_dates(df: pd.DataFrame) -> tuple[bool, str]:
         if min_date.year < 2020:
             return False, f"{WARN} Dates start too early: {min_date}"
 
-        return True, f"{OK} Date range: {min_date.date()} to {max_date.date()}"
+        return True, f"{OK} Date range: {min_date.date()} to {max_date.date()} ({date_col})"
     except Exception as e:
         return False, f"{FAIL} Date parsing error: {e}"
 
@@ -345,20 +349,31 @@ def update_manifest() -> None:
         return
 
     df = pd.read_csv(TRAINING_DATA_PATH)
-    dates = pd.to_datetime(df["date"])
+    date_col = "game_date" if "game_date" in df.columns else "date"
+    dates = pd.to_datetime(df[date_col], errors="coerce")
 
-    manifest = load_manifest() or {"version": "1.0.0"}
+    existing = load_manifest() or {}
+    version = existing.get("version", "local")
 
-    manifest["training_data"] = {
-        "file": "training_data.csv",
+    manifest = {
+        "version": version,
+        "generated_at": datetime.now().isoformat(),
+        "file_name": TRAINING_DATA_PATH.name,
         "sha256": calculate_checksum(TRAINING_DATA_PATH),
-        "rows": len(df),
-        "columns": len(df.columns),
-        "date_range": {
-            "start": str(dates.min().date()),
-            "end": str(dates.max().date()),
+        "file_size_mb": round(TRAINING_DATA_PATH.stat().st_size / (1024 * 1024), 2),
+        "quality_metrics": {
+            "total_games": len(df),
+            "total_columns": len(df.columns),
+            "date_range": {
+                "min": str(dates.min().date()) if dates.notna().any() else None,
+                "max": str(dates.max().date()) if dates.notna().any() else None,
+            },
         },
-        "last_updated": datetime.now().isoformat(),
+        "schema": {
+            "total_columns": len(df.columns),
+            "columns": list(df.columns),
+        },
+        "warnings": [],
     }
 
     # Update git commit if available
@@ -377,8 +392,8 @@ def update_manifest() -> None:
 
     save_manifest(manifest)
     print(f"{OK} Manifest updated: {MANIFEST_PATH}")
-    print(f"  Rows: {manifest['training_data']['rows']}")
-    print(f"  Checksum: {manifest['training_data']['sha256'][:16]}...")
+    print(f"  Rows: {manifest['quality_metrics']['total_games']}")
+    print(f"  Checksum: {manifest['sha256'][:16]}...")
 
 
 def main():

@@ -198,75 +198,8 @@ def compute_injury_impact(df: pd.DataFrame, *, min_match_fraction: float = 0.99,
     if pd.isna(train_min) or pd.isna(train_max):
         raise ValueError("Training data has invalid game_date values; cannot compute injury features.")
 
-    # Preferred path: reuse already-computed injury features if available.
-    # This repo commonly produces data/processed/training_data_complete_2023_with_injuries.csv which
-    # contains injury columns matched to the same match_key contract used in training_data.csv.
-    PRECOMPUTED_INJURY_TRAINING = PROJECT_ROOT / "data" / "processed" / "training_data_complete_2023_with_injuries.csv"
-    if PRECOMPUTED_INJURY_TRAINING.exists() and "match_key" in df.columns:
-        try:
-            header_cols = list(pd.read_csv(PRECOMPUTED_INJURY_TRAINING, nrows=0).columns)
-            injury_cols = [
-                "has_injury_data",
-                "home_injury_spread_impact",
-                "away_injury_spread_impact",
-                "injury_spread_diff",
-                "home_star_out",
-                "away_star_out",
-                "home_injury_impact",
-                "away_injury_impact",
-                "injury_impact_diff",
-                "home_injury_total_impact",
-                "away_injury_total_impact",
-                "injury_total_diff",
-            ]
-            usecols = ["match_key"] + [c for c in injury_cols if c in header_cols]
-            if len(usecols) > 1:
-                pre = pd.read_csv(PRECOMPUTED_INJURY_TRAINING, usecols=usecols, low_memory=False)
-                pre = pre.drop_duplicates(subset=["match_key"], keep="last")
-
-                merged = df.merge(pre, on="match_key", how="left")
-
-                # Determine match coverage using actual injury values (not stale has_injury_data flag).
-                probe_col = (
-                    "home_injury_spread_impact"
-                    if "home_injury_spread_impact" in merged.columns
-                    else "home_injury_impact"
-                )
-                if probe_col in merged.columns:
-                    # Coverage = rows where injury impact column is not NaN (merge succeeded)
-                    matched = int(merged[probe_col].notna().sum())
-                    match_fraction = matched / len(merged) if len(merged) else 0
-                    # Recalculate has_injury_data from actual values (flag in source may be stale)
-                    merged["has_injury_data"] = merged[probe_col].notna().astype(int)
-                else:
-                    matched = 0
-                    match_fraction = 0.0
-                    merged["has_injury_data"] = 0
-
-                print(
-                    f"      Using precomputed injury features: {PRECOMPUTED_INJURY_TRAINING.name} ; "
-                    f"matched {matched}/{len(merged)} games ({match_fraction*100:.1f}%)"
-                )
-
-                if match_fraction >= min_match_fraction:
-                    return merged
-
-                msg = (
-                    f"Precomputed injury match coverage too low: {match_fraction:.2%} < {min_match_fraction:.2%}. "
-                    "Fix inputs/matching before backtesting."
-                )
-                if drop_unmatched:
-                    before = len(merged)
-                    merged = merged[merged["has_injury_data"] == 1].copy()
-                    after = len(merged)
-                    print(f"      [STRICT] Dropped unmatched precomputed injury games: {before:,} -> {after:,}")
-                    if after == 0:
-                        raise ValueError(msg)
-                    return merged
-
-                raise ValueError(msg)
-        except Exception as e:
-            print(f"      [WARN] Failed to use precomputed injury features: {type(e).__name__}: {e}")
+    # Canonical training data is expected to carry injury columns already.
+    # If coverage is insufficient, recompute from injury sources below.
 
     # Team abbreviation normalization (shared by both injury sources).
     TEAM_ABBR_MAP = {

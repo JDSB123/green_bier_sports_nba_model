@@ -8,7 +8,7 @@
 - Live artifacts: ACR `nbagbsacr`, Container App `nba-gbsv-api`
 
 ## Training data in use
-- File: `data/processed/training_data_complete_2023_with_injuries.csv` (local working copy, generated 2026-01-11)
+- File: `data/processed/training_data.csv` (canonical working copy with injuries, generated 2026-01-11)
 - Manifest: `data/processed/training_data_manifest.json`
 - Coverage: 3,969 games, 2023-01-01 to 2026-01-09, 327 columns; odds & injury coverage 1.0
 

@@ -67,7 +67,6 @@ python scripts/build_training_data_complete.py
 
 Outputs:
 - Canonical file: `data/processed/training_data.csv`
-- Snapshot file: `data/processed/training_data_complete_<YYYY>.csv`
 
 ---
 

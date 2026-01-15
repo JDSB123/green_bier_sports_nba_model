@@ -134,7 +134,7 @@ python scripts/build_training_data_complete.py
 | FG Labels | 100% | fg_spread_covered, fg_total_over, fg_home_win |
 | 1H Labels | 100% | 1h_spread_covered, 1h_total_over |
 | Model Features | 55/55 (100%) | All required features present |
-| Odds Coverage | 100% | Spread + total for all games |
+| Odds Coverage | FG 100% / 1H 78.4% | Full-game lines complete; 1H partial |
 | Injury Impact | 100% | Via Kaggle box score inference |
 
 ---
@@ -150,10 +150,10 @@ Prefix: training_data/
 
 training_data/
   v2026.01.11/                    # Versioned release
-    training_data_complete_2023_with_injuries.csv
+    training_data.csv
     manifest.json
   latest/                         # Always points to validated version
-    training_data_complete_2023_with_injuries.csv
+    training_data.csv
     manifest.json
 ```
 

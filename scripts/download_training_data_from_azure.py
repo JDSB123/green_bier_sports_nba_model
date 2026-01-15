@@ -29,8 +29,10 @@ BLOB_PREFIX = "training_data"
 
 # Local paths
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
-DEFAULT_OUTPUT = DATA_DIR / "training_data_from_azure.csv"
+DEFAULT_OUTPUT = DATA_DIR / "training_data.csv"
 MANIFEST_OUTPUT = DATA_DIR / "training_data_manifest.json"
+
+CANONICAL_BLOB_NAME = "training_data.csv"
 
 # Status symbols
 OK = "[✓]"
@@ -109,10 +111,10 @@ def main():
 
     # Determine blob paths
     if version == "latest":
-        data_blob = f"{BLOB_PREFIX}/latest/training_data_complete_2023_with_injuries.csv"
+        data_blob = f"{BLOB_PREFIX}/latest/{CANONICAL_BLOB_NAME}"
         manifest_blob = f"{BLOB_PREFIX}/latest/manifest.json"
     else:
-        data_blob = f"{BLOB_PREFIX}/{version}/training_data_complete_2023_with_injuries.csv"
+        data_blob = f"{BLOB_PREFIX}/{version}/{CANONICAL_BLOB_NAME}"
         manifest_blob = f"{BLOB_PREFIX}/{version}/manifest.json"
 
     print(f"\n{INFO} Version: {version}")
