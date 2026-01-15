@@ -324,6 +324,7 @@ def run_backtest(
     print(f"\nRunning walk-forward backtest...")
     
     predict_df = predict_df.sort_values("date").reset_index(drop=True)
+    last_reported = 0
 
     for row_idx, (_, game) in enumerate(predict_df.iterrows()):
         # Simple guard to avoid very early-season rows with sparse features
@@ -434,9 +435,10 @@ def run_backtest(
                 profit=profit,
             ))
 
-        if len(results["fg_spread"]) % 50 == 0 and len(results["fg_spread"]) > 0:
-            fg_bets = len(results["fg_spread"])
-            print(f"  Made {fg_bets} FG spread bets so far...")
+        total_bets = sum(len(bets) for bets in results.values())
+        if total_bets and total_bets % 50 == 0 and total_bets != last_reported:
+            print(f"  Made {total_bets} total bets so far...")
+            last_reported = total_bets
     
     return results
 
