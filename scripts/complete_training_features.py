@@ -38,7 +38,21 @@ def fill_moneylines(training_file: Path) -> pd.DataFrame:
     # Load training data
     df = pd.read_csv(training_file, low_memory=False)
     df["game_date"] = pd.to_datetime(df["game_date"], format="mixed")
+    if "fg_ml_home" not in df.columns:
+        df["fg_ml_home"] = np.nan
+    if "fg_ml_away" not in df.columns:
+        df["fg_ml_away"] = np.nan
     before = df["fg_ml_home"].notna().sum()
+
+    if not KAGGLE_FILE.exists():
+        print("      [SKIP] Kaggle file missing; filling from TheOdds moneylines when available")
+        if "to_fg_ml_home" in df.columns:
+            df["fg_ml_home"] = df["fg_ml_home"].fillna(df["to_fg_ml_home"])
+        if "to_fg_ml_away" in df.columns:
+            df["fg_ml_away"] = df["fg_ml_away"].fillna(df["to_fg_ml_away"])
+        after = df["fg_ml_home"].notna().sum()
+        print(f"      Before: {before}, After: {after}, Filled: {after - before}")
+        return df
     
     # Load Kaggle
     kaggle = pd.read_csv(KAGGLE_FILE)
@@ -801,39 +815,66 @@ def compute_h2h_features(df: pd.DataFrame) -> pd.DataFrame:
 def compute_predicted_features(df: pd.DataFrame) -> pd.DataFrame:
     """Compute predicted margin/total features."""
     print("\n[8/8] Computing predicted features...")
-    
+
     # Strict: do not estimate predicted_* values with baked-in constants.
     # If a feature cannot be computed from real inputs, leave NaN.
-    if "fg_spread_line" in df.columns:
-        df["predicted_margin"] = -pd.to_numeric(df["fg_spread_line"], errors="coerce")
-    else:
-        df["predicted_margin"] = np.nan
+    def _num(col: str) -> pd.Series:
+        if col not in df.columns:
+            return pd.Series([np.nan] * len(df), index=df.index)
+        return pd.to_numeric(df[col], errors="coerce")
+
+    home_margin = _num("home_avg_margin")
+    if home_margin.isna().all():
+        home_margin = _num("home_margin")
+    away_margin = _num("away_avg_margin")
+    if away_margin.isna().all():
+        away_margin = _num("away_margin")
+
+    home_ppg = _num("home_ppg")
+    away_ppg = _num("away_ppg")
+    home_papg = _num("home_papg")
+    away_papg = _num("away_papg")
+
+    hca = _num("home_court_advantage")
+    if hca.isna().all():
+        hca = _num("dynamic_hca")
+    away_fatigue = _num("away_travel_fatigue")
+    net_rating_diff = _num("net_rating_diff")
+
+    # Predicted margin uses team form + situational context.
+    base_margin = (home_margin - away_margin) / 2
+    df["predicted_margin"] = (
+        base_margin
+        + hca.fillna(0)
+        - away_fatigue.fillna(0)
+        + net_rating_diff.fillna(0) * 0.2
+    )
+    df.loc[home_margin.isna() | away_margin.isna(), "predicted_margin"] = np.nan
     print(f"      predicted_margin: {df['predicted_margin'].notna().sum()}/{len(df)}")
-    
-    if "fg_total_line" in df.columns:
-        df["predicted_total"] = pd.to_numeric(df["fg_total_line"], errors="coerce")
-    else:
-        df["predicted_total"] = np.nan
+
+    # Predicted total uses matchup-based points expectations.
+    home_expected = (home_ppg + away_papg) / 2
+    away_expected = (away_ppg + home_papg) / 2
+    df["predicted_total"] = home_expected + away_expected
+    df.loc[home_ppg.isna() | away_ppg.isna() | home_papg.isna() | away_papg.isna(), "predicted_total"] = np.nan
     print(f"      predicted_total: {df['predicted_total'].notna().sum()}/{len(df)}")
-    
-    # spread_vs_predicted
-    if "fg_spread_line" in df.columns:
-        df["spread_vs_predicted"] = (
-            pd.to_numeric(df["fg_spread_line"], errors="coerce") - (-pd.to_numeric(df["predicted_margin"], errors="coerce"))
-        )
-    else:
-        df["spread_vs_predicted"] = np.nan
+
+    # spread_vs_predicted (use canonical spread_line if present)
+    spread_line = _num("spread_line")
+    if spread_line.isna().all():
+        spread_line = _num("fg_spread_line")
+    df["spread_vs_predicted"] = spread_line - (-df["predicted_margin"])
+    df.loc[spread_line.isna() | df["predicted_margin"].isna(), "spread_vs_predicted"] = np.nan
     print(f"      spread_vs_predicted: {df['spread_vs_predicted'].notna().sum()}/{len(df)}")
-    
-    # total_vs_predicted
-    if "fg_total_line" in df.columns:
-        df["total_vs_predicted"] = (
-            pd.to_numeric(df["fg_total_line"], errors="coerce") - pd.to_numeric(df["predicted_total"], errors="coerce")
-        )
-    else:
-        df["total_vs_predicted"] = np.nan
+
+    # total_vs_predicted (use canonical total_line if present)
+    total_line = _num("total_line")
+    if total_line.isna().all():
+        total_line = _num("fg_total_line")
+    df["total_vs_predicted"] = total_line - df["predicted_total"]
+    df.loc[total_line.isna() | df["predicted_total"].isna(), "total_vs_predicted"] = np.nan
     print(f"      total_vs_predicted: {df['total_vs_predicted'].notna().sum()}/{len(df)}")
-    
+
     return df
 
 

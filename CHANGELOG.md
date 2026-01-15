@@ -7,6 +7,27 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 
 ---
 
+## [NBA_v33.0.16.0] - 2026-01-14
+
+### Added
+- Comprehensive data stack audit script ([scripts/audit_data_stack.py](scripts/audit_data_stack.py)) - validates all 9 markets
+- Performance grades and optimization recommendations in model_pack.json
+- Data infrastructure documentation in model_pack.json
+
+### Changed
+- Updated model_pack.json with latest review (2026-01-14)
+- Added threshold optimization recommendations for 1H Spread market
+- Documented Azure Blob storage as single source of truth with audit status
+
+### Reviewed
+- Backtest results from v33.0.15.0 validated:
+  - FG Spread: 60.6% accuracy / 15.7% ROI (Grade A)
+  - FG Total: 59.2% accuracy / 13.1% ROI (Grade A-)
+  - 1H Spread: 55.9% accuracy / 8.2% ROI (Grade B) - optimization recommended
+  - 1H Total: 58.1% accuracy / 11.4% ROI (Grade A-)
+
+---
+
 ## [NBA_v33.0.11.0] - 2026-01-05
 
 ### Changed
@@ -124,4 +145,3 @@ See [VERSIONING.md](VERSIONING.md) for:
 ---
 
 **Latest Release:** [NBA_v33.0.11.0](https://github.com/JDSB123/green_bier_sports_nba_model/releases/tag/NBA_v33.0.11.0)
-

@@ -218,10 +218,13 @@ run_backtest() {
     
     # Run the backtest
     echo "Starting backtest..."
-    python scripts/backtest.py \
+    python scripts/backtest_production.py \
+        --data "/app/data/processed/training_data.csv" \
+        --models-dir "/app/models/production" \
         --markets "$MARKETS" \
-        --min-training "$MIN_TRAINING" \
-        --data "/app/data/processed/training_data.csv"
+        --min-train "$MIN_TRAINING" \
+        --no-pricing \
+        --output-json "/app/data/backtest_results/production_backtest_results.json"
     
     exit_code=$?
     if [ $exit_code -ne 0 ]; then
@@ -235,16 +238,10 @@ run_backtest() {
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     mkdir -p /app/data/results
     
-    if [ -f "/app/data/processed/all_markets_backtest_results.csv" ]; then
-        cp /app/data/processed/all_markets_backtest_results.csv \
-           /app/data/results/backtest_results_${TIMESTAMP}.csv
-        echo "✓ Results saved to /app/data/results/backtest_results_${TIMESTAMP}.csv"
-    fi
-    
-    if [ -f "/app/ALL_MARKETS_BACKTEST_RESULTS.md" ]; then
-        cp /app/ALL_MARKETS_BACKTEST_RESULTS.md \
-           /app/data/results/backtest_report_${TIMESTAMP}.md
-        echo "✓ Report saved to /app/data/results/backtest_report_${TIMESTAMP}.md"
+    if [ -f "/app/data/backtest_results/production_backtest_results.json" ]; then
+        cp /app/data/backtest_results/production_backtest_results.json \
+           /app/data/results/backtest_results_${TIMESTAMP}.json
+        echo "✓ Results saved to /app/data/results/backtest_results_${TIMESTAMP}.json"
     fi
     
     echo "✓ Backtest completed successfully"
@@ -283,12 +280,13 @@ run_prod_backtest() {
     echo ""
 
     # NOTE: Require real 1H lines (fh_*) when available; otherwise 1H markets will be skipped.
-    python scripts/backtest_production_model.py \
-        --data "${DATA_PATH#/app/}" \
-        --models-dir "models/production" \
+    python scripts/backtest_production.py \
+        --data "$DATA_PATH" \
+        --models-dir "/app/models/production" \
         --markets "$MARKETS" \
-        --output-dir "data/backtest_results" \
-        --tag "prod"
+        --min-train "$MIN_TRAINING" \
+        --no-pricing \
+        --output-json "/app/data/backtest_results/production_backtest_results.json"
 
     exit_code=$?
     if [ $exit_code -ne 0 ]; then

@@ -3,7 +3,8 @@
 Backtest Production Models on Historical Data
 
 This script backtests the ACTUAL production models using the SAME feature
-engineering pipeline used in live predictions. This ensures accurate comparison.
+columns used during training, sourced from the precomputed training dataset.
+This avoids feature drift between training and backtesting.
 
 Usage:
     # Accuracy-only (no ROI/profit; avoids any pricing assumptions)
@@ -32,9 +33,12 @@ import pandas as pd
 import numpy as np
 import joblib
 
-from src.modeling.features import FeatureEngineer
-from src.config import settings
 from src.modeling.season_utils import get_season_for_date
+from src.prediction.feature_validation import (
+    MissingFeaturesError,
+    validate_and_prepare_features,
+)
+from src.prediction.engine import map_1h_features_to_fg_names
 
 logging.basicConfig(
     level=logging.INFO,
@@ -109,6 +113,103 @@ def calculate_profit(won: bool, odds: int) -> float:
         return odds / 100
 
 
+def _normalize_markets_arg(markets_arg: Optional[str]) -> Optional[List[str]]:
+    """Normalize a comma-separated markets string into concrete market keys."""
+    if not markets_arg:
+        return None
+
+    raw = [part.strip().lower() for part in markets_arg.split(",") if part.strip()]
+    if not raw or "all" in raw:
+        return None
+
+    normalized: List[str] = []
+    unknown: List[str] = []
+
+    for part in raw:
+        if part in ("fg", "full_game", "fullgame"):
+            normalized.extend(["fg_spread", "fg_total"])
+        elif part in ("1h", "first_half", "firsthalf"):
+            normalized.extend(["1h_spread", "1h_total"])
+        elif part in ("spread", "spreads"):
+            normalized.extend(["fg_spread", "1h_spread"])
+        elif part in ("total", "totals"):
+            normalized.extend(["fg_total", "1h_total"])
+        elif part in ("fg_spread", "fg_total", "1h_spread", "1h_total"):
+            normalized.append(part)
+        else:
+            unknown.append(part)
+
+    if unknown:
+        raise ValueError(
+            "Unknown markets: "
+            + ", ".join(sorted(set(unknown)))
+            + ". Valid: all, fg, 1h, spread, total, fg_spread, fg_total, 1h_spread, 1h_total."
+        )
+
+    # De-dupe while preserving order
+    ordered: List[str] = []
+    for market in normalized:
+        if market not in ordered:
+            ordered.append(market)
+
+    return ordered or None
+
+
+def _pick_first_value(game: pd.Series, candidates: List[str]) -> Optional[float]:
+    """Return the first non-null line value from candidate columns."""
+    for col in candidates:
+        if col in game and pd.notna(game.get(col)):
+            try:
+                return float(game.get(col))
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def _build_feature_payload(game: pd.Series, market_key: str) -> Tuple[Dict[str, float], Optional[float], Optional[float]]:
+    """Build feature payload for a single game/market from precomputed dataset columns."""
+    features = game.to_dict()
+
+    if market_key.startswith("1h_"):
+        spread_line = _pick_first_value(game, ["1h_spread_line", "fh_spread_line"])
+        total_line = _pick_first_value(game, ["1h_total_line", "fh_total_line"])
+    else:
+        spread_line = _pick_first_value(game, ["fg_spread_line", "spread_line"])
+        total_line = _pick_first_value(game, ["fg_total_line", "total_line"])
+
+    if spread_line is not None:
+        features["spread_line"] = spread_line
+        if market_key.startswith("1h_"):
+            features["1h_spread_line"] = spread_line
+            features["fh_spread_line"] = spread_line
+        else:
+            features["fg_spread_line"] = spread_line
+
+    if total_line is not None:
+        features["total_line"] = total_line
+        if market_key.startswith("1h_"):
+            features["1h_total_line"] = total_line
+            features["fh_total_line"] = total_line
+        else:
+            features["fg_total_line"] = total_line
+
+    # Use 1H feature mapping when available (production parity)
+    if market_key.startswith("1h_"):
+        features = map_1h_features_to_fg_names(features)
+
+    # Derived "line vs model" features (if predicted values exist)
+    pred_margin_key = "predicted_margin_1h" if market_key.startswith("1h_") else "predicted_margin"
+    pred_total_key = "predicted_total_1h" if market_key.startswith("1h_") else "predicted_total"
+
+    if pred_margin_key in features and spread_line is not None and pd.notna(features.get(pred_margin_key)):
+        features["spread_vs_predicted"] = features[pred_margin_key] - (-spread_line)
+
+    if pred_total_key in features and total_line is not None and pd.notna(features.get(pred_total_key)):
+        features["total_vs_predicted"] = features[pred_total_key] - total_line
+
+    return features, spread_line, total_line
+
+
 def run_backtest(
     data_path: str,
     models_dir: str,
@@ -119,9 +220,10 @@ def run_backtest(
     pricing_enabled: bool = True,
     min_train_games: int = 100,
     max_games: Optional[int] = None,
+    markets_filter: Optional[List[str]] = None,
 ) -> Dict[str, List[BetResult]]:
     """
-    Run walk-forward backtest using production models and feature engineering.
+    Run walk-forward backtest using production models and precomputed dataset features.
     
     Args:
         data_path: Path to training data CSV
@@ -145,6 +247,8 @@ def run_backtest(
         print(f"Spread juice: {spread_juice}, Total juice: {total_juice}")
     else:
         print("Pricing: DISABLED (accuracy-only; ROI/profit not computed)")
+    if markets_filter:
+        print(f"Markets: {', '.join(markets_filter)}")
     print(f"Min training games: {min_train_games}")
     print()
     
@@ -183,10 +287,6 @@ def run_backtest(
     
     print(f"Loaded {len(df)} games from {df['date'].min()} to {df['date'].max()}")
     
-    # IMPORTANT: Keep full dataset for historical reference
-    # Only filter the games we PREDICT on, not the historical data
-    full_historical_df = df.copy()
-    
     # Filter date range for PREDICTION targets only
     predict_df = df.copy()
     if start_date:
@@ -195,7 +295,6 @@ def run_backtest(
         predict_df = predict_df[predict_df["date"] <= pd.to_datetime(end_date)]
     
     print(f"Games to predict: {len(predict_df)}")
-    print(f"Historical games available: {len(full_historical_df)}")
     
     # Limit games if specified
     if max_games is not None and len(predict_df) > max_games:
@@ -238,7 +337,11 @@ def run_backtest(
             ("1h_total", "1h_total_model.joblib", "1h_total_over", "1h_total_line", None),
         ]
     
+    market_filter_set = set(markets_filter) if markets_filter else None
+
     for market_key, model_file, label_col, line_col, odds in model_configs:
+        if market_filter_set and market_key not in market_filter_set:
+            continue
         model_path = models_dir / model_file
         if model_path.exists():
             model, features = load_production_model(model_path)
@@ -256,100 +359,54 @@ def run_backtest(
     if not markets:
         raise ValueError("No models loaded!")
     
-    # Initialize feature engineer
-    fe = FeatureEngineer(lookback=10)
-    
     # Walk-forward backtest
     results: Dict[str, List[BetResult]] = {k: [] for k in markets}
     
     print(f"\nRunning walk-forward backtest...")
     
-    for idx, game in predict_df.iterrows():
+    predict_df = predict_df.sort_values("date").reset_index(drop=True)
+
+    for row_idx, (_, game) in enumerate(predict_df.iterrows()):
+        # Simple guard to avoid very early-season rows with sparse features
+        if min_train_games and row_idx < min_train_games:
+            continue
+
         game_date = game["date"]
-        
-        # Get historical data (games before this one) from FULL dataset
-        historical = full_historical_df[full_historical_df["date"] < game_date].copy()
-        
-        # Need minimum games for feature computation
-        if len(historical) < min_train_games:
-            continue
-        
-        # Compute features for this game
-        try:
-            base_features = fe.build_game_features(game, historical)
-        except Exception as e:
-            logger.debug(f"Could not compute features for {game_date}: {e}")
-            continue
-        
-        if not base_features:
-            continue
-        
-        # Make predictions for each market
+
         for market_key, config in markets.items():
             model = config["model"]
             model_features = config["features"]
             label_col = config["label_col"]
             line_col = config["line_col"]
             odds = config["odds"]
-            
-            # Check if we have the line
+
+            # Check if we have the market line + outcome label
             if line_col not in game or pd.isna(game.get(line_col)):
                 continue
-            
-            line = game[line_col]
-
-            # IMPORTANT:
-            # Production models expect generic feature names "spread_line" and "total_line"
-            # for BOTH FG and 1H markets. We must map the correct period-specific lines
-            # into those two feature slots.
-            if market_key.startswith("1h_"):
-                model_spread_line_col = "1h_spread_line"
-                model_total_line_col = "1h_total_line"
-            else:
-                model_spread_line_col = "fg_spread_line"
-                model_total_line_col = "fg_total_line"
-
-            # Require both line features for model input (avoid silent 0-fill on key fields)
-            if model_spread_line_col not in game or pd.isna(game.get(model_spread_line_col)):
-                continue
-            if model_total_line_col not in game or pd.isna(game.get(model_total_line_col)):
-                continue
-            
-            # Check if we have the actual outcome
             if label_col not in game or pd.isna(game.get(label_col)):
                 continue
-            
+
+            line = float(game[line_col])
             actual_label = int(game[label_col])
 
-            # Build per-market feature frame with correct line mapping
-            features = dict(base_features)
-            features["spread_line"] = float(game[model_spread_line_col])
-            features["total_line"] = float(game[model_total_line_col])
-            # Also include raw column names (useful for debugging / feature parity checks)
-            features[model_spread_line_col] = float(game[model_spread_line_col])
-            features[model_total_line_col] = float(game[model_total_line_col])
-
-            # Derived "line vs model" features expected by production models
-            # (normally computed inside FeatureEngineer when game contains spread_line/total_line)
-            if "predicted_margin" in features:
-                features["spread_vs_predicted"] = features["predicted_margin"] - (-features["spread_line"])
-            if "predicted_total" in features:
-                features["total_vs_predicted"] = features["predicted_total"] - features["total_line"]
+            features, spread_line, total_line = _build_feature_payload(game, market_key)
+            if spread_line is None or total_line is None:
+                continue
 
             feature_df = pd.DataFrame([features])
-            
-            # Prepare features for model
-            # NO FAKE DATA: do not zero-fill missing features.
-            missing_model_features = [c for c in model_features if c not in feature_df.columns]
-            if missing_model_features:
+            try:
+                X, _missing = validate_and_prepare_features(
+                    feature_df,
+                    model_features,
+                    market=market_key,
+                )
+            except MissingFeaturesError as e:
+                logger.debug(f"Missing features for {market_key} on {game_date}: {e}")
                 continue
 
-            X = feature_df[model_features]
-            # Also skip if any required value is NaN (avoid implicit imputation downstream)
             if X.isna().any().any():
                 continue
-            
-            # Get prediction
+
             try:
                 proba = model.predict_proba(X)[0]
                 pred_class = 1 if proba[1] > 0.5 else 0
@@ -357,12 +414,11 @@ def run_backtest(
             except Exception as e:
                 logger.debug(f"Prediction failed for {market_key}: {e}")
                 continue
-            
-            # Determine actual value
+
+            # Determine actual and predicted values (reporting only)
             if "spread" in market_key:
                 if "1h" in market_key:
-                    # 1H margin
-                    if "home_1h" in game and "away_1h" in game:
+                    if "home_1h" in game and "away_1h" in game and pd.notna(game.get("home_1h")) and pd.notna(game.get("away_1h")):
                         actual_value = game["home_1h"] - game["away_1h"]
                     elif (
                         "home_q1" in game and "home_q2" in game and "away_q1" in game and "away_q2" in game
@@ -374,16 +430,15 @@ def run_backtest(
                         actual_value = home_1h - away_1h
                     else:
                         continue
-                    predicted_value = features.get("predicted_margin_1h", 0)
+                    predicted_value = features.get("predicted_margin_1h", features.get("predicted_margin", 0))
                 else:
                     actual_value = game["home_score"] - game["away_score"]
                     predicted_value = features.get("predicted_margin", 0)
-                
+
                 side = "home" if pred_class == 1 else "away"
             else:
-                # Total
                 if "1h" in market_key:
-                    if "home_1h" in game and "away_1h" in game:
+                    if "home_1h" in game and "away_1h" in game and pd.notna(game.get("home_1h")) and pd.notna(game.get("away_1h")):
                         actual_value = game["home_1h"] + game["away_1h"]
                     elif (
                         "home_q1" in game and "home_q2" in game and "away_q1" in game and "away_q2" in game
@@ -395,17 +450,16 @@ def run_backtest(
                         actual_value = home_1h + away_1h
                     else:
                         continue
-                    predicted_value = features.get("predicted_total_1h", 0)
+                    predicted_value = features.get("predicted_total_1h", features.get("predicted_total", 0))
                 else:
                     actual_value = game["home_score"] + game["away_score"]
                     predicted_value = features.get("predicted_total", 0)
-                
+
                 side = "over" if pred_class == 1 else "under"
-            
-            # Did we win?
+
             won = (pred_class == actual_label)
             profit = calculate_profit(won, odds) if odds is not None else None
-            
+
             results[market_key].append(BetResult(
                 date=str(game_date.date()),
                 home_team=game["home_team"],
@@ -420,8 +474,7 @@ def run_backtest(
                 odds=odds,
                 profit=profit,
             ))
-        
-        # Progress
+
         if len(results["fg_spread"]) % 50 == 0 and len(results["fg_spread"]) > 0:
             fg_bets = len(results["fg_spread"])
             print(f"  Made {fg_bets} FG spread bets so far...")
@@ -615,6 +668,14 @@ def main():
         help="Path to production models directory",
     )
     parser.add_argument(
+        "--markets",
+        default="all",
+        help=(
+            "Comma-separated markets (default: all). "
+            "Options: fg, 1h, spread, total, fg_spread, fg_total, 1h_spread, 1h_total."
+        ),
+    )
+    parser.add_argument(
         "--start-date",
         help="Start date (YYYY-MM-DD)",
     )
@@ -665,6 +726,8 @@ def main():
             "Either pass --spread-juice and --total-juice explicitly, "
             "or run with --no-pricing for accuracy-only mode."
         )
+
+    markets_filter = _normalize_markets_arg(args.markets)
     
     results = run_backtest(
         data_path=args.data,
@@ -676,6 +739,7 @@ def main():
         pricing_enabled=pricing_enabled,
         min_train_games=args.min_train,
         max_games=args.max_games,
+        markets_filter=markets_filter,
     )
     
     print_summary(results, output_json=args.output_json)

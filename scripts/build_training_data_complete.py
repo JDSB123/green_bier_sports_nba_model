@@ -1074,6 +1074,33 @@ def standardize_core_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def normalize_game_date_from_match_key(df: pd.DataFrame) -> pd.DataFrame:
+    """Force game_date to the canonical CST date embedded in match_key."""
+    df = df.copy()
+    if "match_key" not in df.columns:
+        return df
+
+    # match_key format: YYYY-MM-DD_home_team_away_team (CST date)
+    mk_date = df["match_key"].astype(str).str.split("_").str[0]
+    mk_date_parsed = pd.to_datetime(mk_date, errors="coerce")
+
+    if "game_date" not in df.columns:
+        df["game_date"] = pd.NaT
+    else:
+        df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce", format="mixed")
+
+    # Track mismatches for visibility before overwriting
+    existing_dates = df["game_date"].dt.date.astype(str)
+    mk_dates = mk_date_parsed.dt.date.astype(str)
+    mismatches = (existing_dates.notna()) & (mk_dates.notna()) & (existing_dates != mk_dates)
+    if mismatches.any():
+        print(f"       [STD] match_key/game_date mismatches: {int(mismatches.sum())}")
+
+    # Canonicalize game_date to match_key date where available
+    df.loc[mk_date_parsed.notna(), "game_date"] = mk_date_parsed
+    return df
+
+
 def compute_situational(df: pd.DataFrame) -> pd.DataFrame:
     """Compute rest, B2B, streaks."""
     df = df.sort_values("game_date").copy()
@@ -1254,6 +1281,8 @@ def main(
     df = merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new, quarters)
     # Normalize core columns (FG/1H only, no Q1 confusion)
     df = standardize_core_columns(df)
+    # Canonicalize game_date to CST date embedded in match_key
+    df = normalize_game_date_from_match_key(df)
 
     # Ensure game_date is parsed and season labels are aligned to real NBA season boundaries.
     df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce", format="mixed")

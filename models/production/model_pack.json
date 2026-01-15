@@ -1,9 +1,10 @@
 {
   "version": "NBA_v33.0.15.0",
   "created_at": "2026-01-05T00:00:00Z",
+  "last_reviewed": "2026-01-14T00:00:00Z",
   "git_commit": "manual-sync",
   "git_tag": "NBA_v33.0.15.0",
-  "release_notes": "NBA_v33.0.15.0 Production - Full feature set with RLM/splits for live predictions, calibrated confidence (no arbitrary caps), 55 features per model",
+  "release_notes": "NBA_v33.0.15.0 Production - Full feature set with RLM/splits for live predictions, calibrated confidence (no arbitrary caps), 55 features per model. Reviewed 2026-01-14: FG markets performing strongly, 1H Spread threshold optimization recommended.",
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-20",
@@ -15,25 +16,33 @@
       "accuracy": 0.606,
       "roi": 0.157,
       "predictions": 232,
-      "status": "production"
+      "status": "production",
+      "performance_grade": "A",
+      "notes": "Strong performer - maintain current thresholds"
     },
     "fg_total": {
       "accuracy": 0.592,
       "roi": 0.131,
       "predictions": 232,
-      "status": "production"
+      "status": "production",
+      "performance_grade": "A-",
+      "notes": "Solid ROI - maintain current thresholds"
     },
     "1h_spread": {
       "accuracy": 0.559,
       "roi": 0.082,
       "predictions": 232,
-      "status": "production"
+      "status": "production",
+      "performance_grade": "B",
+      "notes": "Near breakeven accuracy - consider raising confidence threshold to 0.58 and edge to 1.5"
     },
     "1h_total": {
       "accuracy": 0.581,
       "roi": 0.114,
       "predictions": 232,
-      "status": "production"
+      "status": "production",
+      "performance_grade": "A-",
+      "notes": "Good performance - maintain current thresholds"
     }
   },
   "model_algorithm": {
@@ -105,6 +114,50 @@
     "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.15.0",
     "health_endpoint": "/health",
     "markets_required": 4
+  },
+  "optimization_recommendations": {
+    "updated": "2026-01-14",
+    "recommendations": [
+      {
+        "market": "1h_spread",
+        "action": "raise_thresholds",
+        "current": {
+          "min_confidence": 0.68,
+          "min_edge": 1.5
+        },
+        "recommended": {
+          "min_confidence": 0.70,
+          "min_edge": 2.0
+        },
+        "rationale": "55.9% accuracy is close to breakeven. Raising thresholds will filter lower-quality picks and improve ROI.",
+        "expected_impact": "Reduced volume, higher win rate, improved ROI"
+      }
+    ],
+    "next_backtest_due": "2026-02-15",
+    "next_retraining_due": "2026-03-01",
+    "notes": "FG markets performing well. Focus optimization on 1H markets. Consider Q1 model development once sufficient 2025-26 data accumulated."
+  },
+  "data_infrastructure": {
+    "updated": "2026-01-14",
+    "azure_blob_storage": {
+      "account": "nbagbsvstrg",
+      "container": "nbahistoricaldata",
+      "single_source_of_truth": true
+    },
+    "training_data_coverage": {
+      "games": 3969,
+      "columns": 327,
+      "date_range": "2023-01-01 to 2026-01-09",
+      "injury_coverage": "100%",
+      "odds_coverage": "100%",
+      "model_features_coverage": "55/55 (100%)"
+    },
+    "audit_status": {
+      "last_audit": "2026-01-14",
+      "local_data_available": false,
+      "azure_sync_required": true,
+      "docker_backtest_available": true
+    }
   },
   "performance_history": []
 }
