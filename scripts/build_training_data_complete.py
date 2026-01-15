@@ -277,8 +277,8 @@ def load_kaggle(start_date: str) -> pd.DataFrame:
 
 
 def load_theodds_derived() -> pd.DataFrame:
-    """Load pre-computed TheOdds consensus lines."""
-    print("\n[2/8] Loading TheOdds derived lines...")
+    """Load pre-computed TheOdds consensus lines (PRIORITY SOURCE)."""
+    print("\n[2/8] Loading TheOdds derived consensus lines...")
 
     if not THEODDS_LINES.exists():
         print("       [SKIP] Not found")
@@ -294,17 +294,17 @@ def load_theodds_derived() -> pd.DataFrame:
     )
 
     df = df.rename(columns={
-        "fg_spread_line": "to_fg_spread",
-        "fg_total_line": "to_fg_total",
-        "fg_ml_home": "to_fg_ml_home",
-        "fg_ml_away": "to_fg_ml_away",
-        "fh_spread_line": "to_1h_spread",
-        "fh_total_line": "to_1h_total",
-        "fh_ml_home": "to_1h_ml_home",
-        "fh_ml_away": "to_1h_ml_away",
+        "fg_spread_line": "theodds_fg_spread",
+        "fg_total_line": "theodds_fg_total",
+        "fg_ml_home": "theodds_fg_ml_home",
+        "fg_ml_away": "theodds_fg_ml_away",
+        "fh_spread_line": "theodds_1h_spread",
+        "fh_total_line": "theodds_1h_total",
+        "fh_ml_home": "theodds_1h_ml_home",
+        "fh_ml_away": "theodds_1h_ml_away",
     })
 
-    print(f"       Games: {len(df):,}")
+    print(f"       Games: {len(df):,} (PRIORITY: consensus/derived)")
     return df
 
 
@@ -398,8 +398,14 @@ def load_theodds_2025_26() -> pd.DataFrame:
 
 
 def load_h1_exports() -> pd.DataFrame:
-    """Load detailed 1H odds exports."""
-    print("\n[3/8] Loading 1H odds exports...")
+    """Load detailed 1H odds exports (SECONDARY SOURCE).
+    
+    Priority hierarchy:
+      1. theodds_lines.csv (consensus, PRIORITY)
+      2. H1_EXPORTS (detailed exports, SECONDARY)
+      3. THEODDS_2025_26 raw API (fallback for 2025-26)
+    """
+    print("\n[3/8] Loading 1H odds exports (detailed, SECONDARY source)...")
 
     dfs = []
     for f in H1_EXPORTS:
@@ -450,7 +456,7 @@ def load_h1_exports() -> pd.DataFrame:
         })
 
     result = pd.DataFrame(lines)
-    print(f"       Aggregated: {len(result):,} games")
+    print(f"       Aggregated: {len(result):,} games (SECONDARY source)")
     return result
 
 
