@@ -217,11 +217,11 @@ def safe_median(values: list) -> Optional[float]:
 def load_kaggle(start_date: str) -> pd.DataFrame:
     """Load Kaggle betting data - our primary source through 2025."""
     print("\n[1/8] Loading Kaggle betting data (2007-2025)...")
-    
+
     df = pd.read_csv(KAGGLE_FILE)
     df["game_date"] = pd.to_datetime(df["date"])
     df = df[df["game_date"] >= start_date].copy()
-    
+
     # Standardize team names
     df["home_team"] = df["home"].apply(standardize_team_name)
     df["away_team"] = df["away"].apply(standardize_team_name)
@@ -229,18 +229,18 @@ def load_kaggle(start_date: str) -> pd.DataFrame:
         lambda r: generate_match_key(r["game_date"], r["home_team"], r["away_team"], source_is_utc=False),
         axis=1
     )
-    
+
     # Scores
     df["home_score"] = df["score_home"]
     df["away_score"] = df["score_away"]
     df["fg_margin"] = df["home_score"] - df["away_score"]
     df["fg_total_actual"] = df["home_score"] + df["away_score"]
-    
+
     # Q1-Q4 scores
     for q in [1, 2, 3, 4]:
         df[f"home_q{q}"] = df[f"q{q}_home"]
         df[f"away_q{q}"] = df[f"q{q}_away"]
-    
+
     # Half scores
     # NO FAKE DATA: do not treat missing quarter scores as 0.
     home_1h_mask = df["home_q1"].notna() & df["home_q2"].notna()
@@ -251,14 +251,14 @@ def load_kaggle(start_date: str) -> pd.DataFrame:
     df.loc[~away_1h_mask, "away_1h"] = np.nan
     df["1h_total_actual"] = df["home_1h"] + df["away_1h"]
     df["1h_margin"] = df["home_1h"] - df["away_1h"]
-    
+
     home_2h_mask = df["home_q3"].notna() & df["home_q4"].notna()
     away_2h_mask = df["away_q3"].notna() & df["away_q4"].notna()
     df.loc[home_2h_mask, "home_2h"] = df.loc[home_2h_mask, "home_q3"] + df.loc[home_2h_mask, "home_q4"]
     df.loc[~home_2h_mask, "home_2h"] = np.nan
     df.loc[away_2h_mask, "away_2h"] = df.loc[away_2h_mask, "away_q3"] + df.loc[away_2h_mask, "away_q4"]
     df.loc[~away_2h_mask, "away_2h"] = np.nan
-    
+
     # FG lines
     df["kaggle_fg_spread"] = df.apply(
         lambda r: -r["spread"] if r.get("whos_favored") == "home" else r["spread"], axis=1
@@ -266,11 +266,11 @@ def load_kaggle(start_date: str) -> pd.DataFrame:
     df["kaggle_fg_total"] = df["total"]
     df["kaggle_fg_ml_home"] = df["moneyline_home"]
     df["kaggle_fg_ml_away"] = df["moneyline_away"]
-    
+
     # Season info
     df["season"] = df["season"]
     df["is_playoffs"] = df["playoffs"].fillna(0).astype(int)
-    
+
     print(f"       Games: {len(df):,}")
     print(f"       Date range: {df['game_date'].min().date()} to {df['game_date'].max().date()}")
     return df
@@ -279,11 +279,11 @@ def load_kaggle(start_date: str) -> pd.DataFrame:
 def load_theodds_derived() -> pd.DataFrame:
     """Load pre-computed TheOdds consensus lines."""
     print("\n[2/8] Loading TheOdds derived lines...")
-    
+
     if not THEODDS_LINES.exists():
         print("       [SKIP] Not found")
         return pd.DataFrame()
-    
+
     df = pd.read_csv(THEODDS_LINES)
     df["commence_time"] = pd.to_datetime(df["commence_time"])
     df["home_team"] = df["home_team"].apply(standardize_team_name)
@@ -292,7 +292,7 @@ def load_theodds_derived() -> pd.DataFrame:
         lambda r: generate_match_key(r["commence_time"], r["home_team"], r["away_team"], source_is_utc=True),
         axis=1
     )
-    
+
     df = df.rename(columns={
         "fg_spread_line": "to_fg_spread",
         "fg_total_line": "to_fg_total",
@@ -303,7 +303,7 @@ def load_theodds_derived() -> pd.DataFrame:
         "fh_ml_home": "to_1h_ml_home",
         "fh_ml_away": "to_1h_ml_away",
     })
-    
+
     print(f"       Games: {len(df):,}")
     return df
 
@@ -320,11 +320,11 @@ def load_theodds_2025_26() -> pd.DataFrame:
     df["commence_time"] = pd.to_datetime(df["commence_time"])
     df["game_date"] = df["commence_time"].dt.tz_convert(CST).dt.date
     df["game_date"] = pd.to_datetime(df["game_date"])
-    
+
     # Keep raw team names for h2h column lookup BEFORE standardization
     raw_home = df["home_team"].copy()
     raw_away = df["away_team"].copy()
-    
+
     df["home_team"] = df["home_team"].apply(standardize_team_name)
     df["away_team"] = df["away_team"].apply(standardize_team_name)
     df["match_key"] = df.apply(
@@ -340,29 +340,29 @@ def load_theodds_2025_26() -> pd.DataFrame:
     h1_ml_away_vals = []
     q1_ml_home_vals = []
     q1_ml_away_vals = []
-    
+
     for idx, row in df.iterrows():
         home_raw = raw_home.iloc[idx]
         away_raw = raw_away.iloc[idx]
-        
+
         # FG moneyline (h2h)
         h2h_home_col = f"h2h_{home_raw}_price"
         h2h_away_col = f"h2h_{away_raw}_price"
         fg_ml_home_vals.append(row.get(h2h_home_col) if h2h_home_col in df.columns else np.nan)
         fg_ml_away_vals.append(row.get(h2h_away_col) if h2h_away_col in df.columns else np.nan)
-        
+
         # 1H moneyline (h2h_h1)
         h2h_h1_home_col = f"h2h_h1_{home_raw}_price"
         h2h_h1_away_col = f"h2h_h1_{away_raw}_price"
         h1_ml_home_vals.append(row.get(h2h_h1_home_col) if h2h_h1_home_col in df.columns else np.nan)
         h1_ml_away_vals.append(row.get(h2h_h1_away_col) if h2h_h1_away_col in df.columns else np.nan)
-        
+
         # Q1 moneyline (h2h_q1)
         h2h_q1_home_col = f"h2h_q1_{home_raw}_price"
         h2h_q1_away_col = f"h2h_q1_{away_raw}_price"
         q1_ml_home_vals.append(row.get(h2h_q1_home_col) if h2h_q1_home_col in df.columns else np.nan)
         q1_ml_away_vals.append(row.get(h2h_q1_away_col) if h2h_q1_away_col in df.columns else np.nan)
-    
+
     df["to_fg_ml_home"] = fg_ml_home_vals
     df["to_fg_ml_away"] = fg_ml_away_vals
     df["to_1h_ml_home"] = h1_ml_home_vals
@@ -400,17 +400,17 @@ def load_theodds_2025_26() -> pd.DataFrame:
 def load_h1_exports() -> pd.DataFrame:
     """Load detailed 1H odds exports."""
     print("\n[3/8] Loading 1H odds exports...")
-    
+
     dfs = []
     for f in H1_EXPORTS:
         if f.exists():
             df = pd.read_csv(f)
             dfs.append(df)
             print(f"       {f.name}: {len(df):,} rows")
-    
+
     if not dfs:
         return pd.DataFrame()
-    
+
     df = pd.concat(dfs, ignore_index=True)
     df["home_team"] = df["home_team"].apply(standardize_team_name)
     df["away_team"] = df["away_team"].apply(standardize_team_name)
@@ -419,20 +419,20 @@ def load_h1_exports() -> pd.DataFrame:
         lambda r: generate_match_key(r["commence_time"], r["home_team"], r["away_team"], source_is_utc=True),
         axis=1
     )
-    
+
     # Aggregate by game
     lines = []
     for match_key, group in df.groupby("match_key"):
         spreads, totals, ml_h, ml_a = [], [], [], []
         home_team = group.iloc[0]["home_team"]
         away_team = group.iloc[0]["away_team"]
-        
+
         for _, row in group.iterrows():
             market = row.get("market_key", "")
             outcome = row.get("outcome_name", "")
             point = row.get("outcome_point")
             price = row.get("outcome_price")
-            
+
             if market == "spreads_h1" and outcome == home_team:
                 if pd.notna(point): spreads.append(point)
             elif market == "totals_h1" and outcome == "Over":
@@ -440,7 +440,7 @@ def load_h1_exports() -> pd.DataFrame:
             elif market == "h2h_h1":
                 if outcome == home_team and pd.notna(price): ml_h.append(price)
                 elif outcome == away_team and pd.notna(price): ml_a.append(price)
-        
+
         lines.append({
             "match_key": match_key,
             "exp_1h_spread": safe_median(spreads),
@@ -448,7 +448,7 @@ def load_h1_exports() -> pd.DataFrame:
             "exp_1h_ml_home": safe_median(ml_h),
             "exp_1h_ml_away": safe_median(ml_a),
         })
-    
+
     result = pd.DataFrame(lines)
     print(f"       Aggregated: {len(result):,} games")
     return result
@@ -457,17 +457,17 @@ def load_h1_exports() -> pd.DataFrame:
 def load_line_movement() -> pd.DataFrame:
     """Load featured odds for line movement."""
     print("\n[4/8] Loading line movement data...")
-    
+
     dfs = []
     for f in FEAT_EXPORTS:
         if f.exists():
             df = pd.read_csv(f)
             dfs.append(df)
             print(f"       {f.name}: {len(df):,} rows")
-    
+
     if not dfs:
         return pd.DataFrame()
-    
+
     df = pd.concat(dfs, ignore_index=True)
     df["home_team"] = df["home_team"].apply(standardize_team_name)
     df["away_team"] = df["away_team"].apply(standardize_team_name)
@@ -477,12 +477,12 @@ def load_line_movement() -> pd.DataFrame:
         lambda r: generate_match_key(r["commence_time"], r["home_team"], r["away_team"], source_is_utc=True),
         axis=1
     )
-    
+
     movements = []
     for match_key, group in df.groupby("match_key"):
         group = group.sort_values("snapshot_timestamp")
         home_team = group.iloc[0]["home_team"]
-        
+
         # Spreads
         spread_rows = group[(group["market_key"] == "spreads") & (group["outcome_name"] == home_team)]
         if len(spread_rows) > 0:
@@ -491,7 +491,7 @@ def load_line_movement() -> pd.DataFrame:
             close_spread = spread_rows.iloc[-1]["outcome_point"]
         else:
             open_spread = close_spread = None
-        
+
         # Totals
         total_rows = group[(group["market_key"] == "totals") & (group["outcome_name"] == "Over")]
         if len(total_rows) > 0:
@@ -500,7 +500,7 @@ def load_line_movement() -> pd.DataFrame:
             close_total = total_rows.iloc[-1]["outcome_point"]
         else:
             open_total = close_total = None
-        
+
         movements.append({
             "match_key": match_key,
             "open_spread": open_spread,
@@ -510,7 +510,7 @@ def load_line_movement() -> pd.DataFrame:
             "close_total": close_total,
             "total_move": (close_total - open_total) if pd.notna(open_total) and pd.notna(close_total) else None,
         })
-    
+
     result = pd.DataFrame(movements)
     print(f"       Aggregated: {len(result):,} games")
     return result
@@ -519,11 +519,11 @@ def load_line_movement() -> pd.DataFrame:
 def load_box_scores() -> pd.DataFrame:
     """Load box scores (through June 2023 from wyattowalsh)."""
     print("\n[5/8] Loading wyattowalsh box scores (1946-2023)...")
-    
+
     if not BOX_SCORES.exists():
         print("       [SKIP] Not found")
         return pd.DataFrame()
-    
+
     df = pd.read_csv(BOX_SCORES)
     df["game_date"] = pd.to_datetime(df["game_date"])
     df["home_team"] = df["team_name_home"].apply(standardize_team_name)
@@ -532,7 +532,7 @@ def load_box_scores() -> pd.DataFrame:
         lambda r: generate_match_key(r["game_date"], r["home_team"], r["away_team"], source_is_utc=False),
         axis=1
     )
-    
+
     # Compute advanced stats
     for side in ["home", "away"]:
         opp = "away" if side == "home" else "home"
@@ -542,21 +542,21 @@ def load_box_scores() -> pd.DataFrame:
         df[f"{side}_tov_pct"] = df[f"tov_{side}"] / (df[f"fga_{side}"] + 0.44 * df[f"fta_{side}"] + df[f"tov_{side}"]).replace(0, np.nan)
         df[f"{side}_oreb_pct"] = df[f"oreb_{side}"] / (df[f"oreb_{side}"] + df[f"dreb_{opp}"]).replace(0, np.nan)
         df[f"{side}_poss"] = df[f"fga_{side}"] - df[f"oreb_{side}"] + df[f"tov_{side}"] + 0.44 * df[f"fta_{side}"]
-    
+
     for side in ["home", "away"]:
         opp = "away" if side == "home" else "home"
         df[f"{side}_off_rtg"] = df[f"pts_{side}"] / df[f"{side}_poss"].replace(0, np.nan) * 100
         df[f"{side}_def_rtg"] = df[f"pts_{opp}"] / df[f"{opp}_poss"].replace(0, np.nan) * 100
         df[f"{side}_net_rtg"] = df[f"{side}_off_rtg"] - df[f"{side}_def_rtg"]
-    
+
     df["pace"] = (df["home_poss"] + df["away_poss"]) / 2
-    
+
     cols = ["match_key", "pace"]
     for side in ["home", "away"]:
-        cols.extend([f"{side}_efg_pct", f"{side}_3p_rate", f"{side}_ft_rate", 
+        cols.extend([f"{side}_efg_pct", f"{side}_3p_rate", f"{side}_ft_rate",
                      f"{side}_tov_pct", f"{side}_oreb_pct",
                      f"{side}_off_rtg", f"{side}_def_rtg", f"{side}_net_rtg"])
-    
+
     result = df[cols].drop_duplicates("match_key")
     print(f"       Games: {len(result):,}")
     print(f"       Date range: {df['game_date'].min().date()} to {df['game_date'].max().date()}")
@@ -566,27 +566,27 @@ def load_box_scores() -> pd.DataFrame:
 def load_nba_api_box_scores() -> pd.DataFrame:
     """Load nba_api box scores for 2023-26 seasons."""
     print("\n[5b/8] Loading nba_api box scores (2023-2026)...")
-    
+
     all_games = []
     for path in NBA_API_BOX_SCORES:
         if not path.exists():
             continue
-        
+
         df = pd.read_csv(path)
         print(f"       {path.name}: {len(df)} rows")
-        
+
         # Group by game_id
         for game_id, group in df.groupby("GAME_ID"):
             if len(group) != 2:
                 continue
-            
+
             row1, row2 = group.iloc[0], group.iloc[1]
             home_team = standardize_team_name(row2["TEAM_NAME"])  # Home is usually second
             away_team = standardize_team_name(row1["TEAM_NAME"])
-            
+
             # Parse date from GAME_ID (format: 00XXYYYMMDD)
             game_date_str = str(game_id)[2:]  # Remove leading zeros
-            
+
             game = {
                 "game_id": game_id,
                 "home_team": home_team,
@@ -594,19 +594,19 @@ def load_nba_api_box_scores() -> pd.DataFrame:
                 "home_score": row2["PTS"],
                 "away_score": row1["PTS"],
             }
-            
+
             # All box score stats
             for stat in ["FGM", "FGA", "FG3M", "FG3A", "FTM", "FTA", "OREB", "DREB", "AST", "STL", "BLK", "TO", "PF"]:
                 game[f"home_{stat.lower()}"] = row2[stat] if stat in row2 else None
                 game[f"away_{stat.lower()}"] = row1[stat] if stat in row1 else None
-            
+
             all_games.append(game)
-    
+
     if not all_games:
         return pd.DataFrame()
-    
+
     result = pd.DataFrame(all_games)
-    
+
     # Compute advanced stats
     for side in ["home", "away"]:
         opp = "away" if side == "home" else "home"
@@ -618,15 +618,15 @@ def load_nba_api_box_scores() -> pd.DataFrame:
         result[f"{side}_tov_pct"] = result[f"{side}_to"] / poss.replace(0, np.nan)
         result[f"{side}_oreb_pct"] = result[f"{side}_oreb"] / (result[f"{side}_oreb"] + result[f"{opp}_dreb"]).replace(0, np.nan)
         result[f"{side}_poss"] = fga - result[f"{side}_oreb"] + result[f"{side}_to"] + 0.44 * result[f"{side}_fta"]
-    
+
     for side in ["home", "away"]:
         opp = "away" if side == "home" else "home"
         result[f"{side}_off_rtg"] = result[f"{side}_score"] / result[f"{side}_poss"].replace(0, np.nan) * 100
         result[f"{side}_def_rtg"] = result[f"{opp}_score"] / result[f"{opp}_poss"].replace(0, np.nan) * 100
         result[f"{side}_net_rtg"] = result[f"{side}_off_rtg"] - result[f"{side}_def_rtg"]
-    
+
     result["pace"] = (result["home_poss"] + result["away_poss"]) / 2
-    
+
     print(f"       Total games: {len(result):,}")
     return result
 
@@ -637,7 +637,7 @@ def load_quarter_scores() -> pd.DataFrame:
     if not QUARTER_SCORES_2526.exists():
         print("       [SKIP] quarter_scores_2025_26.csv not found")
         return pd.DataFrame()
-    
+
     df = pd.read_csv(QUARTER_SCORES_2526)
     df["game_date"] = pd.to_datetime(df["game_date"])
     df["home_team"] = df["home_team"].apply(standardize_team_name)
@@ -660,15 +660,15 @@ def load_quarter_scores() -> pd.DataFrame:
 def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new, quarters=None) -> pd.DataFrame:
     """Merge all data sources including 2025-26 as new rows."""
     print("\n[6/8] Merging all sources...")
-    
+
     df = kaggle.copy()
     kaggle_keys = set(df["match_key"])
-    
+
     # ADD 2025-26 games as NEW ROWS (not just merge)
     if not theodds_2526.empty:
         # Get games not in Kaggle
         new_games = theodds_2526[~theodds_2526["match_key"].isin(kaggle_keys)].copy()
-        
+
         if not new_games.empty:
             # Create base structure matching Kaggle
             new_rows = []
@@ -693,13 +693,13 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
                     "to_q1_ml_away": row.get("to_q1_ml_away"),
                 }
                 new_rows.append(new_row)
-            
+
             new_df = pd.DataFrame(new_rows)
             df = pd.concat([df, new_df], ignore_index=True)
             print(f"       Added 2025-26 games: {len(new_rows):,}")
-    
+
     n = len(df)
-    
+
     # TheOdds derived (2021-2025)
     if not theodds.empty:
         cols = ["match_key", "to_fg_spread", "to_fg_total", "to_fg_ml_home", "to_fg_ml_away",
@@ -741,18 +741,18 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
         for idx, row in df.iterrows():
             if pd.notna(df.at[idx, "home_efg_pct"]) if "home_efg_pct" in df.columns else False:
                 continue  # Already have box score
-            
+
             home, away = row["home_team"], row["away_team"]
             match = box_new[
                 ((box_new["home_team"] == home) & (box_new["away_team"] == away)) |
                 ((box_new["home_team"] == away) & (box_new["away_team"] == home))
             ]
-            
+
             if len(match) > 0:
                 m = match.iloc[0]
                 is_flipped = m["home_team"] != home
-                
-                for stat in ["score", "fgm", "fga", "fg3m", "fg3a", "ftm", "fta", 
+
+                for stat in ["score", "fgm", "fga", "fg3m", "fg3a", "ftm", "fta",
                             "oreb", "dreb", "ast", "stl", "blk", "to", "pf",
                             "efg_pct", "3p_rate", "ft_rate", "tov_pct", "oreb_pct",
                             "off_rtg", "def_rtg", "net_rtg"]:
@@ -766,7 +766,7 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
                             df.at[idx, a_col] = m[a_col]
                 if "pace" in m:
                     df.at[idx, "pace"] = m["pace"]
-        
+
         m = df["home_efg_pct"].notna().sum() if "home_efg_pct" in df.columns else 0
         print(f"       Box scores (nba_api): {m:,}/{n:,} ({m/n*100:.1f}%)")
 
@@ -802,19 +802,19 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
         df["1h_spread_line"] = df["exp_1h_spread"]
     elif "to_1h_spread" in df.columns:
         df["1h_spread_line"] = df["to_1h_spread"]
-    
+
     if "exp_1h_total" in df.columns and "to_1h_total" in df.columns:
         df["1h_total_line"] = df["exp_1h_total"].fillna(df["to_1h_total"])
     elif "exp_1h_total" in df.columns:
         df["1h_total_line"] = df["exp_1h_total"]
     elif "to_1h_total" in df.columns:
         df["1h_total_line"] = df["to_1h_total"]
-    
+
     if "exp_1h_ml_home" in df.columns and "to_1h_ml_home" in df.columns:
         df["1h_ml_home"] = df["exp_1h_ml_home"].fillna(df["to_1h_ml_home"])
     elif "to_1h_ml_home" in df.columns:
         df["1h_ml_home"] = df["to_1h_ml_home"]
-    
+
     if "exp_1h_ml_away" in df.columns and "to_1h_ml_away" in df.columns:
         df["1h_ml_away"] = df["exp_1h_ml_away"].fillna(df["to_1h_ml_away"])
     elif "to_1h_ml_away" in df.columns:
@@ -840,27 +840,27 @@ def merge_all(kaggle, theodds, theodds_2526, h1_exp, movement, box_old, box_new,
 def compute_elo(df: pd.DataFrame) -> pd.DataFrame:
     """Compute ELO from results."""
     print("\n[7/8] Computing ELO ratings...")
-    
+
     df = df.sort_values("game_date").copy()
     K, HOME_ADV = 20, 100
     elo = {t: 1500 for t in set(df["home_team"]) | set(df["away_team"])}
-    
+
     h_elo, a_elo = [], []
     for _, r in df.iterrows():
         h, a = r["home_team"], r["away_team"]
         h_elo.append(elo[h])
         a_elo.append(elo[a])
-        
+
         exp = 1 / (1 + 10 ** ((elo[a] - elo[h] - HOME_ADV) / 400))
         win = 1 if r["home_score"] > r["away_score"] else 0
         elo[h] += K * (win - exp)
         elo[a] += K * ((1-win) - (1-exp))
-    
+
     df["home_elo"] = h_elo
     df["away_elo"] = a_elo
     df["elo_diff"] = df["home_elo"] - df["away_elo"]
     df["elo_prob"] = 1 / (1 + 10 ** ((df["away_elo"] - df["home_elo"] - HOME_ADV) / 400))
-    
+
     print(f"       Computed for {len(df):,} games")
     return df
 
@@ -868,20 +868,20 @@ def compute_elo(df: pd.DataFrame) -> pd.DataFrame:
 def compute_rolling(df: pd.DataFrame, windows=[5, 10, 20]) -> pd.DataFrame:
     """Compute rolling stats from scores."""
     print("\n[8/8] Computing rolling stats...")
-    
+
     df = df.sort_values("game_date").copy()
-    
+
     # Stats from scores (available for all games)
     score_stats = ["score", "1h", "q1", "q2", "q3", "q4"]
     # Advanced stats (only where box scores available)
     adv_stats = ["efg_pct", "3p_rate", "ft_rate", "tov_pct", "oreb_pct", "off_rtg", "def_rtg", "net_rtg"]
-    
+
     new_cols = {}
-    
+
     for w in windows:
         for side in ["home", "away"]:
             team = f"{side}_team"
-            
+
             # Score-based stats (100% coverage)
             for stat in score_stats:
                 col = f"{side}_{stat}"
@@ -889,7 +889,7 @@ def compute_rolling(df: pd.DataFrame, windows=[5, 10, 20]) -> pd.DataFrame:
                     new_cols[f"{side}_{w}g_{stat}"] = df.groupby(team)[col].transform(
                         lambda x: x.shift(1).rolling(w, min_periods=3).mean()
                     )
-            
+
             # Advanced stats (22% coverage - only through June 2023)
             for stat in adv_stats:
                 col = f"{side}_{stat}"
@@ -897,7 +897,7 @@ def compute_rolling(df: pd.DataFrame, windows=[5, 10, 20]) -> pd.DataFrame:
                     new_cols[f"{side}_{w}g_{stat}"] = df.groupby(team)[col].transform(
                         lambda x: x.shift(1).rolling(w, min_periods=3).mean()
                     )
-    
+
     # Add differentials
     for w in windows:
         for stat in score_stats + adv_stats:
@@ -905,11 +905,11 @@ def compute_rolling(df: pd.DataFrame, windows=[5, 10, 20]) -> pd.DataFrame:
             a_col = f"away_{w}g_{stat}"
             if h_col in new_cols and a_col in new_cols:
                 new_cols[f"diff_{w}g_{stat}"] = new_cols[h_col] - new_cols[a_col]
-    
+
     # Add all at once
     for col, vals in new_cols.items():
         df[col] = vals
-    
+
     print(f"       Added {len(new_cols)} rolling columns")
     return df
 
@@ -1104,7 +1104,7 @@ def normalize_game_date_from_match_key(df: pd.DataFrame) -> pd.DataFrame:
 def compute_situational(df: pd.DataFrame) -> pd.DataFrame:
     """Compute rest, B2B, streaks."""
     df = df.sort_values("game_date").copy()
-    
+
     team_dates = {}
     rest_h, rest_a = [], []
     for _, r in df.iterrows():
@@ -1113,13 +1113,13 @@ def compute_situational(df: pd.DataFrame) -> pd.DataFrame:
         rest_h.append((d - team_dates.get(h, d - timedelta(days=7))).days if h in team_dates else 7)
         rest_a.append((d - team_dates.get(a, d - timedelta(days=7))).days if a in team_dates else 7)
         team_dates[h] = team_dates[a] = d
-    
+
     df["home_rest"] = rest_h
     df["away_rest"] = rest_a
     df["home_b2b"] = (df["home_rest"] == 1).astype(int)
     df["away_b2b"] = (df["away_rest"] == 1).astype(int)
     df["rest_adv"] = df["home_rest"] - df["away_rest"]
-    
+
     # Streaks
     team_streaks = {}
     str_h, str_a = [], []
@@ -1130,11 +1130,11 @@ def compute_situational(df: pd.DataFrame) -> pd.DataFrame:
         win = r["home_score"] > r["away_score"]
         team_streaks[h] = max(1, team_streaks.get(h,0)+1) if win else min(-1, team_streaks.get(h,0)-1)
         team_streaks[a] = max(1, team_streaks.get(a,0)+1) if not win else min(-1, team_streaks.get(a,0)-1)
-    
+
     df["home_streak"] = str_h
     df["away_streak"] = str_a
     df["streak_diff"] = df["home_streak"] - df["away_streak"]
-    
+
     return df
 
 
@@ -1197,7 +1197,7 @@ def print_summary(df: pd.DataFrame):
     print(f"\n  Games: {len(df):,}")
     print(f"  Date range: {df['game_date'].min().date()} to {df['game_date'].max().date()}")
     print(f"  Columns: {len(df.columns)}")
-    
+
     print("\n  COVERAGE:")
     for name, col in [("FG spread", "fg_spread_line"), ("FG total", "fg_total_line"),
                       ("1H spread", "1h_spread_line"), ("1H total", "1h_total_line"),
@@ -1206,12 +1206,93 @@ def print_summary(df: pd.DataFrame):
         if col in df.columns:
             pct = df[col].notna().mean() * 100
             print(f"    {name}: {pct:.1f}%")
-    
+
     print("\n  LABELS:")
     for lab in ["fg_spread_covered", "fg_total_over", "1h_spread_covered", "1h_total_over"]:
         if lab in df.columns:
             n = df[lab].notna().sum()
             print(f"    {lab}: {n:,} games")
+
+
+def _download_prebuilt_training_data(blob_account: str = "nbagbsvstrg", version: str = "latest") -> Path:
+    """Download pre-built training data from Azure training_data/ path.
+
+    This avoids expensive rebuilds from 8 raw sources during backtest runs.
+    Uses validated, versioned training data instead of ephemeral rebuilds.
+
+    Args:
+        blob_account: Azure Storage account name
+        version: Version to download (e.g., "latest", "v2026.01.14")
+
+    Returns:
+        Path to downloaded training_data.csv
+    """
+    import tempfile
+    from pathlib import Path
+
+    output = OUTPUT_DIR / "training_data.csv"
+    container = "training_data"
+    blob_path = f"{version}/training_data.csv"
+
+    print(f"\n  [PREBUILT] Downloading training data from Azure: {container}/{blob_path}")
+
+    # Use azcopy for efficient download
+    try:
+        sas_url = _get_blob_sas_url(blob_account, container, blob_path)
+        cmd = [
+            "azcopy",
+            "copy",
+            sas_url,
+            str(output),
+            "--overwrite=ifSourceNewer"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print(f"  [PREBUILT] Downloaded to {output}")
+        if not output.exists():
+            raise FileNotFoundError(f"Download completed but file not found at {output}")
+        return output
+    except subprocess.CalledProcessError as e:
+        print(f"  [PREBUILT] azcopy failed: {e.stderr}")
+        print(f"  [PREBUILT] Falling back to az cli...")
+
+        # Fallback to az storage blob download
+        try:
+            cmd = [
+                "az", "storage", "blob", "download",
+                "--account-name", blob_account,
+                "--container-name", container,
+                "--name", blob_path,
+                "--file", str(output)
+            ]
+            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            print(f"  [PREBUILT] Downloaded via az cli to {output}")
+            return output
+        except subprocess.CalledProcessError as e2:
+            raise RuntimeError(f"Failed to download prebuilt training data: {e2.stderr}") from e2
+
+
+def _get_blob_sas_url(blob_account: str, container: str, blob_path: str) -> str:
+    """Generate SAS URL for blob access (for azcopy)."""
+    # For simplicity, use az cli to generate SAS URL
+    # In production, you'd use connection strings or managed identity
+    try:
+        result = subprocess.run(
+            [
+                "az", "storage", "blob", "generate-sas",
+                "--account-name", blob_account,
+                "--container-name", container,
+                "--name", blob_path,
+                "--permissions", "r",
+                "--expiry", "2050-12-31"
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        sas_token = result.stdout.strip().strip('"')
+        return f"https://{blob_account}.blob.core.windows.net/{container}/{blob_path}?{sas_token}"
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate SAS URL: {e}") from e
 
 
 def main(
@@ -1223,10 +1304,12 @@ def main(
     skip_post_processing: bool = False,
     seasons: str | None = "2023-2024,2024-2025,2025-2026",
     leakage_days: int = 3,
+    use_prebuilt: bool = False,
+    prebuilt_version: str = "latest",
 ):
     """
     Build training data with optional cutoff date to prevent data leakage.
-    
+
     Args:
         start_date: First date to include (default: 2023-01-01)
         cutoff_date: Last date to include (default: None = include all)
@@ -1236,14 +1319,31 @@ def main(
                          Set to False only for local development with pre-cached data.
         blob_account: Azure Storage account name (single source of truth)
         blob_container: Azure blob container name (single source of truth)
+        use_prebuilt: If True, download validated training data from training_data/latest/
+                      instead of rebuilding from 8 raw sources (fast, for backtests).
+        prebuilt_version: Version of prebuilt data to download (default: "latest")
     """
     print("\n" + "="*80)
     print(" BUILDING COMPLETE TRAINING DATA")
+    if use_prebuilt:
+        print(f" MODE: PREBUILT (version={prebuilt_version})")
     if seasons:
         print(f" SEASONS: {seasons}")
     if cutoff_date:
         print(f" CUTOFF DATE: {cutoff_date} (excludes games after this date)")
     print("="*80)
+
+    # If --use-prebuilt flag is set, skip all raw data collection
+    if use_prebuilt:
+        print("\n[PREBUILT] Downloading validated training data from Azure...")
+        try:
+            _download_prebuilt_training_data(blob_account, prebuilt_version)
+            print("[PREBUILT] Training data ready. Skipping raw data rebuild.")
+            return  # Exit early; prebuilt data is production-ready
+        except Exception as e:
+            print(f"[PREBUILT] ERROR: {e}")
+            print("[PREBUILT] Falling back to full rebuild...")
+            # Fall through to standard rebuild if download fails
 
     prefixes = [
         "historical/the_odds",
@@ -1293,28 +1393,28 @@ def main(
     # This prevents older seasons from influencing rolling features and eliminates stale season references.
     if seasons:
         df = _filter_to_requested_seasons(df, season_years)
-    
+
     # Apply cutoff date to prevent data leakage
     if cutoff_date:
         import pytz
         CST = pytz.timezone("America/Chicago")
         UTC = pytz.UTC
-        
+
         df["game_date"] = pd.to_datetime(df["game_date"], format="mixed")
         # Convert to CST for accurate date comparison
         df["_game_date_utc"] = df["game_date"].dt.tz_localize(UTC)
         df["_cst_date"] = df["_game_date_utc"].dt.tz_convert(CST).dt.date
-        
+
         cutoff = pd.to_datetime(cutoff_date).date()
         before_cutoff = len(df)
         df = df[df["_cst_date"] <= cutoff].copy()
         after_cutoff = len(df)
-        
+
         # Clean up temp columns
         df = df.drop(columns=["_game_date_utc", "_cst_date"])
-        
+
         print(f"\n  [CUTOFF] Filtered {before_cutoff:,} -> {after_cutoff:,} games (excluded {before_cutoff - after_cutoff} after {cutoff_date})")
-    
+
     df = compute_elo(df)
     df = compute_rolling(df)
     df = compute_fg_features(df)
@@ -1373,7 +1473,7 @@ def main(
         "fg_spread_line",
         "fg_total_line",
     ]
-    
+
     missing_critical = [c for c in critical_cols if c not in final_df.columns]
     if missing_critical:
         raise ValueError(f"Missing CRITICAL columns: {missing_critical}")
@@ -1389,7 +1489,7 @@ def main(
         raise ValueError("Critical columns have nulls - cannot backtest")
 
     # Optional columns - warn but don't fail
-    optional_cols = ["fg_ml_home", "fg_ml_away", "1h_spread_line", "1h_total_line", 
+    optional_cols = ["fg_ml_home", "fg_ml_away", "1h_spread_line", "1h_total_line",
                      "1h_ml_home", "1h_ml_away", "home_q1", "away_q1"]
     optional_in_df = [c for c in optional_cols if c in final_df.columns]
     if optional_in_df:
@@ -1432,6 +1532,16 @@ if __name__ == "__main__":
         help="Comma-separated seasons to include (e.g. 2023-2024,2024-2025,2025-2026)",
     )
     parser.add_argument("--leakage-days", type=int, default=3, help="Exclude the most recent N days to avoid leakage (default: 3)")
+    parser.add_argument(
+        "--use-prebuilt",
+        action="store_true",
+        help="Download validated training data from training_data/latest/ instead of rebuilding from raw sources (fast for backtests)"
+    )
+    parser.add_argument(
+        "--prebuilt-version",
+        default="latest",
+        help="Version of prebuilt data to download (e.g., 'latest', 'v2026.01.14', default: 'latest')"
+    )
     args = parser.parse_args()
     main(
         args.start_date,
@@ -1442,4 +1552,6 @@ if __name__ == "__main__":
         args.skip_post_processing,
         args.seasons,
         args.leakage_days,
+        args.use_prebuilt,
+        args.prebuilt_version,
     )

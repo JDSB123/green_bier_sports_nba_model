@@ -142,6 +142,7 @@ fetch_data() {
     echo "STEP 1: FETCHING FRESH DATA"
     echo "============================================================"
     echo "Seasons: $SEASONS"
+    echo "Mode: ${USE_PREBUILT_FLAG:---rebuild (default, fresh from raw sources)}"
     echo "Output: /app/data/processed/training_data.csv"
     echo ""
     
@@ -158,11 +159,25 @@ fetch_data() {
         START_YEAR="2023"
     fi
 
-    python scripts/build_training_data_complete.py \
-        --start-date "${START_YEAR}-01-01"
+    # Check if we should use prebuilt data (--use-prebuilt) or rebuild fresh
+    if [ "${USE_PREBUILT:-false}" = "true" ]; then
+        echo "[PREBUILT] Downloading validated training data from training_data/latest/"
+        python scripts/build_training_data_complete.py \
+            --start-date "${START_YEAR}-01-01" \
+            --use-prebuilt
+    else
+        echo "[REBUILD] Building fresh training data from all 8 raw sources..."
+        python scripts/build_training_data_complete.py \
+            --start-date "${START_YEAR}-01-01"
+    fi
 
     GENERATED_FILE="/app/data/processed/training_data_complete_${START_YEAR}.csv"
     if [ ! -f "$GENERATED_FILE" ]; then
+        # For prebuilt mode, training_data.csv is created directly; accept either path
+        if [ "${USE_PREBUILT:-false}" = "true" ] && [ -f "/app/data/processed/training_data.csv" ]; then
+            echo "✓ Prebuilt data downloaded successfully"
+            return 0
+        fi
         echo "ERROR: Expected training data file not found at $GENERATED_FILE"
         echo "Available files in /app/data/processed:"
         ls -lh /app/data/processed/ | head -50
@@ -247,6 +262,32 @@ run_backtest() {
     echo "✓ Backtest completed successfully"
 }
 
+# Function to cleanup ephemeral historical cache
+cleanup_cache() {
+    echo ""
+    echo "============================================================"
+    echo "CLEANUP: Removing ephemeral historical cache"
+    echo "============================================================"
+    echo ""
+    
+    # Enforce ephemeral-only policy: remove temporary/cached historical data
+    # Keep only processed training data and results
+    CLEANUP_PATHS=(
+        "/app/data/historical"
+        "/app/.cache"
+    )
+    
+    for path in "${CLEANUP_PATHS[@]}"; do
+        if [ -d "$path" ]; then
+            echo "  Removing: $path"
+            rm -rf "$path"
+        fi
+    done
+    
+    echo "✓ Ephemeral cache cleaned up"
+    echo "  Retained: training_data.csv, models/, results/"
+}
+
 # Function to run leakage-safe backtest using frozen production models
 run_prod_backtest() {
     echo ""
@@ -322,6 +363,7 @@ case "$COMMAND" in
         validate_python
         fetch_data
         run_backtest
+        cleanup_cache
         echo ""
         echo "============================================================"
         echo "FULL PIPELINE COMPLETED SUCCESSFULLY"
@@ -341,6 +383,7 @@ case "$COMMAND" in
     backtest)
         validate_python
         run_backtest
+        cleanup_cache
         echo ""
         echo "============================================================"
         echo "BACKTEST COMPLETED SUCCESSFULLY"

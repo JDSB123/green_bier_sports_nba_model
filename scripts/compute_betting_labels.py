@@ -291,9 +291,72 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         computed = df["1h_home_win"].notna().sum()
         logger.info(f"  Computed 1h_home_win for {computed} games")
     
+    # ==================
+    # FIRST QUARTER LABELS
+    # ==================
+    
+    # Q1 margin and total (2025-26+ data available from fetch_quarter_scores.py)
+    if "home_q1" in df.columns and "away_q1" in df.columns:
+        df["q1_margin"] = df["home_q1"] - df["away_q1"]
+        df["q1_total_actual"] = df["home_q1"] + df["away_q1"]
+
+        # Only where we have Q1 scores (real data, typically 2025-26+)
+        q1_mask = df["home_q1"].notna() & df["away_q1"].notna()
+        computed_q1 = int(q1_mask.sum())
+        logger.info(f"  Computed q1_margin/q1_total_actual for {computed_q1} games")
+    else:
+        df["q1_margin"] = np.nan
+        df["q1_total_actual"] = np.nan
+        logger.warning("  Missing home_q1/away_q1 scores - cannot compute Q1 labels")
+    
+    # Q1 Spread Covered
+    if "q1_spread_line" in df.columns and "q1_margin" in df.columns:
+        spread_q1_mask = df["q1_spread_line"].notna() & df["q1_margin"].notna()
+        df.loc[spread_q1_mask, 'q1_spread_covered'] = (
+            df.loc[spread_q1_mask, 'q1_margin'] + df.loc[spread_q1_mask, 'q1_spread_line'] > 0
+        ).astype(int)
+        
+        # Handle pushes
+        push_mask = (df['q1_margin'] + df['q1_spread_line']).abs() < 0.01
+        df.loc[spread_q1_mask & push_mask, 'q1_spread_covered'] = np.nan
+        
+        computed = df['q1_spread_covered'].notna().sum()
+        logger.info(f"  Computed q1_spread_covered for {computed} games")
+    else:
+        if "q1_spread_line" not in df.columns:
+            logger.warning("  Missing q1_spread_line - cannot compute q1_spread_covered")
+        if "q1_margin" not in df.columns:
+            logger.warning("  Missing q1_margin - cannot compute q1_spread_covered")
+    
+    # Q1 Total Over
+    if "q1_total_line" in df.columns and "q1_total_actual" in df.columns:
+        total_q1_mask = df["q1_total_line"].notna() & df["q1_total_actual"].notna()
+        df.loc[total_q1_mask, 'q1_total_over'] = (
+            df.loc[total_q1_mask, 'q1_total_actual'] > df.loc[total_q1_mask, 'q1_total_line']
+        ).astype(int)
+        
+        # Handle pushes
+        push_mask = (df['q1_total_actual'] - df['q1_total_line']).abs() < 0.01
+        df.loc[total_q1_mask & push_mask, 'q1_total_over'] = np.nan
+        
+        computed = df['q1_total_over'].notna().sum()
+        logger.info(f"  Computed q1_total_over for {computed} games")
+    else:
+        if "q1_total_line" not in df.columns:
+            logger.warning("  Missing q1_total_line - cannot compute q1_total_over")
+        if "q1_total_actual" not in df.columns:
+            logger.warning("  Missing q1_total_actual - cannot compute q1_total_over")
+    
+    # Q1 Home Win (moneyline)
+    if "q1_margin" in df.columns:
+        df["q1_home_win"] = (df["q1_margin"] > 0).astype(int)
+        df.loc[df["q1_margin"].isna(), "q1_home_win"] = np.nan
+        computed = df["q1_home_win"].notna().sum()
+        logger.info(f"  Computed q1_home_win for {computed} games")
+    
     # region agent log
     post_counts = {}
-    for c in ["1h_spread_covered", "1h_total_over", "1h_home_win"]:
+    for c in ["1h_spread_covered", "1h_total_over", "1h_home_win", "q1_spread_covered", "q1_total_over", "q1_home_win"]:
         if c in df.columns:
             post_counts[c] = {
                 "overall_non_null": int(df[c].notna().sum()),
@@ -304,7 +367,7 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         run_id=run_id,
         hypothesis_id="H1",
         location="scripts/compute_betting_labels.py:compute_betting_labels:post_compute",
-        message="Post-compute 1H labels coverage (overall vs 2025-26 subset)",
+        message="Post-compute 1H + Q1 labels coverage (overall vs 2025-26 subset)",
         data=post_counts,
     )
     # endregion
@@ -323,6 +386,9 @@ def validate_labels(df: pd.DataFrame) -> None:
         ('1h_spread_covered', '1h_spread_line'),
         ('1h_total_over', '1h_total_line'),
         ('1h_home_win', 'home_1h'),
+        ('q1_spread_covered', 'q1_spread_line'),
+        ('q1_total_over', 'q1_total_line'),
+        ('q1_home_win', 'home_q1'),
     ]
     
     for label, prereq in labels:
