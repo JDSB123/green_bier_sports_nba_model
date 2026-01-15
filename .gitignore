@@ -40,15 +40,19 @@ secrets/*
 *~
 
 # =============================================================================
-# DATA DIRECTORIES - AZURE BLOB IS THE SINGLE SOURCE OF TRUTH
+# DATA DIRECTORIES
 # =============================================================================
-# ALL data lives in Azure Blob Storage (nbagbsvstrg/nbahistoricaldata).
-# Local data/ is ephemeral - regenerated via:
-#   python scripts/build_training_data_complete.py --sync-from-azure
-#
-# DO NOT commit data files to git. DO NOT rely on local copies.
+# Historical/raw inputs live in Azure Blob Storage (nbagbsvstrg/nbahistoricaldata).
+# Canonical training data (data/processed/training_data.csv) is committed to git.
 # =============================================================================
 data/
+# Keep canonical training data + manifest tracked in git
+!data/
+data/*
+!data/processed/
+data/processed/*
+!data/processed/training_data.csv
+!data/processed/training_data_manifest.json
 
 # Model artifacts (exclude from data/processed, but include production models)
 *.joblib

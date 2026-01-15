@@ -75,10 +75,10 @@ INJURY_COLUMNS = [
 ]
 
 # Status symbols
-OK = "[✓]"
-FAIL = "[✗]"
-WARN = "[!]"
-INFO = "[i]"
+OK = "[OK]"
+FAIL = "[FAIL]"
+WARN = "[WARN]"
+INFO = "[INFO]"
 
 
 def calculate_checksum(file_path: Path) -> str:

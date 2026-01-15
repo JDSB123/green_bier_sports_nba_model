@@ -6,9 +6,10 @@ This document defines the authoritative data sources and how canonical training 
 
 ---
 
-## Canonical Source (Azure Blob)
+## Canonical Source (Git + Azure Blob)
 
-All historical data lives in Azure Blob Storage. Local copies are working caches only.
+Canonical training data is committed in git and mirrored to Azure Blob Storage.
+Other historical/raw inputs remain in Azure only.
 
 Storage account: `nbagbsvstrg`
 Container: `nbahistoricaldata`
@@ -52,7 +53,7 @@ data/processed/training_data.csv
 Rules:
 - Do NOT rebuild or merge raw data for backtests.
 - Do NOT use training_data_all_seasons or any ad-hoc merge outputs.
-- If the file is missing, download it from Azure or copy it into `data/processed/`.
+- If the file is missing, restore it from git or download from Azure.
 
 ---
 

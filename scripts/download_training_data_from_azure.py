@@ -35,9 +35,9 @@ MANIFEST_OUTPUT = DATA_DIR / "training_data_manifest.json"
 CANONICAL_BLOB_NAME = "training_data.csv"
 
 # Status symbols
-OK = "[✓]"
-FAIL = "[✗]"
-INFO = "[i]"
+OK = "[OK]"
+FAIL = "[FAIL]"
+INFO = "[INFO]"
 
 
 def calculate_checksum(file_path: Path) -> str:
