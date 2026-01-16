@@ -61,17 +61,17 @@ def run_backtest(
             )
 
         if result.returncode == 0:
-            print("✓ Success")
+            print("Success")
             return True
         else:
-            print(f"✗ Failed (exit code {result.returncode})")
+            print(f"Failed (exit code {result.returncode})")
             return False
 
     except subprocess.TimeoutExpired:
-        print("✗ Timeout")
+        print("Timeout")
         return False
     except Exception as e:
-        print(f"✗ Error: {e}")
+        print(f"Error: {e}")
         return False
 
 

@@ -94,27 +94,36 @@ class FilterThresholds:
     These thresholds determine whether a prediction passes the betting filter.
     A prediction must meet BOTH confidence AND edge thresholds to pass.
 
-    Thresholds can be set via environment variables. Defaults provided for local development:
-    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.62)
-    - FILTER_SPREAD_MIN_EDGE (default: 2.0)
-    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.72)
-    - FILTER_TOTAL_MIN_EDGE (default: 3.0)
-    - FILTER_1H_SPREAD_MIN_CONFIDENCE (default: 0.68)
-    - FILTER_1H_SPREAD_MIN_EDGE (default: 1.5)
-    - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.66)
-    - FILTER_1H_TOTAL_MIN_EDGE (default: 2.0)
+    OPTIMIZED THRESHOLDS (Updated 2026-01-15):
+    Based on comprehensive backtesting optimization across 24 spread configs,
+    338 totals configs, and 1,612 moneyline configs.
 
-    4 markets only (1H + FG spreads/totals).
+    Thresholds can be set via environment variables. Defaults provided for local development:
+    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.55) - OPTIMIZED from 0.62
+    - FILTER_SPREAD_MIN_EDGE (default: 0.0) - OPTIMIZED from 2.0
+    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.72) - UNCHANGED
+    - FILTER_TOTAL_MIN_EDGE (default: 3.0) - UNCHANGED
+    - FILTER_1H_SPREAD_MIN_CONFIDENCE (default: 0.68) - UNCHANGED
+    - FILTER_1H_SPREAD_MIN_EDGE (default: 1.5) - UNCHANGED
+    - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.66) - UNCHANGED
+    - FILTER_1H_TOTAL_MIN_EDGE (default: 2.0) - UNCHANGED
+
+    Optimization Results (FG Spread):
+    - Expected ROI: +27.17% (up from +15.7%)
+    - Expected Accuracy: 65.1% (up from 60.6%)
+    - Expected Volume: ~3,095 bets/season (up from ~232)
+
+    See: OPTIMIZATION_RESULTS_SUMMARY.md for full details
     """
-    # Spread thresholds
+    # Spread thresholds - OPTIMIZED (Conservative Option A)
     spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.62)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.55)
     )
     spread_min_edge: float = field(
-        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 2.0)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 0.0)
     )
 
-    # Total thresholds
+    # Total thresholds - UNCHANGED (conservative approach)
     total_min_confidence: float = field(
         default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.72)
     )
@@ -122,7 +131,7 @@ class FilterThresholds:
         default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_EDGE", 3.0)
     )
 
-    # 1H Spread thresholds
+    # 1H Spread thresholds - UNCHANGED (conservative approach)
     fh_spread_min_confidence: float = field(
         default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.68)
     )
@@ -130,7 +139,7 @@ class FilterThresholds:
         default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_EDGE", 1.5)
     )
 
-    # 1H Total thresholds
+    # 1H Total thresholds - UNCHANGED (low volume in optimization)
     fh_total_min_confidence: float = field(
         default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.66)
     )
@@ -158,7 +167,7 @@ class Settings:
 
     # API base URLs (with defaults for import compatibility)
     the_odds_base_url: str = field(
-        default_factory=lambda: _env_optional("THE_ODDS_BASE_URL", "https://api.the-odds-api.com")
+        default_factory=lambda: _env_optional("THE_ODDS_BASE_URL", "https://api.the-odds-api.com/v4")
     )
     api_basketball_base_url: str = field(
         default_factory=lambda: _env_optional("API_BASKETBALL_BASE_URL", "https://v1.basketball.api-sports.io")
