@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Picks - Model vs Market | 2026-01-16</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .meta {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .summary-box {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        .summary-box h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            color: #333;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .section {
+            padding: 20px;
+        }
+
+        .section-header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .tier-elite { background: linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%); }
+        .tier-strong { background: linear-gradient(90deg, #ff9f43 0%, #ee5a24 100%); }
+        .tier-good { background: linear-gradient(90deg, #feca57 0%, #ff9f43 100%); }
+        .tier-standard { background: linear-gradient(90deg, #48dbfb 0%, #0abde3 100%); }
+
+        .pick-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .pick-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .pick-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .pick-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .pick-time {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .matchup {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .market-type {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #0984e3;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .market-type.optimized {
+            background: #ffeaa7;
+            color: #d63031;
+            border: 2px solid #d63031;
+        }
+
+        .pick-details {
+            margin: 15px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .detail-label {
+            color: #666;
+            font-weight: 600;
+            min-width: 150px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: bold;
+            text-align: right;
+            flex: 1;
+        }
+
+        .our-pick {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .model-prediction {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .market-line {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .edge {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            font-size: 1.1em;
+        }
+
+        .fire-rating {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 1.3em;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .insights-section {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px;
+            border-radius: 10px;
+        }
+
+        .insight-box {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+        }
+
+        .insight-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .print-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+
+        .print-button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(118, 75, 162, 0.5);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .print-button {
+                display: none;
+            }
+            .pick-card {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 NBA PICKS - MODEL vs MARKET</h1>
+            <div class="meta">
+                <div>January 16, 2026 | 5:45 PM CST</div>
+                <div>Model Version: NBA_v33.0.21.0 (Optimized FG Spread)</div>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <h2>📊 Tonight's Summary</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Total Picks</div>
+                    <div class="value">14</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Games</div>
+                    <div class="value">6</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Elite Picks</div>
+                    <div class="value" style="color: #ee5a24;">2</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Strong Picks</div>
+                    <div class="value" style="color: #ff9f43;">3</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">FG Spread</div>
+                    <div class="value" style="color: #d63031;">3</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">vs Baseline</div>
+                    <div class="value" style="color: #00b894;">+200%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header tier-elite">
+                🔥🔥🔥🔥 ELITE PICKS (Highest Confidence)
+            </div>
+
+            <div class="pick-card">
+                <div class="pick-header">
+                    <div class="pick-number">1</div>
+                    <div class="pick-time">01/16 09:10 PM</div>
+                </div>
+                <div class="matchup">Washington Wizards (10-29) @ Sacramento Kings (11-30)</div>
+                <div class="market-type">1H TOTAL</div>
+
+                <div class="pick-details">
+                    <div class="detail-row our-pick">
+                        <div class="detail-label">OUR PICK</div>
+                        <div class="detail-value">
+                            UNDER 119.75
+                            <span class="confidence-badge">68%</span>
+                        </div>
+                    </div>
+                    <div class="detail-row model-prediction">
+                        <div class="detail-label">MODEL PREDICTS</div>
+                        <div class="detail-value">111.4</div>
+                    </div>
+                    <div class="detail-row market-line">
+                        <div class="detail-label">MARKET LINE</div>
+                        <div class="detail-value">119.75 @ -105</div>
+                    </div>
+                    <div class="detail-row edge">
+                        <div class="detail-label">EDGE</div>
+                        <div class="detail-value">
+                            +8.3 pts
+                            <span class="fire-rating">🔥🔥🔥🔥</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pick-card">
+                <div class="pick-header">
+                    <div class="pick-number">2</div>
+                    <div class="pick-time">01/16 06:10 PM</div>
+                </div>
+                <div class="matchup">New Orleans Pelicans (10-33) @ Indiana Pacers (9-32)</div>
+                <div class="market-type">1H TOTAL</div>
+
+                <div class="pick-details">
+                    <div class="detail-row our-pick">
+                        <div class="detail-label">OUR PICK</div>
+                        <div class="detail-value">
+                            UNDER 124.5
+                            <span class="confidence-badge">68%</span>
+                        </div>
+                    </div>
+                    <div class="detail-row model-prediction">
+                        <div class="detail-label">MODEL PREDICTS</div>
+                        <div class="detail-value">114.0</div>
+                    </div>
+                    <div class="detail-row market-line">
+                        <div class="detail-label">MARKET LINE</div>
+                        <div class="detail-value">124.5 @ -110</div>
+                    </div>
+                    <div class="detail-row edge">
+                        <div class="detail-label">EDGE</div>
+                        <div class="detail-value">
+                            +10.5 pts
+                            <span class="fire-rating">🔥🔥🔥🔥</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header tier-strong">
+                🔥🔥🔥 STRONG PICKS
+            </div>
+
+            <div class="pick-card">
+                <div class="pick-header">
+                    <div class="pick-number">3</div>
+                    <div class="pick-time">01/16 09:10 PM</div>
+                </div>
+                <div class="matchup">Washington Wizards (10-29) @ Sacramento Kings (11-30)</div>
+                <div class="market-type">1H SPREAD</div>
+
+                <div class="pick-details">
+                    <div class="detail-row our-pick">
+                        <div class="detail-label">OUR PICK</div>
+                        <div class="detail-value">
+                            Sacramento Kings -3.5
+                            <span class="confidence-badge">77%</span>
+                        </div>
+                    </div>
+                    <div class="detail-row model-prediction">
+                        <div class="detail-label">MODEL PREDICTS</div>
+                        <div class="detail-value">Sacramento Kings -8.5</div>
+                    </div>
+                    <div class="detail-row market-line">
+                        <div class="detail-label">MARKET LINE</div>
+                        <div class="detail-value">-3.5 @ -110</div>
+                    </div>
+                    <div class="detail-row edge">
+                        <div class="detail-label">EDGE</div>
+                        <div class="detail-value">
+                            +5.0 pts
+                            <span class="fire-rating">🔥🔥🔥</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pick-card">
+                <div class="pick-header">
+                    <div class="pick-number">4</div>
+                    <div class="pick-time">01/16 08:40 PM</div>
+                </div>
+                <div class="matchup">Minnesota Timberwolves (27-14) @ Houston Rockets (23-15)</div>
+                <div class="market-type optimized">FG SPREAD ⭐ OPTIMIZED</div>
+
+                <div class="pick-details">
+                    <div class="detail-row our-pick">
+                        <div class="detail-label">OUR PICK</div>
+                        <div class="detail-value">
+                            Minnesota Timberwolves +4.5
+                            <span class="confidence-badge">64%</span>
+                        </div>
+                    </div>
+                    <div class="detail-row model-prediction">
+                        <div class="detail-label">MODEL PREDICTS</div>
+                        <div class="detail-value">Minnesota Timberwolves -3.2</div>
+                    </div>
+                    <div class="detail-row market-line">
+                        <div class="detail-label">MARKET LINE</div>
+                        <div class="detail-value">+4.5 @ -110</div>
+                    </div>
+                    <div class="detail-row edge">
+                        <div class="detail-label">EDGE</div>
+                        <div class="detail-value">
+                            +7.7 pts
+                            <span class="fire-rating">🔥🔥🔥</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="background: #fff3cd; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 0.9em;">
+                    <strong>💡 Insight:</strong> Model says Timberwolves should be -3.2 (favorite), but market has them as +4.5 (underdog). Massive 7.7 point value getting points on the better team!
+                </div>
+            </div>
+
+            <div class="pick-card">
+                <div class="pick-header">
+                    <div class="pick-number">5</div>
+                    <div class="pick-time">01/16 06:40 PM</div>
+                </div>
+                <div class="matchup">Los Angeles Clippers (0-0) @ Toronto Raptors (25-17)</div>
+                <div class="market-type">FG TOTAL</div>
+
+                <div class="pick-details">
+                    <div class="detail-row our-pick">
+                        <div class="detail-label">OUR PICK</div>
+                        <div class="detail-value">
+                            OVER 212.5
+                            <span class="confidence-badge">61%</span>
+                        </div>
+                    </div>
+                    <div class="detail-row model-prediction">
+                        <div class="detail-label">MODEL PREDICTS</div>
+                        <div class="detail-value">220.0</div>
+                    </div>
+                    <div class="detail-row market-line">
+                        <div class="detail-label">MARKET LINE</div>
+                        <div class="detail-value">212.5 @ -110</div>
+                    </div>
+                    <div class="detail-row edge">
+                        <div class="detail-label">EDGE</div>
+                        <div class="detail-value">
+                            +7.5 pts
+                            <span class="fire-rating">🔥🔥🔥</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="insights-section">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🎯 Key Insights</h2>
+
+            <div class="insight-box">
+                <h4>Biggest Model Disagreements</h4>
+                <ol style="margin-left: 20px; line-height: 1.8;">
+                    <li><strong>UNDER 241.0</strong> (Pelicans/Pacers FG) - <span class="highlight">12.2 pts edge</span><br>
+                        Model: 228.8 | Market: 241.0</li>
+                    <li><strong>UNDER 124.5</strong> (Pelicans/Pacers 1H) - <span class="highlight">10.5 pts edge</span><br>
+                        Model: 114.0 | Market: 124.5</li>
+                    <li><strong>UNDER 119.75</strong> (Wizards/Kings 1H) - <span class="highlight">8.3 pts edge</span><br>
+                        Model: 111.4 | Market: 119.75</li>
+                </ol>
+            </div>
+
+            <div class="insight-box">
+                <h4>Market Trend Analysis</h4>
+                <p><strong>Heavy UNDER Bias:</strong> Model thinks market is overvaluing totals. 4 of 7 total picks are UNDERS, suggesting lines are set too high.</p>
+            </div>
+
+            <div class="insight-box">
+                <h4>Optimization Impact (v20 vs v21)</h4>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Baseline (v20)</th>
+                            <th>Current (v21)</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>FG Spread Picks</strong></td>
+                            <td>1</td>
+                            <td>3</td>
+                            <td style="color: #00b894; font-weight: bold;">+200%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Picks</strong></td>
+                            <td>9</td>
+                            <td>14</td>
+                            <td style="color: #00b894; font-weight: bold;">+55%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Additional Value</strong></td>
+                            <td colspan="3">2 more FG Spread picks captured (Pelicans +4.5, Wizards +7.0)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="insight-box">
+                <h4>Expected on Full Slate (10-12 games)</h4>
+                <p>Tonight: Only 6 games (lower volume expected)</p>
+                <p>Typical slate would show:</p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li>FG Spread: 5-10 picks (vs 2-3 with v20)</li>
+                    <li>Total: 20-30 picks (vs 15-20 with v20)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <button class="print-button" onclick="window.print()">🖨️ Print Report</button>
+</body>
+</html>
