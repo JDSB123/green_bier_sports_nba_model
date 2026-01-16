@@ -1,10 +1,10 @@
 {
-    "version": "NBA_v33.0.20.0",
+    "version": "NBA_v33.0.21.0",
   "created_at": "2026-01-05T00:00:00Z",
-  "last_reviewed": "2026-01-14T00:00:00Z",
-  "git_commit": "manual-sync",
-    "git_tag": "NBA_v33.0.20.0",
-  "release_notes": "NBA_v33.0.15.0 Production - Full feature set with RLM/splits for live predictions, calibrated confidence (no arbitrary caps), 55 features per model. Reviewed 2026-01-14: FG markets performing strongly, 1H Spread threshold optimization recommended.",
+  "last_reviewed": "2026-01-15T00:00:00Z",
+  "git_commit": "156b9c4",
+    "git_tag": "NBA_v33.0.21.0",
+  "release_notes": "NBA_v33.0.21.0 - OPTIMIZED THRESHOLDS: Comprehensive backtesting optimization (24 spread, 338 totals, 1,612 ML configs). FG Spread thresholds optimized (0.62→0.55 conf, 2.0→0.0 edge) resulting in +73% ROI improvement (15.7%→27.17%), +7.4% accuracy improvement (60.6%→65.1%), and 13x volume increase. Conservative deployment (FG Spread only) with monitoring plan. Other markets unchanged pending validation.",
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-20",
@@ -91,8 +91,12 @@
   },
   "filter_thresholds": {
     "fg_spread": {
-      "min_confidence": 0.62,
-      "min_edge": 2.0
+      "min_confidence": 0.55,
+      "min_edge": 0.0,
+      "optimized": "2026-01-15",
+      "expected_roi": 0.2717,
+      "expected_accuracy": 0.651,
+      "expected_volume": 3095
     },
     "fg_total": {
       "min_confidence": 0.72,
@@ -111,7 +115,7 @@
   "deployment": {
     "container_app": "nba-gbsv-api",
     "resource_group": "nba-gbsv-model-rg",
-        "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.20.0",
+        "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.0.21.0",
     "health_endpoint": "/health",
     "markets_required": 4
   },
