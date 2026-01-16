@@ -1,0 +1,206 @@
+================================================================================
+TONIGHT'S NBA PICKS - MODEL vs MARKET COMPARISON
+Date: 2026-01-16
+Generated: 2026-01-16 05:45 PM CST
+Model Version: NBA_v33.0.21.0 (Optimized FG Spread)
+Total Picks: 14 picks across 6 games
+================================================================================
+
+ELITE PICKS (4 Fire - Highest Confidence)
+================================================================================
+
+1. 01/16 09:10 PM | Washington Wizards (10-29) @ Sacramento Kings (11-30)
+   Market: 1H TOTAL
+   OUR PICK:        UNDER 119.75                  (68% confidence)
+   MODEL PREDICTS:  111.4
+   MARKET LINE:     119.75                        @ -105
+   EDGE:            +8.3 pts                      **** ELITE
+
+2. 01/16 06:10 PM | New Orleans Pelicans (10-33) @ Indiana Pacers (9-32)
+   Market: 1H TOTAL
+   OUR PICK:        UNDER 124.5                   (68% confidence)
+   MODEL PREDICTS:  114.0
+   MARKET LINE:     124.5                         @ -110
+   EDGE:            +10.5 pts                     **** ELITE
+
+
+STRONG PICKS (3 Fire)
+================================================================================
+
+3. 01/16 09:10 PM | Washington Wizards (10-29) @ Sacramento Kings (11-30)
+   Market: 1H SPREAD
+   OUR PICK:        Sacramento Kings -3.5         (77% confidence)
+   MODEL PREDICTS:  Sacramento Kings -8.5
+   MARKET LINE:     -3.5                          @ -110
+   EDGE:            +5.0 pts                      *** STRONG
+
+4. 01/16 08:40 PM | Minnesota Timberwolves (27-14) @ Houston Rockets (23-15)
+   Market: FG SPREAD <-- OPTIMIZED MARKET
+   OUR PICK:        Minnesota Timberwolves +4.5   (64% confidence)
+   MODEL PREDICTS:  Minnesota Timberwolves -3.2
+   MARKET LINE:     +4.5                          @ -110
+   EDGE:            +7.7 pts                      *** STRONG
+
+5. 01/16 06:40 PM | Los Angeles Clippers (0-0) @ Toronto Raptors (25-17)
+   Market: FG TOTAL
+   OUR PICK:        OVER 212.5                    (61% confidence)
+   MODEL PREDICTS:  220.0
+   MARKET LINE:     212.5                         @ -110
+   EDGE:            +7.5 pts                      *** STRONG
+
+
+GOOD PICKS (2 Fire)
+================================================================================
+
+6. 01/16 06:10 PM | Cleveland Cavaliers (23-19) @ Philadelphia 76ers (22-17)
+   Market: 1H SPREAD
+   OUR PICK:        Philadelphia 76ers -1.2       (77% confidence)
+   MODEL PREDICTS:  Philadelphia 76ers -2.8
+   MARKET LINE:     -1.2                          @ -110
+   EDGE:            +1.5 pts                      ** GOOD
+
+7. 01/16 09:10 PM | Washington Wizards (10-29) @ Sacramento Kings (11-30)
+   Market: FG TOTAL
+   OUR PICK:        UNDER 233.5                   (61% confidence)
+   MODEL PREDICTS:  228.2
+   MARKET LINE:     233.5                         @ -110
+   EDGE:            +5.3 pts                      ** GOOD
+
+8. 01/16 08:40 PM | Minnesota Timberwolves (27-14) @ Houston Rockets (23-15)
+   Market: 1H TOTAL
+   OUR PICK:        OVER 108.0                    (71% confidence)
+   MODEL PREDICTS:  112.5
+   MARKET LINE:     108.0                         @ -110
+   EDGE:            +4.5 pts                      ** GOOD
+
+9. 01/16 06:10 PM | Cleveland Cavaliers (23-19) @ Philadelphia 76ers (22-17)
+   Market: 1H TOTAL
+   OUR PICK:        OVER 113.5                    (72% confidence)
+   MODEL PREDICTS:  118.1
+   MARKET LINE:     113.5                         @ -110
+   EDGE:            +4.6 pts                      ** GOOD
+
+
+STANDARD PICKS (1 Fire)
+================================================================================
+
+10. 01/16 06:10 PM | New Orleans Pelicans (10-33) @ Indiana Pacers (9-32)
+    Market: FG SPREAD <-- OPTIMIZED MARKET
+    OUR PICK:        New Orleans Pelicans +4.5    (64% confidence)
+    MODEL PREDICTS:  New Orleans Pelicans +3.0
+    MARKET LINE:     -4.5                         @ -110
+    EDGE:            +1.5 pts                     * STANDARD
+
+11. 01/16 09:10 PM | Washington Wizards (10-29) @ Sacramento Kings (11-30)
+    Market: FG SPREAD <-- OPTIMIZED MARKET
+    OUR PICK:        Washington Wizards +7.0      (64% confidence)
+    MODEL PREDICTS:  Washington Wizards +5.3
+    MARKET LINE:     -7.0                         @ -110
+    EDGE:            +1.7 pts                     * STANDARD
+
+12. 01/16 06:10 PM | New Orleans Pelicans (10-33) @ Indiana Pacers (9-32)
+    Market: FG TOTAL
+    OUR PICK:        UNDER 241.0                  (67% confidence)
+    MODEL PREDICTS:  228.8
+    MARKET LINE:     241.0                        @ -110
+    EDGE:            +12.2 pts                    * STANDARD
+
+13. 01/16 08:40 PM | Minnesota Timberwolves (27-14) @ Houston Rockets (23-15)
+    Market: 1H SPREAD
+    OUR PICK:        Minnesota Timberwolves -2.5  (77% confidence)
+    MODEL PREDICTS:  Minnesota Timberwolves -7.5
+    MARKET LINE:     -2.5                         @ -110
+    EDGE:            +5.0 pts                     * STANDARD
+
+14. 01/16 06:10 PM | Chicago Bulls (19-21) @ Brooklyn Nets (21-22)
+    Market: 1H SPREAD
+    OUR PICK:        Chicago Bulls +0.5           (77% confidence)
+    MODEL PREDICTS:  Chicago Bulls -1.5
+    MARKET LINE:     -0.5                         @ -110
+    EDGE:            +2.0 pts                     * STANDARD
+
+
+================================================================================
+SUMMARY BY MARKET
+================================================================================
+
+FG SPREAD:     3 picks <-- OPTIMIZED MARKET (v20: 1 pick, v21: 3 picks = +200%)
+FG TOTAL:      3 picks
+1H SPREAD:     4 picks
+1H TOTAL:      4 picks
+--------------------------------------------------------------------------------
+TOTAL:         14 picks (v20 would have had 9 picks)
+
+
+================================================================================
+KEY INSIGHTS - MODEL vs MARKET
+================================================================================
+
+BIGGEST EDGES (Where model disagrees most with market):
+
+1. UNDER 241.0 (Pelicans/Pacers FG Total)
+   - Model: 228.8, Market: 241.0
+   - Difference: 12.2 points
+   - Market overvaluing total
+
+2. UNDER 124.5 (Pelicans/Pacers 1H Total)
+   - Model: 114.0, Market: 124.5
+   - Difference: 10.5 points
+   - Market overvaluing total
+
+3. UNDER 119.75 (Wizards/Kings 1H Total)
+   - Model: 111.4, Market: 119.75
+   - Difference: 8.3 points
+   - Market overvaluing total
+
+TREND: Heavy UNDER bias on totals - model thinks market is setting lines too high
+
+
+SPREAD VALUE:
+
+Timberwolves FG Spread (OPTIMIZED MARKET):
+- Model: Timberwolves -3.2 (favored)
+- Market: Timberwolves +4.5 (underdog)
+- Difference: 7.7 points
+- Massive value on Timberwolves getting points when model says they should be favored
+
+
+CONFIDENCE LEVELS:
+
+High Confidence (75%+):
+- All 1H Spreads: 77% confidence
+- 76ers, Kings, Timberwolves, Bulls all show 77%
+
+Medium-High Confidence (65-74%):
+- 1H Totals: 68-72%
+- FG Totals: 67%
+
+Medium Confidence (60-64%):
+- FG Spreads: 64%
+- Some FG Totals: 61%
+
+
+================================================================================
+OPTIMIZATION IMPACT
+================================================================================
+
+With v33.0.20.0 thresholds (0.62 conf, 2.0 edge on FG Spread):
+- Would have picked: 1 FG Spread pick
+- Would have picked: 9 total picks
+
+With v33.0.21.0 thresholds (0.55 conf, 0.0 edge on FG Spread):
+- Actually picked: 3 FG Spread picks (+200%)
+- Actually picked: 14 total picks (+55%)
+
+ADDITIONAL VALUE CAPTURED:
+- 2 more FG Spread picks (Pelicans +4.5, Wizards +7.0)
+- These passed the lowered threshold and added value to portfolio
+
+Note: Tonight only has 6 games. On typical 10-12 game slates, expect:
+- FG Spread: 5-10 picks (vs 2-3 with v20)
+- Total: 20-30 picks (vs 15-20 with v20)
+
+
+================================================================================
+END OF REPORT
+================================================================================
