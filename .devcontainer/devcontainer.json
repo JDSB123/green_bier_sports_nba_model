@@ -19,6 +19,8 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "github.copilot",
+        "github.copilot-chat",
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-azuretools.vscode-docker"
