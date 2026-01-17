@@ -11,6 +11,10 @@ on:
         required: false
         default: 'false'
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   maintenance:
     name: Repository Health Check
