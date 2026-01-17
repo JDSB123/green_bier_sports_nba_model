@@ -267,6 +267,7 @@ Optional:
 
 ## Documentation
 
+- `docs/DEV_WORKFLOW.md` - Development workflow (Codespaces/local/backtesting)
 - `docs/CURRENT_STACK_AND_FLOW.md` - Detailed architecture
 - `docs/BACKTEST_QUICKSTART.md` - Backtesting guide
 - `docs/DATA_INGESTION_METHODOLOGY.md` - Data sources and processing
