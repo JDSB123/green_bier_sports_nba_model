@@ -64,6 +64,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Ensure Azure CLI extensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          az config set extension.use_dynamic_install=yes_without_prompt
+          az extension add --name containerapp
+
       - name: Validate Azure context
         shell: bash
         run: |
@@ -101,6 +108,29 @@ jobs:
             exit 1
           fi
 
+      - name: Set Action Network secrets (optional)
+        if: ${{ secrets.ACTION_NETWORK_USERNAME != '' && secrets.ACTION_NETWORK_PASSWORD != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          az containerapp secret set \
+            -n ${{ env.CONTAINER_APP_NAME }} \
+            -g ${{ env.RESOURCE_GROUP }} \
+            --secrets \
+              action-network-username='${{ secrets.ACTION_NETWORK_USERNAME }}' \
+              action-network-password='${{ secrets.ACTION_NETWORK_PASSWORD }}'
+
+      - name: Build container env vars
+        id: envvars
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENV_VARS="REQUIRE_API_AUTH=false NBA_MODEL_VERSION=${{ steps.version.outputs.ver }} THE_ODDS_API_KEY=secretref:the-odds-api-key API_BASKETBALL_KEY=secretref:api-basketball-key"
+          if [ -n "${{ secrets.ACTION_NETWORK_USERNAME }}" ] && [ -n "${{ secrets.ACTION_NETWORK_PASSWORD }}" ]; then
+            ENV_VARS="$ENV_VARS ACTION_NETWORK_USERNAME=secretref:action-network-username ACTION_NETWORK_PASSWORD=secretref:action-network-password"
+          fi
+          echo "vars=$ENV_VARS" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -119,9 +149,7 @@ jobs:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
           imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
-          environmentVariables: |
-            REQUIRE_API_AUTH=false
-            NBA_MODEL_VERSION=${{ steps.version.outputs.ver }}
+          environmentVariables: ${{ steps.envvars.outputs.vars }}
 
       - name: Smoke tests
         run: |
