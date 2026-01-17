@@ -5,18 +5,21 @@ This guide is the repeatable, minimal workflow for local dev, Codespaces, and de
 ## Codespaces quickstart
 
 1. Create or reopen the Codespace (extensions auto-install).
-2. Ensure secrets are available:
+2. Optional one-command setup:
+   - `./scripts/setup_codespace.sh`
+3. Ensure secrets are available:
    - For containers: create `secrets/THE_ODDS_API_KEY` and `secrets/API_BASKETBALL_KEY` (see `docs/DOCKER_SECRETS.md`).
    - For local runs: copy `.env.example` to `.env` and fill values (never commit).
-3. Start the API:
+4. Start the API:
    - `docker compose up -d`
-4. Verify:
+5. Verify:
    - `curl http://localhost:8090/health`
 
 ## Local dev quickstart (non-Codespaces)
 
-1. Create venv and install deps:
-   - `python -m venv .venv && source .venv/bin/activate`
+1. Create venv and install deps (or run the setup script):
+   - `./scripts/setup_codespace.sh`
+   - or `python -m venv .venv && source .venv/bin/activate`
    - `pip install -r requirements.txt`
 2. Set `PYTHONPATH` to repo root or use the venv with `python` from repo root.
 3. Run scripts:
@@ -45,6 +48,12 @@ This guide is the repeatable, minimal workflow for local dev, Codespaces, and de
 Notes:
 - CI enforces version consistency across `VERSION`, `models/production/model_pack.json`, and `models/production/feature_importance.json`.
 - The deploy workflow runs on push to `main`. Check GitHub Actions if a deploy or validation fails.
+
+## Actions monitoring
+
+- The repo includes a post-push hook that can watch the latest GitHub Actions run after you push to `main`.
+- Run `./scripts/setup_codespace.sh` (or `git config core.hooksPath .githooks`) to enable it locally.
+- The hook uses `gh` and calls `scripts/watch_actions.sh`.
 
 ## Common troubleshooting
 

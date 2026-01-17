@@ -2,8 +2,8 @@
 
 Operational scripts for the NBA prediction system.
 
-Script count: 40 Python scripts + 11 PowerShell/Shell scripts
-Last updated: 2026-01-11
+Script count: 62 Python scripts + 19 PowerShell/Shell scripts
+Last updated: 2026-01-17
 
 ---
 
@@ -123,6 +123,8 @@ python scripts/build_training_data_complete.py
 | `sync_archives_to_azure.ps1` | Sync archives to Azure |
 | `sync_historical_data_to_azure.ps1` | Sync historical data |
 | `cleanup_nba_docker.ps1` | Clean up Docker resources |
+| `setup_codespace.sh` | One-command dev setup (env, deps, hooks) |
+| `watch_actions.sh` | Watch latest GitHub Actions run for a branch |
 
 ---
 

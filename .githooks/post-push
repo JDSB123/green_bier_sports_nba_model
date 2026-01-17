@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+BRANCH_TO_WATCH=""
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      BRANCH_TO_WATCH="${remote_ref#refs/heads/}"
+      ;;
+  esac
+done
+
+if [ -z "$BRANCH_TO_WATCH" ]; then
+  exit 0
+fi
+
+if [ -x "$ROOT_DIR/scripts/watch_actions.sh" ]; then
+  "$ROOT_DIR/scripts/watch_actions.sh" "$BRANCH_TO_WATCH" || true
+else
+  echo "watch_actions.sh not found; skipping Actions watch."
+fi
