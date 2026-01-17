@@ -109,16 +109,22 @@ jobs:
           fi
 
       - name: Set Action Network secrets (optional)
-        if: ${{ secrets.ACTION_NETWORK_USERNAME != '' && secrets.ACTION_NETWORK_PASSWORD != '' }}
         shell: bash
+        env:
+          ACTION_NETWORK_USERNAME: ${{ secrets.ACTION_NETWORK_USERNAME }}
+          ACTION_NETWORK_PASSWORD: ${{ secrets.ACTION_NETWORK_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${ACTION_NETWORK_USERNAME}" ] || [ -z "${ACTION_NETWORK_PASSWORD}" ]; then
+            echo "Action Network secrets not set; skipping."
+            exit 0
+          fi
           az containerapp secret set \
             -n ${{ env.CONTAINER_APP_NAME }} \
             -g ${{ env.RESOURCE_GROUP }} \
             --secrets \
-              action-network-username='${{ secrets.ACTION_NETWORK_USERNAME }}' \
-              action-network-password='${{ secrets.ACTION_NETWORK_PASSWORD }}'
+              action-network-username="${ACTION_NETWORK_USERNAME}" \
+              action-network-password="${ACTION_NETWORK_PASSWORD}"
 
       - name: Build container env vars
         id: envvars
