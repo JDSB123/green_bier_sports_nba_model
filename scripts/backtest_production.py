@@ -375,6 +375,44 @@ def run_backtest(
                 logger.debug(f"Prediction failed for {market_key}: {e}")
                 continue
 
+            # ===================================================================
+            # FILTER LOGIC: Match production filtering behavior
+            # ===================================================================
+            from src.config import filter_thresholds
+            
+            # Get thresholds based on market
+            if market_key == "fg_spread":
+                min_conf = filter_thresholds.spread_min_confidence
+                min_edge = filter_thresholds.spread_min_edge
+                pred_margin = features.get("predicted_margin", 0) or 0
+                # Edge = predicted_margin + spread_line (positive = bet home)
+                raw_edge = pred_margin + spread_line if spread_line else 0
+            elif market_key == "1h_spread":
+                min_conf = filter_thresholds.fh_spread_min_confidence
+                min_edge = filter_thresholds.fh_spread_min_edge
+                pred_margin = features.get("predicted_margin_1h", features.get("predicted_margin", 0)) or 0
+                raw_edge = pred_margin + spread_line if spread_line else 0
+            elif market_key == "fg_total":
+                min_conf = filter_thresholds.total_min_confidence
+                min_edge = filter_thresholds.total_min_edge
+                pred_total = features.get("predicted_total", 0) or 0
+                raw_edge = pred_total - total_line if total_line else 0
+            elif market_key == "1h_total":
+                min_conf = filter_thresholds.fh_total_min_confidence
+                min_edge = filter_thresholds.fh_total_min_edge
+                pred_total = features.get("predicted_total_1h", features.get("predicted_total", 0)) or 0
+                raw_edge = pred_total - total_line if total_line else 0
+            else:
+                min_conf = 0.55
+                min_edge = 0.0
+                raw_edge = 0
+            
+            edge_abs = abs(raw_edge)
+            
+            # Apply filter: must meet BOTH confidence AND edge threshold
+            if confidence < min_conf or edge_abs < min_edge:
+                continue
+
             # Determine actual and predicted values (reporting only)
             if "spread" in market_key:
                 if "1h" in market_key:

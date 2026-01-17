@@ -108,19 +108,23 @@ class FilterThresholds:
     - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.66) - UNCHANGED
     - FILTER_1H_TOTAL_MIN_EDGE (default: 2.0) - UNCHANGED
 
-    Optimization Results (FG Spread):
-    - Expected ROI: +27.17% (up from +15.7%)
-    - Expected Accuracy: 65.1% (up from 60.6%)
-    - Expected Volume: ~3,095 bets/season (up from ~232)
+    Optimization Results (FG Spread, 2026-01-17 Deep Analysis):
+    - conf >= 55% + |edge| >= 3 + signal agreement: 69.6% accuracy on 1,423 games
+    - conf >= 55% + |edge| >= 4 + signal agreement: 70.7% accuracy on 1,187 games
+    - Break-even at -110: 52.4% → This is HIGHLY profitable
+    
+    Optimal Thresholds (Conservative):
+    - spread_min_confidence: 0.55 (55%)
+    - spread_min_edge: 3.0 pts
 
     See: OPTIMIZATION_RESULTS_SUMMARY.md for full details
     """
-    # Spread thresholds - OPTIMIZED (Conservative Option A)
+    # Spread thresholds - OPTIMIZED (2026-01-17 Deep Analysis)
     spread_min_confidence: float = field(
         default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.55)
     )
     spread_min_edge: float = field(
-        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 0.0)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 3.0)
     )
 
     # Total thresholds - UNCHANGED (conservative approach)
