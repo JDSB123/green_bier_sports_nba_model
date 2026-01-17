@@ -21,7 +21,7 @@ data/processed/training_data.csv
 | Date Range | 2023-01-01 to 2026-01-08 |
 | Injury Data | ✅ 100% coverage |
 | FG Labels | ✅ 100% coverage |
-| 1H Labels | 78% coverage (2022-23 season lacks 1H lines) |
+| 1H Labels | 81.2% coverage (2022-23 season lacks 1H lines) |
 
 ### Season Breakdown
 - 2022-23: 774 games (partial season, no 1H lines)

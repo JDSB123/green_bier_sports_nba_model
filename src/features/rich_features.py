@@ -46,7 +46,6 @@ import pandas as pd
 from src.config import settings
 from src.ingestion import api_basketball
 from src.ingestion.api_basketball import normalize_standings_response
-from src.ingestion.espn import fetch_espn_standings
 from src.modeling.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
@@ -82,7 +81,6 @@ class RichFeatureBuilder:
         self._stats_cache: Dict[int, Dict] = {}
         self._games_cache: Optional[List[Dict]] = None
         self._standings_cache: Optional[Dict[int, Dict]] = None
-        self._espn_standings_cache: Optional[Dict[str, Dict]] = None
         self._injuries_cache: Optional[pd.DataFrame] = None
         self._injuries_fetched: bool = False
 
@@ -94,7 +92,6 @@ class RichFeatureBuilder:
                 'stats': len(self._stats_cache),
                 'games_cached': self._games_cache is not None,
                 'standings_cached': self._standings_cache is not None,
-                'espn_standings_cached': self._espn_standings_cache is not None,
                 'injuries_cached': self._injuries_cache is not None,
             },
             'persistent_cache': {
@@ -112,7 +109,6 @@ class RichFeatureBuilder:
         self._stats_cache.clear()
         self._games_cache = None
         self._standings_cache = None
-        self._espn_standings_cache = None
         self._injuries_cache = None
         self._injuries_fetched = False
         print("[CACHE] Session cache cleared - next calls will fetch fresh data")
@@ -312,43 +308,6 @@ class RichFeatureBuilder:
         )
 
         return team_games[:limit]
-
-    async def get_espn_standings(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Fetch current standings from ESPN (PRIMARY source) - ALWAYS FRESH.
-
-        STRICT MODE: ESPN is the ONLY source for team records.
-        Raises error if ESPN fails - NO silent fallback to stale data.
-
-        ESPN standings are FREE and update in real-time after each game.
-        Returns dict keyed by team name with wins, losses, win_pct.
-        """
-        # Session cache only
-        if self._espn_standings_cache is not None:
-            return self._espn_standings_cache
-
-        print("[API] Fetching fresh ESPN standings")
-        espn_standings = await fetch_espn_standings()
-
-        if not espn_standings:
-            raise ValueError("STRICT MODE: ESPN standings returned empty - cannot proceed without fresh team records")
-
-        self._espn_standings_cache = {
-            name: {
-                "wins": standing.wins,
-                "losses": standing.losses,
-                "win_pct": standing.win_pct,
-                "games_played": standing.wins + standing.losses,
-                "streak": standing.streak,
-                "home_record": standing.home_record,
-                "away_record": standing.away_record,
-                "last_10": standing.last_10,
-            }
-            for name, standing in espn_standings.items()
-        }
-
-        print(f"[API] Fetched ESPN standings for {len(self._espn_standings_cache)} teams")
-        return self._espn_standings_cache
 
     def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
         """Calculate team W-L record from completed games data.

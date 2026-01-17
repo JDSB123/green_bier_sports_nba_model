@@ -44,7 +44,7 @@ secrets/*
 # DATA DIRECTORIES
 # =============================================================================
 # Historical/raw inputs live in Azure Blob Storage (nbagbsvstrg/nbahistoricaldata).
-# Canonical training data (data/processed/master_training_data.csv) is committed to git.
+# Canonical training data (data/processed/training_data.csv) is committed to git; optional master files may be added when promoted.
 # =============================================================================
 data/
 # Keep canonical training data + manifest tracked in git

@@ -185,33 +185,6 @@ def _parse_teams_command(text: str) -> dict:
 
     return result
 
-
-async def _get_espn_standings() -> dict:
-    """Fetch ESPN standings for accurate W-L records."""
-    from src.ingestion.espn import fetch_espn_standings
-    return await fetch_espn_standings()
-
-
-def _lookup_espn_record(team_name: str, standings: dict) -> dict | None:
-    """Lookup ESPN record for a team name, returning wins/losses."""
-    if not standings:
-        return None
-
-    standing = standings.get(team_name)
-    if standing:
-        return {"wins": standing.wins, "losses": standing.losses, "source": "espn"}
-
-    from src.ingestion.standardize import normalize_team_to_espn
-
-    normalized_name, is_valid = normalize_team_to_espn(team_name, source="espn_records")
-    if is_valid:
-        standing = standings.get(normalized_name)
-        if standing:
-            return {"wins": standing.wins, "losses": standing.losses, "source": "espn"}
-
-    return None
-
-
 # Prometheus metrics
 REQUEST_COUNT = Counter(
     'nba_api_requests_total',
@@ -842,7 +815,8 @@ async def get_slate_predictions(
 
     # Fetch games
     try:
-        games = await fetch_todays_games(target_date, include_records=False)
+        # UNIFIED SOURCE: include team records from The Odds API (same source as odds)
+        games = await fetch_todays_games(target_date, include_records=True)
     except Exception as e:
         logger.error("Error fetching odds for %s: %s", target_date, e, exc_info=True)
         fallback_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -856,12 +830,6 @@ async def get_slate_predictions(
 
     if not games:
         return SlateResponse(date=str(target_date), predictions=[], total_plays=0)
-
-    try:
-        espn_standings = await _get_espn_standings()
-    except Exception as e:
-        logger.error("Failed to fetch ESPN standings: %s", e)
-        raise HTTPException(status_code=503, detail="ESPN standings unavailable")
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
@@ -901,22 +869,16 @@ async def get_slate_predictions(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            home_record_data = _lookup_espn_record(home_team, espn_standings)
-            away_record_data = _lookup_espn_record(away_team, espn_standings)
+            # UNIFIED SOURCE: records are attached to the game object by fetch_todays_games(include_records=True)
+            home_record_data = game.get("home_team_record") or {}
+            away_record_data = game.get("away_team_record") or {}
 
-            if not home_record_data:
-                logger.warning("Missing ESPN record for home team: %s", home_team)
-                home_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
-
-            if not away_record_data:
-                logger.warning("Missing ESPN record for away team: %s", away_team)
-                away_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
-            
-            features["home_wins"] = home_record_data.get("wins", 0)
-            features["home_losses"] = home_record_data.get("losses", 0)
-            features["away_wins"] = away_record_data.get("wins", 0)
-            features["away_losses"] = away_record_data.get("losses", 0)
-            features["_records_source"] = home_record_data.get("source", "espn")
+            features["home_wins"] = int(home_record_data.get("wins", 0) or 0)
+            features["home_losses"] = int(home_record_data.get("losses", 0) or 0)
+            features["away_wins"] = int(away_record_data.get("wins", 0) or 0)
+            features["away_losses"] = int(away_record_data.get("losses", 0) or 0)
+            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_data_unified"] = bool(game.get("_data_unified", False))
 
             # Extract consensus lines
             odds = extract_consensus_odds(game, as_of_utc=odds_as_of_utc)
@@ -1058,7 +1020,7 @@ async def get_executive_summary(
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
     # Fetch games
-    games = await fetch_todays_games(target_date, include_records=False)
+    games = await fetch_todays_games(target_date, include_records=True)
     if not games:
         return {
             "date": str(target_date),
@@ -1070,11 +1032,6 @@ async def get_executive_summary(
         }
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    try:
-        espn_standings = await _get_espn_standings()
-    except Exception as e:
-        logger.error("Failed to fetch ESPN standings: %s", e)
-        raise HTTPException(status_code=503, detail="ESPN standings unavailable")
     odds_snapshot_path = None
     odds_archive_path = None
     try:
@@ -1130,28 +1087,21 @@ async def get_executive_summary(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            home_record_data = _lookup_espn_record(home_team, espn_standings)
-            away_record_data = _lookup_espn_record(away_team, espn_standings)
+            home_record_data = game.get("home_team_record") or {}
+            away_record_data = game.get("away_team_record") or {}
 
-            if not home_record_data:
-                logger.warning("Missing ESPN record for home team: %s", home_team)
-                home_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
-
-            if not away_record_data:
-                logger.warning("Missing ESPN record for away team: %s", away_team)
-                away_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
-            
-            home_wins = home_record_data.get("wins", 0)
-            home_losses = home_record_data.get("losses", 0)
-            away_wins = away_record_data.get("wins", 0)
-            away_losses = away_record_data.get("losses", 0)
+            home_wins = int(home_record_data.get("wins", 0) or 0)
+            home_losses = int(home_record_data.get("losses", 0) or 0)
+            away_wins = int(away_record_data.get("wins", 0) or 0)
+            away_losses = int(away_record_data.get("losses", 0) or 0)
             
             # Document data source in features for audit trail
             features["home_wins"] = home_wins
             features["home_losses"] = home_losses
             features["away_wins"] = away_wins
             features["away_losses"] = away_losses
-            features["_records_source"] = home_record_data.get("source", "espn")
+            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_data_unified"] = bool(game.get("_data_unified", False))
             
             home_record = f"({home_wins}-{home_losses})"
             away_record = f"({away_wins}-{away_losses})"
@@ -1609,15 +1559,9 @@ async def get_comprehensive_slate_analysis(
         }
 
     # Fetch games
-    games = await fetch_todays_games(target_date, include_records=False)
+    games = await fetch_todays_games(target_date, include_records=True)
     if not games:
         return {"date": str(target_date), "analysis": [], "summary": "No games found"}
-
-    try:
-        espn_standings = await _get_espn_standings()
-    except Exception as e:
-        logger.error("Failed to fetch ESPN standings: %s", e)
-        raise HTTPException(status_code=503, detail="ESPN standings unavailable")
 
     odds_as_of_utc = request_started_utc
     odds_snapshot_path = None
@@ -1662,23 +1606,15 @@ async def get_comprehensive_slate_analysis(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
             
-            home_record_data = _lookup_espn_record(home_team, espn_standings)
-            away_record_data = _lookup_espn_record(away_team, espn_standings)
+            home_record_data = game.get("home_team_record") or {}
+            away_record_data = game.get("away_team_record") or {}
 
-            if not home_record_data:
-                logger.warning("Missing ESPN record for home team: %s", home_team)
-                home_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
-
-            if not away_record_data:
-                logger.warning("Missing ESPN record for away team: %s", away_team)
-                away_record_data = {"wins": 0, "losses": 0, "source": "espn_missing"}
-            
-            features["home_wins"] = home_record_data.get("wins", 0)
-            features["home_losses"] = home_record_data.get("losses", 0)
-            features["away_wins"] = away_record_data.get("wins", 0)
-            features["away_losses"] = away_record_data.get("losses", 0)
-            features["_records_source"] = home_record_data.get("source", "espn")
-            features["_data_unified"] = game.get("_data_unified", False)
+            features["home_wins"] = int(home_record_data.get("wins", 0) or 0)
+            features["home_losses"] = int(home_record_data.get("losses", 0) or 0)
+            features["away_wins"] = int(away_record_data.get("wins", 0) or 0)
+            features["away_losses"] = int(away_record_data.get("losses", 0) or 0)
+            features["_records_source"] = home_record_data.get("source", "the_odds_api")
+            features["_data_unified"] = bool(game.get("_data_unified", False))
             
             # Build first half features
             fh_features = features.copy()
@@ -2840,4 +2776,3 @@ async def get_v1_picks(
             },
             status_code=500
         )
-

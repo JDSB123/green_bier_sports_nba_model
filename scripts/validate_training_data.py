@@ -19,7 +19,7 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -35,6 +35,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 TRAINING_DATA_PATH = DATA_DIR / "training_data.csv"
 MANIFEST_PATH = DATA_DIR / "training_data_manifest.json"
+COVERAGE_START_DEFAULT = "2023-05-01"
+COVERAGE_MIN_RATIO = 0.95
 
 # Required columns for each model type
 REQUIRED_COLUMNS = {
@@ -208,6 +210,61 @@ def validate_dates(df: pd.DataFrame) -> tuple[bool, str]:
         return False, f"{FAIL} Date parsing error: {e}"
 
 
+def validate_coverage(df: pd.DataFrame, start_date_str: str, minimum_ratio: float) -> tuple[bool, str]:
+    """Ensure the dataset covers at least `minimum_ratio` of days since `start_date_str`."""
+    if "game_date" not in df.columns:
+        return False, f"{FAIL} Cannot compute coverage: 'game_date' column missing"
+
+    try:
+        dates = pd.to_datetime(df["game_date"], errors="coerce").dt.date
+    except Exception as e:
+        return False, f"{FAIL} Coverage date parsing failed: {e}"
+
+    valid_dates = sorted({d for d in dates.dropna() if d})
+    if not valid_dates:
+        return False, f"{FAIL} No valid game dates to compute coverage"
+
+    start_date = datetime.fromisoformat(start_date_str).date()
+    max_date = valid_dates[-1]
+
+    if max_date < start_date:
+        return False, (
+            f"{FAIL} Latest data ({max_date}) is before requested coverage start ({start_date})"
+        )
+
+    OFFSEASON_MONTHS = {7, 8, 9}
+
+    # Build expected active months between start and latest data (exclude summer months)
+    expected_months: set[tuple[int, int]] = set()
+    cursor = start_date
+    while cursor <= max_date:
+        if cursor.month not in OFFSEASON_MONTHS:
+            expected_months.add((cursor.year, cursor.month))
+        cursor += timedelta(days=1)
+
+    actual_months = {
+        (d.year, d.month)
+        for d in valid_dates
+        if d >= start_date and d.month not in OFFSEASON_MONTHS
+    }
+
+    if not expected_months:
+        return False, f"{FAIL} No expected months calculated for coverage"
+
+    coverage_ratio = len(actual_months) / len(expected_months)
+    formatted_ratio = f"{coverage_ratio * 100:.1f}%"
+
+    if coverage_ratio >= minimum_ratio:
+        return True, (
+            f"{OK} Month coverage since {start_date}: {formatted_ratio} ({len(actual_months)}/{len(expected_months)} active months)"
+        )
+
+    return False, (
+        f"{FAIL} Month coverage since {start_date}: {formatted_ratio} < {minimum_ratio * 100:.0f}%"
+        f" ({len(actual_months)}/{len(expected_months)} active months)"
+    )
+
+
 def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     """Validate label columns have valid values (0/1)."""
     messages = []
@@ -235,7 +292,7 @@ def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     return all_valid, messages
 
 
-def run_validation(strict: bool = False) -> tuple[bool, dict]:
+def run_validation(strict: bool = False, coverage_start: str = COVERAGE_START_DEFAULT, coverage_min: float = COVERAGE_MIN_RATIO) -> tuple[bool, dict]:
     """Run all validations."""
     results = {
         "timestamp": datetime.now().isoformat(),
@@ -322,6 +379,14 @@ def run_validation(strict: bool = False) -> tuple[bool, dict]:
     if not passed:
         results["passed"] = False
 
+    # Coverage validation
+    print("\n--- Coverage Validation ---")
+    passed, msg = validate_coverage(df, coverage_start, coverage_min)
+    results["checks"]["coverage"] = passed
+    print(f"\n{msg}")
+    if not passed and strict:
+        results["passed"] = False
+
     # Label validation
     print("\n--- Label Validation ---")
     passed, messages = validate_labels(df)
@@ -401,6 +466,17 @@ def main():
     parser.add_argument("--strict", action="store_true", help="Fail on warnings too")
     parser.add_argument("--update-manifest", action="store_true", help="Update manifest with current stats")
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    parser.add_argument(
+        "--coverage-start",
+        default=COVERAGE_START_DEFAULT,
+        help="Start date (YYYY-MM-DD) to assess training data coverage",
+    )
+    parser.add_argument(
+        "--coverage-min",
+        type=float,
+        default=COVERAGE_MIN_RATIO,
+        help="Minimum coverage ratio (0-1) required since --coverage-start",
+    )
 
     args = parser.parse_args()
 
@@ -408,7 +484,11 @@ def main():
         update_manifest()
         return
 
-    passed, results = run_validation(strict=args.strict)
+    passed, results = run_validation(
+        strict=args.strict,
+        coverage_start=args.coverage_start,
+        coverage_min=args.coverage_min,
+    )
 
     if args.json:
         print(json.dumps(results, indent=2))
