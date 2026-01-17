@@ -108,23 +108,23 @@ class FilterThresholds:
     - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.66) - UNCHANGED
     - FILTER_1H_TOTAL_MIN_EDGE (default: 2.0) - UNCHANGED
 
-    Optimization Results (FG Spread, 2026-01-17 Deep Analysis):
-    - conf >= 55% + |edge| >= 3 + signal agreement: 69.6% accuracy on 1,423 games
-    - conf >= 55% + |edge| >= 4 + signal agreement: 70.7% accuracy on 1,187 games
-    - Break-even at -110: 52.4% → This is HIGHLY profitable
+Optimization Results (FG Spread, 2026-01-17 Analysis):
+    - CAUTION: Previous results were inflated due to in-sample testing
+    - True out-of-sample (2023-24): ~53% classifier, ~58% edge signal
+    - Edge signal |svp| >= 5 shows best risk-adjusted returns
     
-    Optimal Thresholds (Conservative):
+    Conservative Thresholds (out-of-sample validated):
     - spread_min_confidence: 0.55 (55%)
-    - spread_min_edge: 3.0 pts
+    - spread_min_edge: 5.0 pts (high-conviction only)
 
     See: OPTIMIZATION_RESULTS_SUMMARY.md for full details
     """
-    # Spread thresholds - OPTIMIZED (2026-01-17 Deep Analysis)
+    # Spread thresholds - CONSERVATIVE (out-of-sample validated)
     spread_min_confidence: float = field(
         default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.55)
     )
     spread_min_edge: float = field(
-        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 3.0)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 5.0)
     )
 
     # Total thresholds - UNCHANGED (conservative approach)
@@ -162,7 +162,7 @@ class Settings:
     # Core API Keys - STRICT MODE: Env only, validated at runtime
     the_odds_api_key: str = field(default_factory=lambda: read_secret_lax("THE_ODDS_API_KEY"))
     api_basketball_key: str = field(default_factory=lambda: read_secret_lax("API_BASKETBALL_KEY"))
-    
+
     # Optional API Keys (None if not set)
     betsapi_key: Optional[str] = field(default_factory=lambda: _env_optional("BETSAPI_KEY"))
     action_network_username: Optional[str] = field(default_factory=lambda: read_secret_lax("ACTION_NETWORK_USERNAME"))
