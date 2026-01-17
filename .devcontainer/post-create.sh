@@ -8,6 +8,16 @@ echo "🚀 Setting up NBA Prediction System in Codespaces..."
 # Create secrets directory if needed (for Docker secrets mount)
 mkdir -p secrets
 
+# Install Python dependencies
+echo "📦 Installing Python dependencies..."
+pip install -r requirements.txt
+
+# Setup .env from example if it doesn't exist
+if [ ! -f .env ]; then
+    echo "⚙️  Creating .env from template..."
+    cp .env.example .env
+fi
+
 # Make scripts executable
 chmod +x scripts/*.py 2>/dev/null || true
 
