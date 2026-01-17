@@ -71,8 +71,8 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=PROJECT_ROOT / "data" / "processed" / "master_training_data.csv",
-        help="Output master file path",
+        default=PROJECT_ROOT / "data" / "processed" / "training_data.csv",
+        help="Output training data file path",
     )
     parser.add_argument(
         "--skip-validation",

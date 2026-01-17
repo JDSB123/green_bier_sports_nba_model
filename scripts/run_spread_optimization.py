@@ -20,7 +20,7 @@ def run_backtest(
     confidence: float,
     juice: int,
     output_dir: Path,
-    data_path: str = "data/processed/master_training_data.csv",
+    data_path: str = "data/processed/training_data.csv",
     models_dir: str = "models/production",
 ) -> bool:
     """

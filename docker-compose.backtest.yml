@@ -173,7 +173,7 @@ services:
       - ./data:/app/data
     command: >
       python scripts/backtest_extended.py
-      --data /app/data/processed/master_training_data.csv
+      --data /app/data/processed/training_data.csv
       --markets fg_spread
       --fg-spread-juice ${FG_SPREAD_JUICE:--110}
       --fg-spread-conf ${FG_SPREAD_CONF:-0.55}
@@ -196,7 +196,7 @@ services:
       - ./data:/app/data
     command: >
       python scripts/backtest_extended.py
-      --data /app/data/processed/master_training_data.csv
+      --data /app/data/processed/training_data.csv
       --markets fg_total
       --fg-total-juice ${FG_TOTAL_JUICE:--110}
       --fg-total-conf ${FG_TOTAL_CONF:-0.55}
@@ -218,7 +218,7 @@ services:
       - ./data:/app/data
     command: >
       python scripts/backtest_extended.py
-      --data /app/data/processed/master_training_data.csv
+      --data /app/data/processed/training_data.csv
       --markets fg_moneyline
       --fg-ml-conf ${FG_ML_CONF:-0.55}
       --min-train ${MIN_TRAINING:-80}
@@ -240,7 +240,7 @@ services:
       - ./data:/app/data
     command: >
       python scripts/backtest_extended.py
-      --data /app/data/processed/master_training_data.csv
+      --data /app/data/processed/training_data.csv
       --markets 1h_spread
       --1h-spread-juice ${1H_SPREAD_JUICE:--110}
       --1h-spread-conf ${1H_SPREAD_CONF:-0.55}
@@ -263,7 +263,7 @@ services:
       - ./data:/app/data
     command: >
       python scripts/backtest_extended.py
-      --data /app/data/processed/master_training_data.csv
+      --data /app/data/processed/training_data.csv
       --markets 1h_total
       --1h-total-juice ${1H_TOTAL_JUICE:--110}
       --1h-total-conf ${1H_TOTAL_CONF:-0.55}
@@ -285,7 +285,7 @@ services:
       - ./data:/app/data
     command: >
       python scripts/backtest_extended.py
-      --data /app/data/processed/master_training_data.csv
+      --data /app/data/processed/training_data.csv
       --markets 1h_moneyline
       --1h-ml-conf ${1H_ML_CONF:-0.55}
       --min-train ${MIN_TRAINING:-80}

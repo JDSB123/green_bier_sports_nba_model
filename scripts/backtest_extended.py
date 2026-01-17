@@ -663,7 +663,7 @@ def main():
     )
 
     # Data/model paths
-    parser.add_argument("--data", default="data/processed/master_training_data.csv")
+    parser.add_argument("--data", default="data/processed/training_data.csv")
     parser.add_argument("--models-dir", default="models/production")
     parser.add_argument("--output-json", default="data/backtest_results/extended_backtest_results.json")
 

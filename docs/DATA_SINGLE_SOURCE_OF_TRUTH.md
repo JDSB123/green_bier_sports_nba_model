@@ -1,15 +1,37 @@
 # Data Single Source of Truth
 
-Last updated: 2026-01-12
+Last updated: 2026-01-16
 
-This document defines the authoritative data sources and how canonical training data is used.
+This document defines THE ONE authoritative training data file.
 
 ---
 
-## Canonical Source (Git + Azure Blob)
+## THE CANONICAL FILE
 
-Canonical training data is committed in git and mirrored to Azure Blob Storage.
-Other historical/raw inputs remain in Azure only.
+```
+data/processed/training_data.csv
+```
+
+**This is THE ONLY training data file. There is no other.**
+
+| Attribute | Value |
+|-----------|-------|
+| Rows | 3,969 games |
+| Columns | 326 features |
+| Date Range | 2023-01-01 to 2026-01-08 |
+| Injury Data | ✅ 100% coverage |
+| FG Labels | ✅ 100% coverage |
+| 1H Labels | 78% coverage (2022-23 season lacks 1H lines) |
+
+### Season Breakdown
+- 2022-23: 774 games (partial season, no 1H lines)
+- 2023-24: 1,319 games (99.6% 1H coverage)
+- 2024-25: 1,321 games (99.8% 1H coverage)
+- 2025-26: 555 games (to date, 99.8% 1H coverage)
+
+---
+
+## Azure Blob Storage (Mirror)
 
 Storage account: `nbagbsvstrg`
 Container: `nbahistoricaldata`
@@ -97,11 +119,20 @@ Outputs:
 
 Full coverage (100%):
 - FG labels: fg_spread_covered, fg_total_over, fg_home_win
-- 1H labels: 1h_spread_covered, 1h_total_over
 - Scores: home_score, away_score, fg_margin, fg_total_actual
+- Injury impact: 7 columns, 100% coverage
 - Rest, ELO, derived, rolling, H2H, predicted features
 
 Partial coverage:
+- 1H labels: 78% (2022-23 lacks 1H betting lines)
 - Moneylines: best available from The Odds API
-- Travel features: not yet implemented
-- Injury impact: 95%+ via Kaggle inference
+
+---
+
+## DEPRECATED FILES (DO NOT USE)
+
+The following files have been removed or deprecated:
+- `master_training_data.csv` - DELETED, merged into training_data.csv
+- `training_data_canonicalized.csv` - DELETED
+- `training_data_2023_with_injuries.csv` - DELETED
+- Any file matching `*training*.csv` except `training_data.csv`

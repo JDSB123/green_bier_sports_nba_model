@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Validate Master Training Data Integrity
+Validate Training Data Integrity
 
-This script is the SINGLE SOURCE OF TRUTH validator for master_training_data.csv.
+This script is the SINGLE SOURCE OF TRUTH validator for training_data.csv.
 Run this before any backtest or model training to ensure data quality.
 
 Checks performed:
@@ -144,12 +144,12 @@ def validate_no_leakage(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate master training data integrity")
+    parser = argparse.ArgumentParser(description="Validate training data integrity")
     parser.add_argument(
         "--data",
         type=Path,
-        default=PROJECT_ROOT / "data" / "processed" / "master_training_data.csv",
-        help="Path to master training data",
+        default=PROJECT_ROOT / "data" / "processed" / "training_data.csv",
+        help="Path to training data",
     )
     parser.add_argument("--strict", action="store_true", help="Fail on any warning")
     args = parser.parse_args()

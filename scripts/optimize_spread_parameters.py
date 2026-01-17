@@ -341,7 +341,7 @@ def main():
 
     parser.add_argument(
         "--data",
-        default="data/processed/master_training_data.csv",
+        default="data/processed/training_data.csv",
         help="Path to training data CSV",
     )
     parser.add_argument(

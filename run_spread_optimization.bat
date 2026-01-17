@@ -8,7 +8,7 @@ echo ===========================================================================
 echo.
 
 set OUTPUT_DIR=data\backtest_results\spread_optimization
-set DATA=data\processed\master_training_data.csv
+set DATA=data\processed\training_data.csv
 set MODELS=models\production
 
 REM Create output directory
