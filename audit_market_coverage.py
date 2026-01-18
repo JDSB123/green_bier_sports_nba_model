@@ -12,7 +12,7 @@ FAIL = "[FAIL]"
 INFO = "[INFO]"
 
 data_dir = Path("data/processed")
-training_file = data_dir / "master_training_data.csv"
+training_file = data_dir / "training_data.csv"
 
 if not training_file.exists():
     print(f"{FAIL} training_data.csv not found. Checking available files...")

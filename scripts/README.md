@@ -33,7 +33,7 @@ Data engineering only (not used for backtests):
 
 ```bash
 # Rebuild full training data from raw sources
-python scripts/build_training_data_complete.py
+python scripts/build_training_data_complete.py --rebuild-from-raw
 ```
 
 ---

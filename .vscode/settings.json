@@ -32,5 +32,6 @@
   "containers.networks.label": "Name",
   "containers.volumes.label": "Name",
   "liveServer.settings.port": 5501,
-  "azureFunctions.projectSubpath": "azure\\function_app"
+  "azureFunctions.projectSubpath": "azure\\function_app",
+  "chat.agent.maxRequests": 250
 }

@@ -189,7 +189,8 @@ class RichFeatureBuilder:
         _REFERENCE_CACHE['leagues'][cache_key] = league_info
         self._update_cache_timestamp(cache_key)
 
-        print(f"[CACHE] League info cached: {league_info.get('name', 'Unknown')}")
+        print(
+            f"[CACHE] League info cached: {league_info.get('name', 'Unknown')}")
         return league_info
 
     async def validate_season(self, season: str) -> bool:
@@ -197,7 +198,8 @@ class RichFeatureBuilder:
         cache_key = f"season_{self.league_id}_{season}"
 
         # Check persistent cache
-        if cache_key in _REFERENCE_CACHE['seasons'] and self._is_cache_valid(cache_key, max_age_hours=168):  # 1 week
+        # 1 week
+        if cache_key in _REFERENCE_CACHE['seasons'] and self._is_cache_valid(cache_key, max_age_hours=168):
             return _REFERENCE_CACHE['seasons'][cache_key]
 
         # Fetch seasons to validate
@@ -209,7 +211,8 @@ class RichFeatureBuilder:
         _REFERENCE_CACHE['seasons'][cache_key] = season_exists
         self._update_cache_timestamp(cache_key)
 
-        print(f"[CACHE] Season validation cached: {season} -> {'valid' if season_exists else 'invalid'}")
+        print(
+            f"[CACHE] Season validation cached: {season} -> {'valid' if season_exists else 'invalid'}")
         return season_exists
 
     async def get_team_stats(self, team_id: int) -> Dict[str, Any]:
@@ -233,7 +236,8 @@ class RichFeatureBuilder:
 
         response = result.get("response", {})
         if not response:
-            raise ValueError(f"STRICT MODE: No statistics found for team {team_id} - API returned empty")
+            raise ValueError(
+                f"STRICT MODE: No statistics found for team {team_id} - API returned empty")
 
         self._stats_cache[team_id] = response
         return response
@@ -287,7 +291,8 @@ class RichFeatureBuilder:
             self._games_cache = result.get("response", [])
 
             if not self._games_cache:
-                raise ValueError(f"STRICT MODE: No games found for season {self.season} - API returned empty")
+                raise ValueError(
+                    f"STRICT MODE: No games found for season {self.season} - API returned empty")
 
             print(f"[API] Fetched {len(self._games_cache)} games")
 
@@ -298,7 +303,7 @@ class RichFeatureBuilder:
             g for g in all_games
             if (g.get("teams", {}).get("home", {}).get("id") == team_id or
                 g.get("teams", {}).get("away", {}).get("id") == team_id) and
-               g.get("status", {}).get("short") == "FT"  # Finished
+            g.get("status", {}).get("short") == "FT"  # Finished
         ]
 
         # Sort by date desc
@@ -342,8 +347,10 @@ class RichFeatureBuilder:
                 continue
 
             # Get scores
-            home_score = game.get("scores", {}).get("home", {}).get("total", 0) or 0
-            away_score = game.get("scores", {}).get("away", {}).get("total", 0) or 0
+            home_score = game.get("scores", {}).get(
+                "home", {}).get("total", 0) or 0
+            away_score = game.get("scores", {}).get(
+                "away", {}).get("total", 0) or 0
 
             # Skip games with no score (shouldn't happen for finished games)
             if home_score == 0 and away_score == 0:
@@ -396,7 +403,8 @@ class RichFeatureBuilder:
             injuries = await fetch_all_injuries()
 
             if not injuries:
-                print("[INJURIES] No injury data available (this is OK - not all players are injured)")
+                print(
+                    "[INJURIES] No injury data available (this is OK - not all players are injured)")
                 self._injuries_cache = None
                 return None
 
@@ -419,12 +427,14 @@ class RichFeatureBuilder:
                 })
 
             self._injuries_cache = pd.DataFrame(rows)
-            print(f"[API] Fetched {len(self._injuries_cache)} injuries from live API")
+            print(
+                f"[API] Fetched {len(self._injuries_cache)} injuries from live API")
 
             return self._injuries_cache
 
         except Exception as e:
-            print(f"[INJURIES] Error fetching injuries: {e} - continuing without injury data")
+            print(
+                f"[INJURIES] Error fetching injuries: {e} - continuing without injury data")
             self._injuries_cache = None
             return None
 
@@ -460,31 +470,41 @@ class RichFeatureBuilder:
         away_points = away_stats.get("points", {})
 
         # Points per game
-        home_ppg = float(home_points.get("for", {}).get("average", {}).get("all", 0))
-        away_ppg = float(away_points.get("for", {}).get("average", {}).get("all", 0))
-        home_papg = float(home_points.get("against", {}).get("average", {}).get("all", 0))
-        away_papg = float(away_points.get("against", {}).get("average", {}).get("all", 0))
+        home_ppg = float(home_points.get(
+            "for", {}).get("average", {}).get("all", 0))
+        away_ppg = float(away_points.get(
+            "for", {}).get("average", {}).get("all", 0))
+        home_papg = float(home_points.get(
+            "against", {}).get("average", {}).get("all", 0))
+        away_papg = float(away_points.get(
+            "against", {}).get("average", {}).get("all", 0))
 
         if home_ppg == 0 or away_ppg == 0:
-            raise ValueError(f"Missing PPG data: home={home_ppg}, away={away_ppg}")
+            raise ValueError(
+                f"Missing PPG data: home={home_ppg}, away={away_ppg}")
 
-        standings_by_id = standings_norm.get("by_id", {}) if isinstance(standings_norm, dict) else {}
+        standings_by_id = standings_norm.get(
+            "by_id", {}) if isinstance(standings_norm, dict) else {}
 
         # Standings position and records (API-Basketball)
         home_standing = standings_by_id.get(home_id, {})
         away_standing = standings_by_id.get(away_id, {})
 
         # Use API-B standings for W/L; fall back to computed record if missing
-        home_record = home_standing or self.calculate_team_record_from_games(home_id)
-        away_record = away_standing or self.calculate_team_record_from_games(away_id)
+        home_record = home_standing or self.calculate_team_record_from_games(
+            home_id)
+        away_record = away_standing or self.calculate_team_record_from_games(
+            away_id)
 
         home_wins = home_record.get("wins", 0)
         home_losses = home_record.get("losses", 0)
         away_wins = away_record.get("wins", 0)
         away_losses = away_record.get("losses", 0)
 
-        home_games_played = home_record.get("games_played", home_wins + home_losses)
-        away_games_played = away_record.get("games_played", away_wins + away_losses)
+        home_games_played = home_record.get(
+            "games_played", home_wins + home_losses)
+        away_games_played = away_record.get(
+            "games_played", away_wins + away_losses)
 
         if home_games_played == 0 or away_games_played == 0:
             raise ValueError(
@@ -494,7 +514,8 @@ class RichFeatureBuilder:
         home_win_pct = home_wins / home_games_played if home_games_played > 0 else 0.0
         away_win_pct = away_wins / away_games_played if away_games_played > 0 else 0.0
 
-        home_position = home_standing.get("position", 15)  # Mid-table if missing
+        home_position = home_standing.get(
+            "position", 15)  # Mid-table if missing
         away_position = away_standing.get("position", 15)
 
         # H2H metrics (symmetric: count wins regardless of venue)
@@ -506,8 +527,10 @@ class RichFeatureBuilder:
                 try:
                     g_home_id = g.get("teams", {}).get("home", {}).get("id")
                     g_away_id = g.get("teams", {}).get("away", {}).get("id")
-                    g_home_score = g.get("scores", {}).get("home", {}).get("total")
-                    g_away_score = g.get("scores", {}).get("away", {}).get("total")
+                    g_home_score = g.get("scores", {}).get(
+                        "home", {}).get("total")
+                    g_away_score = g.get("scores", {}).get(
+                        "away", {}).get("total")
                     if g_home_score is None or g_away_score is None:
                         continue
                     if g_home_id == home_id:
@@ -523,7 +546,8 @@ class RichFeatureBuilder:
                 except (TypeError, AttributeError):
                     continue
             h2h_win_rate = home_h2h_wins / valid_h2h_games if valid_h2h_games > 0 else 0.5
-            h2h_margin = sum(h2h_margins) / len(h2h_margins) if h2h_margins else 0.0
+            h2h_margin = sum(h2h_margins) / \
+                len(h2h_margins) if h2h_margins else 0.0
         else:
             h2h_win_rate = 0.5  # Neutral if no history
             h2h_margin = 0.0
@@ -558,15 +582,22 @@ class RichFeatureBuilder:
 
             for i, g in enumerate(recent_games[:10]):
                 try:
-                    is_home = g.get("teams", {}).get("home", {}).get("id") == team_id
-                    home_score = g.get("scores", {}).get("home", {}).get("total", 0) or 0
-                    away_score = g.get("scores", {}).get("away", {}).get("total", 0) or 0
+                    is_home = g.get("teams", {}).get(
+                        "home", {}).get("id") == team_id
+                    home_score = g.get("scores", {}).get(
+                        "home", {}).get("total", 0) or 0
+                    away_score = g.get("scores", {}).get(
+                        "away", {}).get("total", 0) or 0
 
                     # First half scores (Q1 + Q2)
-                    home_q1 = g.get("scores", {}).get("home", {}).get("quarter_1", 0) or 0
-                    away_q1 = g.get("scores", {}).get("away", {}).get("quarter_1", 0) or 0
-                    home_1h = home_q1 + (g.get("scores", {}).get("home", {}).get("quarter_2", 0) or 0)
-                    away_1h = away_q1 + (g.get("scores", {}).get("away", {}).get("quarter_2", 0) or 0)
+                    home_q1 = g.get("scores", {}).get(
+                        "home", {}).get("quarter_1", 0) or 0
+                    away_q1 = g.get("scores", {}).get(
+                        "away", {}).get("quarter_1", 0) or 0
+                    home_1h = home_q1 + \
+                        (g.get("scores", {}).get("home", {}).get("quarter_2", 0) or 0)
+                    away_1h = away_q1 + \
+                        (g.get("scores", {}).get("away", {}).get("quarter_2", 0) or 0)
 
                     if is_home:
                         team_score, opp_score = home_score, away_score
@@ -613,10 +644,12 @@ class RichFeatureBuilder:
                     last_game_date = last_game.get("date", "")
 
                     # Extract previous game location (the home team's arena)
-                    prev_game_location = last_game.get("teams", {}).get("home", {}).get("name")
+                    prev_game_location = last_game.get(
+                        "teams", {}).get("home", {}).get("name")
 
                     if last_game_date:
-                        last_dt = datetime.fromisoformat(last_game_date.replace("Z", "+00:00"))
+                        last_dt = datetime.fromisoformat(
+                            last_game_date.replace("Z", "+00:00"))
                         # Use scheduled game datetime when available to avoid "now" drift
                         ref_dt = (
                             game_dt.astimezone(last_dt.tzinfo)
@@ -730,8 +763,10 @@ class RichFeatureBuilder:
 
         # Predicted points for each team
         # Home scores: average of (home offense, opponent defense) at expected pace
-        home_expected_pts = ((home_ortg + away_drtg) / 2) * expected_pace_factor
-        away_expected_pts = ((away_ortg + home_drtg) / 2) * expected_pace_factor
+        home_expected_pts = ((home_ortg + away_drtg) /
+                             2) * expected_pace_factor
+        away_expected_pts = ((away_ortg + home_drtg) /
+                             2) * expected_pace_factor
 
         # Apply rest to team totals directly (per-team impact instead of averaging)
         home_expected_pts += home_rest_adj
@@ -760,7 +795,8 @@ class RichFeatureBuilder:
         rest_margin_adj = home_rest_adj - away_rest_adj  # Positive = home better rested
         form_margin_adj = home_form_adj - away_form_adj  # Positive = home hotter
 
-        predicted_margin_nba = base_margin + HOME_COURT_ADV + rest_margin_adj + form_margin_adj
+        predicted_margin_nba = base_margin + \
+            HOME_COURT_ADV + rest_margin_adj + form_margin_adj
 
         # Injury integration - DYNAMIC FETCH from ESPN + API-Basketball
         injuries_df = await self.get_injuries_df()
@@ -770,8 +806,10 @@ class RichFeatureBuilder:
             out_injuries = injuries_df[injuries_df['status'] == 'out']
 
             # Match team names (partial match for flexibility)
-            home_out_ppg = out_injuries[out_injuries['team'].str.contains(home_team, case=False, na=False)]['ppg'].sum()
-            away_out_ppg = out_injuries[out_injuries['team'].str.contains(away_team, case=False, na=False)]['ppg'].sum()
+            home_out_ppg = out_injuries[out_injuries['team'].str.contains(
+                home_team, case=False, na=False)]['ppg'].sum()
+            away_out_ppg = out_injuries[out_injuries['team'].str.contains(
+                away_team, case=False, na=False)]['ppg'].sum()
 
             # Calculate injury impact on margin
             # Negative home_out_ppg hurts home team (subtracts from margin)
@@ -780,7 +818,8 @@ class RichFeatureBuilder:
             # Using 65% replacement efficiency = 35% of star's PPG is lost
             # This accounts for both scoring and intangible impact (playmaking, gravity)
             REPLACEMENT_LOSS_FACTOR = 0.35  # 35% of PPG lost when player is out
-            injury_margin_adj = (-home_out_ppg + away_out_ppg) * REPLACEMENT_LOSS_FACTOR
+            injury_margin_adj = (-home_out_ppg +
+                                 away_out_ppg) * REPLACEMENT_LOSS_FACTOR
 
             # ADD injury adjustment to existing margin
             # (preserves HOME_COURT_ADV and form_margin_adj)
@@ -832,8 +871,10 @@ class RichFeatureBuilder:
         predicted_margin_1h = (home_1h_margin - away_1h_margin) / 2 + hca_1h
 
         # Form trend proxies (recent vs longer-term performance)
-        home_form_trend = home_form.get("l5_margin", 0.0) - home_form.get("l10_margin", 0.0)
-        away_form_trend = away_form.get("l5_margin", 0.0) - away_form.get("l10_margin", 0.0)
+        home_form_trend = home_form.get(
+            "l5_margin", 0.0) - home_form.get("l10_margin", 0.0)
+        away_form_trend = away_form.get(
+            "l5_margin", 0.0) - away_form.get("l10_margin", 0.0)
 
         # Build feature dict
         features = {
@@ -947,30 +988,37 @@ class RichFeatureBuilder:
         features["away_margin"] = features["away_avg_margin"]
         features["home_rest"] = features["home_rest_days"]
         features["away_rest"] = features["away_rest_days"]
-        features["rest_diff"] = features["home_rest_days"] - features["away_rest_days"]
+        features["rest_diff"] = features["home_rest_days"] - \
+            features["away_rest_days"]
         features["home_pace"] = home_ppg + home_papg
         features["away_pace"] = away_ppg + away_papg
-        features["expected_pace"] = (features["home_pace"] + features["away_pace"]) / 2
+        features["expected_pace"] = (
+            features["home_pace"] + features["away_pace"]) / 2
         features["home_score_std"] = home_form["score_std"]
         features["away_score_std"] = away_form["score_std"]
         features["home_margin_std"] = home_form["margin_std"]
         features["away_margin_std"] = away_form["margin_std"]
         features["home_net_rating"] = features["home_net_rtg"]
         features["away_net_rating"] = features["away_net_rtg"]
-        features["net_rating_diff"] = features["home_net_rtg"] - features["away_net_rtg"]
+        features["net_rating_diff"] = features["home_net_rtg"] - \
+            features["away_net_rtg"]
         features["home_1h_win_pct"] = home_form["win_pct_1h"]
         features["away_1h_win_pct"] = away_form["win_pct_1h"]
         features["home_margin_1h"] = features["home_spread_margin_1h"]
         features["away_margin_1h"] = features["away_spread_margin_1h"]
-        features["home_pace_1h"] = features["home_ppg_1h"] + features["home_papg_1h"]
-        features["away_pace_1h"] = features["away_ppg_1h"] + features["away_papg_1h"]
-        features["expected_pace_1h"] = (features["home_pace_1h"] + features["away_pace_1h"]) / 2
+        features["home_pace_1h"] = features["home_ppg_1h"] + \
+            features["home_papg_1h"]
+        features["away_pace_1h"] = features["away_ppg_1h"] + \
+            features["away_papg_1h"]
+        features["expected_pace_1h"] = (
+            features["home_pace_1h"] + features["away_pace_1h"]) / 2
         features["dynamic_hca"] = HOME_COURT_ADV
         features["dynamic_hca_1h"] = HOME_COURT_ADV * 0.5
         features["h2h_win_pct"] = h2h_win_rate
 
         features["elo_diff"] = features["home_elo"] - features["away_elo"]
-        features["elo_prob_home"] = 1 / (1 + 10 ** (-features["elo_diff"] / 400))
+        features["elo_prob_home"] = 1 / \
+            (1 + 10 ** (-features["elo_diff"] / 400))
 
         # ============================================================
         # TRAVEL/FATIGUE FEATURES
@@ -984,11 +1032,14 @@ class RichFeatureBuilder:
         # Calculate travel: from previous game location to current game (home team's arena)
         # If no previous location data, fall back to away team's home arena
         if away_prev_location:
-            away_travel_distance = get_travel_distance(away_prev_location, home_team) or 0
-            away_tz_change = get_timezone_difference(away_prev_location, home_team)
+            away_travel_distance = get_travel_distance(
+                away_prev_location, home_team) or 0
+            away_tz_change = get_timezone_difference(
+                away_prev_location, home_team)
         else:
             # Fallback: assume traveling from home arena
-            away_travel_distance = get_travel_distance(away_team, home_team) or 0
+            away_travel_distance = get_travel_distance(
+                away_team, home_team) or 0
             away_tz_change = get_timezone_difference(away_team, home_team)
 
         away_is_b2b = away_form["rest_days"] <= 1
@@ -1017,7 +1068,8 @@ class RichFeatureBuilder:
             features["away_b2b_travel_penalty"] = -1.5  # Additional penalty
 
         # Travel advantage for home team
-        features["travel_advantage"] = -away_travel_fatigue  # Away fatigue helps home
+        features["travel_advantage"] = - \
+            away_travel_fatigue  # Away fatigue helps home
 
         # Store team-specific HCA for transparency
         features["home_court_advantage"] = HOME_COURT_ADV
@@ -1065,20 +1117,36 @@ class RichFeatureBuilder:
         # ATS (against the spread) cover rates - estimate from margin performance
         # Teams that consistently outperform their expected margin tend to cover more often
         # Formula: base 50% + adjustment based on how team performs vs expected scoring
-        home_margin_performance = (home_ppg - home_papg) / 10  # Net rating scaled
+        home_margin_performance = (
+            home_ppg - home_papg) / 10  # Net rating scaled
         away_margin_performance = (away_ppg - away_papg) / 10
-        features["home_ats_pct"] = max(0.35, min(0.65, 0.50 + home_margin_performance * 0.05))
-        features["away_ats_pct"] = max(0.35, min(0.65, 0.50 + away_margin_performance * 0.05))
-        features["home_ats_pct_1h"] = features["home_ats_pct"]  # Use same for 1H
+        features["home_ats_pct"] = max(
+            0.35, min(0.65, 0.50 + home_margin_performance * 0.05))
+        features["away_ats_pct"] = max(
+            0.35, min(0.65, 0.50 + away_margin_performance * 0.05))
+        # Use same for 1H
+        features["home_ats_pct_1h"] = features["home_ats_pct"]
         features["away_ats_pct_1h"] = features["away_ats_pct"]
+
+        # Over tendency heuristic (align with training features)
+        league_avg_total = LEAGUE_AVG_PPG * 2
+        home_total_bias = (features["home_total_ppg"] - league_avg_total) / 10
+        away_total_bias = (features["away_total_ppg"] - league_avg_total) / 10
+        features["home_over_pct"] = max(
+            0.35, min(0.65, 0.50 + home_total_bias * 0.05))
+        features["away_over_pct"] = max(
+            0.35, min(0.65, 0.50 + away_total_bias * 0.05))
 
         # Injury spread impact - calculated from actual injury PPG data
         # Losing scorers directly impacts expected margin
-        features["home_injury_spread_impact"] = -home_out_ppg  # Negative = hurts spread
+        features["home_injury_spread_impact"] = - \
+            home_out_ppg  # Negative = hurts spread
         features["away_injury_spread_impact"] = -away_out_ppg
-        features["injury_spread_diff"] = features["home_injury_spread_impact"] - features["away_injury_spread_impact"]
+        features["injury_spread_diff"] = features["home_injury_spread_impact"] - \
+            features["away_injury_spread_impact"]
 
         # Rest advantage for spread betting (home rest - away rest)
-        features["rest_advantage"] = home_form["rest_days"] - away_form["rest_days"]
+        features["rest_advantage"] = home_form["rest_days"] - \
+            away_form["rest_days"]
 
         return features

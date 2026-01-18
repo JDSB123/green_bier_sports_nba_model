@@ -13,6 +13,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.parse import urlencode
 
 # Configuration from environment (no hardcoded secrets or URLs)
 import os
@@ -29,6 +30,10 @@ API_PORT = os.getenv("NBA_API_PORT", "8090")
 API_BASE = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
 NBA_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "").strip()
 MODEL_PACK_PATH = os.getenv("NBA_MODEL_PACK_PATH", "models/production/model_pack.json")
+PUBLIC_WEEKLY_LINEUP_URL = os.getenv(
+    "PUBLIC_WEEKLY_LINEUP_URL",
+    "https://www.greenbiersportventures.com/weekly-lineup.html",
+).strip()
 
 
 def load_model_timestamp(path: str = MODEL_PACK_PATH) -> str:
@@ -79,6 +84,20 @@ def format_teams_message(data: dict) -> dict:
     plays = data.get("plays", [])
     model_version = NBA_MODEL_VERSION or data.get("version") or "unknown"
     model_updated_cst = load_model_timestamp()
+    date_label = data.get("date", "today")
+
+    def _append_query(base_url: str, params: dict) -> str:
+        if not base_url:
+            return ""
+        query = urlencode(params)
+        if not query:
+            return base_url
+        joiner = "&" if "?" in base_url else "?"
+        return f"{base_url}{joiner}{query}"
+
+    lineup_params = {"date": date_label}
+    api_lineup_url = _append_query(f"{API_BASE.rstrip('/')}/weekly-lineup/html", lineup_params)
+    public_lineup_url = _append_query(PUBLIC_WEEKLY_LINEUP_URL, lineup_params)
 
     # Generate title with CST timestamp
     now_cst = datetime.now(ZoneInfo("America/Chicago"))
@@ -155,8 +174,24 @@ def format_teams_message(data: dict) -> dict:
                 "separator": True,
                 "spacing": "Small"
             }
-        ]
+        ],
     }
+
+    actions = []
+    if api_lineup_url:
+        actions.append({
+            "type": "Action.OpenUrl",
+            "title": "Weekly Lineup (API)",
+            "url": api_lineup_url,
+        })
+    if public_lineup_url:
+        actions.append({
+            "type": "Action.OpenUrl",
+            "title": "Weekly Lineup (Website)",
+            "url": public_lineup_url,
+        })
+    if actions:
+        card["actions"] = actions
 
     # Add rows - one per pick
     for p in sorted_plays:

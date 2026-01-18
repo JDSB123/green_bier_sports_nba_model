@@ -170,7 +170,8 @@ class QualityChecker:
 
     def _check_critical_nulls(self) -> tuple[bool, str]:
         """Check for nulls in critical columns."""
-        critical = ["game_id", "home_team", "away_team", "home_score", "away_score"]
+        critical = ["game_id", "home_team",
+                    "away_team", "home_score", "away_score"]
         null_counts = {}
         for col in critical:
             if col in self.df.columns:
@@ -218,14 +219,15 @@ class QualityChecker:
 
         avg_coverage = sum(coverage.values()) / len(coverage)
         self.metrics["odds_coverage"] = avg_coverage
-        
+
         if avg_coverage >= MIN_ODDS_COVERAGE:
             return True, f"{avg_coverage:.1%} coverage ({used})"
         return False, f"Only {avg_coverage:.1%} (need {MIN_ODDS_COVERAGE:.0%}) ({used})"
 
     def _check_injury_coverage(self) -> tuple[bool, str]:
         """Check injury data coverage."""
-        injury_cols_present = [c for c in INJURY_COLUMNS if c in self.df.columns]
+        injury_cols_present = [
+            c for c in INJURY_COLUMNS if c in self.df.columns]
         if not injury_cols_present:
             self.metrics["injury_coverage"] = 0
             return False, "No injury columns found"
@@ -253,7 +255,8 @@ class QualityChecker:
         min_date = dates.min()
         max_date = dates.max()
 
-        self.metrics["date_range"] = {"min": str(min_date.date()), "max": str(max_date.date())}
+        self.metrics["date_range"] = {"min": str(
+            min_date.date()), "max": str(max_date.date())}
 
         # Check reasonable range
         if min_date.year >= 2022:
@@ -270,10 +273,12 @@ class QualityChecker:
 
         # Check no season has < 10% of games
         total = len(self.df)
-        small_seasons = [s for s, c in season_counts.items() if c < total * 0.1]
+        small_seasons = [s for s, c in season_counts.items()
+                         if c < total * 0.1]
 
         if not small_seasons:
-            seasons_str = ", ".join([f"{s}: {c}" for s, c in sorted(season_counts.items())])
+            seasons_str = ", ".join(
+                [f"{s}: {c}" for s, c in sorted(season_counts.items())])
             return True, seasons_str
         return True, f"Unbalanced: {small_seasons} (warn only)"
 
@@ -323,14 +328,14 @@ def upload_to_azure(
     print(f"  {INFO} Data Blob: {data_blob}")
     print(f"  {INFO} Manifest Blob: {manifest_blob}")
 
-    if dry_run:
-        print(f"\n  {WARN} DRY RUN - No upload performed")
-        return True
-
-    # Save manifest locally first
+    # Always save manifest locally (even on dry-run) so checksum/schema stay in sync.
     manifest_path = file_path.parent / "training_data_manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2))
     print(f"\n  {OK} Saved manifest locally: {manifest_path}")
+
+    if dry_run:
+        print(f"\n  {WARN} DRY RUN - No upload performed")
+        return True
 
     try:
         # Upload versioned data
@@ -340,7 +345,8 @@ def upload_to_azure(
             f'--container-name {CONTAINER} --name "{data_blob}" '
             f'--file "{file_path}" --overwrite true --auth-mode key'
         )
-        result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, shell=True)
         if result.returncode != 0:
             print(f"  {FAIL} Upload failed: {result.stderr}")
             return False
@@ -353,7 +359,8 @@ def upload_to_azure(
             f'--container-name {CONTAINER} --name "{manifest_blob}" '
             f'--file "{manifest_path}" --overwrite true --auth-mode key'
         )
-        result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, shell=True)
         if result.returncode != 0:
             print(f"  {FAIL} Manifest upload failed: {result.stderr}")
             return False
@@ -368,7 +375,8 @@ def upload_to_azure(
                 f'--source-uri "https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{src}" '
                 f'--auth-mode key'
             )
-            result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, shell=True)
             if result.returncode != 0:
                 print(f"  {WARN} Copy to latest failed: {result.stderr}")
             else:
@@ -382,11 +390,16 @@ def upload_to_azure(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Upload quality-checked training data to Azure")
-    parser.add_argument("--dry-run", action="store_true", help="Validate only, no upload")
-    parser.add_argument("--force", action="store_true", help="Skip confirmation prompts")
-    parser.add_argument("--version", default=None, help="Version tag (default: vYYYYMMDD)")
-    parser.add_argument("--file", type=Path, default=None, help="Specific file to upload")
+    parser = argparse.ArgumentParser(
+        description="Upload quality-checked training data to Azure")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Validate only, no upload")
+    parser.add_argument("--force", action="store_true",
+                        help="Skip confirmation prompts")
+    parser.add_argument("--version", default=None,
+                        help="Version tag (default: vYYYYMMDD)")
+    parser.add_argument("--file", type=Path, default=None,
+                        help="Specific file to upload")
     args = parser.parse_args()
 
     print("\n" + "=" * 60)
@@ -425,10 +438,14 @@ def main():
     print("\n" + "=" * 60)
     print("QUALITY SUMMARY")
     print("=" * 60)
-    print(f"  Total Games: {manifest['quality_metrics'].get('total_games', 'N/A'):,}")
-    print(f"  Total Columns: {manifest['quality_metrics'].get('total_columns', 'N/A')}")
-    print(f"  Odds Coverage: {manifest['quality_metrics'].get('odds_coverage', 0):.1%}")
-    print(f"  Injury Coverage: {manifest['quality_metrics'].get('injury_coverage', 0):.1%}")
+    print(
+        f"  Total Games: {manifest['quality_metrics'].get('total_games', 'N/A'):,}")
+    print(
+        f"  Total Columns: {manifest['quality_metrics'].get('total_columns', 'N/A')}")
+    print(
+        f"  Odds Coverage: {manifest['quality_metrics'].get('odds_coverage', 0):.1%}")
+    print(
+        f"  Injury Coverage: {manifest['quality_metrics'].get('injury_coverage', 0):.1%}")
     print(f"  Date Range: {manifest['quality_metrics'].get('date_range', {})}")
     print(f"  SHA256: {manifest['sha256'][:16]}...")
 
@@ -445,7 +462,8 @@ def main():
 
     # Confirm upload
     if not args.dry_run and not args.force:
-        response = input(f"\nUpload to Azure Blob Storage as {version}? [y/N]: ")
+        response = input(
+            f"\nUpload to Azure Blob Storage as {version}? [y/N]: ")
         if response.lower() != "y":
             print("Upload cancelled.")
             sys.exit(0)
@@ -460,8 +478,10 @@ def main():
         else:
             print(f"{OK} UPLOAD COMPLETE")
             print(f"\nSingle Source of Truth:")
-            print(f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/{version}/")
-            print(f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/latest/")
+            print(
+                f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/{version}/")
+            print(
+                f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/latest/")
         print("=" * 60)
     else:
         print(f"\n{FAIL} Upload failed")

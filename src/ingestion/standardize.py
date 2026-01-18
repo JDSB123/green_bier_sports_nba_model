@@ -8,7 +8,8 @@ IMPORTANT CLARIFICATION:
 - "Standard format" team names (e.g., "Los Angeles Lakers") are a NAMING CONVENTION
 - This naming style happens to match ESPN's format, but data comes from MULTIPLE sources
 - ESPN is used as a data source ONLY for schedules (see src/ingestion/espn.py)
-- Most data (odds, stats, records) comes from The Odds API and API-Basketball
+- Most data (odds, stats) comes from The Odds API and API-Basketball
+- Team records are sourced from ESPN standings in the serving layer
 
 Uses the MASTER team_mapping.json database via src.utils.team_names for:
 - Canonical team IDs (nba_lal, nba_bos, etc.)

@@ -156,8 +156,29 @@ fetch_data() {
         return 0
     fi
 
+    # Optional: fetch audited artifact from Azure (consume-only, no rebuilds)
+    if [ "${ALLOW_AZURE_DOWNLOAD:-0}" = "1" ]; then
+        echo "[INFO] training_data.csv missing; attempting Azure download (ALLOW_AZURE_DOWNLOAD=1)"
+        VERSION_TO_GET="${AZURE_TRAINING_DATA_VERSION:-latest}"
+        python scripts/download_training_data_from_azure.py \
+            --version "$VERSION_TO_GET" \
+            --verify \
+            --output "/app/data/processed/training_data.csv"
+
+        if [ $? -eq 0 ] && [ -f "/app/data/processed/training_data.csv" ]; then
+            echo "[OK] Downloaded canonical training data from Azure ($VERSION_TO_GET)"
+            echo "  File: /app/data/processed/training_data.csv"
+            echo "  Size: $(du -h /app/data/processed/training_data.csv | cut -f1)"
+            echo "  Lines: $(wc -l < /app/data/processed/training_data.csv)"
+            return 0
+        fi
+
+        echo "ERROR: Azure download failed"
+        exit 1
+    fi
+
     echo "ERROR: Canonical training data not found at /app/data/processed/training_data.csv"
-    echo "Place the audited training_data.csv (2023+) under /app/data/processed and rerun."
+    echo "Place the audited training_data.csv under /app/data/processed, or set ALLOW_AZURE_DOWNLOAD=1 to fetch from Azure."
     exit 1
 }
 

@@ -99,92 +99,103 @@ def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
     mapped_features = dict(features)  # Copy all features
 
     # Core statistical features mapping
+    # Prefer unified feature names; also set legacy keys for backward compatibility.
     feature_mappings = {
         # PPG (points per game)
-        "home_ppg_1h": "home_ppg",
-        "away_ppg_1h": "away_ppg",
-        "home_papg_1h": "home_papg",
-        "away_papg_1h": "away_papg",
+        "home_ppg_1h": ["home_ppg"],
+        "away_ppg_1h": ["away_ppg"],
+        "home_papg_1h": ["home_papg"],
+        "away_papg_1h": ["away_papg"],
 
         # Margins
-        "home_margin_1h": "home_avg_margin",
-        "away_margin_1h": "away_avg_margin",
+        "home_margin_1h": ["home_margin", "home_avg_margin"],
+        "away_margin_1h": ["away_margin", "away_avg_margin"],
+        "home_spread_margin_1h": ["home_margin", "home_avg_margin"],
+        "away_spread_margin_1h": ["away_margin", "away_avg_margin"],
+
+        # Model-predicted margin/total (critical for 1H edge calc + model features)
+        "predicted_margin_1h": ["predicted_margin"],
+        "predicted_total_1h": ["predicted_total"],
 
         # Differentials
-        "ppg_diff_1h": "ppg_diff",
-        "margin_diff_1h": "win_pct_diff",  # Using win_pct_diff as closest equivalent
+        "ppg_diff_1h": ["ppg_diff"],
 
         # Win rates
-        "home_1h_win_pct": "home_win_pct",
-        "away_1h_win_pct": "away_win_pct",
+        "home_1h_win_pct": ["home_win_pct"],
+        "away_1h_win_pct": ["away_win_pct"],
 
         # Pace
-        "home_pace_1h": "home_pace_factor",
-        "away_pace_1h": "away_pace_factor",
+        "home_pace_1h": ["home_pace", "home_pace_factor"],
+        "away_pace_1h": ["away_pace", "away_pace_factor"],
+        "expected_pace_1h": ["expected_pace"],
 
         # Recent form (last 5)
-        "home_l5_margin_1h": "home_l5_margin",
-        "away_l5_margin_1h": "away_l5_margin",
+        "home_l5_margin_1h": ["home_l5_margin"],
+        "away_l5_margin_1h": ["away_l5_margin"],
 
         # Recent form (last 10)
-        "home_l10_margin_1h": "home_l10_margin",
-        "away_l10_margin_1h": "away_l10_margin",
+        "home_l10_margin_1h": ["home_l10_margin"],
+        "away_l10_margin_1h": ["away_l10_margin"],
 
         # Consistency (standard deviation)
-        "home_margin_std_1h": "home_form_adj",  # Using form_adj as closest equivalent
-        "away_margin_std_1h": "away_form_adj",
+        "home_margin_std_1h": ["home_margin_std", "home_form_adj"],
+        "away_margin_std_1h": ["away_margin_std", "away_form_adj"],
+        "home_score_std_1h": ["home_score_std"],
+        "away_score_std_1h": ["away_score_std"],
 
         # Efficiency ratings
-        "home_ortg_1h": "home_ortg",
-        "away_ortg_1h": "away_ortg",
-        "home_drtg_1h": "home_drtg",
-        "away_drtg_1h": "away_drtg",
-        "home_net_rtg_1h": "home_net_rtg",
-        "away_net_rtg_1h": "away_net_rtg",
+        "home_ortg_1h": ["home_ortg"],
+        "away_ortg_1h": ["away_ortg"],
+        "home_drtg_1h": ["home_drtg"],
+        "away_drtg_1h": ["away_drtg"],
+        "home_net_rtg_1h": ["home_net_rtg", "home_net_rating"],
+        "away_net_rtg_1h": ["away_net_rtg", "away_net_rating"],
 
         # Position (standings)
-        "home_position_1h": "home_position",
-        "away_position_1h": "away_position",
+        "home_position_1h": ["home_position"],
+        "away_position_1h": ["away_position"],
 
         # H2H
-        "h2h_margin_1h": "h2h_win_rate",  # Using win_rate as closest equivalent
+        "h2h_margin_1h": ["h2h_margin"],
 
         # Rest (same for both periods)
-        "home_rest_days_1h": "home_rest_days",
-        "away_rest_days_1h": "away_rest_days",
-        "home_rest_adj_1h": "home_rest_adj",
-        "away_rest_adj_1h": "away_rest_adj",
-        "rest_margin_adj_1h": "rest_margin_adj",
+        "home_rest_days_1h": ["home_rest_days", "home_rest"],
+        "away_rest_days_1h": ["away_rest_days", "away_rest"],
+        "home_rest_adj_1h": ["home_rest_adj"],
+        "away_rest_adj_1h": ["away_rest_adj"],
+        "rest_margin_adj_1h": ["rest_margin_adj"],
 
         # Travel (same for both periods)
-        "away_travel_distance_1h": "away_travel_distance",
-        "away_timezone_change_1h": "away_timezone_change",
-        "away_travel_fatigue_1h": "away_travel_fatigue",
-        "is_away_long_trip_1h": "is_away_long_trip",
-        "is_away_cross_country_1h": "is_away_cross_country",
-        "away_b2b_travel_penalty_1h": "away_b2b_travel_penalty",
-        "travel_advantage_1h": "travel_advantage",
+        "away_travel_distance_1h": ["away_travel_distance"],
+        "away_timezone_change_1h": ["away_timezone_change"],
+        "away_travel_fatigue_1h": ["away_travel_fatigue"],
+        "is_away_long_trip_1h": ["is_away_long_trip"],
+        "is_away_cross_country_1h": ["is_away_cross_country"],
+        "away_b2b_travel_penalty_1h": ["away_b2b_travel_penalty"],
+        "travel_advantage_1h": ["travel_advantage"],
 
         # Home court advantage
-        "dynamic_hca_1h": "home_court_advantage",
+        "dynamic_hca_1h": ["dynamic_hca", "home_court_advantage"],
 
         # Injuries (same for both periods)
-        "home_injury_impact_ppg_1h": "home_injury_impact_ppg",
-        "away_injury_impact_ppg_1h": "away_injury_impact_ppg",
-        "injury_margin_adj_1h": "injury_margin_adj",
+        "home_injury_impact_ppg_1h": ["home_injury_impact_ppg"],
+        "away_injury_impact_ppg_1h": ["away_injury_impact_ppg"],
+        "injury_margin_adj_1h": ["injury_margin_adj"],
 
         # Elo (same for both periods)
-        "home_elo_1h": "home_elo",
-        "away_elo_1h": "away_elo",
-        "elo_diff_1h": "elo_diff",
-        "elo_prob_home_1h": "elo_prob_home",
+        "home_elo_1h": ["home_elo"],
+        "away_elo_1h": ["away_elo"],
+        "elo_diff_1h": ["elo_diff"],
+        "elo_prob_home_1h": ["elo_prob_home"],
     }
 
     # Apply mappings - copy 1H features to FG names if they exist
     for h1_feature, fg_feature in feature_mappings.items():
         if h1_feature in features:
-            mapped_features[fg_feature] = features[h1_feature]
-            logger.debug(f"Mapped {h1_feature} -> {fg_feature} = {features[h1_feature]}")
+            targets = fg_feature if isinstance(fg_feature, (list, tuple)) else [fg_feature]
+            for target in targets:
+                mapped_features[target] = features[h1_feature]
+            logger.debug(f"Mapped {h1_feature} -> {targets} = {features[h1_feature]}")
 
     return mapped_features
 
@@ -849,4 +860,3 @@ class UnifiedPredictionEngine:
                 "fg": self.fg_predictor is not None,
             },
         }
-

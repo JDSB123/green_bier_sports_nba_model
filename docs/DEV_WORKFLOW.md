@@ -10,6 +10,7 @@ This guide is the repeatable, minimal workflow for local dev, Codespaces, and de
 3. Ensure secrets are available:
    - For containers: create `secrets/THE_ODDS_API_KEY` and `secrets/API_BASKETBALL_KEY` (see `docs/DOCKER_SECRETS.md`).
    - For local runs: copy `.env.example` to `.env` and fill values (never commit).
+   - If Codespaces secrets are set, the setup script syncs them into `.env` and `secrets/`.
 4. Start the API:
    - `docker compose up -d`
 5. Verify:

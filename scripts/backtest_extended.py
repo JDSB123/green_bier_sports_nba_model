@@ -31,6 +31,7 @@ import os
 import sys
 import logging
 import json
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
@@ -54,6 +55,50 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+def ensure_canonical_training_data(
+    data_path: str,
+    version: str = "latest",
+    verify: bool = True,
+) -> None:
+    """Ensure canonical training_data.csv is present by downloading from Azure.
+
+    Backtesting is consume-only: we never rebuild here. We only fetch the audited
+    artifact from Azure `training_data/<version>/` (default `latest`).
+    """
+    target = Path(data_path)
+    default_target = Path("data/processed/training_data.csv")
+
+    if target != default_target and target.exists():
+        return
+
+    if target != default_target and not target.exists():
+        raise FileNotFoundError(
+            f"Training data not found at {target}. "
+            "Either point --data at an existing CSV, or use the canonical path "
+            "data/processed/training_data.csv so it can be downloaded from Azure."
+        )
+
+    cmd = [
+        sys.executable,
+        "scripts/download_training_data_from_azure.py",
+        "--version",
+        version,
+        "--output",
+        str(target),
+    ]
+    if verify:
+        cmd.append("--verify")
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(
+            "Failed to download canonical training data from Azure.\n"
+            f"Command: {' '.join(cmd)}\n"
+            f"STDOUT:\n{result.stdout}\n"
+            f"STDERR:\n{result.stderr}"
+        )
 
 
 # ============================================================================
@@ -667,6 +712,38 @@ def main():
     parser.add_argument("--models-dir", default="models/production")
     parser.add_argument("--output-json", default="data/backtest_results/extended_backtest_results.json")
 
+    try:
+        bool_action = argparse.BooleanOptionalAction  # py3.9+
+    except AttributeError:  # pragma: no cover
+        bool_action = None
+
+    if bool_action:
+        parser.add_argument(
+            "--ensure-canonical",
+            action=bool_action,
+            default=True,
+            help="Download/verify Azure training_data/latest into the canonical path before running (default: true)",
+        )
+    else:
+        parser.add_argument(
+            "--ensure-canonical",
+            action="store_true",
+            help="Download/verify Azure training_data/latest into the canonical path before running",
+        )
+        parser.add_argument(
+            "--no-ensure-canonical",
+            dest="ensure_canonical",
+            action="store_false",
+            help="Do not download/verify Azure canonical data",
+        )
+        parser.set_defaults(ensure_canonical=True)
+
+    parser.add_argument(
+        "--azure-version",
+        default="latest",
+        help="Azure training_data version to use when --ensure-canonical is enabled (default: latest)",
+    )
+
     # Market selection
     parser.add_argument(
         "--markets", default="all",
@@ -699,6 +776,9 @@ def main():
     parser.add_argument("--min-train", type=int, default=100)
 
     args = parser.parse_args()
+
+    if getattr(args, "ensure_canonical", False):
+        ensure_canonical_training_data(args.data, version=args.azure_version, verify=True)
 
     print("=" * 80)
     print("EXTENDED BACKTEST")

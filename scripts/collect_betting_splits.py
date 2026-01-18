@@ -6,10 +6,11 @@ Run daily before games to collect RLM/sharp money signals.
 
 Usage:
     # Collect today's splits (default: Action Network)
+    # Appends to history by default (use --no-append-history to skip)
     python scripts/collect_betting_splits.py
 
-    # Collect and save to historical CSV
-    python scripts/collect_betting_splits.py --save --append-history
+    # Collect and save to historical CSV + JSON snapshot
+    python scripts/collect_betting_splits.py --save
 
     # Use specific source
     python scripts/collect_betting_splits.py --source action_network
@@ -61,8 +62,8 @@ Examples:
     # Quick check of today's splits
     python scripts/collect_betting_splits.py
 
-    # Collect and save to training history
-    python scripts/collect_betting_splits.py --save --append-history
+    # Collect and save to training history (default behavior)
+    python scripts/collect_betting_splits.py --save
 
     # Use Action Network specifically
     python scripts/collect_betting_splits.py --source action_network --save
@@ -81,8 +82,16 @@ Examples:
     )
     parser.add_argument(
         "--append-history",
+        dest="append_history",
         action="store_true",
-        help="Append to historical CSV for training (data/splits/historical_splits.csv)",
+        default=True,
+        help="Append to historical CSV for training (data/splits/historical_splits.csv) [default]",
+    )
+    parser.add_argument(
+        "--no-append-history",
+        dest="append_history",
+        action="store_false",
+        help="Skip appending to historical CSV",
     )
     args = parser.parse_args()
 

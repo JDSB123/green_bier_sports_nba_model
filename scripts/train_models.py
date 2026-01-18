@@ -64,10 +64,14 @@ from src.modeling.feature_config import (
     filter_available_features,
 )
 from src.modeling.period_features import MODEL_CONFIGS, get_model_features
+from src.utils.version import resolve_version
 
 
-# Model version for tracking
-MODEL_VERSION = "33.0.15.0"
+# Model version for tracking (env overrides VERSION file)
+MODEL_VERSION = resolve_version()
+MODEL_VERSION_LABEL = (
+    MODEL_VERSION if MODEL_VERSION.lower().startswith("nba_v") else f"v{MODEL_VERSION}"
+)
 
 # Market configurations mapping
 MARKET_CONFIG = {
@@ -586,7 +590,7 @@ def train_models(
     tracker = ModelTracker()
 
     print(f"\n{'='*60}")
-    print(f"NBA Model Training v{MODEL_VERSION}")
+    print(f"NBA Model Training {MODEL_VERSION_LABEL}")
     print(f"{'='*60}")
 
     # Load supplementary data (injuries, betting splits)
@@ -1130,4 +1134,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

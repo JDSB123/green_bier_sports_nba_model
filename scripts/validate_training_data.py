@@ -98,7 +98,8 @@ def validate_checksum(manifest: dict | None) -> tuple[bool, str]:
     if not manifest:
         return True, f"{WARN} No manifest to check against"
 
-    expected = manifest.get("sha256") or manifest.get("training_data", {}).get("sha256")
+    expected = manifest.get("sha256") or manifest.get(
+        "training_data", {}).get("sha256")
     if not expected:
         return True, f"{WARN} No checksum in manifest"
 
@@ -150,7 +151,8 @@ def validate_nulls(df: pd.DataFrame) -> tuple[bool, list[str]]:
     messages = []
     all_valid = True
 
-    critical_cols = REQUIRED_COLUMNS["identifiers"] + REQUIRED_COLUMNS["fg_labels"]
+    critical_cols = REQUIRED_COLUMNS["identifiers"] + \
+        REQUIRED_COLUMNS["fg_labels"]
 
     for col in critical_cols:
         if col in df.columns:
@@ -179,7 +181,8 @@ def validate_ranges(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
         if below > 0 or above > 0:
             # Warning, not failure (could be outliers)
-            messages.append(f"{WARN} {col}: {below} below {min_val}, {above} above {max_val}")
+            messages.append(
+                f"{WARN} {col}: {below} below {min_val}, {above} above {max_val}")
         else:
             pass  # Don't clutter output with all passing
 
@@ -192,7 +195,8 @@ def validate_ranges(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
 def validate_dates(df: pd.DataFrame) -> tuple[bool, str]:
     """Validate date column."""
-    date_col = "game_date" if "game_date" in df.columns else ("date" if "date" in df.columns else None)
+    date_col = "game_date" if "game_date" in df.columns else (
+        "date" if "date" in df.columns else None)
     if not date_col:
         return False, f"{FAIL} No game_date/date column"
 
@@ -316,9 +320,11 @@ def run_validation(strict: bool = False, coverage_start: str = COVERAGE_START_DE
     # Load manifest
     manifest = load_manifest()
     if manifest:
-        print(f"{OK} Manifest loaded: v{manifest.get('version', 'unknown')}")
+        version = str(manifest.get("version", "unknown"))
+        prefix = "" if version.startswith("v") else "v"
+        print(f"{OK} Manifest loaded: {prefix}{version}")
     else:
-        print("{WARN} No manifest found")
+        print(f"{WARN} No manifest found")
 
     # Check checksum
     passed, msg = validate_checksum(manifest)
@@ -463,9 +469,12 @@ def update_manifest() -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Validate training data")
-    parser.add_argument("--strict", action="store_true", help="Fail on warnings too")
-    parser.add_argument("--update-manifest", action="store_true", help="Update manifest with current stats")
-    parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    parser.add_argument("--strict", action="store_true",
+                        help="Fail on warnings too")
+    parser.add_argument("--update-manifest", action="store_true",
+                        help="Update manifest with current stats")
+    parser.add_argument("--json", action="store_true",
+                        help="Output results as JSON")
     parser.add_argument(
         "--coverage-start",
         default=COVERAGE_START_DEFAULT,

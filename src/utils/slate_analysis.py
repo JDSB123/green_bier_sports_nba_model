@@ -1,11 +1,12 @@
 """
 Utility functions for slate analysis.
 
-UNIFIED DATA SOURCE: All game data (odds, team records, scores) comes from
-The Odds API to ensure data integrity. No bifurcation between sources.
+ODDS SOURCE: The Odds API provides all betting lines for the slate.
+RECORDS SOURCE: ESPN standings are used for season W-L records, with a
+fallback to The Odds API scores (recent games only) if ESPN is unavailable.
 
-QA/QC Principle: Team records displayed with picks MUST come from the same
-source as the odds data to serve as a data integrity check.
+QA/QC Principle: All sources are normalized to ESPN team names to prevent
+team mismatch across odds, records, and feature generation.
 
 Extracted from deprecated analyze_todays_slate.py script.
 These functions are used by the API and Docker analysis scripts.
@@ -25,22 +26,73 @@ logger = logging.getLogger(__name__)
 CST = ZoneInfo("America/Chicago")
 
 # =============================================================================
-# UNIFIED TEAM RECORDS FROM THE ODDS API
+# TEAM RECORDS (ESPN PRIMARY, THE ODDS FALLBACK)
 # =============================================================================
-# These functions calculate team records from The Odds API scores endpoint,
-# ensuring the same data source provides both odds AND team records.
-# This is a QA/QC measure to prevent data bifurcation.
+# ESPN standings provide season W-L records. If ESPN fails, fall back to The
+# Odds API scores endpoint (limited to recent days) to avoid missing records.
 # =============================================================================
 
 # Cache for team records (session-level, cleared between API calls)
 _UNIFIED_RECORDS_CACHE: Dict[str, Dict[str, int]] = {}
+_UNIFIED_RECORDS_SOURCE: Optional[str] = None
 
 
 def clear_unified_records_cache():
     """Clear the unified records cache to force fresh data."""
-    global _UNIFIED_RECORDS_CACHE
+    global _UNIFIED_RECORDS_CACHE, _UNIFIED_RECORDS_SOURCE
     _UNIFIED_RECORDS_CACHE = {}
+    _UNIFIED_RECORDS_SOURCE = None
     logger.info("[UNIFIED] Team records cache cleared")
+
+
+async def fetch_team_records(
+    days_back: int = 90,
+    sport: str = "basketball_nba",
+) -> Tuple[Dict[str, Dict[str, int]], Optional[str]]:
+    """
+    Fetch team records with ESPN as primary, The Odds API as fallback.
+
+    Args:
+        days_back: Number of days for The Odds fallback window (capped by API)
+        sport: Sport identifier for The Odds API
+
+    Returns:
+        Tuple of (records dict, source label)
+    """
+    global _UNIFIED_RECORDS_CACHE, _UNIFIED_RECORDS_SOURCE
+
+    if _UNIFIED_RECORDS_CACHE:
+        return _UNIFIED_RECORDS_CACHE, _UNIFIED_RECORDS_SOURCE
+
+    try:
+        from src.ingestion.espn import fetch_espn_standings
+        standings = await fetch_espn_standings()
+        records: Dict[str, Dict[str, int]] = {}
+        for team_name, standing in standings.items():
+            games_played = standing.wins + standing.losses
+            records[team_name] = {
+                "wins": standing.wins,
+                "losses": standing.losses,
+                "games_played": games_played,
+            }
+        _UNIFIED_RECORDS_CACHE = records
+        _UNIFIED_RECORDS_SOURCE = "espn"
+        logger.info(f"[RECORDS] Loaded {len(records)} team records from ESPN standings")
+        return records, _UNIFIED_RECORDS_SOURCE
+    except Exception as e:
+        logger.warning(f"[RECORDS] ESPN standings unavailable, falling back to The Odds scores: {e}")
+
+    try:
+        records = await fetch_team_records_from_odds_api(days_back=days_back, sport=sport)
+        days_from = min(days_back, 3)
+        _UNIFIED_RECORDS_CACHE = records
+        _UNIFIED_RECORDS_SOURCE = f"the_odds_api_last_{days_from}_days"
+        logger.info(f"[RECORDS] Loaded {len(records)} team records from The Odds scores (last {days_from} days)")
+        return records, _UNIFIED_RECORDS_SOURCE
+    except Exception as e:
+        logger.warning(f"[RECORDS] Could not fetch records from The Odds scores: {e}")
+        _UNIFIED_RECORDS_SOURCE = None
+        return {}, None
 
 
 async def fetch_team_records_from_odds_api(
@@ -50,11 +102,11 @@ async def fetch_team_records_from_odds_api(
     """
     Calculate team W-L records from The Odds API scores endpoint.
     
-    UNIFIED DATA SOURCE: This ensures team records come from the same
-    source as the betting odds, maintaining data integrity.
+    NOTE: The Odds API scores endpoint only supports a short lookback.
+    This function is intended as a fallback when ESPN standings are unavailable.
     
     Args:
-        days_back: Number of days of scores to fetch (default 90 for season)
+        days_back: Number of days of scores to fetch (capped by API to 3)
         sport: Sport identifier
     
     Returns:
@@ -69,12 +121,13 @@ async def fetch_team_records_from_odds_api(
     if _UNIFIED_RECORDS_CACHE:
         return _UNIFIED_RECORDS_CACHE
     
-    logger.info(f"[UNIFIED] Fetching team records from The Odds API scores (last {days_back} days)")
+    days_from = min(days_back, 3)
+    logger.info(f"[UNIFIED] Fetching team records from The Odds API scores (last {days_from} days)")
     
     try:
         # Fetch recent scores from The Odds API
         # The scores endpoint returns completed games with final scores
-        scores = await the_odds.fetch_scores(sport=sport, days_from=min(days_back, 3))
+        scores = await the_odds.fetch_scores(sport=sport, days_from=days_from)
         
         if not scores:
             logger.warning("[UNIFIED] No scores returned from The Odds API")
@@ -214,31 +267,29 @@ def _lookup_team_record_with_synonyms(
 
 async def get_unified_team_record(team_name: str) -> Tuple[int, int]:
     """
-    Get wins and losses for a team from The Odds API.
-    
-    UNIFIED DATA SOURCE: Returns record from same source as odds.
-    
-    QA/QC: Both odds and records use standardized team names, but some teams have
-    multiple valid forms (e.g., "LA Clippers" vs "Los Angeles Clippers"). This
-    function handles synonym matching to ensure lookups succeed.
-    
+    Get wins and losses for a team from the records source.
+
+    Records source uses ESPN standings when available, with The Odds scores
+    as a fallback. Team names are standardized to ESPN format for matching.
+
     Args:
         team_name: Team name (standardized format)
-    
+
     Returns:
         Tuple of (wins, losses)
-    
+
     Raises:
         ValueError: If team record cannot be found (no silent fallback)
     """
-    records = await fetch_team_records_from_odds_api()
+    records, _ = await fetch_team_records()
     record_dict = _lookup_team_record_with_synonyms(team_name, records)
     return record_dict["wins"], record_dict["losses"]
 
 
 async def validate_data_integrity(
     odds_teams: List[str],
-    record_teams: List[str]
+    record_teams: List[str],
+    records_source: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Validate that odds data and record data are consistent.
@@ -261,14 +312,22 @@ async def validate_data_integrity(
     
     is_valid = len(missing_from_records) == 0
     
+    source_label = records_source or "unknown"
     return {
         "is_valid": is_valid,
         "odds_teams_count": len(odds_set),
         "record_teams_count": len(record_set),
         "missing_from_records": list(missing_from_records),
         "missing_from_odds": list(missing_from_odds),
-        "data_source": "the_odds_api",
-        "message": "UNIFIED: All data from The Odds API" if is_valid else f"WARNING: {len(missing_from_records)} teams in odds missing from records"
+        "data_source": {
+            "odds": "the_odds_api",
+            "records": source_label,
+        },
+        "message": (
+            f"Records source: {source_label}"
+            if is_valid
+            else f"WARNING: {len(missing_from_records)} teams in odds missing from records (records source: {source_label})"
+        ),
     }
 
 
@@ -316,15 +375,16 @@ async def fetch_todays_games(
     """
     Fetch games for a specific date, including first half markets and team records.
     
-    UNIFIED DATA SOURCE: All data (odds, team records) comes from The Odds API
-    to ensure data integrity. This prevents bifurcation between sources.
+    ODDS SOURCE: The Odds API provides betting lines.
+    RECORDS SOURCE: ESPN standings provide season W-L, with The Odds scores
+    as a fallback when ESPN is unavailable.
     
     First half markets (spreads_h1, totals_h1) are only available
     through the event-specific endpoint, so we fetch them separately for each game.
     
     Args:
         target_date: Date to fetch games for
-        include_records: If True, include team W-L records from The Odds API scores
+        include_records: If True, include team W-L records from the records source
     
     Returns:
         List of game dicts with odds and optionally team records
@@ -336,14 +396,18 @@ async def fetch_todays_games(
     raw_games = await the_odds.fetch_odds()
     filtered_games = filter_games_for_date(raw_games, target_date)
     
-    # UNIFIED: Fetch team records from The Odds API scores (same source as odds)
+    # Fetch team records from the records source (ESPN primary, The Odds fallback)
     unified_records = {}
+    records_source = None
     if include_records:
         try:
-            unified_records = await fetch_team_records_from_odds_api()
-            logger.info(f"[UNIFIED] Fetched records for {len(unified_records)} teams from The Odds API")
+            unified_records, records_source = await fetch_team_records()
+            if records_source:
+                logger.info(f"[RECORDS] Fetched records for {len(unified_records)} teams from {records_source}")
+            else:
+                logger.warning("[RECORDS] Records source unavailable")
         except Exception as e:
-            logger.warning(f"[UNIFIED] Could not fetch team records: {e}")
+            logger.warning(f"[RECORDS] Could not fetch team records: {e}")
     
     # Enrich with first half markets for each game
     enriched_games = []
@@ -379,7 +443,7 @@ async def fetch_todays_games(
             except Exception as e:
                 logger.warning(f"Could not fetch 1H odds for event {event_id}: {e}")
         
-        # UNIFIED: Add team records from The Odds API (same source as odds)
+        # Add team records from the configured records source
         # NO SILENT FALLBACKS: Use synonym-aware lookup, fail loudly if records missing
         if include_records and unified_records:
             try:
@@ -389,14 +453,14 @@ async def fetch_todays_games(
                 game["home_team_record"] = {
                     "wins": home_record["wins"],
                     "losses": home_record["losses"],
-                    "source": "the_odds_api"  # QA/QC: Document data source
+                    "source": records_source or "unknown",
                 }
                 game["away_team_record"] = {
                     "wins": away_record["wins"],
                     "losses": away_record["losses"],
-                    "source": "the_odds_api"  # QA/QC: Document data source
+                    "source": records_source or "unknown",
                 }
-                game["_data_unified"] = True  # Flag indicating unified source
+                game["_data_unified"] = True  # Flag indicating odds+records normalized to ESPN names
             except ValueError as e:
                 # NO SILENT FALLBACK: Log ERROR and skip game if records cannot be found
                 logger.error(
@@ -417,7 +481,8 @@ async def fetch_todays_games(
         
         validation = await validate_data_integrity(
             odds_teams=[t for t in odds_teams if t],
-            record_teams=list(unified_records.keys())
+            record_teams=list(unified_records.keys()),
+            records_source=records_source,
         )
         
         if not validation["is_valid"]:

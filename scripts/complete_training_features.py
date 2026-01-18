@@ -29,6 +29,7 @@ from src.modeling.team_factors import (
 DATA_DIR = PROJECT_ROOT / "data"
 TRAINING_FILE = DATA_DIR / "processed" / "training_data.csv"
 KAGGLE_FILE = DATA_DIR / "external" / "kaggle" / "nba_2008-2025.csv"
+SPLITS_HISTORY_FILE = DATA_DIR / "splits" / "historical_splits.csv"
 
 
 def fill_moneylines(training_file: Path) -> pd.DataFrame:
@@ -160,6 +161,109 @@ def add_betting_splits_defaults(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = np.nan
 
     print("      Marked splits as unavailable; left split features as NaN")
+    return df
+
+
+def merge_betting_splits_history(df: pd.DataFrame, history_file: Path = SPLITS_HISTORY_FILE) -> pd.DataFrame:
+    """Merge historical betting splits (if available) onto training data.
+
+    This does not fabricate values; it only fills rows where historical splits exist.
+    """
+    print("\n[3b/4] Merging historical betting splits (if available)...")
+
+    if not history_file.exists():
+        print("      [SKIP] No historical splits file found")
+        return df
+
+    splits = pd.read_csv(history_file, low_memory=False)
+    if splits.empty:
+        print("      [SKIP] Historical splits file is empty")
+        return df
+
+    # Normalize date
+    date_source = "game_time" if "game_time" in splits.columns else "collection_date"
+    splits["game_date"] = pd.to_datetime(
+        splits[date_source], errors="coerce"
+    ).dt.date
+
+    # Standardize team names
+    if "home_team" in splits.columns:
+        splits["home_team"] = splits["home_team"].apply(standardize_team_name)
+    if "away_team" in splits.columns:
+        splits["away_team"] = splits["away_team"].apply(standardize_team_name)
+
+    # Build match_key for join
+    splits = splits[splits["game_date"].notna()].copy()
+    splits["match_key"] = splits.apply(
+        lambda r: generate_match_key(
+            pd.Timestamp(r["game_date"]), r["home_team"], r["away_team"], source_is_utc=False
+        ),
+        axis=1,
+    )
+
+    # Keep the latest snapshot per game (if multiple collection times exist)
+    if "collection_time" in splits.columns:
+        splits["collection_time"] = pd.to_datetime(
+            splits["collection_time"], errors="coerce"
+        )
+        splits = splits.sort_values("collection_time")
+    splits = splits.drop_duplicates("match_key", keep="last")
+
+    feature_cols = [
+        "has_real_splits",
+        "spread_public_home_pct",
+        "spread_public_away_pct",
+        "spread_money_home_pct",
+        "spread_money_away_pct",
+        "over_public_pct",
+        "under_public_pct",
+        "over_money_pct",
+        "under_money_pct",
+        "spread_open",
+        "spread_current",
+        "spread_movement",
+        "total_open",
+        "total_current",
+        "total_movement",
+        "is_rlm_spread",
+        "is_rlm_total",
+        "sharp_side_spread",
+        "sharp_side_total",
+        "spread_ticket_money_diff",
+        "total_ticket_money_diff",
+    ]
+
+    merge_cols = [c for c in feature_cols if c in splits.columns]
+    if not merge_cols:
+        print("      [SKIP] Historical splits missing expected feature columns")
+        return df
+
+    splits_merge = splits[["match_key"] + merge_cols].copy()
+    df = df.merge(splits_merge, on="match_key", how="left", suffixes=("", "_splits"))
+
+    # Fill/override with historical splits where present
+    for col in merge_cols:
+        split_col = f"{col}_splits"
+        if split_col not in df.columns:
+            continue
+        if col not in df.columns:
+            df[col] = df[split_col]
+        else:
+            df[col] = df[col].where(df[split_col].isna(), df[split_col])
+
+    # Ensure has_real_splits is set when any historical splits exist
+    if "has_real_splits_splits" in df.columns:
+        df["has_real_splits"] = df["has_real_splits"].where(
+            df["has_real_splits_splits"].isna(), df["has_real_splits_splits"]
+        )
+
+    # Drop temporary columns
+    drop_cols = [f"{c}_splits" for c in merge_cols if f"{c}_splits" in df.columns]
+    if drop_cols:
+        df = df.drop(columns=drop_cols)
+
+    matched = df[merge_cols].notna().any(axis=1).sum()
+    print(f"      Merged splits for {matched}/{len(df)} games")
     return df
 
 
@@ -578,39 +682,195 @@ def compute_injury_impact(df: pd.DataFrame, *, min_match_fraction: float = 0.99,
 def compute_derived_features(df: pd.DataFrame) -> pd.DataFrame:
     """Compute simple derived features from existing columns."""
     print("\n[5/8] Computing derived features...")
-    
+
+    def _num(col: str) -> pd.Series | None:
+        if col not in df.columns:
+            return None
+        return pd.to_numeric(df[col], errors="coerce")
+
+    home_ppg = _num("home_ppg")
+    away_ppg = _num("away_ppg")
+    home_papg = _num("home_papg")
+    away_papg = _num("away_papg")
+
     # ppg_diff
-    if "home_ppg" in df.columns and "away_ppg" in df.columns:
-        df["ppg_diff"] = df["home_ppg"] - df["away_ppg"]
+    if home_ppg is not None and away_ppg is not None:
+        df["ppg_diff"] = home_ppg - away_ppg
         print(f"      ppg_diff: {df['ppg_diff'].notna().sum()}/{len(df)}")
-    
+
     # win_pct_diff
     if "home_win_pct" in df.columns and "away_win_pct" in df.columns:
         df["win_pct_diff"] = df["home_win_pct"] - df["away_win_pct"]
         print(f"      win_pct_diff: {df['win_pct_diff'].notna().sum()}/{len(df)}")
-    
+
     # rest_diff
     if "home_rest_days" in df.columns and "away_rest_days" in df.columns:
         df["rest_diff"] = df["home_rest_days"] - df["away_rest_days"]
         print(f"      rest_diff: {df['rest_diff'].notna().sum()}/{len(df)}")
-    
+
     # home_margin / away_margin (copy from avg_margin)
     if "home_avg_margin" in df.columns:
         df["home_margin"] = df["home_avg_margin"]
         print(f"      home_margin: {df['home_margin'].notna().sum()}/{len(df)}")
-    
+
     if "away_avg_margin" in df.columns:
         df["away_margin"] = df["away_avg_margin"]
         print(f"      away_margin: {df['away_margin'].notna().sum()}/{len(df)}")
-    
-    # net_rating_diff (use margin diff as proxy)
-    if "home_margin" in df.columns and "away_margin" in df.columns:
+
+    # Total PPG (used by totals models)
+    if home_ppg is not None and home_papg is not None:
+        df["home_total_ppg"] = home_ppg + home_papg
+        print(f"      home_total_ppg: {df['home_total_ppg'].notna().sum()}/{len(df)}")
+    if away_ppg is not None and away_papg is not None:
+        df["away_total_ppg"] = away_ppg + away_papg
+        print(f"      away_total_ppg: {df['away_total_ppg'].notna().sum()}/{len(df)}")
+
+    # Pace (fallback to totals if missing)
+    if "home_pace" not in df.columns and home_ppg is not None and home_papg is not None:
+        df["home_pace"] = home_ppg + home_papg
+    if "away_pace" not in df.columns and away_ppg is not None and away_papg is not None:
+        df["away_pace"] = away_ppg + away_papg
+    if "home_pace" in df.columns and "away_pace" in df.columns:
+        df["expected_pace"] = df["home_pace"] + df["away_pace"]
+        df["expected_pace"] = df["expected_pace"] / 2
+        print(f"      expected_pace: {df['expected_pace'].notna().sum()}/{len(df)}")
+
+    # Rest adjustments (align with RichFeatureBuilder)
+    def rest_adjustment(rest_days: float | int | None) -> float:
+        if rest_days is None or pd.isna(rest_days):
+            return np.nan
+        if rest_days <= 1:
+            return -1.5
+        if rest_days == 2:
+            return 0.0
+        if rest_days <= 4:
+            return 0.5
+        if rest_days <= 7:
+            return 0.8
+        return 0.0  # 8+ days: rust cancels benefit
+
+    home_rest = _num("home_rest_days")
+    away_rest = _num("away_rest_days")
+    if home_rest is None:
+        home_rest = _num("home_rest")
+    if away_rest is None:
+        away_rest = _num("away_rest")
+
+    if home_rest is not None and away_rest is not None:
+        df["home_rest_adj"] = home_rest.apply(rest_adjustment)
+        df["away_rest_adj"] = away_rest.apply(rest_adjustment)
+        df["rest_margin_adj"] = df["home_rest_adj"] - df["away_rest_adj"]
+        print(f"      home_rest_adj: {df['home_rest_adj'].notna().sum()}/{len(df)}")
+
+    # Leak-safe efficiency metrics (Torvik-inspired, pre-game)
+    if home_ppg is not None and home_papg is not None and away_ppg is not None and away_papg is not None:
+        league_avg_ppg = 113.5
+        home_pace_factor = (home_ppg + home_papg) / (2 * league_avg_ppg)
+        away_pace_factor = (away_ppg + away_papg) / (2 * league_avg_ppg)
+
+        home_pace_factor = home_pace_factor.replace(0, np.nan)
+        away_pace_factor = away_pace_factor.replace(0, np.nan)
+
+        df["home_ortg"] = home_ppg / home_pace_factor
+        df["home_drtg"] = home_papg / home_pace_factor
+        df["away_ortg"] = away_ppg / away_pace_factor
+        df["away_drtg"] = away_papg / away_pace_factor
+        df["home_net_rtg"] = df["home_ortg"] - df["home_drtg"]
+        df["away_net_rtg"] = df["away_ortg"] - df["away_drtg"]
+        df["net_rating_diff"] = df["home_net_rtg"] - df["away_net_rtg"]
+        print(f"      home_net_rtg: {df['home_net_rtg'].notna().sum()}/{len(df)}")
+    elif "home_margin" in df.columns and "away_margin" in df.columns:
         df["net_rating_diff"] = df["home_margin"] - df["away_margin"]
         print(f"      net_rating_diff: {df['net_rating_diff'].notna().sum()}/{len(df)}")
-    
-    # NOTE: Do not inject constant "baseline" features here.
-    # If pace/home-court are needed, they must come from real inputs or be computed elsewhere.
-    
+
+    # Elo probability (align with compute_elo)
+    if "elo_prob" in df.columns:
+        df["elo_prob_home"] = df["elo_prob"]
+        print(f"      elo_prob_home: {df['elo_prob_home'].notna().sum()}/{len(df)}")
+    elif "home_elo" in df.columns and "away_elo" in df.columns:
+        home_adv = 100.0
+        df["elo_prob_home"] = 1 / (1 + 10 ** ((df["away_elo"] - df["home_elo"] - home_adv) / 400))
+        print(f"      elo_prob_home: {df['elo_prob_home'].notna().sum()}/{len(df)}")
+
+    # Injury impact (map to model schema if available)
+    if "home_injury_impact_ppg" not in df.columns:
+        if "home_injury_impact" in df.columns:
+            df["home_injury_impact_ppg"] = df["home_injury_impact"]
+        elif "home_injury_spread_impact" in df.columns:
+            df["home_injury_impact_ppg"] = df["home_injury_spread_impact"]
+    if "away_injury_impact_ppg" not in df.columns:
+        if "away_injury_impact" in df.columns:
+            df["away_injury_impact_ppg"] = df["away_injury_impact"]
+        elif "away_injury_spread_impact" in df.columns:
+            df["away_injury_impact_ppg"] = df["away_injury_spread_impact"]
+
+    if "home_injury_impact_ppg" in df.columns and "away_injury_impact_ppg" in df.columns:
+        loss_factor = 0.35
+        df["injury_margin_adj"] = (-df["home_injury_impact_ppg"] + df["away_injury_impact_ppg"]) * loss_factor
+        df["home_injury_total_impact"] = df["home_injury_impact_ppg"]
+        df["away_injury_total_impact"] = df["away_injury_impact_ppg"]
+        df["injury_total_diff"] = df["home_injury_total_impact"] - df["away_injury_total_impact"]
+
+    # ATS / Over tendency (heuristic, align with RichFeatureBuilder)
+    if home_ppg is not None and home_papg is not None:
+        home_margin_perf = (home_ppg - home_papg) / 10
+        df["home_ats_pct"] = (0.50 + home_margin_perf * 0.05).clip(0.35, 0.65)
+    if away_ppg is not None and away_papg is not None:
+        away_margin_perf = (away_ppg - away_papg) / 10
+        df["away_ats_pct"] = (0.50 + away_margin_perf * 0.05).clip(0.35, 0.65)
+
+    if "home_total_ppg" in df.columns:
+        league_avg_total = 113.5 * 2
+        home_total_bias = (df["home_total_ppg"] - league_avg_total) / 10
+        df["home_over_pct"] = (0.50 + home_total_bias * 0.05).clip(0.35, 0.65)
+    if "away_total_ppg" in df.columns:
+        league_avg_total = 113.5 * 2
+        away_total_bias = (df["away_total_ppg"] - league_avg_total) / 10
+        df["away_over_pct"] = (0.50 + away_total_bias * 0.05).clip(0.35, 0.65)
+
+    # Line movement (map from open/close columns if present)
+    if "spread_open" not in df.columns and "open_spread" in df.columns:
+        df["spread_open"] = df["open_spread"]
+    if "spread_current" not in df.columns:
+        if "close_spread" in df.columns:
+            df["spread_current"] = df["close_spread"]
+        elif "spread_line" in df.columns:
+            df["spread_current"] = df["spread_line"]
+    if "spread_movement" in df.columns and "spread_open" in df.columns and "spread_current" in df.columns:
+        df["spread_movement"] = df["spread_movement"].fillna(
+            df["spread_current"] - df["spread_open"]
+        )
+    elif "spread_open" in df.columns and "spread_current" in df.columns:
+        df["spread_movement"] = df["spread_current"] - df["spread_open"]
+
+    if "total_open" not in df.columns and "open_total" in df.columns:
+        df["total_open"] = df["open_total"]
+    if "total_current" not in df.columns:
+        if "close_total" in df.columns:
+            df["total_current"] = df["close_total"]
+        elif "total_line" in df.columns:
+            df["total_current"] = df["total_line"]
+    if "total_movement" in df.columns and "total_open" in df.columns and "total_current" in df.columns:
+        df["total_movement"] = df["total_movement"].fillna(
+            df["total_current"] - df["total_open"]
+        )
+    elif "total_open" in df.columns and "total_current" in df.columns:
+        df["total_movement"] = df["total_current"] - df["total_open"]
+
+    # Public/money splits complements (derive when possible)
+    if "spread_public_home_pct" in df.columns and "spread_public_away_pct" not in df.columns:
+        df["spread_public_away_pct"] = 100 - df["spread_public_home_pct"]
+    if "spread_money_home_pct" in df.columns and "spread_money_away_pct" not in df.columns:
+        df["spread_money_away_pct"] = 100 - df["spread_money_home_pct"]
+    if "over_public_pct" in df.columns and "under_public_pct" not in df.columns:
+        df["under_public_pct"] = 100 - df["over_public_pct"]
+    if "over_money_pct" in df.columns and "under_money_pct" not in df.columns:
+        df["under_money_pct"] = 100 - df["over_money_pct"]
+    if "spread_ticket_money_diff" not in df.columns and "spread_public_home_pct" in df.columns and "spread_money_home_pct" in df.columns:
+        df["spread_ticket_money_diff"] = df["spread_public_home_pct"] - df["spread_money_home_pct"]
+    if "total_ticket_money_diff" not in df.columns and "over_public_pct" in df.columns and "over_money_pct" in df.columns:
+        df["total_ticket_money_diff"] = df["over_public_pct"] - df["over_money_pct"]
+
     return df
 
 
@@ -627,6 +887,10 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
     away_score_std = []
     home_form_trend = []
     away_form_trend = []
+    home_l5_margin = []
+    away_l5_margin = []
+    home_l10_margin = []
+    away_l10_margin = []
     
     team_margins = {}
     team_scores = {}
@@ -642,10 +906,14 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
             l5 = np.mean(team_margins[home][-5:])
             l10 = np.mean(team_margins[home][-10:]) if len(team_margins[home]) >= 10 else l5
             home_form_trend.append(l5 - l10)
+            home_l5_margin.append(l5)
+            home_l10_margin.append(l10)
         else:
             home_margin_std.append(np.nan)
             home_score_std.append(np.nan)
             home_form_trend.append(np.nan)
+            home_l5_margin.append(np.nan)
+            home_l10_margin.append(np.nan)
         
         # Away rolling stats
         if away in team_margins and len(team_margins[away]) >= 5:
@@ -654,10 +922,14 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
             l5 = np.mean(team_margins[away][-5:])
             l10 = np.mean(team_margins[away][-10:]) if len(team_margins[away]) >= 10 else l5
             away_form_trend.append(l5 - l10)
+            away_l5_margin.append(l5)
+            away_l10_margin.append(l10)
         else:
             away_margin_std.append(np.nan)
             away_score_std.append(np.nan)
             away_form_trend.append(np.nan)
+            away_l5_margin.append(np.nan)
+            away_l10_margin.append(np.nan)
         
         # Update history (strict: only when scores are present)
         home_score = row.get("home_score")
@@ -683,6 +955,10 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
     df["away_score_std"] = away_score_std
     df["home_form_trend"] = home_form_trend
     df["away_form_trend"] = away_form_trend
+    df["home_l5_margin"] = home_l5_margin
+    df["away_l5_margin"] = away_l5_margin
+    df["home_l10_margin"] = home_l10_margin
+    df["away_l10_margin"] = away_l10_margin
     
     print(f"      home_margin_std: {df['home_margin_std'].notna().sum()}/{len(df)} computed")
     print(f"      away_margin_std: {df['away_margin_std'].notna().sum()}/{len(df)} computed")
@@ -690,7 +966,78 @@ def compute_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
     print(f"      away_score_std: {df['away_score_std'].notna().sum()}/{len(df)} computed")
     print(f"      home_form_trend: {df['home_form_trend'].notna().sum()}/{len(df)} computed")
     print(f"      away_form_trend: {df['away_form_trend'].notna().sum()}/{len(df)} computed")
+    print(f"      home_l5_margin: {df['home_l5_margin'].notna().sum()}/{len(df)} computed")
+    print(f"      away_l5_margin: {df['away_l5_margin'].notna().sum()}/{len(df)} computed")
+    print(f"      home_l10_margin: {df['home_l10_margin'].notna().sum()}/{len(df)} computed")
+    print(f"      away_l10_margin: {df['away_l10_margin'].notna().sum()}/{len(df)} computed")
     
+    return df
+
+
+def compute_standings_positions(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute league standings position (1-15 scaled) using pre-game records."""
+    print("\n[6b/8] Computing standings positions...")
+
+    df = df.sort_values(["season", "game_date"]).reset_index(drop=True) if "season" in df.columns else df.sort_values("game_date").reset_index(drop=True)
+
+    home_positions = []
+    away_positions = []
+    current_season = None
+    records: dict[str, tuple[int, int]] = {}
+
+    def win_pct(team: str) -> float:
+        wins, losses = records.get(team, (0, 0))
+        games = wins + losses
+        return wins / games if games > 0 else 0.5
+
+    for _, row in df.iterrows():
+        season = row["season"] if "season" in df.columns else None
+        if season != current_season:
+            records = {}
+            current_season = season
+
+        home = row["home_team"]
+        away = row["away_team"]
+
+        teams = set(records.keys()) | {home, away}
+        rankings = sorted(teams, key=lambda t: (-win_pct(t), t))
+        total_teams = len(rankings) if rankings else 1
+
+        rank_map = {team: idx + 1 for idx, team in enumerate(rankings)}
+
+        def scaled_position(team: str) -> float:
+            wins, losses = records.get(team, (0, 0))
+            games = wins + losses
+            if games == 0:
+                return 8.0
+            rank = rank_map.get(team, 8)
+            pos = int(np.ceil(rank / total_teams * 15))
+            return float(min(max(pos, 1), 15))
+
+        home_positions.append(scaled_position(home))
+        away_positions.append(scaled_position(away))
+
+        # Update records with current game outcome (post-game)
+        home_score = row.get("home_score")
+        away_score = row.get("away_score")
+        if pd.notna(home_score) and pd.notna(away_score):
+            home_wins, home_losses = records.get(home, (0, 0))
+            away_wins, away_losses = records.get(away, (0, 0))
+            if home_score > away_score:
+                home_wins += 1
+                away_losses += 1
+            elif away_score > home_score:
+                away_wins += 1
+                home_losses += 1
+            records[home] = (home_wins, home_losses)
+            records[away] = (away_wins, away_losses)
+
+    df["home_position"] = home_positions
+    df["away_position"] = away_positions
+    df["position_diff"] = df["away_position"] - df["home_position"]
+
+    print(f"      home_position: {df['home_position'].notna().sum()}/{len(df)} computed")
+    print(f"      away_position: {df['away_position'].notna().sum()}/{len(df)} computed")
     return df
 
 
@@ -702,6 +1049,7 @@ def compute_h2h_features(df: pd.DataFrame) -> pd.DataFrame:
     
     h2h_games = []
     h2h_margin = []
+    h2h_win_rate = []
     
     matchup_history = {}  # (team1, team2) -> list of margins (from team1 perspective)
     
@@ -712,15 +1060,19 @@ def compute_h2h_features(df: pd.DataFrame) -> pd.DataFrame:
         
         if key in matchup_history and len(matchup_history[key]) > 0:
             history = matchup_history[key]
+            recent = history[-5:]
             h2h_games.append(len(history))
             # Get from home team's perspective
             if home == key[0]:
-                h2h_margin.append(np.mean(history[-5:]))
+                h2h_margin.append(np.mean(recent))
+                h2h_win_rate.append(sum(1 for m in recent if m > 0) / len(recent))
             else:
-                h2h_margin.append(-np.mean(history[-5:]))
+                h2h_margin.append(-np.mean(recent))
+                h2h_win_rate.append(sum(1 for m in recent if m < 0) / len(recent))
         else:
             h2h_games.append(0)
             h2h_margin.append(np.nan)
+            h2h_win_rate.append(0.5)
         
         # Update history (strict: only when scores are present)
         home_score = row.get("home_score")
@@ -738,9 +1090,11 @@ def compute_h2h_features(df: pd.DataFrame) -> pd.DataFrame:
     
     df["h2h_games"] = h2h_games
     df["h2h_margin"] = h2h_margin
+    df["h2h_win_rate"] = h2h_win_rate
     
     print(f"      h2h_games: {(df['h2h_games'] > 0).sum()}/{len(df)} with history")
     print(f"      h2h_margin: {df['h2h_margin'].notna().sum()}/{len(df)} computed")
+    print(f"      h2h_win_rate: {df['h2h_win_rate'].notna().sum()}/{len(df)} computed")
     
     return df
 
@@ -882,6 +1236,9 @@ def main():
     
     # Add betting splits columns (no placeholders)
     df = add_betting_splits_defaults(df)
+
+    # Merge historical betting splits if available
+    df = merge_betting_splits_history(df)
     
     # Compute injury impact from inactive_players.csv
     if args.skip_injuries:
@@ -897,6 +1254,9 @@ def main():
     
     # Compute rolling features (margin_std, form_trend, etc.)
     df = compute_rolling_features(df)
+
+    # Compute standings positions
+    df = compute_standings_positions(df)
     
     # Compute H2H features
     df = compute_h2h_features(df)

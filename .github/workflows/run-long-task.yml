@@ -1,0 +1,39 @@
+name: Run Long Task
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Command to run (e.g., python scripts/backtest_extended.py)"
+        required: true
+        default: "python scripts/backtest_extended.py"
+
+jobs:
+  run-task:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Run task
+        run: |
+          set -e
+          echo "Running: ${{ github.event.inputs.task }}"
+          ${{ github.event.inputs.task }}

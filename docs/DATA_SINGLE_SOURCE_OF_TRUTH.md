@@ -17,17 +17,15 @@ data/processed/training_data.csv
 | Attribute | Value |
 |-----------|-------|
 | Rows | 3,969 games |
-| Columns | 326 features |
+| Columns | 327 columns |
 | Date Range | 2023-01-01 to 2026-01-08 |
 | Injury Data | ✅ 100% coverage |
 | FG Labels | ✅ 100% coverage |
-| 1H Labels | 81.2% coverage (2022-23 season lacks 1H lines) |
+| 1H Labels | 81.2% overall coverage (99.6% since 2023-05-01) |
 
 ### Season Breakdown
-- 2022-23: 774 games (partial season, no 1H lines)
-- 2023-24: 1,319 games (99.6% 1H coverage)
-- 2024-25: 1,321 games (99.8% 1H coverage)
-- 2025-26: 555 games (to date, 99.8% 1H coverage)
+- Early 2023 segment: drives overall 1H coverage down (historical 1H lines are sparse)
+- Since 2023-05-01 window: 99.6%+ 1H coverage (enforced window for coverage gates)
 
 ---
 
@@ -75,7 +73,11 @@ data/processed/training_data.csv
 Rules:
 - Do NOT rebuild or merge raw data for backtests.
 - Do NOT use training_data_all_seasons or any ad-hoc merge outputs.
-- If the file is missing, restore it from git or download from Azure.
+- If the file is missing, download it from Azure (`training_data/latest/`) and verify checksum.
+
+Backtesting phase is consume-only:
+- Backtest scripts must only read the audited `training_data.csv` artifact.
+- Any rebuild/merge/backfill belongs to the data engineering phase only.
 
 ---
 
@@ -84,8 +86,11 @@ Rules:
 Rebuilds are for data engineering only and are not part of backtest runs:
 
 ```bash
-# Rebuild full training data from raw sources
+# Default behavior downloads prebuilt audited data from Azure (no rebuild)
 python scripts/build_training_data_complete.py
+
+# Explicit rebuild from raw sources (data engineering only)
+python scripts/build_training_data_complete.py --rebuild-from-raw
 ```
 
 Outputs:

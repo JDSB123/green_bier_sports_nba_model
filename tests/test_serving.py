@@ -230,5 +230,46 @@ def test_predict_game_with_only_fg_lines(app_with_engine):
     data = response.json()
     assert "full_game" in data
 
+def test_executive_summary_allows_1h_only_lines(app_with_engine, monkeypatch):
+    """Test executive summary returns 1H picks even when FG lines are missing."""
+    async def fake_fetch_todays_games(target_date, include_records=True):
+        return [{
+            "home_team": "Boston Celtics",
+            "away_team": "New York Knicks",
+            "commence_time": "2026-01-16T00:00:00Z",
+            "home_team_record": {"wins": 10, "losses": 5, "source": "the_odds_api"},
+            "away_team_record": {"wins": 8, "losses": 7, "source": "the_odds_api"},
+            "_data_unified": True,
+        }]
+
+    def fake_extract_consensus_odds(game, as_of_utc=None):
+        return {
+            "home_spread": None,
+            "total": None,
+            "fh_home_spread": -1.5,
+            "fh_total": 110.5,
+        }
+
+    async def fake_save_odds(data, out_dir=None, prefix="odds"):
+        return "/tmp/odds.json"
+
+    monkeypatch.setattr("src.utils.slate_analysis.fetch_todays_games", fake_fetch_todays_games)
+    monkeypatch.setattr("src.utils.slate_analysis.extract_consensus_odds", fake_extract_consensus_odds)
+    monkeypatch.setattr("src.ingestion.the_odds.save_odds", fake_save_odds)
+
+    client = TestClient(app_with_engine)
+    response = client.get("/slate/today/executive?use_splits=false")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_plays"] >= 1
+    assert any(play["period"] == "1H" for play in data["plays"])
+
+    call = app_with_engine.state.engine.predict_all_markets.call_args
+    assert call.kwargs["fg_spread_line"] is None
+    assert call.kwargs["fg_total_line"] is None
+    assert call.kwargs["fh_spread_line"] == -1.5
+    assert call.kwargs["fh_total_line"] == 110.5
+
 def _read_version() -> str:
     return (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip()

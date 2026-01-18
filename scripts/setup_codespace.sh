@@ -21,6 +21,72 @@ if [ ! -f .env ]; then
   fi
 fi
 
+sync_env_var() {
+  local key="$1"
+  local value="${!key:-}"
+
+  if [ -z "$value" ]; then
+    return 0
+  fi
+
+  if [ ! -f .env ]; then
+    touch .env
+  fi
+
+  SYNC_KEY="$key" SYNC_VALUE="$value" "$PYTHON_BIN" - <<'PY'
+from pathlib import Path
+import os
+
+key = os.environ["SYNC_KEY"]
+value = os.environ["SYNC_VALUE"]
+path = Path(".env")
+lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+out = []
+found = False
+
+for line in lines:
+    if line.startswith(f"{key}="):
+        out.append(f"{key}={value}")
+        found = True
+    else:
+        out.append(line)
+
+if not found:
+    out.append(f"{key}={value}")
+
+path.write_text("\n".join(out) + "\n", encoding="utf-8")
+PY
+}
+
+write_secret_file() {
+  local key="$1"
+  local value="${!key:-}"
+
+  if [ -z "$value" ]; then
+    return 0
+  fi
+
+  local secret_path="secrets/$key"
+  printf '%s' "$value" > "$secret_path"
+  chmod 600 "$secret_path" 2>/dev/null || true
+}
+
+SYNC_KEYS=(
+  THE_ODDS_API_KEY
+  API_BASKETBALL_KEY
+  ACTION_NETWORK_USERNAME
+  ACTION_NETWORK_PASSWORD
+  SERVICE_API_KEY
+  BETSAPI_KEY
+  KAGGLE_API_TOKEN
+  TEAMS_WEBHOOK_URL
+)
+
+for key in "${SYNC_KEYS[@]}"; do
+  sync_env_var "$key"
+  write_secret_file "$key"
+done
+
 if [ "${USE_SYSTEM_PYTHON:-0}" = "1" ]; then
   "$PYTHON_BIN" -m pip install -r requirements.txt
 else
@@ -51,4 +117,5 @@ Next steps:
 - Start API: docker compose up -d
 - Health check: curl http://localhost:8090/health
 - Predictions: curl http://localhost:8090/slate/today
+Note: Codespaces secrets are synced to .env and secrets/ when present.
 EOF

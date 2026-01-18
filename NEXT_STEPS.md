@@ -142,7 +142,7 @@ Test optimal parameters on most recent games (not used in optimization):
 ```bash
 # Run validation backtest
 python scripts/backtest_production.py \
-  --data=data/processed/master_training_data.csv \
+   --data=data/processed/training_data.csv \
   --models-dir=models/production \
   --markets=all \
   --start-date=2025-12-01 \
@@ -348,7 +348,7 @@ After 3 months of production betting:
 Before executing optimizations:
 
 1. **Data Quality:**
-   - ✅ Is master_training_data.csv current? (Yes - 3,195 games through 2025-26)
+   - ✅ Is training_data.csv canonical and verified? (Yes - Azure training_data/latest, 3,969 games)
    - ✅ Are all leaky features removed? (Yes - v33.0.19.0 fix)
    - ✅ Are models trained on clean data? (Yes - retrained after leakage fix)
 

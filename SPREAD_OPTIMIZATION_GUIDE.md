@@ -263,7 +263,7 @@ This optimization is designed to work independently:
 - Can run simultaneously with total/moneyline optimization
 
 ✅ **No file conflicts**
-- Reads from: `data/processed/master_training_data.csv` (read-only)
+- Reads from: `data/processed/training_data.csv` (read-only, canonical)
 - Reads from: `models/production/` (read-only)
 - Writes to: `data/backtest_results/spread_optimization/` (unique directory)
 
@@ -279,5 +279,5 @@ This optimization is designed to work independently:
 
 For questions or issues:
 1. Check the execution logs in `data/backtest_results/spread_optimization/*.log`
-2. Verify data file exists: `data/processed/master_training_data.csv`
+2. Verify data file exists: `data/processed/training_data.csv`
 3. Verify models exist: `models/production/fg_spread_model.joblib` and `1h_spread_model.joblib`

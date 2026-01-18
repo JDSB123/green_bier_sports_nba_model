@@ -7,8 +7,8 @@ All file caching operations are NO-OPs.
 This ensures:
 - Every request gets fresh data from APIs
 - No stale data persists between requests
-- ESPN standings are always current
-- Team records are always accurate
+- ESPN standings are always current when used for records
+- Team records reflect their source (ESPN preferred; recent scores fallback)
 
 Usage:
     from src.utils.api_cache import api_cache

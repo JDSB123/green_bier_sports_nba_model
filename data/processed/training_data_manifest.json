@@ -1,9 +1,9 @@
 {
-  "version": "v20260115_013831",
-  "generated_at": "2026-01-15T07:38:31.650643+00:00",
+  "version": "v20260117_175446",
+  "generated_at": "2026-01-17T17:59:19.440942+00:00",
   "file_name": "training_data.csv",
-  "sha256": "c18f6bb68ae192b045ae73c256dffcac804537d2957079b4a7c78fa43e32b427",
-  "file_size_mb": 12.5,
+  "sha256": "0eea968d3a42e1b62e654ceb55907e4f8d133b72df2404e822d18328982e91d1",
+  "file_size_mb": 12.72,
   "quality_metrics": {
     "total_games": 3969,
     "total_columns": 327,

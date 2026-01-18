@@ -32,27 +32,33 @@ def validate_feature_independence(df: pd.DataFrame) -> tuple[bool, list[str]]:
     total_line = pd.to_numeric(df["total_line"], errors="coerce")
     pred_total = pd.to_numeric(df["predicted_total"], errors="coerce")
     if (pred_total == total_line).all():
-        errors.append("CRITICAL: predicted_total == total_line for ALL rows (data corruption)")
+        errors.append(
+            "CRITICAL: predicted_total == total_line for ALL rows (data corruption)")
     elif (pred_total == total_line).sum() > len(df) * 0.1:
-        errors.append(f"WARNING: predicted_total == total_line for {(pred_total == total_line).sum()} rows")
+        errors.append(
+            f"WARNING: predicted_total == total_line for {(pred_total == total_line).sum()} rows")
 
     # Check predicted_margin != -spread_line
     spread_line = pd.to_numeric(df["spread_line"], errors="coerce")
     pred_margin = pd.to_numeric(df["predicted_margin"], errors="coerce")
     if (pred_margin == -spread_line).all():
-        errors.append("CRITICAL: predicted_margin == -spread_line for ALL rows (data corruption)")
+        errors.append(
+            "CRITICAL: predicted_margin == -spread_line for ALL rows (data corruption)")
     elif (pred_margin == -spread_line).sum() > len(df) * 0.1:
-        errors.append(f"WARNING: predicted_margin == -spread_line for {(pred_margin == -spread_line).sum()} rows")
+        errors.append(
+            f"WARNING: predicted_margin == -spread_line for {(pred_margin == -spread_line).sum()} rows")
 
     # Check spread_vs_predicted has variance
     svp = pd.to_numeric(df["spread_vs_predicted"], errors="coerce").dropna()
     if len(svp.unique()) < 10:
-        errors.append(f"CRITICAL: spread_vs_predicted has only {len(svp.unique())} unique values (should have variance)")
+        errors.append(
+            f"CRITICAL: spread_vs_predicted has only {len(svp.unique())} unique values (should have variance)")
 
     # Check total_vs_predicted has variance
     tvp = pd.to_numeric(df["total_vs_predicted"], errors="coerce").dropna()
     if len(tvp.unique()) < 10:
-        errors.append(f"CRITICAL: total_vs_predicted has only {len(tvp.unique())} unique values (should have variance)")
+        errors.append(
+            f"CRITICAL: total_vs_predicted has only {len(tvp.unique())} unique values (should have variance)")
 
     return len(errors) == 0, errors
 
@@ -66,13 +72,15 @@ def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     away_score = pd.to_numeric(df["away_score"], errors="coerce")
     spread_line = pd.to_numeric(df["spread_line"], errors="coerce")
 
-    computed_fg_spread = ((home_score - away_score) + spread_line > 0).astype(int)
+    computed_fg_spread = ((home_score - away_score) +
+                          spread_line > 0).astype(int)
     stored_fg_spread = pd.to_numeric(df["fg_spread_covered"], errors="coerce")
 
     mask = stored_fg_spread.notna() & computed_fg_spread.notna()
     mismatch = (stored_fg_spread[mask] != computed_fg_spread[mask]).sum()
     if mismatch > 0:
-        errors.append(f"WARNING: fg_spread_covered mismatches: {mismatch} rows")
+        errors.append(
+            f"WARNING: fg_spread_covered mismatches: {mismatch} rows")
 
     # FG total: home_score + away_score > total_line means over hit
     total_line = pd.to_numeric(df["total_line"], errors="coerce")
@@ -87,9 +95,29 @@ def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     return len(errors) == 0, errors
 
 
-def validate_coverage(df: pd.DataFrame) -> tuple[bool, list[str]]:
-    """Ensure minimum coverage requirements are met."""
+def validate_coverage(df: pd.DataFrame, coverage_start: str) -> tuple[bool, list[str]]:
+    """Ensure minimum coverage requirements are met.
+
+    Coverage is evaluated only for rows on/after `coverage_start` (YYYY-MM-DD)
+    to align with our enforced canonical coverage window.
+    """
     errors = []
+
+    if "game_date" not in df.columns:
+        return False, ["MISSING COLUMN: game_date"]
+
+    dates = pd.to_datetime(df["game_date"], errors="coerce", format="mixed")
+    start = pd.to_datetime(coverage_start, errors="coerce")
+    if pd.isna(start):
+        return False, [f"INVALID ARG: coverage_start='{coverage_start}' (expected YYYY-MM-DD)"]
+
+    window = df.loc[dates.notna() & (dates >= start)].copy()
+    if window.empty:
+        return False, [f"NO DATA: no rows on/after {coverage_start} to evaluate coverage"]
+
+    # Informational note (kept in errors list output block as a non-failing line)
+    errors.append(
+        f"INFO: Coverage window rows={len(window):,}/{len(df):,} (start={coverage_start})")
 
     requirements = {
         # Betting lines
@@ -112,11 +140,14 @@ def validate_coverage(df: pd.DataFrame) -> tuple[bool, list[str]]:
         if col not in df.columns:
             errors.append(f"MISSING COLUMN: {col}")
             continue
-        coverage = df[col].notna().mean() * 100
+        coverage = window[col].notna().mean() * 100
         if coverage < threshold:
-            errors.append(f"LOW COVERAGE: {col} = {coverage:.1f}% (need {threshold}%)")
+            errors.append(
+                f"LOW COVERAGE: {col} = {coverage:.1f}% (need {threshold}%)")
 
-    return len(errors) == 0, errors
+    # Ignore the INFO line for pass/fail evaluation.
+    failing = [e for e in errors if not e.startswith("INFO:")]
+    return len(failing) == 0, errors
 
 
 def validate_no_leakage(df: pd.DataFrame) -> tuple[bool, list[str]]:
@@ -130,7 +161,8 @@ def validate_no_leakage(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
     correlation = pred_total.corr(actual_total)
     if correlation > 0.7:
-        errors.append(f"POTENTIAL LEAKAGE: predicted_total correlates {correlation:.2f} with actual total (too high)")
+        errors.append(
+            f"POTENTIAL LEAKAGE: predicted_total correlates {correlation:.2f} with actual total (too high)")
 
     # predicted_margin vs actual margin
     actual_margin = df["home_score"] - df["away_score"]
@@ -138,20 +170,28 @@ def validate_no_leakage(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
     correlation = pred_margin.corr(actual_margin)
     if correlation > 0.7:
-        errors.append(f"POTENTIAL LEAKAGE: predicted_margin correlates {correlation:.2f} with actual margin (too high)")
+        errors.append(
+            f"POTENTIAL LEAKAGE: predicted_margin correlates {correlation:.2f} with actual margin (too high)")
 
     return len(errors) == 0, errors
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate training data integrity")
+    parser = argparse.ArgumentParser(
+        description="Validate training data integrity")
     parser.add_argument(
         "--data",
         type=Path,
         default=PROJECT_ROOT / "data" / "processed" / "training_data.csv",
         help="Path to training data",
     )
-    parser.add_argument("--strict", action="store_true", help="Fail on any warning")
+    parser.add_argument(
+        "--coverage-start",
+        default="2023-05-01",
+        help="Only enforce coverage thresholds on/after this date (YYYY-MM-DD)",
+    )
+    parser.add_argument("--strict", action="store_true",
+                        help="Fail on any warning")
     args = parser.parse_args()
 
     print("=" * 70)
@@ -176,7 +216,7 @@ def main() -> int:
     validations = [
         ("Feature Independence", validate_feature_independence),
         ("Label Correctness", validate_labels),
-        ("Coverage Requirements", validate_coverage),
+        ("Coverage Requirements", lambda d: validate_coverage(d, args.coverage_start)),
         ("No Data Leakage", validate_no_leakage),
     ]
 
@@ -199,11 +239,16 @@ def main() -> int:
         print()
         print("Key Statistics:")
         print(f"  Games: {len(df):,}")
-        print(f"  Date Range: {df['game_date'].min()} to {df['game_date'].max()}")
-        print(f"  predicted_total unique values: {df['predicted_total'].nunique():,}")
-        print(f"  predicted_margin unique values: {df['predicted_margin'].nunique():,}")
-        print(f"  spread_vs_predicted range: [{df['spread_vs_predicted'].min():.1f}, {df['spread_vs_predicted'].max():.1f}]")
-        print(f"  total_vs_predicted range: [{df['total_vs_predicted'].min():.1f}, {df['total_vs_predicted'].max():.1f}]")
+        print(
+            f"  Date Range: {df['game_date'].min()} to {df['game_date'].max()}")
+        print(
+            f"  predicted_total unique values: {df['predicted_total'].nunique():,}")
+        print(
+            f"  predicted_margin unique values: {df['predicted_margin'].nunique():,}")
+        print(
+            f"  spread_vs_predicted range: [{df['spread_vs_predicted'].min():.1f}, {df['spread_vs_predicted'].max():.1f}]")
+        print(
+            f"  total_vs_predicted range: [{df['total_vs_predicted'].min():.1f}, {df['total_vs_predicted'].max():.1f}]")
         return 0
     else:
         print("✗ VALIDATION FAILED")

@@ -118,6 +118,44 @@ class TestPeriodPredictor:
         # Edge = predicted_total - total_line = 225.0 - 220.0 = 5.0
         assert result["edge"] == pytest.approx(5.0, rel=0.01)
 
+    def test_map_1h_features_to_unified_names(self):
+        """Test that 1H features override unified FG keys for 1H predictions."""
+        from src.prediction.engine import map_1h_features_to_fg_names
+
+        features = {
+            "home_ppg": 110.0,
+            "away_ppg": 105.0,
+            "home_margin": 3.0,
+            "away_margin": -3.0,
+            "home_pace": 100.0,
+            "away_pace": 99.0,
+            "predicted_margin": 4.0,
+            "predicted_total": 220.0,
+            "home_ppg_1h": 55.0,
+            "away_ppg_1h": 52.0,
+            "home_margin_1h": 1.5,
+            "away_margin_1h": -1.5,
+            "home_pace_1h": 52.0,
+            "away_pace_1h": 50.0,
+            "predicted_margin_1h": 2.0,
+            "predicted_total_1h": 110.0,
+            "dynamic_hca_1h": 1.5,
+        }
+
+        mapped = map_1h_features_to_fg_names(features)
+
+        assert mapped["home_ppg"] == 55.0
+        assert mapped["away_ppg"] == 52.0
+        assert mapped["home_margin"] == 1.5
+        assert mapped["away_margin"] == -1.5
+        assert mapped["home_pace"] == 52.0
+        assert mapped["away_pace"] == 50.0
+        assert mapped["predicted_margin"] == 2.0
+        assert mapped["predicted_total"] == 110.0
+        assert mapped["dynamic_hca"] == 1.5
+        assert mapped["home_court_advantage"] == 1.5
+        assert mapped["home_avg_margin"] == 1.5
+
 class TestUnifiedPredictionEngine:
     """Tests for the UnifiedPredictionEngine class."""
 
