@@ -44,6 +44,32 @@ LEAKY_FEATURES_BLACKLIST = [
     "home_fgm", "away_fgm",
     "home_dreb", "away_dreb",
     "home_efg_pct", "away_efg_pct",
+    
+    # CRITICAL LEAKAGE PREVENTION (Added 2026-01-18)
+    "predicted_margin",
+    "spread_vs_predicted",
+    "predicted_total",
+    "total_vs_predicted",
+    "home_avg_margin", 
+    "away_avg_margin",
+    
+    # AGGRESSIVE LEAKAGE PREVENTION (Season stats likely include current game)
+    "home_ppg", "away_ppg", 
+    "home_papg", "away_papg",
+    "home_win_pct", "away_win_pct",
+    "win_pct_diff", "ppg_diff",
+    "net_rating_diff",
+    "home_pts", "away_pts", # aliases
+    
+    # 2026-01-18: THE SMOKING GUNS (94% accuracy specific leaks)
+    "home_margin", "away_margin", # Almost certainly actual game margin or included in average
+    "home_pace", "away_pace", # Likely actual game pace or included in average
+    "home_net_rtg", "away_net_rtg", # Efficiency often calculated from box score
+    "home_elo", "away_elo", "elo_diff", # ELO updated post-game leaks result
+    "h2h_margin", # H2H margin likely includes current game if not carefully lagged
+    "home_form_trend", "away_form_trend", # L5 trends likely include current game
+
+
 ]
 
 

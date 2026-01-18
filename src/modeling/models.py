@@ -157,6 +157,8 @@ class SpreadsModel(BaseModel):
     """
 
     # Core features that have predictive value based on historical data
+    # NOTE: Removed 'predicted_margin' and 'spread_vs_predicted' to prevent 
+    # training data leakage (where historical stats might include the target game).
     DEFAULT_FEATURES = [
         # Team performance
         "home_ppg", "home_papg", "home_win_pct", "home_avg_margin",
@@ -169,10 +171,9 @@ class SpreadsModel(BaseModel):
         # Head-to-head
         "h2h_win_pct", "h2h_avg_margin",
         # Derived
-        "win_pct_diff", "ppg_diff", "predicted_margin",
+        "win_pct_diff", "ppg_diff",
         # *** LINE FEATURES *** (market information)
         "spread_line",  # The actual spread line
-        "spread_vs_predicted",  # Model vs market disagreement
         "spread_opening_line",
         "spread_line_std",  # Book disagreement
         # ATS performance
@@ -351,10 +352,9 @@ class TotalsModel(BaseModel):
         # Dynamic Home Court Advantage (affects pace/scoring)
         "dynamic_hca",
         # Derived
-        "predicted_total",
+        # NOTE: Removed 'predicted_total' and 'total_vs_predicted' to prevent usage of leaked training data
         # *** LINE FEATURES *** (market information)
         "total_line",  # The actual total line
-        "total_vs_predicted",  # Model vs market disagreement
         "total_opening_line",
         "total_line_std",  # Book disagreement
         # Over/under tendencies
@@ -578,15 +578,15 @@ class TeamTotalsModel(BaseModel):
                 "scikit-learn required. Install with: pip install scikit-learn")
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "TeamTotalsModel":
-        
+
         # Filter to only available features
         available_features = [f for f in self.feature_columns if f in X.columns]
         missing_features = set(self.feature_columns) - set(available_features)
-        
+
         if missing_features:
             logger.info(f"Feature filtering: {len(available_features)}/{len(self.feature_columns)} available ({len(missing_features)} missing)")
             logger.info(f"Using {len(available_features)}/{len(self.feature_columns)} requested features ({len(available_features)/len(self.feature_columns):.1%})")
-        
+
         self.feature_columns = available_features
         X_features = X[self.feature_columns].copy()
 

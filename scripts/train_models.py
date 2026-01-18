@@ -222,7 +222,7 @@ def train_single_market(
 ) -> Optional[ModelMetrics]:
     """
     Train a single market model (one of the 4 independent models).
-    
+
     Args:
         market_key: One of 'fg_spread', 'fg_total', '1h_spread', '1h_total'.
         train_df: Training data DataFrame
@@ -230,7 +230,7 @@ def train_single_market(
         model_type: 'logistic' or 'gradient_boosting'
         output_dir: Directory to save model
         tracker: ModelTracker for version registration
-        
+
     Returns:
         Test ModelMetrics if successful, None otherwise
     """
@@ -238,22 +238,22 @@ def train_single_market(
     if not config:
         print(f"  [ERROR] Unknown market: {market_key}")
         return None
-    
+
     print(f"\n{'='*60}")
     print(f"Training {config['name']} Model ({market_key})")
     print(f"{'='*60}")
-    
+
     label_col = config["label_col"]
     line_col = config["line_col"]
     period = config["period"]
     model_class = config["model_class"]
     output_file = config["output_file"]
-    
+
     # Check if label column exists
     if label_col not in train_df.columns:
         print(f"  [WARN] Label column '{label_col}' not found. Skipping.")
         return None
-    
+
     # Get features for this market
     try:
         if period == "fg":
@@ -292,11 +292,11 @@ def train_single_market(
         available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=0.3)
 
     print(f"  Using {len(available_features)} of {len(features)} possible features")
-    
+
     if len(available_features) < 5:
         print(f"  [WARN] Too few features available ({len(available_features)}). Skipping.")
         return None
-    
+
     # Filter data
     if line_col:
         train_market = train_df[train_df[line_col].notna() & train_df[label_col].notna()].copy()
@@ -304,32 +304,32 @@ def train_single_market(
     else:
         train_market = train_df[train_df[label_col].notna()].copy()
         test_market = test_df[test_df[label_col].notna()].copy()
-    
+
     print(f"  Train size: {len(train_market)}, Test size: {len(test_market)}")
-    
+
     if len(train_market) < 20:
         print(f"  [WARN] Insufficient data ({len(train_market)} games). Skipping.")
         return None
-    
+
     # Initialize and train model
     model = model_class(
         name=f"{market_key}_classifier",
         model_type=model_type,
         feature_columns=available_features,
     )
-    
+
     model.fit(train_market, train_market[label_col])
-    
+
     # Evaluate on training
     train_metrics = model.evaluate(train_market, train_market[label_col])
     print_metrics(f"{config['name']} (Train)", train_metrics)
-    
+
     # Evaluate on test
     test_metrics = None
     if len(test_market) > 0:
         test_metrics = model.evaluate(test_market, test_market[label_col])
         print_metrics(f"{config['name']} (Test)", test_metrics)
-        
+
         # High-confidence bucket analysis
         try:
             proba = model.predict_proba(test_market)[:, 1]
@@ -348,12 +348,12 @@ def train_single_market(
                 print(f"  High-conf (>=60%): {acc_high:.1%} acc on {high_n} bets, ROI: {roi_high:+.1%}")
         except Exception as e:
             logger.debug(f"Could not compute high-conf stats: {e}")
-    
+
     # Save model (standardized .joblib format for all models)
     model_path = os.path.join(output_dir, output_file)
     model.save(model_path)
     print(f"  Saved: {model_path}")
-    
+
     # Register version
     try:
         version_id = f"{MODEL_VERSION}-{market_key}-{model_type}"
@@ -380,7 +380,7 @@ def train_single_market(
         )
     except Exception as e:
         print(f"  [WARN] Could not register model version: {e}")
-    
+
     return test_metrics if test_metrics else train_metrics
 
 
@@ -394,38 +394,38 @@ def train_all_markets(
 ) -> Dict[str, ModelMetrics]:
     """
     Train all 4 independent market models.
-    
+
     Args:
         model_type: 'logistic' or 'gradient_boosting'
         test_size: Proportion for test split
         output_dir: Directory to save models
         markets: List of market keys to train (default: all 9)
-        
+
     Returns:
         Dictionary of market_key -> ModelMetrics
     """
     from typing import List, Dict
-    
+
     output_dir = output_dir or os.path.join(settings.data_processed_dir, "models")
     os.makedirs(output_dir, exist_ok=True)
     tracker = ModelTracker()
-    
+
     print(f"\n{'='*70}")
     print(f"Training All 4 Independent Market Models")
     print(f"{'='*70}")
     print(f"Model Type: {model_type}")
     print(f"Output Dir: {output_dir}")
-    
+
     # Determine which markets to train
     if markets is None:
         markets = list(MARKET_CONFIG.keys())
-    
+
     print(f"Markets to train: {', '.join(markets)}")
-    
+
     # Load training data
     print("\nLoading supplementary data...")
     injuries_df, splits_df = load_supplementary_data(settings.data_processed_dir)
-    
+
     # Check for custom data file first
     if data_file and os.path.exists(data_file):
         training_path = data_file
@@ -437,7 +437,7 @@ def train_all_markets(
         if not os.path.exists(training_path) and os.path.exists(fh_path):
             print(f"Using first-half augmented training file: {fh_path}")
             training_path = fh_path
-    
+
     if not os.path.exists(training_path):
         print("\nNo training data available!")
         print("Expected data/processed/training_data.csv (canonical 2023+ dataset).")
@@ -445,7 +445,7 @@ def train_all_markets(
         return {}
 
     training_df = pd.read_csv(training_path, low_memory=False)
-    
+
     # Handle date column naming (game_date vs date)
     if "game_date" in training_df.columns and "date" not in training_df.columns:
         training_df["date"] = pd.to_datetime(training_df["game_date"], format="mixed", errors="coerce")
@@ -456,20 +456,20 @@ def train_all_markets(
     if training_df.empty:
         print("Training data file is empty!")
         return {}
-    
+
     print(f"Training dataset size: {len(training_df)} games")
-    
+
     # Enrich with additional features
     print("\nEnriching training data...")
     training_df = enrich_with_injury_features(training_df, injuries_df)
     training_df = enrich_with_rlm_features(training_df, splits_df)
-    
+
     # Compute derived labels if missing
     training_df = ensure_all_labels(training_df)
-    
+
     # Temporal split
     training_df = training_df.sort_values("date")
-    
+
     if cutoff_date:
         # Date-based temporal split (more robust)
         cutoff = pd.to_datetime(cutoff_date)
@@ -484,7 +484,7 @@ def train_all_markets(
         train_df = training_df.iloc[:split_idx]
         test_df = training_df.iloc[split_idx:]
         print(f"\nTrain size: {len(train_df)}, Test size: {len(test_df)}")
-    
+
     # Train each market
     results = {}
     for market_key in markets:
@@ -498,31 +498,31 @@ def train_all_markets(
         )
         if metrics:
             results[market_key] = metrics
-    
+
     # Summary
     print(f"\n{'='*70}")
     print(f"Training Complete - {len(results)}/4 markets trained successfully")
     print(f"{'='*70}")
-    
+
     for market_key, metrics in results.items():
         print(f"  {market_key}: {metrics.accuracy:.1%} acc, {metrics.roi:+.1%} ROI")
-    
+
     return results
 
 
 def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
     """Ensure all 6 market labels exist in the DataFrame."""
     df = df.copy()
-    
+
     # Full game labels
     if "spread_covered" not in df.columns and "spread_line" in df.columns:
         df["actual_margin"] = df["home_score"] - df["away_score"]
         df["spread_covered"] = df.apply(
-            lambda r: int(r["actual_margin"] > -r["spread_line"]) 
+            lambda r: int(r["actual_margin"] > -r["spread_line"])
             if pd.notna(r.get("spread_line")) else None,
             axis=1
         )
-    
+
     if "total_over" not in df.columns and "total_line" in df.columns:
         df["actual_total"] = df["home_score"] + df["away_score"]
         df["total_over"] = df.apply(
@@ -530,13 +530,13 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
             if pd.notna(r.get("total_line")) else None,
             axis=1
         )
-    
+
     # First half labels (if quarter data available)
     if "home_q1" in df.columns and "home_q2" in df.columns:
         for c in ["home_q1", "home_q2", "away_q1", "away_q2"]:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors="coerce")
-        
+
         # IMPORTANT: Don't use fillna(0) - preserve NaN when quarter scores missing
         # Only compute 1H score when BOTH quarters are present
         df["home_1h_score"] = np.where(
@@ -549,32 +549,32 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
             df["away_q1"] + df["away_q2"],
             np.nan
         )
-        
+
         if "home_1h_win" not in df.columns:
             df["home_1h_win"] = np.where(
                 df["home_1h_score"].notna() & df["away_1h_score"].notna(),
                 (df["home_1h_score"] > df["away_1h_score"]).astype(int),
                 np.nan
             )
-        
+
         if "actual_1h_margin" not in df.columns:
             df["actual_1h_margin"] = df["home_1h_score"] - df["away_1h_score"]
             df["actual_1h_total"] = df["home_1h_score"] + df["away_1h_score"]
-        
+
         if "1h_spread_covered" not in df.columns and "1h_spread_line" in df.columns:
             df["1h_spread_covered"] = df.apply(
                 lambda r: int(r["actual_1h_margin"] > -r["1h_spread_line"])
                 if pd.notna(r.get("1h_spread_line")) and pd.notna(r.get("actual_1h_margin")) else None,
                 axis=1
             )
-        
+
         if "1h_total_over" not in df.columns and "1h_total_line" in df.columns:
             df["1h_total_over"] = df.apply(
                 lambda r: int(r["actual_1h_total"] > r["1h_total_line"])
                 if pd.notna(r.get("1h_total_line")) and pd.notna(r.get("actual_1h_total")) else None,
                 axis=1
             )
-    
+
     return df
 
 
@@ -612,7 +612,7 @@ def train_models(
         return
 
     training_df = pd.read_csv(training_path, low_memory=False)
-    
+
     # Handle date column naming (game_date vs date)
     if "game_date" in training_df.columns and "date" not in training_df.columns:
         training_df["date"] = pd.to_datetime(training_df["game_date"], format="mixed", errors="coerce")
@@ -914,7 +914,7 @@ def train_first_half_models(
     output_dir: Optional[str] = None,
 ) -> None:
     """Train first half spread and total models.
-    
+
     Args:
         model_type: Type of classifier to use ('logistic' or 'gradient_boosting')
         test_size: Proportion of data for testing
@@ -1082,7 +1082,7 @@ def main():
         markets = ["1h_spread", "1h_total"]
     else:
         markets = list(MARKET_CONFIG.keys())
-    
+
     # Legacy mode (backward compatibility)
     if args.legacy:
         print("\n[INFO] Legacy mode: Using old training functions")
