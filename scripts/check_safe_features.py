@@ -26,10 +26,10 @@ for feat in features_to_check:
         if len(valid) == 0:
             print(f"{feat:20s}: No valid data")
             continue
-            
+
         corr = valid[feat].corr(valid[target])
         print(f"{feat:20s}: {corr:.4f}")
-        
+
         # Check "Identity" leak
         is_identical = (valid[feat] == valid[target]).mean()
         if is_identical > 0.1:

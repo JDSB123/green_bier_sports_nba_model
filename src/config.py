@@ -112,7 +112,7 @@ Optimization Results (FG Spread, 2026-01-17 Analysis):
     - CAUTION: Previous results were inflated due to in-sample testing
     - True out-of-sample (2023-24): ~53% classifier, ~58% edge signal
     - Edge signal |svp| >= 5 shows best risk-adjusted returns
-    
+
     Conservative Thresholds (out-of-sample validated):
     - spread_min_confidence: 0.55 (55%)
     - spread_min_edge: 5.0 pts (high-conviction only)

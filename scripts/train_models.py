@@ -308,7 +308,7 @@ def train_single_market(
              # These features capture team strength from full-game data (large sample)
              # Model learns 1H dynamics by predicting 1H outcomes from FG-level statistics
              # Logistic regression prevents overfitting on noisy 1H-specific patterns
-             
+
              whitelist = set(available_features)  # Keep all features
              effective_blacklist = blacklist - whitelist
              available_features = [f for f in available_features if f not in effective_blacklist]
@@ -1140,11 +1140,11 @@ def main():
     # Unified training mode
     if args.ensemble:
         print("\n[INFO] Ensemble mode: Training both logistic and gradient boosting models")
-        
+
         # For 1H markets, force logistic-only (best practice for noisy targets)
         fg_markets = [m for m in markets if m.startswith("fg")]
         h1_markets = [m for m in markets if m.startswith("1h")]
-        
+
         if fg_markets:
             print("\n>>> Training FG with logistic regression...")
             train_all_markets(
@@ -1164,7 +1164,7 @@ def main():
                 cutoff_date=args.cutoff_date,
                 data_file=args.data_file,
             )
-        
+
         if h1_markets:
             print("\n>>> Training 1H with LOGISTIC ONLY (Best Practice: Simple for Noisy Targets)")
             train_all_markets(
@@ -1175,7 +1175,7 @@ def main():
                 cutoff_date=args.cutoff_date,
                 data_file=args.data_file,
             )
-        
+
         return
     else:
         train_all_markets(

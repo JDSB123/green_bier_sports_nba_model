@@ -869,7 +869,7 @@ class RichFeatureBuilder:
         # Home 1H expected = avg(home's 1H offense, away's 1H defense) * pace_factor
         # Pace factor: expected_1h_pace / 110 (110 is ~baseline 1H pace across league)
         pace_adjustment = expected_1h_pace / 110.0 if expected_1h_pace > 0 else 1.0
-        
+
         home_1h_expected = (home_1h_ppg + away_1h_papg) / 2
         away_1h_expected = (away_1h_ppg + home_1h_papg) / 2
         predicted_total_1h = (home_1h_expected + away_1h_expected) * pace_adjustment

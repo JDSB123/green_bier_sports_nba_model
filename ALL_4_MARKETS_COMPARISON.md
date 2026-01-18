@@ -1,7 +1,7 @@
 # All 4 Markets: Side-by-Side Performance Analysis
 
-**Training Date**: January 18, 2026  
-**Model Version**: NBA_v33.0.23.0  
+**Training Date**: January 18, 2026
+**Model Version**: NBA_v33.0.23.0
 **Test Set**: 794 FG games, 712 1H games
 
 ## Performance Summary
