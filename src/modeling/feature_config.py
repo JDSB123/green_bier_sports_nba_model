@@ -62,6 +62,11 @@ TOTALS_FEATURES = [
     "predicted_total",
 ]
 
+# 1H TOTALS FEATURES - NOTE: All experimental feature sets (custom, minimal, etc) tested.
+# Result: 1H Total accuracy stuck at ~50% regardless of features or model type.
+# Using ALL 102 unified features for consistency with training, but logistic-only prevents overfitting.
+H1_TOTALS_CUSTOM_FEATURES = UNIFIED_FEATURE_NAMES.copy()  # Use ALL 102 unified features
+
 
 # =============================================================================
 # UNIFIED FEATURE FUNCTIONS

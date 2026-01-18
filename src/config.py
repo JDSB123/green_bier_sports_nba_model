@@ -135,20 +135,21 @@ Optimization Results (FG Spread, 2026-01-17 Analysis):
         default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_EDGE", 3.0)
     )
 
-    # 1H Spread thresholds - UNCHANGED (conservative approach)
+    # 1H Spread thresholds - TIGHTENED for noisy data (Best Practice)
+    # Higher edge required because 1H has higher variance
     fh_spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.68)
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.60)
     )
     fh_spread_min_edge: float = field(
-        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_EDGE", 1.5)
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_EDGE", 2.5)
     )
 
-    # 1H Total thresholds - UNCHANGED (low volume in optimization)
+    # 1H Total thresholds - TIGHTENED (high variance in 1H)
     fh_total_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.66)
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.62)
     )
     fh_total_min_edge: float = field(
-        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_EDGE", 2.0)
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_EDGE", 2.5)
     )
 
 

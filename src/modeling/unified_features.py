@@ -54,13 +54,13 @@ LEAKY_FEATURES_BLACKLIST = [
     "away_avg_margin",
 
     # AGGRESSIVE LEAKAGE PREVENTION (Season stats likely include current game)
-    "home_ppg", "away_ppg", 
+    "home_ppg", "away_ppg",
     "home_papg", "away_papg",
     "home_win_pct", "away_win_pct",
     "win_pct_diff", "ppg_diff",
     "net_rating_diff",
     "home_pts", "away_pts", # aliases
-    
+
     # 2026-01-18: THE SMOKING GUNS (94% accuracy specific leaks)
     "home_margin", "away_margin", # Almost certainly actual game margin or included in average
     "home_pace", "away_pace", # Likely actual game pace or included in average
@@ -282,13 +282,22 @@ ATS_FEATURES = [
 ]
 
 # -----------------------------------------------------------------------------
-# MARKET LINES (Added at prediction time)
+# MARKET LINES (Added at prediction time) - FG ONLY
+# NOTE: 1H-specific lines (1h_spread_line, 1h_total_line) are NOT included
+# in unified training to avoid 23% NaN imputation in historical FG data.
+# They are injected at PREDICTION time for 1H models via map_1h_features_to_fg_names()
 # -----------------------------------------------------------------------------
 MARKET_FEATURES = [
     Feature("spread_line", FeatureCategory.MARKET, "Current spread line", default=0.0),
     Feature("total_line", FeatureCategory.MARKET, "Current total line", default=220.0),
     Feature("spread_vs_predicted", FeatureCategory.MARKET, "Spread vs model prediction diff", default=0.0),
     Feature("total_vs_predicted", FeatureCategory.MARKET, "Total vs model prediction diff", default=0.0),
+]
+
+# 1H-Specific Market Features (injected at prediction time, NOT in training)
+H1_MARKET_FEATURES = [
+    Feature("1h_spread_line", FeatureCategory.MARKET, "Current 1H spread line", default=0.0),
+    Feature("1h_total_line", FeatureCategory.MARKET, "Current 1H total line", default=110.0),
 ]
 
 # -----------------------------------------------------------------------------

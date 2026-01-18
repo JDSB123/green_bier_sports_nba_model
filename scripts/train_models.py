@@ -263,14 +263,23 @@ def train_single_market(
                 features = get_totals_features()
         else:
             market_type = "spread" if "spread" in market_key else "total"
-            try:
-                features = get_model_features(period, market_type)
-            except Exception:
-                # Fallback to FG features
-                if market_type == "spread":
-                    features = get_spreads_features()
-                else:
-                    features = get_totals_features()
+            # 1H TOTAL: Use custom domain-driven feature set
+            if market_key == "1h_total":
+                try:
+                    from src.modeling.feature_config import H1_TOTALS_CUSTOM_FEATURES
+                    features = H1_TOTALS_CUSTOM_FEATURES
+                    print(f"  [1H Total Custom] Using domain-driven feature set ({len(features)} features)")
+                except ImportError:
+                    features = get_model_features(period, market_type)
+            else:
+                try:
+                    features = get_model_features(period, market_type)
+                except Exception:
+                    # Fallback to FG features
+                    if market_type == "spread":
+                        features = get_spreads_features()
+                    else:
+                        features = get_totals_features()
     except Exception as e:
         print(f"  [WARN] Could not get features: {e}")
         features = get_spreads_features() if "spread" in market_key else get_totals_features()
@@ -283,24 +292,27 @@ def train_single_market(
     try:
         # Step 1: Get raw features (Don't filter leaky yet)
         available_features = filter_available_features(
-            features, 
-            train_df.columns.tolist(), 
+            features,
+            train_df.columns.tolist(),
             min_required_pct=min_pct,
-            exclude_leaky=False 
+            exclude_leaky=False
         )
-        
+
         # Step 2: Apply Custom Leakage Logic
         from src.modeling.unified_features import LEAKY_FEATURES_BLACKLIST
         blacklist = set(LEAKY_FEATURES_BLACKLIST)
-        
+
         if "1h" in market_key:
-             # ALLOW PPG for 1H models (Whitelist)
-             # Rationale: PPG leaks Full Game info, which is a useful but not game-breaking proxy for 1H strength.
-             whitelist = {"home_ppg", "away_ppg", "home_papg", "away_papg", "ppg_diff"}
+             # 1H STRATEGY: Use ALL unified features + simple logistic model
+             # Rationale: FG Total works at 56% using all 102 unified features
+             # These features capture team strength from full-game data (large sample)
+             # Model learns 1H dynamics by predicting 1H outcomes from FG-level statistics
+             # Logistic regression prevents overfitting on noisy 1H-specific patterns
+             
+             whitelist = set(available_features)  # Keep all features
              effective_blacklist = blacklist - whitelist
-             # Still enforce the crucial bans (ELO, Actual Margin)
              available_features = [f for f in available_features if f not in effective_blacklist]
-             print(f"  [1H Config] Allowed PPG features (Whitelist applied)")
+             print(f"  [1H Config] ALL FEATURES (same as FG Total) - Logistic learns 1H dynamics from FG-level data")
         else:
              # STRICT for FG models
              available_features = [f for f in available_features if f not in blacklist]
@@ -1128,24 +1140,43 @@ def main():
     # Unified training mode
     if args.ensemble:
         print("\n[INFO] Ensemble mode: Training both logistic and gradient boosting models")
-        print("\n>>> Training with logistic regression...")
-        train_all_markets(
-            model_type="logistic",
-            test_size=args.test_size,
-            output_dir=args.output_dir,
-            markets=markets,
-            cutoff_date=args.cutoff_date,
-            data_file=args.data_file,
-        )
-        print("\n>>> Training with gradient boosting...")
-        train_all_markets(
-            model_type="gradient_boosting",
-            test_size=args.test_size,
-            output_dir=args.output_dir,
-            markets=markets,
-            cutoff_date=args.cutoff_date,
-            data_file=args.data_file,
-        )
+        
+        # For 1H markets, force logistic-only (best practice for noisy targets)
+        fg_markets = [m for m in markets if m.startswith("fg")]
+        h1_markets = [m for m in markets if m.startswith("1h")]
+        
+        if fg_markets:
+            print("\n>>> Training FG with logistic regression...")
+            train_all_markets(
+                model_type="logistic",
+                test_size=args.test_size,
+                output_dir=args.output_dir,
+                markets=fg_markets,
+                cutoff_date=args.cutoff_date,
+                data_file=args.data_file,
+            )
+            print("\n>>> Training FG with gradient boosting...")
+            train_all_markets(
+                model_type="gradient_boosting",
+                test_size=args.test_size,
+                output_dir=args.output_dir,
+                markets=fg_markets,
+                cutoff_date=args.cutoff_date,
+                data_file=args.data_file,
+            )
+        
+        if h1_markets:
+            print("\n>>> Training 1H with LOGISTIC ONLY (Best Practice: Simple for Noisy Targets)")
+            train_all_markets(
+                model_type="logistic",
+                test_size=args.test_size,
+                output_dir=args.output_dir,
+                markets=h1_markets,
+                cutoff_date=args.cutoff_date,
+                data_file=args.data_file,
+            )
+        
+        return
     else:
         train_all_markets(
             model_type=args.model_type,

@@ -847,8 +847,8 @@ class RichFeatureBuilder:
         # ============================================================
         # 1H MODELING (v33.0.7.0: Independent matchup-based predictions)
         # ============================================================
-        # Use actual 1H stats with matchup formula (same as FG)
-        # NO scaling from FG - truly independent predictions
+        # Use actual 1H stats with IMPROVED matchup formula
+        # 1H has different pace/rhythm than full game - account for this
 
         # 1H stats from L5 recent form
         home_1h_ppg = home_form["l5_ppg_1h"]
@@ -858,12 +858,21 @@ class RichFeatureBuilder:
         away_1h_papg = away_form["l5_papg_1h"]
         away_1h_margin = away_form["l5_margin_1h"]
 
-        # 1H Predictions using MATCHUP formula (same logic as FG)
-        # Home 1H expected = avg(home's 1H offense, away's 1H defense allowed)
-        # Away 1H expected = avg(away's 1H offense, home's 1H defense allowed)
+        # Calculate 1H pace factor (not from FG pace, but from actual 1H scoring)
+        # 1H pace = (home_1h_ppg + home_1h_papg) / 2, representing "possessions"
+        home_1h_pace = home_1h_ppg + home_1h_papg if home_1h_ppg + home_1h_papg > 0 else 55
+        away_1h_pace = away_1h_ppg + away_1h_papg if away_1h_ppg + away_1h_papg > 0 else 55
+        expected_1h_pace = (home_1h_pace + away_1h_pace) / 2
+
+        # 1H Predictions: Use ENHANCED formula
+        # Account for pace variation (faster 1H tempo = more points)
+        # Home 1H expected = avg(home's 1H offense, away's 1H defense) * pace_factor
+        # Pace factor: expected_1h_pace / 110 (110 is ~baseline 1H pace across league)
+        pace_adjustment = expected_1h_pace / 110.0 if expected_1h_pace > 0 else 1.0
+        
         home_1h_expected = (home_1h_ppg + away_1h_papg) / 2
         away_1h_expected = (away_1h_ppg + home_1h_papg) / 2
-        predicted_total_1h = home_1h_expected + away_1h_expected
+        predicted_total_1h = (home_1h_expected + away_1h_expected) * pace_adjustment
 
         # 1H Margin: Use actual 1H margin stats
         # HCA scaled for 1H (~1.5 pts vs 3 pts FG)
