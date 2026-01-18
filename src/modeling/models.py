@@ -407,6 +407,10 @@ class TotalsModel(BaseModel):
             X: Feature DataFrame
             y: Target (1 = over, 0 = under) or total score values
         """
+        available_features = [f for f in self.feature_columns if f in X.columns]
+        self.feature_columns = available_features
+
+        X_features = X[self.feature_columns].copy()
 
         # Initialize estimator
         if self.model_type == "logistic":
@@ -427,11 +431,7 @@ class TotalsModel(BaseModel):
             ("imputer", KNNImputer(n_neighbors=5)),
             ("scaler", StandardScaler()),
             ("est", estimator)
-
-        else:
-            raise ValueError(f"Unknown model_type: {self.model_type}")
-
-        pipeline= Pipeline([("scaler", StandardScaler()), ("est", estimator)])
+        ])
 
         # Apply probability calibration for classification models
         if self.use_calibration and self.model_type in ["logistic", "gradient_boosting"]:
@@ -578,12 +578,23 @@ class TeamTotalsModel(BaseModel):
                 "scikit-learn required. Install with: pip install scikit-learn")
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "TeamTotalsModel":
+        
+        # Filter to only available features
+        available_features = [f for f in self.feature_columns if f in X.columns]
+        missing_features = set(self.feature_columns) - set(available_features)
+        
+        if missing_features:
+            logger.info(f"Feature filtering: {len(available_features)}/{len(self.feature_columns)} available ({len(missing_features)} missing)")
+            logger.info(f"Using {len(available_features)}/{len(self.feature_columns)} requested features ({len(available_features)/len(self.feature_columns):.1%})")
+        
+        self.feature_columns = available_features
+        X_features = X[self.feature_columns].copy()
 
         # Initialize estimator
         if self.model_type == "logistic":
-            estimator= LogisticRegression(max_iter=1000, random_state=42)
+            estimator = LogisticRegression(max_iter=1000, random_state=42)
         elif self.model_type == "gradient_boosting":
-            estimator= GradientBoostingClassifier(
+            estimator = GradientBoostingClassifier(
                 n_estimators=100,
                 max_depth=4,
                 learning_rate=0.1,
@@ -592,33 +603,28 @@ class TeamTotalsModel(BaseModel):
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}")
 
-        pipeline= Pipeline([
+        pipeline = Pipeline([
             ("imputer", KNNImputer(n_neighbors=5)),
             ("scaler", StandardScaler()),
             ("est", estimator)
-
-        else:
-            raise ValueError(f"Unknown model_type: {self.model_type}")
-
-        pipeline= Pipeline([("scaler", StandardScaler()), ("est", estimator)])
+        ])
 
         # Apply probability calibration for classification models
         if self.use_calibration:
             logger.info(
                 f"Applying isotonic calibration to {self.model_type} team totals model")
-            calibrated_model= CalibratedClassifierCV(
+            calibrated_model = CalibratedClassifierCV(
                 pipeline,
                 method='isotonic',  # Isotonic regression for non-parametric calibration
                 cv=5,  # 5-fold cross-validation for calibration
             )
             calibrated_model.fit(X_features, y)
-            self.pipeline= calibrated_model
+            self.model = calibrated_model
         else:
             pipeline.fit(X_features, y)
-            self.pipeline= pipeline
+            self.model = pipeline
 
-        self.model= estimator
-        self.is_fitted= True
+        self.is_fitted = True
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
