@@ -13,7 +13,7 @@ df = pd.read_csv('/workspaces/green_bier_sports_nba_model/data/processed/trainin
 if "spread_covered" not in df.columns:
     df["actual_margin"] = df["home_score"] - df["away_score"]
     df["spread_covered"] = df.apply(
-        lambda r: int(r["actual_margin"] > -r["spread_line"]) 
+        lambda r: int(r["actual_margin"] > -r["spread_line"])
         if pd.notna(r.get("spread_line")) else None,
         axis=1
     )

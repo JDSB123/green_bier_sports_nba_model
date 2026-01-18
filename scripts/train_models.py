@@ -281,8 +281,33 @@ def train_single_market(
         min_pct = 0.15  # Lower threshold for period-specific models
 
     try:
-        available_features = filter_available_features(features, train_df.columns.tolist(), min_required_pct=min_pct)
+        # Step 1: Get raw features (Don't filter leaky yet)
+        available_features = filter_available_features(
+            features, 
+            train_df.columns.tolist(), 
+            min_required_pct=min_pct,
+            exclude_leaky=False 
+        )
+        
+        # Step 2: Apply Custom Leakage Logic
+        from src.modeling.unified_features import LEAKY_FEATURES_BLACKLIST
+        blacklist = set(LEAKY_FEATURES_BLACKLIST)
+        
+        if "1h" in market_key:
+             # ALLOW PPG for 1H models (Whitelist)
+             # Rationale: PPG leaks Full Game info, which is a useful but not game-breaking proxy for 1H strength.
+             whitelist = {"home_ppg", "away_ppg", "home_papg", "away_papg", "ppg_diff"}
+             effective_blacklist = blacklist - whitelist
+             # Still enforce the crucial bans (ELO, Actual Margin)
+             available_features = [f for f in available_features if f not in effective_blacklist]
+             print(f"  [1H Config] Allowed PPG features (Whitelist applied)")
+        else:
+             # STRICT for FG models
+             available_features = [f for f in available_features if f not in blacklist]
+             print(f"  [FG Config] Strict Blacklist Applied")
+
     except ValueError:
+
         # Fallback: use FG features for 1H models
         print(f"  [INFO] Using FG features for {market_key} (period features unavailable)")
         if "spread" in market_key:

@@ -157,7 +157,7 @@ class SpreadsModel(BaseModel):
     """
 
     # Core features that have predictive value based on historical data
-    # NOTE: Removed 'predicted_margin' and 'spread_vs_predicted' to prevent 
+    # NOTE: Removed 'predicted_margin' and 'spread_vs_predicted' to prevent
     # training data leakage (where historical stats might include the target game).
     DEFAULT_FEATURES = [
         # Team performance
