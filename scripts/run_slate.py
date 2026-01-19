@@ -265,6 +265,13 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
             margin-bottom: 30px;
         }}
         .summary-box h2 {{ color: #e94560; margin-bottom: 15px; }}
+        .line-note {{
+            color: #f1f5f9;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }}
         .picks-table {{
             width: 100%;
             border-collapse: collapse;
@@ -322,6 +329,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
         <div class="summary-box">
             <h2>📊 {len(analysis)} Games Analyzed</h2>
         </div>
+        <p class="line-note">Spreads and lines always reflect the home team’s perspective (positive = home underdog).</p>
 
         <table class="picks-table">
             <thead>
@@ -372,7 +380,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
                 return
 
             pick_team = p_data.get("pick")
-            market_line = p_data.get("market_line", 0)
+            market_line = p_data.get("market_line")
             pick_line = p_data.get("pick_line") if p_data.get("pick_line") is not None else market_line
             market_odds_val = p_data.get("market_odds")
             conf = p_data.get("confidence", 0)
@@ -395,10 +403,11 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
 
             # Pick display - make model prediction explicit
             if p_type == "total":
-                pick_str = f"{pick_team} {market_line}"
+                pick_str = f"{pick_team} {market_line if market_line is not None else 0:.1f}"
                 model_total = p_data.get('model_total', 0)
                 model_val = f"Total: {model_total:.1f}"
-                market_val = f"{market_line:.1f}"
+                market_val = f"{market_line if market_line is not None else 0:.1f}"
+                line_display = f"{market_line:.1f}" if market_line is not None else "N/A"
             else:
                 pick_str = f"{pick_team} {pick_line:+.1f}"
                 model_margin = p_data.get("model_margin", 0)
@@ -410,6 +419,12 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
                 else:
                     model_val = "Pick'em"
                 market_val = f"{pick_line:+.1f}"
+                if market_line is not None:
+                    home_line = market_line
+                    away_line = -market_line
+                    line_display = f"{home_line:+.1f}/{away_line:+.1f}"
+                else:
+                    line_display = "N/A"
 
             tier_class = "tier-elite" if fire_count >= 5 else ("tier-strong" if fire_count >= 4 else "")
             edge_class = "edge-positive" if edge_pts > 0 else "edge-negative"
@@ -420,6 +435,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
                 "odds": format_odds_html(market_odds_val),
                 "model": model_val,
                 "market_line": market_val,
+                "line_display": line_display,
                 "edge": f"{edge_pts:+.1f}",
                 "fire_count": fire_count,
                 "tier_class": tier_class,
@@ -443,7 +459,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
                 <td class="pick-cell">{p['pick']}</td>
                 <td>{p['odds']}</td>
                 <td class="model-val">{p['model']}</td>
-                <td class="market-val">{p['market_line']}</td>
+                <td class="market-val">{p['line_display']}</td>
                 <td class="{p['edge_class']}">{p['edge']} pts</td>
                 <td class="fire fire-{p['fire_count']}">{"🔥" * p['fire_count']}</td>
             </tr>
@@ -528,8 +544,10 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         log("=" * 155)
 
         # Header
-        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Prediction':<12} | {'Line':<8} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
+        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Prediction':<12} | {'Line':<12} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
         log(header)
+        log("-" * 155)
+        log("NOTE: 'Line' column shows home/away view (home_line/away_line; home positive = home underdog); 'Pick' still shows the team we\'re backing.")
         log("-" * 155)
 
         for game in analysis:
@@ -560,9 +578,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     return
 
                 pick_team = p_data.get("pick")
-                market_line = p_data.get("market_line", 0)
+                market_line = p_data.get("market_line")
                 # Use pick_line (the spread for the picked team) if available
-                pick_line = p_data.get("pick_line") if p_data.get("pick_line") is not None else market_line
+                pick_line = p_data.get("pick_line")
+                if pick_line is None:
+                    pick_line = market_line
                 market_odds_val = p_data.get("market_odds")
                 conf = p_data.get("confidence", 0)
 
@@ -573,10 +593,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
 
                 # Pick display - make model prediction explicit
                 if p_type == "total":
-                    pick_str = f"{pick_team} {market_line}"
+                    pick_str = f"{pick_team} {market_line if market_line is not None else 0:.1f}"
                     model_total = p_data.get('model_total', 0)
                     model_val = f"{model_total:.1f}"
-                    market_val = f"{market_line:.1f}"
+                    market_val = f"{market_line if market_line is not None else 0:.1f}"
+                    line_display = f"{market_line:.1f}" if market_line is not None else "N/A"
                 else:  # spread
                     pick_str = f"{pick_team} {pick_line:+.1f}"
                     model_margin = p_data.get("model_margin", 0)
@@ -588,6 +609,12 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     else:
                         model_val = "Pick'em"
                     market_val = f"{pick_line:+.1f}"
+                    if market_line is not None:
+                        home_line = market_line
+                        away_line = -market_line
+                        line_display = f"{home_line:+.1f}/{away_line:+.1f}"
+                    else:
+                        line_display = "N/A"
 
                 ev_pct = p_data.get("ev_pct")
                 ev_str = f"{ev_pct:+.1f}%" if isinstance(ev_pct, (int, float)) else "N/A"
@@ -598,6 +625,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     "odds": format_odds(market_odds_val),
                     "model": model_val,
                     "market_line": market_val,
+                    "line_display": line_display,
                     "edge": f"{edge_pts:+.1f} pts",
                     "ev": ev_str,
                     "fire": fire
@@ -619,7 +647,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 for p in picks:
                     t_str = time_cst if first else ""
                     m_str = matchup_str if first else ""
-                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<12} | {p['market_line']:<8} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
+                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<12} | {p['line_display']:<12} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
                     first = False
                 log("-" * 155)
             else:
@@ -652,6 +680,14 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             log("-" * 100)
             log(f"GAME: {away} {away_record} @ {home} {home_record}")
             log(f"TIME: {time_cst}")
+            home_line = odds.get("home_spread")
+            if home_line is not None:
+                away_line = -home_line
+                log(f"  Market line (home view): {home} {home_line:+.1f} / {away} {away_line:+.1f}")
+            fh_home_line = odds.get("fh_home_spread")
+            if fh_home_line is not None:
+                fh_away_line = -fh_home_line
+                log(f"  1H market line (home view): {home} {fh_home_line:+.1f} / {away} {fh_away_line:+.1f}")
             log()
 
             # Full Game picks
@@ -856,4 +892,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
