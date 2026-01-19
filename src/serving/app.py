@@ -480,6 +480,12 @@ def health(request: Request):
     return {
         "status": "ok",
         "version": RELEASE_VERSION,
+        "build": {
+            "image_tag": os.getenv("NBA_IMAGE_TAG") or os.getenv("GITHUB_SHA") or "unknown",
+            "hostname": os.getenv("HOSTNAME") or "unknown",
+            "container_app_name": os.getenv("CONTAINER_APP_NAME") or "unknown",
+            "container_app_revision": os.getenv("CONTAINER_APP_REVISION") or "unknown",
+        },
         "mode": "STRICT",
         "architecture": "1H + FG spreads/totals only",
         "caching": "DISABLED - fresh data every request",

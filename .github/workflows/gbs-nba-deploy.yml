@@ -131,7 +131,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ENV_VARS="REQUIRE_API_AUTH=false NBA_MODEL_VERSION=${{ steps.version.outputs.ver }} THE_ODDS_API_KEY=secretref:the-odds-api-key API_BASKETBALL_KEY=secretref:api-basketball-key"
+          # Always deploy an immutable image (sha tag) while keeping NBA_MODEL_VERSION as the human version.
+          ENV_VARS="REQUIRE_API_AUTH=false NBA_MODEL_VERSION=${{ steps.version.outputs.ver }} NBA_IMAGE_TAG=${{ github.sha }} THE_ODDS_API_KEY=secretref:the-odds-api-key API_BASKETBALL_KEY=secretref:api-basketball-key"
           if [ -n "${{ secrets.ACTION_NETWORK_USERNAME }}" ] && [ -n "${{ secrets.ACTION_NETWORK_PASSWORD }}" ]; then
             ENV_VARS="$ENV_VARS ACTION_NETWORK_USERNAME=secretref:action-network-username ACTION_NETWORK_PASSWORD=secretref:action-network-password"
           fi
@@ -154,7 +155,7 @@ jobs:
         with:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
-          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
+          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
           environmentVariables: ${{ steps.envvars.outputs.vars }}
 
       - name: Smoke tests
