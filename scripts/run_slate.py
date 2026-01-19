@@ -385,10 +385,13 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
             market_odds_val = p_data.get("market_odds")
             conf = p_data.get("confidence", 0)
 
-            edge_pts = p_data.get("edge", 0) or 0
+            edge_raw = p_data.get("edge", 0)
+            edge_abs = p_data.get("edge_abs")
+            if edge_abs is None:
+                edge_abs = abs(edge_raw or 0)
 
             # Fire rating
-            edge_norm = min(abs(edge_pts) / 10.0, 1.0)
+            edge_norm = min(edge_abs / 10.0, 1.0)
             combined = (conf * 0.6) + (edge_norm * 0.4)
             if combined >= 0.85:
                 fire_count = 5
@@ -427,7 +430,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
                     line_display = "N/A"
 
             tier_class = "tier-elite" if fire_count >= 5 else ("tier-strong" if fire_count >= 4 else "")
-            edge_class = "edge-positive" if edge_pts > 0 else "edge-negative"
+            edge_class = "edge-positive"
 
             picks.append({
                 "market": market_name,
@@ -436,7 +439,7 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
                 "model": model_val,
                 "market_line": market_val,
                 "line_display": line_display,
-                "edge": f"{edge_pts:+.1f}",
+                "edge": f"{edge_abs:.1f}",
                 "fire_count": fire_count,
                 "tier_class": tier_class,
                 "edge_class": edge_class
@@ -586,10 +589,13 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 market_odds_val = p_data.get("market_odds")
                 conf = p_data.get("confidence", 0)
 
-                edge_pts = p_data.get("edge", 0) or 0
+                edge_raw = p_data.get("edge", 0)
+                edge_abs = p_data.get("edge_abs")
+                if edge_abs is None:
+                    edge_abs = abs(edge_raw or 0)
 
                 # Fire rating - all in pts now
-                fire = calculate_fire_rating(conf, abs(edge_pts))
+                fire = calculate_fire_rating(conf, edge_abs)
 
                 # Pick display - make model prediction explicit
                 if p_type == "total":
@@ -626,7 +632,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     "model": model_val,
                     "market_line": market_val,
                     "line_display": line_display,
-                    "edge": f"{edge_pts:+.1f} pts",
+                    "edge": f"{edge_abs:.1f} pts",
                     "ev": ev_str,
                     "fire": fire
                 })
@@ -703,10 +709,13 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     # Use pick_line for display (correct sign for picked team)
                     pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
                     market_odds_val = spread.get("market_odds")
-                    edge = spread.get("edge", 0) or 0
+                    edge_raw = spread.get("edge", 0)
+                    edge_abs = spread.get("edge_abs")
+                    if edge_abs is None:
+                        edge_abs = abs(edge_raw or 0)
                     conf = spread.get("confidence", 0)
                     model_margin = spread.get("model_margin", 0)
-                    fire = calculate_fire_rating(conf, abs(edge))
+                    fire = calculate_fire_rating(conf, edge_abs)
 
                     # Determine predicted winner and margin for rationale
                     if model_margin > 0:
@@ -719,12 +728,12 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     log(f"    SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
                     log(f"       Model predicts: {pred_winner} wins by {pred_margin:.1f} pts")
                     log(f"       Market line: {pick_team} {pick_line:+.1f}")
-                    log(f"       Edge: {edge:+.1f} pts of value")
+                    log(f"       Edge: {edge_abs:.1f} pts of value")
                     # Explain the edge calculation
                     if pick_team == home:
-                        log(f"       Rationale: Model says {home} by {abs(model_margin):.1f}, getting {pick_line:+.1f} → {edge:.1f} pts edge")
+                        log(f"       Rationale: Model says {home} by {abs(model_margin):.1f}, getting {pick_line:+.1f} → {edge_abs:.1f} pts edge")
                     else:
-                        log(f"       Rationale: Model says {pred_winner} by {pred_margin:.1f}, but getting {away} {pick_line:+.1f} → {edge:.1f} pts edge")
+                        log(f"       Rationale: Model says {pred_winner} by {pred_margin:.1f}, but getting {away} {pick_line:+.1f} → {edge_abs:.1f} pts edge")
                     log(f"       Confidence: {conf:.0%}  |  {fire}")
                     ev_line = format_ev_line(spread)
                     if ev_line:
@@ -736,16 +745,19 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     pick_side = total["pick"]
                     line = total.get("market_line", 0)
                     market_odds_val = total.get("market_odds")
-                    edge = total.get("edge", 0) or 0
+                    edge_raw = total.get("edge", 0)
+                    edge_abs = total.get("edge_abs")
+                    if edge_abs is None:
+                        edge_abs = abs(edge_raw or 0)
                     conf = total.get("confidence", 0)
                     model_total = total.get("model_total", 0)
-                    fire = calculate_fire_rating(conf, abs(edge))
+                    fire = calculate_fire_rating(conf, edge_abs)
                     diff = model_total - line
 
                     log(f"    TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds_val)})")
                     log(f"       Model predicts: {model_total:.1f} total points")
                     log(f"       Market line: {line:.1f}")
-                    log(f"       Edge: {abs(edge):.1f} pts of value")
+                    log(f"       Edge: {edge_abs:.1f} pts of value")
                     if pick_side == "OVER":
                         log(f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) by {abs(diff):.1f} pts → OVER")
                     else:
@@ -768,10 +780,13 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         market_line = spread.get("market_line", 0)
                         pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
                         market_odds_val = spread.get("market_odds")
-                        edge = spread.get("edge", 0) or 0
+                        edge_raw = spread.get("edge", 0)
+                        edge_abs = spread.get("edge_abs")
+                        if edge_abs is None:
+                            edge_abs = abs(edge_raw or 0)
                         conf = spread.get("confidence", 0)
                         model_margin = spread.get("model_margin", 0)
-                        fire = calculate_fire_rating(conf, abs(edge))
+                        fire = calculate_fire_rating(conf, edge_abs)
 
                         if model_margin > 0:
                             pred_winner, pred_margin = home, abs(model_margin)
@@ -783,7 +798,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         log(f"    1H SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
                         log(f"       Model predicts: {pred_winner} leads by {pred_margin:.1f} at half")
                         log(f"       Market line: {pick_team} {pick_line:+.1f}")
-                        log(f"       Edge: {edge:+.1f} pts of value")
+                        log(f"       Edge: {edge_abs:.1f} pts of value")
                         log(f"       Confidence: {conf:.0%}  |  {fire}")
                         ev_line = format_ev_line(spread)
                         if ev_line:
@@ -794,16 +809,19 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                         pick_side = total["pick"]
                         line = total.get("market_line", 0)
                         market_odds_val = total.get("market_odds")
-                        edge = total.get("edge", 0) or 0
+                        edge_raw = total.get("edge", 0)
+                        edge_abs = total.get("edge_abs")
+                        if edge_abs is None:
+                            edge_abs = abs(edge_raw or 0)
                         conf = total.get("confidence", 0)
                         model_total = total.get("model_total", 0)
-                        fire = calculate_fire_rating(conf, abs(edge))
+                        fire = calculate_fire_rating(conf, edge_abs)
                         diff = model_total - line
 
                         log(f"    1H TOTAL: {pick_side} {line:.1f} ({format_odds(market_odds_val)})")
                         log(f"       Model predicts: {model_total:.1f} 1H points")
                         log(f"       Market line: {line:.1f}")
-                        log(f"       Edge: {abs(edge):.1f} pts of value")
+                        log(f"       Edge: {edge_abs:.1f} pts of value")
                         if pick_side == "OVER":
                             log(f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) → OVER")
                         else:
