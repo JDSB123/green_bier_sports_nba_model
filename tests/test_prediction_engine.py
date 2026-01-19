@@ -104,9 +104,14 @@ class TestPeriodPredictor:
         assert "under_prob" in result
         assert "predicted_total" in result
         assert "confidence" in result
+        assert "classifier_confidence" in result
         assert "bet_side" in result
+        assert "classifier_side" in result
+        assert "prediction_side" in result
+        assert "signals_agree" in result
         assert "edge" in result
         assert "passes_filter" in result
+        assert "filter_reason" in result
 
     def test_predict_total_over(self, period_predictor, sample_features):
         """Test total prediction when model predicts over."""
@@ -115,8 +120,32 @@ class TestPeriodPredictor:
         assert result["over_prob"] == 0.55
         assert result["under_prob"] == 0.45
         assert result["bet_side"] == "over"
+        # Confidence must correspond to bet_side (not max(probabilities))
+        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["classifier_confidence"] == pytest.approx(max(result["over_prob"], result["under_prob"]), rel=1e-6)
         # Edge = predicted_total - total_line = 225.0 - 220.0 = 5.0
         assert result["edge"] == pytest.approx(5.0, rel=0.01)
+
+    def test_predict_total_conflict_rejected_and_confidence_matches_bet_side(self, period_predictor, sample_features):
+        """If classifier and point prediction disagree, reject and keep bet_side/confidence consistent."""
+        # Force classifier to prefer UNDER (array is [under, over])
+        period_predictor.total_model.predict_proba.return_value = np.array([[0.80, 0.20]])
+
+        # Point prediction (predicted_total=225, line=220) implies OVER
+        result = period_predictor.predict_total(sample_features, total_line=220.0)
+
+        assert result["classifier_side"] == "under"
+        assert result["prediction_side"] == "over"
+        assert result["signals_agree"] is False
+
+        # bet_side follows point prediction; confidence follows bet_side probability
+        assert result["bet_side"] == "over"
+        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
+
+        assert result["passes_filter"] is False
+        assert isinstance(result["filter_reason"], str)
+        assert result["filter_reason"].startswith("Signal conflict:")
 
     def test_map_1h_features_to_unified_names(self):
         """Test that 1H features override unified FG keys for 1H predictions."""
@@ -155,6 +184,73 @@ class TestPeriodPredictor:
         assert mapped["dynamic_hca"] == 1.5
         assert mapped["home_court_advantage"] == 1.5
         assert mapped["home_avg_margin"] == 1.5
+
+
+class TestLegacyTotalPredictor:
+    """Regression tests for legacy TotalPredictor (kept for compatibility)."""
+
+    @pytest.fixture
+    def mock_fg_total_model(self):
+        model = MagicMock()
+        # Return probabilities [under, over]
+        model.predict_proba.return_value = np.array([[0.45, 0.55]])
+        return model
+
+    @pytest.fixture
+    def mock_fh_total_model(self):
+        model = MagicMock()
+        # Return probabilities [under, over]
+        model.predict_proba.return_value = np.array([[0.45, 0.55]])
+        return model
+
+    @pytest.fixture
+    def legacy_total_predictor(self, mock_fg_total_model, mock_fh_total_model):
+        from src.prediction.totals.predictor import TotalPredictor
+
+        # Keep feature columns minimal; validation will enforce presence.
+        return TotalPredictor(
+            fg_model=mock_fg_total_model,
+            fg_feature_columns=["predicted_total"],
+            fh_model=mock_fh_total_model,
+            fh_feature_columns=["predicted_total"],
+        )
+
+    def test_legacy_total_predictor_conflict_rejected_fg(self, legacy_total_predictor):
+        # Force classifier to prefer UNDER (array is [under, over])
+        legacy_total_predictor.fg_model.predict_proba.return_value = np.array([[0.80, 0.20]])
+
+        features = {"predicted_total": 225.0}
+        result = legacy_total_predictor.predict_full_game(features, total_line=220.0)
+
+        assert result["classifier_side"] == "under"
+        assert result["prediction_side"] == "over"
+        assert result["signals_agree"] is False
+
+        assert result["bet_side"] == "over"
+        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
+
+        assert result["passes_filter"] is False
+        assert isinstance(result["filter_reason"], str)
+        assert result["filter_reason"].startswith("Signal conflict:")
+
+    def test_legacy_total_predictor_conflict_rejected_1h(self, legacy_total_predictor):
+        legacy_total_predictor.fh_model.predict_proba.return_value = np.array([[0.80, 0.20]])
+
+        features = {"predicted_total_1h": 112.5}
+        result = legacy_total_predictor.predict_first_half(features, total_line=110.0)
+
+        assert result["classifier_side"] == "under"
+        assert result["prediction_side"] == "over"
+        assert result["signals_agree"] is False
+
+        assert result["bet_side"] == "over"
+        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
+
+        assert result["passes_filter"] is False
+        assert isinstance(result["filter_reason"], str)
+        assert result["filter_reason"].startswith("Signal conflict:")
 
 class TestUnifiedPredictionEngine:
     """Tests for the UnifiedPredictionEngine class."""

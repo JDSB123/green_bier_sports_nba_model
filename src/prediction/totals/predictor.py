@@ -18,8 +18,9 @@ from src.prediction.totals.filters import (
     FGTotalFilter,
     FirstHalfTotalFilter,
 )
-from src.prediction.confidence import calculate_confidence_from_probabilities
 from src.prediction.feature_validation import validate_and_prepare_features
+from src.prediction.resolution import resolve_total_two_signal
+from src.config import filter_thresholds
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,6 @@ class TotalPredictor:
         total_proba = self.fg_model.predict_proba(X)[0]
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
-        confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
         classifier_side = "over" if over_prob > 0.5 else "under"
         predicted_total = features["predicted_total"]
 
@@ -116,39 +116,36 @@ class TotalPredictor:
         prediction_side = "over" if raw_edge > 0 else "under"
         edge = abs(raw_edge)  # Use absolute value for display/filtering
 
-        # Check dual-signal agreement
-        signals_agree = (classifier_side == prediction_side)
-
         # v33.0.11.0: Classifier sanity check - detect broken/drifted models
         classifier_extreme = (over_prob > 0.99 or over_prob < 0.01)
 
-        passes_filter, filter_reason = self.fg_filter.should_bet(confidence=confidence)
-
-        # Override filter if signals don't agree (unless classifier is broken)
-        if not signals_agree and not classifier_extreme:
-            passes_filter = False
-            filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
-        elif classifier_extreme:
-            # Classifier is unreliable, use edge-only filtering
-            passes_filter = edge >= 1.5  # Minimum edge threshold
-            if not passes_filter:
-                filter_reason = f"Classifier unreliable (extreme prob: {over_prob:.1%}), low edge"
+        resolved = resolve_total_two_signal(
+            over_prob=over_prob,
+            under_prob=under_prob,
+            classifier_side=classifier_side,
+            prediction_side=prediction_side,
+            edge_abs=edge,
+            min_confidence=filter_thresholds.total_min_confidence,
+            min_edge=filter_thresholds.total_min_edge,
+            classifier_extreme=classifier_extreme,
+        )
 
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total,
-            "confidence": confidence,
-            "bet_side": prediction_side,  # Use prediction_side (from edge) as authoritative
+            "confidence": resolved.confidence,
+            "classifier_confidence": resolved.classifier_confidence,
+            "bet_side": resolved.bet_side,  # Use prediction_side (from edge) as authoritative
             "edge": edge,
             "raw_edge": raw_edge,  # Signed edge for diagnostics
             "classifier_side": classifier_side,  # What the ML classifier said
             "prediction_side": prediction_side,  # What the point prediction said
-            "signals_agree": signals_agree,
+            "signals_agree": resolved.signals_agree,
             "classifier_extreme": classifier_extreme,  # v33.0.11.0: True if classifier unreliable
-            "model_edge_pct": abs(confidence - 0.5),
-            "passes_filter": passes_filter,
-            "filter_reason": filter_reason,
+            "model_edge_pct": abs(resolved.confidence - 0.5),
+            "passes_filter": resolved.passes_filter,
+            "filter_reason": resolved.filter_reason,
         }
 
     def predict_first_half(
@@ -194,8 +191,7 @@ class TotalPredictor:
 
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
-        confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
-        bet_side = "over" if over_prob > 0.5 else "under"
+        classifier_side = "over" if over_prob > 0.5 else "under"
         predicted_total_1h = features["predicted_total_1h"]  # No fallback - already validated
 
         # Calculate edge - ALWAYS use consistent formula
@@ -204,29 +200,34 @@ class TotalPredictor:
         prediction_side = "over" if raw_edge > 0 else "under"
         edge = abs(raw_edge)  # Use absolute value for display/filtering
 
-        # Check dual-signal agreement
-        signals_agree = (bet_side == prediction_side)
+        # v33.0.11.0: Classifier sanity check - detect broken/drifted models
+        classifier_extreme = (over_prob > 0.99 or over_prob < 0.01)
 
-        passes_filter, filter_reason = self.first_half_filter.should_bet(confidence=confidence)
-
-        # Override filter if signals don't agree
-        if not signals_agree:
-            passes_filter = False
-            filter_reason = f"Signal conflict: classifier={bet_side}, prediction={prediction_side}"
+        resolved = resolve_total_two_signal(
+            over_prob=over_prob,
+            under_prob=under_prob,
+            classifier_side=classifier_side,
+            prediction_side=prediction_side,
+            edge_abs=edge,
+            min_confidence=filter_thresholds.fh_total_min_confidence,
+            min_edge=filter_thresholds.fh_total_min_edge,
+            classifier_extreme=classifier_extreme,
+        )
 
         return {
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total_1h,
-            "confidence": confidence,
-            "bet_side": prediction_side,  # Use prediction_side (from edge) as authoritative
+            "confidence": resolved.confidence,
+            "classifier_confidence": resolved.classifier_confidence,
+            "bet_side": resolved.bet_side,  # Use prediction_side (from edge) as authoritative
             "edge": edge,
             "raw_edge": raw_edge,  # Signed edge for diagnostics
-            "classifier_side": bet_side,  # What the ML classifier said
+            "classifier_side": classifier_side,  # What the ML classifier said
             "prediction_side": prediction_side,  # What the point prediction said
-            "signals_agree": signals_agree,
-            "model_edge_pct": abs(confidence - 0.5),
-            "passes_filter": passes_filter,
-            "filter_reason": filter_reason,
+            "signals_agree": resolved.signals_agree,
+            "classifier_extreme": classifier_extreme,
+            "model_edge_pct": abs(resolved.confidence - 0.5),
+            "passes_filter": resolved.passes_filter,
+            "filter_reason": resolved.filter_reason,
         }
-

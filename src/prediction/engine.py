@@ -46,6 +46,7 @@ from src.prediction.feature_validation import (
     MissingFeaturesError,
     get_feature_mode,
 )
+from src.prediction.resolution import resolve_total_two_signal
 from src.modeling.period_features import MODEL_CONFIGS
 from src.config import filter_thresholds
 
@@ -327,7 +328,7 @@ class PeriodPredictor:
             min_conf = filter_thresholds.spread_min_confidence
             min_edge = filter_thresholds.spread_min_edge
 
-        # Simple filter: just need confidence and edge to pass
+        # Simple filter: confidence AND edge threshold
         passes_filter = confidence >= min_conf and edge_abs >= min_edge
 
         filter_reason = None
@@ -365,7 +366,6 @@ class PeriodPredictor:
             raise ModelNotFoundError(f"Total model for {self.period} not loaded")
 
         import pandas as pd
-        from src.prediction.confidence import calculate_confidence_from_probabilities
 
         # FIX: For 1H models, map 1H features to FG feature names that the model expects
         if self.period == "1h":
@@ -402,7 +402,6 @@ class PeriodPredictor:
         total_proba = self.total_model.predict_proba(X)[0]
         over_prob = float(total_proba[1])
         under_prob = float(total_proba[0])
-        confidence = calculate_confidence_from_probabilities(over_prob, under_prob)
         classifier_side = "over" if over_prob > 0.5 else "under"
 
         # =====================================================================
@@ -446,9 +445,6 @@ class PeriodPredictor:
 
         # v33.0.11.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
         # The edge calculation is more robust than a potentially drifted classifier
-        bet_side = prediction_side
-
-        # For filtering and display, use absolute edge value
         edge_abs = abs(edge)
 
         # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
@@ -459,15 +455,23 @@ class PeriodPredictor:
             min_conf = filter_thresholds.total_min_confidence
             min_edge = filter_thresholds.total_min_edge
 
-        # Simple filter: just need confidence and edge to pass
-        passes_filter = confidence >= min_conf and edge_abs >= min_edge
+        resolved = resolve_total_two_signal(
+            over_prob=over_prob,
+            under_prob=under_prob,
+            classifier_side=classifier_side,
+            prediction_side=prediction_side,
+            edge_abs=edge_abs,
+            min_confidence=min_conf,
+            min_edge=min_edge,
+            classifier_extreme=classifier_extreme,
+        )
 
-        filter_reason = None
-        if not passes_filter:
-            if confidence < min_conf:
-                filter_reason = f"Low confidence: {confidence:.1%}"
-            else:
-                filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
+        bet_side = resolved.bet_side
+        confidence = resolved.confidence
+        classifier_confidence = resolved.classifier_confidence
+        signals_agree = resolved.signals_agree
+        passes_filter = resolved.passes_filter
+        filter_reason = resolved.filter_reason
 
         return {
             "over_prob": over_prob,
@@ -475,12 +479,14 @@ class PeriodPredictor:
             "predicted_total": predicted_total,
             "total_line": total_line,
             "confidence": confidence,
+            "classifier_confidence": classifier_confidence,
             "side": bet_side,  # Alias for downstream code expecting generic side
             "bet_side": bet_side,
             "edge": edge_abs,  # Always positive for the recommended side
             "raw_edge": edge,  # Signed edge for diagnostics
             "classifier_side": classifier_side,  # What the ML classifier says
             "prediction_side": prediction_side,  # What the point prediction says
+            "signals_agree": signals_agree,
             "classifier_extreme": classifier_extreme,  # True if classifier is unreliable
             "model_edge_pct": abs(confidence - 0.5),
             "passes_filter": passes_filter,
