@@ -468,6 +468,10 @@ def health(request: Request):
     engine_loaded = hasattr(
         app.state, 'engine') and app.state.engine is not None
     api_keys = get_api_key_status()
+    try:
+        splits_sources = validate_splits_sources_configured()
+    except Exception as e:
+        splits_sources = {"error": str(e)}
 
     model_info = {}
     if engine_loaded:
@@ -486,6 +490,7 @@ def health(request: Request):
         "model_info": model_info,
         "season": settings.current_season,
         "api_keys": api_keys,
+        "betting_splits_sources": splits_sources,
         "timestamp": datetime.now().isoformat()
     }
 

@@ -73,15 +73,17 @@ def validate_required_api_keys() -> ValidationResult:
             logger.debug(f"{key_name}: {mask_api_key(key_value)}")
     
     # Optional API keys (warn if missing but don't fail)
+    #
+    # IMPORTANT: Action Network's public scoreboard API does not require credentials; only the
+    # premium/authenticated endpoints do. We should not warn users that "betting splits are unavailable"
+    # just because ACTION_NETWORK_USERNAME/PASSWORD are not set.
     optional_keys = {
-        "ACTION_NETWORK_USERNAME": settings.action_network_username,
-        "ACTION_NETWORK_PASSWORD": settings.action_network_password,
         "BETSAPI_KEY": settings.betsapi_key,
     }
-    
+
     for key_name, key_value in optional_keys.items():
         if not key_value or not key_value.strip():
-            warnings.append(f"{key_name} is not set (optional, but some features may be unavailable)")
+            warnings.append(f"{key_name} is not set (optional)")
     
     return ValidationResult(
         is_valid=len(errors) == 0,
@@ -203,7 +205,9 @@ def get_api_key_status() -> Dict[str, str]:
     return {
         "THE_ODDS_API_KEY": "set" if settings.the_odds_api_key else "not_set",
         "API_BASKETBALL_KEY": "set" if settings.api_basketball_key else "not_set",
-        "ACTION_NETWORK_USERNAME": "set" if settings.action_network_username else "not_set",
+        # Action Network has a public scoreboard endpoint; credentials only enable premium endpoints.
+        "ACTION_NETWORK_PUBLIC_API": "available",
+        "ACTION_NETWORK_PREMIUM_CREDS": "set" if (settings.action_network_username and settings.action_network_password) else "not_set",
         "BETSAPI_KEY": "set" if settings.betsapi_key else "not_set",
     }
 
@@ -237,10 +241,18 @@ def validate_premium_features() -> Dict[str, Dict[str, any]]:
         },
         "betting_splits": {
             "name": "Action Network (Betting Splits)",
-            "configured": bool(settings.action_network_username and settings.action_network_password),
+            # Public splits are available without credentials; premium creds only add coverage/fields.
+            "configured": True,
             "required": False,
-            "keys_needed": ["ACTION_NETWORK_USERNAME", "ACTION_NETWORK_PASSWORD"],
-            "provides": ["public betting %", "money %", "RLM detection", "sharp money signals"],
+            "keys_needed": ["ACTION_NETWORK_USERNAME", "ACTION_NETWORK_PASSWORD (optional)"],
+            "public_available": True,
+            "premium_configured": bool(settings.action_network_username and settings.action_network_password),
+            "provides": [
+                "public betting %",
+                "money % (when available from source)",
+                "RLM detection",
+                "sharp money signals (heuristic from splits)",
+            ],
         },
         "odds_backup": {
             "name": "BetsAPI (Backup Odds)",
@@ -259,7 +271,7 @@ def validate_premium_features() -> Dict[str, Dict[str, any]]:
     if required_missing:
         logger.error(f"MISSING REQUIRED API KEYS: {required_missing}")
     else:
-        logger.info(f"Premium data sources: {configured_count}/{total_count} configured")
+        logger.info(f"Data sources: {configured_count}/{total_count} configured")
 
     optional_missing = [f["name"] for f in features.values() if not f["required"] and not f["configured"]]
     if optional_missing:
