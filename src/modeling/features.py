@@ -997,21 +997,24 @@ class FeatureEngineer:
         # Scale HCA for 1H (~1.5 pts vs 3 pts for FG)
         hca_1h = hca * 0.5
 
-        # v33.0.7.0: Require actual 1H data - NO FALLBACKS
+        # v33.1.0: Graceful degradation - skip 1H features if data unavailable
+        # This allows FG markets to work even if 1H data is missing
         if not home_1h_stats:
-            raise ValueError(
+            logger.warning(
                 f"Insufficient 1H historical data for {home_team}. "
-                f"Cannot compute 1H predictions without actual 1H stats. "
-                f"Ensure historical_df contains quarter columns (home_q1, home_q2, etc.) "
-                f"and team has at least 3 games with 1H data."
+                f"Skipping 1H predictions (FG predictions will still work). "
+                f"Team needs at least 3 games with Q1/Q2 data for 1H markets."
             )
+            # Return features WITHOUT 1H predictions (FG predictions still work)
+            return features
         if not away_1h_stats:
-            raise ValueError(
+            logger.warning(
                 f"Insufficient 1H historical data for {away_team}. "
-                f"Cannot compute 1H predictions without actual 1H stats. "
-                f"Ensure historical_df contains quarter columns (away_q1, away_q2, etc.) "
-                f"and team has at least 3 games with 1H data."
+                f"Skipping 1H predictions (FG predictions will still work). "
+                f"Team needs at least 3 games with Q1/Q2 data for 1H markets."
             )
+            # Return features WITHOUT 1H predictions (FG predictions still work)
+            return features
 
         # 1H Margin: Use actual 1H margin stats (not scaled FG)
         home_1h_margin = home_1h_stats["margin_1h"]

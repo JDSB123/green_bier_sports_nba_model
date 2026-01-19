@@ -39,8 +39,7 @@ MODEL_VERSION = resolve_version()
 import logging
 import joblib
 
-from src.prediction.spreads import SpreadPredictor
-from src.prediction.totals import TotalPredictor
+# Legacy predictors removed in v33.1.0 - all predictions use PeriodPredictor
 from src.prediction.feature_validation import (
     validate_and_prepare_features,
     MissingFeaturesError,
@@ -88,115 +87,95 @@ def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
     """
     Map 1H-specific feature names to FG feature names for model compatibility.
 
-    The 1H models were trained on FG feature names but should use 1H data.
-    This function copies 1H features to the FG feature names the model expects.
+    ARCHITECTURE NOTE:
+    1H models were trained on unified feature schema (same names as FG models).
+    At prediction time, we need to provide 1H-specific data (e.g., 1H scoring rates)
+    but use FG feature names (e.g., "home_ppg" instead of "home_ppg_1h").
+
+    This mapping ensures:
+    - Period-specific stats (PPG, margins, efficiency) use 1H data
+    - Shared features (rest, travel, injuries, Elo) remain unchanged
+    - Model receives correct feature names with period-appropriate values
 
     Args:
-        features: Dict with both FG and 1H features
+        features: Dict with both FG and 1H features (with _1h suffix)
 
     Returns:
-        Dict with 1H features mapped to FG names (for 1H model predictions)
+        Dict with 1H features mapped to FG names for model input
     """
-    mapped_features = dict(features)  # Copy all features
+    mapped_features = dict(features)  # Start with all features
 
-    # Core statistical features mapping
-    # Prefer unified feature names; also set legacy keys for backward compatibility.
-    feature_mappings = {
-        # PPG (points per game)
-        "home_ppg_1h": ["home_ppg"],
-        "away_ppg_1h": ["away_ppg"],
-        "home_papg_1h": ["home_papg"],
-        "away_papg_1h": ["away_papg"],
+    # =============================================================================
+    # PERIOD-SPECIFIC FEATURES (use 1H data for 1H predictions)
+    # =============================================================================
+    PERIOD_SPECIFIC_MAPPINGS = {
+        # Scoring rates (1H has different scoring than FG)
+        "home_ppg_1h": "home_ppg",
+        "away_ppg_1h": "away_ppg",
+        "home_papg_1h": "home_papg",
+        "away_papg_1h": "away_papg",
+        "ppg_diff_1h": "ppg_diff",
 
-        # Margins
-        "home_margin_1h": ["home_margin", "home_avg_margin"],
-        "away_margin_1h": ["away_margin", "away_avg_margin"],
-        "home_spread_margin_1h": ["home_margin", "home_avg_margin"],
-        "away_spread_margin_1h": ["away_margin", "away_avg_margin"],
+        # Margins (1H margins != FG margins)
+        "home_margin_1h": "home_margin",
+        "away_margin_1h": "away_margin",
 
-        # Model-predicted margin/total (critical for 1H edge calc + model features)
-        "predicted_margin_1h": ["predicted_margin"],
-        "predicted_total_1h": ["predicted_total"],
+        # Win rates (1H win% != FG win%)
+        "home_1h_win_pct": "home_win_pct",
+        "away_1h_win_pct": "away_win_pct",
 
-        # Differentials
-        "ppg_diff_1h": ["ppg_diff"],
+        # Pace (1H pace can differ from FG pace)
+        "home_pace_1h": "home_pace",
+        "away_pace_1h": "away_pace",
+        "expected_pace_1h": "expected_pace",
 
-        # Win rates
-        "home_1h_win_pct": ["home_win_pct"],
-        "away_1h_win_pct": ["away_win_pct"],
+        # Recent form (1H-specific L5/L10)
+        "home_l5_margin_1h": "home_l5_margin",
+        "away_l5_margin_1h": "away_l5_margin",
+        "home_l10_margin_1h": "home_l10_margin",
+        "away_l10_margin_1h": "away_l10_margin",
 
-        # Pace
-        "home_pace_1h": ["home_pace", "home_pace_factor"],
-        "away_pace_1h": ["away_pace", "away_pace_factor"],
-        "expected_pace_1h": ["expected_pace"],
+        # Consistency (1H volatility)
+        "home_margin_std_1h": "home_margin_std",
+        "away_margin_std_1h": "away_margin_std",
+        "home_score_std_1h": "home_score_std",
+        "away_score_std_1h": "away_score_std",
 
-        # Recent form (last 5)
-        "home_l5_margin_1h": ["home_l5_margin"],
-        "away_l5_margin_1h": ["away_l5_margin"],
+        # Efficiency ratings (1H-specific ORtg/DRtg/NetRtg)
+        "home_ortg_1h": "home_ortg",
+        "away_ortg_1h": "away_ortg",
+        "home_drtg_1h": "home_drtg",
+        "away_drtg_1h": "away_drtg",
+        "home_net_rtg_1h": "home_net_rtg",
+        "away_net_rtg_1h": "away_net_rtg",
+        "net_rating_diff_1h": "net_rating_diff",
 
-        # Recent form (last 10)
-        "home_l10_margin_1h": ["home_l10_margin"],
-        "away_l10_margin_1h": ["away_l10_margin"],
+        # Model predictions (CRITICAL for edge calculation)
+        "predicted_margin_1h": "predicted_margin",
+        "predicted_total_1h": "predicted_total",
 
-        # Consistency (standard deviation)
-        "home_margin_std_1h": ["home_margin_std", "home_form_adj"],
-        "away_margin_std_1h": ["away_margin_std", "away_form_adj"],
-        "home_score_std_1h": ["home_score_std"],
-        "away_score_std_1h": ["away_score_std"],
-
-        # Efficiency ratings
-        "home_ortg_1h": ["home_ortg"],
-        "away_ortg_1h": ["away_ortg"],
-        "home_drtg_1h": ["home_drtg"],
-        "away_drtg_1h": ["away_drtg"],
-        "home_net_rtg_1h": ["home_net_rtg", "home_net_rating"],
-        "away_net_rtg_1h": ["away_net_rtg", "away_net_rating"],
-
-        # Position (standings)
-        "home_position_1h": ["home_position"],
-        "away_position_1h": ["away_position"],
-
-        # H2H
-        "h2h_margin_1h": ["h2h_margin"],
-
-        # Rest (same for both periods)
-        "home_rest_days_1h": ["home_rest_days", "home_rest"],
-        "away_rest_days_1h": ["away_rest_days", "away_rest"],
-        "home_rest_adj_1h": ["home_rest_adj"],
-        "away_rest_adj_1h": ["away_rest_adj"],
-        "rest_margin_adj_1h": ["rest_margin_adj"],
-
-        # Travel (same for both periods)
-        "away_travel_distance_1h": ["away_travel_distance"],
-        "away_timezone_change_1h": ["away_timezone_change"],
-        "away_travel_fatigue_1h": ["away_travel_fatigue"],
-        "is_away_long_trip_1h": ["is_away_long_trip"],
-        "is_away_cross_country_1h": ["is_away_cross_country"],
-        "away_b2b_travel_penalty_1h": ["away_b2b_travel_penalty"],
-        "travel_advantage_1h": ["travel_advantage"],
-
-        # Home court advantage
-        "dynamic_hca_1h": ["dynamic_hca", "home_court_advantage"],
-
-        # Injuries (same for both periods)
-        "home_injury_impact_ppg_1h": ["home_injury_impact_ppg"],
-        "away_injury_impact_ppg_1h": ["away_injury_impact_ppg"],
-        "injury_margin_adj_1h": ["injury_margin_adj"],
-
-        # Elo (same for both periods)
-        "home_elo_1h": ["home_elo"],
-        "away_elo_1h": ["away_elo"],
-        "elo_diff_1h": ["elo_diff"],
-        "elo_prob_home_1h": ["elo_prob_home"],
+        # H2H (1H-specific head-to-head)
+        "h2h_margin_1h": "h2h_margin",
     }
 
-    # Apply mappings - copy 1H features to FG names if they exist
-    for h1_feature, fg_feature in feature_mappings.items():
-        if h1_feature in features:
-            targets = fg_feature if isinstance(fg_feature, (list, tuple)) else [fg_feature]
-            for target in targets:
-                mapped_features[target] = features[h1_feature]
-            logger.debug(f"Mapped {h1_feature} -> {targets} = {features[h1_feature]}")
+    # Apply period-specific mappings
+    for h1_name, fg_name in PERIOD_SPECIFIC_MAPPINGS.items():
+        if h1_name in features:
+            mapped_features[fg_name] = features[h1_name]
+            logger.debug(f"[1H→FG] {h1_name} → {fg_name} = {features[h1_name]:.2f}")
+
+    # =============================================================================
+    # SHARED FEATURES (same for 1H and FG - no mapping needed)
+    # =============================================================================
+    # These features are game-level, not period-specific:
+    # - Rest: home_rest, away_rest, rest_diff, home_b2b, away_b2b
+    # - Travel: away_travel_distance, away_timezone_change, away_travel_fatigue
+    # - Injuries: home_injury_impact_ppg, away_injury_impact_ppg
+    # - Home Court Advantage: dynamic_hca, home_court_advantage
+    # - Elo: home_elo, away_elo, elo_diff, elo_prob_home
+    # - Betting: public_home_pct, rlm_indicator, sharp_money_side
+    #
+    # These are already in the feature dict with standard names, no mapping needed.
 
     return mapped_features
 
@@ -228,12 +207,15 @@ class PeriodPredictor:
         features: Dict[str, float],
         spread_line: float,
     ) -> Dict[str, Any]:
-        """Predict spread outcome for this period."""
+        """Predict spread outcome for this period.
+
+        FIXED v33.1.0: Edge-based confidence with signal conflict detection.
+        """
         if self.spread_model is None:
             raise ModelNotFoundError(f"Spread model for {self.period} not loaded")
 
         import pandas as pd
-        from src.prediction.confidence import calculate_confidence_from_probabilities
+        from src.prediction.resolution import resolve_spread_two_signal
 
         # FIX: For 1H models, map 1H features to FG feature names that the model expects
         if self.period == "1h":
@@ -270,7 +252,6 @@ class PeriodPredictor:
         spread_proba = self.spread_model.predict_proba(X)[0]
         home_cover_prob = float(spread_proba[1])
         away_cover_prob = float(spread_proba[0])
-        confidence = calculate_confidence_from_probabilities(home_cover_prob, away_cover_prob)
         classifier_side = "home" if home_cover_prob > 0.5 else "away"
 
         # =====================================================================
@@ -288,7 +269,6 @@ class PeriodPredictor:
                 f"Fix feature pipeline to ensure {margin_key} is always computed."
             )
         if predicted_margin == 0:
-            # Log when margin is exactly 0 (might be intentional or might indicate issue)
             logger.debug(f"[{self.period}_spread] predicted_margin is exactly 0 (may be intentional)")
 
         # EDGE CALCULATION:
@@ -302,9 +282,9 @@ class PeriodPredictor:
         # Formula: edge = predicted_margin + spread_line
         edge = predicted_margin + spread_line
         prediction_side = "home" if edge > 0 else "away"
+        edge_abs = abs(edge)
 
-        # v33.0.11.0 FIX: Classifier sanity check - detect broken/drifted models
-        # If classifier outputs extreme probability (>99% or <1%), it's unreliable
+        # Classifier sanity check - detect broken/drifted models
         classifier_extreme = (home_cover_prob > 0.99 or home_cover_prob < 0.01)
         if classifier_extreme:
             logger.warning(
@@ -312,15 +292,7 @@ class PeriodPredictor:
                 f"Model may have data drift."
             )
 
-        # v33.0.11.0 FIX: Use EDGE-BASED prediction as authoritative bet_side
-        # The edge calculation is more robust than a potentially drifted classifier
-        bet_side = prediction_side
-
-        # For filtering and display, use absolute edge value
-        edge_abs = abs(edge)
-
-        # Filter logic: confidence AND edge threshold (NO dual-signal requirement)
-        # Use calibrated probability from src/prediction/confidence.py for consistency
+        # Get filter thresholds
         if self.period == "1h":
             min_conf = filter_thresholds.fh_spread_min_confidence
             min_edge = filter_thresholds.fh_spread_min_edge
@@ -328,32 +300,36 @@ class PeriodPredictor:
             min_conf = filter_thresholds.spread_min_confidence
             min_edge = filter_thresholds.spread_min_edge
 
-        # Simple filter: confidence AND edge threshold
-        passes_filter = confidence >= min_conf and edge_abs >= min_edge
-
-        filter_reason = None
-        if not passes_filter:
-            if confidence < min_conf:
-                filter_reason = f"Low confidence: {confidence:.1%}"
-            else:
-                filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
+        # UNIFIED SIGNAL RESOLUTION: Edge-based bet_side with signal conflict detection
+        resolved = resolve_spread_two_signal(
+            home_cover_prob=home_cover_prob,
+            away_cover_prob=away_cover_prob,
+            classifier_side=classifier_side,
+            prediction_side=prediction_side,
+            edge_abs=edge_abs,
+            min_confidence=min_conf,
+            min_edge=min_edge,
+            classifier_extreme=classifier_extreme,
+        )
 
         return {
             "home_cover_prob": home_cover_prob,
             "away_cover_prob": away_cover_prob,
             "predicted_margin": predicted_margin,
             "spread_line": spread_line,
-            "confidence": confidence,
-            "side": bet_side,  # Alias for downstream code expecting generic side
-            "bet_side": bet_side,
+            "confidence": resolved.confidence,
+            "classifier_confidence": resolved.classifier_confidence,
+            "side": resolved.bet_side,  # Alias for downstream code
+            "bet_side": resolved.bet_side,
             "edge": edge_abs,  # Always positive for the recommended side
             "raw_edge": edge,  # Signed edge for diagnostics
-            "classifier_side": classifier_side,  # What the ML classifier says
-            "prediction_side": prediction_side,  # What the point prediction says
-            "classifier_extreme": classifier_extreme,  # True if classifier is unreliable
-            "model_edge_pct": abs(confidence - 0.5),
-            "passes_filter": passes_filter,
-            "filter_reason": filter_reason,
+            "classifier_side": classifier_side,
+            "prediction_side": prediction_side,
+            "signals_agree": resolved.signals_agree,
+            "classifier_extreme": classifier_extreme,
+            "model_edge_pct": abs(resolved.confidence - 0.5),
+            "passes_filter": resolved.passes_filter,
+            "filter_reason": resolved.filter_reason,
         }
 
     def predict_total(
@@ -571,10 +547,7 @@ class UnifiedPredictionEngine:
         self.fg_predictor = PeriodPredictor("fg", *fg_models)
         logger.info("FG predictor initialized (2/2 models)")
 
-        # Legacy predictors for backwards compatibility
-        self._init_legacy_predictors()
-
-        # Verify loaded models (v33.0.11.0 expects spreads/totals)
+        # Verify loaded models (v33.1.0 expects 4 models: spreads/totals for 1H+FG)
         loaded_count = sum(
             1
             for k, v in self.loaded_models.items()
@@ -679,12 +652,20 @@ class UnifiedPredictionEngine:
             else:
                 features = config.get("features", [])
 
-            # AUTO-CORRECTION: Use model's internal feature names if available
+            # STRICT VALIDATION: Model features must match config exactly
             if hasattr(model, "feature_names_in_"):
                 model_features = model.feature_names_in_.tolist()
-                if set(model_features) != set(features):
-                    logger.warning(f"Feature mismatch for {model_key}. Using model's internal features ({len(model_features)}) instead of config/file ({len(features)}).")
-                features = model_features
+                if model_features != features:  # Order matters!
+                    logger.error(
+                        f"FATAL: Model feature mismatch for {model_key}!\n"
+                        f"  Config features ({len(features)}): {features[:5]}...\n"
+                        f"  Model features ({len(model_features)}): {model_features[:5]}...\n"
+                        f"  Predictions will be WRONG if features don't match exactly."
+                    )
+                    raise ValueError(
+                        f"Model {model_key} trained on different features than config. "
+                        f"Retrain model or fix config to match model.feature_names_in_"
+                    )
 
             logger.info(f"Loaded {model_key} (pkl) with {len(features)} features")
             return model, features
@@ -698,12 +679,20 @@ class UnifiedPredictionEngine:
         if model is None:
             raise ValueError(f"Invalid model file: {model_path}")
 
-        # AUTO-CORRECTION: Use model's internal feature names if available
+        # STRICT VALIDATION: Model features must match config exactly
         if hasattr(model, "feature_names_in_"):
             model_features = model.feature_names_in_.tolist()
-            if set(model_features) != set(features):
-                logger.warning(f"Feature mismatch for {model_key}. Using model's internal features ({len(model_features)}) instead of config/file ({len(features)}).")
-            features = model_features
+            if model_features != features:  # Order matters!
+                logger.error(
+                    f"FATAL: Model feature mismatch for {model_key}!\n"
+                    f"  Config features ({len(features)}): {features[:5]}...\n"
+                    f"  Model features ({len(model_features)}): {model_features[:5]}...\n"
+                    f"  Predictions will be WRONG if features don't match exactly."
+                )
+                raise ValueError(
+                    f"Model {model_key} trained on different features than config. "
+                    f"Retrain model or fix config to match model.feature_names_in_"
+                )
 
         logger.info(f"Loaded {model_key} with {len(features)} features")
 
@@ -724,39 +713,6 @@ class UnifiedPredictionEngine:
 
         return model, features
 
-    def _init_legacy_predictors(self):
-        """
-        Initialize legacy predictors for backwards compatibility.
-
-        DEPRECATED (v33.0.11.0): These predictors are NOT used by any production code path.
-        All predictions go through PeriodPredictor.predict_spread/predict_total.
-        Keeping for API stability but may be removed in v34.0.
-        """
-        # DEPRECATED: These are NOT used by predict_all_markets() or any serving code
-        if self.fg_predictor:
-            # Create legacy SpreadPredictor
-            if self.fg_predictor.spread_model:
-                try:
-                    self.spread_predictor = SpreadPredictor(
-                        fg_model=self.fg_predictor.spread_model,
-                        fg_feature_columns=self.fg_predictor.spread_features,
-                        fh_model=self.h1_predictor.spread_model if (self.h1_predictor and self.h1_predictor.spread_model) else self.fg_predictor.spread_model,
-                        fh_feature_columns=self.h1_predictor.spread_features if (self.h1_predictor and self.h1_predictor.spread_model) else self.fg_predictor.spread_features,
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to init legacy SpreadPredictor: {e}")
-
-            # Create legacy TotalPredictor
-            if self.fg_predictor.total_model:
-                try:
-                    self.total_predictor = TotalPredictor(
-                        fg_model=self.fg_predictor.total_model,
-                        fg_feature_columns=self.fg_predictor.total_features,
-                        fh_model=self.h1_predictor.total_model if (self.h1_predictor and self.h1_predictor.total_model) else self.fg_predictor.total_model,
-                        fh_feature_columns=self.h1_predictor.total_features if (self.h1_predictor and self.h1_predictor.total_model) else self.fg_predictor.total_features,
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to init legacy TotalPredictor: {e}")
 
     def predict_first_half(
         self,
