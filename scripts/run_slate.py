@@ -216,7 +216,17 @@ def _match_single_filter(*, home: str, away: str, raw: str) -> bool:
     return raw in home or raw in away
 
 
-def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_data: dict = None) -> str:
+def generate_html_output(
+    analysis: list,
+    date_str: str,
+    now_cst: datetime,
+    *,
+    api_version: str | None = None,
+    odds_as_of_utc: str | None = None,
+    data_fetched_at_cst: str | None = None,
+    markets: list[str] | None = None,
+    odds_data: dict = None,
+) -> str:
     """Generate HTML output for the slate analysis."""
 
     def fire_to_html(fire_str: str) -> str:
@@ -232,6 +242,15 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
             return f"+{odds_val}" if odds_val > 0 else str(odds_val)
         except (ValueError, TypeError):
             return str(odds_val)
+
+    meta_parts: list[str] = []
+    if data_fetched_at_cst:
+        meta_parts.append(f"Data fetched: {data_fetched_at_cst}")
+    if odds_as_of_utc:
+        meta_parts.append(f"Odds as of (UTC): {odds_as_of_utc}")
+    if markets:
+        meta_parts.append(f"Markets: {', '.join(markets)}")
+    meta_note = " | ".join(meta_parts)
 
     html = f'''<!DOCTYPE html>
 <html lang="en">
@@ -323,13 +342,14 @@ def generate_html_output(analysis: list, date_str: str, now_cst: datetime, odds_
     <div class="container">
         <header>
             <h1>🏀 NBA PREDICTIONS</h1>
-            <p class="subtitle">{date_str.upper()} | Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')} | {resolve_version().replace("NBA_v", "v")}</p>
+            <p class="subtitle">{date_str.upper()} | Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')} | {resolve_version().replace("NBA_v", "v")}{f" | API {api_version.replace('NBA_v','v')}" if api_version else ""}</p>
         </header>
 
         <div class="summary-box">
             <h2>📊 {len(analysis)} Games Analyzed</h2>
         </div>
         <p class="line-note">Spreads and lines always reflect the home team’s perspective (positive = home underdog).</p>
+        {f'<p class="line-note">{meta_note}</p>' if meta_note else ''}
 
         <table class="picks-table">
             <thead>
@@ -511,7 +531,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
 
     log(f"\n{'='*100}")
     log(f"NBA PREDICTIONS - {date_str.upper()}")
-    log(f"Generated: {now_cst.strftime('%Y-%m-%d %I:%M %p CST')}")
+    log(f"Generated (CST): {now_cst.strftime('%Y-%m-%d %I:%M %p CST')}")
     log(f"{'='*100}\n")
 
     try:
@@ -520,7 +540,25 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             params={"use_splits": "true"},
             timeout=120,
         )
+        api_version = data.get("version")
+        api_date = data.get("date")
+        data_fetched_at_cst = data.get("data_fetched_at_cst")
+        odds_as_of_utc = data.get("odds_as_of_utc")
+        markets = data.get("markets")
         analysis = data.get("analysis", [])
+
+        date_label = (api_date or date_str).upper()
+        if api_date and date_label != date_str.upper():
+            log(f"[DATE] Resolved: {date_label} (CST)")
+        if data_fetched_at_cst:
+            log(f"[FETCHED] {data_fetched_at_cst}")
+        if odds_as_of_utc:
+            log(f"[ODDS UTC] {odds_as_of_utc}")
+        if api_version:
+            log(f"[API VERSION] {api_version.replace('NBA_v', 'v')}")
+        if markets:
+            log(f"[MARKETS] {', '.join(markets)}")
+        log()
 
         if not analysis:
             log("No games found for this date")
@@ -848,7 +886,15 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
 
         # Generate and save HTML output
         html_file = OUTPUT_DIR / f"slate_output_{timestamp}.html"
-        html_content = generate_html_output(analysis, date_str, now_cst)
+        html_content = generate_html_output(
+            analysis,
+            (api_date or date_str),
+            now_cst,
+            api_version=api_version,
+            odds_as_of_utc=odds_as_of_utc,
+            data_fetched_at_cst=data_fetched_at_cst,
+            markets=markets if isinstance(markets, list) else None,
+        )
         with open(html_file, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"[SAVED] HTML output saved to: {html_file}")
