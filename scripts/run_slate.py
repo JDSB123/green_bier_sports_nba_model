@@ -90,14 +90,14 @@ def check_stack_running() -> bool:
     """Check if the NBA stack is running."""
     try:
         result = subprocess.run(
-            ["docker", "ps", "--filter", "name=nba-v33", "--format", "{{.Names}}"],
+            ["docker", "ps", "--filter", "name=nba-gbsv-api", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
             timeout=10
         )
-        # Container is named 'nba-v33' per compose; service name is 'nba-v33-api'
+        # Container is named 'nba-gbsv-api' per docker-compose.yml
         names = result.stdout.splitlines()
-        return any(n in ("nba-v33", "nba-v33-api") for n in names)
+        return any(n == "nba-gbsv-api" for n in names)
     except Exception:
         return False
 
@@ -222,6 +222,8 @@ def generate_html_output(
     now_cst: datetime,
     *,
     api_version: str | None = None,
+    api_url: str | None = None,
+    api_build: str | None = None,
     odds_as_of_utc: str | None = None,
     data_fetched_at_cst: str | None = None,
     markets: list[str] | None = None,
@@ -248,6 +250,10 @@ def generate_html_output(
         meta_parts.append(f"Data fetched: {data_fetched_at_cst}")
     if odds_as_of_utc:
         meta_parts.append(f"Odds as of (UTC): {odds_as_of_utc}")
+    if api_url:
+        meta_parts.append(f"API: {api_url}")
+    if api_build:
+        meta_parts.append(f"Build: {api_build}")
     if markets:
         meta_parts.append(f"Markets: {', '.join(markets)}")
     meta_note = " | ".join(meta_parts)
@@ -348,7 +354,7 @@ def generate_html_output(
         <div class="summary-box">
             <h2>📊 {len(analysis)} Games Analyzed</h2>
         </div>
-        <p class="line-note">Spreads and lines always reflect the home team’s perspective (positive = home underdog).</p>
+        <p class="line-note">Matchup is Away @ Home. For spreads, Line (H/A) shows the home team line then away team line (positive = underdog).</p>
         {f'<p class="line-note">{meta_note}</p>' if meta_note else ''}
 
         <table class="picks-table">
@@ -359,7 +365,7 @@ def generate_html_output(
                     <th>Pick</th>
                     <th>Odds</th>
                     <th>Prediction</th>
-                    <th>Line</th>
+                    <th>Line (H/A)</th>
                     <th>Edge</th>
                     <th>Rating</th>
                 </tr>
@@ -445,7 +451,7 @@ def generate_html_output(
                 if market_line is not None:
                     home_line = market_line
                     away_line = -market_line
-                    line_display = f"{home_line:+.1f}/{away_line:+.1f}"
+                    line_display = f"H{home_line:+.1f}/A{away_line:+.1f}"
                 else:
                     line_display = "N/A"
 
@@ -535,6 +541,24 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
     log(f"{'='*100}\n")
 
     try:
+        health = None
+        html_build_note = None
+        try:
+            health = http_get_json(f"{API_URL}/health", timeout=10)
+        except Exception:
+            health = None
+        if health:
+            build = health.get("build") or {}
+            parts = []
+            if build.get("image_tag"):
+                parts.append(str(build.get("image_tag")))
+            if build.get("hostname"):
+                parts.append(str(build.get("hostname")))
+            if build.get("container_app_revision") and build.get("container_app_revision") != "unknown":
+                parts.append(str(build.get("container_app_revision")))
+            if parts:
+                html_build_note = " / ".join(parts)
+
         data = http_get_json(
             f"{API_URL}/slate/{date_str}/comprehensive",
             params={"use_splits": "true"},
@@ -556,6 +580,18 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             log(f"[ODDS UTC] {odds_as_of_utc}")
         if api_version:
             log(f"[API VERSION] {api_version.replace('NBA_v', 'v')}")
+        log(f"[API URL] {API_URL}")
+        if health:
+            build = health.get("build") or {}
+            build_parts = []
+            if build.get("image_tag"):
+                build_parts.append(f"image_tag={build.get('image_tag')}")
+            if build.get("hostname"):
+                build_parts.append(f"host={build.get('hostname')}")
+            if build.get("container_app_revision") and build.get("container_app_revision") != "unknown":
+                build_parts.append(f"rev={build.get('container_app_revision')}")
+            if build_parts:
+                log(f"[API BUILD] {', '.join(build_parts)}")
         if markets:
             log(f"[MARKETS] {', '.join(markets)}")
         log()
@@ -585,10 +621,10 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         log("=" * 155)
 
         # Header
-        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Prediction':<12} | {'Line':<12} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
+        header = f"{'Time (CST)':<12} | {'Matchup':<42} | {'Pick':<22} | {'Odds':<7} | {'Prediction':<12} | {'Line (H/A)':<14} | {'Edge':<8} | {'EV%':<7} | {'Fire'}"
         log(header)
         log("-" * 155)
-        log("NOTE: 'Line' column shows home/away view (home_line/away_line; home positive = home underdog); 'Pick' still shows the team we\'re backing.")
+        log("NOTE: Matchup is 'Away @ Home'. Line (H/A) shows home team line then away team line (positive = underdog). Pick shows the side we\'re backing.")
         log("-" * 155)
 
         for game in analysis:
@@ -656,7 +692,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                     if market_line is not None:
                         home_line = market_line
                         away_line = -market_line
-                        line_display = f"{home_line:+.1f}/{away_line:+.1f}"
+                        line_display = f"H{home_line:+.1f}/A{away_line:+.1f}"
                     else:
                         line_display = "N/A"
 
@@ -691,12 +727,12 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
                 for p in picks:
                     t_str = time_cst if first else ""
                     m_str = matchup_str if first else ""
-                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<12} | {p['line_display']:<12} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
+                    log(f"{t_str:<12} | {m_str:<42} | {p['pick']:<22} | {p['odds']:<7} | {p['model']:<12} | {p['line_display']:<14} | {p['edge']:<8} | {p['ev']:<7} | {p['fire']}")
                     first = False
                 log("-" * 155)
             else:
                 # No picks for this game
-                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<12} | {'-':<8} | {'-':<8} | {'-':<7} | -")
+                log(f"{time_cst:<12} | {matchup_str:<42} | {'No Action':<22} | {'-':<7} | {'-':<12} | {'-':<14} | {'-':<8} | {'-':<7} | -")
                 log("-" * 155)
 
         log("\n" + "=" * 100)
@@ -891,6 +927,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             (api_date or date_str),
             now_cst,
             api_version=api_version,
+            api_url=API_URL,
+            api_build=html_build_note,
             odds_as_of_utc=odds_as_of_utc,
             data_fetched_at_cst=data_fetched_at_cst,
             markets=markets if isinstance(markets, list) else None,
@@ -927,27 +965,37 @@ def main():
     )
     parser.add_argument("--date", default="today", help="Date: today, tomorrow, or YYYY-MM-DD")
     parser.add_argument("--matchup", help="Filter to specific team (e.g., 'Lakers')")
+    parser.add_argument("--api-url", help="Override API base URL (e.g., https://...azurecontainerapps.io)")
+    parser.add_argument("--no-docker", action="store_true", help="Skip Docker checks (use with --api-url)")
     args = parser.parse_args()
+
+    if args.api_url:
+        global API_URL
+        API_URL = args.api_url.rstrip("/")
     
     print("\n" + "="*80)
     print(f"🏀 NBA PREDICTION SYSTEM {resolve_version().replace('NBA_v', 'v')} (4 markets: 1H + FG)")
     print("="*80)
     
-    # Step 1: Check Docker
-    if not check_docker_running():
-        print("❌ Docker is not running. Please start Docker Desktop.")
-        sys.exit(1)
-    print("✅ Docker is running")
-    
-    # Step 2: Ensure stack is running
-    if not check_stack_running():
-        start_stack()
-    else:
-        print("✅ Stack already running")
+    if not args.no_docker:
+        # Step 1: Check Docker
+        if not check_docker_running():
+            print("❌ Docker is not running. Please start Docker Desktop.")
+            sys.exit(1)
+        print("✅ Docker is running")
+
+        # Step 2: Ensure stack is running
+        if not check_stack_running():
+            start_stack()
+        else:
+            print("✅ Stack already running")
     
     # Step 3: Wait for API
     if not wait_for_api():
-        print("\n💡 Try: docker compose logs nba-v33")
+        if args.no_docker:
+            print("\n💡 Check the API URL and try again.")
+        else:
+            print("\n💡 Try: docker compose logs nba-v33-api")
         sys.exit(1)
     
     # Step 4: Fetch and display

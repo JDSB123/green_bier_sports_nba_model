@@ -51,6 +51,7 @@ services:
       # Optional auth
       - REQUIRE_API_AUTH=${REQUIRE_API_AUTH:-false}
       - SERVICE_API_KEY=${SERVICE_API_KEY:-}
+      - NBA_IMAGE_TAG=${NBA_IMAGE_TAG:-local}
 
       # Configuration (4 independent markets - 1H + FG)
       - NBA_MODEL_VERSION=${NBA_MODEL_VERSION:-}
