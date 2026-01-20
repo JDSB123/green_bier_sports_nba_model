@@ -15,6 +15,15 @@ Usage:
 
     python scripts/backtest_production.py --start-date 2024-01-01 --end-date 2025-01-01 --no-pricing
 """
+from src.prediction.engine import map_1h_features_to_fg_names
+from src.prediction.feature_validation import (
+    MissingFeaturesError,
+    validate_and_prepare_features,
+)
+from src.modeling.season_utils import get_season_for_date
+import joblib
+import numpy as np
+import pandas as pd
 import argparse
 import os
 import sys
@@ -29,16 +38,6 @@ from dataclasses import dataclass
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pandas as pd
-import numpy as np
-import joblib
-
-from src.modeling.season_utils import get_season_for_date
-from src.prediction.feature_validation import (
-    MissingFeaturesError,
-    validate_and_prepare_features,
-)
-from src.prediction.engine import map_1h_features_to_fg_names
 
 logging.basicConfig(
     level=logging.INFO,
@@ -93,7 +92,6 @@ def ensure_canonical_training_data(
         )
 
 
-
 @dataclass
 class BetResult:
     """Result of a single bet."""
@@ -107,8 +105,10 @@ class BetResult:
     predicted_value: float  # predicted margin or total
     actual_value: float  # actual margin or total
     won: bool
-    odds: Optional[int]  # American odds (None if pricing disabled / unavailable)
-    profit: Optional[float]  # Units profit/loss (None if pricing disabled / unavailable)
+    # American odds (None if pricing disabled / unavailable)
+    odds: Optional[int]
+    # Units profit/loss (None if pricing disabled / unavailable)
+    profit: Optional[float]
 
 
 def load_production_model(model_path: Path) -> Tuple[object, List[str]]:
@@ -121,7 +121,8 @@ def load_production_model(model_path: Path) -> Tuple[object, List[str]]:
         features = data.get("feature_columns", [])
     else:
         model = data
-        features = model.feature_names_in_.tolist() if hasattr(model, 'feature_names_in_') else []
+        features = model.feature_names_in_.tolist() if hasattr(
+            model, 'feature_names_in_') else []
 
     return model, features
 
@@ -142,7 +143,8 @@ def _normalize_markets_arg(markets_arg: Optional[str]) -> Optional[List[str]]:
     if not markets_arg:
         return None
 
-    raw = [part.strip().lower() for part in markets_arg.split(",") if part.strip()]
+    raw = [part.strip().lower()
+           for part in markets_arg.split(",") if part.strip()]
     if not raw or "all" in raw:
         return None
 
@@ -195,10 +197,13 @@ def _build_feature_payload(game: pd.Series, market_key: str) -> Tuple[Dict[str, 
     features = game.to_dict()
 
     if market_key.startswith("1h_"):
-        spread_line = _pick_first_value(game, ["1h_spread_line", "fh_spread_line"])
-        total_line = _pick_first_value(game, ["1h_total_line", "fh_total_line"])
+        spread_line = _pick_first_value(
+            game, ["1h_spread_line", "fh_spread_line"])
+        total_line = _pick_first_value(
+            game, ["1h_total_line", "fh_total_line"])
     else:
-        spread_line = _pick_first_value(game, ["fg_spread_line", "spread_line"])
+        spread_line = _pick_first_value(
+            game, ["fg_spread_line", "spread_line"])
         total_line = _pick_first_value(game, ["fg_total_line", "total_line"])
 
     if spread_line is not None:
@@ -222,11 +227,14 @@ def _build_feature_payload(game: pd.Series, market_key: str) -> Tuple[Dict[str, 
         features = map_1h_features_to_fg_names(features)
 
     # Derived "line vs model" features (if predicted values exist)
-    pred_margin_key = "predicted_margin_1h" if market_key.startswith("1h_") else "predicted_margin"
-    pred_total_key = "predicted_total_1h" if market_key.startswith("1h_") else "predicted_total"
+    pred_margin_key = "predicted_margin_1h" if market_key.startswith(
+        "1h_") else "predicted_margin"
+    pred_total_key = "predicted_total_1h" if market_key.startswith(
+        "1h_") else "predicted_total"
 
     if pred_margin_key in features and spread_line is not None and pd.notna(features.get(pred_margin_key)):
-        features["spread_vs_predicted"] = features[pred_margin_key] - (-spread_line)
+        features["spread_vs_predicted"] = features[pred_margin_key] - \
+            (-spread_line)
 
     if pred_total_key in features and total_line is not None and pd.notna(features.get(pred_total_key)):
         features["total_vs_predicted"] = features[pred_total_key] - total_line
@@ -281,22 +289,25 @@ def run_backtest(
 
     # Ensure date column - prefer game_date as primary
     if "game_date" in df.columns:
-        df["date"] = pd.to_datetime(df["game_date"], format="mixed", errors="coerce")
+        df["date"] = pd.to_datetime(
+            df["game_date"], format="mixed", errors="coerce")
     elif "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"], format="mixed", errors="coerce")
+        df["date"] = pd.to_datetime(
+            df["date"], format="mixed", errors="coerce")
     else:
         raise ValueError("No date column found in data!")
 
     df = df.dropna(subset=["date"])
     df = df.sort_values("date").reset_index(drop=True)
 
-
-    print(f"Loaded {len(df)} games from {df['date'].min()} to {df['date'].max()}")
+    print(
+        f"Loaded {len(df)} games from {df['date'].min()} to {df['date'].max()}")
 
     # Filter date range for PREDICTION targets only
     predict_df = df.copy()
     if start_date:
-        predict_df = predict_df[predict_df["date"] >= pd.to_datetime(start_date)]
+        predict_df = predict_df[predict_df["date"]
+                                >= pd.to_datetime(start_date)]
     if end_date:
         predict_df = predict_df[predict_df["date"] <= pd.to_datetime(end_date)]
 
@@ -330,17 +341,25 @@ def run_backtest(
 
     if pricing_enabled:
         model_configs = [
-            ("fg_spread", "fg_spread_model.joblib", "fg_spread_covered", "fg_spread_line", spread_juice),
-            ("fg_total", "fg_total_model.joblib", "fg_total_over", "fg_total_line", total_juice),
-            ("1h_spread", "1h_spread_model.joblib", "1h_spread_covered", "1h_spread_line", spread_juice),
-            ("1h_total", "1h_total_model.joblib", "1h_total_over", "1h_total_line", total_juice),
+            ("fg_spread", "fg_spread_model.joblib",
+             "fg_spread_covered", "fg_spread_line", spread_juice),
+            ("fg_total", "fg_total_model.joblib",
+             "fg_total_over", "fg_total_line", total_juice),
+            ("1h_spread", "1h_spread_model.joblib",
+             "1h_spread_covered", "1h_spread_line", spread_juice),
+            ("1h_total", "1h_total_model.joblib",
+             "1h_total_over", "1h_total_line", total_juice),
         ]
     else:
         model_configs = [
-            ("fg_spread", "fg_spread_model.joblib", "fg_spread_covered", "fg_spread_line", None),
-            ("fg_total", "fg_total_model.joblib", "fg_total_over", "fg_total_line", None),
-            ("1h_spread", "1h_spread_model.joblib", "1h_spread_covered", "1h_spread_line", None),
-            ("1h_total", "1h_total_model.joblib", "1h_total_over", "1h_total_line", None),
+            ("fg_spread", "fg_spread_model.joblib",
+             "fg_spread_covered", "fg_spread_line", None),
+            ("fg_total", "fg_total_model.joblib",
+             "fg_total_over", "fg_total_line", None),
+            ("1h_spread", "1h_spread_model.joblib",
+             "1h_spread_covered", "1h_spread_line", None),
+            ("1h_total", "1h_total_model.joblib",
+             "1h_total_over", "1h_total_line", None),
         ]
 
     market_filter_set = set(markets_filter) if markets_filter else None
@@ -396,7 +415,8 @@ def run_backtest(
             line = float(game[line_col])
             actual_label = int(game[label_col])
 
-            features, spread_line, total_line = _build_feature_payload(game, market_key)
+            features, spread_line, total_line = _build_feature_payload(
+                game, market_key)
             if spread_line is None or total_line is None:
                 continue
 
@@ -408,7 +428,8 @@ def run_backtest(
                     market=market_key,
                 )
             except MissingFeaturesError as e:
-                logger.debug(f"Missing features for {market_key} on {game_date}: {e}")
+                logger.debug(
+                    f"Missing features for {market_key} on {game_date}: {e}")
                 continue
 
             if X.isna().any().any():
@@ -437,7 +458,8 @@ def run_backtest(
             elif market_key == "1h_spread":
                 min_conf = filter_thresholds.fh_spread_min_confidence
                 min_edge = filter_thresholds.fh_spread_min_edge
-                pred_margin = features.get("predicted_margin_1h", features.get("predicted_margin", 0)) or 0
+                pred_margin = features.get(
+                    "predicted_margin_1h", features.get("predicted_margin", 0)) or 0
                 raw_edge = pred_margin + spread_line if spread_line else 0
             elif market_key == "fg_total":
                 min_conf = filter_thresholds.total_min_confidence
@@ -447,7 +469,8 @@ def run_backtest(
             elif market_key == "1h_total":
                 min_conf = filter_thresholds.fh_total_min_confidence
                 min_edge = filter_thresholds.fh_total_min_edge
-                pred_total = features.get("predicted_total_1h", features.get("predicted_total", 0)) or 0
+                pred_total = features.get(
+                    "predicted_total_1h", features.get("predicted_total", 0)) or 0
                 raw_edge = pred_total - total_line if total_line else 0
             else:
                 min_conf = 0.55
@@ -470,12 +493,15 @@ def run_backtest(
                         and pd.notna(game.get("home_q1")) and pd.notna(game.get("home_q2"))
                         and pd.notna(game.get("away_q1")) and pd.notna(game.get("away_q2"))
                     ):
-                        home_1h = float(game["home_q1"]) + float(game["home_q2"])
-                        away_1h = float(game["away_q1"]) + float(game["away_q2"])
+                        home_1h = float(game["home_q1"]) + \
+                            float(game["home_q2"])
+                        away_1h = float(game["away_q1"]) + \
+                            float(game["away_q2"])
                         actual_value = home_1h - away_1h
                     else:
                         continue
-                    predicted_value = features.get("predicted_margin_1h", features.get("predicted_margin", 0))
+                    predicted_value = features.get(
+                        "predicted_margin_1h", features.get("predicted_margin", 0))
                 else:
                     actual_value = game["home_score"] - game["away_score"]
                     predicted_value = features.get("predicted_margin", 0)
@@ -490,12 +516,15 @@ def run_backtest(
                         and pd.notna(game.get("home_q1")) and pd.notna(game.get("home_q2"))
                         and pd.notna(game.get("away_q1")) and pd.notna(game.get("away_q2"))
                     ):
-                        home_1h = float(game["home_q1"]) + float(game["home_q2"])
-                        away_1h = float(game["away_q1"]) + float(game["away_q2"])
+                        home_1h = float(game["home_q1"]) + \
+                            float(game["home_q2"])
+                        away_1h = float(game["away_q1"]) + \
+                            float(game["away_q2"])
                         actual_value = home_1h + away_1h
                     else:
                         continue
-                    predicted_value = features.get("predicted_total_1h", features.get("predicted_total", 0))
+                    predicted_value = features.get(
+                        "predicted_total_1h", features.get("predicted_total", 0))
                 else:
                     actual_value = game["home_score"] + game["away_score"]
                     predicted_value = features.get("predicted_total", 0)
@@ -565,20 +594,24 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
         accuracy = n_wins / n_bets
 
         pricing_available = all(b.profit is not None for b in bets)
-        profit: Optional[float] = sum(b.profit for b in bets) if pricing_available else None
-        roi: Optional[float] = (profit / n_bets * 100) if profit is not None else None
+        profit: Optional[float] = sum(
+            b.profit for b in bets) if pricing_available else None
+        roi: Optional[float] = (
+            profit / n_bets * 100) if profit is not None else None
 
         # High confidence subset
         high_conf_bets = [b for b in bets if b.confidence >= 0.60]
         if high_conf_bets:
             hc_wins = sum(1 for b in high_conf_bets if b.won)
             hc_acc = hc_wins / len(high_conf_bets)
-            hc_pricing_available = all(b.profit is not None for b in high_conf_bets)
+            hc_pricing_available = all(
+                b.profit is not None for b in high_conf_bets)
             hc_profit: Optional[float] = (
                 sum(b.profit for b in high_conf_bets) if hc_pricing_available else None
             )
             hc_roi: Optional[float] = (
-                hc_profit / len(high_conf_bets) * 100 if hc_profit is not None else None
+                hc_profit / len(high_conf_bets) *
+                100 if hc_profit is not None else None
             )
         else:
             hc_acc = 0
@@ -589,12 +622,15 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
         if roi is None or profit is None:
             print(f"  All bets:     {n_bets:4d} bets, {accuracy:5.1%} acc")
         else:
-            print(f"  All bets:     {n_bets:4d} bets, {accuracy:5.1%} acc, {roi:+6.1f}% ROI, {profit:+7.1f} units")
+            print(
+                f"  All bets:     {n_bets:4d} bets, {accuracy:5.1%} acc, {roi:+6.1f}% ROI, {profit:+7.1f} units")
         if high_conf_bets:
             if hc_roi is None or hc_profit is None:
-                print(f"  High-conf(60%+): {len(high_conf_bets):4d} bets, {hc_acc:5.1%} acc")
+                print(
+                    f"  High-conf(60%+): {len(high_conf_bets):4d} bets, {hc_acc:5.1%} acc")
             else:
-                print(f"  High-conf(60%+): {len(high_conf_bets):4d} bets, {hc_acc:5.1%} acc, {hc_roi:+6.1f}% ROI, {hc_profit:+7.1f} units")
+                print(
+                    f"  High-conf(60%+): {len(high_conf_bets):4d} bets, {hc_acc:5.1%} acc, {hc_roi:+6.1f}% ROI, {hc_profit:+7.1f} units")
 
         summary["markets"][market] = {
             "n_bets": n_bets,
@@ -620,9 +656,11 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
     print("\n" + "-" * 70)
     if total_bets > 0:
         if total_profit is None:
-            print(f"TOTAL: {total_bets} bets, {total_wins/total_bets:.1%} accuracy")
+            print(
+                f"TOTAL: {total_bets} bets, {total_wins/total_bets:.1%} accuracy")
         else:
-            print(f"TOTAL: {total_bets} bets, {total_wins/total_bets:.1%} accuracy, {total_profit/total_bets*100:+.1f}% ROI, {total_profit:+.1f} units")
+            print(
+                f"TOTAL: {total_bets} bets, {total_wins/total_bets:.1%} accuracy, {total_profit/total_bets*100:+.1f}% ROI, {total_profit:+.1f} units")
 
     # === BY SEASON BREAKDOWN ===
     print("\n" + "=" * 70)
@@ -652,7 +690,8 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
             season_data[season]["bets"].append(bet)
 
         # Print header
-        print(f"\n{'Season':<12} | {'FG Spread':^15} | {'FG Total':^15} | {'1H Spread':^15} | {'1H Total':^15}")
+        print(
+            f"\n{'Season':<12} | {'FG Spread':^15} | {'FG Total':^15} | {'1H Spread':^15} | {'1H Total':^15}")
         print("-" * 80)
 
         for season in sorted(season_data.keys()):
@@ -661,7 +700,8 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
             # Calculate per-market stats
             market_stats = {}
             for market in ["fg_spread", "fg_total", "1h_spread", "1h_total"]:
-                market_bets = [b for b in bets_in_season if b["market"] == market]
+                market_bets = [
+                    b for b in bets_in_season if b["market"] == market]
                 if market_bets:
                     wins = sum(1 for b in market_bets if b["won"])
                     acc = wins / len(market_bets) * 100
@@ -682,7 +722,8 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
                 ),
             }
             for market in ["fg_spread", "fg_total", "1h_spread", "1h_total"]:
-                market_bets = [b for b in bets_in_season if b["market"] == market]
+                market_bets = [
+                    b for b in bets_in_season if b["market"] == market]
                 if market_bets:
                     summary["by_season"][season][market] = {
                         "n_bets": len(market_bets),
@@ -702,7 +743,8 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Backtest production models on historical data")
+    parser = argparse.ArgumentParser(
+        description="Backtest production models on historical data")
     parser.add_argument(
         "--data",
         default="data/processed/training_data.csv",
@@ -797,7 +839,8 @@ def main():
     args = parser.parse_args()
 
     if getattr(args, "ensure_canonical", False):
-        ensure_canonical_training_data(args.data, version=args.azure_version, verify=True)
+        ensure_canonical_training_data(
+            args.data, version=args.azure_version, verify=True)
 
     pricing_enabled = not args.no_pricing
     if pricing_enabled and (args.spread_juice is None or args.total_juice is None):

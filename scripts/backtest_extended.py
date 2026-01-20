@@ -26,6 +26,15 @@ Usage:
     # Accuracy-only mode
     python scripts/backtest_extended.py --no-pricing
 """
+from src.prediction.engine import map_1h_features_to_fg_names
+from src.prediction.feature_validation import (
+    MissingFeaturesError,
+    validate_and_prepare_features,
+)
+from src.modeling.season_utils import get_season_for_date
+import joblib
+import numpy as np
+import pandas as pd
 import argparse
 import os
 import sys
@@ -39,16 +48,6 @@ from dataclasses import dataclass, field
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pandas as pd
-import numpy as np
-import joblib
-
-from src.modeling.season_utils import get_season_for_date
-from src.prediction.feature_validation import (
-    MissingFeaturesError,
-    validate_and_prepare_features,
-)
-from src.prediction.engine import map_1h_features_to_fg_names
 
 logging.basicConfig(
     level=logging.INFO,
@@ -299,7 +298,8 @@ def load_production_model(model_path: Path) -> Tuple[object, List[str]]:
         features = data.get("feature_columns", [])
     else:
         model = data
-        features = model.feature_names_in_.tolist() if hasattr(model, 'feature_names_in_') else []
+        features = model.feature_names_in_.tolist() if hasattr(
+            model, 'feature_names_in_') else []
 
     return model, features
 
@@ -417,11 +417,14 @@ def run_backtest(
 
         if config.is_moneyline and not model_path.exists():
             # For moneylines without dedicated model, use ELO-based prediction
-            print(f"  [INFO] {market_key}: No model found, will use ELO-based predictions")
-            loaded_models[market_key] = {"model": None, "features": [], "use_elo": True}
+            print(
+                f"  [INFO] {market_key}: No model found, will use ELO-based predictions")
+            loaded_models[market_key] = {
+                "model": None, "features": [], "use_elo": True}
         elif model_path.exists():
             model, features = load_production_model(model_path)
-            loaded_models[market_key] = {"model": model, "features": features, "use_elo": False}
+            loaded_models[market_key] = {
+                "model": model, "features": features, "use_elo": False}
             print(f"  [OK] Loaded {market_key}: {len(features)} features")
         else:
             print(f"  [WARN] Model not found: {model_path}")
@@ -439,10 +442,12 @@ def run_backtest(
         # Filter data by market's minimum date
         market_df = df.copy()
         if config.min_date:
-            market_df = market_df[market_df["date"] >= pd.to_datetime(config.min_date)]
+            market_df = market_df[market_df["date"]
+                                  >= pd.to_datetime(config.min_date)]
 
         market_df = market_df.sort_values("date").reset_index(drop=True)
-        print(f"\n  {market_key}: {len(market_df)} games (from {config.min_date or 'start'})")
+        print(
+            f"\n  {market_key}: {len(market_df)} games (from {config.min_date or 'start'})")
 
         for row_idx, (_, game) in enumerate(market_df.iterrows()):
             # Skip early games for training
@@ -502,7 +507,8 @@ def run_backtest(
                 home_odds, away_odds = get_moneyline_odds(game, config)
 
                 if home_odds is not None and away_odds is not None:
-                    fair_home, fair_away, vig_pct = remove_vig_proportional(home_odds, away_odds)
+                    fair_home, fair_away, vig_pct = remove_vig_proportional(
+                        home_odds, away_odds)
                     odds = int(home_odds) if side == "home" else int(away_odds)
                     implied_prob = american_to_implied_prob(odds)
                     fair_prob = fair_home if side == "home" else fair_away
@@ -524,7 +530,8 @@ def run_backtest(
                 vig_pct = None
 
             won = (pred_class == actual_label)
-            profit = calculate_profit(won, odds) if odds and pricing_enabled else None
+            profit = calculate_profit(
+                won, odds) if odds and pricing_enabled else None
 
             results[market_key].append(BetResult(
                 date=str(game["date"].date()),
@@ -564,9 +571,11 @@ def calculate_moneyline_metrics(bets: List[BetResult]) -> MoneylineMetrics:
     calibration_errors = []
     for b in bets:
         if b.fair_prob is not None:
-            pred_prob = b.predicted_prob if b.side == "home" else (1 - b.predicted_prob)
+            pred_prob = b.predicted_prob if b.side == "home" else (
+                1 - b.predicted_prob)
             calibration_errors.append(abs(pred_prob - b.fair_prob))
-    fair_calibration_error = np.mean(calibration_errors) if calibration_errors else None
+    fair_calibration_error = np.mean(
+        calibration_errors) if calibration_errors else None
 
     # Average vig paid
     vigs = [b.vig_pct for b in bets if b.vig_pct is not None]
@@ -608,7 +617,8 @@ def print_summary(
         print("-" * 40)
 
         if roi is not None:
-            print(f"  Bets: {n_bets:,}  |  Accuracy: {accuracy:.1%}  |  ROI: {roi:+.2f}%  |  Profit: {profit:+.1f}u")
+            print(
+                f"  Bets: {n_bets:,}  |  Accuracy: {accuracy:.1%}  |  ROI: {roi:+.2f}%  |  Profit: {profit:+.1f}u")
         else:
             print(f"  Bets: {n_bets:,}  |  Accuracy: {accuracy:.1%}")
 
@@ -619,7 +629,8 @@ def print_summary(
             if ml_metrics.raw_roi is not None:
                 print(f"  Raw ROI: {ml_metrics.raw_roi:+.2f}%")
             if ml_metrics.fair_calibration_error is not None:
-                print(f"  Fair Calibration Error: {ml_metrics.fair_calibration_error:.3f}")
+                print(
+                    f"  Fair Calibration Error: {ml_metrics.fair_calibration_error:.3f}")
             if ml_metrics.avg_vig_paid is not None:
                 print(f"  Avg Vig Paid: {ml_metrics.avg_vig_paid:.2f}%")
 
@@ -637,12 +648,15 @@ def print_summary(
             if tier_bets:
                 tier_wins = sum(1 for b in tier_bets if b.won)
                 tier_acc = tier_wins / len(tier_bets)
-                tier_profit = sum(b.profit for b in tier_bets if b.profit is not None)
+                tier_profit = sum(
+                    b.profit for b in tier_bets if b.profit is not None)
                 if tier_profit is not None and len(tier_bets) > 0:
                     tier_roi = tier_profit / len(tier_bets) * 100
-                    print(f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc, {tier_roi:+6.2f}% ROI")
+                    print(
+                        f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc, {tier_roi:+6.2f}% ROI")
                 else:
-                    print(f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc")
+                    print(
+                        f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc")
 
         summary["markets"][market] = {
             "n_bets": n_bets,
@@ -710,7 +724,8 @@ def main():
     # Data/model paths
     parser.add_argument("--data", default="data/processed/training_data.csv")
     parser.add_argument("--models-dir", default="models/production")
-    parser.add_argument("--output-json", default="data/backtest_results/extended_backtest_results.json")
+    parser.add_argument(
+        "--output-json", default="data/backtest_results/extended_backtest_results.json")
 
     try:
         bool_action = argparse.BooleanOptionalAction  # py3.9+
@@ -755,7 +770,8 @@ def main():
     parser.add_argument("--end-date", help="End date (YYYY-MM-DD)")
 
     # Pricing mode
-    parser.add_argument("--no-pricing", action="store_true", help="Accuracy-only mode")
+    parser.add_argument("--no-pricing", action="store_true",
+                        help="Accuracy-only mode")
 
     # Per-market juice (American odds)
     parser.add_argument("--fg-spread-juice", type=int, default=-110)
@@ -778,7 +794,8 @@ def main():
     args = parser.parse_args()
 
     if getattr(args, "ensure_canonical", False):
-        ensure_canonical_training_data(args.data, version=args.azure_version, verify=True)
+        ensure_canonical_training_data(
+            args.data, version=args.azure_version, verify=True)
 
     print("=" * 80)
     print("EXTENDED BACKTEST")
@@ -822,10 +839,12 @@ def main():
     df = pd.read_csv(data_path, low_memory=False)
 
     # Parse dates
-    df["date"] = pd.to_datetime(df.get("game_date", df.get("date")), errors="coerce")
+    df["date"] = pd.to_datetime(
+        df.get("game_date", df.get("date")), errors="coerce")
     df = df.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
 
-    print(f"Loaded {len(df)} games from {df['date'].min().date()} to {df['date'].max().date()}")
+    print(
+        f"Loaded {len(df)} games from {df['date'].min().date()} to {df['date'].max().date()}")
 
     # Apply date filters
     if args.start_date:

@@ -41,7 +41,7 @@ LEAKY_FEATURES_BLACKLIST = [
     "home_1h", "away_1h",
     "home_q1", "away_q1",
     "fg_margin", "actual_margin",
-    
+
     # ==========================================================================
     # BOX SCORE STATS FROM THIS GAME (leaky - computed from final stats)
     # ==========================================================================
@@ -50,7 +50,7 @@ LEAKY_FEATURES_BLACKLIST = [
     "home_fgm", "away_fgm",
     "home_dreb", "away_dreb",
     "home_efg_pct", "away_efg_pct",
-    
+
     # ==========================================================================
     # DO NOT BLACKLIST THESE - They are model outputs, not leaky inputs:
     # - predicted_margin: Model's prediction of home team margin (computed pre-game)
@@ -99,21 +99,36 @@ class Feature:
 # CORE TEAM STATS - Basic scoring and win rates
 # -----------------------------------------------------------------------------
 CORE_FEATURES = [
-    Feature("home_ppg", FeatureCategory.CORE, "Home team points per game", default=110.0, required=True),
-    Feature("home_papg", FeatureCategory.CORE, "Home team points allowed per game", default=110.0, required=True),
-    Feature("home_margin", FeatureCategory.CORE, "Home team average margin", default=0.0, required=True),
-    Feature("away_ppg", FeatureCategory.CORE, "Away team points per game", default=110.0, required=True),
-    Feature("away_papg", FeatureCategory.CORE, "Away team points allowed per game", default=110.0, required=True),
-    Feature("away_margin", FeatureCategory.CORE, "Away team average margin", default=0.0, required=True),
-    Feature("home_win_pct", FeatureCategory.CORE, "Home team win percentage", default=0.5, required=True),
-    Feature("away_win_pct", FeatureCategory.CORE, "Away team win percentage", default=0.5, required=True),
-    Feature("win_pct_diff", FeatureCategory.CORE, "Win percentage differential (home - away)", default=0.0),
-    Feature("ppg_diff", FeatureCategory.CORE, "PPG differential (home - away)", default=0.0),
-    Feature("home_pace", FeatureCategory.CORE, "Home team pace (possessions per game)", default=100.0),
-    Feature("away_pace", FeatureCategory.CORE, "Away team pace (possessions per game)", default=100.0),
-    Feature("expected_pace", FeatureCategory.CORE, "Expected game pace", default=100.0),
-    Feature("predicted_margin", FeatureCategory.CORE, "Model predicted margin", default=0.0),
-    Feature("predicted_total", FeatureCategory.CORE, "Model predicted total", default=220.0),
+    Feature("home_ppg", FeatureCategory.CORE,
+            "Home team points per game", default=110.0, required=True),
+    Feature("home_papg", FeatureCategory.CORE,
+            "Home team points allowed per game", default=110.0, required=True),
+    Feature("home_margin", FeatureCategory.CORE,
+            "Home team average margin", default=0.0, required=True),
+    Feature("away_ppg", FeatureCategory.CORE,
+            "Away team points per game", default=110.0, required=True),
+    Feature("away_papg", FeatureCategory.CORE,
+            "Away team points allowed per game", default=110.0, required=True),
+    Feature("away_margin", FeatureCategory.CORE,
+            "Away team average margin", default=0.0, required=True),
+    Feature("home_win_pct", FeatureCategory.CORE,
+            "Home team win percentage", default=0.5, required=True),
+    Feature("away_win_pct", FeatureCategory.CORE,
+            "Away team win percentage", default=0.5, required=True),
+    Feature("win_pct_diff", FeatureCategory.CORE,
+            "Win percentage differential (home - away)", default=0.0),
+    Feature("ppg_diff", FeatureCategory.CORE,
+            "PPG differential (home - away)", default=0.0),
+    Feature("home_pace", FeatureCategory.CORE,
+            "Home team pace (possessions per game)", default=100.0),
+    Feature("away_pace", FeatureCategory.CORE,
+            "Away team pace (possessions per game)", default=100.0),
+    Feature("expected_pace", FeatureCategory.CORE,
+            "Expected game pace", default=100.0),
+    Feature("predicted_margin", FeatureCategory.CORE,
+            "Model predicted margin", default=0.0),
+    Feature("predicted_total", FeatureCategory.CORE,
+            "Model predicted total", default=220.0),
 ]
 
 # -----------------------------------------------------------------------------
@@ -122,29 +137,46 @@ CORE_FEATURES = [
 # These are derived from pre-game rolling averages or season-to-date PPG/PAPG
 # (see scripts/complete_training_features.py) and are safe for training.
 EFFICIENCY_FEATURES = [
-    Feature("home_ortg", FeatureCategory.EFFICIENCY, "Home offensive rating (pregame)", default=110.0),
-    Feature("home_drtg", FeatureCategory.EFFICIENCY, "Home defensive rating (pregame)", default=110.0),
-    Feature("home_net_rtg", FeatureCategory.EFFICIENCY, "Home net rating (pregame)", default=0.0),
-    Feature("away_ortg", FeatureCategory.EFFICIENCY, "Away offensive rating (pregame)", default=110.0),
-    Feature("away_drtg", FeatureCategory.EFFICIENCY, "Away defensive rating (pregame)", default=110.0),
-    Feature("away_net_rtg", FeatureCategory.EFFICIENCY, "Away net rating (pregame)", default=0.0),
-    Feature("net_rating_diff", FeatureCategory.EFFICIENCY, "Net rating differential", default=0.0),
+    Feature("home_ortg", FeatureCategory.EFFICIENCY,
+            "Home offensive rating (pregame)", default=110.0),
+    Feature("home_drtg", FeatureCategory.EFFICIENCY,
+            "Home defensive rating (pregame)", default=110.0),
+    Feature("home_net_rtg", FeatureCategory.EFFICIENCY,
+            "Home net rating (pregame)", default=0.0),
+    Feature("away_ortg", FeatureCategory.EFFICIENCY,
+            "Away offensive rating (pregame)", default=110.0),
+    Feature("away_drtg", FeatureCategory.EFFICIENCY,
+            "Away defensive rating (pregame)", default=110.0),
+    Feature("away_net_rtg", FeatureCategory.EFFICIENCY,
+            "Away net rating (pregame)", default=0.0),
+    Feature("net_rating_diff", FeatureCategory.EFFICIENCY,
+            "Net rating differential", default=0.0),
 ]
 
 # -----------------------------------------------------------------------------
 # RECENT FORM - Last 5 and 10 game performance
 # -----------------------------------------------------------------------------
 FORM_FEATURES = [
-    Feature("home_l5_margin", FeatureCategory.FORM, "Home margin last 5 games", default=0.0),
-    Feature("away_l5_margin", FeatureCategory.FORM, "Away margin last 5 games", default=0.0),
-    Feature("home_l10_margin", FeatureCategory.FORM, "Home margin last 10 games", default=0.0),
-    Feature("away_l10_margin", FeatureCategory.FORM, "Away margin last 10 games", default=0.0),
-    Feature("home_form_trend", FeatureCategory.FORM, "Home form trend (L5 vs L10)", default=0.0),
-    Feature("away_form_trend", FeatureCategory.FORM, "Away form trend (L5 vs L10)", default=0.0),
-    Feature("home_margin_std", FeatureCategory.FORM, "Home margin standard deviation", default=10.0),
-    Feature("away_margin_std", FeatureCategory.FORM, "Away margin standard deviation", default=10.0),
-    Feature("home_score_std", FeatureCategory.FORM, "Home scoring standard deviation", default=10.0),
-    Feature("away_score_std", FeatureCategory.FORM, "Away scoring standard deviation", default=10.0),
+    Feature("home_l5_margin", FeatureCategory.FORM,
+            "Home margin last 5 games", default=0.0),
+    Feature("away_l5_margin", FeatureCategory.FORM,
+            "Away margin last 5 games", default=0.0),
+    Feature("home_l10_margin", FeatureCategory.FORM,
+            "Home margin last 10 games", default=0.0),
+    Feature("away_l10_margin", FeatureCategory.FORM,
+            "Away margin last 10 games", default=0.0),
+    Feature("home_form_trend", FeatureCategory.FORM,
+            "Home form trend (L5 vs L10)", default=0.0),
+    Feature("away_form_trend", FeatureCategory.FORM,
+            "Away form trend (L5 vs L10)", default=0.0),
+    Feature("home_margin_std", FeatureCategory.FORM,
+            "Home margin standard deviation", default=10.0),
+    Feature("away_margin_std", FeatureCategory.FORM,
+            "Away margin standard deviation", default=10.0),
+    Feature("home_score_std", FeatureCategory.FORM,
+            "Home scoring standard deviation", default=10.0),
+    Feature("away_score_std", FeatureCategory.FORM,
+            "Away scoring standard deviation", default=10.0),
 ]
 
 # -----------------------------------------------------------------------------
@@ -152,47 +184,76 @@ FORM_FEATURES = [
 # -----------------------------------------------------------------------------
 # NOTE: Feature names must match what features.py generates (home_rest, not home_rest_days)
 REST_FEATURES = [
-    Feature("home_rest", FeatureCategory.REST, "Home team days of rest", default=2.0),
-    Feature("away_rest", FeatureCategory.REST, "Away team days of rest", default=2.0),
-    Feature("rest_diff", FeatureCategory.REST, "Rest differential (home - away)", default=0.0),
-    Feature("home_b2b", FeatureCategory.REST, "Home playing back-to-back (0/1)", default=0.0),
-    Feature("away_b2b", FeatureCategory.REST, "Away playing back-to-back (0/1)", default=0.0),
-    Feature("home_rest_adj", FeatureCategory.REST, "Home rest adjustment factor", default=0.0),
-    Feature("away_rest_adj", FeatureCategory.REST, "Away rest adjustment factor", default=0.0),
-    Feature("rest_margin_adj", FeatureCategory.REST, "Rest-based margin adjustment", default=0.0),
+    Feature("home_rest", FeatureCategory.REST,
+            "Home team days of rest", default=2.0),
+    Feature("away_rest", FeatureCategory.REST,
+            "Away team days of rest", default=2.0),
+    Feature("rest_diff", FeatureCategory.REST,
+            "Rest differential (home - away)", default=0.0),
+    Feature("home_b2b", FeatureCategory.REST,
+            "Home playing back-to-back (0/1)", default=0.0),
+    Feature("away_b2b", FeatureCategory.REST,
+            "Away playing back-to-back (0/1)", default=0.0),
+    Feature("home_rest_adj", FeatureCategory.REST,
+            "Home rest adjustment factor", default=0.0),
+    Feature("away_rest_adj", FeatureCategory.REST,
+            "Away rest adjustment factor", default=0.0),
+    Feature("rest_margin_adj", FeatureCategory.REST,
+            "Rest-based margin adjustment", default=0.0),
 ]
 
 # -----------------------------------------------------------------------------
 # TRAVEL AND FATIGUE
 # -----------------------------------------------------------------------------
 TRAVEL_FEATURES = [
-    Feature("away_travel_distance", FeatureCategory.TRAVEL, "Away team travel distance (miles)", default=0.0),
-    Feature("away_timezone_change", FeatureCategory.TRAVEL, "Away team timezone change (hours)", default=0.0),
-    Feature("away_travel_fatigue", FeatureCategory.TRAVEL, "Away team travel fatigue score", default=0.0),
-    Feature("is_away_long_trip", FeatureCategory.TRAVEL, "Is away team on long trip (0/1)", default=0.0),
-    Feature("is_away_cross_country", FeatureCategory.TRAVEL, "Is cross-country travel (0/1)", default=0.0),
-    Feature("away_b2b_travel_penalty", FeatureCategory.TRAVEL, "B2B + travel compound penalty", default=0.0),
-    Feature("travel_advantage", FeatureCategory.TRAVEL, "Home travel advantage score", default=0.0),
-    Feature("home_court_advantage", FeatureCategory.TRAVEL, "Team-specific HCA (e.g., Denver ~4.2)", default=3.0),
-    Feature("dynamic_hca", FeatureCategory.TRAVEL, "Dynamic home court advantage", default=3.0),
+    Feature("away_travel_distance", FeatureCategory.TRAVEL,
+            "Away team travel distance (miles)", default=0.0),
+    Feature("away_timezone_change", FeatureCategory.TRAVEL,
+            "Away team timezone change (hours)", default=0.0),
+    Feature("away_travel_fatigue", FeatureCategory.TRAVEL,
+            "Away team travel fatigue score", default=0.0),
+    Feature("is_away_long_trip", FeatureCategory.TRAVEL,
+            "Is away team on long trip (0/1)", default=0.0),
+    Feature("is_away_cross_country", FeatureCategory.TRAVEL,
+            "Is cross-country travel (0/1)", default=0.0),
+    Feature("away_b2b_travel_penalty", FeatureCategory.TRAVEL,
+            "B2B + travel compound penalty", default=0.0),
+    Feature("travel_advantage", FeatureCategory.TRAVEL,
+            "Home travel advantage score", default=0.0),
+    Feature("home_court_advantage", FeatureCategory.TRAVEL,
+            "Team-specific HCA (e.g., Denver ~4.2)", default=3.0),
+    Feature("dynamic_hca", FeatureCategory.TRAVEL,
+            "Dynamic home court advantage", default=3.0),
 ]
 
 # -----------------------------------------------------------------------------
 # INJURY IMPACT
 # -----------------------------------------------------------------------------
 INJURY_FEATURES = [
-    Feature("has_injury_data", FeatureCategory.INJURY, "Injury data available (0/1)", default=0.0),
-    Feature("home_injury_impact_ppg", FeatureCategory.INJURY, "Home PPG lost to injuries", default=0.0),
-    Feature("away_injury_impact_ppg", FeatureCategory.INJURY, "Away PPG lost to injuries", default=0.0),
-    Feature("injury_margin_adj", FeatureCategory.INJURY, "Injury-based margin adjustment", default=0.0),
-    Feature("home_star_out", FeatureCategory.INJURY, "Home star player out (0/1)", default=0.0),
-    Feature("away_star_out", FeatureCategory.INJURY, "Away star player out (0/1)", default=0.0),
-    Feature("home_injury_spread_impact", FeatureCategory.INJURY, "Home spread impact from injuries", default=0.0),
-    Feature("away_injury_spread_impact", FeatureCategory.INJURY, "Away spread impact from injuries", default=0.0),
-    Feature("injury_spread_diff", FeatureCategory.INJURY, "Net injury spread impact", default=0.0),
-    Feature("home_injury_total_impact", FeatureCategory.INJURY, "Home total impact from injuries", default=0.0),
-    Feature("away_injury_total_impact", FeatureCategory.INJURY, "Away total impact from injuries", default=0.0),
-    Feature("injury_total_diff", FeatureCategory.INJURY, "Net injury total impact", default=0.0),
+    Feature("has_injury_data", FeatureCategory.INJURY,
+            "Injury data available (0/1)", default=0.0),
+    Feature("home_injury_impact_ppg", FeatureCategory.INJURY,
+            "Home PPG lost to injuries", default=0.0),
+    Feature("away_injury_impact_ppg", FeatureCategory.INJURY,
+            "Away PPG lost to injuries", default=0.0),
+    Feature("injury_margin_adj", FeatureCategory.INJURY,
+            "Injury-based margin adjustment", default=0.0),
+    Feature("home_star_out", FeatureCategory.INJURY,
+            "Home star player out (0/1)", default=0.0),
+    Feature("away_star_out", FeatureCategory.INJURY,
+            "Away star player out (0/1)", default=0.0),
+    Feature("home_injury_spread_impact", FeatureCategory.INJURY,
+            "Home spread impact from injuries", default=0.0),
+    Feature("away_injury_spread_impact", FeatureCategory.INJURY,
+            "Away spread impact from injuries", default=0.0),
+    Feature("injury_spread_diff", FeatureCategory.INJURY,
+            "Net injury spread impact", default=0.0),
+    Feature("home_injury_total_impact", FeatureCategory.INJURY,
+            "Home total impact from injuries", default=0.0),
+    Feature("away_injury_total_impact", FeatureCategory.INJURY,
+            "Away total impact from injuries", default=0.0),
+    Feature("injury_total_diff", FeatureCategory.INJURY,
+            "Net injury total impact", default=0.0),
 ]
 
 # -----------------------------------------------------------------------------
@@ -203,33 +264,54 @@ INJURY_FEATURES = [
 # live predictions can leverage real RLM/sharp money signals.
 # -----------------------------------------------------------------------------
 BETTING_FEATURES = [
-    Feature("has_real_splits", FeatureCategory.BETTING, "Real splits data available (0/1)", default=0.0),
+    Feature("has_real_splits", FeatureCategory.BETTING,
+            "Real splits data available (0/1)", default=0.0),
     # Spread public betting
-    Feature("spread_public_home_pct", FeatureCategory.BETTING, "% of public on home spread", default=50.0),
-    Feature("spread_public_away_pct", FeatureCategory.BETTING, "% of public on away spread", default=50.0),
-    Feature("spread_money_home_pct", FeatureCategory.BETTING, "% of money on home spread", default=50.0),
-    Feature("spread_money_away_pct", FeatureCategory.BETTING, "% of money on away spread", default=50.0),
-    Feature("spread_ticket_money_diff", FeatureCategory.BETTING, "Ticket vs money divergence (spread)", default=0.0),
+    Feature("spread_public_home_pct", FeatureCategory.BETTING,
+            "% of public on home spread", default=50.0),
+    Feature("spread_public_away_pct", FeatureCategory.BETTING,
+            "% of public on away spread", default=50.0),
+    Feature("spread_money_home_pct", FeatureCategory.BETTING,
+            "% of money on home spread", default=50.0),
+    Feature("spread_money_away_pct", FeatureCategory.BETTING,
+            "% of money on away spread", default=50.0),
+    Feature("spread_ticket_money_diff", FeatureCategory.BETTING,
+            "Ticket vs money divergence (spread)", default=0.0),
     # Spread line movement
-    Feature("spread_open", FeatureCategory.BETTING, "Opening spread line", default=0.0),
-    Feature("spread_current", FeatureCategory.BETTING, "Current spread line", default=0.0),
-    Feature("spread_movement", FeatureCategory.BETTING, "Spread line movement", default=0.0),
+    Feature("spread_open", FeatureCategory.BETTING,
+            "Opening spread line", default=0.0),
+    Feature("spread_current", FeatureCategory.BETTING,
+            "Current spread line", default=0.0),
+    Feature("spread_movement", FeatureCategory.BETTING,
+            "Spread line movement", default=0.0),
     # Spread RLM signals
-    Feature("is_rlm_spread", FeatureCategory.BETTING, "Reverse line movement on spread (0/1)", default=0.0),
-    Feature("sharp_side_spread", FeatureCategory.BETTING, "Sharp money side on spread (-1/0/1)", default=0.0),
+    Feature("is_rlm_spread", FeatureCategory.BETTING,
+            "Reverse line movement on spread (0/1)", default=0.0),
+    Feature("sharp_side_spread", FeatureCategory.BETTING,
+            "Sharp money side on spread (-1/0/1)", default=0.0),
     # Total public betting
-    Feature("over_public_pct", FeatureCategory.BETTING, "% of public on over", default=50.0),
-    Feature("under_public_pct", FeatureCategory.BETTING, "% of public on under", default=50.0),
-    Feature("over_money_pct", FeatureCategory.BETTING, "% of money on over", default=50.0),
-    Feature("under_money_pct", FeatureCategory.BETTING, "% of money on under", default=50.0),
-    Feature("total_ticket_money_diff", FeatureCategory.BETTING, "Ticket vs money divergence (total)", default=0.0),
+    Feature("over_public_pct", FeatureCategory.BETTING,
+            "% of public on over", default=50.0),
+    Feature("under_public_pct", FeatureCategory.BETTING,
+            "% of public on under", default=50.0),
+    Feature("over_money_pct", FeatureCategory.BETTING,
+            "% of money on over", default=50.0),
+    Feature("under_money_pct", FeatureCategory.BETTING,
+            "% of money on under", default=50.0),
+    Feature("total_ticket_money_diff", FeatureCategory.BETTING,
+            "Ticket vs money divergence (total)", default=0.0),
     # Total line movement
-    Feature("total_open", FeatureCategory.BETTING, "Opening total line", default=220.0),
-    Feature("total_current", FeatureCategory.BETTING, "Current total line", default=220.0),
-    Feature("total_movement", FeatureCategory.BETTING, "Total line movement", default=0.0),
+    Feature("total_open", FeatureCategory.BETTING,
+            "Opening total line", default=220.0),
+    Feature("total_current", FeatureCategory.BETTING,
+            "Current total line", default=220.0),
+    Feature("total_movement", FeatureCategory.BETTING,
+            "Total line movement", default=0.0),
     # Total RLM signals
-    Feature("is_rlm_total", FeatureCategory.BETTING, "Reverse line movement on total (0/1)", default=0.0),
-    Feature("sharp_side_total", FeatureCategory.BETTING, "Sharp money side on total (-1/0/1)", default=0.0),
+    Feature("is_rlm_total", FeatureCategory.BETTING,
+            "Reverse line movement on total (0/1)", default=0.0),
+    Feature("sharp_side_total", FeatureCategory.BETTING,
+            "Sharp money side on total (-1/0/1)", default=0.0),
 ]
 
 # -----------------------------------------------------------------------------
@@ -237,38 +319,52 @@ BETTING_FEATURES = [
 # -----------------------------------------------------------------------------
 # Computed from prior matchups only (see scripts/complete_training_features.py).
 H2H_FEATURES = [
-    Feature("h2h_games", FeatureCategory.H2H, "Number of H2H games this season", default=0.0),
-    Feature("h2h_margin", FeatureCategory.H2H, "Average H2H margin (last 5)", default=0.0),
-    Feature("h2h_win_rate", FeatureCategory.H2H, "H2H win rate (last 5)", default=0.5),
+    Feature("h2h_games", FeatureCategory.H2H,
+            "Number of H2H games this season", default=0.0),
+    Feature("h2h_margin", FeatureCategory.H2H,
+            "Average H2H margin (last 5)", default=0.0),
+    Feature("h2h_win_rate", FeatureCategory.H2H,
+            "H2H win rate (last 5)", default=0.5),
 ]
 
 # -----------------------------------------------------------------------------
 # ELO RATINGS
 # -----------------------------------------------------------------------------
 ELO_FEATURES = [
-    Feature("home_elo", FeatureCategory.ELO, "Home team ELO rating", default=1500.0),
-    Feature("away_elo", FeatureCategory.ELO, "Away team ELO rating", default=1500.0),
-    Feature("elo_diff", FeatureCategory.ELO, "ELO differential (home - away)", default=0.0),
-    Feature("elo_prob_home", FeatureCategory.ELO, "ELO-based home win probability", default=0.5),
+    Feature("home_elo", FeatureCategory.ELO,
+            "Home team ELO rating", default=1500.0),
+    Feature("away_elo", FeatureCategory.ELO,
+            "Away team ELO rating", default=1500.0),
+    Feature("elo_diff", FeatureCategory.ELO,
+            "ELO differential (home - away)", default=0.0),
+    Feature("elo_prob_home", FeatureCategory.ELO,
+            "ELO-based home win probability", default=0.5),
 ]
 
 # -----------------------------------------------------------------------------
 # STANDINGS
 # -----------------------------------------------------------------------------
 STANDINGS_FEATURES = [
-    Feature("home_position", FeatureCategory.CORE, "Home team standings position (1-15)", default=8.0),
-    Feature("away_position", FeatureCategory.CORE, "Away team standings position (1-15)", default=8.0),
-    Feature("position_diff", FeatureCategory.CORE, "Position differential", default=0.0),
+    Feature("home_position", FeatureCategory.CORE,
+            "Home team standings position (1-15)", default=8.0),
+    Feature("away_position", FeatureCategory.CORE,
+            "Away team standings position (1-15)", default=8.0),
+    Feature("position_diff", FeatureCategory.CORE,
+            "Position differential", default=0.0),
 ]
 
 # -----------------------------------------------------------------------------
 # ATS PERFORMANCE
 # -----------------------------------------------------------------------------
 ATS_FEATURES = [
-    Feature("home_ats_pct", FeatureCategory.BETTING, "Home ATS win percentage", default=0.5),
-    Feature("away_ats_pct", FeatureCategory.BETTING, "Away ATS win percentage", default=0.5),
-    Feature("home_over_pct", FeatureCategory.BETTING, "Home over percentage", default=0.5),
-    Feature("away_over_pct", FeatureCategory.BETTING, "Away over percentage", default=0.5),
+    Feature("home_ats_pct", FeatureCategory.BETTING,
+            "Home ATS win percentage", default=0.5),
+    Feature("away_ats_pct", FeatureCategory.BETTING,
+            "Away ATS win percentage", default=0.5),
+    Feature("home_over_pct", FeatureCategory.BETTING,
+            "Home over percentage", default=0.5),
+    Feature("away_over_pct", FeatureCategory.BETTING,
+            "Away over percentage", default=0.5),
 ]
 
 # -----------------------------------------------------------------------------
@@ -278,24 +374,32 @@ ATS_FEATURES = [
 # They are injected at PREDICTION time for 1H models via map_1h_features_to_fg_names()
 # -----------------------------------------------------------------------------
 MARKET_FEATURES = [
-    Feature("spread_line", FeatureCategory.MARKET, "Current spread line", default=0.0),
-    Feature("total_line", FeatureCategory.MARKET, "Current total line", default=220.0),
-    Feature("spread_vs_predicted", FeatureCategory.MARKET, "Spread vs model prediction diff", default=0.0),
-    Feature("total_vs_predicted", FeatureCategory.MARKET, "Total vs model prediction diff", default=0.0),
+    Feature("spread_line", FeatureCategory.MARKET,
+            "Current spread line", default=0.0),
+    Feature("total_line", FeatureCategory.MARKET,
+            "Current total line", default=220.0),
+    Feature("spread_vs_predicted", FeatureCategory.MARKET,
+            "Spread vs model prediction diff", default=0.0),
+    Feature("total_vs_predicted", FeatureCategory.MARKET,
+            "Total vs model prediction diff", default=0.0),
 ]
 
 # 1H-Specific Market Features (injected at prediction time, NOT in training)
 H1_MARKET_FEATURES = [
-    Feature("1h_spread_line", FeatureCategory.MARKET, "Current 1H spread line", default=0.0),
-    Feature("1h_total_line", FeatureCategory.MARKET, "Current 1H total line", default=110.0),
+    Feature("1h_spread_line", FeatureCategory.MARKET,
+            "Current 1H spread line", default=0.0),
+    Feature("1h_total_line", FeatureCategory.MARKET,
+            "Current 1H total line", default=110.0),
 ]
 
 # -----------------------------------------------------------------------------
 # TOTALS-SPECIFIC
 # -----------------------------------------------------------------------------
 TOTALS_SPECIFIC_FEATURES = [
-    Feature("home_total_ppg", FeatureCategory.CORE, "Home contribution to total", default=110.0),
-    Feature("away_total_ppg", FeatureCategory.CORE, "Away contribution to total", default=110.0),
+    Feature("home_total_ppg", FeatureCategory.CORE,
+            "Home contribution to total", default=110.0),
+    Feature("away_total_ppg", FeatureCategory.CORE,
+            "Away contribution to total", default=110.0),
 ]
 
 
@@ -342,7 +446,8 @@ class ModelConfig:
     label_column: str        # Column name for training labels
     line_column: str         # Column name for the betting line
     model_file: str          # Filename for saved model
-    features: List[str] = field(default_factory=lambda: UNIFIED_FEATURE_NAMES.copy())
+    features: List[str] = field(
+        default_factory=lambda: UNIFIED_FEATURE_NAMES.copy())
 
 
 MODEL_REGISTRY: Dict[str, ModelConfig] = {
@@ -403,7 +508,8 @@ def get_features_by_category(category: FeatureCategory) -> List[str]:
 def get_model_config(market_key: str) -> ModelConfig:
     """Get configuration for a specific model."""
     if market_key not in MODEL_REGISTRY:
-        raise ValueError(f"Unknown market: {market_key}. Valid: {list(MODEL_REGISTRY.keys())}")
+        raise ValueError(
+            f"Unknown market: {market_key}. Valid: {list(MODEL_REGISTRY.keys())}")
     return MODEL_REGISTRY[market_key]
 
 
@@ -433,7 +539,8 @@ def validate_features(features: Dict[str, float]) -> Dict[str, float]:
 
     if missing_required:
         import logging
-        logging.warning(f"Required features missing (using defaults): {missing_required}")
+        logging.warning(
+            f"Required features missing (using defaults): {missing_required}")
 
     return result
 
