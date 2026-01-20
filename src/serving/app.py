@@ -784,11 +784,12 @@ def verify_integrity(request: Request):
 
         test_features = {name: defaults.get(
             name, 0.0) for name in required_features}
-        # Additional 1H-only required fields (not part of model columns)
-        test_features.setdefault(
-            "predicted_margin_1h", overrides["predicted_margin_1h"])
-        test_features.setdefault("predicted_total_1h",
-                                 overrides["predicted_total_1h"])
+        # CRITICAL: Always include predicted_margin/predicted_total - needed for edge calculation
+        # These are computed by RichFeatureBuilder at inference time, not part of model columns
+        test_features.setdefault("predicted_margin", overrides["predicted_margin"])
+        test_features.setdefault("predicted_total", overrides["predicted_total"])
+        test_features.setdefault("predicted_margin_1h", overrides["predicted_margin_1h"])
+        test_features.setdefault("predicted_total_1h", overrides["predicted_total_1h"])
 
         # Check 3: Test 1H prediction
         try:
