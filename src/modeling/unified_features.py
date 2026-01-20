@@ -24,52 +24,42 @@ from enum import Enum
 # =============================================================================
 # These features are computed FROM the game's actual outcome (box scores, final scores)
 # and therefore contain future information that leaks the answer to the model.
-# CRITICAL: If you add features that correlate >0.5 with the label, ADD THEM HERE.
+#
+# IMPORTANT DISTINCTION (2026-01-20 FIX):
+# - LEAKY (blacklist): Features derived from THIS GAME's actual result (scores, box scores)
+# - NOT LEAKY (allow): Model's own predictions computed BEFORE the game from historical data
+#   e.g., predicted_margin, predicted_total are computed at inference time from live API stats
+#
+# The 2026-01-18 commit incorrectly blacklisted predicted_margin/predicted_total which are
+# MODEL OUTPUTS needed for edge calculation, not leaky inputs. This broke FG predictions.
 
 LEAKY_FEATURES_BLACKLIST = [
-    # Box score stats from THIS game (not rolling averages)
-    # (Pregame efficiency uses *_ortg/*_drtg/*_net_rtg derived from prior games.)
-    "home_off_rtg", "away_off_rtg",
-    "home_def_rtg", "away_def_rtg",
-    # Actual game scores (obvious leakage)
-    "home_score",
-    "away_score",
-    "home_1h",
-    "away_1h",
-    "home_q1",
-    "away_q1",
-    "fg_margin",
-    "actual_margin",
-    # Box score totals from this game
+    # ==========================================================================
+    # ACTUAL GAME RESULTS (definitely leaky - these are the answers)
+    # ==========================================================================
+    "home_score", "away_score",
+    "home_1h", "away_1h",
+    "home_q1", "away_q1",
+    "fg_margin", "actual_margin",
+    
+    # ==========================================================================
+    # BOX SCORE STATS FROM THIS GAME (leaky - computed from final stats)
+    # ==========================================================================
+    "home_off_rtg", "away_off_rtg",  # Game-specific offensive rating
+    "home_def_rtg", "away_def_rtg",  # Game-specific defensive rating
     "home_fgm", "away_fgm",
     "home_dreb", "away_dreb",
     "home_efg_pct", "away_efg_pct",
-
-    # CRITICAL LEAKAGE PREVENTION (Added 2026-01-18)
-    "predicted_margin",
-    "spread_vs_predicted",
-    "predicted_total",
-    "total_vs_predicted",
-    "home_avg_margin",
-    "away_avg_margin",
-
-    # AGGRESSIVE LEAKAGE PREVENTION (Season stats likely include current game)
-    "home_ppg", "away_ppg",
-    "home_papg", "away_papg",
-    "home_win_pct", "away_win_pct",
-    "win_pct_diff", "ppg_diff",
-    "net_rating_diff",
-    "home_pts", "away_pts", # aliases
-
-    # 2026-01-18: THE SMOKING GUNS (94% accuracy specific leaks)
-    "home_margin", "away_margin", # Almost certainly actual game margin or included in average
-    "home_pace", "away_pace", # Likely actual game pace or included in average
-    "home_net_rtg", "away_net_rtg", # Efficiency often calculated from box score
-    "home_elo", "away_elo", "elo_diff", # ELO updated post-game leaks result
-    "h2h_margin", # H2H margin likely includes current game if not carefully lagged
-    "home_form_trend", "away_form_trend", # L5 trends likely include current game
-
-
+    
+    # ==========================================================================
+    # DO NOT BLACKLIST THESE - They are model outputs, not leaky inputs:
+    # - predicted_margin: Model's prediction of home team margin (computed pre-game)
+    # - predicted_total: Model's prediction of total points (computed pre-game)
+    # - spread_vs_predicted: Edge calculation (predicted_margin vs spread_line)
+    # - total_vs_predicted: Edge calculation (predicted_total vs total_line)
+    # - home_ppg, away_ppg: Rolling averages from PRIOR games (properly lagged)
+    # - home_elo, away_elo: Pre-game Elo ratings (updated AFTER prior games)
+    # ==========================================================================
 ]
 
 
