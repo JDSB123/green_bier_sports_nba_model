@@ -154,6 +154,11 @@ def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
         "predicted_margin_1h": "predicted_margin",
         "predicted_total_1h": "predicted_total",
 
+        # Period-specific HCA (computed by feature pipeline with _1h suffix)
+        "dynamic_hca_1h": "dynamic_hca",
+        "home_court_advantage_1h": "home_court_advantage",
+        "home_avg_margin_1h": "home_avg_margin",
+
         # H2H (1H-specific head-to-head)
         "h2h_margin_1h": "h2h_margin",
     }
@@ -176,6 +181,13 @@ def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
     # - Betting: public_home_pct, rlm_indicator, sharp_money_side
     #
     # These are already in the feature dict with standard names, no mapping needed.
+
+    # Compatibility aliases (some downstream models/features expect these keys)
+    if "home_court_advantage" not in mapped_features and "dynamic_hca" in mapped_features:
+        mapped_features["home_court_advantage"] = mapped_features["dynamic_hca"]
+
+    if "home_avg_margin" not in mapped_features and "home_margin" in mapped_features:
+        mapped_features["home_avg_margin"] = mapped_features["home_margin"]
 
     return mapped_features
 

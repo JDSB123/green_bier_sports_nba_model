@@ -98,6 +98,10 @@ def sample_features():
         # Predicted values (critical for edge calculation)
         "predicted_margin": 8.0,  # Model predicts home wins by 8
         "predicted_total": 225.0,
+
+        # 1H predicted values (required for 1H edge calculation)
+        "predicted_margin_1h": 4.0,
+        "predicted_total_1h": 112.0,
     })
 
     return features

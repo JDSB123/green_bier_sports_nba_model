@@ -3,8 +3,8 @@
 Bump version across all files in the NBA prediction repository.
 
 Usage:
-    python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
-    python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD> --dry-run
+    python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
+    python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>] --dry-run
 """
 import argparse
 import re
@@ -15,23 +15,28 @@ from typing import List, Tuple
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
 
+# Version formats:
+# - Current: NBA_v<MAJOR>.<MINOR>.<PATCH>
+# - Legacy:  NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+_VERSION_REGEX = r"NBA_v\d+\.\d+\.\d+(?:\.\d+)?"
+
 # Files that need version updates
 VERSION_FILES = [
-    ("VERSION", r"NBA_v\d+\.\d+\.\d+\.\d+", "{version}"),
-    ("models/production/model_pack.json", r'"version":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
-     '  "version": "{version}"'),
-    ("models/production/model_pack.json", r'"git_tag":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
-     '  "git_tag": "{version}"'),
-    ("models/production/model_pack.json", r'"acr":\s*"nbagbsacr\.azurecr\.io/nba-gbsv-api:NBA_v\d+\.\d+\.\d+\.\d+"',
-     '    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:{version}"'),
-    ("models/production/feature_importance.json", r'"version":\s*"NBA_v\d+\.\d+\.\d+\.\d+"',
-     '  "version": "{version}"'),
+    ("VERSION", _VERSION_REGEX, "{version}"),
+    ("models/production/model_pack.json", rf'"version":\s*"{_VERSION_REGEX}"',
+     '"version": "{version}"'),
+    ("models/production/model_pack.json", rf'"git_tag":\s*"{_VERSION_REGEX}"',
+     '"git_tag": "{version}"'),
+    ("models/production/model_pack.json", rf'"acr":\s*"nbagbsacr\.azurecr\.io/nba-gbsv-api:{_VERSION_REGEX}"',
+     '"acr": "nbagbsacr.azurecr.io/nba-gbsv-api:{version}"'),
+    ("models/production/feature_importance.json", rf'"version":\s*"{_VERSION_REGEX}"',
+     '"version": "{version}"'),
 ]
 
 
 def validate_version(version: str) -> bool:
     """Validate version format."""
-    pattern = r"^NBA_v\d+\.\d+\.\d+\.\d+$"
+    pattern = rf"^{_VERSION_REGEX}$"
     return bool(re.match(pattern, version))
 
 
@@ -63,15 +68,18 @@ def find_and_replace(file_path: Path, pattern: str, replacement: str, new_versio
 
 def main():
     parser = argparse.ArgumentParser(description="Bump NBA model version across all files")
-    parser.add_argument("version", help="New version (e.g., NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>)")
+    parser.add_argument(
+        "version",
+        help="New version (e.g., NBA_v<MAJOR>.<MINOR>.<PATCH> or NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Show what would be changed without modifying files")
     args = parser.parse_args()
     
     # Validate version format
     if not validate_version(args.version):
         print(f"[ERROR] Invalid version format: {args.version}")
-        print("   Expected format: NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>")
-        print("   Example: NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>")
+        print("   Expected format: NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]")
+        print("   Example: NBA_v33.1.3 or NBA_v33.1.3.0")
         sys.exit(1)
     
     print("=" * 80)
@@ -145,4 +153,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -9,10 +9,10 @@
 ## Version Format
 
 ```
-NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
 ```
 
-Example: `NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>`
+Example: `NBA_v33.1.3` or `NBA_v33.1.3.0`
 
 - **MAJOR (33)**: Model architecture generation or breaking API changes
 - **MINOR (0)**: New features, market additions, major logic changes
@@ -58,7 +58,7 @@ Example: `NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>`
 - Adding archiving to predictions ✅
 - Fixing Docker secrets handling ✅
 
-### BUILD (v<MAJOR>.<MINOR>.<PATCH>.<BUILD> -> v<MAJOR>.<MINOR>.<PATCH>.<BUILD+1>)
+### BUILD (v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>] -> v<MAJOR>.<MINOR>.<PATCH>[.<BUILD+1>])
 - Hotfixes for critical production issues
 - Docker configuration changes only
 - No code changes, just rebuild
@@ -82,12 +82,12 @@ Example: `NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>`
 
 1. **Update VERSION file:**
    ```bash
-   echo "NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>" > VERSION
+   echo "NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]" > VERSION
    ```
 
 2. **Update all references (use script below):**
    ```powershell
-   python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+   python scripts/bump_version.py NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
    ```
    This updates:
    - [VERSION](VERSION)
@@ -97,13 +97,13 @@ Example: `NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>`
 3. **Commit with semantic message:**
    ```bash
    git add VERSION models/production/model_pack.json models/production/feature_importance.json
-   git commit -m "chore: bump version to NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+   git commit -m "chore: bump version to NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
    
    - Fixed spread calculation bug
    - Added archive folder for historical tracking
    - Updated deployment docs"
    
-   git tag NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+   git tag NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
    git push origin main --tags
    ```
 
@@ -194,5 +194,4 @@ A: No. Only bump when merging to `main`. Experimental branches keep the current 
 - [README.md](README.md) - Project overview
 - [.github/copilot-instructions.md](.github/copilot-instructions.md) - Deployment pipeline
 - [models/production/model_pack.json](models/production/model_pack.json) - Model metadata
-
 

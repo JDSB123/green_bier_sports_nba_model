@@ -97,8 +97,15 @@ def check_version_consistency():
     if app_file.exists():
         try:
             content = app_file.read_text(encoding='utf-8', errors='ignore')
-            if version in content or "NBA_MODEL_VERSION" in content:
-                check("app.py version", True, "Version referenced")
+            # app.py resolves version dynamically via src.utils.version.resolve_version()
+            # so we accept either a literal version string, env override, or the resolver.
+            if (
+                version in content
+                or "NBA_MODEL_VERSION" in content
+                or "resolve_version" in content
+                or "src.utils.version" in content
+            ):
+                check("app.py version", True, "Version referenced (literal/env/resolver)")
             else:
                 check("app.py version", False, "Version not found in app.py")
         except Exception as e:
@@ -112,6 +119,9 @@ def check_required_files():
     print("\n" + "=" * 70)
     print("2. REQUIRED FILES CHECK")
     print("=" * 70)
+
+    version_path = PROJECT_ROOT / "VERSION"
+    version = version_path.read_text().strip() if version_path.exists() else ""
     
     required_files = [
         ("VERSION", PROJECT_ROOT / "VERSION"),
@@ -134,17 +144,42 @@ def check_required_files():
     if models_dir.exists():
         model_files = list(models_dir.glob("*.pkl")) + list(models_dir.glob("*.joblib"))
         check("Model files exist", len(model_files) > 0, f"Found {len(model_files)} model files")
-        
-        # Check for expected 4 models
-        expected_models = [
-            "1h_spread_model.pkl",
-            "1h_total_model.pkl",
-            "fg_spread_model.joblib",
-            "fg_total_model.joblib",
-        ]
-        for model_name in expected_models:
-            model_path = models_dir / model_name
-            check(f"Model: {model_name}", model_path.exists(), f"{model_path}")
+
+        # Prefer model_pack.json as the source of truth for which model artifacts should exist
+        model_pack_path = models_dir / "model_pack.json"
+        if model_pack_path.exists():
+            try:
+                pack = json.loads(model_pack_path.read_text(encoding="utf-8"))
+                pack_version = (pack.get("version") or "").strip()
+                check("Model pack version matches VERSION", pack_version == version, f"{pack_version} vs {version}")
+
+                market_status = pack.get("market_status") or {}
+                model_files_expected = sorted(
+                    {
+                        (v.get("model_file") or "").strip()
+                        for v in market_status.values()
+                        if isinstance(v, dict)
+                    }
+                )
+                if model_files_expected:
+                    for model_name in model_files_expected:
+                        model_path = models_dir / model_name
+                        check(f"Model: {model_name}", model_path.exists(), f"{model_path}")
+                else:
+                    check("Model pack lists models", False, f"No model_file entries in {model_pack_path}")
+            except Exception as e:
+                check("Model pack parse", False, f"Failed to parse {model_pack_path}: {e}")
+        else:
+            # Fallback: expected 4 models (1H + FG) - modern format is joblib for all.
+            expected_models = [
+                "1h_spread_model.joblib",
+                "1h_total_model.joblib",
+                "fg_spread_model.joblib",
+                "fg_total_model.joblib",
+            ]
+            for model_name in expected_models:
+                model_path = models_dir / model_name
+                check(f"Model: {model_name}", model_path.exists(), f"{model_path}")
     else:
         check("Model files exist", False, "models/production directory not found")
     
@@ -358,4 +393,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

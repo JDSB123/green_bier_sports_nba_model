@@ -1,7 +1,7 @@
 # NBA Container App Deployment Status - Root Cause Analysis
 
-**Date:** January 21, 2026  
-**Version:** NBA_v33.1.3  
+**Date:** January 21, 2026
+**Version:** NBA_v33.1.3
 **Issue:** Predictions work locally but fail in Azure Container App
 
 ---
@@ -18,7 +18,7 @@ Based on analysis of your codebase and deployment pipeline, here are the **5 cri
 - Confidence/edge calculations fail silently
 - Predictions become inaccurate
 
-**Status:** ✅ FIXED in recent commits  
+**Status:** ✅ FIXED in recent commits
 **What you need to do:** Use the updated `run_slate.py` that includes `ensure_api_version_matches_local()` function which auto-rebuilds the container if versions drift.
 
 ---
@@ -67,7 +67,7 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 - Health check fails at end of deployment
 - Deployment appears to fail even though it succeeds
 
-**Status:** ✅ FIXED  
+**Status:** ✅ FIXED
 **Fix Applied:** FQDN now dynamically resolved using `az containerapp show`
 
 ---
@@ -79,7 +79,7 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 - Health verification fails even though app is running
 - Deployment verification fails
 
-**Status:** ✅ FIXED  
+**Status:** ✅ FIXED
 **Fix Applied:** deploy.ps1 now accepts both `"ok"` and `"healthy"`
 
 ---
@@ -236,4 +236,3 @@ az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --since 5m
 - **Current version:** NBA_v33.1.3
 - **Resource group:** `nba-gbsv-model-rg`
 - **Container app:** `nba-gbsv-api`
-

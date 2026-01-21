@@ -1,6 +1,6 @@
 # Azure Container App Deployment Troubleshooting
 
-**Last Updated:** 2026-01-21  
+**Last Updated:** 2026-01-21
 **Version:** NBA_v33.1.3
 
 ## Common Failure Scenarios & Fixes
@@ -49,7 +49,7 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 # Should show:
 # {
 #   "name": "THE_ODDS_API_KEY",
-#   "secretRef": "the-odds-api-key"  
+#   "secretRef": "the-odds-api-key"
 # }
 ```
 
@@ -176,7 +176,7 @@ python scripts/predict.py  # This triggers app startup
 - Missing API keys in environment
 - Unsupported Python version
 
-**Fix:** 
+**Fix:**
 ```bash
 # Check feature configuration
 python -c "from src.modeling.unified_features import get_all_features; print(len(get_all_features()))"
@@ -304,7 +304,7 @@ az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg --since 30m | Sel
 curl -s "https://api.the-odds-api.com/v4/sports/basketball_nba/odds?apiKey=$ENV:THE_ODDS_API_KEY&regions=us&markets=spread" | jq '.response | length'
 ```
 
-**Fix:** 
+**Fix:**
 - Check API rate limits haven't been exceeded
 - Verify API keys are active in The Odds and API-Basketball dashboards
 - Add detailed logging to `src/ingestion/` modules:
@@ -485,4 +485,3 @@ az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
 - [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md) - Local Docker issues
 - [DOCKER_SECRETS.md](DOCKER_SECRETS.md) - Secret management
 - [.github/copilot-instructions.md](../.github/copilot-instructions.md) - Deployment pipeline
-

@@ -33,6 +33,7 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 from src.utils.version import resolve_version
 
@@ -106,7 +107,8 @@ def start_stack():
     """Start the Docker stack."""
     print("🐳 Starting Docker stack...")
     result = subprocess.run(
-        ["docker", "compose", "up", "-d"],
+        # Always build to avoid accidentally running a stale local image after code/model updates.
+        ["docker", "compose", "up", "-d", "--build"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True
@@ -136,6 +138,58 @@ def wait_for_api(max_wait: int = 60) -> bool:
     
     print("❌ API did not become ready in time")
     return False
+
+
+def _is_local_api_url(url: str) -> bool:
+    """Return True when API_URL points at localhost."""
+    try:
+        host = urlparse(url).hostname or ""
+    except Exception:
+        return False
+    return host in {"localhost", "127.0.0.1"}
+
+
+def ensure_api_version_matches_local(*, local_version: str, max_wait: int = 60) -> None:
+    """Ensure the running local container matches the repo VERSION.
+
+    This prevents a common footgun: an old `nba-gbsv-api:local` image still running after a git pull.
+    Only acts when API_URL is local.
+    """
+    if not _is_local_api_url(API_URL):
+        return
+
+    try:
+        health = http_get_json(f"{API_URL}/health", timeout=10)
+    except Exception:
+        return
+
+    api_version = (health.get("version") or "").strip()
+    if not api_version or api_version == local_version:
+        return
+
+    print(f"⚠️  Version mismatch: local={local_version} but API={api_version}. Rebuilding/recreating container...")
+    result = subprocess.run(
+        ["docker", "compose", "up", "-d", "--build", "--force-recreate"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"❌ Failed to rebuild stack: {result.stderr.strip()}")
+        return
+
+    # Wait for the rebuilt API to come back
+    if not wait_for_api(max_wait=max_wait):
+        return
+
+    try:
+        health = http_get_json(f"{API_URL}/health", timeout=10)
+        api_version = (health.get("version") or "").strip()
+    except Exception:
+        return
+
+    if api_version != local_version:
+        print(f"⚠️  Still mismatched after rebuild: local={local_version} API={api_version}")
 
 
 def calculate_fire_rating(confidence: float, edge_pts: float) -> str:
@@ -514,7 +568,7 @@ def generate_html_output(
     return html
 
 
-def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
+def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_splits: bool = True):
     """Fetch slate, display results, and save to file."""
     now_cst = datetime.now(CST)
     output_lines = []
@@ -559,11 +613,23 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
             if parts:
                 html_build_note = " / ".join(parts)
 
-        data = http_get_json(
-            f"{API_URL}/slate/{date_str}/comprehensive",
-            params={"use_splits": "true"},
-            timeout=120,
-        )
+        try:
+            data = http_get_json(
+                f"{API_URL}/slate/{date_str}/comprehensive",
+                params={"use_splits": "true" if use_splits else "false"},
+                timeout=120,
+            )
+        except Exception as e:
+            if use_splits:
+                log("[WARN] Slate request failed with use_splits=true; retrying with use_splits=false")
+                data = http_get_json(
+                    f"{API_URL}/slate/{date_str}/comprehensive",
+                    params={"use_splits": "false"},
+                    timeout=120,
+                )
+                use_splits = False
+            else:
+                raise e
         api_version = data.get("version")
         api_date = data.get("date")
         data_fetched_at_cst = data.get("data_fetched_at_cst")
@@ -581,6 +647,7 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None):
         if api_version:
             log(f"[API VERSION] {api_version.replace('NBA_v', 'v')}")
         log(f"[API URL] {API_URL}")
+        log(f"[USE_SPLITS] {'true' if use_splits else 'false'}")
         if health:
             build = health.get("build") or {}
             build_parts = []
@@ -967,14 +1034,22 @@ def main():
     parser.add_argument("--matchup", help="Filter to specific team (e.g., 'Lakers')")
     parser.add_argument("--api-url", help="Override API base URL (e.g., https://...azurecontainerapps.io)")
     parser.add_argument("--no-docker", action="store_true", help="Skip Docker checks (use with --api-url)")
+    parser.add_argument(
+        "--use-splits",
+        default="true",
+        choices=["true", "false"],
+        help="Use betting splits (default: true). If providers are down, use --use-splits false.",
+    )
     args = parser.parse_args()
 
     if args.api_url:
         global API_URL
         API_URL = args.api_url.rstrip("/")
+
+    local_version = resolve_version()
     
     print("\n" + "="*80)
-    print(f"🏀 NBA PREDICTION SYSTEM {resolve_version().replace('NBA_v', 'v')} (4 markets: 1H + FG)")
+    print(f"🏀 NBA PREDICTION SYSTEM {local_version.replace('NBA_v', 'v')} (4 markets: 1H + FG)")
     print("="*80)
     
     if not args.no_docker:
@@ -997,9 +1072,13 @@ def main():
         else:
             print("\n💡 Try: docker compose logs nba-v33-api")
         sys.exit(1)
+
+    # Guardrail: if we're pointing at a local API, ensure the running container matches repo VERSION.
+    if not args.no_docker:
+        ensure_api_version_matches_local(local_version=local_version)
     
     # Step 4: Fetch and display
-    fetch_and_display_slate(args.date, args.matchup)
+    fetch_and_display_slate(args.date, args.matchup, use_splits=(args.use_splits == "true"))
 
 
 if __name__ == "__main__":

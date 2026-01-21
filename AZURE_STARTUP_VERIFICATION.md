@@ -2,7 +2,7 @@
 
 **Purpose:** Verify your deployment is correctly configured before running predictions.
 
-**Run this BEFORE deploying to Azure:** 
+**Run this BEFORE deploying to Azure:**
 
 ```bash
 # 1. Ensure local code is working
@@ -242,4 +242,3 @@ curl "https://$FQDN/slate/today/executive" | jq '.plays | length'
 - [DOCKER_SECRETS.md](DOCKER_SECRETS.md) - Secret management
 - [.github/copilot-instructions.md](../.github/copilot-instructions.md) - Deployment pipeline
 - [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - Full deployment guide
-

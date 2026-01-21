@@ -107,7 +107,7 @@ Complete market structure overhaul to 4 markets.
 This project uses **semantic versioning** with the format:
 
 ```
-NBA_v<MAJOR>.<MINOR>.<PATCH>.<BUILD>
+NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
 ```
 
 - **MAJOR**: Model architecture changes or breaking API changes

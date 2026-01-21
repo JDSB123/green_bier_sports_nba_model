@@ -48,7 +48,7 @@ $RESOURCE_GROUP = "nba-gbsv-model-rg"
 $CONTAINER_APP = "nba-gbsv-api"
 $ACR_NAME = "nbagbsacr"
 $DOCKERFILE = "Dockerfile.combined"
-$HEALTH_URL = "https://nba-gbsv-api.ambitiouscoast-4bcd4cd8.eastus.azurecontainerapps.io/health"
+$HEALTH_URL = $null
 
 # Helper functions
 function Write-Step {
@@ -181,16 +181,31 @@ try {
     # Step 7: Health check
     Write-Step "[7/7] Verifying deployment"
     
+    # Resolve current Container App FQDN (avoid hardcoded domains)
+    if ($DryRun) {
+        $HEALTH_URL = "https://<container-app-fqdn>/health"
+    } else {
+        $FQDN = (az containerapp show -n $CONTAINER_APP -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
+        if (-not $FQDN) {
+            Write-Failure "Failed to resolve Container App FQDN"
+            exit 1
+        }
+        $HEALTH_URL = "https://$FQDN/health"
+    }
+
     Write-Host "  Waiting 10 seconds for container to start..." -ForegroundColor Gray
     if (-not $DryRun) {
         Start-Sleep -Seconds 10
     }
     
-    try {
+    if ($DryRun) {
+        Write-Host "  [DRY RUN] Would check: $HEALTH_URL" -ForegroundColor Gray
+    } else {
+      try {
         $Response = Invoke-WebRequest -Uri $HEALTH_URL -UseBasicParsing
         $HealthData = $Response.Content | ConvertFrom-Json
         
-        if ($HealthData.status -eq "healthy" -and $HealthData.version -eq $VERSION) {
+        if (($HealthData.status -in @("ok", "healthy")) -and $HealthData.version -eq $VERSION) {
             Write-Success "Deployment verified successfully"
             Write-Host ""
             Write-Host "  Status:  $($HealthData.status)" -ForegroundColor Green
@@ -205,6 +220,7 @@ try {
         Write-Host "  URL: $HEALTH_URL"
         Write-Host "  Check logs: az containerapp logs show -n $CONTAINER_APP -g $RESOURCE_GROUP"
         exit 1
+      }
     }
 
     # Success summary
