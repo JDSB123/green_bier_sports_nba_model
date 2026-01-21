@@ -15,6 +15,7 @@
   },
   
   "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "nohup bash -lc 'scripts/keepalive.sh' >/tmp/codespace-keepalive.log 2>&1 &",
   
   "customizations": {
     "vscode": {
@@ -30,7 +31,10 @@
         "python.testing.pytestEnabled": true,
         "python.testing.pytestArgs": [
           "tests"
-        ]
+        ],
+        "remote.autoForwardPortsSource": "process",
+        "remote.restoreForwardedPorts": true,
+        "remote.SSH.connectTimeout": 300
       }
     }
   },

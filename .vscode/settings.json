@@ -33,5 +33,8 @@
   "containers.volumes.label": "Name",
   "liveServer.settings.port": 5501,
   "azureFunctions.projectSubpath": "azure\\function_app",
-  "chat.agent.maxRequests": 250
+  "chat.agent.maxRequests": 250,
+  "remote.autoForwardPortsSource": "process",
+  "remote.restoreForwardedPorts": true,
+  "remote.SSH.connectTimeout": 300
 }
