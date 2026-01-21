@@ -77,5 +77,15 @@
       "group": "build",
       "presentation": { "reveal": "always", "panel": "shared" }
     }
+    ,
+    {
+      "label": "Preflight: Freshness & Invariants",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "python scripts/preflight_freshness.py"],
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "new" },
+      "problemMatcher": []
+    }
   ]
 }
