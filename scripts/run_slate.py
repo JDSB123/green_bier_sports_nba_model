@@ -231,6 +231,31 @@ def format_odds(odds: int | None) -> str:
         return str(odds)
 
 
+def _format_spread_rationale(
+    *,
+    pick_team: str,
+    pick_line: float,
+    pred_winner: str,
+    pred_margin: float,
+    edge_abs: float,
+) -> str:
+    """Format a spread rationale line that stays consistent with the model winner."""
+    if pred_winner == "Toss-up":
+        return (
+            f"       Rationale: Model is a toss-up, getting {pick_team} {pick_line:+.1f} "
+            f"→ {edge_abs:.1f} pts edge"
+        )
+    if pred_winner == pick_team:
+        return (
+            f"       Rationale: Model says {pick_team} by {pred_margin:.1f}, getting {pick_line:+.1f} "
+            f"→ {edge_abs:.1f} pts edge"
+        )
+    return (
+        f"       Rationale: Model says {pred_winner} by {pred_margin:.1f}, but getting {pick_team} {pick_line:+.1f} "
+        f"→ {edge_abs:.1f} pts edge"
+    )
+
+
 def _match_game(game: dict, matchup_filter: str) -> bool:
     """Match on one or more matchup filters.
 
@@ -870,11 +895,15 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                     log(f"       Model predicts: {pred_winner} wins by {pred_margin:.1f} pts")
                     log(f"       Market line: {pick_team} {pick_line:+.1f}")
                     log(f"       Edge: {edge_abs:.1f} pts of value")
-                    # Explain the edge calculation
-                    if pick_team == home:
-                        log(f"       Rationale: Model says {home} by {abs(model_margin):.1f}, getting {pick_line:+.1f} → {edge_abs:.1f} pts edge")
-                    else:
-                        log(f"       Rationale: Model says {pred_winner} by {pred_margin:.1f}, but getting {away} {pick_line:+.1f} → {edge_abs:.1f} pts edge")
+                    log(
+                        _format_spread_rationale(
+                            pick_team=pick_team,
+                            pick_line=float(pick_line),
+                            pred_winner=pred_winner,
+                            pred_margin=float(pred_margin),
+                            edge_abs=float(edge_abs),
+                        )
+                    )
                     log(f"       Confidence: {conf:.0%}  |  {fire}")
                     ev_line = format_ev_line(spread)
                     if ev_line:

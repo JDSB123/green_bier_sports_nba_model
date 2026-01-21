@@ -29,6 +29,14 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 
 ---
 
+## [NBA_v33.1.4] - 2026-01-21
+
+### Fixed
+- Comprehensive slate “recommended picks” now align with engine `passes_filter`/`bet_side` (prevents low-confidence/negative-EV rows being surfaced as picks).
+- `run_slate.py` now auto-builds on startup and auto-rebuilds on local API version mismatch; spread rationale text now matches the model’s predicted winner.
+
+---
+
 ## [NBA_v33.0.11.0] - 2026-01-05
 
 ### Changed

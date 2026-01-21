@@ -1,7 +1,7 @@
 # Azure Container App Deployment Troubleshooting
 
 **Last Updated:** 2026-01-21
-**Version:** NBA_v33.1.3
+**Version:** NBA_v33.1.4
 
 ## Common Failure Scenarios & Fixes
 

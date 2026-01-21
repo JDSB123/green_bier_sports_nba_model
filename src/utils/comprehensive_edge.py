@@ -116,7 +116,6 @@ def calculate_comprehensive_edge(
     # === FULL GAME SPREAD ===
     market_expected_margin = -fg_market_spread if fg_market_spread is not None else 0
     fg_spread_edge = fg_predicted_margin - market_expected_margin
-    fg_spread_pick = home_team if fg_spread_edge > 0 else away_team
     # NO SILENT FAILURES: Require ML Engine predictions for all markets
     # The system must have trained ML models available - no fallbacks to heuristics
     if not engine_predictions:
@@ -134,11 +133,21 @@ def calculate_comprehensive_edge(
             f"Engine must provide full_game.spread predictions"
         )
 
-    # Extract ML model probabilities - these are calibrated classifier outputs
-    if fg_spread_pick == home_team:
+    fg_spread_bet_side = fg_spread_pred.get("bet_side")
+    if fg_spread_bet_side == "home":
+        fg_spread_pick = home_team
         fg_spread_p_model = fg_spread_pred.get("home_cover_prob")
-    else:
+    elif fg_spread_bet_side == "away":
+        fg_spread_pick = away_team
         fg_spread_p_model = fg_spread_pred.get("away_cover_prob")
+    else:
+        # Defensive fallback (should not happen): infer from edge sign
+        fg_spread_pick = home_team if fg_spread_edge > 0 else away_team
+        fg_spread_p_model = (
+            fg_spread_pred.get("home_cover_prob")
+            if fg_spread_pick == home_team
+            else fg_spread_pred.get("away_cover_prob")
+        )
 
     if fg_spread_p_model is None or fg_spread_p_model == 0.5:
         raise ValueError(
@@ -162,6 +171,8 @@ def calculate_comprehensive_edge(
     fg_spread_p_dist = fg_home_cover_dist if fg_spread_pick == home_team else fg_away_cover_dist
     
     spread_threshold = edge_thresholds.get("spread", 2.0)
+    fg_spread_passes_filter = bool(fg_spread_pred.get("passes_filter", False))
+    fg_spread_emit = fg_spread_passes_filter and (abs(fg_spread_edge) >= spread_threshold)
     fg_pick_line = fg_market_spread if fg_spread_pick == home_team else -fg_market_spread
     fg_spread_pick_odds = fg_spread_odds_home if fg_spread_pick == home_team else fg_spread_odds_away
     if fg_spread_pick_odds is None:
@@ -181,16 +192,22 @@ def calculate_comprehensive_edge(
         "market_odds_away": fg_spread_odds_away,
         "edge": fg_spread_edge,
         "edge_abs": abs(fg_spread_edge),
-        "pick": fg_spread_pick if abs(fg_spread_edge) >= spread_threshold else None,
-        "pick_line": fg_pick_line if abs(fg_spread_edge) >= spread_threshold else None,
-        "pick_odds": fg_spread_pick_odds if abs(fg_spread_edge) >= spread_threshold else None,
+        "pick": fg_spread_pick if fg_spread_emit else None,
+        "pick_line": fg_pick_line if fg_spread_emit else None,
+        "pick_odds": fg_spread_pick_odds if fg_spread_emit else None,
         "confidence": fg_spread_confidence,
-        "win_probability": fg_spread_win_prob if abs(fg_spread_edge) >= spread_threshold else 0.5,
+        "win_probability": fg_spread_win_prob if fg_spread_emit else 0.5,
         "probability_source": fg_spread_probability_source,
-        "p_model": fg_spread_p_model if abs(fg_spread_edge) >= spread_threshold else None,
-        "p_fair": fg_spread_p_fair if abs(fg_spread_edge) >= spread_threshold else None,
-        "ev_pct": fg_spread_ev_pct if abs(fg_spread_edge) >= spread_threshold else None,
-        "kelly_fraction": fg_spread_kelly if abs(fg_spread_edge) >= spread_threshold else None,
+        "p_model": fg_spread_p_model if fg_spread_emit else None,
+        "p_fair": fg_spread_p_fair if fg_spread_emit else None,
+        "ev_pct": fg_spread_ev_pct if fg_spread_emit else None,
+        "kelly_fraction": fg_spread_kelly if fg_spread_emit else None,
+        "passes_filter": fg_spread_passes_filter,
+        "filter_reason": fg_spread_pred.get("filter_reason"),
+        "signals_agree": fg_spread_pred.get("signals_agree"),
+        "classifier_side": fg_spread_pred.get("classifier_side"),
+        "prediction_side": fg_spread_pred.get("prediction_side"),
+        "classifier_extreme": fg_spread_pred.get("classifier_extreme"),
         "dist_std": fg_spread_std,
         "dist_home_cover_prob": fg_home_cover_dist,
         "dist_away_cover_prob": fg_away_cover_dist,
@@ -203,7 +220,6 @@ def calculate_comprehensive_edge(
     
     # === FULL GAME TOTAL ===
     fg_total_edge = fg_predicted_total - fg_market_total
-    fg_total_pick = "OVER" if fg_total_edge > 0 else "UNDER"
     total_threshold = edge_thresholds.get("total", 3.0)
 
     # NO SILENT FAILURES: Require ML Engine predictions for totals
@@ -221,8 +237,13 @@ def calculate_comprehensive_edge(
             f"Engine must provide full_game.total predictions"
         )
 
+    fg_total_bet_side = fg_total_pred.get("bet_side")
+    if fg_total_bet_side not in {"over", "under"}:
+        fg_total_bet_side = "over" if fg_total_edge > 0 else "under"
+    fg_total_pick = "OVER" if fg_total_bet_side == "over" else "UNDER"
+
     # Extract ML model probabilities - calibrated over/under classifier
-    if fg_total_pick == "OVER":
+    if fg_total_bet_side == "over":
         fg_total_p_model = fg_total_pred.get("over_prob")
     else:
         fg_total_p_model = fg_total_pred.get("under_prob")
@@ -248,6 +269,9 @@ def calculate_comprehensive_edge(
     fg_under_prob_dist = 1.0 - fg_over_prob_dist
     fg_total_p_dist = fg_over_prob_dist if fg_total_pick == "OVER" else fg_under_prob_dist
 
+    fg_total_passes_filter = bool(fg_total_pred.get("passes_filter", False))
+    fg_total_emit = fg_total_passes_filter and (abs(fg_total_edge) >= total_threshold)
+
     fg_total_pick_odds = fg_total_odds_over if fg_total_pick == "OVER" else fg_total_odds_under
     if fg_total_pick_odds is None:
         fg_total_pick_odds = fg_total_odds
@@ -266,16 +290,22 @@ def calculate_comprehensive_edge(
         "market_odds_under": fg_total_odds_under,
         "edge": fg_total_edge,
         "edge_abs": abs(fg_total_edge),
-        "pick": fg_total_pick if abs(fg_total_edge) >= total_threshold else None,
-        "pick_line": fg_market_total if abs(fg_total_edge) >= total_threshold else None,
-        "pick_odds": fg_total_pick_odds if abs(fg_total_edge) >= total_threshold else None,
+        "pick": fg_total_pick if fg_total_emit else None,
+        "pick_line": fg_market_total if fg_total_emit else None,
+        "pick_odds": fg_total_pick_odds if fg_total_emit else None,
         "confidence": fg_total_confidence,
-        "win_probability": fg_total_win_prob if abs(fg_total_edge) >= total_threshold else 0.5,
+        "win_probability": fg_total_win_prob if fg_total_emit else 0.5,
         "probability_source": fg_total_probability_source,
-        "p_model": fg_total_p_model if abs(fg_total_edge) >= total_threshold else None,
-        "p_fair": fg_total_p_fair if abs(fg_total_edge) >= total_threshold else None,
-        "ev_pct": fg_total_ev_pct if abs(fg_total_edge) >= total_threshold else None,
-        "kelly_fraction": fg_total_kelly if abs(fg_total_edge) >= total_threshold else None,
+        "p_model": fg_total_p_model if fg_total_emit else None,
+        "p_fair": fg_total_p_fair if fg_total_emit else None,
+        "ev_pct": fg_total_ev_pct if fg_total_emit else None,
+        "kelly_fraction": fg_total_kelly if fg_total_emit else None,
+        "passes_filter": fg_total_passes_filter,
+        "filter_reason": fg_total_pred.get("filter_reason"),
+        "signals_agree": fg_total_pred.get("signals_agree"),
+        "classifier_side": fg_total_pred.get("classifier_side"),
+        "prediction_side": fg_total_pred.get("prediction_side"),
+        "classifier_extreme": fg_total_pred.get("classifier_extreme"),
         "dist_std": fg_total_std,
         "dist_over_prob": fg_over_prob_dist,
         "dist_under_prob": fg_under_prob_dist,
@@ -317,14 +347,21 @@ def calculate_comprehensive_edge(
 
         fh_market_expected_margin = -fh_market_spread
         fh_spread_edge = fh_predicted_margin - fh_market_expected_margin
-        fh_spread_pick = home_team if fh_spread_edge > 0 else away_team
+
+        fh_spread_bet_side = fh_spread_pred.get("bet_side")
+        if fh_spread_bet_side == "home":
+            fh_spread_pick = home_team
+        elif fh_spread_bet_side == "away":
+            fh_spread_pick = away_team
+        else:
+            fh_spread_pick = home_team if fh_spread_edge > 0 else away_team
 
         fh_spread_confidence = fh_spread_pred.get("confidence")
         if fh_spread_confidence is None:
             raise ValueError(
                 f"Missing confidence score from ML 1H spread model for {home_team} vs {away_team}"
             )
-        fh_spread_win_prob = fh_cover_prob if fh_spread_edge > 0 else (1 - fh_cover_prob)
+        fh_spread_win_prob = fh_cover_prob if fh_spread_pick == home_team else (1 - fh_cover_prob)
         fh_spread_p_model = fh_cover_prob if fh_spread_pick == home_team else (1 - fh_cover_prob)
         fh_spread_std = estimate_spread_std(fh_features, "1h")
         fh_home_cover_dist = cover_probability(fh_predicted_margin, fh_market_spread, fh_spread_std)
@@ -332,6 +369,8 @@ def calculate_comprehensive_edge(
         fh_spread_p_dist = fh_home_cover_dist if fh_spread_pick == home_team else fh_away_cover_dist
 
         fh_spread_threshold = edge_thresholds.get("1h_spread", 1.5)
+        fh_spread_passes_filter = bool(fh_spread_pred.get("passes_filter", False))
+        fh_spread_emit = fh_spread_passes_filter and (abs(fh_spread_edge) >= fh_spread_threshold)
         fh_pick_line = fh_market_spread if fh_spread_pick == home_team else -fh_market_spread
         fh_spread_pick_odds = fh_spread_odds_home if fh_spread_pick == home_team else fh_spread_odds_away
         if fh_spread_pick_odds is None:
@@ -351,16 +390,22 @@ def calculate_comprehensive_edge(
             "market_odds_away": fh_spread_odds_away,
             "edge": fh_spread_edge,
             "edge_abs": abs(fh_spread_edge),
-            "pick": fh_spread_pick if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "pick_line": fh_pick_line if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "pick_odds": fh_spread_pick_odds if abs(fh_spread_edge) >= fh_spread_threshold else None,
+            "pick": fh_spread_pick if fh_spread_emit else None,
+            "pick_line": fh_pick_line if fh_spread_emit else None,
+            "pick_odds": fh_spread_pick_odds if fh_spread_emit else None,
             "confidence": fh_spread_confidence,
             "win_probability": fh_spread_win_prob,
             "probability_source": "engine_ml",  # 1H always uses engine predictions when available
-            "p_model": fh_spread_p_model if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "p_fair": fh_spread_p_fair if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "ev_pct": fh_spread_ev_pct if abs(fh_spread_edge) >= fh_spread_threshold else None,
-            "kelly_fraction": fh_spread_kelly if abs(fh_spread_edge) >= fh_spread_threshold else None,
+            "p_model": fh_spread_p_model if fh_spread_emit else None,
+            "p_fair": fh_spread_p_fair if fh_spread_emit else None,
+            "ev_pct": fh_spread_ev_pct if fh_spread_emit else None,
+            "kelly_fraction": fh_spread_kelly if fh_spread_emit else None,
+            "passes_filter": fh_spread_passes_filter,
+            "filter_reason": fh_spread_pred.get("filter_reason"),
+            "signals_agree": fh_spread_pred.get("signals_agree"),
+            "classifier_side": fh_spread_pred.get("classifier_side"),
+            "prediction_side": fh_spread_pred.get("prediction_side"),
+            "classifier_extreme": fh_spread_pred.get("classifier_extreme"),
             "dist_std": fh_spread_std,
             "dist_home_cover_prob": fh_home_cover_dist,
             "dist_away_cover_prob": fh_away_cover_dist,
@@ -389,14 +434,18 @@ def calculate_comprehensive_edge(
         fh_over_prob = fh_total_pred.get("over_prob", 0.5)
 
         fh_total_edge = fh_predicted_total - fh_market_total
-        fh_total_pick = "OVER" if fh_total_edge > 0 else "UNDER"
+
+        fh_total_bet_side = fh_total_pred.get("bet_side")
+        if fh_total_bet_side not in {"over", "under"}:
+            fh_total_bet_side = "over" if fh_total_edge > 0 else "under"
+        fh_total_pick = "OVER" if fh_total_bet_side == "over" else "UNDER"
 
         fh_total_confidence = fh_total_pred.get("confidence")
         if fh_total_confidence is None:
             raise ValueError(
                 f"Missing confidence score from ML 1H total model for {home_team} vs {away_team}"
             )
-        fh_total_win_prob = fh_over_prob if fh_total_edge > 0 else (1 - fh_over_prob)
+        fh_total_win_prob = fh_over_prob if fh_total_pick == "OVER" else (1 - fh_over_prob)
         fh_total_p_model = fh_over_prob if fh_total_pick == "OVER" else (1 - fh_over_prob)
         fh_total_std = estimate_total_std(fh_features, "1h")
         fh_over_prob_dist = over_probability(fh_predicted_total, fh_market_total, fh_total_std)
@@ -404,6 +453,8 @@ def calculate_comprehensive_edge(
         fh_total_p_dist = fh_over_prob_dist if fh_total_pick == "OVER" else fh_under_prob_dist
 
         fh_total_threshold = edge_thresholds.get("1h_total", 2.0)
+        fh_total_passes_filter = bool(fh_total_pred.get("passes_filter", False))
+        fh_total_emit = fh_total_passes_filter and (abs(fh_total_edge) >= fh_total_threshold)
         fh_total_pick_odds = fh_total_odds_over if fh_total_pick == "OVER" else fh_total_odds_under
         if fh_total_pick_odds is None:
             fh_total_pick_odds = fh_total_odds
@@ -422,16 +473,22 @@ def calculate_comprehensive_edge(
             "market_odds_under": fh_total_odds_under,
             "edge": fh_total_edge,
             "edge_abs": abs(fh_total_edge),
-            "pick": fh_total_pick if abs(fh_total_edge) >= fh_total_threshold else None,
-            "pick_line": fh_market_total if abs(fh_total_edge) >= fh_total_threshold else None,
-            "pick_odds": fh_total_pick_odds if abs(fh_total_edge) >= fh_total_threshold else None,
+            "pick": fh_total_pick if fh_total_emit else None,
+            "pick_line": fh_market_total if fh_total_emit else None,
+            "pick_odds": fh_total_pick_odds if fh_total_emit else None,
             "confidence": fh_total_confidence,
             "win_probability": fh_total_win_prob,
             "probability_source": "engine_ml",  # 1H always uses engine predictions when available
-            "p_model": fh_total_p_model if abs(fh_total_edge) >= fh_total_threshold else None,
-            "p_fair": fh_total_p_fair if abs(fh_total_edge) >= fh_total_threshold else None,
-            "ev_pct": fh_total_ev_pct if abs(fh_total_edge) >= fh_total_threshold else None,
-            "kelly_fraction": fh_total_kelly if abs(fh_total_edge) >= fh_total_threshold else None,
+            "p_model": fh_total_p_model if fh_total_emit else None,
+            "p_fair": fh_total_p_fair if fh_total_emit else None,
+            "ev_pct": fh_total_ev_pct if fh_total_emit else None,
+            "kelly_fraction": fh_total_kelly if fh_total_emit else None,
+            "passes_filter": fh_total_passes_filter,
+            "filter_reason": fh_total_pred.get("filter_reason"),
+            "signals_agree": fh_total_pred.get("signals_agree"),
+            "classifier_side": fh_total_pred.get("classifier_side"),
+            "prediction_side": fh_total_pred.get("prediction_side"),
+            "classifier_extreme": fh_total_pred.get("classifier_extreme"),
             "dist_std": fh_total_std,
             "dist_over_prob": fh_over_prob_dist,
             "dist_under_prob": fh_under_prob_dist,
