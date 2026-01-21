@@ -45,6 +45,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Require deployment secrets (push-only)
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          : "${{ secrets.THE_ODDS_API_KEY?Missing THE_ODDS_API_KEY }}"
+          : "${{ secrets.API_BASKETBALL_KEY?Missing API_BASKETBALL_KEY }}"
+          echo "✓ Required secrets present"
+
+      - name: Run invariant tests (4-market guardrail)
+        run: |
+          set -euo pipefail
+          pytest tests/test_prediction_invariants.py -v
+
       - name: Read version from VERSION file
         id: version
         shell: bash
