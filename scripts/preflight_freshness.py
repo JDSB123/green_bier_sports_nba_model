@@ -51,7 +51,7 @@ def main() -> int:
         print("Secrets present: " + ", ".join(REQUIRED_SECRETS))
 
         # 2) Fetch fresh odds (no cache/placeholder)
-        run_cmd([sys.executable, "scripts/run_the_odds_tomorrow.py"], "Fetch fresh odds")
+        run_cmd([sys.executable, "scripts/ingest_all.py", "--refresh"], "Fetch fresh odds")
 
         # 3) Run invariant tests (4 markets, no silent conflicts)
         run_cmd([sys.executable, "-m", "pytest", "tests/test_prediction_invariants.py", "-v"], "Run invariant tests")
