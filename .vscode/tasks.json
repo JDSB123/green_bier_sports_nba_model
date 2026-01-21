@@ -1,76 +1,81 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Run Tests",
-            "type": "shell",
-            "command": "${command:python.interpreterPath}",
-            "args": [
-                "-m",
-                "pytest",
-                "tests",
-                "-v"
-            ],
-            "group": {
-                "kind": "test",
-                "isDefault": true
-            },
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
-        },
-        {
-            "label": "Train Models",
-            "type": "shell",
-            "command": "${command:python.interpreterPath}",
-            "args": [
-                "scripts/train_models.py"
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
-        },
-        {
-            "label": "Generate Predictions",
-            "type": "shell",
-            "command": "${command:python.interpreterPath}",
-            "args": [
-                "scripts/predict.py"
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
-        },
-        {
-            "label": "Collect Odds Data",
-            "type": "shell",
-            "command": "${command:python.interpreterPath}",
-            "args": [
-                "scripts/run_the_odds_tomorrow.py"
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
-        },
-        {
-            "label": "Run Backtest",
-            "type": "shell",
-            "command": "${command:python.interpreterPath}",
-            "args": [
-                "scripts/backtest.py"
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            }
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "pytest", "tests", "-v"],
+      "group": { "kind": "test", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "Train Models",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["scripts/train_models.py"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "Generate Predictions",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["scripts/predict.py"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "Collect Odds Data",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["scripts/run_the_odds_tomorrow.py"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "Run Backtest",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["scripts/backtest.py"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "Keep Codespace Alive",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "while true; do echo \"[codespace-keepalive] $(date)\"; sleep 300; done"],
+      "isBackground": true,
+      "group": "none",
+      "presentation": { "reveal": "never", "panel": "dedicated" }
+    },
+    {
+      "label": "Compose: Up API",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "docker compose up -d"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Compose: Down",
+      "type": "shell",
+      "command": "bash",
+      "args": ["-lc", "docker compose down"],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Docker: Build Combined Image",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "VERSION=$(cat VERSION) && docker build --build-arg MODEL_VERSION=$VERSION -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined ."
+      ],
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    }
+  ]
 }
