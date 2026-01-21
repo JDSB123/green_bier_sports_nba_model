@@ -101,97 +101,97 @@ async def fetch_team_records_from_odds_api(
 ) -> Dict[str, Dict[str, int]]:
     """
     Calculate team W-L records from The Odds API scores endpoint.
-    
+
     NOTE: The Odds API scores endpoint only supports a short lookback.
     This function is intended as a fallback when ESPN standings are unavailable.
-    
+
     Args:
         days_back: Number of days of scores to fetch (capped by API to 3)
         sport: Sport identifier
-    
+
     Returns:
         Dict mapping team name to {"wins": int, "losses": int, "games_played": int}
-    
+
     Raises:
         ValueError: If scores cannot be fetched from The Odds API
     """
     global _UNIFIED_RECORDS_CACHE
-    
+
     # Return cached if available
     if _UNIFIED_RECORDS_CACHE:
         return _UNIFIED_RECORDS_CACHE
-    
+
     days_from = min(days_back, 3)
     logger.info(f"[UNIFIED] Fetching team records from The Odds API scores (last {days_from} days)")
-    
+
     try:
         # Fetch recent scores from The Odds API
         # The scores endpoint returns completed games with final scores
         scores = await the_odds.fetch_scores(sport=sport, days_from=days_from)
-        
+
         if not scores:
             logger.warning("[UNIFIED] No scores returned from The Odds API")
             return {}
-        
+
         # Calculate W-L for each team
         # NOTE: Scores from the_odds.fetch_scores() are standardized to ESPN format
         # via standardize_game_data(), so team names are already normalized.
         # Records dictionary uses ESPN team names as keys (e.g., "Los Angeles Lakers").
         team_records: Dict[str, Dict[str, int]] = {}
-        
+
         for game in scores:
             # Only count completed games
             if not game.get("completed", False):
                 continue
-            
+
             home_team = game.get("home_team")
             away_team = game.get("away_team")
-            
+
             if not home_team or not away_team:
                 continue
-            
+
             # Get scores
             scores_data = game.get("scores", [])
             home_score = None
             away_score = None
-            
+
             for score in scores_data:
                 if score.get("name") == home_team:
                     home_score = score.get("score")
                 elif score.get("name") == away_team:
                     away_score = score.get("score")
-            
+
             if home_score is None or away_score is None:
                 continue
-            
+
             try:
                 home_score = int(home_score)
                 away_score = int(away_score)
             except (ValueError, TypeError):
                 continue
-            
+
             # Initialize team records if needed
             for team in [home_team, away_team]:
                 if team not in team_records:
                     team_records[team] = {"wins": 0, "losses": 0, "games_played": 0}
-            
+
             # Update records
             team_records[home_team]["games_played"] += 1
             team_records[away_team]["games_played"] += 1
-            
+
             if home_score > away_score:
                 team_records[home_team]["wins"] += 1
                 team_records[away_team]["losses"] += 1
             else:
                 team_records[away_team]["wins"] += 1
                 team_records[home_team]["losses"] += 1
-        
+
         # Cache the results
         _UNIFIED_RECORDS_CACHE = team_records
-        
+
         logger.info(f"[UNIFIED] Calculated records for {len(team_records)} teams from The Odds API")
         return team_records
-        
+
     except Exception as e:
         logger.error(f"[UNIFIED] Failed to fetch scores from The Odds API: {e}")
         raise ValueError(f"Cannot calculate unified team records: {e}")
@@ -203,40 +203,40 @@ def _lookup_team_record_with_synonyms(
 ) -> Dict[str, int]:
     """
     Look up team record with synonym-aware matching.
-    
+
     NO SILENT FALLBACKS: Raises ValueError if record cannot be found.
-    
+
     Args:
         team_name: Team name to look up
         records: Dictionary of team records (team name -> {"wins": int, "losses": int})
-    
+
     Returns:
         Dictionary with "wins" and "losses" keys
-    
+
     Raises:
         ValueError: If team record cannot be found (even after synonym matching)
     """
     from src.ingestion.standardize import normalize_team_to_espn
     from src.utils.team_names import normalize_team_name, get_canonical_name
-    
+
     # Try exact match first
     if team_name in records:
         return records[team_name]
-    
+
     # Normalize team name to standard format
     normalized_name, is_valid = normalize_team_to_espn(team_name, source="unified_records")
-    
+
     if not is_valid:
         available_teams = list(records.keys())[:10]
         raise ValueError(
             f"INVALID TEAM NAME: '{team_name}' cannot be normalized. "
             f"Available teams: {available_teams}"
         )
-    
+
     # Try exact match with normalized name
     if normalized_name in records:
         return records[normalized_name]
-    
+
     # Handle team name synonyms (e.g., "LA Clippers" <-> "Los Angeles Clippers")
     # Some teams have multiple valid standard format names. Both normalize to the same
     # canonical ID, so we check all records keys that map to the same canonical ID.
@@ -246,7 +246,7 @@ def _lookup_team_record_with_synonyms(
         # Try canonical form if different from normalized (MASTER db canonical)
         if canonical_form != normalized_name and canonical_form in records:
             return records[canonical_form]
-        
+
         # Check all record keys to find ones that normalize to the same canonical ID
         # This handles synonyms like "LA Clippers" <-> "Los Angeles Clippers"
         for record_key in records:
@@ -254,7 +254,7 @@ def _lookup_team_record_with_synonyms(
             if record_canonical_id == canonical_id:
                 # Found a synonym - return its record
                 return records[record_key]
-    
+
     # NO SILENT FALLBACK: Fail loudly if record cannot be found
     available_teams = list(records.keys())[:10]
     raise ValueError(
@@ -293,25 +293,25 @@ async def validate_data_integrity(
 ) -> Dict[str, Any]:
     """
     Validate that odds data and record data are consistent.
-    
+
     QA/QC: This serves as a data integrity check to ensure we're not
     mixing data from different sources.
-    
+
     Args:
         odds_teams: Team names from odds data
         record_teams: Team names from records data
-    
+
     Returns:
         Dict with validation results and any discrepancies
     """
     odds_set = set(odds_teams)
     record_set = set(record_teams)
-    
+
     missing_from_records = odds_set - record_set
     missing_from_odds = record_set - odds_set
-    
+
     is_valid = len(missing_from_records) == 0
-    
+
     source_label = records_source or "unknown"
     return {
         "is_valid": is_valid,
@@ -359,7 +359,7 @@ def to_cst(dt: datetime) -> datetime:
 def get_target_date(date_str: str | None = None) -> date:
     """Get target date for analysis."""
     now_cst = get_cst_now()
-    
+
     if date_str is None or date_str.lower() == "today":
         return now_cst.date()
     elif date_str.lower() == "tomorrow":
@@ -374,28 +374,28 @@ async def fetch_todays_games(
 ) -> List[Dict]:
     """
     Fetch games for a specific date, including first half markets and team records.
-    
+
     ODDS SOURCE: The Odds API provides betting lines.
     RECORDS SOURCE: ESPN standings provide season W-L, with The Odds scores
     as a fallback when ESPN is unavailable.
-    
+
     First half markets (spreads_h1, totals_h1) are only available
     through the event-specific endpoint, so we fetch them separately for each game.
-    
+
     Args:
         target_date: Date to fetch games for
         include_records: If True, include team W-L records from the records source
-    
+
     Returns:
         List of game dicts with odds and optionally team records
     """
     # Clear the unified records cache to ensure fresh data
     clear_unified_records_cache()
-    
+
     # Fetch main odds data (full game markets)
     raw_games = await the_odds.fetch_odds()
     filtered_games = filter_games_for_date(raw_games, target_date)
-    
+
     # Fetch team records from the records source (ESPN primary, The Odds fallback)
     unified_records = {}
     records_source = None
@@ -408,14 +408,14 @@ async def fetch_todays_games(
                 logger.warning("[RECORDS] Records source unavailable")
         except Exception as e:
             logger.warning(f"[RECORDS] Could not fetch team records: {e}")
-    
+
     # Enrich with first half markets for each game
     enriched_games = []
     for game in filtered_games:
         event_id = game.get("id")
         home_team = game.get("home_team")
         away_team = game.get("away_team")
-        
+
         if event_id:
             try:
                 # Fetch 1H odds specifically (spreads_h1, totals_h1)
@@ -423,12 +423,12 @@ async def fetch_todays_games(
                     event_id,
                     markets="spreads_h1,totals_h1"
                 )
-                
+
                 # MERGE instead of overwrite
                 # Keep existing bookmakers (FG) and add new ones (1H)
                 existing_bms = {bm["key"]: bm for bm in game.get("bookmakers", [])}
                 new_bms = event_odds.get("bookmakers", [])
-                
+
                 for nbm in new_bms:
                     if nbm["key"] in existing_bms:
                         # Add markets to existing bookmaker
@@ -438,18 +438,18 @@ async def fetch_todays_games(
                         existing_bms[nbm["key"]]["markets"] = list(existing_markets.values())
                     else:
                         existing_bms[nbm["key"]] = nbm
-                
+
                 game["bookmakers"] = list(existing_bms.values())
             except Exception as e:
                 logger.warning(f"Could not fetch 1H odds for event {event_id}: {e}")
-        
+
         # Add team records from the configured records source
         # NO SILENT FALLBACKS: Use synonym-aware lookup, fail loudly if records missing
         if include_records and unified_records:
             try:
                 home_record = _lookup_team_record_with_synonyms(home_team, unified_records)
                 away_record = _lookup_team_record_with_synonyms(away_team, unified_records)
-                
+
                 game["home_team_record"] = {
                     "wins": home_record["wins"],
                     "losses": home_record["losses"],
@@ -470,26 +470,26 @@ async def fetch_todays_games(
                 )
                 # Skip this game - don't add it to enriched_games
                 continue
-        
+
         enriched_games.append(game)
-    
+
     # QA/QC: Validate data integrity
     if include_records and unified_records:
         odds_teams = []
         for g in enriched_games:
             odds_teams.extend([g.get("home_team"), g.get("away_team")])
-        
+
         validation = await validate_data_integrity(
             odds_teams=[t for t in odds_teams if t],
             record_teams=list(unified_records.keys()),
             records_source=records_source,
         )
-        
+
         if not validation["is_valid"]:
             logger.warning(f"[QA/QC] Data integrity warning: {validation['message']}")
         else:
             logger.info(f"[QA/QC] Data integrity check passed: {validation['message']}")
-    
+
     return enriched_games
 
 
@@ -517,7 +517,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
     bookmakers = game.get("bookmakers", [])
     if as_of_utc is None:
         as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    
+
     # Collect all odds
     spreads_home = []
     spreads_away = []
@@ -534,15 +534,15 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
     q1_spreads_home = []
     q1_spreads_away = []
     q1_totals = []
-    
+
     home_team = game.get("home_team")
     away_team = game.get("away_team")
-    
+
     for bm in bookmakers:
         for market in bm.get("markets", []):
             key = market.get("key")
             outcomes = market.get("outcomes", [])
-            
+
             if key == "spreads":
                 for out in outcomes:
                     if out.get("name") == home_team:
@@ -555,7 +555,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
                             "price": out.get("price"),
                             "point": out.get("point")
                         })
-            
+
             elif key == "totals":
                 for out in outcomes:
                     if out.get("name") == "Over":
@@ -571,11 +571,11 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
                             "side": "Under"
                         })
                         totals_under.append(out.get("price"))
-            
-            # First half markets
-            # Market keys from API: "spreads_h1", "totals_h1"
-            elif key and ("h1" in key.lower() or "first_half" in key.lower() or "1h" in key.lower() or key.lower() == "spreads_h1" or key.lower() == "totals_h1"):
-                if "spread" in key.lower() or "handicap" in key.lower() or key.lower() == "spreads_h1":
+
+            # First half markets (strict whitelist + sanity bounds)
+            elif key:
+                k = str(key).lower()
+                if k == "spreads_h1":
                     for out in outcomes:
                         if out.get("name") == home_team:
                             fh_spreads_home.append({
@@ -587,22 +587,35 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
                                 "price": out.get("price"),
                                 "point": out.get("point")
                             })
-                elif "total" in key.lower() or "over_under" in key.lower() or key.lower() == "totals_h1":
+                elif k == "totals_h1":
                     for out in outcomes:
-                        if out.get("name") == "Over":
+                        name = out.get("name")
+                        point = out.get("point")
+                        price = out.get("price")
+                        # Sanity bounds for 1H totals to avoid misparsed FG/alt lines
+                        try:
+                            if point is None:
+                                continue
+                            pval = float(point)
+                        except (TypeError, ValueError):
+                            continue
+                        if not (70.0 <= pval <= 130.0):
+                            # Skip clearly invalid 1H totals
+                            continue
+                        if name == "Over":
                             fh_totals.append({
-                                "point": out.get("point"),
-                                "price": out.get("price")
+                                "point": pval,
+                                "price": price
                             })
-                            fh_totals_over.append(out.get("price"))
-                        elif out.get("name") == "Under":
+                            fh_totals_over.append(price)
+                        elif name == "Under":
                             fh_totals.append({
-                                "point": out.get("point"),
-                                "price": out.get("price"),
+                                "point": pval,
+                                "price": price,
                                 "side": "Under"
                             })
-                            fh_totals_under.append(out.get("price"))
-            
+                            fh_totals_under.append(price)
+
             # First quarter markets
             # Market keys from API: "spreads_q1", "totals_q1"
             elif key and ("q1" in key.lower() or "first_quarter" in key.lower() or "1q" in key.lower()):
@@ -631,7 +644,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
                                 "price": out.get("price"),
                                 "side": "Under"
                             })
-    
+
     # Calculate consensus
     def _latest_update_utc() -> str | None:
         updates = []
@@ -677,7 +690,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
         "as_of_utc": as_of_utc,
         "last_update_utc": _latest_update_utc(),
     }
-    
+
     if spreads_home:
         median_spread = statistics.median([s.get("point", 0) for s in spreads_home if s.get("point") is not None])
         median_price = statistics.median([s.get("price", -110) for s in spreads_home if s.get("price") is not None])
@@ -686,7 +699,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
     if spreads_away:
         median_price = statistics.median([s.get("price", -110) for s in spreads_away if s.get("price") is not None])
         result["away_spread_price"] = int(median_price)
-    
+
     if totals:
         median_total = statistics.median([t.get("point", 220) for t in totals if t.get("point") is not None])
         median_price = statistics.median([t.get("price", -110) for t in totals if t.get("price") is not None])
@@ -700,7 +713,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
         under_prices = [p for p in totals_under if p is not None]
         if under_prices:
             result["total_under_price"] = int(statistics.median(under_prices))
-    
+
     if fh_spreads_home:
         median_fh_spread = statistics.median([s.get("point", 0) for s in fh_spreads_home if s.get("point") is not None])
         median_fh_price = statistics.median([s.get("price", -110) for s in fh_spreads_home if s.get("price") is not None])
@@ -709,7 +722,7 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
     if fh_spreads_away:
         median_fh_price = statistics.median([s.get("price", -110) for s in fh_spreads_away if s.get("price") is not None])
         result["fh_away_spread_price"] = int(median_fh_price)
-    
+
     if fh_totals:
         median_fh_total = statistics.median([t.get("point", 110) for t in fh_totals if t.get("point") is not None])
         median_fh_price = statistics.median([t.get("price", -110) for t in fh_totals if t.get("price") is not None])
@@ -723,19 +736,19 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
         under_prices = [p for p in fh_totals_under if p is not None]
         if under_prices:
             result["fh_total_under_price"] = int(statistics.median(under_prices))
-    
+
     # Q1 spread
     if q1_spreads_home:
         median_q1_spread = statistics.median([s.get("point", 0) for s in q1_spreads_home if s.get("point") is not None])
         median_q1_price = statistics.median([s.get("price", -110) for s in q1_spreads_home if s.get("price") is not None])
         result["q1_home_spread"] = float(median_q1_spread)
         result["q1_home_spread_price"] = int(median_q1_price)
-    
+
     # Q1 total
     if q1_totals:
         median_q1_total = statistics.median([t.get("point", 55) for t in q1_totals if t.get("point") is not None])
         median_q1_price = statistics.median([t.get("price", -110) for t in q1_totals if t.get("price") is not None])
         result["q1_total"] = float(median_q1_total)
         result["q1_total_price"] = int(median_q1_price)
-    
+
     return result
