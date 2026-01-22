@@ -92,61 +92,57 @@ class FilterThresholds:
     Configurable filter thresholds for betting predictions.
 
     These thresholds determine whether a prediction passes the betting filter.
-    A prediction must meet BOTH confidence AND edge thresholds to pass.
+    EDGE-ONLY filtering: confidence thresholds disabled (set to 0.0)
+    A prediction only needs to meet the edge threshold to pass.
 
-    OPTIMIZED THRESHOLDS (Updated 2026-01-15):
-    Based on comprehensive backtesting optimization across 24 spread configs,
-    338 totals configs, and 1,612 moneyline configs.
+    UPDATED 2026-01-22: Switched to edge-only filtering.
+    Confidence is still calculated and reported but not used for filtering.
 
     Thresholds can be set via environment variables. Defaults provided for local development:
-    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.55) - OPTIMIZED from 0.62
-    - FILTER_SPREAD_MIN_EDGE (default: 0.0) - OPTIMIZED from 2.0
-    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.72) - UNCHANGED
-    - FILTER_TOTAL_MIN_EDGE (default: 3.0) - UNCHANGED
-    - FILTER_1H_SPREAD_MIN_CONFIDENCE (default: 0.68) - UNCHANGED
-    - FILTER_1H_SPREAD_MIN_EDGE (default: 1.5) - UNCHANGED
-    - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.66) - UNCHANGED
-    - FILTER_1H_TOTAL_MIN_EDGE (default: 2.0) - UNCHANGED
+    - FILTER_SPREAD_MIN_CONFIDENCE (default: 0.0) - DISABLED (edge-only)
+    - FILTER_SPREAD_MIN_EDGE (default: 5.0) - Primary filter
+    - FILTER_TOTAL_MIN_CONFIDENCE (default: 0.0) - DISABLED (edge-only)
+    - FILTER_TOTAL_MIN_EDGE (default: 3.0) - Primary filter
+    - FILTER_1H_SPREAD_MIN_CONFIDENCE (default: 0.0) - DISABLED (edge-only)
+    - FILTER_1H_SPREAD_MIN_EDGE (default: 2.5) - Primary filter
+    - FILTER_1H_TOTAL_MIN_CONFIDENCE (default: 0.0) - DISABLED (edge-only)
+    - FILTER_1H_TOTAL_MIN_EDGE (default: 2.5) - Primary filter
 
-Optimization Results (FG Spread, 2026-01-17 Analysis):
-    - CAUTION: Previous results were inflated due to in-sample testing
-    - True out-of-sample (2023-24): ~53% classifier, ~58% edge signal
-    - Edge signal |svp| >= 5 shows best risk-adjusted returns
-
-    Conservative Thresholds (out-of-sample validated):
-    - spread_min_confidence: 0.55 (55%)
+    Edge Thresholds (tuned per market):
     - spread_min_edge: 5.0 pts (high-conviction only)
+    - total_min_edge: 3.0 pts
+    - 1H_spread_min_edge: 2.5 pts
+    - 1H_total_min_edge: 2.5 pts
 
     See: OPTIMIZATION_RESULTS_SUMMARY.md for full details
     """
-    # Spread thresholds - CONSERVATIVE (out-of-sample validated)
+    # Spread thresholds - EDGE-ONLY
     spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.55)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.0)
     )
     spread_min_edge: float = field(
         default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 5.0)
     )
 
-    # Total thresholds - UNCHANGED (conservative approach)
+    # Total thresholds - EDGE-ONLY
     total_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.72)
+        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.0)
     )
     total_min_edge: float = field(
         default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_EDGE", 3.0)
     )
 
-    # 1H Spread thresholds - TIGHTENED for noisy data (Best Practice)
-    # Higher edge required because 1H has higher variance
+    # 1H Spread thresholds - EDGE-ONLY
     fh_spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.60)
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.0)
     )
     fh_spread_min_edge: float = field(
         default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_EDGE", 2.5)
     )
 
-    # 1H Total thresholds - TIGHTENED (high variance in 1H)
+    # 1H Total thresholds - EDGE-ONLY
     fh_total_min_confidence: float = field(
-        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.62)
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.0)
     )
     fh_total_min_edge: float = field(
         default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_EDGE", 2.5)

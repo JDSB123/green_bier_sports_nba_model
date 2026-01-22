@@ -75,12 +75,10 @@ def resolve_total_two_signal(
 
     filter_reason: Optional[str] = None
 
-    passes_filter = confidence >= min_confidence and edge_abs >= min_edge
+    # EDGE-ONLY filtering: confidence is informational only
+    passes_filter = edge_abs >= min_edge
     if not passes_filter:
-        if confidence < min_confidence:
-            filter_reason = f"Low confidence: {confidence:.1%}"
-        else:
-            filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
+        filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
 
     return ResolvedTwoWay(
         bet_side=bet_side,
@@ -142,12 +140,10 @@ def resolve_spread_two_signal(
 
     filter_reason: Optional[str] = None
 
-    passes_filter = confidence >= min_confidence and edge_abs >= min_edge
+    # EDGE-ONLY filtering: confidence is informational only
+    passes_filter = edge_abs >= min_edge
     if not passes_filter:
-        if confidence < min_confidence:
-            filter_reason = f"Low confidence: {confidence:.1%}"
-        else:
-            filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
+        filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
 
     return ResolvedTwoWay(
         bet_side=bet_side,
