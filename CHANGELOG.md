@@ -7,6 +7,26 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 
 ---
 
+## [NBA_v33.1.7] - 2026-01-24
+
+### Fixed
+- **Test Suite Alignment**: Updated 6 tests in `test_prediction_invariants.py` and `test_prediction_engine.py` 
+  to reflect edge-only filtering behavior (no longer assert signal conflict rejection)
+- **Config Files**: Set all `*_MIN_CONFIDENCE` values to `0.0` in `.env` and `.env.example` to match
+  production edge-only filtering logic (confidence thresholds are informational only)
+- **Documentation**: Added deprecation notice to `src/markets/__init__.py` clarifying that 
+  `SpreadMarket`, `TotalMarket`, `MoneylineMarket` classes are NOT used in production
+
+### Documentation
+- **Edge-Only Filtering**: Since v33.1.5, filtering is based ONLY on edge thresholds:
+  - `passes_filter = edge_abs >= min_edge`
+  - Confidence is calculated and reported for diagnostics but does NOT affect filtering
+  - Signal conflicts are tracked via `signals_agree` field but do NOT filter predictions
+- **Stale v33.1.0 docs**: Files like `FIXES_APPLIED_v33.1.0.md` contain historical context about
+  signal conflict filtering that was later removed. Current behavior is edge-only.
+
+---
+
 ## [NBA_v33.0.16.0] - 2026-01-14
 
 ### Added

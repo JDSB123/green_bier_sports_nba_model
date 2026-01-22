@@ -60,6 +60,7 @@ OPTIONAL_SECRETS = {
 # Detection: What environment are we in?
 # ============================================================================
 
+
 def detect_environment() -> str:
     """Detect the current runtime environment."""
     if os.environ.get("GITHUB_ACTIONS") == "true":
@@ -95,23 +96,25 @@ def check_secret(name: str, config: dict) -> tuple[bool, str, str]:
     # 1. Check environment variable
     env_val = os.environ.get(config["env_var"])
     if env_val:
-        preview = f"{env_val[:4]}...{env_val[-4:]}" if len(env_val) > 8 else "****"
+        preview = f"{env_val[:4]}...{env_val[-4:]}" if len(
+            env_val) > 8 else "****"
         return True, "env_var", preview
-    
+
     # 2. Check Docker secrets file
     project_root = get_project_root()
     secret_file = project_root / config["secret_file"]
     if secret_file.exists():
         content = secret_file.read_text().strip()
         if content and not content.startswith("your_"):
-            preview = f"{content[:4]}...{content[-4:]}" if len(content) > 8 else "****"
+            preview = f"{content[:4]}...{content[-4:]}" if len(
+                content) > 8 else "****"
             return True, "secret_file", preview
-    
+
     # 3. Check /run/secrets (Docker Swarm style)
     docker_secret = Path(f"/run/secrets/{name}")
     if docker_secret.exists():
         return True, "docker_swarm", "****"
-    
+
     return False, "not_found", ""
 
 
@@ -129,33 +132,35 @@ def validate_version_consistency() -> tuple[bool, list[str]]:
     """Check that VERSION file matches other version references."""
     project_root = get_project_root()
     issues = []
-    
+
     version_file = project_root / "VERSION"
     if not version_file.exists():
         return False, ["VERSION file not found"]
-    
+
     version = version_file.read_text().strip()
-    
+
     # Check model_pack.json
     model_pack = project_root / "models/production/model_pack.json"
     if model_pack.exists():
         try:
             data = json.loads(model_pack.read_text())
             if data.get("version") != version:
-                issues.append(f"model_pack.json version ({data.get('version')}) != VERSION ({version})")
+                issues.append(
+                    f"model_pack.json version ({data.get('version')}) != VERSION ({version})")
         except json.JSONDecodeError:
             issues.append("model_pack.json is invalid JSON")
-    
+
     # Check feature_importance.json
     feature_imp = project_root / "models/production/feature_importance.json"
     if feature_imp.exists():
         try:
             data = json.loads(feature_imp.read_text())
             if data.get("version") != version:
-                issues.append(f"feature_importance.json version ({data.get('version')}) != VERSION ({version})")
+                issues.append(
+                    f"feature_importance.json version ({data.get('version')}) != VERSION ({version})")
         except json.JSONDecodeError:
             issues.append("feature_importance.json is invalid JSON")
-    
+
     return len(issues) == 0, issues
 
 
@@ -167,7 +172,7 @@ def validate_all(verbose: bool = True) -> bool:
     """Run all validations. Returns True if all passed."""
     env = detect_environment()
     project_root = get_project_root()
-    
+
     if verbose:
         print("=" * 60)
         print("🔐 NBA Model Environment Validator")
@@ -175,13 +180,13 @@ def validate_all(verbose: bool = True) -> bool:
         print(f"Environment: {env}")
         print(f"Project root: {project_root}")
         print()
-    
+
     all_passed = True
-    
+
     # 1. Required Secrets
     if verbose:
         print("📋 REQUIRED SECRETS:")
-    
+
     for name, config in REQUIRED_SECRETS.items():
         found, source, preview = check_secret(name, config)
         if found:
@@ -191,17 +196,18 @@ def validate_all(verbose: bool = True) -> bool:
             all_passed = False
             if verbose:
                 print(f"  ❌ {name}: NOT FOUND")
-                print(f"     → Set env var: export {config['env_var']}=your_key")
+                print(
+                    f"     → Set env var: export {config['env_var']}=your_key")
                 print(f"     → Or create file: {config['secret_file']}")
-    
+
     if verbose:
         print()
-    
+
     # 2. Azure OIDC (only relevant in GitHub Actions)
     if env == "github_actions":
         if verbose:
             print("📋 AZURE OIDC (GitHub Actions):")
-        
+
         oidc = check_azure_oidc()
         for name, found in oidc.items():
             if found:
@@ -211,14 +217,14 @@ def validate_all(verbose: bool = True) -> bool:
                 # Don't fail - these are injected by the workflow
                 if verbose:
                     print(f"  ⚠️  {name}: Not in env (should be in secrets)")
-        
+
         if verbose:
             print()
-    
+
     # 3. Version Consistency
     if verbose:
         print("📋 VERSION CONSISTENCY:")
-    
+
     version_ok, version_issues = validate_version_consistency()
     if version_ok:
         if verbose:
@@ -231,10 +237,10 @@ def validate_all(verbose: bool = True) -> bool:
                 print(f"  ❌ {issue}")
         if verbose:
             print("     → Run: python scripts/bump_version.py <VERSION>")
-    
+
     if verbose:
         print()
-    
+
     # 4. Optional secrets (informational)
     if verbose:
         print("📋 OPTIONAL SECRETS:")
@@ -246,7 +252,7 @@ def validate_all(verbose: bool = True) -> bool:
             else:
                 print(f"  ⚪ {name}: not set (optional)")
         print()
-    
+
     # Summary
     if verbose:
         print("=" * 60)
@@ -255,18 +261,18 @@ def validate_all(verbose: bool = True) -> bool:
         else:
             print("❌ VALIDATION FAILED - Fix issues above")
         print("=" * 60)
-    
+
     return all_passed
 
 
 def print_setup_instructions():
     """Print setup instructions for the current environment."""
     env = detect_environment()
-    
+
     print("\n" + "=" * 60)
     print("🔧 SETUP INSTRUCTIONS")
     print("=" * 60)
-    
+
     if env == "local":
         print("""
 LOCAL DEVELOPMENT:
@@ -280,7 +286,7 @@ LOCAL DEVELOPMENT:
 3. Create Docker secrets (for container builds):
    python scripts/manage_secrets.py from-env
 """)
-    
+
     elif env == "codespace":
         print("""
 CODESPACE:
@@ -293,7 +299,7 @@ CODESPACE:
    cp .env.example .env
    # Edit with your keys
 """)
-    
+
     elif env == "docker":
         print("""
 DOCKER:
@@ -305,7 +311,7 @@ DOCKER:
 2. Or pass as environment variables:
    docker run -e THE_ODDS_API_KEY=xxx -e API_BASKETBALL_KEY=xxx ...
 """)
-    
+
     elif env == "github_actions":
         print("""
 GITHUB ACTIONS:
@@ -325,17 +331,20 @@ GITHUB ACTIONS:
 
 if __name__ == "__main__":
     import argparse
-    
-    parser = argparse.ArgumentParser(description="Validate NBA Model environment")
-    parser.add_argument("--quiet", "-q", action="store_true", help="Only output on failure")
-    parser.add_argument("--help-setup", action="store_true", help="Show setup instructions")
+
+    parser = argparse.ArgumentParser(
+        description="Validate NBA Model environment")
+    parser.add_argument("--quiet", "-q", action="store_true",
+                        help="Only output on failure")
+    parser.add_argument("--help-setup", action="store_true",
+                        help="Show setup instructions")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     args = parser.parse_args()
-    
+
     if args.help_setup:
         print_setup_instructions()
         sys.exit(0)
-    
+
     if args.json:
         # JSON mode for programmatic use
         results = {
@@ -346,19 +355,20 @@ if __name__ == "__main__":
         for name, config in REQUIRED_SECRETS.items():
             found, source, _ = check_secret(name, config)
             results["secrets"][name] = {"found": found, "source": source}
-        
+
         version_ok, issues = validate_version_consistency()
         results["version_consistent"] = version_ok
         results["version_issues"] = issues
-        results["all_passed"] = all(s["found"] for s in results["secrets"].values()) and version_ok
-        
+        results["all_passed"] = all(
+            s["found"] for s in results["secrets"].values()) and version_ok
+
         print(json.dumps(results, indent=2))
         sys.exit(0 if results["all_passed"] else 1)
-    
+
     passed = validate_all(verbose=not args.quiet)
-    
+
     if not passed:
         print_setup_instructions()
         sys.exit(1)
-    
+
     sys.exit(0)
