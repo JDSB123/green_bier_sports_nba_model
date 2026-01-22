@@ -126,12 +126,16 @@ class TestPeriodPredictor:
         # Edge = predicted_total - total_line = 225.0 - 220.0 = 5.0
         assert result["edge"] == pytest.approx(5.0, rel=0.01)
 
-    def test_predict_total_conflict_rejected_and_confidence_matches_bet_side(self, period_predictor, sample_features):
-        """If classifier and point prediction disagree, reject and keep bet_side/confidence consistent."""
+    def test_predict_total_conflict_signals_agree_field_accurate(self, period_predictor, sample_features):
+        """When classifier and point prediction disagree, signals_agree=False but edge-only filter applies.
+        
+        Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts are tracked
+        for diagnostics but do NOT filter predictions. Filter only checks edge threshold.
+        """
         # Force classifier to prefer UNDER (array is [under, over])
         period_predictor.total_model.predict_proba.return_value = np.array([[0.80, 0.20]])
 
-        # Point prediction (predicted_total=225, line=220) implies OVER
+        # Point prediction (predicted_total=225, line=220) implies OVER with edge=5
         result = period_predictor.predict_total(sample_features, total_line=220.0)
 
         assert result["classifier_side"] == "under"
@@ -143,9 +147,9 @@ class TestPeriodPredictor:
         assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
-        assert result["passes_filter"] is False
-        assert isinstance(result["filter_reason"], str)
-        assert result["filter_reason"].startswith("Signal conflict:")
+        # EDGE-ONLY: passes_filter depends on edge, not signal agreement
+        # Edge = 5.0 pts, min_edge = 3.0 for FG total -> should pass
+        assert result["passes_filter"] is True
 
     def test_map_1h_features_to_unified_names(self):
         """Test that 1H features override unified FG keys for 1H predictions."""
@@ -215,7 +219,8 @@ class TestLegacyTotalPredictor:
             fh_feature_columns=["predicted_total"],
         )
 
-    def test_legacy_total_predictor_conflict_rejected_fg(self, legacy_total_predictor):
+    def test_legacy_total_predictor_conflict_signals_tracked_fg(self, legacy_total_predictor):
+        """Signal conflicts are tracked but don't filter (edge-only filtering v33.1.5+)."""
         # Force classifier to prefer UNDER (array is [under, over])
         legacy_total_predictor.fg_model.predict_proba.return_value = np.array([[0.80, 0.20]])
 
@@ -230,11 +235,11 @@ class TestLegacyTotalPredictor:
         assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
-        assert result["passes_filter"] is False
-        assert isinstance(result["filter_reason"], str)
-        assert result["filter_reason"].startswith("Signal conflict:")
+        # EDGE-ONLY: Edge = 5.0 pts, min_edge = 3.0 for FG total -> passes
+        assert result["passes_filter"] is True
 
-    def test_legacy_total_predictor_conflict_rejected_1h(self, legacy_total_predictor):
+    def test_legacy_total_predictor_conflict_signals_tracked_1h(self, legacy_total_predictor):
+        """Signal conflicts are tracked but don't filter (edge-only filtering v33.1.5+)."""
         legacy_total_predictor.fh_model.predict_proba.return_value = np.array([[0.80, 0.20]])
 
         features = {"predicted_total_1h": 112.5}
@@ -248,9 +253,8 @@ class TestLegacyTotalPredictor:
         assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
-        assert result["passes_filter"] is False
-        assert isinstance(result["filter_reason"], str)
-        assert result["filter_reason"].startswith("Signal conflict:")
+        # EDGE-ONLY: Edge = 2.5 pts, min_edge = 2.0 for 1H total -> passes
+        assert result["passes_filter"] is True
 
 class TestUnifiedPredictionEngine:
     """Tests for the UnifiedPredictionEngine class."""
@@ -396,13 +400,13 @@ class TestConfidenceCalculation:
 class TestFilterThresholds:
     """Tests for filter threshold application."""
 
-    def test_spread_filter_low_confidence(self):
-        """Test spread prediction fails filter on low confidence."""
+    def test_spread_filter_low_edge(self):
+        """Test spread prediction fails filter on low edge (edge-only filtering v33.1.5+)."""
         from src.prediction.engine import PeriodPredictor
 
-        # Create predictor with mock model that returns low probability
+        # Create predictor with mock model
         mock_model = MagicMock()
-        mock_model.predict_proba.return_value = np.array([[0.48, 0.52]])  # Low confidence
+        mock_model.predict_proba.return_value = np.array([[0.48, 0.52]])
 
         predictor = PeriodPredictor(
             period="fg",
@@ -412,12 +416,27 @@ class TestFilterThresholds:
             total_features=["home_ppg"],
         )
 
-        features = {"home_ppg": 110, "predicted_margin": 5}
+        # Small edge: predicted_margin=1, spread_line=-3.5, edge=1-(-3.5)=4.5...wait
+        # Actually edge = predicted_margin + spread_line = 1 + (-3.5) = -2.5, abs=2.5
+        # But min_edge for FG spread is 2.0, so 2.5 > 2.0 passes!
+        # Let's use smaller predicted_margin to get smaller edge
+        features = {"home_ppg": 110, "predicted_margin": 1.5}  # edge = 1.5 + (-3.5) = -2, abs=2
         result = predictor.predict_spread(features, spread_line=-3.5)
 
-        # 52% confidence is below the configured threshold
+        # Edge = abs(1.5 + (-3.5)) = 2.0, min_edge = 2.0 for FG spread
+        # This is borderline, let's use even smaller margin
+        features = {"home_ppg": 110, "predicted_margin": 0.5}  # edge = 0.5 + (-3.5) = -3, abs=3
+        # Wait that's still >= 2.0. Let me reconsider.
+        # predicted_margin=0 -> edge = 0 + (-3.5) = -3.5 -> abs=3.5 (still passes)
+        # We need spread_line closer to predicted_margin
+        features = {"home_ppg": 110, "predicted_margin": -3}  # edge = -3 + (-3.5) = -6.5... no
+        # Let's try: predicted_margin=2, spread_line=-3.5 -> edge = 2 + (-3.5) = -1.5, abs=1.5
+        features = {"home_ppg": 110, "predicted_margin": 2}
+        result = predictor.predict_spread(features, spread_line=-3.5)
+
+        # Edge = abs(2 + (-3.5)) = 1.5 pts, min_edge = 2.0 for FG spread -> FAILS
         assert result["passes_filter"] is False
-        assert "confidence" in result["filter_reason"].lower()
+        assert "edge" in result["filter_reason"].lower()
 
     def test_spread_filter_passes_with_high_confidence_and_edge(self):
         """Test spread prediction passes filter with high confidence and edge."""
