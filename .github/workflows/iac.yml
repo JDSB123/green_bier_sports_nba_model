@@ -1,5 +1,5 @@
 # Infrastructure as Code workflow for NBA Model
-# Runs Bicep validation on PRs, deploys on push to main
+# Only runs when infra/ files change
 
 name: Infrastructure
 
@@ -15,16 +15,6 @@ on:
       - 'infra/**'
       - '.github/workflows/iac.yml'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Target environment'
-        required: true
-        default: 'prod'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
 
 permissions:
   id-token: write
@@ -32,7 +22,6 @@ permissions:
 
 env:
   AZURE_RG_NBA: nba-gbsv-model-rg
-  AZURE_LOCATION: eastus
 
 jobs:
   validate:
@@ -98,18 +87,8 @@ jobs:
             --parameters theOddsApiKey=${{ secrets.THE_ODDS_API_KEY }} \
             --parameters apiBasketballKey=${{ secrets.API_BASKETBALL_KEY }}
 
-      - name: Show Outputs
-        run: |
-          az deployment group show \
-            --resource-group ${{ env.AZURE_RG_NBA }} \
-            --name "nba-iac-${{ github.run_number }}" \
-            --query properties.outputs
-
       - name: Verify Container App
         run: |
-          FQDN=$(az containerapp show \
-            --name nba-gbsv-api \
-            --resource-group ${{ env.AZURE_RG_NBA }} \
-            --query properties.configuration.ingress.fqdn -o tsv)
+          FQDN=$(az containerapp show --name nba-gbsv-api --resource-group ${{ env.AZURE_RG_NBA }} --query properties.configuration.ingress.fqdn -o tsv)
           echo "Container App URL: https://$FQDN"
-          curl -sf "https://$FQDN/health" || echo "⚠️ Health check pending (cold start)"
+          curl -sf "https://$FQDN/health" || echo "⚠️ Health check pending"

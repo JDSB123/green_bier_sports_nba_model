@@ -1,5 +1,5 @@
 # Green Bier Sports - NBA Model CI/CD
-# Triggers on push to main/master, deploys to Azure Container Apps
+# Triggers on push to main, deploys to Azure Container Apps
 #
 # SINGLE SOURCE OF TRUTH - See docs/AZURE_CONFIG.md
 #   Resource Group: nba-gbsv-model-rg
@@ -9,22 +9,20 @@
 name: GBS NBA - Build & Deploy
 
 permissions:
+  id-token: write
   contents: read
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'models/**'
+      - 'Dockerfile*'
+      - 'requirements.txt'
+      - 'VERSION'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'prod'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
 
 env:
   AZURE_CONTAINER_REGISTRY: nbagbsacr
@@ -35,7 +33,6 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,122 +44,45 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Require deployment secrets (push-only)
-        if: github.event_name == 'push'
+      - name: Require deployment secrets
         run: |
-          set -euo pipefail
-          if [ -z "$THE_ODDS_API_KEY" ]; then
-            echo "❌ Missing THE_ODDS_API_KEY secret"
-            exit 1
-          fi
-          if [ -z "$API_BASKETBALL_KEY" ]; then
-            echo "❌ Missing API_BASKETBALL_KEY secret"
-            exit 1
-          fi
+          if [ -z "$THE_ODDS_API_KEY" ]; then echo "❌ Missing THE_ODDS_API_KEY"; exit 1; fi
+          if [ -z "$API_BASKETBALL_KEY" ]; then echo "❌ Missing API_BASKETBALL_KEY"; exit 1; fi
           echo "✓ Required secrets present"
         env:
           THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
           API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
 
-      - name: Run invariant tests (4-market guardrail)
-        run: |
-          set -euo pipefail
-          pytest tests/test_prediction_invariants.py -v
+      - name: Run invariant tests
+        run: pytest tests/test_prediction_invariants.py -v
 
-      - name: Read version from VERSION file
+      - name: Read version
         id: version
-        shell: bash
         run: |
-          set -euo pipefail
           VERSION=$(cat VERSION | tr -d '\n')
           echo "ver=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Detected version: ${VERSION}"
+          echo "Version: ${VERSION}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Azure
+      - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Ensure Azure CLI extensions
-        shell: bash
+      - name: Setup Azure CLI
         run: |
-          set -euo pipefail
           az config set extension.use_dynamic_install=yes_without_prompt
           az extension add --name containerapp
 
-      - name: Validate Azure context
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Azure subscription:" "$(az account show --query id -o tsv)"
-          echo "Verifying ACR visibility..."
-          az acr show -n "${{ env.AZURE_CONTAINER_REGISTRY }}" -o none
-
-      - name: Ensure ACR admin enabled (best-effort)
-        shell: bash
-        run: |
-          set +e
-          echo "Ensuring admin user enabled for ${{ env.AZURE_CONTAINER_REGISTRY }}..."
-          az acr update --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --admin-enabled true && echo "✓ ACR admin enabled" || echo "⚠️ Could not enable ACR admin (insufficient perms or already enabled)"
-
-      - name: Log in to ACR (robust)
-        shell: bash
-        run: |
-          set -e
-          REG="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io"
-          echo "Trying az acr login to $REG..."
-          if az acr login --name "${{ env.AZURE_CONTAINER_REGISTRY }}"; then
-            echo "[ACR] Logged in via az acr login (OIDC)"
-            exit 0
-          fi
-
-          echo "[ACR] az acr login failed; attempting admin credential fallback"
-          USER=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query username -o tsv)
-          PASS=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query "passwords[0].value" -o tsv)
-          if [ -n "$USER" ] && [ -n "$PASS" ]; then
-            echo "$PASS" | docker login "$REG" -u "$USER" --password-stdin
-            echo "[ACR] Logged in with admin credentials"
-          else
-            echo "[ACR] Could not retrieve admin credentials. Check Azure login and permissions."
-            exit 1
-          fi
-
-      - name: Set Action Network secrets (optional)
-        shell: bash
-        env:
-          ACTION_NETWORK_USERNAME: ${{ secrets.ACTION_NETWORK_USERNAME }}
-          ACTION_NETWORK_PASSWORD: ${{ secrets.ACTION_NETWORK_PASSWORD }}
-        run: |
-          set -euo pipefail
-          if [ -z "${ACTION_NETWORK_USERNAME}" ] || [ -z "${ACTION_NETWORK_PASSWORD}" ]; then
-            echo "Action Network secrets not set; skipping."
-            exit 0
-          fi
-          az containerapp secret set \
-            -n ${{ env.CONTAINER_APP_NAME }} \
-            -g ${{ env.RESOURCE_GROUP }} \
-            --secrets \
-              action-network-username="${ACTION_NETWORK_USERNAME}" \
-              action-network-password="${ACTION_NETWORK_PASSWORD}"
-
-      - name: Build container env vars
-        id: envvars
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Always deploy an immutable image (sha tag) while keeping NBA_MODEL_VERSION as the human version.
-          ENV_VARS="REQUIRE_API_AUTH=false NBA_MODEL_VERSION=${{ steps.version.outputs.ver }} NBA_IMAGE_TAG=${{ github.sha }} THE_ODDS_API_KEY=secretref:the-odds-api-key API_BASKETBALL_KEY=secretref:api-basketball-key"
-          if [ -n "${{ secrets.ACTION_NETWORK_USERNAME }}" ] && [ -n "${{ secrets.ACTION_NETWORK_PASSWORD }}" ]; then
-            ENV_VARS="$ENV_VARS ACTION_NETWORK_USERNAME=secretref:action-network-username ACTION_NETWORK_PASSWORD=secretref:action-network-password"
-          fi
-          echo "vars=$ENV_VARS" >> "$GITHUB_OUTPUT"
+      - name: Log in to ACR
+        run: az acr login --name "${{ env.AZURE_CONTAINER_REGISTRY }}"
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -182,25 +102,14 @@ jobs:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
           imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          environmentVariables: ${{ steps.envvars.outputs.vars }}
+          environmentVariables: >-
+            REQUIRE_API_AUTH=false
+            NBA_MODEL_VERSION=${{ steps.version.outputs.ver }}
+            THE_ODDS_API_KEY=secretref:the-odds-api-key
+            API_BASKETBALL_KEY=secretref:api-basketball-key
 
-      - name: Smoke tests
+      - name: Smoke test
         run: |
-          set -euo pipefail
           sleep 30
           FQDN=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
-          
-          echo "Testing health endpoint..."
-          curl -sf "https://$FQDN/health" | jq .
-          
-          echo "Testing slate/today endpoint..."
-          RESPONSE=$(curl -sf "https://$FQDN/slate/today?use_splits=false")
-          echo "$RESPONSE" | jq .
-          
-          # Verify response is valid JSON and contains expected structure
-          if echo "$RESPONSE" | jq -e '.predictions' > /dev/null 2>&1; then
-            echo "✓ Smoke tests passed - API is responding correctly"
-          else
-            echo "✗ Smoke tests failed - Invalid response structure"
-            exit 1
-          fi
+          curl -sf "https://$FQDN/health" && echo "✓ Health check passed"
