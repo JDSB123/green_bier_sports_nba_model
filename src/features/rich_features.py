@@ -83,7 +83,8 @@ class RichFeatureBuilder:
         self._standings_cache: Optional[Dict[int, Dict]] = None
         self._injuries_cache: Optional[pd.DataFrame] = None
         self._injuries_fetched: bool = False
-        self._box_scores_cache: Dict[int, Dict] = {}  # game_id -> box score stats
+        # game_id -> box score stats
+        self._box_scores_cache: Dict[int, Dict] = {}
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get statistics about cache usage and performance."""
@@ -426,15 +427,19 @@ class RichFeatureBuilder:
                     stats_totals["rebounds_def"] += reb.get("defense", 0) or 0
 
                     # Other stats
-                    stats_totals["assists"] += team_stats.get("assists", 0) or 0
+                    stats_totals["assists"] += team_stats.get(
+                        "assists", 0) or 0
                     stats_totals["steals"] += team_stats.get("steals", 0) or 0
                     stats_totals["blocks"] += team_stats.get("blocks", 0) or 0
-                    stats_totals["turnovers"] += team_stats.get("turnovers", 0) or 0
-                    stats_totals["personal_fouls"] += team_stats.get("personal_fouls", 0) or 0
+                    stats_totals["turnovers"] += team_stats.get(
+                        "turnovers", 0) or 0
+                    stats_totals["personal_fouls"] += team_stats.get(
+                        "personal_fouls", 0) or 0
                     break
 
         if games_with_stats == 0:
-            print(f"[BOX SCORE] No box score data found for team {team_id}, using defaults")
+            print(
+                f"[BOX SCORE] No box score data found for team {team_id}, using defaults")
             return defaults
 
         # Calculate averages
@@ -460,15 +465,19 @@ class RichFeatureBuilder:
         }
 
         # Derived metrics
-        result["ast_to_ratio"] = result["assists"] / result["turnovers"] if result["turnovers"] > 0 else 1.7
-        result["oreb_pct"] = result["rebounds_off"] / result["rebounds_total"] if result["rebounds_total"] > 0 else 0.23
+        result["ast_to_ratio"] = result["assists"] / \
+            result["turnovers"] if result["turnovers"] > 0 else 1.7
+        result["oreb_pct"] = result["rebounds_off"] / \
+            result["rebounds_total"] if result["rebounds_total"] > 0 else 0.23
         # Effective FG% = (FGM + 0.5 * 3PM) / FGA
         if stats_totals["fg_attempts"] > 0:
-            result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 * stats_totals["three_made"]) / stats_totals["fg_attempts"]) * 100
+            result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 *
+                                 stats_totals["three_made"]) / stats_totals["fg_attempts"]) * 100
         else:
             result["efg_pct"] = 52.0
 
-        print(f"[BOX SCORE] Team {team_id}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, AST/TO={result['ast_to_ratio']:.2f} (from {n} games)")
+        print(
+            f"[BOX SCORE] Team {team_id}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, AST/TO={result['ast_to_ratio']:.2f} (from {n} games)")
         return result
 
     def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
