@@ -55,9 +55,18 @@ jobs:
         if: github.event_name == 'push'
         run: |
           set -euo pipefail
-          : "${{ secrets.THE_ODDS_API_KEY?Missing THE_ODDS_API_KEY }}"
-          : "${{ secrets.API_BASKETBALL_KEY?Missing API_BASKETBALL_KEY }}"
+          if [ -z "$THE_ODDS_API_KEY" ]; then
+            echo "❌ Missing THE_ODDS_API_KEY secret"
+            exit 1
+          fi
+          if [ -z "$API_BASKETBALL_KEY" ]; then
+            echo "❌ Missing API_BASKETBALL_KEY secret"
+            exit 1
+          fi
           echo "✓ Required secrets present"
+        env:
+          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+          API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
 
       - name: Run invariant tests (4-market guardrail)
         run: |
