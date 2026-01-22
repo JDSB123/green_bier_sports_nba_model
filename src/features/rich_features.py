@@ -62,6 +62,14 @@ _REFERENCE_CACHE = {
     'last_updated': {}  # cache timestamps
 }
 
+# ESPN to API-Basketball name mapping
+# API-Basketball uses full names (e.g., "Los Angeles Clippers")
+# while ESPN uses abbreviated names (e.g., "LA Clippers")
+ESPN_TO_API_BASKETBALL = {
+    "LA Clippers": "Los Angeles Clippers",
+    # Other names match between ESPN and API-Basketball
+}
+
 
 class RichFeatureBuilder:
     """
@@ -154,8 +162,13 @@ class RichFeatureBuilder:
             self._team_cache[team_name] = team_id
             return team_id
 
+        # Convert ESPN name to API-Basketball name for search
+        # API-Basketball uses full names (e.g., "Los Angeles Clippers")
+        # while ESPN uses abbreviated names (e.g., "LA Clippers")
+        search_name = ESPN_TO_API_BASKETBALL.get(team_name, team_name)
+        
         # Fetch fresh data from API
-        result = await api_basketball.fetch_teams(search=team_name, league=self.league_id, season=self.season)
+        result = await api_basketball.fetch_teams(search=search_name, league=self.league_id, season=self.season)
         teams = result.get("response", [])
 
         if not teams:
