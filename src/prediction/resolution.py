@@ -5,9 +5,7 @@ consistent pick output.
 
 Design goals:
 - `bet_side` and `confidence` must ALWAYS refer to the same side.
-- If classifier and point-prediction signals disagree (and classifier is not
-  obviously broken/extreme), do not emit a bet.
-- If classifier is extreme/unreliable, allow an edge-only fallback.
+- Never block a pick solely due to classifier/point-prediction disagreement.
 
 This prevents the class of bugs where the API says "OVER" but the confidence
 value corresponds to the UNDER probability (or vice-versa).
@@ -59,8 +57,7 @@ def resolve_total_two_signal(
     Contract:
     - bet_side is always the point-prediction side (prediction_side)
     - confidence is the probability of bet_side (NOT max(probabilities))
-    - if signals conflict and classifier isn't extreme: reject pick
-    - if classifier is extreme: allow edge-only filter
+    - never reject solely due to classifier disagreement
     """
     if classifier_side not in ("over", "under"):
         raise ValueError(f"Invalid classifier_side: {classifier_side}")
@@ -78,26 +75,12 @@ def resolve_total_two_signal(
 
     filter_reason: Optional[str] = None
 
-    if not signals_agree and not classifier_extreme:
-        passes_filter = False
-        filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
-    elif classifier_extreme:
-        passes_filter = edge_abs >= min_edge
-        if not passes_filter:
-            filter_reason = (
-                f"Classifier unreliable (extreme prob: over={over_prob:.1%}), low edge"
-            )
-    else:
-        passes_filter = confidence >= min_confidence and edge_abs >= min_edge
-        if not passes_filter:
-            if confidence < min_confidence:
-                filter_reason = f"Low confidence: {confidence:.1%}"
-            else:
-                filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
-
-    # Safety invariant: we never allow conflicting signals through unless extreme.
-    if passes_filter and (not signals_agree) and (not classifier_extreme):
-        raise AssertionError("Invariant violated: conflicting signals passed filter")
+    passes_filter = confidence >= min_confidence and edge_abs >= min_edge
+    if not passes_filter:
+        if confidence < min_confidence:
+            filter_reason = f"Low confidence: {confidence:.1%}"
+        else:
+            filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
 
     return ResolvedTwoWay(
         bet_side=bet_side,
@@ -125,8 +108,7 @@ def resolve_spread_two_signal(
     Contract (IDENTICAL to totals):
     - bet_side is always the point-prediction side (prediction_side)
     - confidence is the probability of bet_side (NOT max(probabilities))
-    - if signals conflict and classifier isn't extreme: reject pick
-    - if classifier is extreme: allow edge-only filter
+    - never reject solely due to classifier disagreement
 
     Args:
         home_cover_prob: Classifier probability home covers
@@ -136,7 +118,7 @@ def resolve_spread_two_signal(
         edge_abs: Absolute value of edge in points
         min_confidence: Minimum confidence threshold
         min_edge: Minimum edge threshold
-        classifier_extreme: True if classifier outputs >99% or <1% (unreliable)
+        classifier_extreme: Unused for filtering (kept for diagnostics)
 
     Returns:
         ResolvedTwoWay with bet_side and confidence referring to the same side
@@ -160,29 +142,12 @@ def resolve_spread_two_signal(
 
     filter_reason: Optional[str] = None
 
-    # SIGNAL CONFLICT: Reject if signals disagree (unless classifier is broken)
-    if not signals_agree and not classifier_extreme:
-        passes_filter = False
-        filter_reason = f"Signal conflict: classifier={classifier_side}, prediction={prediction_side}"
-    elif classifier_extreme:
-        # Classifier unreliable - use edge-only filter
-        passes_filter = edge_abs >= min_edge
-        if not passes_filter:
-            filter_reason = (
-                f"Classifier unreliable (extreme prob: home={home_cover_prob:.1%}), low edge"
-            )
-    else:
-        # Signals agree - check both confidence and edge
-        passes_filter = confidence >= min_confidence and edge_abs >= min_edge
-        if not passes_filter:
-            if confidence < min_confidence:
-                filter_reason = f"Low confidence: {confidence:.1%}"
-            else:
-                filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
-
-    # Safety invariant: we never allow conflicting signals through unless extreme.
-    if passes_filter and (not signals_agree) and (not classifier_extreme):
-        raise AssertionError("Invariant violated: conflicting signals passed filter")
+    passes_filter = confidence >= min_confidence and edge_abs >= min_edge
+    if not passes_filter:
+        if confidence < min_confidence:
+            filter_reason = f"Low confidence: {confidence:.1%}"
+        else:
+            filter_reason = f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
 
     return ResolvedTwoWay(
         bet_side=bet_side,
