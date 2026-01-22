@@ -1,8 +1,8 @@
 # NBA Model Runbook: Local → Container → Azure
 
-**Purpose:** Single consolidated guide for developers and operators.  
-**Version:** NBA_v33.1.4  
-**Environments:** Local Development | Docker Container | Azure Production  
+**Purpose:** Single consolidated guide for developers and operators.
+**Version:** NBA_v33.1.4
+**Environments:** Local Development | Docker Container | Azure Production
 **Last Updated:** 2026-01-21
 
 ---
@@ -476,4 +476,3 @@ az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.az
 | **Azure** | N/A (always running) | `curl https://$FQDN/health` | Single command: `VERSION=$(cat VERSION) && ... az containerapp update ...` |
 
 **Key Rule:** Always read VERSION from file, never hardcode.
-

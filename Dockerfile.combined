@@ -71,9 +71,9 @@ ENV SEASONS_TO_PROCESS=2025-2026
 # Verify models directory (4 markets: 1H + FG only)
 RUN echo "=== NBA Models (${MODEL_VERSION}) ===" && \
     if [ -d /app/data/processed/models ]; then \
-      echo "✓ Models directory exists"; \
+    echo "✓ Models directory exists"; \
     else \
-      echo "⚠ Models directory not found - will download at runtime"; \
+    echo "⚠ Models directory not found - will download at runtime"; \
     fi
 
 # Entrypoint - simplified to just run uvicorn (all endpoints now in app.py)
@@ -84,4 +84,3 @@ EXPOSE 8090
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -s http://localhost:8090/health || exit 1
 ENTRYPOINT ["/app/start.sh"]
-

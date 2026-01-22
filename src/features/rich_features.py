@@ -864,15 +864,13 @@ class RichFeatureBuilder:
         away_1h_pace = away_1h_ppg + away_1h_papg if away_1h_ppg + away_1h_papg > 0 else 55
         expected_1h_pace = (home_1h_pace + away_1h_pace) / 2
 
-        # 1H Predictions: Use ENHANCED formula
-        # Account for pace variation (faster 1H tempo = more points)
-        # Home 1H expected = avg(home's 1H offense, away's 1H defense) * pace_factor
-        # Pace factor: expected_1h_pace / 110 (110 is ~baseline 1H pace across league)
-        pace_adjustment = expected_1h_pace / 110.0 if expected_1h_pace > 0 else 1.0
-
+        # 1H Predictions: Use CORRECTED formula (v33.1.5 FIX)
+        # PPG and PAPG already encode pace (pts = function of possessions)
+        # DO NOT apply additional pace multiplier - it causes double-counting
+        # Formula: avg(home's 1H offense, away's 1H defense) + avg(away's 1H offense, home's 1H defense)
         home_1h_expected = (home_1h_ppg + away_1h_papg) / 2
         away_1h_expected = (away_1h_ppg + home_1h_papg) / 2
-        predicted_total_1h = (home_1h_expected + away_1h_expected) * pace_adjustment
+        predicted_total_1h = home_1h_expected + away_1h_expected  # NO pace_adjustment
 
         # 1H Margin: Use actual 1H margin stats
         # HCA scaled for 1H (~1.5 pts vs 3 pts FG)

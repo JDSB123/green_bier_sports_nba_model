@@ -1,0 +1,197 @@
+# Green Bier Sports - NBA Model CI/CD
+# Triggers on push to main/master, deploys to Azure Container Apps
+#
+# SINGLE SOURCE OF TRUTH - See docs/AZURE_CONFIG.md
+#   Resource Group: nba-gbsv-model-rg
+#   Container App:  nba-gbsv-api
+#   ACR:            nbagbsacr
+
+name: GBS NBA - Build & Deploy
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  AZURE_CONTAINER_REGISTRY: nbagbsacr
+  RESOURCE_GROUP: nba-gbsv-model-rg
+  CONTAINER_APP_NAME: nba-gbsv-api
+  IMAGE_NAME: nba-gbsv-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Require deployment secrets (push-only)
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          : "${{ secrets.THE_ODDS_API_KEY?Missing THE_ODDS_API_KEY }}"
+          : "${{ secrets.API_BASKETBALL_KEY?Missing API_BASKETBALL_KEY }}"
+          echo "✓ Required secrets present"
+
+      - name: Run invariant tests (4-market guardrail)
+        run: |
+          set -euo pipefail
+          pytest tests/test_prediction_invariants.py -v
+
+      - name: Read version from VERSION file
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(cat VERSION | tr -d '\n')
+          echo "ver=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Detected version: ${VERSION}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Ensure Azure CLI extensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          az config set extension.use_dynamic_install=yes_without_prompt
+          az extension add --name containerapp
+
+      - name: Validate Azure context
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Azure subscription:" "$(az account show --query id -o tsv)"
+          echo "Verifying ACR visibility..."
+          az acr show -n "${{ env.AZURE_CONTAINER_REGISTRY }}" -o none
+
+      - name: Ensure ACR admin enabled (best-effort)
+        shell: bash
+        run: |
+          set +e
+          echo "Ensuring admin user enabled for ${{ env.AZURE_CONTAINER_REGISTRY }}..."
+          az acr update --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --admin-enabled true && echo "✓ ACR admin enabled" || echo "⚠️ Could not enable ACR admin (insufficient perms or already enabled)"
+
+      - name: Log in to ACR (robust)
+        shell: bash
+        run: |
+          set -e
+          REG="${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io"
+          echo "Trying az acr login to $REG..."
+          if az acr login --name "${{ env.AZURE_CONTAINER_REGISTRY }}"; then
+            echo "[ACR] Logged in via az acr login (OIDC)"
+            exit 0
+          fi
+
+          echo "[ACR] az acr login failed; attempting admin credential fallback"
+          USER=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query username -o tsv)
+          PASS=$(az acr credential show --name "${{ env.AZURE_CONTAINER_REGISTRY }}" --query "passwords[0].value" -o tsv)
+          if [ -n "$USER" ] && [ -n "$PASS" ]; then
+            echo "$PASS" | docker login "$REG" -u "$USER" --password-stdin
+            echo "[ACR] Logged in with admin credentials"
+          else
+            echo "[ACR] Could not retrieve admin credentials. Check Azure login and permissions."
+            exit 1
+          fi
+
+      - name: Set Action Network secrets (optional)
+        shell: bash
+        env:
+          ACTION_NETWORK_USERNAME: ${{ secrets.ACTION_NETWORK_USERNAME }}
+          ACTION_NETWORK_PASSWORD: ${{ secrets.ACTION_NETWORK_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ACTION_NETWORK_USERNAME}" ] || [ -z "${ACTION_NETWORK_PASSWORD}" ]; then
+            echo "Action Network secrets not set; skipping."
+            exit 0
+          fi
+          az containerapp secret set \
+            -n ${{ env.CONTAINER_APP_NAME }} \
+            -g ${{ env.RESOURCE_GROUP }} \
+            --secrets \
+              action-network-username="${ACTION_NETWORK_USERNAME}" \
+              action-network-password="${ACTION_NETWORK_PASSWORD}"
+
+      - name: Build container env vars
+        id: envvars
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Always deploy an immutable image (sha tag) while keeping NBA_MODEL_VERSION as the human version.
+          ENV_VARS="REQUIRE_API_AUTH=false NBA_MODEL_VERSION=${{ steps.version.outputs.ver }} NBA_IMAGE_TAG=${{ github.sha }} THE_ODDS_API_KEY=secretref:the-odds-api-key API_BASKETBALL_KEY=secretref:api-basketball-key"
+          if [ -n "${{ secrets.ACTION_NETWORK_USERNAME }}" ] && [ -n "${{ secrets.ACTION_NETWORK_PASSWORD }}" ]; then
+            ENV_VARS="$ENV_VARS ACTION_NETWORK_USERNAME=secretref:action-network-username ACTION_NETWORK_PASSWORD=secretref:action-network-password"
+          fi
+          echo "vars=$ENV_VARS" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.combined
+          push: true
+          tags: |
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+          provenance: false
+
+      - name: Deploy to Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          environmentVariables: ${{ steps.envvars.outputs.vars }}
+
+      - name: Smoke tests
+        run: |
+          set -euo pipefail
+          sleep 30
+          FQDN=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+
+          echo "Testing health endpoint..."
+          curl -sf "https://$FQDN/health" | jq .
+
+          echo "Testing slate/today endpoint..."
+          RESPONSE=$(curl -sf "https://$FQDN/slate/today?use_splits=false")
+          echo "$RESPONSE" | jq .
+
+          # Verify response is valid JSON and contains expected structure
+          if echo "$RESPONSE" | jq -e '.predictions' > /dev/null 2>&1; then
+            echo "✓ Smoke tests passed - API is responding correctly"
+          else
+            echo "✗ Smoke tests failed - Invalid response structure"
+            exit 1
+          fi

@@ -2,7 +2,7 @@
 
 **Purpose:** Ensure Version → Image Tag → Deployment steps are unambiguous and synchronized.
 
-**Last Updated:** 2026-01-21  
+**Last Updated:** 2026-01-21
 **Status:** ✅ Ready for Contributors
 
 ---
@@ -271,4 +271,3 @@ az containerapp exec -n nba-gbsv-api -g nba-gbsv-model-rg \
 1. **VERSION is source of truth**: Always read from `VERSION` file.
 2. **Image tags match VERSION**: Never hardcode tag; derive from `VERSION`.
 3. **Deploy pipeline is linear**: main → build → ACR → Container App → health check.
-
