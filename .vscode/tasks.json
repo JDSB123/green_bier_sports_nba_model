@@ -146,6 +146,23 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Validate Environment",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": [
+        "scripts/validate_environment.py"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
     }
   ]
 }

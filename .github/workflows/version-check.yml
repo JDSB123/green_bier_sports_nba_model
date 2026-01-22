@@ -19,6 +19,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Run environment validator
+        run: |
+          # Run the unified validator (version check is part of it)
+          python scripts/validate_environment.py --json || true
+          # Still proceed with detailed version check below
       
       - name: Read VERSION file
         id: get_version

@@ -47,6 +47,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Validate environment (preflight check)
+        run: python scripts/validate_environment.py --quiet
+        env:
+          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+          API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
+
       - name: Require deployment secrets
         run: |
           if [ -z "$THE_ODDS_API_KEY" ]; then echo "❌ Missing THE_ODDS_API_KEY"; exit 1; fi

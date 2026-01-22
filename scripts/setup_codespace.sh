@@ -110,12 +110,25 @@ if command -v git >/dev/null 2>&1; then
   fi
 fi
 
+# Run environment validation
+echo ""
+echo "🔐 Validating environment..."
+"$PYTHON_BIN" scripts/validate_environment.py || {
+  echo ""
+  echo "⚠️  Some secrets are missing. See instructions above."
+  echo "   Add secrets at: https://github.com/settings/codespaces"
+  echo "   Then restart this Codespace."
+}
+
 cat <<'EOF'
+
 Setup complete.
 
 Next steps:
+- Validate: python scripts/validate_environment.py
 - Start API: docker compose up -d
 - Health check: curl http://localhost:8090/health
 - Predictions: curl http://localhost:8090/slate/today
+
 Note: Codespaces secrets are synced to .env and secrets/ when present.
 EOF
