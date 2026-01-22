@@ -83,6 +83,7 @@ class RichFeatureBuilder:
         self._standings_cache: Optional[Dict[int, Dict]] = None
         self._injuries_cache: Optional[pd.DataFrame] = None
         self._injuries_fetched: bool = False
+        self._box_scores_cache: Dict[int, Dict] = {}  # game_id -> box score stats
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get statistics about cache usage and performance."""
@@ -111,6 +112,7 @@ class RichFeatureBuilder:
         self._standings_cache = None
         self._injuries_cache = None
         self._injuries_fetched = False
+        self._box_scores_cache.clear()
         print("[CACHE] Session cache cleared - next calls will fetch fresh data")
 
     @staticmethod
@@ -314,6 +316,161 @@ class RichFeatureBuilder:
 
         return team_games[:limit]
 
+    async def get_box_score_stats(self, game_id: int) -> Optional[Dict]:
+        """
+        Get box score stats for a specific game.
+
+        Returns team stats including: FG%, 3PT%, FT%, rebounds, assists, steals, blocks, turnovers.
+        """
+        if game_id in self._box_scores_cache:
+            return self._box_scores_cache[game_id]
+
+        try:
+            result = await api_basketball.fetch_game_stats_teams(id=game_id)
+            response = result.get("response", [])
+            if response:
+                self._box_scores_cache[game_id] = response
+                return response
+        except Exception as e:
+            print(f"[API] Failed to fetch box score for game {game_id}: {e}")
+
+        return None
+
+    async def get_team_box_score_averages(self, team_id: int, recent_games: List[Dict]) -> Dict[str, float]:
+        """
+        Calculate rolling box score averages for a team from their recent games.
+
+        Fetches detailed box scores and calculates:
+        - FG%, 3PT%, FT%
+        - Rebounds (total, offensive, defensive)
+        - Assists, steals, blocks, turnovers
+        - Assist/Turnover ratio
+        - Offensive rebound %
+
+        Args:
+            team_id: Team ID
+            recent_games: List of recent game dicts (from get_recent_games)
+
+        Returns:
+            Dict with rolling averages for all box score stats
+        """
+        # Default values if no data
+        defaults = {
+            "fg_pct": 0.45,
+            "fg_made": 0.0,
+            "fg_attempts": 0.0,
+            "three_pct": 0.35,
+            "three_made": 0.0,
+            "three_attempts": 0.0,
+            "ft_pct": 0.75,
+            "ft_made": 0.0,
+            "ft_attempts": 0.0,
+            "rebounds_total": 44.0,
+            "rebounds_off": 10.0,
+            "rebounds_def": 34.0,
+            "assists": 24.0,
+            "steals": 7.0,
+            "blocks": 5.0,
+            "turnovers": 14.0,
+            "personal_fouls": 20.0,
+            "ast_to_ratio": 1.7,
+            "oreb_pct": 0.23,
+            "efg_pct": 0.52,  # Effective FG% = (FG + 0.5 * 3PM) / FGA
+        }
+
+        if not recent_games:
+            return defaults
+
+        # Collect box score stats from recent games
+        stats_totals = {k: 0.0 for k in defaults.keys()}
+        games_with_stats = 0
+
+        # Fetch box scores for up to 10 recent games (batch to limit API calls)
+        game_ids = [g.get("id") for g in recent_games[:10] if g.get("id")]
+
+        for game_id in game_ids:
+            box_score = await self.get_box_score_stats(game_id)
+            if not box_score:
+                continue
+
+            # Find this team's stats in the box score
+            for team_stats in box_score:
+                if team_stats.get("team", {}).get("id") == team_id:
+                    games_with_stats += 1
+
+                    # Field goals
+                    fg = team_stats.get("field_goals", {})
+                    fg_made = fg.get("total", 0) or 0
+                    fg_att = fg.get("attempts", 0) or 0
+                    stats_totals["fg_made"] += fg_made
+                    stats_totals["fg_attempts"] += fg_att
+
+                    # 3-pointers
+                    three = team_stats.get("threepoint_goals", {})
+                    three_made = three.get("total", 0) or 0
+                    three_att = three.get("attempts", 0) or 0
+                    stats_totals["three_made"] += three_made
+                    stats_totals["three_attempts"] += three_att
+
+                    # Free throws
+                    ft = team_stats.get("freethrows_goals", {})
+                    ft_made = ft.get("total", 0) or 0
+                    ft_att = ft.get("attempts", 0) or 0
+                    stats_totals["ft_made"] += ft_made
+                    stats_totals["ft_attempts"] += ft_att
+
+                    # Rebounds
+                    reb = team_stats.get("rebounds", {})
+                    stats_totals["rebounds_total"] += reb.get("total", 0) or 0
+                    stats_totals["rebounds_off"] += reb.get("offence", 0) or 0
+                    stats_totals["rebounds_def"] += reb.get("defense", 0) or 0
+
+                    # Other stats
+                    stats_totals["assists"] += team_stats.get("assists", 0) or 0
+                    stats_totals["steals"] += team_stats.get("steals", 0) or 0
+                    stats_totals["blocks"] += team_stats.get("blocks", 0) or 0
+                    stats_totals["turnovers"] += team_stats.get("turnovers", 0) or 0
+                    stats_totals["personal_fouls"] += team_stats.get("personal_fouls", 0) or 0
+                    break
+
+        if games_with_stats == 0:
+            print(f"[BOX SCORE] No box score data found for team {team_id}, using defaults")
+            return defaults
+
+        # Calculate averages
+        n = games_with_stats
+        result = {
+            "fg_made": stats_totals["fg_made"] / n,
+            "fg_attempts": stats_totals["fg_attempts"] / n,
+            "fg_pct": (stats_totals["fg_made"] / stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 45.0,
+            "three_made": stats_totals["three_made"] / n,
+            "three_attempts": stats_totals["three_attempts"] / n,
+            "three_pct": (stats_totals["three_made"] / stats_totals["three_attempts"] * 100) if stats_totals["three_attempts"] > 0 else 35.0,
+            "ft_made": stats_totals["ft_made"] / n,
+            "ft_attempts": stats_totals["ft_attempts"] / n,
+            "ft_pct": (stats_totals["ft_made"] / stats_totals["ft_attempts"] * 100) if stats_totals["ft_attempts"] > 0 else 75.0,
+            "rebounds_total": stats_totals["rebounds_total"] / n,
+            "rebounds_off": stats_totals["rebounds_off"] / n,
+            "rebounds_def": stats_totals["rebounds_def"] / n,
+            "assists": stats_totals["assists"] / n,
+            "steals": stats_totals["steals"] / n,
+            "blocks": stats_totals["blocks"] / n,
+            "turnovers": stats_totals["turnovers"] / n,
+            "personal_fouls": stats_totals["personal_fouls"] / n,
+        }
+
+        # Derived metrics
+        result["ast_to_ratio"] = result["assists"] / result["turnovers"] if result["turnovers"] > 0 else 1.7
+        result["oreb_pct"] = result["rebounds_off"] / result["rebounds_total"] if result["rebounds_total"] > 0 else 0.23
+        # Effective FG% = (FGM + 0.5 * 3PM) / FGA
+        if stats_totals["fg_attempts"] > 0:
+            result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 * stats_totals["three_made"]) / stats_totals["fg_attempts"]) * 100
+        else:
+            result["efg_pct"] = 52.0
+
+        print(f"[BOX SCORE] Team {team_id}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, AST/TO={result['ast_to_ratio']:.2f} (from {n} games)")
+        return result
+
     def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
         """Calculate team W-L record from completed games data.
 
@@ -462,6 +619,12 @@ class RichFeatureBuilder:
             self.get_standings(),
             self.get_recent_games(home_id, limit=10),
             self.get_recent_games(away_id, limit=10),
+        )
+
+        # Fetch box score averages for advanced stats (FG%, 3PT%, rebounds, etc.)
+        home_box_avgs, away_box_avgs = await asyncio.gather(
+            self.get_team_box_score_averages(home_id, home_recent),
+            self.get_team_box_score_averages(away_id, away_recent),
         )
 
         # Extract season averages
@@ -988,6 +1151,59 @@ class RichFeatureBuilder:
             "injury_margin_adj": injury_margin_adj,
             "home_star_out": home_star_out,
             "away_star_out": away_star_out,
+
+            # ============================================================
+            # BOX SCORE ADVANCED STATS (API-Basketball /games/statistics/teams)
+            # ============================================================
+            # Shooting percentages
+            "home_fg_pct": home_box_avgs["fg_pct"],
+            "away_fg_pct": away_box_avgs["fg_pct"],
+            "fg_pct_diff": home_box_avgs["fg_pct"] - away_box_avgs["fg_pct"],
+            "home_three_pct": home_box_avgs["three_pct"],
+            "away_three_pct": away_box_avgs["three_pct"],
+            "three_pct_diff": home_box_avgs["three_pct"] - away_box_avgs["three_pct"],
+            "home_ft_pct": home_box_avgs["ft_pct"],
+            "away_ft_pct": away_box_avgs["ft_pct"],
+            "ft_pct_diff": home_box_avgs["ft_pct"] - away_box_avgs["ft_pct"],
+            "home_efg_pct": home_box_avgs["efg_pct"],
+            "away_efg_pct": away_box_avgs["efg_pct"],
+            "efg_pct_diff": home_box_avgs["efg_pct"] - away_box_avgs["efg_pct"],
+
+            # Rebounding
+            "home_rebounds": home_box_avgs["rebounds_total"],
+            "away_rebounds": away_box_avgs["rebounds_total"],
+            "rebounds_diff": home_box_avgs["rebounds_total"] - away_box_avgs["rebounds_total"],
+            "home_oreb": home_box_avgs["rebounds_off"],
+            "away_oreb": away_box_avgs["rebounds_off"],
+            "oreb_diff": home_box_avgs["rebounds_off"] - away_box_avgs["rebounds_off"],
+            "home_dreb": home_box_avgs["rebounds_def"],
+            "away_dreb": away_box_avgs["rebounds_def"],
+            "home_oreb_pct": home_box_avgs["oreb_pct"],
+            "away_oreb_pct": away_box_avgs["oreb_pct"],
+
+            # Playmaking & Turnovers
+            "home_assists": home_box_avgs["assists"],
+            "away_assists": away_box_avgs["assists"],
+            "assists_diff": home_box_avgs["assists"] - away_box_avgs["assists"],
+            "home_turnovers": home_box_avgs["turnovers"],
+            "away_turnovers": away_box_avgs["turnovers"],
+            "turnovers_diff": home_box_avgs["turnovers"] - away_box_avgs["turnovers"],
+            "home_ast_to_ratio": home_box_avgs["ast_to_ratio"],
+            "away_ast_to_ratio": away_box_avgs["ast_to_ratio"],
+            "ast_to_ratio_diff": home_box_avgs["ast_to_ratio"] - away_box_avgs["ast_to_ratio"],
+
+            # Defense (steals, blocks)
+            "home_steals": home_box_avgs["steals"],
+            "away_steals": away_box_avgs["steals"],
+            "steals_diff": home_box_avgs["steals"] - away_box_avgs["steals"],
+            "home_blocks": home_box_avgs["blocks"],
+            "away_blocks": away_box_avgs["blocks"],
+            "blocks_diff": home_box_avgs["blocks"] - away_box_avgs["blocks"],
+
+            # Fouls
+            "home_fouls": home_box_avgs["personal_fouls"],
+            "away_fouls": away_box_avgs["personal_fouls"],
+            "fouls_diff": home_box_avgs["personal_fouls"] - away_box_avgs["personal_fouls"],
         }
 
         # Compatibility aliases for offline FeatureEngineer training schema
