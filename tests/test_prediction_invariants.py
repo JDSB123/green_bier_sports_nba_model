@@ -168,8 +168,13 @@ class TestSpreadInvariants:
                 f"1H: bet_side='away' but confidence={confidence:.3f} != away_cover_prob={away_prob:.3f}"
             )
 
-    def test_spread_signals_agree_or_filtered(self, engine, sample_features):
-        """Signals must agree, or prediction must be filtered."""
+    def test_spread_signals_agree_field_present(self, engine, sample_features):
+        """Signal agreement field must be present and accurate.
+        
+        Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts
+        are tracked for diagnostics but do NOT filter predictions.
+        The bet_side always follows the edge-based prediction_side.
+        """
         spread_line = -5.0
 
         pred = engine.predict_full_game(
@@ -182,17 +187,18 @@ class TestSpreadInvariants:
         if not spread_pred:
             pytest.skip("No spread prediction")
 
+        # These fields must exist for diagnostics
+        assert "signals_agree" in spread_pred
+        assert "classifier_side" in spread_pred
+        assert "prediction_side" in spread_pred
+        
+        # signals_agree must accurately reflect the comparison
         signals_agree = spread_pred["signals_agree"]
-        passes_filter = spread_pred["passes_filter"]
-        classifier_extreme = spread_pred.get("classifier_extreme", False)
-
-        # If signals disagree AND classifier is not extreme, must be filtered
-        if not signals_agree and not classifier_extreme:
-            assert not passes_filter, (
-                f"Signal conflict but prediction passed filter! "
-                f"classifier_side={spread_pred['classifier_side']}, "
-                f"prediction_side={spread_pred['prediction_side']}"
-            )
+        expected_agree = spread_pred["classifier_side"] == spread_pred["prediction_side"]
+        assert signals_agree == expected_agree, (
+            f"signals_agree={signals_agree} but classifier_side={spread_pred['classifier_side']} "
+            f"vs prediction_side={spread_pred['prediction_side']}"
+        )
 
 
 class TestTotalInvariants:
@@ -256,8 +262,13 @@ class TestTotalInvariants:
                 f"1H: bet_side='under' but confidence={confidence:.3f} != under_prob={under_prob:.3f}"
             )
 
-    def test_total_signals_agree_or_filtered(self, engine, sample_features):
-        """Signals must agree, or prediction must be filtered."""
+    def test_total_signals_agree_field_present(self, engine, sample_features):
+        """Signal agreement field must be present and accurate.
+        
+        Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts
+        are tracked for diagnostics but do NOT filter predictions.
+        The bet_side always follows the edge-based prediction_side.
+        """
         total_line = 220.0
 
         pred = engine.predict_full_game(
@@ -270,17 +281,18 @@ class TestTotalInvariants:
         if not total_pred:
             pytest.skip("No total prediction")
 
+        # These fields must exist for diagnostics
+        assert "signals_agree" in total_pred
+        assert "classifier_side" in total_pred
+        assert "prediction_side" in total_pred
+        
+        # signals_agree must accurately reflect the comparison
         signals_agree = total_pred["signals_agree"]
-        passes_filter = total_pred["passes_filter"]
-        classifier_extreme = total_pred.get("classifier_extreme", False)
-
-        # If signals disagree AND classifier is not extreme, must be filtered
-        if not signals_agree and not classifier_extreme:
-            assert not passes_filter, (
-                f"Signal conflict but prediction passed filter! "
-                f"classifier_side={total_pred['classifier_side']}, "
-                f"prediction_side={total_pred['prediction_side']}"
-            )
+        expected_agree = total_pred["classifier_side"] == total_pred["prediction_side"]
+        assert signals_agree == expected_agree, (
+            f"signals_agree={signals_agree} but classifier_side={total_pred['classifier_side']} "
+            f"vs prediction_side={total_pred['prediction_side']}"
+        )
 
 
 class TestEdgeCalculations:
