@@ -68,6 +68,8 @@ from src.modeling.edge_thresholds import get_edge_thresholds_for_game
 from src.modeling.unified_features import get_feature_defaults
 from zoneinfo import ZoneInfo
 
+from src.ingestion.standardize import normalize_team_to_espn
+
 logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
@@ -89,40 +91,6 @@ def convert_numpy_types(obj):
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     return obj
-
-
-_TEAM_KEYWORDS = {
-    "lakers": "lakers", "lal": "lakers",
-    "celtics": "celtics", "bos": "celtics",
-    "warriors": "warriors", "gsw": "warriors",
-    "nets": "nets", "bkn": "nets",
-    "knicks": "knicks", "nyk": "knicks",
-    "heat": "heat", "mia": "heat",
-    "bucks": "bucks", "mil": "bucks",
-    "sixers": "76ers", "76ers": "76ers", "phi": "76ers",
-    "suns": "suns", "phx": "suns",
-    "mavs": "mavericks", "mavericks": "mavericks", "dal": "mavericks",
-    "nuggets": "nuggets", "den": "nuggets",
-    "clippers": "clippers", "lac": "clippers",
-    "thunder": "thunder", "okc": "thunder",
-    "cavs": "cavaliers", "cavaliers": "cavaliers", "cle": "cavaliers",
-    "bulls": "bulls", "chi": "bulls",
-    "hawks": "hawks", "atl": "hawks",
-    "raptors": "raptors", "tor": "raptors",
-    "magic": "magic", "orl": "magic",
-    "pacers": "pacers", "ind": "pacers",
-    "hornets": "hornets", "cha": "hornets",
-    "wizards": "wizards", "was": "wizards",
-    "pistons": "pistons", "det": "pistons",
-    "rockets": "rockets", "hou": "rockets",
-    "spurs": "spurs", "sas": "spurs",
-    "kings": "kings", "sac": "kings",
-    "blazers": "blazers", "trailblazers": "blazers", "por": "blazers",
-    "jazz": "jazz", "uta": "jazz",
-    "wolves": "timberwolves", "timberwolves": "timberwolves", "min": "timberwolves",
-    "pelicans": "pelicans", "nop": "pelicans",
-    "grizzlies": "grizzlies", "mem": "grizzlies",
-}
 
 
 async def _validate_teams_outgoing_webhook(request: Request) -> None:
@@ -168,28 +136,15 @@ def _parse_teams_command(text: str) -> dict:
         result["show_menu"] = True
         return result
 
+    # Normalize team name using the canonicalization logic
+    team_name, _ = normalize_team_to_espn(normalized, source="teams_webhook")
+    result["team_filter"] = team_name
+
     if "elite" in normalized or "best" in normalized or "top" in normalized:
         result["elite_only"] = True
 
     if "tomorrow" in normalized:
-        tomorrow = datetime.now() + timedelta(days=1)
-        result["date"] = tomorrow.strftime("%Y-%m-%d")
-
-    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", normalized)
-    if date_match:
-        result["date"] = date_match.group(1)
-    else:
-        date_match = re.search(r"(\d{1,2})/(\d{1,2})", normalized)
-        if date_match:
-            month, day = int(date_match.group(1)), int(date_match.group(2))
-            if 1 <= month <= 12 and 1 <= day <= 31:
-                year = datetime.now().year
-                result["date"] = f"{year}-{month:02d}-{day:02d}"
-
-    for key, team_keyword in _TEAM_KEYWORDS.items():
-        if key in normalized:
-            result["team_filter"] = team_keyword
-            break
+        result["date"] = "tomorrow"
 
     return result
 
@@ -1913,7 +1868,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     app.state.feature_builder.clear_session_cache()
 
     try:
-        # Build features from FRESH data
+               # Build features from FRESH data
         features = await app.state.feature_builder.build_game_features(
             req.home_team, req.away_team
         )
@@ -2272,7 +2227,7 @@ async def get_picks_html(
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏀 NBA Picks</h1>
+            <h1>🏀 NBA PICKS</h1>
             <p>""" + date + """</p>
         </div>
         <div class="content">
