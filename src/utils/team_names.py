@@ -26,6 +26,7 @@ for canonical_id, variants in TEAM_MAPPING.items():
         VARIANT_TO_CANONICAL[variant.lower()] = canonical_id
 
 # Canonical team names (full names)
+# CRITICAL: These must match ESPN's standings API format exactly
 CANONICAL_NAMES = {
     "nba_lal": "Los Angeles Lakers",
     "nba_bos": "Boston Celtics",
@@ -34,7 +35,7 @@ CANONICAL_NAMES = {
     "nba_bkn": "Brooklyn Nets",
     "nba_mia": "Miami Heat",
     "nba_phi": "Philadelphia 76ers",
-    "nba_lac": "Los Angeles Clippers",
+    "nba_lac": "LA Clippers",  # ESPN uses "LA Clippers" NOT "Los Angeles Clippers"
     "nba_den": "Denver Nuggets",
     "nba_okc": "Oklahoma City Thunder",
     "nba_nop": "New Orleans Pelicans",

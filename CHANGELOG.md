@@ -10,11 +10,11 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 ## [NBA_v33.1.7] - 2026-01-24
 
 ### Fixed
-- **Test Suite Alignment**: Updated 6 tests in `test_prediction_invariants.py` and `test_prediction_engine.py` 
+- **Test Suite Alignment**: Updated 6 tests in `test_prediction_invariants.py` and `test_prediction_engine.py`
   to reflect edge-only filtering behavior (no longer assert signal conflict rejection)
 - **Config Files**: Set all `*_MIN_CONFIDENCE` values to `0.0` in `.env` and `.env.example` to match
   production edge-only filtering logic (confidence thresholds are informational only)
-- **Documentation**: Added deprecation notice to `src/markets/__init__.py` clarifying that 
+- **Documentation**: Added deprecation notice to `src/markets/__init__.py` clarifying that
   `SpreadMarket`, `TotalMarket`, `MoneylineMarket` classes are NOT used in production
 
 ### Documentation

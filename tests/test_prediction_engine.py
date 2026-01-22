@@ -8,6 +8,7 @@ import numpy as np
 from unittest.mock import Mock, MagicMock, patch
 from pathlib import Path
 
+
 class TestPeriodPredictor:
     """Tests for the PeriodPredictor class."""
 
@@ -58,7 +59,8 @@ class TestPeriodPredictor:
 
     def test_predict_spread_returns_correct_structure(self, period_predictor, sample_features):
         """Test spread prediction returns expected keys."""
-        result = period_predictor.predict_spread(sample_features, spread_line=-3.5)
+        result = period_predictor.predict_spread(
+            sample_features, spread_line=-3.5)
 
         assert "home_cover_prob" in result
         assert "away_cover_prob" in result
@@ -70,7 +72,8 @@ class TestPeriodPredictor:
 
     def test_predict_spread_home_favorite(self, period_predictor, sample_features):
         """Test spread prediction when home team is favorite."""
-        result = period_predictor.predict_spread(sample_features, spread_line=-3.5)
+        result = period_predictor.predict_spread(
+            sample_features, spread_line=-3.5)
 
         assert result["home_cover_prob"] == 0.60
         assert result["away_cover_prob"] == 0.40
@@ -98,7 +101,8 @@ class TestPeriodPredictor:
 
     def test_predict_total_returns_correct_structure(self, period_predictor, sample_features):
         """Test total prediction returns expected keys."""
-        result = period_predictor.predict_total(sample_features, total_line=220.0)
+        result = period_predictor.predict_total(
+            sample_features, total_line=220.0)
 
         assert "over_prob" in result
         assert "under_prob" in result
@@ -115,28 +119,33 @@ class TestPeriodPredictor:
 
     def test_predict_total_over(self, period_predictor, sample_features):
         """Test total prediction when model predicts over."""
-        result = period_predictor.predict_total(sample_features, total_line=220.0)
+        result = period_predictor.predict_total(
+            sample_features, total_line=220.0)
 
         assert result["over_prob"] == 0.55
         assert result["under_prob"] == 0.45
         assert result["bet_side"] == "over"
         # Confidence must correspond to bet_side (not max(probabilities))
-        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
-        assert result["classifier_confidence"] == pytest.approx(max(result["over_prob"], result["under_prob"]), rel=1e-6)
+        assert result["confidence"] == pytest.approx(
+            result["over_prob"], rel=1e-6)
+        assert result["classifier_confidence"] == pytest.approx(
+            max(result["over_prob"], result["under_prob"]), rel=1e-6)
         # Edge = predicted_total - total_line = 225.0 - 220.0 = 5.0
         assert result["edge"] == pytest.approx(5.0, rel=0.01)
 
     def test_predict_total_conflict_signals_agree_field_accurate(self, period_predictor, sample_features):
         """When classifier and point prediction disagree, signals_agree=False but edge-only filter applies.
-        
+
         Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts are tracked
         for diagnostics but do NOT filter predictions. Filter only checks edge threshold.
         """
         # Force classifier to prefer UNDER (array is [under, over])
-        period_predictor.total_model.predict_proba.return_value = np.array([[0.80, 0.20]])
+        period_predictor.total_model.predict_proba.return_value = np.array([
+                                                                           [0.80, 0.20]])
 
         # Point prediction (predicted_total=225, line=220) implies OVER with edge=5
-        result = period_predictor.predict_total(sample_features, total_line=220.0)
+        result = period_predictor.predict_total(
+            sample_features, total_line=220.0)
 
         assert result["classifier_side"] == "under"
         assert result["prediction_side"] == "over"
@@ -144,7 +153,8 @@ class TestPeriodPredictor:
 
         # bet_side follows point prediction; confidence follows bet_side probability
         assert result["bet_side"] == "over"
-        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["confidence"] == pytest.approx(
+            result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
         # EDGE-ONLY: passes_filter depends on edge, not signal agreement
@@ -222,17 +232,20 @@ class TestLegacyTotalPredictor:
     def test_legacy_total_predictor_conflict_signals_tracked_fg(self, legacy_total_predictor):
         """Signal conflicts are tracked but don't filter (edge-only filtering v33.1.5+)."""
         # Force classifier to prefer UNDER (array is [under, over])
-        legacy_total_predictor.fg_model.predict_proba.return_value = np.array([[0.80, 0.20]])
+        legacy_total_predictor.fg_model.predict_proba.return_value = np.array([
+                                                                              [0.80, 0.20]])
 
         features = {"predicted_total": 225.0}
-        result = legacy_total_predictor.predict_full_game(features, total_line=220.0)
+        result = legacy_total_predictor.predict_full_game(
+            features, total_line=220.0)
 
         assert result["classifier_side"] == "under"
         assert result["prediction_side"] == "over"
         assert result["signals_agree"] is False
 
         assert result["bet_side"] == "over"
-        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["confidence"] == pytest.approx(
+            result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
         # EDGE-ONLY: Edge = 5.0 pts, min_edge = 3.0 for FG total -> passes
@@ -240,21 +253,25 @@ class TestLegacyTotalPredictor:
 
     def test_legacy_total_predictor_conflict_signals_tracked_1h(self, legacy_total_predictor):
         """Signal conflicts are tracked but don't filter (edge-only filtering v33.1.5+)."""
-        legacy_total_predictor.fh_model.predict_proba.return_value = np.array([[0.80, 0.20]])
+        legacy_total_predictor.fh_model.predict_proba.return_value = np.array([
+                                                                              [0.80, 0.20]])
 
         features = {"predicted_total_1h": 112.5}
-        result = legacy_total_predictor.predict_first_half(features, total_line=110.0)
+        result = legacy_total_predictor.predict_first_half(
+            features, total_line=110.0)
 
         assert result["classifier_side"] == "under"
         assert result["prediction_side"] == "over"
         assert result["signals_agree"] is False
 
         assert result["bet_side"] == "over"
-        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
+        assert result["confidence"] == pytest.approx(
+            result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
         # EDGE-ONLY: Edge = 2.5 pts, min_edge = 2.0 for 1H total -> passes
         assert result["passes_filter"] is True
+
 
 class TestUnifiedPredictionEngine:
     """Tests for the UnifiedPredictionEngine class."""
@@ -288,7 +305,8 @@ class TestUnifiedPredictionEngine:
         assert "version" in info
         assert info["version"] == MODEL_VERSION
         assert "markets" in info
-        assert info["markets"] == len([k for k, v in engine.loaded_models.items() if v])
+        assert info["markets"] == len(
+            [k for k, v in engine.loaded_models.items() if v])
         assert "markets_list" in info
 
     def test_predict_all_markets_returns_expected_periods(self):
@@ -304,7 +322,7 @@ class TestUnifiedPredictionEngine:
         mock_period_result = {
             "spread": {"passes_filter": True, "confidence": 0.6},
             "total": {"passes_filter": True, "confidence": 0.55},
-            }
+        }
 
         mock_predictor = MagicMock()
         engine.h1_predictor = mock_predictor
@@ -312,9 +330,10 @@ class TestUnifiedPredictionEngine:
 
         # Mock the predict methods to return full period results
         with patch.object(engine, 'predict_first_half', return_value=mock_period_result), \
-             patch.object(engine, 'predict_full_game', return_value=mock_period_result):
+                patch.object(engine, 'predict_full_game', return_value=mock_period_result):
 
-            features = {"home_ppg": 110, "away_ppg": 105, "predicted_margin": 5}
+            features = {"home_ppg": 110,
+                        "away_ppg": 105, "predicted_margin": 5}
 
             result = engine.predict_all_markets(
                 features=features,
@@ -331,6 +350,7 @@ class TestUnifiedPredictionEngine:
                 assert "spread" in result[period]
                 assert "total" in result[period]
 
+
 class TestModelNotFoundError:
     """Tests for the ModelNotFoundError exception."""
 
@@ -341,6 +361,7 @@ class TestModelNotFoundError:
         error = ModelNotFoundError("Model not found")
         assert isinstance(error, Exception)
         assert str(error) == "Model not found"
+
 
 class TestConfidenceCalculation:
     """Tests for confidence calculation utilities.
@@ -397,6 +418,7 @@ class TestConfidenceCalculation:
 
         assert conf_55 < conf_65 < conf_80
 
+
 class TestFilterThresholds:
     """Tests for filter threshold application."""
 
@@ -420,16 +442,19 @@ class TestFilterThresholds:
         # Actually edge = predicted_margin + spread_line = 1 + (-3.5) = -2.5, abs=2.5
         # But min_edge for FG spread is 2.0, so 2.5 > 2.0 passes!
         # Let's use smaller predicted_margin to get smaller edge
-        features = {"home_ppg": 110, "predicted_margin": 1.5}  # edge = 1.5 + (-3.5) = -2, abs=2
+        # edge = 1.5 + (-3.5) = -2, abs=2
+        features = {"home_ppg": 110, "predicted_margin": 1.5}
         result = predictor.predict_spread(features, spread_line=-3.5)
 
         # Edge = abs(1.5 + (-3.5)) = 2.0, min_edge = 2.0 for FG spread
         # This is borderline, let's use even smaller margin
-        features = {"home_ppg": 110, "predicted_margin": 0.5}  # edge = 0.5 + (-3.5) = -3, abs=3
+        # edge = 0.5 + (-3.5) = -3, abs=3
+        features = {"home_ppg": 110, "predicted_margin": 0.5}
         # Wait that's still >= 2.0. Let me reconsider.
         # predicted_margin=0 -> edge = 0 + (-3.5) = -3.5 -> abs=3.5 (still passes)
         # We need spread_line closer to predicted_margin
-        features = {"home_ppg": 110, "predicted_margin": -3}  # edge = -3 + (-3.5) = -6.5... no
+        # edge = -3 + (-3.5) = -6.5... no
+        features = {"home_ppg": 110, "predicted_margin": -3}
         # Let's try: predicted_margin=2, spread_line=-3.5 -> edge = 2 + (-3.5) = -1.5, abs=1.5
         features = {"home_ppg": 110, "predicted_margin": 2}
         result = predictor.predict_spread(features, spread_line=-3.5)
@@ -463,4 +488,3 @@ class TestFilterThresholds:
         # Large edge (11.5 > configured threshold) - should pass both filters
         assert result["passes_filter"] is True
         assert result["filter_reason"] is None
-

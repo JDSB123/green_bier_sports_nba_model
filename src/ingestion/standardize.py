@@ -114,6 +114,8 @@ def _cache_variant_override(*, raw: str, normalized: str) -> None:
         logger.warning(f"Failed to cache variant override: {e}")
 
 # ESPN team names (canonical format)
+# CRITICAL: This must match EXACTLY what ESPN's standings API returns
+# ESPN uses "LA Clippers" (NOT "Los Angeles Clippers") in their standings API
 ESPN_TEAM_NAMES = {
     "Atlanta Hawks",
     "Boston Celtics",
@@ -127,8 +129,7 @@ ESPN_TEAM_NAMES = {
     "Golden State Warriors",
     "Houston Rockets",
     "Indiana Pacers",
-    "LA Clippers",
-    "Los Angeles Clippers",  # ESPN uses both
+    "LA Clippers",  # ESPN uses "LA Clippers", NOT "Los Angeles Clippers"
     "Los Angeles Lakers",
     "Memphis Grizzlies",
     "Miami Heat",

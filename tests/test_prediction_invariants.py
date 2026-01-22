@@ -170,7 +170,7 @@ class TestSpreadInvariants:
 
     def test_spread_signals_agree_field_present(self, engine, sample_features):
         """Signal agreement field must be present and accurate.
-        
+
         Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts
         are tracked for diagnostics but do NOT filter predictions.
         The bet_side always follows the edge-based prediction_side.
@@ -191,7 +191,7 @@ class TestSpreadInvariants:
         assert "signals_agree" in spread_pred
         assert "classifier_side" in spread_pred
         assert "prediction_side" in spread_pred
-        
+
         # signals_agree must accurately reflect the comparison
         signals_agree = spread_pred["signals_agree"]
         expected_agree = spread_pred["classifier_side"] == spread_pred["prediction_side"]
@@ -264,7 +264,7 @@ class TestTotalInvariants:
 
     def test_total_signals_agree_field_present(self, engine, sample_features):
         """Signal agreement field must be present and accurate.
-        
+
         Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts
         are tracked for diagnostics but do NOT filter predictions.
         The bet_side always follows the edge-based prediction_side.
@@ -285,7 +285,7 @@ class TestTotalInvariants:
         assert "signals_agree" in total_pred
         assert "classifier_side" in total_pred
         assert "prediction_side" in total_pred
-        
+
         # signals_agree must accurately reflect the comparison
         signals_agree = total_pred["signals_agree"]
         expected_agree = total_pred["classifier_side"] == total_pred["prediction_side"]

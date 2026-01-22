@@ -10,7 +10,7 @@ DEPRECATION NOTICE (v33.1.5):
 The SpreadMarket, TotalMarket, and MoneylineMarket classes are NOT used
 in production. Actual prediction filtering uses EDGE-ONLY logic in:
   - src/prediction/resolution.py::apply_thresholds()
-  
+
 The classes here are retained for potential future refactoring but the
 apply_filters() method on BaseMarket has STALE confidence-based logic.
 Do NOT use these classes for production filtering.

@@ -53,6 +53,7 @@ def _load_team_mapping():
                 _VARIANT_TO_CANONICAL[variant.lower().strip()] = canonical_id
     
     # Canonical ID to full name mapping
+    # CRITICAL: These must match ESPN's standings API format exactly
     _CANONICAL_TO_FULL = {
         "nba_atl": "Atlanta Hawks",
         "nba_bos": "Boston Celtics",
@@ -66,7 +67,7 @@ def _load_team_mapping():
         "nba_gsw": "Golden State Warriors",
         "nba_hou": "Houston Rockets",
         "nba_ind": "Indiana Pacers",
-        "nba_lac": "Los Angeles Clippers",
+        "nba_lac": "LA Clippers",  # ESPN uses "LA Clippers" NOT "Los Angeles Clippers"
         "nba_lal": "Los Angeles Lakers",
         "nba_mem": "Memphis Grizzlies",
         "nba_mia": "Miami Heat",
@@ -96,6 +97,7 @@ _load_team_mapping()
 # =============================================================================
 
 # Additional abbreviation mappings (supplements team_mapping.json)
+# CRITICAL: Use ESPN's exact team names ("LA Clippers" NOT "Los Angeles Clippers")
 ABBREV_TO_FULL = {
     # Standard 2-3 letter abbreviations
     "atl": "Atlanta Hawks", "bos": "Boston Celtics", "bkn": "Brooklyn Nets",
@@ -103,7 +105,7 @@ ABBREV_TO_FULL = {
     "dal": "Dallas Mavericks", "den": "Denver Nuggets", "det": "Detroit Pistons",
     "gs": "Golden State Warriors", "gsw": "Golden State Warriors",
     "hou": "Houston Rockets", "ind": "Indiana Pacers",
-    "lac": "Los Angeles Clippers", "lal": "Los Angeles Lakers",
+    "lac": "LA Clippers", "lal": "Los Angeles Lakers",
     "mem": "Memphis Grizzlies", "mia": "Miami Heat", "mil": "Milwaukee Bucks",
     "min": "Minnesota Timberwolves", "no": "New Orleans Pelicans",
     "nop": "New Orleans Pelicans", "nyk": "New York Knicks", "ny": "New York Knicks",
@@ -122,7 +124,7 @@ ABBREV_TO_FULL = {
     "hornets": "Charlotte Hornets", "bulls": "Chicago Bulls", "cavaliers": "Cleveland Cavaliers",
     "cavs": "Cleveland Cavaliers", "mavericks": "Dallas Mavericks", "mavs": "Dallas Mavericks",
     "nuggets": "Denver Nuggets", "pistons": "Detroit Pistons", "warriors": "Golden State Warriors",
-    "rockets": "Houston Rockets", "pacers": "Indiana Pacers", "clippers": "Los Angeles Clippers",
+    "rockets": "Houston Rockets", "pacers": "Indiana Pacers", "clippers": "LA Clippers",
     "lakers": "Los Angeles Lakers", "grizzlies": "Memphis Grizzlies", "heat": "Miami Heat",
     "bucks": "Milwaukee Bucks", "timberwolves": "Minnesota Timberwolves", "wolves": "Minnesota Timberwolves",
     "pelicans": "New Orleans Pelicans", "knicks": "New York Knicks", "thunder": "Oklahoma City Thunder",
