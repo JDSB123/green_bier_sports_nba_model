@@ -741,10 +741,14 @@ def verify_integrity(request: Request):
             name, 0.0) for name in required_features}
         # CRITICAL: Always include predicted_margin/predicted_total - needed for edge calculation
         # These are computed by RichFeatureBuilder at inference time, not part of model columns
-        test_features.setdefault("predicted_margin", overrides["predicted_margin"])
-        test_features.setdefault("predicted_total", overrides["predicted_total"])
-        test_features.setdefault("predicted_margin_1h", overrides["predicted_margin_1h"])
-        test_features.setdefault("predicted_total_1h", overrides["predicted_total_1h"])
+        test_features.setdefault(
+            "predicted_margin", overrides["predicted_margin"])
+        test_features.setdefault(
+            "predicted_total", overrides["predicted_total"])
+        test_features.setdefault(
+            "predicted_margin_1h", overrides["predicted_margin_1h"])
+        test_features.setdefault("predicted_total_1h",
+                                 overrides["predicted_total_1h"])
 
         # Check 3: Test 1H prediction
         try:
@@ -1424,7 +1428,15 @@ async def get_executive_summary(
     })
 
 
+@app.get("/teams/outgoing")
+@app.get("/teams/outgoing/")
+async def teams_outgoing_get():
+    """Allow GET for Teams validation pings; instruct to use POST for real calls."""
+    return JSONResponse(status_code=200, content={"text": "Teams webhook is reachable. Use POST for commands."})
+
+
 @app.post("/teams/outgoing")
+@app.post("/teams/outgoing/")
 @limiter.limit("30/minute")
 async def teams_outgoing_webhook(request: Request):
     """Teams outgoing webhook handler (ACA-hosted)."""
@@ -1868,7 +1880,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     app.state.feature_builder.clear_session_cache()
 
     try:
-               # Build features from FRESH data
+        # Build features from FRESH data
         features = await app.state.feature_builder.build_game_features(
             req.home_team, req.away_team
         )
