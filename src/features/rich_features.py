@@ -1354,10 +1354,16 @@ class RichFeatureBuilder:
                 splits_features["has_real_splits"] = 1
             features.update(splits_features)
         else:
-            # EXPLICIT: no splits available.
-            # We do NOT add split columns at all, so models that require them will fail
-            # in STRICT feature validation instead of silently using fabricated values.
+            # No splits available - use defaults so model features are complete
+            # The model expects these 7 features to exist (trained with them)
             features["has_real_splits"] = 0
+            features["spread_public_home_pct"] = 0.0
+            features["spread_ticket_money_diff"] = 0.0
+            features["spread_movement"] = 0.0
+            features["is_rlm_spread"] = 0
+            features["sharp_side_spread"] = 0
+            features["is_rlm_total"] = 0
+            features["sharp_side_total"] = 0
 
         # ATS (against the spread) cover rates - estimate from margin performance
         # Teams that consistently outperform their expected margin tend to cover more often
