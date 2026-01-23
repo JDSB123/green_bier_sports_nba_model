@@ -149,6 +149,29 @@ def _parse_teams_command(text: str) -> dict:
     return result
 
 
+# --- Teams Webhook Picks Cache (5-minute TTL for fast responses) ---
+_teams_picks_cache: Dict[str, Any] = {}
+_teams_picks_cache_time: Dict[str, float] = {}
+_TEAMS_CACHE_TTL_SECONDS = 300  # 5 minutes
+
+
+def _get_cached_picks(date_key: str) -> Optional[Dict[str, Any]]:
+    """Get cached picks if still valid (within TTL)."""
+    import time
+    if date_key in _teams_picks_cache:
+        cached_time = _teams_picks_cache_time.get(date_key, 0)
+        if time.time() - cached_time < _TEAMS_CACHE_TTL_SECONDS:
+            return _teams_picks_cache[date_key]
+    return None
+
+
+def _set_cached_picks(date_key: str, data: Dict[str, Any]) -> None:
+    """Cache picks data with timestamp."""
+    import time
+    _teams_picks_cache[date_key] = data
+    _teams_picks_cache_time[date_key] = time.time()
+
+
 # Prometheus metrics
 REQUEST_COUNT = Counter(
     'nba_api_requests_total',
@@ -1453,7 +1476,11 @@ async def teams_outgoing_get(request: Request, validationToken: Optional[str] = 
 @app.post("/teams/outgoing/")
 @limiter.limit("30/minute")
 async def teams_outgoing_webhook(request: Request):
-    """Teams outgoing webhook handler (ACA-hosted)."""
+    """Teams outgoing webhook handler (ACA-hosted).
+    
+    Uses in-memory cache (5-min TTL) for fast responses.
+    Teams requires response within 5 seconds.
+    """
     await _validate_teams_outgoing_webhook(request)
 
     try:
@@ -1473,14 +1500,25 @@ async def teams_outgoing_webhook(request: Request):
         )
         return JSONResponse(status_code=200, content={"text": help_text})
 
-    try:
-        data = await get_executive_summary(request, date=parsed["date"], use_splits=True)
-    except HTTPException as e:
-        logger.error("Teams outgoing webhook request failed: %s", e.detail)
-        return JSONResponse(status_code=200, content={"text": f"Error: {e.detail}"})
-    except Exception as e:
-        logger.error("Teams outgoing webhook request failed: %s", e)
-        return JSONResponse(status_code=200, content={"text": "Failed to fetch picks."})
+    # Try cache first for fast response (Teams has 5-second timeout)
+    cache_key = parsed["date"]
+    cached_data = _get_cached_picks(cache_key)
+    
+    if cached_data is not None:
+        logger.info(f"Teams webhook: serving cached picks for {cache_key}")
+        data = cached_data
+    else:
+        # Fetch fresh data and cache it
+        try:
+            data = await get_executive_summary(request, date=parsed["date"], use_splits=True)
+            if isinstance(data, dict):
+                _set_cached_picks(cache_key, data)
+        except HTTPException as e:
+            logger.error("Teams outgoing webhook request failed: %s", e.detail)
+            return JSONResponse(status_code=200, content={"text": f"Error: {e.detail}"})
+        except Exception as e:
+            logger.error("Teams outgoing webhook request failed: %s", e)
+            return JSONResponse(status_code=200, content={"text": "Failed to fetch picks."})
 
     if not isinstance(data, dict):
         return JSONResponse(status_code=200, content={"text": "No picks available."})

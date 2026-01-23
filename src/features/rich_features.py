@@ -166,7 +166,7 @@ class RichFeatureBuilder:
         # API-Basketball uses full names (e.g., "Los Angeles Clippers")
         # while ESPN uses abbreviated names (e.g., "LA Clippers")
         search_name = ESPN_TO_API_BASKETBALL.get(team_name, team_name)
-        
+
         # Fetch fresh data from API
         result = await api_basketball.fetch_teams(search=search_name, league=self.league_id, season=self.season)
         teams = result.get("response", [])

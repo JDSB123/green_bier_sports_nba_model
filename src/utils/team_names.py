@@ -121,7 +121,8 @@ def find_best_match(query: str, candidates: List[str], threshold: float = 0.8) -
     Returns:
         Best matching candidate or None
     """
-    matches = difflib.get_close_matches(query, candidates, n=1, cutoff=threshold)
+    matches = difflib.get_close_matches(
+        query, candidates, n=1, cutoff=threshold)
     return matches[0] if matches else None
 
 

@@ -42,16 +42,16 @@ _CANONICAL_TO_FULL: Dict[str, str] = {}
 def _load_team_mapping():
     """Load team mapping from JSON file (called once at import)."""
     global _TEAM_MAPPING, _VARIANT_TO_CANONICAL, _CANONICAL_TO_FULL
-    
+
     if TEAM_MAPPING_FILE.exists():
         with open(TEAM_MAPPING_FILE, "r") as f:
             _TEAM_MAPPING = json.load(f)
-        
+
         # Build reverse lookup
         for canonical_id, variants in _TEAM_MAPPING.items():
             for variant in variants:
                 _VARIANT_TO_CANONICAL[variant.lower().strip()] = canonical_id
-    
+
     # Canonical ID to full name mapping
     # CRITICAL: These must match ESPN's standings API format exactly
     _CANONICAL_TO_FULL = {
@@ -138,15 +138,15 @@ ABBREV_TO_FULL = {
 def standardize_team_name(team: str) -> str:
     """
     Convert any team name variant to canonical full name.
-    
+
     SINGLE SOURCE OF TRUTH for team name standardization.
-    
+
     Args:
         team: Any team name variant (abbreviation, nickname, full name)
-    
+
     Returns:
         Canonical full name (e.g., "Los Angeles Lakers")
-    
+
     Examples:
         >>> standardize_team_name("lal")
         'Los Angeles Lakers'
@@ -157,24 +157,24 @@ def standardize_team_name(team: str) -> str:
     """
     if not team or not isinstance(team, str):
         return team
-    
+
     team_lower = team.lower().strip()
-    
+
     # Check direct abbreviation match
     if team_lower in ABBREV_TO_FULL:
         return ABBREV_TO_FULL[team_lower]
-    
+
     # Check team_mapping.json variants
     if team_lower in _VARIANT_TO_CANONICAL:
         canonical_id = _VARIANT_TO_CANONICAL[team_lower]
         if canonical_id in _CANONICAL_TO_FULL:
             return _CANONICAL_TO_FULL[canonical_id]
-    
+
     # Already a full name? Return as-is with title case
     for full_name in ABBREV_TO_FULL.values():
         if team_lower == full_name.lower():
             return full_name
-    
+
     # Return original with title case as fallback
     return team.strip()
 
@@ -186,31 +186,31 @@ def standardize_team_name(team: str) -> str:
 def to_cst(dt: Union[datetime, str, None], source_is_utc: bool = True) -> Optional[datetime]:
     """
     Convert any datetime to CST (Central Standard Time).
-    
+
     SINGLE SOURCE OF TRUTH for timezone conversion.
     All data should be stored in CST.
-    
+
     Args:
         dt: datetime object or ISO string
         source_is_utc: If True (default), naive datetimes are treated as UTC.
                        If False, naive datetimes are treated as already CST.
-    
+
     Returns:
         datetime in CST timezone (timezone-aware)
     """
     if dt is None:
         return None
-    
+
     # Parse string to datetime
     if isinstance(dt, str):
         try:
             # Handle ISO format with Z suffix (UTC)
             if dt.endswith("Z"):
                 dt = dt[:-1] + "+00:00"
-            
+
             # Parse ISO format
             parsed = datetime.fromisoformat(dt)
-            
+
             # If no timezone, use source_is_utc to determine
             if parsed.tzinfo is None:
                 if source_is_utc:
@@ -218,7 +218,7 @@ def to_cst(dt: Union[datetime, str, None], source_is_utc: bool = True) -> Option
                 else:
                     # Already in CST/local time, just localize
                     parsed = parsed.replace(tzinfo=CST)
-            
+
             dt = parsed
         except ValueError:
             # Try other common formats
@@ -235,26 +235,26 @@ def to_cst(dt: Union[datetime, str, None], source_is_utc: bool = True) -> Option
                     continue
             else:
                 return None
-    
+
     # Convert to CST
     if dt.tzinfo is None:
         if source_is_utc:
             dt = dt.replace(tzinfo=UTC)
         else:
             dt = dt.replace(tzinfo=CST)
-    
+
     return dt.astimezone(CST)
 
 
 def to_cst_local(dt: Union[datetime, str, None]) -> Optional[datetime]:
     """
     Convert a local US datetime (already in US timezone) to CST.
-    
+
     Use this for data sources like Kaggle that use local US dates.
-    
+
     Args:
         dt: datetime in local US time (not UTC)
-    
+
     Returns:
         datetime in CST timezone
     """
@@ -264,11 +264,11 @@ def to_cst_local(dt: Union[datetime, str, None]) -> Optional[datetime]:
 def to_cst_date(dt: Union[datetime, str, None], source_is_utc: bool = True) -> Optional[str]:
     """
     Convert datetime to CST date string (YYYY-MM-DD).
-    
+
     Args:
         dt: datetime or ISO string
         source_is_utc: If True (default), naive datetimes are treated as UTC.
-    
+
     Returns:
         Date string in YYYY-MM-DD format (CST)
     """
@@ -281,7 +281,7 @@ def to_cst_date(dt: Union[datetime, str, None], source_is_utc: bool = True) -> O
 def to_cst_date_local(dt: Union[datetime, str, None]) -> Optional[str]:
     """
     Convert local US datetime to CST date string.
-    
+
     Use this for data sources like Kaggle that use local US dates.
     """
     return to_cst_date(dt, source_is_utc=False)
@@ -299,21 +299,21 @@ def generate_match_key(
 ) -> str:
     """
     Generate canonical match key for game identification.
-    
+
     SINGLE SOURCE OF TRUTH for match key generation.
     All data sources MUST use this function for game matching.
-    
+
     Format: "YYYY-MM-DD_home team name_away team name"
     - Date in CST
     - Team names lowercase, standardized
     - Home team before away team (consistent ordering)
-    
+
     Args:
         game_date: Game datetime (converted to CST date)
         home_team: Home team name (any variant)
         away_team: Away team name (any variant)
         source_is_utc: If True (default), datetime is UTC. If False, already local.
-    
+
     Returns:
         Canonical match key string
     """
@@ -321,11 +321,11 @@ def generate_match_key(
     date_str = to_cst_date(game_date, source_is_utc=source_is_utc)
     if not date_str:
         date_str = str(game_date)[:10]
-    
+
     # Standardize team names
     home = standardize_team_name(home_team).lower()
     away = standardize_team_name(away_team).lower()
-    
+
     return f"{date_str}_{home}_{away}"
 
 
@@ -339,13 +339,13 @@ def standardize_game_record(
 ) -> Dict[str, Any]:
     """
     Standardize a game record from any data source.
-    
+
     SINGLE ENTRY POINT for game data standardization.
-    
+
     Args:
         record: Raw game record from any source
         source: Source identifier (kaggle, theodds, api_basketball, etc.)
-    
+
     Returns:
         Standardized game record with:
         - game_date_cst: CST datetime
@@ -355,42 +355,42 @@ def standardize_game_record(
         - match_key: Canonical match key
     """
     result = record.copy()
-    
+
     # Extract datetime field (varies by source)
     dt_field = None
     for field in ["commence_time", "game_date", "date", "date_game", "game_date_est"]:
         if field in record and record[field]:
             dt_field = record[field]
             break
-    
+
     # Convert to CST
     if dt_field:
         result["game_date_cst"] = to_cst(dt_field)
         result["date_str"] = to_cst_date(dt_field)
-    
+
     # Standardize team names
     home_field = None
     away_field = None
-    
+
     for hf in ["home_team", "home", "team_city_name_home"]:
         if hf in record and record[hf]:
             home_field = record[hf]
             if "team_nickname_home" in record:
                 home_field = f"{record['team_city_name_home']} {record['team_nickname_home']}"
             break
-    
+
     for af in ["away_team", "away", "team_city_name_away"]:
         if af in record and record[af]:
             away_field = record[af]
             if "team_nickname_away" in record:
                 away_field = f"{record['team_city_name_away']} {record['team_nickname_away']}"
             break
-    
+
     if home_field:
         result["home_team"] = standardize_team_name(home_field)
     if away_field:
         result["away_team"] = standardize_team_name(away_field)
-    
+
     # Generate match key
     if result.get("game_date_cst") and result.get("home_team") and result.get("away_team"):
         result["match_key"] = generate_match_key(
@@ -398,10 +398,10 @@ def standardize_game_record(
             result["home_team"],
             result["away_team"],
         )
-    
+
     # Add source for traceability
     result["_source"] = source
-    
+
     return result
 
 
