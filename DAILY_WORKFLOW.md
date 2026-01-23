@@ -30,7 +30,7 @@ python scripts/compare_thresholds_api.py --date today
 
 ### Step 3: Save Picks for Monitoring (30 seconds)
 ```bash
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 ```
 
 ### Step 4: View Daily Report (1 minute)
@@ -91,7 +91,7 @@ post_to_teams_simple.bat
 python scripts/compare_thresholds_api.py --date today
 
 # Save picks
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 
 # Daily report
 python scripts/monitor_week1_performance.py --date 2026-01-16
@@ -187,7 +187,7 @@ Run with verbose output to see raw predictions
 - [ ] Post picks to Teams (`post_to_teams_simple.bat`)
 - [ ] Run version comparison (`compare_thresholds_api.py`)
 - [ ] Check FG Spread volume (should be 7-10)
-- [ ] Save picks for tracking (`save_daily_picks.py`)
+- [ ] Save picks for tracking (`predict_unified_save_daily_picks.py`)
 - [ ] View daily report (`monitor_week1_performance.py`)
 
 **End of Week (Jan 23):**

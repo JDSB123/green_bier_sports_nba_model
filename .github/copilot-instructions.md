@@ -78,7 +78,7 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 
 ## **Build / Run Commands (Local Development)**
 - Python environment: `python -m venv .venv && .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt`
-- Run predictions: `python scripts/predict.py` or `python scripts/run_slate.py`
+- Run predictions: `python scripts/predict_unified_full_game.py` or `python scripts/predict_unified_slate.py`
 - Run backtests (Docker): `docker compose -f docker-compose.backtest.yml up backtest-full`
 - Run unit tests: `pytest tests -v`
 - VS Code tasks available for: Train Models, Generate Predictions, Collect Odds Data, Run Backtest, Run Tests

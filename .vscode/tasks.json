@@ -25,7 +25,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath}",
       "args": [
-        "scripts/train_models.py"
+        "scripts/model_train_all.py"
       ],
       "group": "build",
       "presentation": {
@@ -38,7 +38,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath}",
       "args": [
-        "scripts/predict.py"
+        "scripts/predict_unified_full_game.py"
       ],
       "group": "build",
       "presentation": {
@@ -135,7 +135,7 @@
       "command": "bash",
       "args": [
         "-lc",
-        "python scripts/preflight_freshness.py"
+        "python scripts/predict_preflight_freshness.py"
       ],
       "group": {
         "kind": "test",

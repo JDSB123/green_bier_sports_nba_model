@@ -188,7 +188,8 @@ az keyvault secret set \
 | `Dockerfile.combined` | Production image definition | Code owner |
 | `docker-compose.yml` | Local dev stack | Dev team |
 | `.env.example` | Config template | Dev team |
-| `infra/nba/main.bicep` | Azure infrastructure (IaC) | DevOps |
+| `infra/nba/prediction.bicep` | Prediction-only infrastructure (IaC) | DevOps |
+| `infra/nba/main.bicep` | Full stack infrastructure (Teams Bot) | DevOps |
 | `docs/AZURE_CONFIG.md` | Azure resource names/FQDN | DevOps |
 | `.github/copilot-instructions.md` | Deployment runbook | Maintainer |
 

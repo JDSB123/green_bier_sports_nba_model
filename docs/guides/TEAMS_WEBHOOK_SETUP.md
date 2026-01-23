@@ -212,7 +212,7 @@ You can combine Teams posting with Week 1 monitoring:
 ```bash
 # Daily workflow
 # 1. Save picks locally
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 
 # 2. Post to Teams
 python scripts/post_to_teams.py
@@ -231,7 +231,7 @@ export TEAMS_WEBHOOK_URL="your_webhook_url"
 export NBA_API_URL="https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io"
 
 # Save picks
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 
 # Post to Teams
 python scripts/post_to_teams.py

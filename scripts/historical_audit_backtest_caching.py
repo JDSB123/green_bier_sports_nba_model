@@ -2,11 +2,13 @@
 """Audit backtest caching strategy."""
 
 from pathlib import Path
+from src.utils.historical_guard import require_historical_mode
 
 OK = "[OK]"
 WARN = "[WARN]"
 FAIL = "[FAIL]"
 
+require_historical_mode()
 print("\n" + "=" * 80)
 print("BACKTEST DATA CACHING AUDIT")
 print("=" * 80)
@@ -27,15 +29,16 @@ if docker_entrypoint.exists():
     else:
         print(f"{FAIL} Entrypoint does not reference training_data.csv")
 
-    if "build_training_data_complete.py" in content or "USE_PREBUILT" in content or "--use-prebuilt" in content:
+    if "data_unified_build_training_complete.py" in content or "USE_PREBUILT" in content or "--use-prebuilt" in content:
         print(f"{WARN} Raw rebuild/prebuilt references found in entrypoint")
     else:
         print(f"{OK} No raw rebuild/prebuilt references in entrypoint")
 
-    if "validate_training_data.py" in content:
-        print(f"{OK} Validation uses validate_training_data.py")
+    if "data_unified_validate_training.py" in content:
+        print(f"{OK} Validation uses data_unified_validate_training.py")
     else:
-        print(f"{WARN} Validation script not updated to validate_training_data.py")
+        print(
+            f"{WARN} Validation script not updated to data_unified_validate_training.py")
 
     if "cleanup_cache" in content:
         print(f"{OK} Cache cleanup function implemented")
@@ -80,9 +83,11 @@ critical_paths = {
 }
 
 for path_str, description in critical_paths.items():
-    full_path = data_dir / path_str if not path_str.startswith(".") else Path(path_str)
+    full_path = data_dir / \
+        path_str if not path_str.startswith(".") else Path(path_str)
     if full_path.exists():
-        size_kb = sum(f.stat().st_size for f in full_path.rglob("*") if f.is_file()) / 1024
+        size_kb = sum(f.stat().st_size for f in full_path.rglob(
+            "*") if f.is_file()) / 1024
         status = OK if "ephemeral" not in description or size_kb < 1000 else WARN
         print(f"{status} {path_str:40} {size_kb:10,.0f}KB - {description}")
     else:

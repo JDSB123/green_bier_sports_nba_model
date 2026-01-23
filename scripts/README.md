@@ -23,7 +23,7 @@ Helpful commands:
 
 ```bash
 # Validate canonical training data
-python scripts/validate_training_data.py --strict
+python scripts/data_unified_validate_training.py --strict
 
 # Download canonical training data from Azure
 python scripts/download_training_data_from_azure.py --version latest --verify
@@ -33,7 +33,7 @@ Data engineering only (not used for backtests):
 
 ```bash
 # Rebuild full training data from raw sources
-python scripts/build_training_data_complete.py --rebuild-from-raw
+python scripts/data_unified_build_training_complete.py --rebuild-from-raw
 ```
 
 ---
@@ -43,43 +43,43 @@ python scripts/build_training_data_complete.py --rebuild-from-raw
 ### Prediction (daily use)
 | Script | Description |
 |--------|-------------|
-| `run_slate.py` | Main entry point - get predictions for today's games |
-| `predict.py` | Make predictions for specific games |
+| `predict_unified_slate.py` | Main entry point - get predictions for today's games |
+| `predict_unified_full_game.py` | Make predictions for specific games |
 | `show_executive.py` | Show executive summary |
-| `review_predictions.py` | Review prediction results |
+| `predict_unified_review.py` | Review prediction results |
 
 ### Training Data
 | Script | Description |
 |--------|-------------|
-| `build_training_data_complete.py` | Data engineering only - build training data from raw sources |
+| `data_unified_build_training_complete.py` | Data engineering only - build training data from raw sources |
 | `fix_training_data_gaps.py` | Fix FG labels, totals, rest days (called by builder) |
-| `complete_training_features.py` | Compute model features (called by builder) |
-| `validate_training_data.py` | Validate training data quality |
-| `compute_betting_labels.py` | Compute spread/total labels |
-| `build_fresh_training_data.py` | Verify/copy canonical training data (no rebuilds) |
+| `data_unified_feature_complete.py` | Compute model features (called by builder) |
+| `data_unified_validate_training.py` | Validate training data quality |
+| `data_unified_compute_betting_labels.py` | Compute spread/total labels |
+| `data_unified_build_training_fresh.py` | Verify/copy canonical training data (no rebuilds) |
 
 ### Model Training & Backtesting
 | Script | Description |
 |--------|-------------|
-| `train_models.py` | Main trainer - train all market models |
-| `backtest_production.py` | Backtest production models |
+| `model_train_all.py` | Main trainer - train all market models |
+| `historical_backtest_production.py` | Backtest production models |
 | `optimize_confidence_thresholds.py` | Sweep confidence/edge thresholds for best ROI/accuracy |
 
 ### Data Ingestion
 | Script | Description |
 |--------|-------------|
-| `ingest_all.py` | Run full ingestion pipeline |
-| `ingest_nba_database.py` | Ingest wyattowalsh/basketball dataset |
-| `ingest_elo_ratings.py` | Ingest FiveThirtyEight ELO ratings |
-| `ingest_historical_period_odds.py` | Ingest period odds from The Odds API |
-| `collect_the_odds.py` | Fetch current odds from The Odds API |
-| `collect_api_basketball.py` | Fetch game data from API-Basketball |
-| `collect_betting_splits.py` | Fetch public betting percentages |
-| `fetch_injuries.py` | Fetch injury reports |
-| `fetch_quarter_scores.py` | Fetch quarter-by-quarter scores |
-| `fetch_nba_box_scores.py` | Fetch NBA API box scores |
+| `data_unified_ingest_all.py` | Run full ingestion pipeline |
+| `data_unified_ingest_database.py` | Ingest wyattowalsh/basketball dataset |
+| `historical_ingest_elo_ratings.py` | Historical: ingest FiveThirtyEight ELO ratings |
+| `historical_ingest_period_odds.py` | Historical: ingest period odds from The Odds API |
+| `data_unified_fetch_the_odds.py` | Fetch current odds from The Odds API |
+| `data_unified_fetch_api_basketball.py` | Fetch game data from API-Basketball |
+| `data_unified_fetch_betting_splits.py` | Fetch public betting percentages |
+| `data_unified_fetch_injuries.py` | Fetch injury reports |
+| `historical_fetch_quarter_scores.py` | Historical: fetch quarter-by-quarter scores |
+| `data_unified_fetch_box_scores.py` | Fetch NBA API box scores |
 | `download_kaggle_player_data.py` | Download Kaggle NBA player box scores |
-| `extract_betting_lines.py` | Extract betting lines from odds data |
+| `data_unified_extract_betting_lines.py` | Extract betting lines from odds data |
 
 ### Azure Blob Storage
 | Script | Description |
@@ -90,25 +90,25 @@ python scripts/build_training_data_complete.py --rebuild-from-raw
 ### Validation
 | Script | Description |
 |--------|-------------|
-| `validate_production_readiness.py` | Validate config, imports, API keys |
-| `validate_model.py` | Validate model files |
-| `validate_training_data.py` | Validate training data |
+| `predict_validate_production_readiness.py` | Validate config, imports, API keys |
+| `model_validate.py` | Validate model files |
+| `data_unified_validate_training.py` | Validate training data |
 | `ci_sanity_check.py` | CI/CD sanity checks |
-| `test_all_api_endpoints.py` | Test all API endpoints |
+| `predict_test_all_api_endpoints.py` | Test all API endpoints |
 
 ### Analysis & Export
 | Script | Description |
 |--------|-------------|
 | `calculate_pick_results.py` | Calculate pick outcomes |
 | `export_executive_html.py` | Export executive HTML summary |
-| `export_historical_odds.py` | Export historical odds |
-| `export_period_odds_to_csv.py` | Export period odds to CSV |
+| `historical_export_odds.py` | Export historical odds |
+| `historical_export_period_odds.py` | Export period odds to CSV |
 | `update_pick_tracker.py` | Update pick tracking database |
 
 ### Operations
 | Script | Description |
 |--------|-------------|
-| `manage_models.py` | Model file management |
+| `model_manage.py` | Model file management |
 | `manage_secrets.py` | Docker secrets management |
 | `post_to_teams.py` | Post predictions to Microsoft Teams |
 | `prepare_deployment.py` | Prepare deployment package |
@@ -165,16 +165,16 @@ training_data/
 
 ```bash
 # Get today's predictions
-python scripts/run_slate.py
+python scripts/predict_unified_slate.py
 
 # Validate canonical training data
-python scripts/validate_training_data.py --strict
+python scripts/data_unified_validate_training.py --strict
 
 # Train models
-python scripts/train_models.py
+python scripts/model_train_all.py
 
 # Run backtest
-python scripts/backtest_production.py --data data/processed/training_data.csv
+python scripts/historical_backtest_production.py --data data/processed/training_data.csv
 ```
 
 ## Docker Usage
@@ -187,5 +187,5 @@ The prediction API runs inside Docker on port 8090.
 docker compose up -d
 
 # Run predictions via Docker
-python scripts/run_slate.py
+python scripts/predict_unified_slate.py
 ```

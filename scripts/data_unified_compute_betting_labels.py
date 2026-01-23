@@ -56,7 +56,8 @@ def normalize_column_names(df: pd.DataFrame) -> pd.DataFrame:
 
     # Ensure game_date is datetime
     if 'game_date' in df.columns:
-        df['game_date'] = pd.to_datetime(df['game_date'], format='mixed', errors='coerce')
+        df['game_date'] = pd.to_datetime(
+            df['game_date'], format='mixed', errors='coerce')
 
     return df
 
@@ -64,7 +65,6 @@ def normalize_column_names(df: pd.DataFrame) -> pd.DataFrame:
 def compute_first_half_scores(df: pd.DataFrame) -> pd.DataFrame:
     """Compute 1H scores from quarter data if not already present."""
     df = df.copy()
-
 
     # Check if 1H columns exist
     if 'home_1h' not in df.columns or df['home_1h'].isna().sum() > len(df) * 0.5:
@@ -79,8 +79,8 @@ def compute_first_half_scores(df: pd.DataFrame) -> pd.DataFrame:
             df.loc[~q_mask, 'away_1h'] = np.nan
 
             computed = q_mask.sum()
-            logger.info(f"  Computed 1H scores for {computed} games from quarter data")
-
+            logger.info(
+                f"  Computed 1H scores for {computed} games from quarter data")
 
     return df
 
@@ -88,7 +88,6 @@ def compute_first_half_scores(df: pd.DataFrame) -> pd.DataFrame:
 def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
     """Compute all betting outcome labels."""
     df = df.copy()
-
 
     # Always recompute labels from source-of-truth score/line fields.
     # This prevents stale/placeholder label values from surviving merges.
@@ -110,11 +109,13 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
 
     # Full game margin (home perspective)
     df["fg_margin"] = df["home_score"] - df["away_score"]
-    logger.info(f"  Computed fg_margin for {df['fg_margin'].notna().sum()} games")
+    logger.info(
+        f"  Computed fg_margin for {df['fg_margin'].notna().sum()} games")
 
     # Full game total
     df["fg_total_actual"] = df["home_score"] + df["away_score"]
-    logger.info(f"  Computed fg_total_actual for {df['fg_total_actual'].notna().sum()} games")
+    logger.info(
+        f"  Computed fg_total_actual for {df['fg_total_actual'].notna().sum()} games")
 
     # FG Spread Covered (home team covers spread)
     # If spread is -3.5, home must win by 4+ to cover
@@ -124,7 +125,8 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         # Handle both conventions: spread relative to home team
         # Negative spread means home is favored, must win by more than abs(spread)
         df.loc[spread_mask, 'fg_spread_covered'] = (
-            df.loc[spread_mask, 'fg_margin'] + df.loc[spread_mask, 'fg_spread_line'] > 0
+            df.loc[spread_mask, 'fg_margin'] +
+            df.loc[spread_mask, 'fg_spread_line'] > 0
         ).astype(int)
 
         # Handle pushes (set to NaN)
@@ -134,13 +136,16 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         computed = df['fg_spread_covered'].notna().sum()
         logger.info(f"  Computed fg_spread_covered for {computed} games")
     else:
-        logger.warning("  Missing fg_spread_line - cannot compute fg_spread_covered")
+        logger.warning(
+            "  Missing fg_spread_line - cannot compute fg_spread_covered")
 
     # FG Total Over
     if 'fg_total_line' in df.columns:
-        total_mask = df['fg_total_line'].notna() & df['fg_total_actual'].notna()
+        total_mask = df['fg_total_line'].notna(
+        ) & df['fg_total_actual'].notna()
         df.loc[total_mask, 'fg_total_over'] = (
-            df.loc[total_mask, 'fg_total_actual'] > df.loc[total_mask, 'fg_total_line']
+            df.loc[total_mask, 'fg_total_actual'] > df.loc[total_mask,
+                                                           'fg_total_line']
         ).astype(int)
 
         # Handle pushes
@@ -150,7 +155,8 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         computed = df['fg_total_over'].notna().sum()
         logger.info(f"  Computed fg_total_over for {computed} games")
     else:
-        logger.warning("  Missing fg_total_line - cannot compute fg_total_over")
+        logger.warning(
+            "  Missing fg_total_line - cannot compute fg_total_over")
 
     # FG Home Win (moneyline label)
     df["fg_home_win"] = (df["fg_margin"] > 0).astype(int)
@@ -170,7 +176,8 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         # Only where we have 1H scores (real data)
         h1_mask = df["home_1h"].notna() & df["away_1h"].notna()
         computed_1h = int(h1_mask.sum())
-        logger.info(f"  Computed 1h_margin/1h_total_actual for {computed_1h} games")
+        logger.info(
+            f"  Computed 1h_margin/1h_total_actual for {computed_1h} games")
     else:
         df["1h_margin"] = np.nan
         df["1h_total_actual"] = np.nan
@@ -179,7 +186,8 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
     if "1h_spread_line" in df.columns and "1h_margin" in df.columns:
         spread_1h_mask = df["1h_spread_line"].notna() & df["1h_margin"].notna()
         df.loc[spread_1h_mask, '1h_spread_covered'] = (
-            df.loc[spread_1h_mask, '1h_margin'] + df.loc[spread_1h_mask, '1h_spread_line'] > 0
+            df.loc[spread_1h_mask, '1h_margin'] +
+            df.loc[spread_1h_mask, '1h_spread_line'] > 0
         ).astype(int)
 
         # Handle pushes
@@ -189,13 +197,16 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         computed = df['1h_spread_covered'].notna().sum()
         logger.info(f"  Computed 1h_spread_covered for {computed} games")
     else:
-        logger.warning("  Missing 1h_spread_line or 1h_margin - cannot compute 1h_spread_covered")
+        logger.warning(
+            "  Missing 1h_spread_line or 1h_margin - cannot compute 1h_spread_covered")
 
     # 1H Total Over
     if "1h_total_line" in df.columns and "1h_total_actual" in df.columns:
-        total_1h_mask = df["1h_total_line"].notna() & df["1h_total_actual"].notna()
+        total_1h_mask = df["1h_total_line"].notna(
+        ) & df["1h_total_actual"].notna()
         df.loc[total_1h_mask, '1h_total_over'] = (
-            df.loc[total_1h_mask, '1h_total_actual'] > df.loc[total_1h_mask, '1h_total_line']
+            df.loc[total_1h_mask,
+                   '1h_total_actual'] > df.loc[total_1h_mask, '1h_total_line']
         ).astype(int)
 
         # Handle pushes
@@ -205,7 +216,8 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         computed = df['1h_total_over'].notna().sum()
         logger.info(f"  Computed 1h_total_over for {computed} games")
     else:
-        logger.warning("  Missing 1h_total_line or 1h_total_actual - cannot compute 1h_total_over")
+        logger.warning(
+            "  Missing 1h_total_line or 1h_total_actual - cannot compute 1h_total_over")
 
     # 1H Home Win
     if "1h_margin" in df.columns:
@@ -218,7 +230,7 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
     # FIRST QUARTER LABELS
     # ==================
 
-    # Q1 margin and total (2025-26+ data available from fetch_quarter_scores.py)
+    # Q1 margin and total (2025-26+ data available from historical_fetch_quarter_scores.py)
     if "home_q1" in df.columns and "away_q1" in df.columns:
         df["q1_margin"] = df["home_q1"] - df["away_q1"]
         df["q1_total_actual"] = df["home_q1"] + df["away_q1"]
@@ -226,17 +238,20 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         # Only where we have Q1 scores (real data, typically 2025-26+)
         q1_mask = df["home_q1"].notna() & df["away_q1"].notna()
         computed_q1 = int(q1_mask.sum())
-        logger.info(f"  Computed q1_margin/q1_total_actual for {computed_q1} games")
+        logger.info(
+            f"  Computed q1_margin/q1_total_actual for {computed_q1} games")
     else:
         df["q1_margin"] = np.nan
         df["q1_total_actual"] = np.nan
-        logger.warning("  Missing home_q1/away_q1 scores - cannot compute Q1 labels")
+        logger.warning(
+            "  Missing home_q1/away_q1 scores - cannot compute Q1 labels")
 
     # Q1 Spread Covered
     if "q1_spread_line" in df.columns and "q1_margin" in df.columns:
         spread_q1_mask = df["q1_spread_line"].notna() & df["q1_margin"].notna()
         df.loc[spread_q1_mask, 'q1_spread_covered'] = (
-            df.loc[spread_q1_mask, 'q1_margin'] + df.loc[spread_q1_mask, 'q1_spread_line'] > 0
+            df.loc[spread_q1_mask, 'q1_margin'] +
+            df.loc[spread_q1_mask, 'q1_spread_line'] > 0
         ).astype(int)
 
         # Handle pushes
@@ -247,15 +262,19 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         logger.info(f"  Computed q1_spread_covered for {computed} games")
     else:
         if "q1_spread_line" not in df.columns:
-            logger.warning("  Missing q1_spread_line - cannot compute q1_spread_covered")
+            logger.warning(
+                "  Missing q1_spread_line - cannot compute q1_spread_covered")
         if "q1_margin" not in df.columns:
-            logger.warning("  Missing q1_margin - cannot compute q1_spread_covered")
+            logger.warning(
+                "  Missing q1_margin - cannot compute q1_spread_covered")
 
     # Q1 Total Over
     if "q1_total_line" in df.columns and "q1_total_actual" in df.columns:
-        total_q1_mask = df["q1_total_line"].notna() & df["q1_total_actual"].notna()
+        total_q1_mask = df["q1_total_line"].notna(
+        ) & df["q1_total_actual"].notna()
         df.loc[total_q1_mask, 'q1_total_over'] = (
-            df.loc[total_q1_mask, 'q1_total_actual'] > df.loc[total_q1_mask, 'q1_total_line']
+            df.loc[total_q1_mask,
+                   'q1_total_actual'] > df.loc[total_q1_mask, 'q1_total_line']
         ).astype(int)
 
         # Handle pushes
@@ -266,9 +285,11 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         logger.info(f"  Computed q1_total_over for {computed} games")
     else:
         if "q1_total_line" not in df.columns:
-            logger.warning("  Missing q1_total_line - cannot compute q1_total_over")
+            logger.warning(
+                "  Missing q1_total_line - cannot compute q1_total_over")
         if "q1_total_actual" not in df.columns:
-            logger.warning("  Missing q1_total_actual - cannot compute q1_total_over")
+            logger.warning(
+                "  Missing q1_total_actual - cannot compute q1_total_over")
 
     # Q1 Home Win (moneyline)
     if "q1_margin" in df.columns:
@@ -276,7 +297,6 @@ def compute_betting_labels(df: pd.DataFrame) -> pd.DataFrame:
         df.loc[df["q1_margin"].isna(), "q1_home_win"] = np.nan
         computed = df["q1_home_win"].notna().sum()
         logger.info(f"  Computed q1_home_win for {computed} games")
-
 
     return df
 
@@ -308,7 +328,8 @@ def validate_labels(df: pd.DataFrame) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Compute betting labels for canonical training data')
+    parser = argparse.ArgumentParser(
+        description='Compute betting labels for canonical training data')
     parser.add_argument(
         '--input',
         type=str,
@@ -336,7 +357,6 @@ def main():
 
     # Normalize column names
     df = normalize_column_names(df)
-
 
     # Compute 1H scores from quarters if needed
     df = compute_first_half_scores(df)

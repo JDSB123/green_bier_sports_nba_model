@@ -6,8 +6,14 @@ This script fetches current injury reports, enriches them with player stats,
 and saves to data/processed/injuries.csv for use in model predictions.
 
 Usage:
-    python scripts/fetch_injuries.py
+    python scripts/data_unified_fetch_injuries.py
 """
+from src.config import settings
+from src.ingestion.injuries import (
+    fetch_all_injuries,
+    save_injuries,
+    enrich_injuries_with_stats,
+)
 import os
 import sys
 import asyncio
@@ -16,13 +22,6 @@ from pathlib import Path
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-
-from src.ingestion.injuries import (
-    fetch_all_injuries,
-    save_injuries,
-    enrich_injuries_with_stats,
-)
-from src.config import settings
 
 
 async def main():
@@ -70,10 +69,12 @@ async def main():
 
     # Show high-impact injuries (out players scoring >15 PPG)
     print("\nHigh-Impact Injuries (OUT status, >15 PPG):")
-    high_impact = [inj for inj in injuries if inj.status == 'out' and inj.ppg > 15]
+    high_impact = [inj for inj in injuries if inj.status ==
+                   'out' and inj.ppg > 15]
     if high_impact:
         for inj in sorted(high_impact, key=lambda x: -x.ppg)[:10]:
-            print(f"  {inj.player_name:25} ({inj.team:20}) {inj.ppg:5.1f} PPG - {inj.injury_type or 'N/A'}")
+            print(
+                f"  {inj.player_name:25} ({inj.team:20}) {inj.ppg:5.1f} PPG - {inj.injury_type or 'N/A'}")
     else:
         print("  None found")
 

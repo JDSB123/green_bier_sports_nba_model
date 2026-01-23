@@ -8,12 +8,12 @@ This avoids feature drift between training and backtesting.
 
 Usage:
     # Accuracy-only (no ROI/profit; avoids any pricing assumptions)
-    python scripts/backtest_production.py --no-pricing
+    python scripts/historical_backtest_production.py --no-pricing
 
     # Explicit constant odds (still an assumption, but never silent)
-    python scripts/backtest_production.py --spread-juice -110 --total-juice -110
+    python scripts/historical_backtest_production.py --spread-juice -110 --total-juice -110
 
-    python scripts/backtest_production.py --start-date 2024-01-01 --end-date 2025-01-01 --no-pricing
+    python scripts/historical_backtest_production.py --start-date 2024-01-01 --end-date 2025-01-01 --no-pricing
 """
 from src.prediction.engine import map_1h_features_to_fg_names
 from src.prediction.feature_validation import (
@@ -21,6 +21,7 @@ from src.prediction.feature_validation import (
     validate_and_prepare_features,
 )
 from src.modeling.season_utils import get_season_for_date
+from src.utils.historical_guard import require_historical_mode, resolve_historical_output_root, ensure_historical_path
 import joblib
 import numpy as np
 import pandas as pd
@@ -743,6 +744,7 @@ def print_summary(results: Dict[str, List[BetResult]], output_json: Optional[str
 
 
 def main():
+    require_historical_mode()
     parser = argparse.ArgumentParser(
         description="Backtest production models on historical data")
     parser.add_argument(
@@ -827,8 +829,8 @@ def main():
     )
     parser.add_argument(
         "--output-json",
-        default="data/backtest_results/production_backtest_results.json",
-        help="Path to save JSON results",
+        default=None,
+        help="Path to save JSON results (defaults to HISTORICAL_OUTPUT_ROOT/backtest_results)",
     )
     parser.add_argument(
         "--max-games",
@@ -837,6 +839,12 @@ def main():
         help="Maximum games to process (for quick testing)",
     )
     args = parser.parse_args()
+    if args.output_json is None:
+        args.output_json = str(
+            resolve_historical_output_root("backtest_results")
+            / "production_backtest_results.json"
+        )
+    ensure_historical_path(Path(args.output_json).parent, "output-json")
 
     if getattr(args, "ensure_canonical", False):
         ensure_canonical_training_data(

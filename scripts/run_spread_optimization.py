@@ -2,7 +2,7 @@
 """
 Run Spread Parameter Optimization
 
-This script programmatically runs backtest_production.py with different
+This script programmatically runs historical_backtest_production.py with different
 parameter combinations to find optimal settings for spread markets.
 """
 import os
@@ -14,6 +14,7 @@ from itertools import product
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
+
 
 def run_backtest(
     market: str,
@@ -38,7 +39,7 @@ def run_backtest(
     # Build command
     cmd = [
         sys.executable,
-        str(PROJECT_ROOT / "scripts" / "backtest_production.py"),
+        str(PROJECT_ROOT / "scripts" / "historical_backtest_production.py"),
         f"--data={data_path}",
         f"--models-dir={models_dir}",
         f"--markets={market}",
@@ -47,7 +48,8 @@ def run_backtest(
         f"--output-json={output_file}",
     ]
 
-    print(f"Running: {market}, conf={confidence:.2f}, juice={juice}... ", end="", flush=True)
+    print(
+        f"Running: {market}, conf={confidence:.2f}, juice={juice}... ", end="", flush=True)
 
     try:
         # Run backtest
@@ -78,7 +80,8 @@ def run_backtest(
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run spread parameter optimization")
+    parser = argparse.ArgumentParser(
+        description="Run spread parameter optimization")
     parser.add_argument(
         "--markets",
         default="fg_spread,1h_spread",

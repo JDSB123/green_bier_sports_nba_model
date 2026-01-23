@@ -45,7 +45,8 @@ def load_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     # Support both formats
     model = model_data.get("pipeline") or model_data.get("model")
-    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+    feature_cols = model_data.get(
+        "feature_columns") or model_data.get("model_columns", [])
 
     return model, feature_cols
 
@@ -86,7 +87,8 @@ def load_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     # Support both formats
     model = model_data.get("pipeline") or model_data.get("model")
-    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+    feature_cols = model_data.get(
+        "feature_columns") or model_data.get("model_columns", [])
 
     return model, feature_cols
 
@@ -115,17 +117,19 @@ def load_first_half_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
         # New combined format
         model_data = joblib.load(model_path)
         model = model_data.get("pipeline") or model_data.get("model")
-        feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+        feature_cols = model_data.get(
+            "feature_columns") or model_data.get("model_columns", [])
         return model, feature_cols
     elif legacy_model_path.exists():
         # Legacy separate files format
         model = joblib.load(legacy_model_path)
-        feature_cols = joblib.load(legacy_features_path) if legacy_features_path.exists() else []
+        feature_cols = joblib.load(
+            legacy_features_path) if legacy_features_path.exists() else []
         return model, feature_cols
     else:
         raise FileNotFoundError(
             f"1H spread model not found at {model_path} or {legacy_model_path}. "
-            f"Run: python scripts/train_models.py --market 1h"
+            f"Run: python scripts/model_train_all.py --market 1h"
         )
 
 
@@ -153,18 +157,17 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
         # New combined format
         model_data = joblib.load(model_path)
         model = model_data.get("pipeline") or model_data.get("model")
-        feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
+        feature_cols = model_data.get(
+            "feature_columns") or model_data.get("model_columns", [])
         return model, feature_cols
     elif legacy_model_path.exists():
         # Legacy separate files format
         model = joblib.load(legacy_model_path)
-        feature_cols = joblib.load(legacy_features_path) if legacy_features_path.exists() else []
+        feature_cols = joblib.load(
+            legacy_features_path) if legacy_features_path.exists() else []
         return model, feature_cols
     else:
         raise FileNotFoundError(
             f"1H total model not found at {model_path} or {legacy_model_path}. "
-            f"Run: python scripts/train_models.py --market 1h"
+            f"Run: python scripts/model_train_all.py --market 1h"
         )
-
-
-

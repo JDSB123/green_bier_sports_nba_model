@@ -26,18 +26,20 @@ Storage Structure:
 
 Usage:
     # Export all ingested data
-    python scripts/export_historical_odds.py
+    python scripts/historical_export_odds.py
 
     # Export specific season
-    python scripts/export_historical_odds.py --season 2023-2024
+    python scripts/historical_export_odds.py --season 2023-2024
 
     # Export to CSV only
-    python scripts/export_historical_odds.py --format csv
+    python scripts/historical_export_odds.py --format csv
 
     # Export with team name standardization
-    python scripts/export_historical_odds.py --standardize-teams
+    python scripts/historical_export_odds.py --standardize-teams
 """
 from __future__ import annotations
+from src.utils.logging import get_logger
+from src.utils.historical_guard import resolve_historical_output_root, require_historical_mode, ensure_historical_path
 
 import argparse
 import json
@@ -52,7 +54,6 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # flake8: noqa: E402
-from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -279,12 +280,12 @@ class HistoricalDataExporter:
                     data.append({
                         "file": str(f),
                         "data": json.load(fp)
-                    })
-            except Exception as e:
-                logger.warning(f"Failed to load {f}: {e}")
+                    self,
+                    source_dir: str | None = None,
+                    export_dir: str | None = None,
         return data
-
-    def export_season_events(
+                    self.source_dir = Path(source_dir) if source_dir else resolve_historical_output_root("the_odds")
+                    self.export_dir = Path(export_dir) if export_dir else resolve_historical_output_root("exports")
         self,
         season: str,
         output_format: str = "both",
@@ -347,9 +348,9 @@ class HistoricalDataExporter:
     def export_season_odds(
         self,
         season: str,
-        market_group: str = "featured",
-        output_format: str = "both",
-        include_all_bookmakers: bool = False,
+        market_group: str="featured",
+        output_format: str="both",
+        include_all_bookmakers: bool=False,
     ) -> List[Path]:
         """
         Export odds for a season.
@@ -386,7 +387,8 @@ class HistoricalDataExporter:
         df = pd.concat(all_dfs, ignore_index=True)
 
         # Sort by time
-        sort_cols = ["commence_time", "event_id", "bookmaker_key", "market_key"]
+        sort_cols = ["commence_time", "event_id",
+                     "bookmaker_key", "market_key"]
         df = df.sort_values(sort_cols)
 
         logger.info(f"Processed {len(df)} odds records")
@@ -412,7 +414,7 @@ class HistoricalDataExporter:
     def export_season_player_props(
         self,
         season: str,
-        output_format: str = "both",
+        output_format: str="both",
     ) -> List[Path]:
         """
         Export player props for a season.
@@ -470,9 +472,9 @@ class HistoricalDataExporter:
 
     def export_all(
         self,
-        season: Optional[str] = None,
-        output_format: str = "both",
-        include_all_bookmakers: bool = False,
+        season: Optional[str]=None,
+        output_format: str="both",
+        include_all_bookmakers: bool=False,
     ) -> Dict[str, List[Path]]:
         """
         Export all available data.
@@ -567,11 +569,14 @@ class HistoricalDataExporter:
 
                         files = list(season_dir.glob("*.json"))
                         if subdir == "events":
-                            summary["seasons"][season]["events_files"] = len(files)
+                            summary["seasons"][season]["events_files"] = len(
+                                files)
                         elif subdir == "odds":
-                            summary["seasons"][season]["odds_files"] = len(files)
+                            summary["seasons"][season]["odds_files"] = len(
+                                files)
                         elif subdir == "player_props":
-                            summary["seasons"][season]["props_files"] = len(files)
+                            summary["seasons"][season]["props_files"] = len(
+                                files)
 
         return summary
 
@@ -605,15 +610,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--source-dir",
         type=str,
-        default="data/historical/the_odds",
-        help="Source directory for raw JSON files",
+        default=None,
+        help="Source directory for raw JSON files (defaults to HISTORICAL_OUTPUT_ROOT/the_odds)",
     )
 
     parser.add_argument(
         "--export-dir",
         type=str,
-        default="data/historical/exports",
-        help="Output directory for exported files",
+        default=None,
+        help="Output directory for exported files (defaults to HISTORICAL_OUTPUT_ROOT/exports)",
     )
 
     parser.add_argument(
@@ -633,7 +638,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     """Main entry point."""
+    require_historical_mode()
     args = parse_args()
+    if args.source_dir:
+        ensure_historical_path(Path(args.source_dir), "source-dir")
+    if args.export_dir:
+        ensure_historical_path(Path(args.export_dir), "export-dir")
 
     exporter = HistoricalDataExporter(
         source_dir=args.source_dir,

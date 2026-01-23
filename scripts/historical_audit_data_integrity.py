@@ -22,12 +22,13 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from src.utils.historical_guard import resolve_historical_output_root, require_historical_mode, ensure_historical_path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 DEFAULT_DATA = _DEFAULT_PROCESSED_DIR / "training_data.csv"
-OUTPUT_DIR = PROJECT_ROOT / "data" / "diagnostics"
+OUTPUT_DIR = resolve_historical_output_root("diagnostics")
 
 
 @dataclass(frozen=True)
@@ -168,7 +169,8 @@ def _conflict_report(
             .sort_values("_delta", ascending=False)
             .head(25)
         )
-        sample_records = sample[key_cols + [canonical, other, "_delta"]].to_dict(orient="records")
+        sample_records = sample[key_cols + [canonical,
+                                            other, "_delta"]].to_dict(orient="records")
 
         reports[f"{canonical}__vs__{other}"] = {
             "present": True,
@@ -206,7 +208,8 @@ def _write_markdown(report: Dict[str, Any], path: Path) -> None:
         if not info.get("present"):
             lines.append(f"| {c} | MISSING | MISSING |")
         else:
-            lines.append(f"| {c} | {info['nulls']:,} | {pct(info['null_pct'])} |")
+            lines.append(
+                f"| {c} | {info['nulls']:,} | {pct(info['null_pct'])} |")
     lines.append("")
 
     dup = report["duplicates"]
@@ -220,9 +223,11 @@ def _write_markdown(report: Dict[str, Any], path: Path) -> None:
     lines.append("")
 
     lines.append("## Conflicts (Across Sources)")
-    lines.append("Conflicts are rows where both values exist and differ by at least the threshold.")
+    lines.append(
+        "Conflicts are rows where both values exist and differ by at least the threshold.")
     lines.append("")
-    lines.append("| Pair | Rows w/ both | Conflicts | Conflict % | Threshold |")
+    lines.append(
+        "| Pair | Rows w/ both | Conflicts | Conflict % | Threshold |")
     lines.append("|---|---:|---:|---:|---:|")
 
     for pair, info in report["conflicts"].items():
@@ -236,23 +241,27 @@ def _write_markdown(report: Dict[str, Any], path: Path) -> None:
     lines.append("")
 
     lines.append("## Coverage by Season")
-    lines.append("| Season | Games | FG spread line | FG total line | 1H spread line | 1H total line |")
+    lines.append(
+        "| Season | Games | FG spread line | FG total line | 1H spread line | 1H total line |")
     lines.append("|---|---:|---:|---:|---:|---:|")
     for row in report["coverage_by_season"]:
         lines.append(
-            "| {season} | {games:,} | {fg_spread:.2%} | {fg_total:.2%} | {h1_spread:.2%} | {h1_total:.2%} |".format(**row)
+            "| {season} | {games:,} | {fg_spread:.2%} | {fg_total:.2%} | {h1_spread:.2%} | {h1_total:.2%} |".format(
+                **row)
         )
 
     if report.get("season_alignment"):
         sa = report["season_alignment"]
         lines.append("")
         lines.append("## Season Alignment")
-        lines.append(f"- Rows with a season mismatch: {sa['mismatch_rows']:,} / {sa['total_rows']:,} ({pct(sa['mismatch_pct'])})")
+        lines.append(
+            f"- Rows with a season mismatch: {sa['mismatch_rows']:,} / {sa['total_rows']:,} ({pct(sa['mismatch_pct'])})")
         if sa.get("sample"):
             lines.append("- Sample mismatches:")
             for r in sa["sample"][:10]:
                 lines.append(
-                    "  - date={date}, season_col={season_col}, computed={computed} ({home} vs {away})".format(**r)
+                    "  - date={date}, season_col={season_col}, computed={computed} ({home} vs {away})".format(
+                        **r)
                 )
 
     path.write_text("\n".join(lines), encoding="utf-8")
@@ -270,10 +279,12 @@ def audit(data_path: Path) -> Dict[str, Any]:
     home_col = _pick_first_existing(df, ["home_team", "home"]) or "home_team"
     away_col = _pick_first_existing(df, ["away_team", "away"]) or "away_team"
 
-    game_id_col = _pick_first_existing(df, ["game_id", "match_key"])  # prefer game_id
+    game_id_col = _pick_first_existing(
+        df, ["game_id", "match_key"])  # prefer game_id
     if game_id_col is None:
         # last resort (not ideal): date+teams
-        df["_game_key"] = df["_audit_date"].astype(str) + "|" + df[home_col].astype(str) + "|" + df[away_col].astype(str)
+        df["_game_key"] = df["_audit_date"].astype(
+            str) + "|" + df[home_col].astype(str) + "|" + df[away_col].astype(str)
         game_id_col = "_game_key"
     else:
         df["_game_key"] = df[game_id_col].astype(str)
@@ -379,10 +390,15 @@ def audit(data_path: Path) -> Dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Audit historical training data for NaNs/coverage/conflicts")
-    parser.add_argument("--data", default=str(DEFAULT_DATA), help="Path to training data CSV")
-    parser.add_argument("--out-dir", default=str(OUTPUT_DIR), help="Directory for audit outputs")
+    parser = argparse.ArgumentParser(
+        description="Audit historical training data for NaNs/coverage/conflicts")
+    require_historical_mode()
+    parser.add_argument("--data", default=str(DEFAULT_DATA),
+                        help="Path to training data CSV")
+    parser.add_argument("--out-dir", default=str(OUTPUT_DIR),
+                        help="Directory for audit outputs")
     args = parser.parse_args()
+    ensure_historical_path(Path(args.out_dir), "out-dir")
 
     data_path = Path(args.data)
     out_dir = Path(args.out_dir)
@@ -394,7 +410,8 @@ def main() -> int:
     json_path = out_dir / f"historical_audit_{stamp}.json"
     md_path = out_dir / f"historical_audit_{stamp}.md"
 
-    json_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    json_path.write_text(json.dumps(
+        report, indent=2, default=str), encoding="utf-8")
     _write_markdown(report, md_path)
 
     print(f"Audit report written: {md_path}")

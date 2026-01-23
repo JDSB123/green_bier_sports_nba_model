@@ -175,7 +175,7 @@ python scripts/post_to_teams.py
 # (Picks posted to Teams channel)
 
 # Optional: Combine with monitoring
-python scripts/save_daily_picks.py                           # Save picks
+python scripts/predict_unified_save_daily_picks.py                           # Save picks
 python scripts/post_to_teams.py                              # Post to Teams
 python scripts/monitor_week1_performance.py --date 2026-01-16 # View report
 ```

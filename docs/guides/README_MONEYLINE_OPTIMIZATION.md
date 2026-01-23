@@ -376,7 +376,7 @@ ls data/processed/training_data.csv
 
 **Solution**: Train spread models first
 ```bash
-python scripts/train_models.py
+python scripts/model_train_all.py
 ```
 
 ### Issue: "No moneyline odds columns"

@@ -24,8 +24,8 @@ This guide is the repeatable, minimal workflow for local dev, Codespaces, and de
    - `pip install -r requirements.txt`
 2. Set `PYTHONPATH` to repo root or use the venv with `python` from repo root.
 3. Run scripts:
-   - `python scripts/run_slate.py`
-   - `python scripts/predict.py`
+   - `python scripts/predict_unified_slate.py`
+   - `python scripts/predict_unified_full_game.py`
 
 ## Backtesting
 

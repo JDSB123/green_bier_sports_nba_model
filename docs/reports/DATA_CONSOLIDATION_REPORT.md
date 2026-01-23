@@ -26,7 +26,7 @@ Historically, two training data files existed with different contents. This has 
 **Pros:**
 - ✅ More comprehensive (includes partial 2022-23 season)
 - ✅ Documented as canonical source in DATA_SINGLE_SOURCE_OF_TRUTH.md
-- ✅ Used by backtest_production.py
+- ✅ Used by historical_backtest_production.py
 - ✅ More training data = better model generalization
 - ✅ 100% FG spread/total/ML coverage
 
@@ -68,8 +68,8 @@ Status: ✅ Completed (master_training_data.csv is deprecated; do not use for ba
 ### 2. Update All References
 
 **Scripts to Update:**
-- ✅ `scripts/backtest_extended.py` - Change default to `training_data.csv`
-- ✅ `audit_market_coverage.py` - Change to `training_data.csv`
+- ✅ `scripts/historical_backtest_extended.py` - Change default to `training_data.csv`
+- ✅ `data_unified_audit_market_coverage.py` - Change to `training_data.csv`
 - ✅ Recent optimization scripts - Verify they use correct file
 
 **Documentation to Update:**

@@ -9,9 +9,9 @@ Checks:
 4. Data quality checks (no nulls in required fields, valid ranges)
 
 Usage:
-    python scripts/validate_training_data.py
-    python scripts/validate_training_data.py --strict
-    python scripts/validate_training_data.py --update-manifest
+    python scripts/data_unified_validate_training.py
+    python scripts/data_unified_validate_training.py --strict
+    python scripts/data_unified_validate_training.py --update-manifest
 """
 from __future__ import annotations
 

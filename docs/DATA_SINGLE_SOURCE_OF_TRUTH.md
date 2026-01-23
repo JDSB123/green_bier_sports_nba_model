@@ -87,10 +87,10 @@ Rebuilds are for data engineering only and are not part of backtest runs:
 
 ```bash
 # Default behavior downloads prebuilt audited data from Azure (no rebuild)
-python scripts/build_training_data_complete.py
+python scripts/data_unified_build_training_complete.py
 
 # Explicit rebuild from raw sources (data engineering only)
-python scripts/build_training_data_complete.py --rebuild-from-raw
+python scripts/data_unified_build_training_complete.py --rebuild-from-raw
 ```
 
 Outputs:

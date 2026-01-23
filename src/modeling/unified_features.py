@@ -135,7 +135,7 @@ CORE_FEATURES = [
 # EFFICIENCY RATINGS - LEAK-SAFE PRE-GAME METRICS
 # -----------------------------------------------------------------------------
 # These are derived from pre-game rolling averages or season-to-date PPG/PAPG
-# (see scripts/complete_training_features.py) and are safe for training.
+# (see scripts/data_unified_feature_complete.py) and are safe for training.
 EFFICIENCY_FEATURES = [
     Feature("home_ortg", FeatureCategory.EFFICIENCY,
             "Home offensive rating (pregame)", default=110.0),
@@ -317,7 +317,7 @@ BETTING_FEATURES = [
 # -----------------------------------------------------------------------------
 # HEAD-TO-HEAD HISTORY - LEAK-SAFE (PRE-GAME ONLY)
 # -----------------------------------------------------------------------------
-# Computed from prior matchups only (see scripts/complete_training_features.py).
+# Computed from prior matchups only (see scripts/data_unified_feature_complete.py).
 H2H_FEATURES = [
     Feature("h2h_games", FeatureCategory.H2H,
             "Number of H2H games this season", default=0.0),

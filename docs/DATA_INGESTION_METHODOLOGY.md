@@ -137,8 +137,8 @@ The NBA prediction system uses a **multi-source data ingestion pipeline** that c
 - Skipped games tracked and reported in logs
 
 **Historical Line Capture:**
-- `scripts/ingest_historical_period_odds.py` captures daily snapshots (FG/1H markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
-- `scripts/extract_betting_lines.py` converts the raw snapshots into consensus lines (`data/processed/betting_lines.csv`) using median aggregation per market.
+- `scripts/historical_ingest_period_odds.py` captures daily snapshots (FG/1H markets) via the historical odds endpoint and stores them under `data/raw/the_odds/historical/`.
+- `scripts/data_unified_extract_betting_lines.py` converts the raw snapshots into consensus lines (`data/processed/betting_lines.csv`) using median aggregation per market.
 
 ---
 
@@ -345,15 +345,15 @@ else:
 
 ### Step 1: Fetch Raw Data
 
-**Script:** `scripts/ingest_all.py`
+**Script:** `scripts/data_unified_ingest_all.py`
 
 **Execution:**
 ```bash
 # Full ingestion (all tiers)
-python scripts/ingest_all.py
+python scripts/data_unified_ingest_all.py
 
 # Essential only (faster)
-python scripts/ingest_all.py --essential
+python scripts/data_unified_ingest_all.py --essential
 ```
 
 **Process:**
@@ -370,7 +370,7 @@ python scripts/ingest_all.py --essential
 
 ### Step 2: Process Raw Data
 
-**Script:** `scripts/build_training_data_complete.py`
+**Script:** `scripts/data_unified_build_training_complete.py`
 
 **Process:**
 1. Load standardized odds from `odds_the_odds.csv`
@@ -513,24 +513,24 @@ Track:
 
 ```bash
 # Full ingestion (all sources, all tiers)
-python scripts/ingest_all.py
+python scripts/data_unified_ingest_all.py
 
 # Essential only (faster)
-python scripts/ingest_all.py --essential
+python scripts/data_unified_ingest_all.py --essential
 
 # Individual sources
-python scripts/collect_the_odds.py
-python scripts/collect_api_basketball.py
+python scripts/data_unified_fetch_the_odds.py
+python scripts/data_unified_fetch_api_basketball.py
 ```
 
 ### Processing
 
 ```bash
 # Build training dataset
-python scripts/build_training_data_complete.py
+python scripts/data_unified_build_training_complete.py
 
 # Build complete training data (from multiple sources)
-python scripts/build_training_data_complete.py
+python scripts/data_unified_build_training_complete.py
 
 # Import Kaggle data (historical)
 python scripts/download_kaggle_player_data.py
@@ -540,13 +540,13 @@ python scripts/download_kaggle_player_data.py
 
 ```bash
 # Validate production readiness
-python scripts/validate_production_readiness.py
+python scripts/predict_validate_production_readiness.py
 
 # Check data quality
-python scripts/validate_training_data.py
+python scripts/data_unified_validate_training.py
 
 # Reconcile team names
-python scripts/validate_training_data.py
+python scripts/data_unified_validate_training.py
 ```
 
 ---
@@ -589,5 +589,4 @@ python scripts/validate_training_data.py
 - **The Odds API Client:** `src/ingestion/the_odds.py`
 - **API-Basketball Client:** `src/ingestion/api_basketball.py`
 - **Dataset Builder:** `src/modeling/dataset.py`
-- **Main Ingestion Script:** `scripts/ingest_all.py`
-
+- **Main Ingestion Script:** `scripts/data_unified_ingest_all.py`

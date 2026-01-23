@@ -187,7 +187,7 @@ class SpreadsModel(BaseModel):
     # DISABLED: Market signal features that require real betting splits data
     # These features have 0% importance in current models because training data
     # lacks real splits (all 50/50 placeholders). To enable:
-    # 1. Set up daily pre-game splits collection (see scripts/collect_betting_splits.py)
+    # 1. Set up daily pre-game splits collection (see scripts/data_unified_fetch_betting_splits.py)
     # 2. Build training data with real splits
     # 3. Add these features back to DEFAULT_FEATURES and retrain
     MARKET_SIGNAL_FEATURES = [
@@ -368,7 +368,7 @@ class TotalsModel(BaseModel):
     # DISABLED: Market signal features that require real betting splits data
     # These features have 0% importance in current models because training data
     # lacks real splits (all 50/50 placeholders). To enable:
-    # 1. Set up daily pre-game splits collection (see scripts/collect_betting_splits.py)
+    # 1. Set up daily pre-game splits collection (see scripts/data_unified_fetch_betting_splits.py)
     # 2. Build training data with real splits
     # 3. Add these features back to DEFAULT_FEATURES and retrain
     MARKET_SIGNAL_FEATURES = [
@@ -407,7 +407,8 @@ class TotalsModel(BaseModel):
             X: Feature DataFrame
             y: Target (1 = over, 0 = under) or total score values
         """
-        available_features = [f for f in self.feature_columns if f in X.columns]
+        available_features = [
+            f for f in self.feature_columns if f in X.columns]
         self.feature_columns = available_features
 
         X_features = X[self.feature_columns].copy()
@@ -437,38 +438,38 @@ class TotalsModel(BaseModel):
         if self.use_calibration and self.model_type in ["logistic", "gradient_boosting"]:
             logger.info(
                 f"Applying isotonic calibration to {self.model_type} model")
-            calibrated_model= CalibratedClassifierCV(
+            calibrated_model = CalibratedClassifierCV(
                 pipeline,
                 method='isotonic',  # Isotonic regression for non-parametric calibration
                 cv=5,  # 5-fold cross-validation for calibration
             )
             calibrated_model.fit(X_features, y)
-            self.pipeline= calibrated_model
+            self.pipeline = calibrated_model
         else:
             pipeline.fit(X_features, y)
-            self.pipeline= pipeline
+            self.pipeline = pipeline
 
-        self.model= estimator
-        self.is_fitted= True
+        self.model = estimator
+        self.is_fitted = True
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Predict totals outcomes (1 = over, 0 = under) or total score."""
         if not self.is_fitted:
             raise ValueError("Model not fitted. Call fit() first.")
-        X_features= self._prepare_features(X)
+        X_features = self._prepare_features(X)
         return self.pipeline.predict(X_features)
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict probability of going over."""
         if not self.is_fitted:
             raise ValueError("Model not fitted. Call fit() first.")
-        X_features= self._prepare_features(X)
+        X_features = self._prepare_features(X)
 
         if self.model_type == "regression":
-            total_pred= self.pipeline.predict(X_features)
+            total_pred = self.pipeline.predict(X_features)
             # Rough conversion with assumed std of ~15 points
-            proba= 1 / (1 + np.exp(-total_pred / 7.5))
+            proba = 1 / (1 + np.exp(-total_pred / 7.5))
             return np.column_stack([1 - proba, proba])
 
         if hasattr(self.pipeline, "predict_proba"):
@@ -479,28 +480,28 @@ class TotalsModel(BaseModel):
         self,
         X: pd.DataFrame,
         y_true: pd.Series,
-        total_lines: Optional[pd.Series]=None,
+        total_lines: Optional[pd.Series] = None,
     ) -> ModelMetrics:
         """Evaluate model performance."""
-        y_pred= self.predict(X)
-        y_proba= self.predict_proba(X)[:, 1]
+        y_pred = self.predict(X)
+        y_proba = self.predict_proba(X)[:, 1]
 
-        metrics= ModelMetrics()
+        metrics = ModelMetrics()
 
         if self.model_type == "regression":
-            metrics.mse= mean_squared_error(y_true, y_pred)
-            metrics.mae= mean_absolute_error(y_true, y_pred)
+            metrics.mse = mean_squared_error(y_true, y_pred)
+            metrics.mae = mean_absolute_error(y_true, y_pred)
         else:
-            y_true_arr= y_true.values
-            metrics.accuracy= accuracy_score(y_true_arr, y_pred)
-            metrics.log_loss= log_loss(y_true_arr, y_proba)
-            metrics.brier= float(np.mean((y_proba - y_true_arr) ** 2))
+            y_true_arr = y_true.values
+            metrics.accuracy = accuracy_score(y_true_arr, y_pred)
+            metrics.log_loss = log_loss(y_true_arr, y_proba)
+            metrics.brier = float(np.mean((y_proba - y_true_arr) ** 2))
             # Flat-bet ROI for totals (assume -110 on all bets)
-            n= len(y_true_arr)
+            n = len(y_true_arr)
             if n > 0:
-                correct= (y_pred == y_true_arr).sum()
-                profit= correct * (100.0 / 110.0) - (n - correct)
-                metrics.roi= profit / n
+                correct = (y_pred == y_true_arr).sum()
+                profit = correct * (100.0 / 110.0) - (n - correct)
+                metrics.roi = profit / n
 
         return metrics
 
@@ -516,12 +517,13 @@ class FirstHalfMixin:
 
 class FirstHalfSpreadsModel(FirstHalfMixin, SpreadsModel):
     """First-half spreads model (home covers first-half spread)."""
+
     def __init__(
         self,
-        name: str="fh_spreads_model",
-        model_type: str="logistic",
-        feature_columns: Optional[List[str]]=None,
-        use_calibration: bool=True,
+        name: str = "fh_spreads_model",
+        model_type: str = "logistic",
+        feature_columns: Optional[List[str]] = None,
+        use_calibration: bool = True,
     ):
         super().__init__(
             name=name,
@@ -533,12 +535,13 @@ class FirstHalfSpreadsModel(FirstHalfMixin, SpreadsModel):
 
 class FirstHalfTotalsModel(FirstHalfMixin, TotalsModel):
     """First-half totals model (first-half over/under)."""
+
     def __init__(
         self,
-        name: str="fh_totals_model",
-        model_type: str="logistic",
-        feature_columns: Optional[List[str]]=None,
-        use_calibration: bool=True,
+        name: str = "fh_totals_model",
+        model_type: str = "logistic",
+        feature_columns: Optional[List[str]] = None,
+        use_calibration: bool = True,
     ):
         super().__init__(
             name=name,
@@ -555,7 +558,7 @@ class TeamTotalsModel(BaseModel):
     are present in the training dataset. This class follows the same Pipeline pattern.
     """
 
-    DEFAULT_FEATURES= [
+    DEFAULT_FEATURES = [
         "home_ppg", "home_papg", "home_total_ppg",
         "away_ppg", "away_papg", "away_total_ppg",
         "predicted_total", "predicted_margin", "ppg_diff",
@@ -563,15 +566,15 @@ class TeamTotalsModel(BaseModel):
 
     def __init__(
         self,
-        name: str="team_totals_model",
-        model_type: str="logistic",
-        feature_columns: Optional[List[str]]=None,
-        use_calibration: bool=True,  # Wrap model with probability calibration
+        name: str = "team_totals_model",
+        model_type: str = "logistic",
+        feature_columns: Optional[List[str]] = None,
+        use_calibration: bool = True,  # Wrap model with probability calibration
     ):
         super().__init__(name)
-        self.model_type= model_type
-        self.feature_columns= feature_columns or self.DEFAULT_FEATURES
-        self.use_calibration= use_calibration
+        self.model_type = model_type
+        self.feature_columns = feature_columns or self.DEFAULT_FEATURES
+        self.use_calibration = use_calibration
 
         if not SKLEARN_AVAILABLE:
             raise ImportError(
@@ -580,12 +583,15 @@ class TeamTotalsModel(BaseModel):
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "TeamTotalsModel":
 
         # Filter to only available features
-        available_features = [f for f in self.feature_columns if f in X.columns]
+        available_features = [
+            f for f in self.feature_columns if f in X.columns]
         missing_features = set(self.feature_columns) - set(available_features)
 
         if missing_features:
-            logger.info(f"Feature filtering: {len(available_features)}/{len(self.feature_columns)} available ({len(missing_features)} missing)")
-            logger.info(f"Using {len(available_features)}/{len(self.feature_columns)} requested features ({len(available_features)/len(self.feature_columns):.1%})")
+            logger.info(
+                f"Feature filtering: {len(available_features)}/{len(self.feature_columns)} available ({len(missing_features)} missing)")
+            logger.info(
+                f"Using {len(available_features)}/{len(self.feature_columns)} requested features ({len(available_features)/len(self.feature_columns):.1%})")
 
         self.feature_columns = available_features
         X_features = X[self.feature_columns].copy()
@@ -630,13 +636,13 @@ class TeamTotalsModel(BaseModel):
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if not self.is_fitted:
             raise ValueError("Model not fitted. Call fit() first.")
-        X_features= self._prepare_features(X)
+        X_features = self._prepare_features(X)
         return self.pipeline.predict(X_features)
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         if not self.is_fitted:
             raise ValueError("Model not fitted. Call fit() first.")
-        X_features= self._prepare_features(X)
+        X_features = self._prepare_features(X)
         if hasattr(self.pipeline, "predict_proba"):
             return self.pipeline.predict_proba(X_features)
         return self.model.predict_proba(self.pipeline.named_steps["scaler"].transform(X_features))
@@ -645,7 +651,7 @@ class TeamTotalsModel(BaseModel):
         self,
         X: pd.DataFrame,
         y_true: pd.Series,
-        team_total_lines: Optional[pd.Series]=None,
+        team_total_lines: Optional[pd.Series] = None,
     ) -> ModelMetrics:
         """
         Evaluate model performance.
@@ -655,21 +661,21 @@ class TeamTotalsModel(BaseModel):
             y_true: True labels (1 = over, 0 = under)
             team_total_lines: Optional Series with team total lines for ROI calculation
         """
-        y_pred= self.predict(X)
-        y_proba= self.predict_proba(X)[:, 1]
+        y_pred = self.predict(X)
+        y_proba = self.predict_proba(X)[:, 1]
 
-        metrics= ModelMetrics()
-        y_true_arr= y_true.values
-        metrics.accuracy= accuracy_score(y_true_arr, y_pred)
-        metrics.log_loss= log_loss(y_true_arr, y_proba)
-        metrics.brier= float(np.mean((y_proba - y_true_arr) ** 2))
+        metrics = ModelMetrics()
+        y_true_arr = y_true.values
+        metrics.accuracy = accuracy_score(y_true_arr, y_pred)
+        metrics.log_loss = log_loss(y_true_arr, y_proba)
+        metrics.brier = float(np.mean((y_proba - y_true_arr) ** 2))
 
         # Flat-bet ROI for team totals (assume -110 on all bets)
-        n= len(y_true_arr)
+        n = len(y_true_arr)
         if n > 0:
-            correct= (y_pred == y_true_arr).sum()
-            profit= correct * (100.0 / 110.0) - (n - correct)
-            metrics.roi= profit / n
+            correct = (y_pred == y_true_arr).sum()
+            profit = correct * (100.0 / 110.0) - (n - correct)
+            metrics.roi = profit / n
 
         return metrics
 
@@ -681,27 +687,27 @@ class EnsembleModel:
     Combines predictions from multiple base models.
     """
 
-    def __init__(self, models: List[BaseModel], weights: Optional[List[float]]=None):
-        self.models= models
-        self.weights= weights or [1.0 / len(models)] * len(models)
+    def __init__(self, models: List[BaseModel], weights: Optional[List[float]] = None):
+        self.models = models
+        self.weights = weights or [1.0 / len(models)] * len(models)
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Weighted average of model probabilities."""
-        probas= []
+        probas = []
         for model, weight in zip(self.models, self.weights):
             probas.append(model.predict_proba(X) * weight)
         return np.sum(probas, axis=0)
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Predict using ensemble."""
-        proba= self.predict_proba(X)
+        proba = self.predict_proba(X)
         return (proba[:, 1] > 0.5).astype(int)
 
 
 def find_value_bets(
     predictions_df: pd.DataFrame,
-    min_edge: float=0.05,
-    min_confidence: float=0.55,
+    min_edge: float = 0.05,
+    min_confidence: float = 0.55,
 ) -> pd.DataFrame:
     """
     Find value betting opportunities.
@@ -714,12 +720,12 @@ def find_value_bets(
     Returns:
         DataFrame of value bet opportunities
     """
-    value_bets= []
+    value_bets = []
 
     for _, row in predictions_df.iterrows():
         # For spreads
         if "spread_prob" in row and "spread_implied_prob" in row:
-            edge= row["spread_prob"] - row["spread_implied_prob"]
+            edge = row["spread_prob"] - row["spread_implied_prob"]
             if edge >= min_edge and row["spread_prob"] >= min_confidence:
                 value_bets.append({
                     "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
@@ -733,7 +739,7 @@ def find_value_bets(
 
         # For totals
         if "total_prob" in row and "total_implied_prob" in row:
-            edge= row["total_prob"] - row["total_implied_prob"]
+            edge = row["total_prob"] - row["total_implied_prob"]
             if edge >= min_edge and row["total_prob"] >= min_confidence:
                 value_bets.append({
                     "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
@@ -747,7 +753,7 @@ def find_value_bets(
 
         # First-half spreads
         if "fh_spread_prob" in row and "fh_spread_implied_prob" in row:
-            edge= row["fh_spread_prob"] - row["fh_spread_implied_prob"]
+            edge = row["fh_spread_prob"] - row["fh_spread_implied_prob"]
             if edge >= min_edge and row["fh_spread_prob"] >= min_confidence:
                 value_bets.append({
                     "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
@@ -761,7 +767,7 @@ def find_value_bets(
 
         # First-half totals
         if "fh_total_prob" in row and "fh_total_implied_prob" in row:
-            edge= row["fh_total_prob"] - row["fh_total_implied_prob"]
+            edge = row["fh_total_prob"] - row["fh_total_implied_prob"]
             if edge >= min_edge and row["fh_total_prob"] >= min_confidence:
                 value_bets.append({
                     "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
@@ -775,7 +781,8 @@ def find_value_bets(
 
         # Team totals (home/away)
         if "home_team_total_prob" in row and "home_team_total_implied_prob" in row:
-            edge= row["home_team_total_prob"] - row["home_team_total_implied_prob"]
+            edge = row["home_team_total_prob"] - \
+                row["home_team_total_implied_prob"]
             if edge >= min_edge and row["home_team_total_prob"] >= min_confidence:
                 value_bets.append({
                     "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
@@ -788,7 +795,8 @@ def find_value_bets(
                 })
 
         if "away_team_total_prob" in row and "away_team_total_implied_prob" in row:
-            edge= row["away_team_total_prob"] - row["away_team_total_implied_prob"]
+            edge = row["away_team_total_prob"] - \
+                row["away_team_total_implied_prob"]
             if edge >= min_edge and row["away_team_total_prob"] >= min_confidence:
                 value_bets.append({
                     "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",

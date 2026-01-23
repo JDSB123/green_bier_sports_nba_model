@@ -3,7 +3,7 @@
     Deploy NBA Container App infrastructure via Bicep.
 
 .DESCRIPTION
-    Wrapper script for deploying infra/nba/main.bicep to Azure.
+    Wrapper script for deploying infra/nba/prediction.bicep to Azure.
     Reads version from VERSION file and prompts for required secrets.
 
 .PARAMETER ResourceGroup
@@ -71,7 +71,7 @@ if ($rgExists -ne "true") {
 }
 
 # Build deployment command
-$BicepFile = Join-Path $ScriptDir "main.bicep"
+$BicepFile = Join-Path $ScriptDir "prediction.bicep"
 $DeploymentName = "nba-deploy-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 
 $params = @(
@@ -97,7 +97,7 @@ Write-Host "Bicep file: $BicepFile" -ForegroundColor Gray
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`n✅ Deployment successful!" -ForegroundColor Green
-    
+
     if (-not $WhatIf) {
         # Show outputs
         Write-Host "`nDeployment outputs:" -ForegroundColor Cyan
@@ -110,4 +110,3 @@ if ($LASTEXITCODE -eq 0) {
     Write-Error "Deployment failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
 }
-

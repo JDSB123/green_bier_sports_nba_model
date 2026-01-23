@@ -11,6 +11,8 @@ Outputs:
 - Markdown summary (`data/processed/pick_review_<DATE>.md`)
 """
 from __future__ import annotations
+from src.utils.team_names import normalize_team_name, are_same_team
+from src.config import settings
 
 import argparse
 import json
@@ -24,11 +26,8 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.config import settings
-from src.utils.team_names import normalize_team_name, are_same_team
 
 CST = ZoneInfo("America/Chicago")
-
 
 
 def get_target_date(value: Optional[str]) -> date:
@@ -54,7 +53,7 @@ def latest_api_basketball_file() -> Path:
     if not files:
         raise FileNotFoundError(
             "No API-Basketball raw games found. "
-            "Run `python scripts/collect_api_basketball.py --process-only` first."
+            "Run `python scripts/data_unified_fetch_api_basketball.py --process-only` first."
         )
     return files[-1]
 
@@ -84,7 +83,7 @@ def sum_period(values: List[Optional[int]]) -> int:
 def build_scoreboard_map(target_date: date) -> Dict[Tuple[str, str], Dict[str, Any]]:
     games = load_raw_games()
     scoreboard: Dict[Tuple[str, str], Dict[str, Any]] = {}
-    
+
     for game in games:
         iso = game.get("date")
         if not iso:
@@ -180,7 +179,7 @@ def evaluate_spread(
 ) -> Optional[str]:
     """
     Evaluate if a spread pick won or lost.
-    
+
     Args:
         actual_margin: home_score - away_score
         line: The spread line (from home team's perspective)
@@ -189,33 +188,33 @@ def evaluate_spread(
         pick: The team that was picked to cover
         home_team: Home team name
         away_team: Away team name
-    
+
     Returns:
         "win", "loss", "push", or None
     """
     if line is None or not pick:
         return None
-    
+
     # Check for push: actual_margin exactly equals the line (from home perspective)
     # If line = -3.5, push if actual_margin = 3.5 (home wins by exactly 3.5)
     # If line = +3.5, push if actual_margin = -3.5 (home loses by exactly 3.5)
     if math.isclose(actual_margin, -line, abs_tol=0.05):
         return "push"
-    
+
     # If we picked home team:
     # - Home covers if actual_margin > -line
     # - Example: line = -3.5, home covers if actual_margin > 3.5
     # - Example: line = +3.5, home covers if actual_margin > -3.5 (home can lose by up to 3.5)
     if are_same_team(pick, home_team):
         return "win" if actual_margin > -line else "loss"
-    
+
     # If we picked away team:
     # - Away covers if actual_margin < -line (opposite of home)
     # - Example: line = -3.5, away covers if actual_margin < 3.5 (home doesn't win by more than 3.5)
     # - Example: line = +3.5, away covers if actual_margin < -3.5 (away wins by more than 3.5)
     if are_same_team(pick, away_team):
         return "win" if actual_margin < -line else "loss"
-    
+
     return None
 
 
@@ -325,7 +324,8 @@ def format_markdown(
 def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str, Any]:
     scoreboard = build_scoreboard_map(target_date)
     if not scoreboard:
-        raise RuntimeError(f"No completed games found for {target_date.isoformat()}.")
+        raise RuntimeError(
+            f"No completed games found for {target_date.isoformat()}.")
 
     metrics: Dict[str, Dict[str, float]] = {}
     games_output: List[Dict[str, Any]] = []
@@ -337,15 +337,16 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
         fg = comp_edge.get("full_game", {})
         fh = comp_edge.get("first_half", {})
 
-        
         actual = find_game(scoreboard, home_team, away_team)
         if actual is None:
-            print(f"⚠️  Missing scoreboard match for {away_team} @ {home_team}")
+            print(
+                f"⚠️  Missing scoreboard match for {away_team} @ {home_team}")
             continue
 
         actual_margin = actual["home_score"] - actual["away_score"]
         actual_total = actual["home_score"] + actual["away_score"]
-        actual_first_half_total = actual["home_first_half"] + actual["away_first_half"]
+        actual_first_half_total = actual["home_first_half"] + \
+            actual["away_first_half"]
 
         entry = {
             "game": f"{away_team} @ {home_team}",
@@ -365,7 +366,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
             home_team,
             away_team,
         )
-        record_outcome(metrics, "FG Spread", spread_result, fg_spread.get("pick_odds"))
+        record_outcome(metrics, "FG Spread", spread_result,
+                       fg_spread.get("pick_odds"))
         entry["picks"].append(
             {
                 "category": "FG Spread",
@@ -382,7 +384,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
             fg_total.get("pick_line") or fg_total.get("market_line"),
             fg_total.get("pick"),
         )
-        record_outcome(metrics, "FG Total", total_result, fg_total.get("pick_odds"))
+        record_outcome(metrics, "FG Total", total_result,
+                       fg_total.get("pick_odds"))
         entry["picks"].append(
             {
                 "category": "FG Total",
@@ -394,7 +397,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
         )
 
         fh_spread = fh.get("spread") or {}
-        fh_pick_line = fh_spread.get("pick_line") or fh_spread.get("market_line")
+        fh_pick_line = fh_spread.get(
+            "pick_line") or fh_spread.get("market_line")
         fh_market_line = fh_spread.get("market_line") or fh_pick_line
         fh_spread_result = evaluate_spread(
             actual["home_first_half"] - actual["away_first_half"],
@@ -403,7 +407,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
             home_team,
             away_team,
         )
-        record_outcome(metrics, "1H Spread", fh_spread_result, fh_spread.get("pick_odds"))
+        record_outcome(metrics, "1H Spread", fh_spread_result,
+                       fh_spread.get("pick_odds"))
         entry["picks"].append(
             {
                 "category": "1H Spread",
@@ -415,7 +420,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
         )
 
         fh_total = fh.get("total") or {}
-        fh_total_line = fh_total.get("pick_line") or fh_total.get("market_line")
+        fh_total_line = fh_total.get(
+            "pick_line") or fh_total.get("market_line")
         fh_total_result = evaluate_total(
             actual_first_half_total,
             fh_total_line,
@@ -430,7 +436,8 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
                 "result": fh_total_result,
             }
         )
-        record_outcome(metrics, "1H Total", fh_total_result, fh_total.get("pick_odds"))
+        record_outcome(metrics, "1H Total", fh_total_result,
+                       fh_total.get("pick_odds"))
 
         games_output.append(entry)
 
@@ -442,8 +449,10 @@ def review_slate(target_date: date, analysis: List[Dict[str, Any]]) -> Dict[str,
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Review slate performance vs API-Basketball results.")
-    parser.add_argument("--date", help="Target date (YYYY-MM-DD, 'today', 'yesterday')", default=None)
+    parser = argparse.ArgumentParser(
+        description="Review slate performance vs API-Basketball results.")
+    parser.add_argument(
+        "--date", help="Target date (YYYY-MM-DD, 'today', 'yesterday')", default=None)
     parser.add_argument("--analysis", help="Path to slate analysis JSON")
     parser.add_argument("--output-json", help="Optional JSON output path")
     parser.add_argument("--output-md", help="Optional Markdown output path")
@@ -457,7 +466,8 @@ def main() -> None:
     analysis_path = Path(args.analysis) if args.analysis else default_analysis
     analysis = load_analysis(analysis_path)
 
-    print(f"Reviewing slate for {target_date.isoformat()} using {analysis_path.name}")
+    print(
+        f"Reviewing slate for {target_date.isoformat()} using {analysis_path.name}")
     results = review_slate(target_date, analysis)
 
     output_data = {
@@ -479,7 +489,8 @@ def main() -> None:
         / f"pick_review_{target_date.strftime('%Y%m%d')}.md"
     )
     md_path.parent.mkdir(parents=True, exist_ok=True)
-    markdown = format_markdown(target_date, results["summary"], results["games"])
+    markdown = format_markdown(
+        target_date, results["summary"], results["games"])
     with md_path.open("w", encoding="utf-8") as fh:
         fh.write(markdown)
     print(f"Saved Markdown summary to {md_path}")
@@ -487,4 +498,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -5,10 +5,10 @@ NBA Slate Runner - THE SINGLE COMMAND FOR PREDICTIONS
 This is the ONE command you run for predictions. No confusion.
 
 Usage:
-    python scripts/run_slate.py                      # Today's full slate
-    python scripts/run_slate.py --date tomorrow     # Tomorrow's slate
-    python scripts/run_slate.py --date 2025-12-19   # Specific date
-    python scripts/run_slate.py --matchup "Lakers vs Celtics"  # Specific game
+    python scripts/predict_unified_slate.py                      # Today's full slate
+    python scripts/predict_unified_slate.py --date tomorrow     # Tomorrow's slate
+    python scripts/predict_unified_slate.py --date 2025-12-19   # Specific date
+    python scripts/predict_unified_slate.py --matchup "Lakers vs Celtics"  # Specific game
 
 Requirements:
     - Docker must be running
@@ -40,8 +40,10 @@ from src.utils.version import resolve_version
 # Fix Windows console encoding
 import io
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(
+        sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 import os
 
@@ -67,7 +69,8 @@ def http_get_json(url: str, params: dict | None = None, timeout: int = 30) -> di
             body = e.read().decode("utf-8", errors="replace")
         except Exception:
             body = ""
-        raise RuntimeError(f"HTTP {e.code} from {full_url}: {body}".strip()) from e
+        raise RuntimeError(
+            f"HTTP {e.code} from {full_url}: {body}".strip()) from e
     except URLError as e:
         raise RuntimeError(f"Failed to reach {full_url}: {e}") from e
     except json.JSONDecodeError as e:
@@ -91,7 +94,8 @@ def check_stack_running() -> bool:
     """Check if the NBA stack is running."""
     try:
         result = subprocess.run(
-            ["docker", "ps", "--filter", "name=nba-gbsv-api", "--format", "{{.Names}}"],
+            ["docker", "ps", "--filter", "name=nba-gbsv-api",
+                "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
             timeout=10
@@ -123,7 +127,7 @@ def wait_for_api(max_wait: int = 60) -> bool:
     """Wait for API to be healthy."""
     print("⏳ Waiting for API to be ready...")
     start = time.time()
-    
+
     while time.time() - start < max_wait:
         try:
             data = http_get_json(f"{API_URL}/health", timeout=5)
@@ -135,7 +139,7 @@ def wait_for_api(max_wait: int = 60) -> bool:
         except Exception:
             pass
         time.sleep(2)
-    
+
     print("❌ API did not become ready in time")
     return False
 
@@ -167,7 +171,8 @@ def ensure_api_version_matches_local(*, local_version: str, max_wait: int = 60) 
     if not api_version or api_version == local_version:
         return
 
-    print(f"⚠️  Version mismatch: local={local_version} but API={api_version}. Rebuilding/recreating container...")
+    print(
+        f"⚠️  Version mismatch: local={local_version} but API={api_version}. Rebuilding/recreating container...")
     result = subprocess.run(
         ["docker", "compose", "up", "-d", "--build", "--force-recreate"],
         cwd=PROJECT_ROOT,
@@ -189,7 +194,8 @@ def ensure_api_version_matches_local(*, local_version: str, max_wait: int = 60) 
         return
 
     if api_version != local_version:
-        print(f"⚠️  Still mismatched after rebuild: local={local_version} API={api_version}")
+        print(
+            f"⚠️  Still mismatched after rebuild: local={local_version} API={api_version}")
 
 
 def calculate_fire_rating(confidence: float, edge_pts: float) -> str:
@@ -286,7 +292,8 @@ def _match_single_filter(*, home: str, away: str, raw: str) -> bool:
         return True
 
     # "Lakers vs Celtics" / "Celtics @ Lakers" / "Celtics at Lakers"
-    parts = [p.strip() for p in re.split(r"\s*(?:vs\.?|@|at)\s*", raw) if p.strip()]
+    parts = [p.strip()
+             for p in re.split(r"\s*(?:vs\.?|@|at)\s*", raw) if p.strip()]
     if len(parts) >= 2:
         a, b = parts[0], parts[1]
         return (a in home or a in away) and (b in home or b in away)
@@ -486,7 +493,8 @@ def generate_html_output(
 
             pick_team = p_data.get("pick")
             market_line = p_data.get("market_line")
-            pick_line = p_data.get("pick_line") if p_data.get("pick_line") is not None else market_line
+            pick_line = p_data.get("pick_line") if p_data.get(
+                "pick_line") is not None else market_line
             market_odds_val = p_data.get("market_odds")
             conf = p_data.get("confidence", 0)
 
@@ -534,7 +542,8 @@ def generate_html_output(
                 else:
                     line_display = "N/A"
 
-            tier_class = "tier-elite" if fire_count >= 5 else ("tier-strong" if fire_count >= 4 else "")
+            tier_class = "tier-elite" if fire_count >= 5 else (
+                "tier-strong" if fire_count >= 4 else "")
             edge_class = "edge-positive"
 
             picks.append({
@@ -610,8 +619,10 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
         kelly = p_data.get("kelly_fraction")
         if ev_pct is None and kelly is None:
             return None
-        ev_str = f"{ev_pct:+.1f}%" if isinstance(ev_pct, (int, float)) else "N/A"
-        kelly_str = f"{kelly:.2f}" if isinstance(kelly, (int, float)) else "N/A"
+        ev_str = f"{ev_pct:+.1f}%" if isinstance(
+            ev_pct, (int, float)) else "N/A"
+        kelly_str = f"{kelly:.2f}" if isinstance(
+            kelly, (int, float)) else "N/A"
         return f"       EV: {ev_str}  |  Kelly: {kelly_str}"
 
     log(f"\n{'='*100}")
@@ -681,7 +692,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
             if build.get("hostname"):
                 build_parts.append(f"host={build.get('hostname')}")
             if build.get("container_app_revision") and build.get("container_app_revision") != "unknown":
-                build_parts.append(f"rev={build.get('container_app_revision')}")
+                build_parts.append(
+                    f"rev={build.get('container_app_revision')}")
             if build_parts:
                 log(f"[API BUILD] {', '.join(build_parts)}")
         if markets:
@@ -789,7 +801,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                         line_display = "N/A"
 
                 ev_pct = p_data.get("ev_pct")
-                ev_str = f"{ev_pct:+.1f}%" if isinstance(ev_pct, (int, float)) else "N/A"
+                ev_str = f"{ev_pct:+.1f}%" if isinstance(
+                    ev_pct, (int, float)) else "N/A"
 
                 picks.append({
                     "market": market_name,
@@ -855,11 +868,13 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
             home_line = odds.get("home_spread")
             if home_line is not None:
                 away_line = -home_line
-                log(f"  Market line (home view): {home} {home_line:+.1f} / {away} {away_line:+.1f}")
+                log(
+                    f"  Market line (home view): {home} {home_line:+.1f} / {away} {away_line:+.1f}")
             fh_home_line = odds.get("fh_home_spread")
             if fh_home_line is not None:
                 fh_away_line = -fh_home_line
-                log(f"  1H market line (home view): {home} {fh_home_line:+.1f} / {away} {fh_away_line:+.1f}")
+                log(
+                    f"  1H market line (home view): {home} {fh_home_line:+.1f} / {away} {fh_away_line:+.1f}")
             log()
 
             # Full Game picks
@@ -873,7 +888,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                     pick_team = spread["pick"]
                     market_line = spread.get("market_line", 0)
                     # Use pick_line for display (correct sign for picked team)
-                    pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
+                    pick_line = spread.get("pick_line") if spread.get(
+                        "pick_line") is not None else market_line
                     market_odds_val = spread.get("market_odds")
                     edge_raw = spread.get("edge", 0)
                     edge_abs = spread.get("edge_abs")
@@ -892,7 +908,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                         pred_winner, pred_margin = "Toss-up", 0
 
                     log(f"    SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
-                    log(f"       Model predicts: {pred_winner} wins by {pred_margin:.1f} pts")
+                    log(
+                        f"       Model predicts: {pred_winner} wins by {pred_margin:.1f} pts")
                     log(f"       Market line: {pick_team} {pick_line:+.1f}")
                     log(f"       Edge: {edge_abs:.1f} pts of value")
                     log(
@@ -929,9 +946,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                     log(f"       Market line: {line:.1f}")
                     log(f"       Edge: {edge_abs:.1f} pts of value")
                     if pick_side == "OVER":
-                        log(f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) by {abs(diff):.1f} pts → OVER")
+                        log(
+                            f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) by {abs(diff):.1f} pts → OVER")
                     else:
-                        log(f"       Rationale: Model ({model_total:.1f}) < Line ({line:.1f}) by {abs(diff):.1f} pts → UNDER")
+                        log(
+                            f"       Rationale: Model ({model_total:.1f}) < Line ({line:.1f}) by {abs(diff):.1f} pts → UNDER")
                     log(f"       Confidence: {conf:.0%}  |  {fire}")
                     ev_line = format_ev_line(total)
                     if ev_line:
@@ -940,7 +959,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
             # First Half picks
             fh = edge_data.get("first_half", {})
             if fh:
-                has_fh_picks = any(fh.get(m, {}).get("pick") for m in ["spread", "total"])
+                has_fh_picks = any(fh.get(m, {}).get("pick")
+                                   for m in ["spread", "total"])
                 if has_fh_picks:
                     log("\n  FIRST HALF:")
 
@@ -948,7 +968,8 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                     if spread.get("pick"):
                         pick_team = spread["pick"]
                         market_line = spread.get("market_line", 0)
-                        pick_line = spread.get("pick_line") if spread.get("pick_line") is not None else market_line
+                        pick_line = spread.get("pick_line") if spread.get(
+                            "pick_line") is not None else market_line
                         market_odds_val = spread.get("market_odds")
                         edge_raw = spread.get("edge", 0)
                         edge_abs = spread.get("edge_abs")
@@ -965,8 +986,10 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                         else:
                             pred_winner, pred_margin = "Toss-up", 0
 
-                        log(f"    1H SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
-                        log(f"       Model predicts: {pred_winner} leads by {pred_margin:.1f} at half")
+                        log(
+                            f"    1H SPREAD: {pick_team} {pick_line:+.1f} ({format_odds(market_odds_val)})")
+                        log(
+                            f"       Model predicts: {pred_winner} leads by {pred_margin:.1f} at half")
                         log(f"       Market line: {pick_team} {pick_line:+.1f}")
                         log(f"       Edge: {edge_abs:.1f} pts of value")
                         log(f"       Confidence: {conf:.0%}  |  {fire}")
@@ -993,9 +1016,11 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                         log(f"       Market line: {line:.1f}")
                         log(f"       Edge: {edge_abs:.1f} pts of value")
                         if pick_side == "OVER":
-                            log(f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) → OVER")
+                            log(
+                                f"       Rationale: Model ({model_total:.1f}) > Line ({line:.1f}) → OVER")
                         else:
-                            log(f"       Rationale: Model ({model_total:.1f}) < Line ({line:.1f}) → UNDER")
+                            log(
+                                f"       Rationale: Model ({model_total:.1f}) < Line ({line:.1f}) → UNDER")
                         log(f"       Confidence: {conf:.0%}  |  {fire}")
                         ev_line = format_ev_line(total)
                         if ev_line:
@@ -1054,15 +1079,19 @@ def main():
     parser = argparse.ArgumentParser(
         description="NBA Slate Runner - THE SINGLE COMMAND FOR PREDICTIONS",
         epilog="Examples:\n"
-               "  python scripts/run_slate.py\n"
-               "  python scripts/run_slate.py --date tomorrow\n"
-               "  python scripts/run_slate.py --matchup Lakers\n",
+        "  python scripts/predict_unified_slate.py\n"
+        "  python scripts/predict_unified_slate.py --date tomorrow\n"
+        "  python scripts/predict_unified_slate.py --matchup Lakers\n",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--date", default="today", help="Date: today, tomorrow, or YYYY-MM-DD")
-    parser.add_argument("--matchup", help="Filter to specific team (e.g., 'Lakers')")
-    parser.add_argument("--api-url", help="Override API base URL (e.g., https://...azurecontainerapps.io)")
-    parser.add_argument("--no-docker", action="store_true", help="Skip Docker checks (use with --api-url)")
+    parser.add_argument("--date", default="today",
+                        help="Date: today, tomorrow, or YYYY-MM-DD")
+    parser.add_argument(
+        "--matchup", help="Filter to specific team (e.g., 'Lakers')")
+    parser.add_argument(
+        "--api-url", help="Override API base URL (e.g., https://...azurecontainerapps.io)")
+    parser.add_argument("--no-docker", action="store_true",
+                        help="Skip Docker checks (use with --api-url)")
     parser.add_argument(
         "--use-splits",
         default="true",
@@ -1076,11 +1105,12 @@ def main():
         API_URL = args.api_url.rstrip("/")
 
     local_version = resolve_version()
-    
+
     print("\n" + "="*80)
-    print(f"🏀 NBA PREDICTION SYSTEM {local_version.replace('NBA_v', 'v')} (4 markets: 1H + FG)")
+    print(
+        f"🏀 NBA PREDICTION SYSTEM {local_version.replace('NBA_v', 'v')} (4 markets: 1H + FG)")
     print("="*80)
-    
+
     if not args.no_docker:
         # Step 1: Check Docker
         if not check_docker_running():
@@ -1093,7 +1123,7 @@ def main():
             start_stack()
         else:
             print("✅ Stack already running")
-    
+
     # Step 3: Wait for API
     if not wait_for_api():
         if args.no_docker:
@@ -1105,9 +1135,10 @@ def main():
     # Guardrail: if we're pointing at a local API, ensure the running container matches repo VERSION.
     if not args.no_docker:
         ensure_api_version_matches_local(local_version=local_version)
-    
+
     # Step 4: Fetch and display
-    fetch_and_display_slate(args.date, args.matchup, use_splits=(args.use_splits == "true"))
+    fetch_and_display_slate(args.date, args.matchup,
+                            use_splits=(args.use_splits == "true"))
 
 
 if __name__ == "__main__":

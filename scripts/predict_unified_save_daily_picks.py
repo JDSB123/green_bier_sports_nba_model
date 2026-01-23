@@ -4,8 +4,8 @@ Save Daily Picks for Monitoring
 Downloads picks from production API and saves locally for performance tracking.
 
 Usage:
-    python scripts/save_daily_picks.py                    # Save today's picks
-    python scripts/save_daily_picks.py --date 2026-01-17  # Save specific date
+    python scripts/predict_unified_save_daily_picks.py                    # Save today's picks
+    python scripts/predict_unified_save_daily_picks.py --date 2026-01-17  # Save specific date
 """
 
 import json
@@ -57,15 +57,20 @@ def save_picks_for_date(date_str: str) -> bool:
         with open(output_file, 'w') as f:
             json.dump(picks_data, f, indent=2)
 
-        print(f"Saved {len(picks_data.get('picks', []))} picks to {output_file}")
+        print(
+            f"Saved {len(picks_data.get('picks', []))} picks to {output_file}")
 
         # Show summary
         if 'picks' in picks_data:
             picks = picks_data['picks']
-            fg_spread = sum(1 for p in picks if p.get('market') == 'spread' and p.get('period') == 'FG')
-            fg_total = sum(1 for p in picks if p.get('market') == 'total' and p.get('period') == 'FG')
-            fh_spread = sum(1 for p in picks if p.get('market') == 'spread' and p.get('period') == '1H')
-            fh_total = sum(1 for p in picks if p.get('market') == 'total' and p.get('period') == '1H')
+            fg_spread = sum(1 for p in picks if p.get('market')
+                            == 'spread' and p.get('period') == 'FG')
+            fg_total = sum(1 for p in picks if p.get('market')
+                           == 'total' and p.get('period') == 'FG')
+            fh_spread = sum(1 for p in picks if p.get('market')
+                            == 'spread' and p.get('period') == '1H')
+            fh_total = sum(1 for p in picks if p.get('market')
+                           == 'total' and p.get('period') == '1H')
 
             print(f"\nPick Summary for {date_str}:")
             print(f"  Total:     {len(picks)}")
@@ -90,8 +95,10 @@ def save_picks_for_date(date_str: str) -> bool:
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Save daily picks for monitoring")
-    parser.add_argument('--date', type=str, help='Date to save (YYYY-MM-DD), defaults to today')
+    parser = argparse.ArgumentParser(
+        description="Save daily picks for monitoring")
+    parser.add_argument('--date', type=str,
+                        help='Date to save (YYYY-MM-DD), defaults to today')
 
     args = parser.parse_args()
 
@@ -111,7 +118,8 @@ def main():
         print("NEXT STEPS")
         print("=" * 80)
         print("\nTo analyze today's picks:")
-        print(f"  python scripts/monitor_week1_performance.py --date {date_str}")
+        print(
+            f"  python scripts/monitor_week1_performance.py --date {date_str}")
         print("\nTo see weekly summary:")
         print("  python scripts/monitor_week1_performance.py --week-summary")
     else:

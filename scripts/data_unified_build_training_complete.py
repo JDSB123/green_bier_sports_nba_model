@@ -1632,13 +1632,14 @@ def main(
         print("\n[POST-1] Running fix_training_data_gaps...")
         fix_gaps(data_file=out)
 
-        # Run complete_training_features.py (STRICT: fail if this step fails)
+        # Run data_unified_feature_complete.py (STRICT: fail if this step fails)
         print("\n[POST-2] Running complete_training_features...")
         import subprocess
         subprocess.run(
             [
                 sys.executable,
-                str(PROJECT_ROOT / "scripts" / "complete_training_features.py"),
+                str(PROJECT_ROOT / "scripts" /
+                    "data_unified_feature_complete.py"),
                 "--training-file",
                 str(out),
             ],

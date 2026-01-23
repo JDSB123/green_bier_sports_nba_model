@@ -112,7 +112,7 @@ Results saved to: data/backtest_results/fg_moneyline_optimization_results.json
 
 ### "predicted_margin not found"
 - You need to train spread models first
-- Run: `python scripts/train_models.py`
+- Run: `python scripts/model_train_all.py`
 
 ### "No moneyline odds columns"
 - Your data needs `fg_ml_home`, `fg_ml_away`, `1h_ml_home`, `1h_ml_away`

@@ -52,7 +52,7 @@ volumes:
 
 ### 3. Azure Production (Key Vault + Container Apps)
 ```bicep
-// infra/nba/main.bicep - Parameterized secrets (NO hardcoded values)
+// infra/nba/prediction.bicep - Parameterized secrets (NO hardcoded values)
 @description('The Odds API Key (required)')
 @secure()
 param theOddsApiKey string
@@ -97,7 +97,7 @@ param apiBasketballKey string
 ### Local Development:
 ```bash
 # API keys already configured in secrets/ directory
-python scripts/predict.py --date 2026-01-03
+python scripts/predict_unified_full_game.py --date 2026-01-03
 ```
 
 ### Docker Deployment:

@@ -52,7 +52,7 @@ cp .env.example .env
 python -m pytest tests -v
 
 # Generate predictions
-python scripts/predict.py
+python scripts/predict_unified_full_game.py
 
 # Collect odds data
 python scripts/run_the_odds_tomorrow.py
@@ -258,7 +258,7 @@ cp .env.example .env
 # API_BASKETBALL_KEY=your_key
 
 # Application reads from .env automatically
-python scripts/predict.py
+python scripts/predict_unified_full_game.py
 ```
 
 **Option B: Using Docker Secrets**
@@ -320,7 +320,7 @@ Container App automatically retrieves secrets from Key Vault at runtime.
 ```bash
 # Ensure PYTHONPATH is set
 export PYTHONPATH=/path/to/repo
-python scripts/predict.py
+python scripts/predict_unified_full_game.py
 ```
 
 **Issue:** API keys not found
@@ -412,7 +412,7 @@ az keyvault secret list --vault-name nbagbs-keyvault --query '[].name' -o table
 pytest tests -v
 
 # Generate predictions
-python scripts/predict.py
+python scripts/predict_unified_full_game.py
 
 # Backtest
 python scripts/backtest.py

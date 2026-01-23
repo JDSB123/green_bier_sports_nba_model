@@ -18,10 +18,12 @@ Output:
     └── 2024-2025_odds_1h.parquet
 
 Usage:
-    python scripts/export_period_odds_to_csv.py
-    python scripts/export_period_odds_to_csv.py --season 2024-2025
+    python scripts/historical_export_period_odds.py
+    python scripts/historical_export_period_odds.py --season 2024-2025
 """
 from __future__ import annotations
+from src.utils.logging import get_logger
+from src.utils.historical_guard import resolve_historical_output_root, require_historical_mode
 
 import argparse
 import json
@@ -36,14 +38,13 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
 # Directories
 DATA_DIR = PROJECT_ROOT / "data"
-PERIOD_ODDS_DIR = DATA_DIR / "historical" / "the_odds" / "period_odds"
-EXPORTS_DIR = DATA_DIR / "historical" / "exports"
+PERIOD_ODDS_DIR = resolve_historical_output_root("the_odds") / "period_odds"
+EXPORTS_DIR = resolve_historical_output_root("exports")
 
 # Markets to extract
 FIRST_HALF_MARKETS = ["h2h_h1", "spreads_h1", "totals_h1"]
@@ -52,43 +53,43 @@ FIRST_HALF_MARKETS = ["h2h_h1", "spreads_h1", "totals_h1"]
 def extract_odds_from_event(event_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Extract odds rows from a single event's data.
-    
+
     Args:
         event_data: Event data from period_odds JSON
-        
+
     Returns:
         List of flattened odds rows
     """
     rows = []
-    
+
     # Get timestamp and event info
     timestamp = event_data.get("timestamp")
     inner_data = event_data.get("data", {})
-    
+
     event_id = inner_data.get("id", "")
     home_team = inner_data.get("home_team", "")
     away_team = inner_data.get("away_team", "")
     commence_time = inner_data.get("commence_time", "")
-    
+
     bookmakers = inner_data.get("bookmakers", [])
-    
+
     for bookmaker in bookmakers:
         bm_key = bookmaker.get("key", "")
         bm_title = bookmaker.get("title", "")
         bm_last_update = bookmaker.get("last_update", "")
-        
+
         markets = bookmaker.get("markets", [])
-        
+
         for market in markets:
             market_key = market.get("key", "")
             market_last_update = market.get("last_update", "")
-            
+
             # Only process first-half markets
             if market_key not in FIRST_HALF_MARKETS:
                 continue
-            
+
             outcomes = market.get("outcomes", [])
-            
+
             for outcome in outcomes:
                 row = {
                     "snapshot_timestamp": timestamp,
@@ -106,61 +107,61 @@ def extract_odds_from_event(event_data: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "outcome_point": outcome.get("point"),
                 }
                 rows.append(row)
-    
+
     return rows
 
 
 def export_season(season: str) -> tuple[Path, Path]:
     """
     Export period odds for a season to CSV and Parquet.
-    
+
     Args:
         season: Season string (e.g., "2024-2025")
-        
+
     Returns:
         Tuple of (csv_path, parquet_path)
     """
     period_file = PERIOD_ODDS_DIR / season / "period_odds_1h.json"
-    
+
     if not period_file.exists():
         raise FileNotFoundError(f"Period odds file not found: {period_file}")
-    
+
     logger.info(f"Loading period odds from {period_file}")
-    
+
     with open(period_file) as f:
         data = json.load(f)
-    
+
     events = data.get("data", [])
     logger.info(f"Processing {len(events)} events for {season}")
-    
+
     # Extract all rows
     all_rows = []
     for event in events:
         rows = extract_odds_from_event(event)
         all_rows.extend(rows)
-    
+
     logger.info(f"Extracted {len(all_rows):,} odds rows")
-    
+
     # Create DataFrame
     df = pd.DataFrame(all_rows)
-    
+
     # Add derived columns
     if not df.empty:
         df["game_date"] = pd.to_datetime(df["commence_time"]).dt.date
-    
+
     # Ensure output directory exists
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Save to CSV
     csv_path = EXPORTS_DIR / f"{season}_odds_1h.csv"
     df.to_csv(csv_path, index=False)
     logger.info(f"Saved CSV: {csv_path}")
-    
+
     # Save to Parquet
     parquet_path = EXPORTS_DIR / f"{season}_odds_1h.parquet"
     df.to_parquet(parquet_path, index=False)
     logger.info(f"Saved Parquet: {parquet_path}")
-    
+
     return csv_path, parquet_path
 
 
@@ -176,16 +177,18 @@ def print_summary(df: pd.DataFrame, season: str) -> None:
     for market in df['market_key'].unique():
         count = len(df[df['market_key'] == market])
         print(f"  {market}: {count:,} rows")
-    
+
     if 'game_date' in df.columns:
-        print(f"\nDate range: {df['game_date'].min()} to {df['game_date'].max()}")
-    
+        print(
+            f"\nDate range: {df['game_date'].min()} to {df['game_date'].max()}")
+
     # Sample h2h_h1 (moneyline) data
     h2h = df[df['market_key'] == 'h2h_h1']
     if not h2h.empty:
         print(f"\nSample h2h_h1 (1H moneyline) - first event:")
         sample = h2h[h2h['event_id'] == h2h['event_id'].iloc[0]]
-        print(sample[['home_team', 'away_team', 'outcome_name', 'outcome_price']].to_string())
+        print(sample[['home_team', 'away_team',
+              'outcome_name', 'outcome_price']].to_string())
 
 
 def main() -> int:
@@ -202,9 +205,10 @@ def main() -> int:
         action="store_true",
         help="Export all available seasons",
     )
-    
+
     args = parser.parse_args()
-    
+
+    require_historical_mode()
     # Find available seasons
     available_seasons = []
     if PERIOD_ODDS_DIR.exists():
@@ -212,38 +216,38 @@ def main() -> int:
             if season_dir.is_dir():
                 if (season_dir / "period_odds_1h.json").exists():
                     available_seasons.append(season_dir.name)
-    
+
     logger.info(f"Available seasons with 1H data: {available_seasons}")
-    
+
     if not available_seasons:
         logger.error("No period odds data found")
         return 1
-    
+
     # Determine which seasons to export
     if args.season:
         seasons_to_export = [args.season]
     else:
         seasons_to_export = available_seasons
-    
+
     # Export each season
     for season in seasons_to_export:
         try:
             csv_path, parquet_path = export_season(season)
-            
+
             # Print summary
             df = pd.read_csv(csv_path)
             print_summary(df, season)
-            
+
         except Exception as e:
             logger.error(f"Failed to export {season}: {e}")
             return 1
-    
+
     print(f"\n{'=' * 60}")
     print("EXPORT COMPLETE")
     print(f"{'=' * 60}")
     print(f"Exported seasons: {seasons_to_export}")
     print(f"Output directory: {EXPORTS_DIR}")
-    
+
     return 0
 
 

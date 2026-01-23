@@ -9,9 +9,9 @@ Validates canonical training_data.csv for:
 - Source attribution for key columns
 
 Usage:
-    python scripts/audit_training_data_coverage.py
-    python scripts/audit_training_data_coverage.py --verbose
-    python scripts/audit_training_data_coverage.py --output audit_report.json
+    python scripts/data_unified_audit_training_coverage.py
+    python scripts/data_unified_audit_training_coverage.py --verbose
+    python scripts/data_unified_audit_training_coverage.py --output audit_report.json
 """
 import argparse
 import json
@@ -147,7 +147,8 @@ def check_column_coverage(
     for col in columns:
         if col in df_filtered.columns:
             non_null = df_filtered[col].notna().sum()
-            coverage_pct = (non_null / total_rows * 100) if total_rows > 0 else 0
+            coverage_pct = (non_null / total_rows *
+                            100) if total_rows > 0 else 0
 
             # Get date range where column has values
             col_dates = df_filtered[df_filtered[col].notna()]["game_date"]
@@ -250,7 +251,8 @@ def check_point_in_time_integrity(df: pd.DataFrame) -> Dict[str, Any]:
 
     # Check 1: Opening vs closing spread lines (if both exist)
     if "spread_opening_line" in df.columns and "spread_closing_line" in df.columns:
-        both_exist = df[["spread_opening_line", "spread_closing_line"]].notna().all(axis=1)
+        both_exist = df[["spread_opening_line",
+                         "spread_closing_line"]].notna().all(axis=1)
         if both_exist.sum() > 100:
             diff = (df.loc[both_exist, "spread_closing_line"] -
                     df.loc[both_exist, "spread_opening_line"]).abs()
@@ -264,10 +266,11 @@ def check_point_in_time_integrity(df: pd.DataFrame) -> Dict[str, Any]:
 
     # Check 2: Verify spread_line matches opening (not closing)
     if "fg_spread_line" in df.columns and "spread_opening_line" in df.columns:
-        both_exist = df[["fg_spread_line", "spread_opening_line"]].notna().all(axis=1)
+        both_exist = df[["fg_spread_line",
+                         "spread_opening_line"]].notna().all(axis=1)
         if both_exist.sum() > 100:
             matches_opening = (df.loc[both_exist, "fg_spread_line"] ==
-                              df.loc[both_exist, "spread_opening_line"]).mean()
+                               df.loc[both_exist, "spread_opening_line"]).mean()
             results["checks_performed"].append({
                 "check": "fg_spread_uses_opening",
                 "samples": int(both_exist.sum()),
@@ -344,9 +347,11 @@ def generate_audit_report(df: pd.DataFrame, verbose: bool = False) -> Dict[str, 
         ("travel", report["travel_features"]),
         ("elo", report["elo_features"]),
     ]:
-        coverages = [v["coverage_pct"] for v in features.values() if v["present"]]
+        coverages = [v["coverage_pct"]
+                     for v in features.values() if v["present"]]
         if coverages:
-            summary[f"{category}_avg_coverage"] = round(sum(coverages) / len(coverages), 1)
+            summary[f"{category}_avg_coverage"] = round(
+                sum(coverages) / len(coverages), 1)
 
     # Check market readiness
     for market, data in report["market_coverage"].items():
@@ -358,11 +363,13 @@ def generate_audit_report(df: pd.DataFrame, verbose: bool = False) -> Dict[str, 
 
     # Check for major issues
     if summary["injury_avg_coverage"] < 50:
-        summary["issues"].append(f"Low injury coverage: {summary['injury_avg_coverage']}%")
+        summary["issues"].append(
+            f"Low injury coverage: {summary['injury_avg_coverage']}%")
         summary["overall_status"] = "WARNING"
 
     if summary["travel_avg_coverage"] < 50:
-        summary["issues"].append(f"Low travel coverage: {summary['travel_avg_coverage']}%")
+        summary["issues"].append(
+            f"Low travel coverage: {summary['travel_avg_coverage']}%")
         summary["overall_status"] = "WARNING"
 
     if report["point_in_time_integrity"]["status"] != "OK":
@@ -385,8 +392,10 @@ def print_report(report: Dict[str, Any], verbose: bool = False):
 
     # File stats
     stats = report["file_stats"]
-    print(f"File: {stats['total_rows']:,} rows × {stats['total_columns']} columns")
-    print(f"Date range: {stats['date_range']['min']} to {stats['date_range']['max']}")
+    print(
+        f"File: {stats['total_rows']:,} rows × {stats['total_columns']} columns")
+    print(
+        f"Date range: {stats['date_range']['min']} to {stats['date_range']['max']}")
     print()
 
     # Market coverage table
@@ -422,16 +431,19 @@ def print_report(report: Dict[str, Any], verbose: bool = False):
         features = report[category]
         present = sum(1 for v in features.values() if v["present"])
         total = len(features)
-        coverages = [v["coverage_pct"] for v in features.values() if v["present"]]
+        coverages = [v["coverage_pct"]
+                     for v in features.values() if v["present"]]
         avg_cov = sum(coverages) / len(coverages) if coverages else 0
 
-        print(f"\n{label}: {present}/{total} columns present, avg coverage: {avg_cov:.1f}%")
+        print(
+            f"\n{label}: {present}/{total} columns present, avg coverage: {avg_cov:.1f}%")
 
         if verbose:
             for col, data in features.items():
                 status = "✓" if data["present"] else "✗"
                 cov = f"{data['coverage_pct']:>5.1f}%" if data["present"] else "N/A"
-                date_info = f"({data['date_range']['min']} to {data['date_range']['max']})" if data.get("date_range") else ""
+                date_info = f"({data['date_range']['min']} to {data['date_range']['max']})" if data.get(
+                    "date_range") else ""
                 print(f"  {status} {col:<35} {cov} {date_info}")
 
     # Point-in-time integrity
@@ -445,7 +457,8 @@ def print_report(report: Dict[str, Any], verbose: bool = False):
 
     if pit["checks_performed"]:
         for check in pit["checks_performed"]:
-            print(f"  • {check['check']}: {check.get('match_rate', check.get('avg_line_movement', 'N/A'))}")
+            print(
+                f"  • {check['check']}: {check.get('match_rate', check.get('avg_line_movement', 'N/A'))}")
 
     if pit["warnings"]:
         print("Warnings:")
@@ -460,8 +473,10 @@ def print_report(report: Dict[str, Any], verbose: bool = False):
 
     summary = report["summary"]
     print(f"Overall Status: {summary['overall_status']}")
-    print(f"Markets Ready for Backtest: {', '.join(summary['markets_ready']) or 'None'}")
-    print(f"Markets NOT Ready: {', '.join(summary['markets_not_ready']) or 'None'}")
+    print(
+        f"Markets Ready for Backtest: {', '.join(summary['markets_ready']) or 'None'}")
+    print(
+        f"Markets NOT Ready: {', '.join(summary['markets_not_ready']) or 'None'}")
     print(f"Injury Coverage: {summary['injury_avg_coverage']}%")
     print(f"Travel Coverage: {summary['travel_avg_coverage']}%")
     print(f"ELO Coverage: {summary['elo_avg_coverage']}%")

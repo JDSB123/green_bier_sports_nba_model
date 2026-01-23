@@ -2,9 +2,12 @@
 Standalone ingestion script for API-Basketball game outcomes.
 
 Fetches NBA game results including final scores for training labels.
-Usage: python scripts/collect_api_basketball.py [--season 2024] [--date 2024-12-01]
+Usage: python scripts/data_unified_fetch_api_basketball.py [--season 2024] [--date 2024-12-01]
 """
 from __future__ import annotations
+from src.ingestion.api_basketball import APIBasketballClient
+from src.config import settings
+import pandas as pd
 import argparse
 import asyncio
 import datetime as dt
@@ -16,11 +19,6 @@ from typing import Any, Dict, List
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import pandas as pd
-
-from src.config import settings
-from src.ingestion.api_basketball import APIBasketballClient
 
 
 NBA_LEAGUE_ID = 12  # NBA league ID in API-Basketball
@@ -132,7 +130,8 @@ def process_api_basketball(
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
     # Find all API-Basketball raw files
-    raw_pattern = os.path.join(settings.data_raw_dir, "api_basketball", "games_*.json")
+    raw_pattern = os.path.join(
+        settings.data_raw_dir, "api_basketball", "games_*.json")
     raw_files = glob.glob(raw_pattern)
 
     all_rows: List[Dict[str, Any]] = []
@@ -164,10 +163,13 @@ def process_api_basketball(
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Collect NBA game outcomes from API-Basketball")
-    parser.add_argument("--season", type=int, help="NBA season year (e.g., 2024 for 2024-25)")
+    parser = argparse.ArgumentParser(
+        description="Collect NBA game outcomes from API-Basketball")
+    parser.add_argument("--season", type=int,
+                        help="NBA season year (e.g., 2024 for 2024-25)")
     parser.add_argument("--date", type=str, help="Specific date (YYYY-MM-DD)")
-    parser.add_argument("--process-only", action="store_true", help="Only process existing raw files")
+    parser.add_argument("--process-only", action="store_true",
+                        help="Only process existing raw files")
     args = parser.parse_args()
 
     target_date = args.date
@@ -178,7 +180,8 @@ async def main():
 
     if not args.process_only:
         # Fetch new data
-        print(f"Fetching NBA games (season={args.season}, date={target_date})...")
+        print(
+            f"Fetching NBA games (season={args.season}, date={target_date})...")
         data = await fetch_nba_games(season=args.season, date=target_date)
 
         # Save raw JSON

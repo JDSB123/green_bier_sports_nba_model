@@ -295,7 +295,7 @@ Based on Kelly Criterion and conservative bankroll management:
 - `scripts/optimize_totals_only.py` - Main optimization script
 - `scripts/optimize_confidence_thresholds.py` - Alternative optimization using existing framework
 - `scripts/analyze_totals_results.py` - Results analysis and reporting
-- `scripts/backtest_production.py` - Core backtesting engine
+- `scripts/historical_backtest_production.py` - Core backtesting engine
 
 ### C. References
 

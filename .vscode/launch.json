@@ -16,7 +16,7 @@
             "name": "Python: Predict Tomorrow",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/predict.py",
+            "program": "${workspaceFolder}/scripts/predict_unified_full_game.py",
             "console": "integratedTerminal",
             "args": [
                 "--date",
@@ -31,7 +31,7 @@
             "name": "Python: Train Models",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/train_models.py",
+            "program": "${workspaceFolder}/scripts/model_train_all.py",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env",
             "env": {

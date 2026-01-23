@@ -30,7 +30,7 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 ## [NBA_v33.0.16.0] - 2026-01-14
 
 ### Added
-- Comprehensive data stack audit script ([scripts/audit_data_stack.py](scripts/audit_data_stack.py)) - validates all 9 markets
+- Comprehensive data stack audit script ([scripts/data_unified_audit_data_stack.py](scripts/data_unified_audit_data_stack.py)) - validates all 9 markets
 - Performance grades and optimization recommendations in model_pack.json
 - Data infrastructure documentation in model_pack.json
 
@@ -53,7 +53,7 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 
 ### Fixed
 - Comprehensive slate “recommended picks” now align with engine `passes_filter`/`bet_side` (prevents low-confidence/negative-EV rows being surfaced as picks).
-- `run_slate.py` now auto-builds on startup and auto-rebuilds on local API version mismatch; spread rationale text now matches the model’s predicted winner.
+- `predict_unified_slate.py` now auto-builds on startup and auto-rebuilds on local API version mismatch; spread rationale text now matches the model’s predicted winner.
 
 ---
 
@@ -87,7 +87,7 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 - Version consistency across all source files
 - Deployment pipeline with safety checks (git push enforcement, health validation)
 - Spread sign calculations in prediction engine
-- Archiving functionality in predict.py, run_slate.py, and app.py
+- Archiving functionality in predict_unified_full_game.py, predict_unified_slate.py, and app.py
 
 ### Changed
 - Updated .gitignore to properly handle archive/ folder (tracked for audit trail)

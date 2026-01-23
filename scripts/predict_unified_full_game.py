@@ -5,25 +5,31 @@ Production-ready predictor with smart filtering for all markets:
 - Full Game: Spreads, Totals
 - First Half: Spreads, Totals
 """
+from src.prediction import UnifiedPredictionEngine
+from src.features.rich_features import RichFeatureBuilder
+from src.ingestion.betting_splits import fetch_public_betting_splits
+from src.ingestion import the_odds
+from src.config import settings
+import sys
+import numpy as np
+import pandas as pd
+from zoneinfo import ZoneInfo
+from typing import Dict, List, Any, Optional
+from pathlib import Path
+from datetime import datetime, timedelta, timezone
+import shutil
+import logging
+import random
+import argparse
+import asyncio
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-import asyncio
-import argparse
-import random
-import logging
-import shutil
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-from zoneinfo import ZoneInfo
-import pandas as pd
-import numpy as np
-import sys
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Add project root to path
@@ -34,11 +40,6 @@ DATA_DIR = PROJECT_ROOT / "data"
 MODELS_DIR = PROJECT_ROOT / "models" / "production"
 ARCHIVE_DIR = PROJECT_ROOT / "archive"
 
-from src.config import settings
-from src.ingestion import the_odds
-from src.ingestion.betting_splits import fetch_public_betting_splits
-from src.features.rich_features import RichFeatureBuilder
-from src.prediction import UnifiedPredictionEngine
 
 # Central Standard Time
 CST = ZoneInfo("America/Chicago")
@@ -62,7 +63,7 @@ def generate_rationale(
 ) -> str:
     """
     Generate detailed rationale for a pick following the required format.
-    
+
     Must include at least 3 of 6 categories:
     1. Market Context (High Priority) - line movement, timestamps
     2. Team Fundamentals (High Priority) - NBA metrics
@@ -70,13 +71,13 @@ def generate_rationale(
     4. Market Sentiment & Sharp Action (Very High Priority) - betting splits, RLM
     5. Model Confidence (High Priority) - probability, EV, confidence
     6. Historical Context (Low Priority) - H2H, trends
-    
+
     Returns bullet-point formatted string.
     """
     rationale_bullets = []
     is_partial_market = "1H" in play_type
     now_cst = datetime.now(CST)
-    
+
     # Calculate expected value (skip if no real odds available)
     if odds is not None:
         if odds > 0:
@@ -87,17 +88,17 @@ def generate_rationale(
         ev_pct = ev * 100
     else:
         ev_pct = None  # No fake EV calculation without real odds
-    
+
     # ============================================================
     # 1. MARKET CONTEXT (High Priority)
     # ============================================================
     market_context = []
-    
+
     if opening_line is not None and opening_line != market_line:
         line_movement = market_line - opening_line
         movement_direction = "up" if line_movement > 0 else "down"
         movement_magnitude = abs(line_movement)
-        
+
         movement_threshold = 1.0 if "SPREAD" in play_type else 0.5
         if movement_magnitude >= movement_threshold:
             if "SPREAD" in play_type:
@@ -111,34 +112,37 @@ def generate_rationale(
                     f"[LINE] Total moved from {opening_line:.1f} to {market_line:.1f} "
                     f"({movement_direction} {movement_magnitude:.1f} pts)."
                 )
-    
+
     # ============================================================
     # 4. MARKET SENTIMENT & SHARP ACTION (Very High Priority)
     # ============================================================
     sharp_action = []
-    
+
     if betting_splits:
         try:
             # We use features built from splits in BuildRichFeatures
             if "SPREAD" in play_type:
                 is_home_pick = "home" in pick.lower()
-                
+
                 # Use features directly since betting_splits might be a dict or object
-                pick_tickets = features.get("spread_public_home_pct", 50) if is_home_pick else features.get("spread_public_away_pct", 50)
-                pick_money = features.get("spread_money_home_pct", 50) if is_home_pick else features.get("spread_money_away_pct", 50)
+                pick_tickets = features.get("spread_public_home_pct", 50) if is_home_pick else features.get(
+                    "spread_public_away_pct", 50)
+                pick_money = features.get("spread_money_home_pct", 50) if is_home_pick else features.get(
+                    "spread_money_away_pct", 50)
                 opp_tickets = 100 - pick_tickets
-                
+
                 rlm = features.get("is_rlm_spread", 0) > 0
                 sharp_side = features.get("sharp_side_spread", 0)
-                
+
                 if rlm:
-                    is_sharp_on_pick = (is_home_pick and sharp_side > 0) or (not is_home_pick and sharp_side < 0)
+                    is_sharp_on_pick = (is_home_pick and sharp_side > 0) or (
+                        not is_home_pick and sharp_side < 0)
                     if is_sharp_on_pick:
                         sharp_action.append(
                             f"[SHARP] Reverse line movement detected: despite {opp_tickets:.0f}% of bets on opponent, "
                             f"line moved in favor of {pick} — classic sharp money signal."
                         )
-                
+
                 ticket_money_diff = features.get("spread_ticket_money_diff", 0)
                 if abs(ticket_money_diff) >= 10:
                     sharp_action.append(
@@ -146,76 +150,87 @@ def generate_rationale(
                     )
             elif "TOTAL" in play_type:
                 is_over = "OVER" in pick.upper()
-                pick_tickets = features.get("over_public_pct", 50) if is_over else features.get("under_public_pct", 50)
+                pick_tickets = features.get(
+                    "over_public_pct", 50) if is_over else features.get("under_public_pct", 50)
                 rlm = features.get("is_rlm_total", 0) > 0
                 if rlm:
-                    sharp_action.append(f"[SHARP] Reverse line movement detected on the {pick}.")
+                    sharp_action.append(
+                        f"[SHARP] Reverse line movement detected on the {pick}.")
         except Exception:
             pass
-    
+
     # ============================================================
     # 2. TEAM FUNDAMENTALS (High Priority)
     # ============================================================
     team_fundamentals = []
-    
+
     if not is_partial_market:
         home_ppg = features.get("home_ppg", 0)
         away_ppg = features.get("away_ppg", 0)
-        
+
         if "SPREAD" in play_type:
             is_home_pick = "home" in pick.lower()
             pick_team_ppg = home_ppg if is_home_pick else away_ppg
-            team_fundamentals.append(f"[STATS] {pick.title()} offensive efficiency: {pick_team_ppg:.1f} season PPG.")
-        
+            team_fundamentals.append(
+                f"[STATS] {pick.title()} offensive efficiency: {pick_team_ppg:.1f} season PPG.")
+
         elif "TOTAL" in play_type:
             combined_ppg = home_ppg + away_ppg
-            team_fundamentals.append(f"[STATS] Combined offensive output: {combined_ppg:.1f} PPG season average.")
-        
+            team_fundamentals.append(
+                f"[STATS] Combined offensive output: {combined_ppg:.1f} PPG season average.")
+
         home_elo = features.get("home_elo", 1500)
         away_elo = features.get("away_elo", 1500)
         elo_diff = abs(home_elo - away_elo)
         if elo_diff >= 50:
             stronger = home_team if home_elo > away_elo else away_team
-            team_fundamentals.append(f"[ELO] {stronger} holds significant ELO advantage ({elo_diff:.0f} pts).")
-    
+            team_fundamentals.append(
+                f"[ELO] {stronger} holds significant ELO advantage ({elo_diff:.0f} pts).")
+
     # ============================================================
     # 3. SITUATIONAL FACTORS (Medium Priority)
     # ============================================================
     situational = []
-    
+
     if not is_partial_market:
         rest_adj = features.get("rest_margin_adj", 0)
         if abs(rest_adj) >= 1.5:
             benefit_team = home_team if rest_adj > 0 else away_team
-            situational.append(f"[REST] {benefit_team} has a situational rest advantage (+{abs(rest_adj):.1f} pts).")
-        
+            situational.append(
+                f"[REST] {benefit_team} has a situational rest advantage (+{abs(rest_adj):.1f} pts).")
+
         travel_fatigue = features.get("away_travel_fatigue", 0)
         if travel_fatigue >= 2.0:
-            situational.append(f"[FATIGUE] Away team fatigue factor: high travel impact ({travel_fatigue:.1f} pts penalty).")
-    
+            situational.append(
+                f"[FATIGUE] Away team fatigue factor: high travel impact ({travel_fatigue:.1f} pts penalty).")
+
     # ============================================================
     # 5. MODEL CONFIDENCE (High Priority)
     # ============================================================
     model_confidence = [
         f"[MODEL] Model assigns {model_prob:.1%} probability to {pick} with {edge:+.1f} pt edge."
     ]
-    
+
     if ev_pct is not None and abs(ev_pct) >= 5:
-        model_confidence.append(f"[MODEL] Expected value: {ev_pct:+.1f}% based on market odds.")
-    
+        model_confidence.append(
+            f"[MODEL] Expected value: {ev_pct:+.1f}% based on market odds.")
+
     # ============================================================
     # ASSEMBLE RATIONALE
     # ============================================================
     rationale_bullets.extend(model_confidence[:1])
-    if market_context: rationale_bullets.extend(market_context[:1])
-    if sharp_action: rationale_bullets.extend(sharp_action[:1])
-    
+    if market_context:
+        rationale_bullets.extend(market_context[:1])
+    if sharp_action:
+        rationale_bullets.extend(sharp_action[:1])
+
     # Fill to 3 bullets
     backups = team_fundamentals + situational
     for b in backups:
-        if len(rationale_bullets) >= 3: break
+        if len(rationale_bullets) >= 3:
+            break
         rationale_bullets.append(b)
-        
+
     return " | ".join(rationale_bullets[:3])
 
 
@@ -295,25 +310,29 @@ async def fetch_upcoming_games(target_date: datetime.date):
                     event_id,
                     markets="spreads_h1,totals_h1"
                 )
-                
+
                 # MERGE instead of overwrite
                 # Keep existing bookmakers (FG) and add new ones (1H)
-                existing_bms = {bm["key"]: bm for bm in game.get("bookmakers", [])}
+                existing_bms = {
+                    bm["key"]: bm for bm in game.get("bookmakers", [])}
                 new_bms = event_odds.get("bookmakers", [])
-                
+
                 for nbm in new_bms:
                     if nbm["key"] in existing_bms:
                         # Add markets to existing bookmaker
-                        existing_markets = {m["key"]: m for m in existing_bms[nbm["key"]].get("markets", [])}
+                        existing_markets = {
+                            m["key"]: m for m in existing_bms[nbm["key"]].get("markets", [])}
                         for nm in nbm.get("markets", []):
                             existing_markets[nm["key"]] = nm
-                        existing_bms[nbm["key"]]["markets"] = list(existing_markets.values())
+                        existing_bms[nbm["key"]]["markets"] = list(
+                            existing_markets.values())
                     else:
                         existing_bms[nbm["key"]] = nbm
-                
+
                 game["bookmakers"] = list(existing_bms.values())
             except Exception as e:
-                print(f"  [WARN] Could not fetch 1H odds for event {event_id}: {e}")
+                print(
+                    f"  [WARN] Could not fetch 1H odds for event {event_id}: {e}")
         enriched_games.append(game)
 
     return enriched_games
@@ -394,13 +413,15 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
         print("\nFetching public betting percentages...")
         try:
             betting_splits_dict = await fetch_public_betting_splits(games, source="auto")
-            print(f"  [OK] Loaded betting splits for {len(betting_splits_dict)} games")
+            print(
+                f"  [OK] Loaded betting splits for {len(betting_splits_dict)} games")
         except Exception as e:
             print(f"  [WARN] Failed to fetch betting splits: {e}")
             print(f"  [INFO] Continuing without betting splits data")
 
     # Initialize feature builder and unified prediction engine
-    feature_builder = RichFeatureBuilder(league_id=12, season=settings.current_season)
+    feature_builder = RichFeatureBuilder(
+        league_id=12, season=settings.current_season)
 
     print("\nInitializing unified prediction engine...")
     engine = UnifiedPredictionEngine(models_dir=MODELS_DIR)
@@ -456,11 +477,13 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 
             # Display FG predictions
             print("\nFULL GAME:")
-            display_market_predictions(fg_preds, lines, market_type="fg", features=features, home_team=home_team, away_team=away_team, splits=splits)
+            display_market_predictions(fg_preds, lines, market_type="fg", features=features,
+                                       home_team=home_team, away_team=away_team, splits=splits)
 
             # Display 1H predictions
             print("\nFIRST HALF:")
-            display_market_predictions(fh_preds, lines, market_type="fh", features=features, home_team=home_team, away_team=away_team, splits=splits)
+            display_market_predictions(fh_preds, lines, market_type="fh", features=features,
+                                       home_team=home_team, away_team=away_team, splits=splits)
 
             # Store prediction
             if commence_time:
@@ -478,10 +501,12 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             }
 
             # Add FG predictions
-            prediction_dict.update(format_predictions_for_csv(fg_preds, lines, prefix="fg"))
+            prediction_dict.update(format_predictions_for_csv(
+                fg_preds, lines, prefix="fg"))
 
             # Add 1H predictions
-            prediction_dict.update(format_predictions_for_csv(fh_preds, lines, prefix="fh"))
+            prediction_dict.update(format_predictions_for_csv(
+                fh_preds, lines, prefix="fh"))
 
             predictions.append(prediction_dict)
 
@@ -510,12 +535,14 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
     # Spread
     if "spread" in preds:
         spread_pred = preds["spread"]
-        print(f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
+        print(
+            f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
         print(f"           Vegas line: {lines[f'{prefix}_spread'] or 'N/A'}")
-        print(f"           Bet: {spread_pred['bet_side']} ({spread_pred['confidence']:.1%})")
+        print(
+            f"           Bet: {spread_pred['bet_side']} ({spread_pred['confidence']:.1%})")
         if spread_pred['edge'] is not None:
             print(f"           Edge: {spread_pred['edge']:+.1f} pts")
-        
+
         # Generate rationale
         if spread_pred['edge'] is not None:
             rat = generate_rationale(
@@ -543,12 +570,14 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
     # Total
     if "total" in preds:
         total_pred = preds["total"]
-        print(f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
+        print(
+            f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
         print(f"          Vegas line: {lines[f'{prefix}_total'] or 'N/A'}")
-        print(f"          Bet: {total_pred['bet_side']} ({total_pred['confidence']:.1%})")
+        print(
+            f"          Bet: {total_pred['bet_side']} ({total_pred['confidence']:.1%})")
         if total_pred['edge'] is not None:
             print(f"          Edge: {total_pred['edge']:+.1f} pts")
-        
+
         if total_pred['edge'] is not None:
             rat = generate_rationale(
                 play_type=f"{market_type.upper()}_TOTAL",
@@ -603,32 +632,37 @@ def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
 def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date) -> str:
     """Generate formatted text report in table format as requested."""
     lines = []
-    
+
     # Header
     date_str = target_date.strftime("%A, %B %d, %Y")
     lines.append("=" * 120)
     lines.append(f"NBA BETTING CARD - {date_str}")
     lines.append("=" * 120)
     lines.append("")
-    
+
     # Table Header
     # DATE | MATCHUP | TYPE | PICK | MODEL | VEGAS | EDGE | FIRE
     header = f"{'DATE/TIME (CST)':<20} | {'MATCHUP':<30} | {'TYPE':<4} | {'PICK':<25} | {'MODEL':<8} | {'VEGAS':<8} | {'EDGE':<6} | {'FIRE':<5}"
     lines.append(header)
     lines.append("-" * len(header))
-    
+
     def calculate_fire_rating(confidence: float, edge: float) -> int:
         """Calculate fire rating (1-5) based on confidence and edge."""
         # Normalize edge (pts) to 0-1 scale (10 pts = max)
         edge_norm = min(abs(edge) / 10.0, 1.0)
         # Combine confidence and edge
         combined_score = (confidence * 0.6) + (edge_norm * 0.4)
-        
-        if combined_score >= 0.85: return 5
-        elif combined_score >= 0.70: return 4
-        elif combined_score >= 0.60: return 3
-        elif combined_score >= 0.52: return 2
-        else: return 1
+
+        if combined_score >= 0.85:
+            return 5
+        elif combined_score >= 0.70:
+            return 4
+        elif combined_score >= 0.60:
+            return 3
+        elif combined_score >= 0.52:
+            return 2
+        else:
+            return 1
 
     # Process each play
     for _, row in df.iterrows():
@@ -637,20 +671,24 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
         away_rec = row.get('away_record', '')
         # Shorten matchup string to fit
         matchup = f"{row['away_team']} @ {row['home_team']}"
-        
-        date_time = row['date'].replace(" CST", "") # Shorten slightly
-        
+
+        date_time = row['date'].replace(" CST", "")  # Shorten slightly
+
         # Helper to add row
         def add_row(market_type, pick, model_val, market_val, edge, conf, passes):
-            if not passes: return
-            
+            if not passes:
+                return
+
             fire = calculate_fire_rating(conf, edge)
             fire_str = "🔥" * fire
-            
+
             # Determine Type (FG or 1H)
-            if "FG" in market_type: type_str = "FG"
-            elif "1H" in market_type: type_str = "1H"
-            else: type_str = "??"
+            if "FG" in market_type:
+                type_str = "FG"
+            elif "1H" in market_type:
+                type_str = "1H"
+            else:
+                type_str = "??"
 
             # Format Pick
             # market_val is the line (usually home line for spread)
@@ -658,14 +696,14 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                 if pick.lower() == "home":
                     team_name = row['home_team']
                     line_val = market_val
-                else: # away
+                else:  # away
                     team_name = row['away_team']
                     line_val = -market_val
-                
+
                 # Format line with + sign if positive
                 line_str = f"{line_val:+.1f}"
                 pick_str = f"{team_name} {line_str}"
-                
+
                 # Handle near-zero margin display (avoid "-0.0")
                 if abs(model_val) < 0.05:
                     model_str = "0.0"
@@ -673,40 +711,44 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                     model_str = f"{model_val:+.1f}"
                 market_str = f"{market_val:+.1f}"
 
-            else: # Total
+            else:  # Total
                 pick_str = f"{pick.upper()} {market_val:.1f}"
                 model_str = f"{model_val:.1f}"
                 market_str = f"{market_val:.1f}"
-            
+
             # Add odds
             pick_str += f" ({odds})"
-                
+
             edge_str = f"{edge:+.1f}"
-            
+
             line = f"{date_time:<20} | {matchup:<30} | {type_str:<4} | {pick_str:<25} | {model_str:<8} | {market_str:<8} | {edge_str:<6} | {fire_str:<5}"
             lines.append(line)
 
         # FG Spread
         if pd.notna(row.get('fg_spread_line')):
-            add_row("FG Spread", row['fg_spread_bet_side'], row['fg_spread_pred_margin'], row['fg_spread_line'], row['fg_spread_edge'], row['fg_spread_confidence'], row['fg_spread_passes_filter'])
+            add_row("FG Spread", row['fg_spread_bet_side'], row['fg_spread_pred_margin'], row['fg_spread_line'],
+                    row['fg_spread_edge'], row['fg_spread_confidence'], row['fg_spread_passes_filter'])
 
         # FG Total
         if pd.notna(row.get('fg_total_line')):
-            add_row("FG Total", row['fg_total_bet_side'], row['fg_total_pred'], row['fg_total_line'], row['fg_total_edge'], row['fg_total_confidence'], row['fg_total_passes_filter'])
+            add_row("FG Total", row['fg_total_bet_side'], row['fg_total_pred'], row['fg_total_line'],
+                    row['fg_total_edge'], row['fg_total_confidence'], row['fg_total_passes_filter'])
 
         # 1H Spread
         if pd.notna(row.get('fh_spread_line')):
-             add_row("1H Spread", row['fh_spread_bet_side'], row['fh_spread_pred_margin'], row['fh_spread_line'], row['fh_spread_edge'], row['fh_spread_confidence'], row['fh_spread_passes_filter'])
+            add_row("1H Spread", row['fh_spread_bet_side'], row['fh_spread_pred_margin'], row['fh_spread_line'],
+                    row['fh_spread_edge'], row['fh_spread_confidence'], row['fh_spread_passes_filter'])
 
         # 1H Total
         if pd.notna(row.get('fh_total_line')):
-             add_row("1H Total", row['fh_total_bet_side'], row['fh_total_pred'], row['fh_total_line'], row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
+            add_row("1H Total", row['fh_total_bet_side'], row['fh_total_pred'], row['fh_total_line'],
+                    row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
 
     lines.append("")
     lines.append("=" * 120)
     lines.append("END OF CARD")
     lines.append("=" * 120)
-    
+
     return "\n".join(lines)
 
 
@@ -724,7 +766,8 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
         shutil.copy2(src, dest_dir / filename)
 
     archive_ts = datetime.now(CST).strftime("%Y%m%d_%H%M%S")
-    date_tag = target_date.strftime("%Y%m%d") if target_date else datetime.now(CST).strftime("%Y%m%d")
+    date_tag = target_date.strftime(
+        "%Y%m%d") if target_date else datetime.now(CST).strftime("%Y%m%d")
 
     try:
         archive_copy(
@@ -796,12 +839,13 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
 
     # Generate formatted text report
     text_report = generate_formatted_text_report(df, target_date)
-    
+
     # Print to console
     print(text_report)
 
     # Save report to file
-    report_path = DATA_DIR / "processed" / f"slate_analysis_{target_date.strftime('%Y%m%d') if target_date else 'latest'}.txt"
+    report_path = DATA_DIR / "processed" / \
+        f"slate_analysis_{target_date.strftime('%Y%m%d') if target_date else 'latest'}.txt"
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(text_report)
     print(f"[OK] Saved formatted text report to {report_path}")
@@ -832,11 +876,12 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
         print("\nNO PLAYS TODAY")
         print("All games filtered out - no bets meet criteria")
         print("=" * 80)
-        
+
         # Still generate text report even if no plays
         if target_date and len(df) > 0:
             text_report = generate_formatted_text_report(df, target_date)
-            text_path = DATA_DIR / "processed" / f"slate_analysis_{target_date.strftime('%Y%m%d')}.txt"
+            text_path = DATA_DIR / "processed" / \
+                f"slate_analysis_{target_date.strftime('%Y%m%d')}.txt"
             with open(text_path, "w", encoding="utf-8") as f:
                 f.write(text_report)
             print(f"[OK] Saved formatted text report to {text_path}")
@@ -855,16 +900,19 @@ def main():
     np.random.seed(42)
     random.seed(42)
     logger.info("Random seeds set to 42 for reproducibility")
-    
-    print("\nWARNING: Running in LOCAL mode. For Docker execution, use 'python scripts/run_slate.py' or './run.ps1'")
 
-    parser = argparse.ArgumentParser(description="Generate NBA predictions for all markets")
-    parser.add_argument("--date", help="Date for predictions (YYYY-MM-DD, 'today', or 'tomorrow')")
+    print("\nWARNING: Running in LOCAL mode. For Docker execution, use 'python scripts/predict_unified_slate.py' or './run.ps1'")
+
+    parser = argparse.ArgumentParser(
+        description="Generate NBA predictions for all markets")
+    parser.add_argument(
+        "--date", help="Date for predictions (YYYY-MM-DD, 'today', or 'tomorrow')")
     parser.add_argument("--no-betting-splits", action="store_true",
-                       help="Disable betting splits integration")
+                        help="Disable betting splits integration")
     args = parser.parse_args()
 
-    asyncio.run(predict_games_async(args.date, use_betting_splits=not args.no_betting_splits))
+    asyncio.run(predict_games_async(
+        args.date, use_betting_splits=not args.no_betting_splits))
 
 
 if __name__ == "__main__":

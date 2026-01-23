@@ -7,13 +7,13 @@ Run daily before games to collect RLM/sharp money signals.
 Usage:
     # Collect today's splits (default: Action Network)
     # Appends to history by default (use --no-append-history to skip)
-    python scripts/collect_betting_splits.py
+    python scripts/data_unified_fetch_betting_splits.py
 
     # Collect and save to historical CSV + JSON snapshot
-    python scripts/collect_betting_splits.py --save
+    python scripts/data_unified_fetch_betting_splits.py --save
 
     # Use specific source
-    python scripts/collect_betting_splits.py --source action_network
+    python scripts/data_unified_fetch_betting_splits.py --source action_network
 
 Data Sources:
     - action_network: Best data (public API with premium indicators when available)
@@ -24,6 +24,14 @@ Output:
     - data/processed/betting_splits.json: Today's splits snapshot
     - data/splits/historical_splits.csv: Cumulative training data
 """
+from src.ingestion import the_odds
+from src.ingestion.betting_splits import (
+    fetch_public_betting_splits,
+    fetch_splits_sbro,
+    scrape_splits_covers,
+    _create_mock_splits_for_games,
+    splits_to_features,
+)
 import asyncio
 import argparse
 import json
@@ -38,14 +46,6 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from src.ingestion.betting_splits import (
-    fetch_public_betting_splits,
-    fetch_splits_sbro,
-    scrape_splits_covers,
-    _create_mock_splits_for_games,
-    splits_to_features,
-)
-from src.ingestion import the_odds
 
 DATA_DIR = PROJECT_ROOT / "data"
 SPLITS_DIR = DATA_DIR / "splits"
@@ -60,13 +60,13 @@ async def main():
         epilog="""
 Examples:
     # Quick check of today's splits
-    python scripts/collect_betting_splits.py
+    python scripts/data_unified_fetch_betting_splits.py
 
     # Collect and save to training history (default behavior)
-    python scripts/collect_betting_splits.py --save
+    python scripts/data_unified_fetch_betting_splits.py --save
 
     # Use Action Network specifically
-    python scripts/collect_betting_splits.py --source action_network --save
+    python scripts/data_unified_fetch_betting_splits.py --source action_network --save
         """,
     )
     parser.add_argument(
@@ -139,7 +139,8 @@ Examples:
               f"{splits.spread_away_money_pct:.1f}% away")
 
         if splits.spread_rlm:
-            print(f"  [!] RLM DETECTED - Sharp side: {splits.sharp_spread_side}")
+            print(
+                f"  [!] RLM DETECTED - Sharp side: {splits.sharp_spread_side}")
 
         ticket_money_diff = splits.spread_home_ticket_pct - splits.spread_home_money_pct
         if abs(ticket_money_diff) > 10:
@@ -151,7 +152,8 @@ Examples:
               f"{splits.under_ticket_pct:.1f}% under")
 
         if splits.total_rlm:
-            print(f"  [!] RLM DETECTED - Sharp side: {splits.sharp_total_side}")
+            print(
+                f"  [!] RLM DETECTED - Sharp side: {splits.sharp_total_side}")
 
         print(f"  Source: {splits.source}")
 
@@ -220,7 +222,8 @@ Examples:
             replaced = len(new_df) - net_new if net_new < len(new_df) else 0
             print(f"\n[OK] Added {len(new_df)} rows to {history_file}")
             if replaced > 0:
-                print(f"     ({replaced} replaced existing, {net_new} net new)")
+                print(
+                    f"     ({replaced} replaced existing, {net_new} net new)")
             print(f"     Total rows: {len(combined)}")
         else:
             new_df.to_csv(history_file, index=False)

@@ -142,8 +142,9 @@ See [Historical Data Storage Guide](./HISTORICAL_DATA_STORAGE.md) for detailed u
 
 | File | Purpose |
 |------|---------|
-| `infra/nba/main.bicep` | **Single source of truth** - ALL Azure resources |
-| `infra/nba/deploy.ps1` | PowerShell wrapper for Bicep deployment |
+| `infra/nba/prediction.bicep` | **Prediction-only entry point** (API + platform) |
+| `infra/nba/main.bicep` | **Full stack entry point** (prediction + Teams Bot) |
+| `infra/nba/deploy.ps1` | PowerShell wrapper for prediction Bicep deployment |
 | `infra/modules/*.bicep` | Reusable modules (storage, containerApp) |
 | `.github/workflows/iac.yml` | Infrastructure CI/CD pipeline |
 | `Dockerfile.combined` | Combined API + Function image |
@@ -152,4 +153,3 @@ See [Historical Data Storage Guide](./HISTORICAL_DATA_STORAGE.md) for detailed u
 | `scripts/archive_picks_to_azure.ps1` | Archive picks to blob storage |
 | `scripts/sync_historical_data_to_azure.ps1` | Sync historical data to blob storage |
 | `scripts/store_backtest_model.ps1` | Store backtest models |
-

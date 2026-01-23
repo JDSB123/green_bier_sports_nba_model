@@ -207,7 +207,7 @@ Uncommitted Files:
 2. ⏳ **Test Locally** (Optional)
    ```bash
    cd c:/Users/JDSB/dev/green_bier_sport_ventures/nba_gbsv_local
-   python scripts/backtest_production.py \
+   python scripts/historical_backtest_production.py \
      --data=data/processed/training_data.csv \
      --models-dir=models/production \
      --markets=fg_spread

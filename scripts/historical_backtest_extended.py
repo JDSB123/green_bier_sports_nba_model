@@ -2,7 +2,7 @@
 """
 Extended Backtest with Per-Market Configuration and Moneyline Support
 
-This script extends backtest_production.py with:
+This script extends historical_backtest_production.py with:
 - Per-market juice/odds parameters (6 independent markets)
 - Per-market confidence thresholds
 - Per-market minimum date boundaries (May 2023+ for spreads)
@@ -13,18 +13,18 @@ This script extends backtest_production.py with:
 
 Usage:
     # All markets with explicit per-market odds
-    python scripts/backtest_extended.py \
+    python scripts/historical_backtest_extended.py \
         --fg-spread-juice -110 --fg-total-juice -110 \
         --1h-spread-juice -110 --1h-total-juice -110
 
     # Single market with specific configuration
-    python scripts/backtest_extended.py --markets fg_spread --fg-spread-juice -105
+    python scripts/historical_backtest_extended.py --markets fg_spread --fg-spread-juice -105
 
     # Moneyline backtesting (uses actual odds from data)
-    python scripts/backtest_extended.py --markets fg_moneyline,1h_moneyline
+    python scripts/historical_backtest_extended.py --markets fg_moneyline,1h_moneyline
 
     # Accuracy-only mode
-    python scripts/backtest_extended.py --no-pricing
+    python scripts/historical_backtest_extended.py --no-pricing
 """
 from src.prediction.engine import map_1h_features_to_fg_names
 from src.prediction.feature_validation import (
@@ -32,6 +32,7 @@ from src.prediction.feature_validation import (
     validate_and_prepare_features,
 )
 from src.modeling.season_utils import get_season_for_date
+from src.utils.historical_guard import require_historical_mode, resolve_historical_output_root, ensure_historical_path
 import joblib
 import numpy as np
 import pandas as pd
@@ -716,6 +717,7 @@ def normalize_markets_arg(markets_str: str) -> List[str]:
 
 
 def main():
+    require_historical_mode()
     parser = argparse.ArgumentParser(
         description="Extended backtest with per-market configuration and moneyline support",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -725,7 +727,10 @@ def main():
     parser.add_argument("--data", default="data/processed/training_data.csv")
     parser.add_argument("--models-dir", default="models/production")
     parser.add_argument(
-        "--output-json", default="data/backtest_results/extended_backtest_results.json")
+        "--output-json",
+        default=None,
+        help="Path to save JSON results (defaults to HISTORICAL_OUTPUT_ROOT/backtest_results)",
+    )
 
     try:
         bool_action = argparse.BooleanOptionalAction  # py3.9+
@@ -792,6 +797,12 @@ def main():
     parser.add_argument("--min-train", type=int, default=100)
 
     args = parser.parse_args()
+    if args.output_json is None:
+        args.output_json = str(
+            resolve_historical_output_root("backtest_results")
+            / "extended_backtest_results.json"
+        )
+    ensure_historical_path(Path(args.output_json).parent, "output-json")
 
     if getattr(args, "ensure_canonical", False):
         ensure_canonical_training_data(

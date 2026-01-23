@@ -6,7 +6,7 @@ Preflight freshness check:
 - Run invariant tests to ensure 4-market integrity (no placeholders, no conflicts).
 
 Usage:
-    python scripts/preflight_freshness.py
+    python scripts/predict_preflight_freshness.py
 
 Assumptions:
 - Run from repo root.
@@ -51,7 +51,7 @@ def main() -> int:
         print("Secrets present: " + ", ".join(REQUIRED_SECRETS))
 
         # 2) Fetch fresh odds (no cache/placeholder)
-        run_cmd([sys.executable, "scripts/ingest_all.py",
+        run_cmd([sys.executable, "scripts/data_unified_ingest_all.py",
                 "--refresh"], "Fetch fresh odds")
 
         # 3) Run invariant tests (4 markets, no silent conflicts)

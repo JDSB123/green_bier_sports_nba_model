@@ -158,25 +158,30 @@ def standardize_team_name(team: str) -> str:
     if not team or not isinstance(team, str):
         return team
 
-    team_lower = team.lower().strip()
+    # Delegate to ingestion canonicalization to enforce ONE source of truth.
+    # This ensures data standardization stays aligned with live ingestion.
+    try:
+        from src.ingestion.standardize import normalize_team_to_espn
+        normalized, is_valid = normalize_team_to_espn(
+            team, source="data_standardization")
+        return normalized if is_valid else ""
+    except Exception:
+        # Fallback to local mapping (legacy behavior) if ingestion module is unavailable.
+        team_lower = team.lower().strip()
 
-    # Check direct abbreviation match
-    if team_lower in ABBREV_TO_FULL:
-        return ABBREV_TO_FULL[team_lower]
+        if team_lower in ABBREV_TO_FULL:
+            return ABBREV_TO_FULL[team_lower]
 
-    # Check team_mapping.json variants
-    if team_lower in _VARIANT_TO_CANONICAL:
-        canonical_id = _VARIANT_TO_CANONICAL[team_lower]
-        if canonical_id in _CANONICAL_TO_FULL:
-            return _CANONICAL_TO_FULL[canonical_id]
+        if team_lower in _VARIANT_TO_CANONICAL:
+            canonical_id = _VARIANT_TO_CANONICAL[team_lower]
+            if canonical_id in _CANONICAL_TO_FULL:
+                return _CANONICAL_TO_FULL[canonical_id]
 
-    # Already a full name? Return as-is with title case
-    for full_name in ABBREV_TO_FULL.values():
-        if team_lower == full_name.lower():
-            return full_name
+        for full_name in ABBREV_TO_FULL.values():
+            if team_lower == full_name.lower():
+                return full_name
 
-    # Return original with title case as fallback
-    return team.strip()
+        return ""
 
 
 # =============================================================================

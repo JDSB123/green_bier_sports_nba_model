@@ -72,10 +72,10 @@
 
 ## Infrastructure Changes Required
 
-### 1. Add Front Door Resource (main.bicep)
+### 1. Add Front Door Resource (prediction.bicep)
 
 ```bicep
-// Add to main.bicep after Container App
+// Add to prediction.bicep after Container App
 
 // =============================================================================
 // NETWORKING LAYER (Front Door)
@@ -204,26 +204,26 @@ import os
 
 class FrontDoorValidationMiddleware(BaseHTTPMiddleware):
     """Validate requests come from Azure Front Door."""
-    
+
     def __init__(self, app, front_door_id: str = None):
         super().__init__(app)
         self.front_door_id = front_door_id or os.getenv("AZURE_FRONT_DOOR_ID")
-    
+
     async def dispatch(self, request: Request, call_next):
         # Skip validation if not configured (local dev)
         if not self.front_door_id:
             return await call_next(request)
-        
+
         # Validate X-Azure-FDID header
         fd_id = request.headers.get("X-Azure-FDID")
-        
+
         if fd_id != self.front_door_id:
             # Log potential bypass attempt
             raise HTTPException(
                 status_code=403,
                 detail="Direct access not allowed. Use Front Door."
             )
-        
+
         return await call_next(request)
 ```
 
@@ -246,7 +246,7 @@ curl https://nba-gbsv-api.*.azurecontainerapps.io/health
 
 ```powershell
 # 1. Enable Front Door
-az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep \
+az deployment group create -g nba-gbsv-model-rg -f infra/nba/prediction.bicep \
   -p enableFrontDoor=true theOddsApiKey=$KEY apiBasketballKey=$KEY imageTag=$VERSION
 
 # 2. Test Front Door endpoint
@@ -295,7 +295,7 @@ infra/
 │   ├── storage.bicep          # No change
 │   └── frontDoor.bicep        # NEW: Reusable Front Door module
 ├── nba/
-│   ├── main.bicep             # Updated: Front Door resources
+│   ├── prediction.bicep       # Updated: Front Door resources
 │   ├── deploy.ps1             # No change
 │   └── main.json              # Auto-generated
 └── README.md
@@ -342,7 +342,7 @@ src/
 
 ### Pending (Before Front Door)
 - [ ] Create `frontDoor.bicep` module
-- [ ] Add Front Door parameters to `main.bicep`
+- [ ] Add Front Door parameters to `prediction.bicep`
 - [ ] Create origin validation middleware
 - [ ] Configure custom domain DNS
 - [ ] Add `internalIngress` parameter to containerApp.bicep

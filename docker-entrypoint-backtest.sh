@@ -211,7 +211,7 @@ run_backtest() {
 
     # Run the backtest
     echo "Starting backtest..."
-    python scripts/backtest_production.py \
+    python scripts/historical_backtest_production.py \
         --data "/app/data/processed/training_data.csv" \
         --models-dir "/app/models/production" \
         --markets "$MARKETS" \
@@ -292,7 +292,7 @@ run_prod_backtest() {
     echo ""
 
     # NOTE: Require real 1H lines (fh_*) when available; otherwise 1H markets will be skipped.
-    python scripts/backtest_production.py \
+    python scripts/historical_backtest_production.py \
         --data "$DATA_PATH" \
         --models-dir "/app/models/production" \
         --markets "$MARKETS" \
@@ -317,7 +317,7 @@ validate_data() {
     echo "VALIDATING TRAINING DATA"
     echo "============================================================"
 
-    python scripts/validate_training_data.py --strict
+    python scripts/data_unified_validate_training.py --strict
 
     if [ $? -ne 0 ]; then
         echo "✗ Validation failed!"

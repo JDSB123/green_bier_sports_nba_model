@@ -11,7 +11,7 @@
 ### 1. Week 1 Monitoring Framework
 Created automated tools to track FG Spread optimization performance:
 
-- **[scripts/save_daily_picks.py](scripts/save_daily_picks.py)** - Downloads daily picks from production API
+- **[scripts/predict_unified_save_daily_picks.py](scripts/predict_unified_save_daily_picks.py)** - Downloads daily picks from production API
 - **[scripts/monitor_week1_performance.py](scripts/monitor_week1_performance.py)** - Analyzes daily/weekly performance
 - **[WEEK1_MONITORING_GUIDE.md](WEEK1_MONITORING_GUIDE.md)** - Complete monitoring instructions
 
@@ -30,7 +30,7 @@ Created automated deployment pipeline for FG Totals expansion:
 
 ```bash
 # Step 1: Save today's picks (run once per day)
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 
 # Step 2: View daily report
 python scripts/monitor_week1_performance.py --date 2026-01-16
@@ -73,7 +73,7 @@ python scripts/deploy_option_b.py --deploy         # Deploy to production
 ### Monitoring Tools
 ```
 scripts/
-├── save_daily_picks.py              # Download daily picks from API
+├── predict_unified_save_daily_picks.py              # Download daily picks from API
 ├── monitor_week1_performance.py     # Performance analysis
 └── deploy_option_b.py               # Option B deployment automation
 
@@ -85,7 +85,7 @@ MONITORING_SETUP_COMPLETE.md         # This file
 ```
 data/
 └── picks/
-    ├── picks_2026-01-16.json       # Created when you run save_daily_picks.py
+    ├── picks_2026-01-16.json       # Created when you run predict_unified_save_daily_picks.py
     ├── picks_2026-01-17.json       # One file per day
     └── ...
 ```
@@ -128,7 +128,7 @@ Investigate:
 ### Daily Monitoring
 ```bash
 # Save today's picks
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 
 # View daily report for specific date
 python scripts/monitor_week1_performance.py --date 2026-01-16

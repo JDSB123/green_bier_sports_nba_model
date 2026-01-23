@@ -33,19 +33,19 @@ nbahistoricaldata/
 - Use it as a cache for ingestion/backtests; always pull from/push to Azure to avoid drift.
 
 ## Sync workflows
-- **Upload local → Azure (overwrite existing)**  
+- **Upload local → Azure (overwrite existing)**
   `az storage blob upload-batch --account-name nbagbsvstrg --auth-mode login --destination nbahistoricaldata --source data/historical --destination-path historical --overwrite`
 
-- **Download Azure → local** (refresh your cache)  
+- **Download Azure → local** (refresh your cache)
   `az storage blob download-batch --account-name nbagbsvstrg --auth-mode login --destination data/historical --source nbahistoricaldata --pattern "historical/*"`
 
-- **Archive picks to Azure**  
+- **Archive picks to Azure**
   `.\scripts\archive_picks_to_azure.ps1 -Date "YYYY-MM-DD" [-ModelVersion <version>]`
 
-- **Sync historical data (scripted)**  
+- **Sync historical data (scripted)**
   `.\scripts\sync_historical_data_to_azure.ps1 [-Season 2024-2025] [-DataType odds] [-DryRun]`
 
-- **Store backtest models/results to Azure**  
+- **Store backtest models/results to Azure**
   `.\scripts\store_backtest_model.ps1 -Version "<tag>" -BacktestDate "YYYY-MM-DD" [-ModelPath ...] [-ResultsPath ...]`
 
 ## QA / anti-leakage controls
@@ -54,6 +54,7 @@ nbahistoricaldata/
 - Backtest scripts should read from the blob-synced cache (`--sync-from-azure` where available) instead of local-only files.
 
 ## Troubleshooting
+- **Historical scripts blocked**: set `HISTORICAL_MODE=true` and `HISTORICAL_OUTPUT_ROOT` to an Azure-mounted path. For local testing only, set `ALLOW_LOCAL_HISTORICAL=true`.
 - **Access denied**: verify `az account show` and that you have Blob Data Contributor/Reader on `nbagbsvstrg`.
-- **Container missing**: re-run infra deploy (`infra/nba/main.bicep` creates `nbahistoricaldata`).
+- **Storage missing**: re-run infra deploy (`infra/nba/prediction.bicep` or `infra/nba/main.bicep`) to recreate the storage account.
 - **Large transfers**: add `--max-connections 4` to `az storage blob upload-batch`/`download-batch` if needed.

@@ -26,7 +26,14 @@ az storage blob download-batch --account-name nbagbsvstrg --auth-mode login \
 2) Run ingestion/export/backtest.
 3) Delete `data/historical` after the run to avoid stale data.
 
+## Azure-only guardrails
+Historical scripts require:
+- `HISTORICAL_MODE=true`
+- `HISTORICAL_OUTPUT_ROOT` set to an Azure-mounted path
+
+Local historical outputs are blocked unless `ALLOW_LOCAL_HISTORICAL=true` is explicitly set.
+
 ## Ingestion/export scripts
-- Continue to use existing scripts (`ingest_historical_period_odds.py`, `export_historical_odds.py`, etc.).
+- Continue to use existing scripts (`historical_ingest_period_odds.py`, `historical_export_odds.py`, etc.).
 - After generating outputs, upload to Azure with manifests/hashes.
 - Do not store historical data in git; Azure Blob is the only source of truth.

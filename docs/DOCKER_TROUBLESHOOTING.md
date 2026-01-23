@@ -166,8 +166,8 @@ The `docker-entrypoint-backtest.sh` script:
 
 1. **Validates Python** - Tests critical imports
 2. **Confirms data** (if `data` or `full` command) - Requires `data/processed/training_data.csv`
-3. **Runs backtest** (if `backtest` or `full` command) - Calls `backtest_production.py`
-4. **Validates data** (if `validate` command) - Calls `validate_training_data.py`
+3. **Runs backtest** (if `backtest` or `full` command) - Calls `historical_backtest_production.py`
+4. **Validates data** (if `validate` command) - Calls `data_unified_validate_training.py`
 5. **Cleans cache** (if `backtest` or `full` command) - Removes ephemeral data
 
 ## Recent Improvements
@@ -186,8 +186,3 @@ The entrypoint script has been improved with:
 3. Try the interactive shell to debug manually
 4. Verify your `.env` file has valid API keys
 5. Check that you have sufficient disk space
-
-
-
-
-

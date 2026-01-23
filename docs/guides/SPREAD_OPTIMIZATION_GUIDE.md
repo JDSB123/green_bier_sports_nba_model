@@ -184,7 +184,7 @@ Use the "Best Balanced" recommendation from the report:
 Test specific seasons or date ranges:
 
 ```bash
-python scripts/backtest_production.py \
+python scripts/historical_backtest_production.py \
   --markets fg_spread \
   --spread-juice -110 \
   --total-juice -110 \
@@ -197,7 +197,7 @@ python scripts/backtest_production.py \
 Test a specific parameter combination:
 
 ```bash
-python scripts/backtest_production.py \
+python scripts/historical_backtest_production.py \
   --markets fg_spread \
   --spread-juice -105 \
   --total-juice -110 \
@@ -209,7 +209,7 @@ python scripts/backtest_production.py \
 Skip ROI calculations (useful for initial testing):
 
 ```bash
-python scripts/backtest_production.py \
+python scripts/historical_backtest_production.py \
   --markets spreads \
   --no-pricing
 ```

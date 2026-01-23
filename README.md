@@ -16,16 +16,16 @@ Each market uses independent feature engineering and model training, tailored to
 ## 🚀 THE ONE COMMAND
 
 ```powershell
-python scripts/run_slate.py
+python scripts/predict_unified_slate.py
 ```
 
 That's it. This handles everything automatically.
 
 **Options:**
 ```powershell
-python scripts/run_slate.py --date tomorrow        # Tomorrow's games
-python scripts/run_slate.py --matchup Lakers       # Filter to Lakers
-python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
+python scripts/predict_unified_slate.py --date tomorrow        # Tomorrow's games
+python scripts/predict_unified_slate.py --matchup Lakers       # Filter to Lakers
+python scripts/predict_unified_slate.py --date 2025-12-19 --matchup Celtics
 ```
 
 ---
@@ -37,7 +37,7 @@ python scripts/run_slate.py --date 2025-12-19 --matchup Celtics
 ## Architecture Overview
 
 **All prediction/model computation runs through Docker containers.**
-`scripts/run_slate.py` is a thin local *orchestrator* (starts the container and calls the API); it does not run models locally.
+`scripts/predict_unified_slate.py` is a thin local *orchestrator* (starts the container and calls the API); it does not run models locally.
 
 ### Services (Docker Compose)
 
@@ -114,12 +114,12 @@ curl "https://$FQDN/health" | jq .
    # REQUIRED - System will not start without these
    THE_ODDS_API_KEY=your_key_here
    API_BASKETBALL_KEY=your_key_here
-   
+
    # OPTIONAL - For production API authentication
    SERVICE_API_KEY=your_service_api_key
    REQUIRE_API_AUTH=false  # Set to true for production
    ```
-   
+
    **Note:** The system prefers Docker secrets over `.env` files. See [`docs/DOCKER_SECRETS.md`](docs/DOCKER_SECRETS.md) for full secrets guide.
 
 ### Running Production
@@ -215,9 +215,9 @@ MIN_TRAINING=80      # Minimum training games before predictions
 Use the main prediction script to analyze slates:
 
 ```powershell
-python scripts/run_slate.py               # Today's games
-python scripts/run_slate.py --date tomorrow
-python scripts/run_slate.py --date 2025-12-18
+python scripts/predict_unified_slate.py               # Today's games
+python scripts/predict_unified_slate.py --date tomorrow
+python scripts/predict_unified_slate.py --date 2025-12-18
 ```
 
 This generates comprehensive predictions and analysis for the specified date.
@@ -310,4 +310,3 @@ curl http://localhost:8090/health
 # View container logs
 docker compose logs -f strict-api
 ```
-

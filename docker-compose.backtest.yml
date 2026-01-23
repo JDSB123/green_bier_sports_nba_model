@@ -172,7 +172,7 @@ services:
     volumes:
       - ./data:/app/data
     command: >
-      python scripts/backtest_extended.py
+      python scripts/historical_backtest_extended.py
       --data /app/data/processed/training_data.csv
       --markets fg_spread
       --fg-spread-juice ${FG_SPREAD_JUICE:--110}
@@ -195,7 +195,7 @@ services:
     volumes:
       - ./data:/app/data
     command: >
-      python scripts/backtest_extended.py
+      python scripts/historical_backtest_extended.py
       --data /app/data/processed/training_data.csv
       --markets fg_total
       --fg-total-juice ${FG_TOTAL_JUICE:--110}
@@ -217,7 +217,7 @@ services:
     volumes:
       - ./data:/app/data
     command: >
-      python scripts/backtest_extended.py
+      python scripts/historical_backtest_extended.py
       --data /app/data/processed/training_data.csv
       --markets fg_moneyline
       --fg-ml-conf ${FG_ML_CONF:-0.55}
@@ -239,7 +239,7 @@ services:
     volumes:
       - ./data:/app/data
     command: >
-      python scripts/backtest_extended.py
+      python scripts/historical_backtest_extended.py
       --data /app/data/processed/training_data.csv
       --markets 1h_spread
       --1h-spread-juice ${1H_SPREAD_JUICE:--110}
@@ -262,7 +262,7 @@ services:
     volumes:
       - ./data:/app/data
     command: >
-      python scripts/backtest_extended.py
+      python scripts/historical_backtest_extended.py
       --data /app/data/processed/training_data.csv
       --markets 1h_total
       --1h-total-juice ${1H_TOTAL_JUICE:--110}
@@ -284,7 +284,7 @@ services:
     volumes:
       - ./data:/app/data
     command: >
-      python scripts/backtest_extended.py
+      python scripts/historical_backtest_extended.py
       --data /app/data/processed/training_data.csv
       --markets 1h_moneyline
       --1h-ml-conf ${1H_ML_CONF:-0.55}

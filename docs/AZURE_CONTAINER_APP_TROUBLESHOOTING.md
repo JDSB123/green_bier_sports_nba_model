@@ -101,7 +101,7 @@ git commit -m "Add production training data"
 git push origin main
 
 # Option 2: Rebuild training data before deployment
-python scripts/build_training_data_complete.py
+python scripts/data_unified_build_training_complete.py
 
 # Option 3: Mount as Azure Blob Storage volume (advanced)
 ```
@@ -137,7 +137,7 @@ docker run --rm nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v33.1.3 \
 **Fix:** Train models and rebuild Docker image
 ```bash
 # Train models locally
-python scripts/train_models.py
+python scripts/model_train_all.py
 
 # Verify they exist
 ls -lh models/production/*.joblib
@@ -168,7 +168,7 @@ python -c "from src.utils.startup_checks import run_startup_integrity_checks; ru
 
 # Or enable verbose logging:
 export LOGLEVEL=DEBUG
-python scripts/predict.py  # This triggers app startup
+python scripts/predict_unified_full_game.py  # This triggers app startup
 ```
 
 **Common failures:**
@@ -283,7 +283,7 @@ az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg \
 **Fix:** If splits providers are down temporarily, use fallback mode
 ```bash
 # Local testing without splits
-python scripts/run_slate.py --use-splits false
+python scripts/predict_unified_slate.py --use-splits false
 
 # For Azure deployment, contact providers or disable market:
 # Set FILTER_*_CONFIDENCE to very high (0.99) to block predictions without splits

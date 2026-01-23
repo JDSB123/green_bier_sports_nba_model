@@ -11,7 +11,7 @@
 ### Step 1: Save Today's Picks (Daily)
 
 ```bash
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 ```
 
 This downloads and saves today's picks to `data/picks/picks_YYYY-MM-DD.json`.
@@ -144,7 +144,7 @@ az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
 - **Source:** Production API downloads
 
 ### Monitoring Scripts
-- **Save Picks:** `scripts/save_daily_picks.py`
+- **Save Picks:** `scripts/predict_unified_save_daily_picks.py`
 - **Daily Report:** `scripts/monitor_week1_performance.py --date YYYY-MM-DD`
 - **Weekly Summary:** `scripts/monitor_week1_performance.py --week-summary`
 - **Deploy Option B:** `scripts/deploy_option_b.py`
@@ -209,7 +209,7 @@ az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg \
 
 ```bash
 # Save today's picks
-python scripts/save_daily_picks.py
+python scripts/predict_unified_save_daily_picks.py
 
 # View today's report
 python scripts/monitor_week1_performance.py --date $(date +%Y-%m-%d)

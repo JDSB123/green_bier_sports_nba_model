@@ -270,7 +270,7 @@ class FilterThresholds:
 
 **Backtest on Recent Data:**
 ```bash
-python scripts/backtest_production.py \
+python scripts/historical_backtest_production.py \
   --markets total \
   --spread-juice -110 \
   --total-juice -110 \
@@ -466,7 +466,7 @@ A: Yes, if parameters are properly optimized. Cherry-picking reduces expected va
 ### Key Files Reference
 
 - **Configuration**: `src/config.py`
-- **Backtesting**: `scripts/backtest_production.py`
+- **Backtesting**: `scripts/historical_backtest_production.py`
 - **Optimization**: `scripts/optimize_totals_only.py`
 - **Analysis**: `scripts/analyze_totals_results.py`
 - **Models**: `models/production/fg_total_model.joblib`, `models/production/1h_total_model.joblib`

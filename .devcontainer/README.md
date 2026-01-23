@@ -41,7 +41,7 @@ curl http://localhost:8090/slate/today
 
 ### Run Analysis Script
 ```bash
-python scripts/run_slate.py
+python scripts/predict_unified_slate.py
 ```
 
 ## 🔧 API Key Configuration
