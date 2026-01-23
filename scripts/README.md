@@ -2,8 +2,9 @@
 
 Operational scripts for the NBA prediction system.
 
-Script count: 62 Python scripts + 19 PowerShell/Shell scripts
-Last updated: 2026-01-17
+Last updated: 2026-01-23
+
+**See also:** [`docs/RUNBOOK.md`](../docs/RUNBOOK.md) for operational workflows.
 
 ---
 

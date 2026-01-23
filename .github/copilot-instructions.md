@@ -85,10 +85,11 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 
 ## **Important Documentation Files**
 - `README.md` — Quick start, API usage, architecture overview
-- `docs/ARCHITECTURE_FLOW_AND_ENDPOINTS.md` — Detailed stack and API endpoints
-- `docs/SINGLE_SOURCE_OF_TRUTH_AUDIT.md` — Data lineage and validation
-- `docs/DOCKER_SECRETS.md` — Secret management (Key Vault setup)
-- `docs/DOCKER_TROUBLESHOOTING.md` — Common Docker issues
+- `docs/ARCHITECTURE.md` — System design, endpoints, data flow
+- `docs/DATA_GUIDE.md` — Data sources, ingestion, validation
+- `docs/AZURE_OPERATIONS.md` — Azure config, deployment, troubleshooting
+- `docs/SECRETS.md` — Secrets management
+- `docs/RUNBOOK.md` — Operational runbook
 - `scripts/README.md` — Script descriptions and usage
 
 ## **Testing & Verification**

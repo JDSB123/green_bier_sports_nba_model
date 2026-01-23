@@ -30,7 +30,7 @@ python scripts/predict_unified_slate.py --date 2025-12-19 --matchup Celtics
 
 ---
 
-> **📖 Single Source of Truth:** See [`docs/STACK_FLOW_AND_VERIFICATION.md`](docs/STACK_FLOW_AND_VERIFICATION.md) for the master reference.
+> **📖 Documentation:** See [`docs/`](docs/) for guides on architecture, data, deployment, and operations.
 
 **Versioning:** `VERSION` is the canonical release identifier (current: see `VERSION`). Runtime and tooling read `VERSION` (or `NBA_MODEL_VERSION` if set), so code and deploy configs no longer hard-code versions.
 
