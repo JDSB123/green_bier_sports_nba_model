@@ -1428,12 +1428,14 @@ async def get_executive_summary(
     })
 
 
-@app.get("/teams/outgoing")
-@app.get("/teams/outgoing/")
-@app.head("/teams/outgoing")
-@app.head("/teams/outgoing/")
-@app.options("/teams/outgoing")
-@app.options("/teams/outgoing/")
+@app.api_route(
+    "/teams/outgoing",
+    methods=["GET", "HEAD", "OPTIONS"],
+)
+@app.api_route(
+    "/teams/outgoing/",
+    methods=["GET", "HEAD", "OPTIONS"],
+)
 async def teams_outgoing_get(request: Request, validationToken: Optional[str] = Query(None)):
     """Handle Teams validation pings (echo validationToken), reachability, and preflight/HEAD."""
     # Teams sends a GET with ?validationToken=... during setup; must echo it as plain text.
