@@ -1451,6 +1451,111 @@ async def get_executive_summary(
     })
 
 
+# =============================================================================
+# TEAMS POWER AUTOMATE WORKFLOW ENDPOINT
+# =============================================================================
+
+@app.get("/teams/workflow")
+@app.get("/teams/workflow/")
+@limiter.limit("30/minute")
+async def teams_workflow_get(
+    request: Request,
+    date: str = Query("today", description="Date: today, tomorrow, or YYYY-MM-DD"),
+    elite: bool = Query(False, description="Only show elite picks (4+ fire rating)"),
+    team: Optional[str] = Query(None, description="Filter by team name"),
+):
+    """
+    Power Automate Workflow endpoint - returns formatted picks for Teams.
+    
+    Use this with Power Automate to post picks to Teams channels.
+    Returns Adaptive Card JSON for rich formatting.
+    
+    Example Power Automate flow:
+    1. Trigger: Recurrence (daily at 9 AM) or Manual
+    2. HTTP action: GET https://nba.greenbiersportventures.com/teams/workflow?date=today
+    3. Post to Teams channel using the response
+    """
+    # Use cache for fast response
+    cache_key = f"{date}_{elite}_{team or 'all'}"
+    cached_data = _get_cached_picks(date)
+    
+    if cached_data is not None:
+        data = cached_data
+    else:
+        try:
+            data = await get_executive_summary(request, date=date, use_splits=True)
+            if isinstance(data, dict):
+                _set_cached_picks(date, data)
+        except HTTPException as e:
+            return JSONResponse(status_code=200, content={
+                "type": "message",
+                "text": f"❌ Error: {e.detail}"
+            })
+        except Exception as e:
+            logger.error("Teams workflow request failed: %s", e)
+            return JSONResponse(status_code=200, content={
+                "type": "message",
+                "text": "❌ Failed to fetch picks."
+            })
+    
+    if not isinstance(data, dict):
+        return JSONResponse(status_code=200, content={
+            "type": "message",
+            "text": "No picks available."
+        })
+    
+    plays = data.get("plays", [])
+    date_label = data.get("date", date)
+    
+    # Apply filters
+    if team:
+        team_lower = team.lower()
+        plays = [p for p in plays if team_lower in p.get("matchup", "").lower()]
+    
+    if elite:
+        plays = [p for p in plays if int(p.get("fire_rating", 0) or 0) >= 4]
+    
+    if not plays:
+        filter_desc = []
+        if elite:
+            filter_desc.append("elite")
+        if team:
+            filter_desc.append(f"for {team}")
+        filter_str = f" ({', '.join(filter_desc)})" if filter_desc else ""
+        return JSONResponse(status_code=200, content={
+            "type": "message",
+            "text": f"📭 No{filter_str} picks for {date_label}."
+        })
+    
+    # Build formatted message for Teams
+    fire_emoji = {5: "🔥🔥🔥🔥🔥", 4: "🔥🔥🔥🔥", 3: "🔥🔥🔥", 2: "🔥🔥", 1: "🔥"}
+    
+    lines = [f"**🏀 NBA Picks for {date_label}**", ""]
+    
+    for p in plays[:10]:  # Limit to 10 picks for readability
+        matchup = p.get("matchup", "Unknown")
+        market = p.get("market", "")
+        pick = p.get("pick", "")
+        edge = p.get("edge", 0)
+        rating = int(p.get("fire_rating", 0) or 0)
+        fires = fire_emoji.get(rating, "")
+        
+        lines.append(f"**{matchup}**")
+        lines.append(f"  {market}: **{pick}** ({edge:+.1f}% edge) {fires}")
+        lines.append("")
+    
+    if len(plays) > 10:
+        lines.append(f"_...and {len(plays) - 10} more picks_")
+    
+    lines.append("")
+    lines.append(f"📊 **Total: {len(plays)} picks** | [View Full Lineup](https://nba.greenbiersportventures.com/weekly-lineup/html?date={date_label})")
+    
+    return JSONResponse(status_code=200, content={
+        "type": "message",
+        "text": "\n".join(lines)
+    })
+
+
 @app.api_route(
     "/teams/outgoing",
     methods=["GET", "HEAD", "OPTIONS"],
