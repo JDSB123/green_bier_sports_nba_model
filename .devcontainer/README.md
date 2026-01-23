@@ -8,17 +8,21 @@ This configuration allows you to run the entire NBA prediction system online thr
    - Go to your GitHub repository
    - Click "Code" > "Codespaces" > "Create codespace on main"
 
-2. **API Keys Configuration:**
+2. **Environment setup (automatic):**
+   - Post-create runs `scripts/setup_codespace.sh`, which creates/uses a repo-local `.venv`, installs `requirements.txt`, and syncs Codespaces secrets into `.env`/`secrets/`.
+   - VS Code is pointed at `.venv` by default to avoid global installs and cross-project bleed.
+
+3. **API Keys Configuration:**
    - API keys are handled via Docker secrets (`./secrets/` directory) or `.env` file
    - The containers automatically read from mounted secrets at `/run/secrets/`
    - Ensure your API keys are in `./secrets/` or `.env` before starting
 
-3. **Start the API:**
+4. **Start the API:**
    ```bash
    docker compose up -d
    ```
 
-4. **Access the API:**
+5. **Access the API:**
    - The API will be available on port 8090
    - GitHub Codespaces will automatically forward the port
    - Click the port notification or go to "Ports" tab to get the public URL

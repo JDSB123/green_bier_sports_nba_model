@@ -87,6 +87,40 @@ for key in "${SYNC_KEYS[@]}"; do
   write_secret_file "$key"
 done
 
+require_secret() {
+  local key="$1"
+  local env_val="${!key:-}"
+  local file_path="secrets/$key"
+
+  if [ -n "$env_val" ]; then
+    return 0
+  fi
+
+  if grep -q "^${key}=" .env 2>/dev/null; then
+    return 0
+  fi
+
+  if [ -s "$file_path" ]; then
+    return 0
+  fi
+
+  echo "❌ Missing required secret: $key" >&2
+  echo "   Set a Codespaces secret named $key, or populate .env or $file_path." >&2
+  return 1
+}
+
+# Enforce required secrets early to avoid flaky runs later.
+REQUIRED_SECRETS=(
+  THE_ODDS_API_KEY
+  API_BASKETBALL_KEY
+  ACTION_NETWORK_USERNAME
+  ACTION_NETWORK_PASSWORD
+)
+
+for key in "${REQUIRED_SECRETS[@]}"; do
+  require_secret "$key"
+done
+
 if [ "${USE_SYSTEM_PYTHON:-0}" = "1" ]; then
   "$PYTHON_BIN" -m pip install -r requirements.txt
 else
