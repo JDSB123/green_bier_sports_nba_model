@@ -22,11 +22,12 @@ from src.ingestion.standardize import (
 def standardize_team_name(team: str) -> str:
     """
     Convert any team name variant to canonical full name.
-    
+
     Wrapper for normalize_team_to_espn that returns just the name string
     for backwards compatibility.
     """
-    normalized, _ = normalize_team_to_espn(team, source="standardize_team_name")
+    normalized, _ = normalize_team_to_espn(
+        team, source="standardize_team_name")
     return normalized
 
 

@@ -199,7 +199,7 @@ class TestTimezoneConversion:
         # CST is UTC-6 (standard) or UTC-5 (daylight saving)
         utc_dt = datetime(2025, 1, 15, 4, 0, 0, tzinfo=UTC)
         cst_dt = to_cst(utc_dt)
-        
+
         assert cst_dt is not None
         assert cst_dt.tzinfo == CST
         # January is standard time: UTC-6
@@ -209,7 +209,7 @@ class TestTimezoneConversion:
     def test_utc_string_with_z_suffix(self):
         """ISO strings with Z suffix (UTC) should convert correctly."""
         cst_dt = to_cst("2025-01-16T04:00:00Z")
-        
+
         assert cst_dt is not None
         assert cst_dt.date().isoformat() == "2025-01-15"  # Previous day in CST
         assert cst_dt.hour == 22
@@ -217,7 +217,7 @@ class TestTimezoneConversion:
     def test_utc_string_with_offset(self):
         """ISO strings with UTC offset should convert correctly."""
         cst_dt = to_cst("2025-01-16T04:00:00+00:00")
-        
+
         assert cst_dt is not None
         assert cst_dt.date().isoformat() == "2025-01-15"
 
@@ -225,7 +225,7 @@ class TestTimezoneConversion:
         """Naive datetimes should be treated as UTC by default."""
         naive_dt = datetime(2025, 1, 15, 4, 0, 0)
         cst_dt = to_cst(naive_dt)
-        
+
         assert cst_dt is not None
         assert cst_dt.hour == 22  # 4am UTC = 10pm CST
 
@@ -233,7 +233,7 @@ class TestTimezoneConversion:
         """to_cst_local should treat input as already in local US time."""
         local_dt = datetime(2025, 1, 15, 19, 30, 0)  # 7:30pm local
         cst_dt = to_cst_local(local_dt)
-        
+
         assert cst_dt is not None
         assert cst_dt.hour == 19  # Should stay 7:30pm
         assert cst_dt.minute == 30
@@ -251,7 +251,7 @@ class TestTimezoneConversion:
     def test_to_cst_date_string_only(self):
         """Date-only strings should parse correctly."""
         cst_dt = to_cst("2025-01-15")
-        
+
         assert cst_dt is not None
         # Midnight UTC = 6pm previous day CST
         assert cst_dt.date().isoformat() == "2025-01-14"
@@ -271,7 +271,7 @@ class TestTimezoneConversion:
         # July is daylight saving time: UTC-5
         utc_dt = datetime(2025, 7, 15, 4, 0, 0, tzinfo=UTC)
         cst_dt = to_cst(utc_dt)
-        
+
         assert cst_dt is not None
         assert cst_dt.hour == 23  # 4am UTC = 11pm CDT (previous day)
 
@@ -281,8 +281,9 @@ class TestMatchKeyGeneration:
 
     def test_basic_match_key(self):
         """Basic match key should be date_away_home format."""
-        key = generate_match_key("2025-01-15", "Los Angeles Lakers", "Boston Celtics")
-        
+        key = generate_match_key(
+            "2025-01-15", "Los Angeles Lakers", "Boston Celtics")
+
         assert key is not None
         assert "2025-01-15" in key or "2025-01-14" in key  # CST conversion
         assert "lakers" in key.lower() or "los angeles" in key.lower()
@@ -292,15 +293,17 @@ class TestMatchKeyGeneration:
         """Match key should accept datetime objects."""
         dt = datetime(2025, 1, 15, 19, 30, 0, tzinfo=CST)
         key = generate_match_key(dt, "Lakers", "Celtics")
-        
+
         assert key is not None
         assert "2025-01-15" in key
 
     def test_match_key_normalizes_teams(self):
         """Match key should normalize team names."""
-        key1 = generate_match_key("2025-01-15", "lal", "bos", source_is_utc=False)
-        key2 = generate_match_key("2025-01-15", "Los Angeles Lakers", "Boston Celtics", source_is_utc=False)
-        
+        key1 = generate_match_key(
+            "2025-01-15", "lal", "bos", source_is_utc=False)
+        key2 = generate_match_key(
+            "2025-01-15", "Los Angeles Lakers", "Boston Celtics", source_is_utc=False)
+
         # Both should produce the same normalized key
         assert key1 == key2
 
@@ -316,9 +319,9 @@ class TestGameRecordStandardization:
             "commence_time": "2025-01-16T02:30:00Z",  # UTC
             "spread": -3.5,
         }
-        
+
         result = standardize_game_record(record)
-        
+
         assert result["home_team"] == "Los Angeles Lakers"
         assert result["away_team"] == "Boston Celtics"
         # Date may or may not be present depending on implementation
@@ -334,9 +337,9 @@ class TestGameRecordStandardization:
             "total": 220.5,
             "custom_field": "preserved",
         }
-        
+
         result = standardize_game_record(record)
-        
+
         assert result["spread"] == -3.5
         assert result["total"] == 220.5
         assert result["custom_field"] == "preserved"
@@ -348,13 +351,13 @@ class TestCanonicalTeamNames:
     def test_returns_all_30_teams(self):
         """Should return all 30 NBA teams."""
         teams = list(CANONICAL_NAMES.values())
-        
+
         assert len(teams) == 30
 
     def test_returns_full_names(self):
         """Should return full team names."""
         teams = list(CANONICAL_NAMES.values())
-        
+
         assert "Los Angeles Lakers" in teams
         assert "Boston Celtics" in teams
         assert "LA Clippers" in teams  # ESPN format
@@ -373,7 +376,7 @@ class TestDataIntegrity:
         """Full names should be unique."""
         full_names = list(CANONICAL_NAMES.values())
         unique_names = set(full_names)
-        
+
         # Full names should be unique (30 NBA teams)
         assert len(unique_names) == 30  # 30 NBA teams
 
