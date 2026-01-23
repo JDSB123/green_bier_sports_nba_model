@@ -7,6 +7,22 @@ Versioning follows [VERSIONING.md](VERSIONING.md).
 
 ---
 
+## [NBA_v33.1.9] - 2026-01-24
+
+### Added
+- **Root Endpoint `/`**: New endpoint returns weekly NBA picks at the root path
+  - Enables clean URL convention: `www.greenbiersportventures.com/prediction/nba`
+  - Alias for `/weekly-lineup/nba` with same query params (date, tier)
+  - Works with Azure Front Door URL rewrite from `/prediction/nba` to `/`
+
+### Changed
+- **Front Door Routing**: Updated `route-nba-api` patterns to include `/prediction/nba/*`
+  - `/prediction/nba` → returns weekly picks via root endpoint
+  - `/prediction/nba/health` → returns health check
+  - `/prediction/nba/weekly-lineup/nba` → also works for backward compatibility
+
+---
+
 ## [NBA_v33.1.7] - 2026-01-24
 
 ### Fixed

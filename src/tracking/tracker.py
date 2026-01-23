@@ -233,7 +233,7 @@ class PickTracker:
         Fetches completed game data and updates pick statuses.
         Only processes games that are confirmed complete.
         """
-        from src.ingestion.api_basketball import fetch_games
+        from src.ingestion.api_basketball import APIBasketballClient
         
         pending = self.get_pending_picks(date=date)
         
@@ -254,7 +254,8 @@ class PickTracker:
         for game_date in dates:
             try:
                 # Fetch completed games for this date
-                games = await fetch_games(date=game_date)
+                client = APIBasketballClient()
+                games = await client.get_games_by_date(game_date)
                 
                 # Create lookup by teams
                 game_lookup = {}

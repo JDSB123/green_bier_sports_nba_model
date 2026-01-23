@@ -479,6 +479,45 @@ def health(request: Request):
     }
 
 
+@app.get("/", tags=["Website"])
+@limiter.limit("60/minute")
+async def root_picks(
+    request: Request,
+    date: str = Query(
+        "today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query(
+        "all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'")
+):
+    """
+    Root endpoint returning weekly NBA picks.
+
+    Alias for /weekly-lineup/nba - designed for simplified URL convention:
+    www.greenbiersportventures.com/prediction/nba
+
+    Query params:
+      - date: YYYY-MM-DD, 'today', or 'tomorrow' (default: today)
+      - tier: 'elite', 'strong', 'good', or 'all' (default: all)
+    """
+    try:
+        result = await _build_weekly_lineup_payload(request, date=date, tier=tier)
+        if not isinstance(result, dict) or result.get("error"):
+            return JSONResponse(
+                content=result if isinstance(result, dict) else {
+                    "sport": "NBA",
+                    "error": "Failed to fetch predictions",
+                    "date": date
+                },
+                status_code=500
+            )
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error in root picks endpoint: {str(e)}", exc_info=True)
+        return JSONResponse(
+            content={"sport": "NBA", "error": str(e), "date": date},
+            status_code=500
+        )
+
+
 @app.get("/metrics")
 def metrics():
     """Prometheus metrics endpoint."""

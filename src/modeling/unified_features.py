@@ -11,12 +11,37 @@ Architecture:
 - No stale data - everything is computed on demand
 
 Usage:
-    from src.modeling.unified_features import UNIFIED_FEATURES, MODEL_REGISTRY
+    from src.modeling.unified_features import (
+        UNIFIED_FEATURE_NAMES,
+        MODEL_REGISTRY,
+        PERIOD_SCALING,
+        FEATURE_DEFAULTS,
+    )
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from enum import Enum
+
+
+# =============================================================================
+# PERIOD SCALING FACTORS - Empirically derived from NBA data
+# =============================================================================
+# Used for rest/travel adjustments between 1H and FG predictions
+PERIOD_SCALING: Dict[str, Dict[str, float]] = {
+    "1h": {
+        "hca_factor": 0.5,         # 1H HCA ~1.5 pts (vs 3 pts FG)
+        "rest_factor": 0.5,        # Rest impact moderate for 1H
+        "travel_factor": 0.5,      # Travel fatigue builds
+        "scoring_pct": 0.485,      # 1H is ~48.5% of game scoring
+    },
+    "fg": {
+        "hca_factor": 1.0,         # Full HCA
+        "rest_factor": 1.0,        # Full rest impact
+        "travel_factor": 1.0,      # Full travel impact
+        "scoring_pct": 1.0,        # Full game
+    },
+}
 
 
 # =============================================================================
@@ -516,6 +541,39 @@ def get_model_config(market_key: str) -> ModelConfig:
 def get_all_market_keys() -> List[str]:
     """Get all market keys."""
     return list(MODEL_REGISTRY.keys())
+
+
+def get_period_markets(period: str) -> List[str]:
+    """Get all market keys for a specific period (1h or fg)."""
+    return [k for k, v in MODEL_REGISTRY.items() if v.period == period]
+
+
+def get_model_features(period: str, market: str) -> List[str]:
+    """
+    Get feature list for a model. All models use unified features.
+    
+    Args:
+        period: "1h" or "fg"  
+        market: "spread" or "total"
+    
+    Returns:
+        List of feature names (same for all markets)
+    """
+    return UNIFIED_FEATURE_NAMES.copy()
+
+
+# Backward compatible dict format of MODEL_REGISTRY
+MODEL_CONFIGS: Dict[str, Dict] = {
+    market_key: {
+        "period": config.period,
+        "market": config.market_type,
+        "label_col": config.label_column,
+        "line_col": config.line_column,
+        "model_file": config.model_file,
+        "features": config.features,
+    }
+    for market_key, config in MODEL_REGISTRY.items()
+}
 
 
 def validate_features(features: Dict[str, float]) -> Dict[str, float]:

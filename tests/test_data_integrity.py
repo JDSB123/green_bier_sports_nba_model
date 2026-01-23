@@ -367,7 +367,7 @@ class TestProductionDataFlow:
 
     def test_backtest_and_live_use_same_features(self):
         """Backtest and live prediction must use identical feature definitions."""
-        from src.modeling.period_features import MODEL_CONFIGS
+        from src.modeling.unified_features import MODEL_CONFIGS
 
         # All 4 markets
         markets = ["fg_spread", "fg_total", "1h_spread", "1h_total"]

@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Set, Tuple
 import joblib
 
 from src.config import settings
-from src.modeling.period_features import MODEL_CONFIGS
+from src.modeling.unified_features import MODEL_CONFIGS
 from src.utils.logging import get_logger
 from src.utils.markets import get_expected_markets, get_market_catalog
 from src.utils.security import validate_required_api_keys

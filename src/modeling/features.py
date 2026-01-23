@@ -12,7 +12,7 @@ from src.modeling.team_factors import (
     get_timezone_difference,
     calculate_travel_fatigue,
 )
-from src.modeling.period_features import PERIOD_SCALING
+from src.modeling.unified_features import PERIOD_SCALING
 from src.modeling.season_utils import (
     is_crossing_offseason,
 )

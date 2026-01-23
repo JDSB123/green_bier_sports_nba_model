@@ -31,7 +31,7 @@ Features include:
 """
 from __future__ import annotations
 from src.utils.version import resolve_version
-from src.modeling.period_features import MODEL_CONFIGS, get_model_features
+from src.modeling.unified_features import MODEL_CONFIGS, get_model_features, UNIFIED_FEATURE_NAMES
 from src.modeling.feature_config import (
     get_spreads_features,
     get_totals_features,
@@ -263,15 +263,11 @@ def train_single_market(
                 features = get_totals_features()
         else:
             market_type = "spread" if "spread" in market_key else "total"
-            # 1H TOTAL: Use custom domain-driven feature set
+            # 1H TOTAL: Use unified feature set (all 4 models use same features)
             if market_key == "1h_total":
-                try:
-                    from src.modeling.feature_config import H1_TOTALS_CUSTOM_FEATURES
-                    features = H1_TOTALS_CUSTOM_FEATURES
-                    print(
-                        f"  [1H Total Custom] Using domain-driven feature set ({len(features)} features)")
-                except ImportError:
-                    features = get_model_features(period, market_type)
+                features = UNIFIED_FEATURE_NAMES.copy()
+                print(
+                    f"  [1H Total] Using unified feature set ({len(features)} features)")
             else:
                 try:
                     features = get_model_features(period, market_type)

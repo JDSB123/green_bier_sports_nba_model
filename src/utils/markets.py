@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from src.modeling.period_features import get_all_market_keys, get_period_markets
+from src.modeling.unified_features import get_all_market_keys, get_period_markets
 
 
 @dataclass(frozen=True)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import Dict, Optional
 
-from src.modeling.period_features import PERIOD_SCALING
+from src.modeling.unified_features import PERIOD_SCALING
 
 
 def _normal_cdf(x: float, mean: float, std: float) -> float:

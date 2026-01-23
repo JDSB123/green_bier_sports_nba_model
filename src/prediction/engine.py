@@ -46,7 +46,7 @@ from src.prediction.feature_validation import (
     get_feature_mode,
 )
 from src.prediction.resolution import resolve_total_two_signal
-from src.modeling.period_features import MODEL_CONFIGS
+from src.modeling.unified_features import MODEL_CONFIGS
 from src.config import filter_thresholds
 
 # Import monitoring components (lazy loaded to avoid circular imports)
