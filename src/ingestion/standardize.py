@@ -28,11 +28,16 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from zoneinfo import ZoneInfo
 
 import json
 
 from src.config import get_nba_season
 from src.utils.logging import get_logger
+
+# Central Standard Time - SINGLE SOURCE OF TRUTH for all game times
+CST = ZoneInfo("America/Chicago")
+UTC = ZoneInfo("UTC")
 
 # Import MASTER team name system
 from src.utils.team_names import (
@@ -444,6 +449,50 @@ def is_valid_espn_team_name(team_name: str) -> bool:
     return team_name in ESPN_TEAM_NAMES
 
 
+def to_cst(dt_value) -> Optional[datetime]:
+    """
+    Convert any datetime to CST (Central Standard Time).
+    
+    CRITICAL: All game times must be converted to CST for consistent date matching.
+    The Odds API and API-Basketball return times in UTC, which can cause
+    games to appear on the wrong date without conversion.
+    
+    Args:
+        dt_value: datetime object, ISO string, or None
+        
+    Returns:
+        datetime in CST timezone (timezone-aware), or None if conversion fails
+    """
+    if dt_value is None:
+        return None
+    
+    # Parse string to datetime
+    if isinstance(dt_value, str):
+        try:
+            # Handle ISO format with Z suffix (UTC)
+            if dt_value.endswith("Z"):
+                dt_value = dt_value[:-1] + "+00:00"
+            
+            # Parse ISO format
+            parsed = datetime.fromisoformat(dt_value)
+            
+            # If no timezone, assume UTC (API default)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=UTC)
+            
+            dt_value = parsed
+        except (ValueError, TypeError):
+            return None
+    
+    # Convert to CST
+    if isinstance(dt_value, datetime):
+        if dt_value.tzinfo is None:
+            dt_value = dt_value.replace(tzinfo=UTC)
+        return dt_value.astimezone(CST)
+    
+    return None
+
+
 def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_failure: bool = False) -> Tuple[str, bool]:
     """
     Normalize team name from any source to standard format.
@@ -734,25 +783,31 @@ def standardize_game_data(
         if key not in ["away_team", "home_team"]:
             result[key] = value
 
-    # Normalize date if present
+    # Normalize date if present - CRITICAL: Convert to CST before extracting date
+    # The Odds API returns UTC times, which can cause date mismatches
+    # Example: A 10pm CST game is 4am UTC the NEXT day
     if "date" in result or "commence_time" in result or "start_time" in result:
         date_key = "date" if "date" in result else (
             "commence_time" if "commence_time" in result else "start_time")
         date_value = result.get(date_key)
         if date_value:
             try:
-                if isinstance(date_value, str):
-                    # Try parsing ISO format
-                    if "T" in date_value or "Z" in date_value:
-                        dt = datetime.fromisoformat(
-                            date_value.replace("Z", "+00:00"))
+                # Check if this is a date-only string (no time component)
+                # Date-only strings should be treated as local dates, not UTC midnight
+                if isinstance(date_value, str) and len(date_value) == 10 and date_value[4] == "-" and date_value[7] == "-":
+                    # Pure date string like "2025-01-15" - treat as local CST date
+                    result["date"] = date_value
+                    result["season"] = get_nba_season(
+                        datetime.strptime(date_value, "%Y-%m-%d").date())
+                else:
+                    # Full datetime - convert to CST first, then extract date
+                    cst_dt = to_cst(date_value)
+                    if cst_dt:
+                        result["date"] = cst_dt.date().isoformat()
+                        result["commence_time_cst"] = cst_dt.isoformat()
+                        result["season"] = get_nba_season(cst_dt.date())
                     else:
-                        dt = datetime.strptime(date_value, "%Y-%m-%d")
-                    result["date"] = dt.date().isoformat()
-                    result["season"] = get_nba_season(dt.date())
-                elif isinstance(date_value, datetime):
-                    result["date"] = date_value.date().isoformat()
-                    result["season"] = get_nba_season(date_value.date())
+                        logger.warning(f"Could not convert date to CST: {date_value}")
             except Exception as e:
                 logger.warning(f"Error normalizing date '{date_value}': {e}")
 
