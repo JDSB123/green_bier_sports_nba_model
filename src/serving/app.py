@@ -1430,8 +1430,12 @@ async def get_executive_summary(
 
 @app.get("/teams/outgoing")
 @app.get("/teams/outgoing/")
-async def teams_outgoing_get():
-    """Allow GET for Teams validation pings; instruct to use POST for real calls."""
+async def teams_outgoing_get(request: Request, validationToken: Optional[str] = Query(None)):
+    """Handle Teams validation pings (echo validationToken) and basic reachability."""
+    # Teams sends a GET with ?validationToken=... during setup; must echo it as plain text.
+    if validationToken:
+        return Response(content=validationToken, media_type="text/plain")
+
     return JSONResponse(status_code=200, content={"text": "Teams webhook is reachable. Use POST for commands."})
 
 
