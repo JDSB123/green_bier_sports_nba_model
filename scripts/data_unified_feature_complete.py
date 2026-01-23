@@ -14,7 +14,7 @@ from src.modeling.team_factors import (
     get_timezone_difference,
     calculate_travel_fatigue,
 )
-from src.data.standardization import standardize_team_name, generate_match_key
+from src.data import standardize_team_name, generate_match_key
 
 import sys
 from pathlib import Path

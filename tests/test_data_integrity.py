@@ -225,7 +225,7 @@ class TestDateCanonicalization:
     
     def test_utc_to_cst_late_night_game(self):
         """Late night CST games from UTC should have correct date."""
-        from src.data.standardization import to_cst
+        from src.data import to_cst
         from zoneinfo import ZoneInfo
         
         CST = ZoneInfo("America/Chicago")
@@ -242,7 +242,7 @@ class TestDateCanonicalization:
     
     def test_afternoon_game_same_date(self):
         """Afternoon CST games should have same date in UTC and CST."""
-        from src.data.standardization import to_cst
+        from src.data import to_cst
         
         # 2pm CST on Jan 15 = 8pm UTC on Jan 15
         utc_time = "2025-01-15T20:00:00Z"
@@ -279,7 +279,7 @@ class TestTeamCanonicalization:
     
     def test_all_30_teams_normalize(self):
         """All 30 NBA team variants should normalize correctly."""
-        from src.data.standardization import standardize_team_name
+        from src.data import standardize_team_name
         
         # Sample variants for each team
         team_variants = {
@@ -297,7 +297,7 @@ class TestTeamCanonicalization:
     
     def test_team_name_consistency_across_modules(self):
         """Team names should be consistent across standardization modules."""
-        from src.data.standardization import standardize_team_name as data_std
+        from src.data import standardize_team_name as data_std
         from src.ingestion.standardize import normalize_team_to_espn as ingestion_std
         
         test_cases = ["LAL", "lakers", "Los Angeles Lakers"]
@@ -311,7 +311,7 @@ class TestTeamCanonicalization:
     
     def test_match_key_generation_deterministic(self):
         """Match keys should be deterministic for the same game."""
-        from src.data.standardization import generate_match_key
+        from src.data import generate_match_key
         
         # Same game, different variant representations
         key1 = generate_match_key("2025-01-15", "LAL", "BOS", source_is_utc=False)

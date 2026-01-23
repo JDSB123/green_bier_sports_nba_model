@@ -13,7 +13,7 @@ This ensures we have data for ALL games 2023+.
 """
 from __future__ import annotations
 from src.utils.logging import get_logger
-from src.data.standardization import (
+from src.data import (
     standardize_team_name,
     generate_match_key,
     CST,

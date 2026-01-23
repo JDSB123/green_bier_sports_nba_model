@@ -1,14 +1,14 @@
 """
-Tests for src/data/standardization.py - THE SINGLE SOURCE OF TRUTH for data normalization.
+Tests for data standardization via src/data module.
 
 These tests ensure all 30 NBA teams and timezone conversions work correctly.
-Coverage target: 100% of src/data/standardization.py
+The canonical implementation is in src/ingestion/standardize.py.
 """
 import pytest
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from src.data.standardization import (
+from src.data import (
     standardize_team_name,
     to_cst,
     to_cst_local,
@@ -18,9 +18,10 @@ from src.data.standardization import (
     standardize_game_record,
     CST,
     UTC,
-    ABBREV_TO_FULL,
-    _CANONICAL_TO_FULL,
 )
+
+# For backwards compatibility tests, import from ingestion
+from src.utils.team_names import CANONICAL_NAMES
 
 
 class TestTeamNameStandardization:
@@ -346,13 +347,13 @@ class TestCanonicalTeamNames:
 
     def test_returns_all_30_teams(self):
         """Should return all 30 NBA teams."""
-        teams = list(_CANONICAL_TO_FULL.values())
+        teams = list(CANONICAL_NAMES.values())
         
         assert len(teams) == 30
 
     def test_returns_full_names(self):
         """Should return full team names."""
-        teams = list(_CANONICAL_TO_FULL.values())
+        teams = list(CANONICAL_NAMES.values())
         
         assert "Los Angeles Lakers" in teams
         assert "Boston Celtics" in teams
@@ -364,21 +365,20 @@ class TestDataIntegrity:
 
     def test_all_canonical_ids_have_full_names(self):
         """Every canonical ID should map to a full name."""
-        for canonical_id in _CANONICAL_TO_FULL:
-            assert _CANONICAL_TO_FULL[canonical_id] is not None
-            assert len(_CANONICAL_TO_FULL[canonical_id]) > 3
+        for canonical_id in CANONICAL_NAMES:
+            assert CANONICAL_NAMES[canonical_id] is not None
+            assert len(CANONICAL_NAMES[canonical_id]) > 3
 
     def test_no_duplicate_full_names(self):
         """Full names should be unique."""
-        full_names = list(ABBREV_TO_FULL.values())
+        full_names = list(CANONICAL_NAMES.values())
         unique_names = set(full_names)
         
-        # Full names can map from multiple abbreviations
+        # Full names should be unique (30 NBA teams)
         assert len(unique_names) == 30  # 30 NBA teams
 
-    def test_abbrev_to_full_consistency(self):
-        """All abbreviations should map to valid full names."""
-        valid_names = set(_CANONICAL_TO_FULL.values())
-        
-        for abbrev, full_name in ABBREV_TO_FULL.items():
-            assert full_name in valid_names, f"{abbrev} maps to invalid name: {full_name}"
+    def test_standardize_team_name_consistency(self):
+        """All canonical names should round-trip through standardize_team_name."""
+        for full_name in CANONICAL_NAMES.values():
+            result = standardize_team_name(full_name)
+            assert result == full_name, f"{full_name} doesn't round-trip: got {result}"

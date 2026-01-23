@@ -870,3 +870,47 @@ def match_game_to_espn_schedule(
                 return espn_game
 
     return None
+
+
+# =============================================================================
+# MATCH KEY GENERATION
+# =============================================================================
+
+def generate_match_key(
+    game_date,
+    home_team: str,
+    away_team: str,
+    source_is_utc: bool = True,
+) -> str:
+    """
+    Generate canonical match key for game identification.
+
+    SINGLE SOURCE OF TRUTH for match key generation.
+    All data sources MUST use this function for game matching.
+
+    Format: "YYYY-MM-DD_home team name_away team name"
+    - Date in CST
+    - Team names lowercase, standardized
+    - Home team before away team (consistent ordering)
+
+    Args:
+        game_date: Game datetime (converted to CST date)
+        home_team: Home team name (any variant)
+        away_team: Away team name (any variant)
+        source_is_utc: If True (default), datetime is UTC. If False, already local.
+
+    Returns:
+        Canonical match key string
+    """
+    # Convert to CST date
+    cst_dt = to_cst(game_date)
+    if cst_dt:
+        date_str = cst_dt.strftime("%Y-%m-%d")
+    else:
+        date_str = str(game_date)[:10] if game_date else "unknown"
+
+    # Standardize team names
+    home_normalized, _ = normalize_team_to_espn(home_team, source="match_key")
+    away_normalized, _ = normalize_team_to_espn(away_team, source="match_key")
+
+    return f"{date_str}_{home_normalized.lower()}_{away_normalized.lower()}"
