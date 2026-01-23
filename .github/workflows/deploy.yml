@@ -119,3 +119,4 @@ jobs:
           sleep 30
           FQDN=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           curl -sf "https://$FQDN/health" && echo "✓ Health check passed"
+# OIDC test
