@@ -9,6 +9,7 @@ from src.prediction import UnifiedPredictionEngine
 from src.features.rich_features import RichFeatureBuilder
 from src.ingestion.betting_splits import fetch_public_betting_splits
 from src.ingestion import the_odds
+from src.ingestion.standardize import to_cst, CST, UTC
 from src.config import settings
 import sys
 import numpy as np
@@ -40,9 +41,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 MODELS_DIR = PROJECT_ROOT / "models" / "production"
 ARCHIVE_DIR = PROJECT_ROOT / "archive"
 
-
-# Central Standard Time
-CST = ZoneInfo("America/Chicago")
+# NOTE: CST and to_cst imported from src.ingestion.standardize (single source of truth)
 
 
 def generate_rationale(
@@ -237,18 +236,6 @@ def generate_rationale(
 def get_cst_now() -> datetime:
     """Get current time in CST."""
     return datetime.now(CST)
-
-
-def parse_utc_time(iso_string: str) -> datetime:
-    """Parse ISO UTC time string to datetime."""
-    if iso_string.endswith("Z"):
-        iso_string = iso_string[:-1] + "+00:00"
-    return datetime.fromisoformat(iso_string).replace(tzinfo=timezone.utc)
-
-
-def to_cst(dt: datetime) -> datetime:
-    """Convert datetime to CST."""
-    return dt.astimezone(CST)
 
 
 def format_cst_time(dt: datetime) -> str:

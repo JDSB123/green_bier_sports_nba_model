@@ -19,11 +19,11 @@ import statistics
 import logging
 
 from src.ingestion import the_odds
+from src.ingestion.standardize import CST, to_cst as _canonical_to_cst
 
 logger = logging.getLogger(__name__)
 
-# Central Standard Time
-CST = ZoneInfo("America/Chicago")
+# NOTE: CST imported from src.ingestion.standardize (single source of truth)
 
 # =============================================================================
 # TEAM RECORDS (ESPN PRIMARY, THE ODDS FALLBACK)
@@ -352,8 +352,8 @@ def parse_utc_time(iso_string: str) -> datetime:
 
 
 def to_cst(dt: datetime) -> datetime:
-    """Convert datetime to CST."""
-    return dt.astimezone(CST)
+    """Convert datetime to CST (uses canonical implementation)."""
+    return _canonical_to_cst(dt)
 
 
 def get_target_date(date_str: str | None = None) -> date:

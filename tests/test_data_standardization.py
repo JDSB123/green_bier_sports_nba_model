@@ -177,18 +177,18 @@ class TestTeamNameStandardization:
         assert standardize_team_name("") == ""
 
     def test_none_input(self):
-        """None should return None."""
-        assert standardize_team_name(None) is None
+        """None should return empty string (fail-safe behavior)."""
+        assert standardize_team_name(None) == ""
 
     def test_whitespace_handling(self):
         """Whitespace should be stripped."""
         assert standardize_team_name("  lal  ") == "Los Angeles Lakers"
         assert standardize_team_name("\tlakers\n") == "Los Angeles Lakers"
 
-    def test_unknown_team_returns_title_case(self):
-        """Unknown teams should return with original capitalization."""
+    def test_unknown_team_returns_empty(self):
+        """Unknown teams should return empty string (fail-safe behavior)."""
         result = standardize_team_name("unknown team")
-        assert result == "unknown team"
+        assert result == ""
 
 
 class TestTimezoneConversion:
@@ -229,13 +229,14 @@ class TestTimezoneConversion:
         assert cst_dt is not None
         assert cst_dt.hour == 22  # 4am UTC = 10pm CST
 
-    def test_to_cst_local_for_us_times(self):
-        """to_cst_local should treat input as already in local US time."""
-        local_dt = datetime(2025, 1, 15, 19, 30, 0)  # 7:30pm local
-        cst_dt = to_cst_local(local_dt)
+    def test_to_cst_local_is_alias_for_to_cst(self):
+        """to_cst_local is now an alias for to_cst - treats naive as UTC."""
+        naive_dt = datetime(2025, 1, 15, 19, 30, 0)  # Naive = treated as UTC
+        cst_dt = to_cst_local(naive_dt)
 
         assert cst_dt is not None
-        assert cst_dt.hour == 19  # Should stay 7:30pm
+        # 7:30pm UTC = 1:30pm CST (6 hours behind)
+        assert cst_dt.hour == 13
         assert cst_dt.minute == 30
 
     def test_to_cst_none_input(self):
@@ -320,7 +321,7 @@ class TestGameRecordStandardization:
             "spread": -3.5,
         }
 
-        result = standardize_game_record(record)
+        result = standardize_game_record(record, source="test")
 
         assert result["home_team"] == "Los Angeles Lakers"
         assert result["away_team"] == "Boston Celtics"
@@ -338,7 +339,7 @@ class TestGameRecordStandardization:
             "custom_field": "preserved",
         }
 
-        result = standardize_game_record(record)
+        result = standardize_game_record(record, source="test")
 
         assert result["spread"] == -3.5
         assert result["total"] == 220.5
