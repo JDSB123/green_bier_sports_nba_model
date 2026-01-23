@@ -1,53 +1,81 @@
 # Secrets Setup Checklist
 
-**Status: Codespace secrets are now set locally. Azure Key Vault needs manual update.**
-
-## ✅ DONE: Local Codespace Secrets
-
-All required secrets have been written to `.env` and `secrets/` in this Codespace:
-- `THE_ODDS_API_KEY` = 4a0b80471d1ebeeb74c358fa0fcc4a27
-- `API_BASKETBALL_KEY` = eea8757fae3c507add2df14800bae25f
-- `ACTION_NETWORK_USERNAME` = jb@greenbiercapital.com
-- `ACTION_NETWORK_PASSWORD` = 6nRC!d!Axt3!4nKQ
-
-**Validation passed.** These work immediately in this Codespace.
+**Last Updated:** 2026-01-23  
+**Status:** Cleaned and updated - OIDC authentication enabled
 
 ---
 
-## 🔲 TODO: GitHub Codespaces Secrets (Optional but Recommended)
+## ✅ Required GitHub Actions Secrets
 
-For **persistent, automatic sync** across all future Codespaces, add these secrets at:
-**GitHub → Settings → Codespaces → Repository secrets for `JDSB123/green_bier_sports_nba_model`**
+For CI/CD deployment, configure these in **GitHub → Settings → Secrets and variables → Actions**:
 
-| Secret Name | Value |
-|-------------|-------|
-| `THE_ODDS_API_KEY` | `4a0b80471d1ebeeb74c358fa0fcc4a27` |
-| `API_BASKETBALL_KEY` | `eea8757fae3c507add2df14800bae25f` |
-| `ACTION_NETWORK_USERNAME` | `jb@greenbiercapital.com` |
-| `ACTION_NETWORK_PASSWORD` | `6nRC!d!Axt3!4nKQ` |
+### Core API Keys
+| Secret Name | Description | Required |
+|-------------|-------------|----------|
+| `THE_ODDS_API_KEY` | The Odds API key | ✅ Yes |
+| `API_BASKETBALL_KEY` | API-Basketball key | ✅ Yes |
 
-**Why:** Post-create auto-syncs Codespaces secrets → `.env`/`secrets/`. Without this, you'll need to recopy secrets manually when creating new Codespaces.
+### Azure Authentication (OIDC)
+| Secret Name | Description | Required |
+|-------------|-------------|----------|
+| `AZURE_CLIENT_ID` | Azure Service Principal Client ID | ✅ Yes |
+| `AZURE_TENANT_ID` | Azure Tenant ID | ✅ Yes |
+| `AZURE_SUBSCRIPTION_ID` | Azure Subscription ID | ✅ Yes |
+
+**Note:** Legacy `AZURE_CREDENTIALS` secret is no longer used. All workflows now use OIDC authentication.
 
 ---
 
-## 🔲 TODO: Azure Key Vault Secrets (Production)
+## 🔲 Optional GitHub Actions Secrets
 
-**Manual action required:** The Azure CLI in this Codespace doesn't have Key Vault write permissions.
+### Action Network (Not Currently Used)
+| Secret Name | Description |
+|-------------|-------------|
+| `ACTION_NETWORK_USERNAME` | Action Network username (premium data source) |
+| `ACTION_NETWORK_PASSWORD` | Action Network password (premium data source) |
 
-### Option 1: Azure Portal (Easiest)
-1. Go to: https://portal.azure.com → Key vaults → `nbagbs-keyvault`
-2. Under "Secrets", add/update:
-   - `THE-ODDS-API-KEY` = `4a0b80471d1ebeeb74c358fa0fcc4a27`
-   - `API-BASKETBALL-KEY` = `eea8757fae3c507add2df14800bae25f`
-   - `ACTION-NETWORK-USERNAME` = `jb@greenbiercapital.com`
-   - `ACTION-NETWORK-PASSWORD` = `6nRC!d!Axt3!4nKQ`
+**Status:** These are referenced in code but not actively used. Only set if you plan to enable Action Network integration.
 
-### Option 2: Azure CLI (if you have local Azure CLI with Key Vault contributor role)
+---
+
+## 🔲 Local Development Secrets
+
+For local Docker Compose and development:
+
+### Option 1: Create from Template
 ```bash
-az keyvault secret set --vault-name nbagbs-keyvault --name THE-ODDS-API-KEY --value '4a0b80471d1ebeeb74c358fa0fcc4a27'
-az keyvault secret set --vault-name nbagbs-keyvault --name API-BASKETBALL-KEY --value 'eea8757fae3c507add2df14800bae25f'
-az keyvault secret set --vault-name nbagbs-keyvault --name ACTION-NETWORK-USERNAME --value 'jb@greenbiercapital.com'
-az keyvault secret set --vault-name nbagbs-keyvault --name ACTION-NETWORK-PASSWORD --value '6nRC!d!Axt3!4nKQ'
+cp .env.example .env
+# Edit .env with your actual values
+```
+
+### Option 2: Use Docker Secrets
+```bash
+python scripts/manage_secrets.py create-from-env
+```
+
+---
+
+## 🔲 Azure Key Vault Secrets (Production)
+
+**Container App Runtime:** The production Container App reads secrets from Azure Key Vault.
+
+### Required Secrets
+1. Go to: https://portal.azure.com → Key vaults → `nbagbs-keyvault`
+2. Under "Secrets", ensure these exist:
+   - `THE-ODDS-API-KEY` (hyphenated, as Key Vault requires)
+   - `API-BASKETBALL-KEY` (hyphenated, as Key Vault requires)
+
+### Via Azure CLI (if you have permissions)
+```bash
+az keyvault secret set --vault-name nbagbs-keyvault --name THE-ODDS-API-KEY --value 'your_key_here'
+az keyvault secret set --vault-name nbagbs-keyvault --name API-BASKETBALL-KEY --value 'your_key_here'
+```
+
+### Verification
+After updating Key Vault, Container App will automatically pick up the new values (may require restart):
+```bash
+az containerapp restart -n nba-gbsv-api -g nba-gbsv-model-rg
+```
 ```
 
 ### Verify Container App References Key Vault

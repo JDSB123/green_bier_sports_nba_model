@@ -1477,7 +1477,7 @@ async def teams_outgoing_get(request: Request, validationToken: Optional[str] = 
 @limiter.limit("30/minute")
 async def teams_outgoing_webhook(request: Request):
     """Teams outgoing webhook handler (ACA-hosted).
-    
+
     Uses in-memory cache (5-min TTL) for fast responses.
     Teams requires response within 5 seconds.
     """
@@ -1503,7 +1503,7 @@ async def teams_outgoing_webhook(request: Request):
     # Try cache first for fast response (Teams has 5-second timeout)
     cache_key = parsed["date"]
     cached_data = _get_cached_picks(cache_key)
-    
+
     if cached_data is not None:
         logger.info(f"Teams webhook: serving cached picks for {cache_key}")
         data = cached_data

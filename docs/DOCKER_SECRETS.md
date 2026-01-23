@@ -94,15 +94,14 @@ python scripts/manage_secrets.py validate
 | `THE_ODDS_API_KEY` | The Odds API key | ✅ Yes |
 | `API_BASKETBALL_KEY` | API-Basketball key | ✅ Yes |
 
-### Optional Secrets
+### Optional Secrets (Not Currently Used)
 
-| Secret Name | Description | Required |
-|-------------|-------------|----------|
-| `SERVICE_API_KEY` | API authentication key | ❌ No |
-| `ACTION_NETWORK_USERNAME` | Action Network username | ❌ No |
-| `ACTION_NETWORK_PASSWORD` | Action Network password | ❌ No |
-| `BETSAPI_KEY` | BetsAPI key | ❌ No |
-| `KAGGLE_API_TOKEN` | Kaggle API token | ❌ No |
+| Secret Name | Description | Status |
+|-------------|-------------|--------|
+| `ACTION_NETWORK_USERNAME` | Action Network username | ⚠️ Feature not implemented |
+| `ACTION_NETWORK_PASSWORD` | Action Network password | ⚠️ Feature not implemented |
+
+**Note:** Action Network integration code exists but is not actively used in production. Only configure these if you plan to enable this feature.
 
 ---
 
