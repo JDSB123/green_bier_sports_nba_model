@@ -1536,7 +1536,10 @@ async def teams_workflow_get(
         matchup = p.get("matchup", "Unknown")
         market = p.get("market", "")
         pick = p.get("pick", "")
-        edge = p.get("edge", 0)
+        try:
+            edge = float(p.get("edge", 0) or 0)
+        except (TypeError, ValueError):
+            edge = 0.0
         rating = int(p.get("fire_rating", 0) or 0)
         fires = fire_emoji.get(rating, "")
         
