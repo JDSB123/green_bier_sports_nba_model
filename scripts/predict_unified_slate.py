@@ -52,9 +52,11 @@ OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
 ARCHIVE_DIR = PROJECT_ROOT / "archive" / "slate_outputs"
 CST = ZoneInfo("America/Chicago")
 
-# API URL from environment - no hardcoded ports
+# API URL - PRODUCTION Azure Container App by default
+# Override with NBA_API_URL env var for local development
+AZURE_PRODUCTION_URL = "https://nba-gbsv-api.livelycoast-b48c3cb0.eastus.azurecontainerapps.io"
 API_PORT = os.getenv("NBA_API_PORT", "8090")
-API_URL = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
+API_URL = os.getenv("NBA_API_URL", AZURE_PRODUCTION_URL)
 
 
 def http_get_json(url: str, params: dict | None = None, timeout: int = 30) -> dict:
@@ -656,16 +658,15 @@ def fetch_and_display_slate(date_str: str, matchup_filter: str = None, use_split
                 timeout=120,
             )
         except Exception as e:
-            if use_splits:
-                log("[WARN] Slate request failed with use_splits=true; retrying with use_splits=false")
-                data = http_get_json(
-                    f"{API_URL}/slate/{date_str}/comprehensive",
-                    params={"use_splits": "false"},
-                    timeout=120,
-                )
-                use_splits = False
-            else:
-                raise e
+            # BETTING SPLITS ARE REQUIRED FOR PRODUCTION
+            # Do NOT silently fall back to no splits
+            log("[ERROR] Slate request failed. Betting splits are REQUIRED for production predictions.")
+            log(f"[ERROR] Exception: {e}")
+            raise RuntimeError(
+                f"Failed to fetch slate with use_splits={use_splits}. "
+                f"Betting splits are REQUIRED for production predictions. "
+                f"Error: {e}"
+            )
         api_version = data.get("version")
         api_date = data.get("date")
         data_fetched_at_cst = data.get("data_fetched_at_cst")

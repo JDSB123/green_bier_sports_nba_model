@@ -61,10 +61,10 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 - `tests/` — pytest test suite
 - `docs/` — Full architecture and operational documentation
 - `azure/teams-app/` — Teams app manifest (optional)
-- `models/production/` — Trained model files (large, usually git-lfs)
-- `data/` — Raw and processed data
-- `Dockerfile` / `Dockerfile.backtest` / `Dockerfile.combined` — Container definitions
-- `docker-compose.yml` / `docker-compose.backtest.yml` — Service orchestration
+- `models/production/` — Trained model files (4 models: 1h_spread, 1h_total, fg_spread, fg_total)
+- `data/` — Processed training data
+- `Dockerfile` / `Dockerfile.combined` — Container definitions
+- `docker-compose.yml` — Service orchestration
 - `pyproject.toml` / `requirements.txt` — Python dependencies
 
 **Note:** All API endpoints (including website integration, Teams webhook, and CSV downloads) are served directly from the Container App via `src/serving/app.py`. No separate Azure Function App is used.
@@ -78,10 +78,9 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 
 ## **Build / Run Commands (Local Development)**
 - Python environment: `python -m venv .venv && .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt`
-- Run predictions: `python scripts/predict_unified_full_game.py` or `python scripts/predict_unified_slate.py`
-- Run backtests (Docker): `docker compose -f docker-compose.backtest.yml up backtest-full`
+- Run predictions: `python scripts/predict_unified_slate.py` (main entry point)
 - Run unit tests: `pytest tests -v`
-- VS Code tasks available for: Train Models, Generate Predictions, Collect Odds Data, Run Backtest, Run Tests
+- VS Code tasks available for: Train Models, Generate Predictions, Collect Odds Data, Run Tests
 
 ## **Important Documentation Files**
 - `README.md` — Quick start, API usage, architecture overview
@@ -109,6 +108,6 @@ AZURE CONTAINER APP (nba-gbsv-api) ← PRODUCTION
 - **Always push to GitHub first** before any Docker/Azure operations
 - Never hardcode secrets in code or `.env` files; use Key Vault only
 - When modifying API responses or data structures, update relevant docs
-- Preserve the 9-market structure (Q1/1H/FG × spread/total/moneyline)
+- Preserve the 4-market structure (1H/FG × spread/total)
 - Keep the Docker Compose setup intact; modifications should be backward compatible
 - Document any new scripts in `scripts/README.md`

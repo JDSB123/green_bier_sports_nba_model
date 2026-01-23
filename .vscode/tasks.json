@@ -51,20 +51,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath}",
       "args": [
-        "scripts/run_the_odds_tomorrow.py"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Run Backtest",
-      "type": "shell",
-      "command": "${command:python.interpreterPath}",
-      "args": [
-        "scripts/backtest.py"
+        "scripts/data_unified_fetch_the_odds.py"
       ],
       "group": "build",
       "presentation": {
