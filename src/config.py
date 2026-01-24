@@ -68,6 +68,14 @@ def _env_optional(key: str, default: Optional[str] = None) -> Optional[str]:
     return os.getenv(key, default)
 
 
+def _env_bool_optional(key: str, default: bool = False) -> bool:
+    """Resolve optional boolean environment variable."""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def _env_float_required(key: str, default: float = None) -> float:
     """Resolve required float environment variable with fallback."""
     value = os.getenv(key)
@@ -205,6 +213,31 @@ class Settings:
     data_processed_dir: str = field(
         default_factory=lambda: _env_optional(
             "DATA_PROCESSED_DIR", "data/processed")
+    )
+
+    # Models directory (single source of truth)
+    # Production container should set MODELS_DIR=/app/models/production
+    models_dir: str = field(
+        default_factory=lambda: _env_optional(
+            "MODELS_DIR", str(PROJECT_ROOT / "models" / "production")
+        )
+    )
+
+    # STRICT LIVE DATA GUARDS (default off for tests/local)
+    require_action_network_splits: bool = field(
+        default_factory=lambda: _env_bool_optional(
+            "REQUIRE_ACTION_NETWORK_SPLITS", False
+        )
+    )
+    require_real_splits: bool = field(
+        default_factory=lambda: _env_bool_optional(
+            "REQUIRE_REAL_SPLITS", False
+        )
+    )
+    require_injury_fetch_success: bool = field(
+        default_factory=lambda: _env_bool_optional(
+            "REQUIRE_INJURY_FETCH_SUCCESS", False
+        )
     )
 
 

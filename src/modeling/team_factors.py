@@ -1,22 +1,15 @@
-"""
-Team-specific factors for NBA prediction models.
+"""src.modeling.team_factors
 
-Contains:
-- Home court advantage by team (HCA)
-- Arena locations for travel distance calculations
-- Time zone data
-- Historical performance factors
+Backwards-compatible shim.
 
-Data sourced from:
-- NBA research on home court advantage
-- Arena coordinates from official NBA data
-- Historical performance analysis
+Production runtime code should import from src.utils.team_factors.
+Training/backtest code may still import from src.modeling.team_factors.
 """
+
 from __future__ import annotations
 
-import math
-from typing import Dict, Optional, Tuple
-from src.utils.team_names import normalize_team_name
+from src.utils.team_factors import *  # noqa: F403
+
 
 # Team name normalization is now provided by single source:
 # src.utils.team_names.normalize_team_name (line 63)

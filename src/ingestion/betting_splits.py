@@ -630,7 +630,9 @@ async def scrape_splits_covers(date: Optional[str] = None) -> List[GameSplits]:
 
 async def fetch_public_betting_splits(
     games: List[Dict[str, Any]],
-    source: str = "auto"
+    source: str = "auto",
+    require_action_network: bool = False,
+    require_non_empty: bool = False,
 ) -> Dict[str, GameSplits]:
     """
     Fetch public betting splits for a list of games.
@@ -645,40 +647,52 @@ async def fetch_public_betting_splits(
     splits_dict = {}
 
     if source == "auto":
-        # Try sources in order of preference
-        # Action Network first (best data if credentials available)
-        sources = ["action_network", "the_odds", "sbro", "covers"]
-        for src in sources:
-            try:
-                if src == "action_network":
-                    # Attempt to fetch from Action Network (credentials should be in .env)
-                    splits_list = await fetch_splits_action_network()
-                elif src == "the_odds":
-                    raw_splits = await the_odds.fetch_betting_splits()
-                    if not raw_splits:
+        # STRICT MODE: if Action Network is required, do not silently fall back.
+        if require_action_network:
+            splits_list = await fetch_splits_action_network()
+            if not splits_list:
+                raise RuntimeError(
+                    "STRICT MODE: Action Network returned no betting splits and require_action_network=true"
+                )
+            for splits in splits_list:
+                game_key = f"{splits.away_team}@{splits.home_team}"
+                splits_dict[game_key] = splits
+            logger.info(f"✓ Loaded betting splits from action_network: {len(splits_list)} games")
+        else:
+            # Try sources in order of preference
+            # Action Network first (best data if credentials available)
+            sources = ["action_network", "the_odds", "sbro", "covers"]
+            for src in sources:
+                try:
+                    if src == "action_network":
+                        # Attempt to fetch from Action Network (credentials should be in .env)
+                        splits_list = await fetch_splits_action_network()
+                    elif src == "the_odds":
+                        raw_splits = await the_odds.fetch_betting_splits()
+                        if not raw_splits:
+                            continue
+                        # Convert The Odds API format to GameSplits
+                        splits_list = parse_the_odds_splits(raw_splits)
+                    elif src == "sbro":
+                        splits_list = await fetch_splits_sbro()
+                    elif src == "covers":
+                        splits_list = await scrape_splits_covers()
+                    else:
                         continue
-                    # Convert The Odds API format to GameSplits
-                    splits_list = parse_the_odds_splits(raw_splits)
-                elif src == "sbro":
-                    splits_list = await fetch_splits_sbro()
-                elif src == "covers":
-                    splits_list = await scrape_splits_covers()
-                else:
+
+                    if splits_list:
+                        for splits in splits_list:
+                            game_key = f"{splits.away_team}@{splits.home_team}"
+                            splits_dict[game_key] = splits
+                        logger.info(f"✓ Loaded betting splits from {src}: {len(splits_list)} games")
+                        break
+                except Exception as e:
+                    logger.warning(f"Failed to fetch splits from {src}: {e}")
                     continue
 
-                if splits_list:
-                    for splits in splits_list:
-                        game_key = f"{splits.away_team}@{splits.home_team}"
-                        splits_dict[game_key] = splits
-                    logger.info(f"✓ Loaded betting splits from {src}: {len(splits_list)} games")
-                    break
-            except Exception as e:
-                logger.warning(f"Failed to fetch splits from {src}: {e}")
-                continue
-        
-        # If no real splits, log warning (don't use mock data in production)
-        if not splits_dict:
-            logger.warning("No betting splits available from any source")
+            # If no real splits, log warning (don't use mock data in production)
+            if not splits_dict:
+                logger.warning("No betting splits available from any source")
     else:
         # Use specified source
         if source == "action_network":
@@ -701,6 +715,9 @@ async def fetch_public_betting_splits(
         for splits in splits_list:
             game_key = f"{splits.away_team}@{splits.home_team}"
             splits_dict[game_key] = splits
+
+    if require_non_empty and not splits_dict:
+        raise RuntimeError("STRICT MODE: No betting splits available (require_non_empty=true)")
 
     return splits_dict
 

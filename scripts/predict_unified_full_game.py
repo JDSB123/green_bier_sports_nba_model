@@ -256,6 +256,13 @@ def get_target_date(date_str: str = None) -> datetime.date:
         return datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
+def parse_utc_time(iso_string: str) -> datetime:
+    """Parse ISO UTC time string to datetime."""
+    if iso_string.endswith("Z"):
+        iso_string = iso_string.replace("Z", "+00:00")
+    return datetime.fromisoformat(iso_string)
+
+
 def filter_games_for_date(games: list, target_date: datetime.date) -> list:
     """Filter games to only include those on the target date (in CST)."""
     filtered = []
@@ -703,7 +710,8 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
                 model_str = f"{model_val:.1f}"
                 market_str = f"{market_val:.1f}"
 
-            # Add odds
+            # Add odds (assuming -110 flat for now as we don't predict exact vig)
+            odds = -110
             pick_str += f" ({odds})"
 
             edge_str = f"{edge:+.1f}"

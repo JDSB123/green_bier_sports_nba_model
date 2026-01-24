@@ -242,30 +242,75 @@ class MarketsResponse(BaseModel):
 
 def _models_dir() -> PathLib:
     """
-    Resolve models directory with explicit, non-silent fallback.
+    Resolve models directory from a single configured path.
 
-    Priority:
-    1) data_processed_dir/models (runtime target)
-    2) PROJECT_ROOT/models/production (local source of truth)
+    Single source of truth:
+    - settings.models_dir (env: MODELS_DIR)
 
-    Raise if neither exists.
+    Raise if the configured directory does not exist.
     """
-    primary = PathLib(settings.data_processed_dir) / "models"
-    if primary.exists():
-        return primary
-
-    secondary = PROJECT_ROOT / "models" / "production"
-    if secondary.exists():
-        logger.warning(
-            f"Models directory not found at {primary}. Using local source {secondary}. "
-            f"Ensure models are copied to data/processed/models for deployment."
+    configured = PathLib(getattr(settings, "models_dir", "")).expanduser()
+    if not str(configured).strip():
+        raise RuntimeError(
+            "MODELS_DIR is not configured (settings.models_dir empty). "
+            "Set MODELS_DIR to the production model directory."
         )
-        return secondary
+    if not configured.exists():
+        raise RuntimeError(
+            f"Models directory does not exist: {configured}. "
+            "Ensure the container image includes the model pack at MODELS_DIR."
+        )
+    return configured
 
-    raise RuntimeError(
-        f"No models directory found. Checked: {primary} and {secondary}. "
-        f"Copy trained models to data/processed/models or set data_processed_dir correctly."
-    )
+
+async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Fetch betting splits, enforcing strict Action Network requirements when configured."""
+    require_action_network = bool(getattr(settings, "require_action_network_splits", False))
+    require_real = bool(getattr(settings, "require_real_splits", False))
+
+    if not (require_action_network or require_real):
+        # Non-strict mode: keep existing behavior (best-effort)
+        try:
+            return await fetch_public_betting_splits(games, source="auto")
+        except Exception as e:
+            logger.warning(f"Could not fetch splits: {e}")
+            return {}
+
+    # Strict mode: hard-fail on any splits failure.
+    try:
+        splits = await fetch_public_betting_splits(
+            games,
+            source="auto",
+            require_action_network=require_action_network,
+            require_non_empty=True,
+        )
+    except Exception as e:
+        logger.error(f"STRICT MODE: Failed to fetch required betting splits: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"STRICT MODE: Action Network betting splits unavailable: {e}",
+        )
+
+    # Require splits coverage for every game we are about to process.
+    missing_keys = []
+    for g in games:
+        home_team = g.get("home_team")
+        away_team = g.get("away_team")
+        if home_team and away_team:
+            game_key = f"{away_team}@{home_team}"
+            if game_key not in splits:
+                missing_keys.append(game_key)
+
+    if missing_keys:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "STRICT MODE: Action Network did not provide betting splits for all games. "
+                f"Missing: {missing_keys[:10]}"  # cap payload
+            ),
+        )
+
+    return splits
 
 
 @asynccontextmanager
@@ -922,10 +967,7 @@ async def get_slate_predictions(
     # Fetch splits
     splits_dict = {}
     if use_splits:
-        try:
-            splits_dict = await fetch_public_betting_splits(games, source="auto")
-        except Exception as e:
-            logger.warning(f"Could not fetch splits: {e}")
+        splits_dict = await _fetch_required_splits(games)
 
     # Process slate
     results = []
@@ -1151,8 +1193,7 @@ async def get_executive_summary(
     splits_dict = {}
     if use_splits:
         try:
-            from src.ingestion.betting_splits import fetch_public_betting_splits
-            splits_dict = await fetch_public_betting_splits(games, source="auto")
+            splits_dict = await _fetch_required_splits(games)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
@@ -1882,8 +1923,7 @@ async def get_comprehensive_slate_analysis(
     splits_dict = {}
     if use_splits:
         try:
-            from src.ingestion.betting_splits import fetch_public_betting_splits
-            splits_dict = await fetch_public_betting_splits(games, source="auto")
+            splits_dict = await _fetch_required_splits(games)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
@@ -2079,9 +2119,18 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     app.state.feature_builder.clear_session_cache()
 
     try:
+        betting_splits = None
+        if bool(getattr(settings, "require_action_network_splits", False)) or bool(
+            getattr(settings, "require_real_splits", False)
+        ):
+            games = [{"home_team": req.home_team, "away_team": req.away_team}]
+            splits_dict = await _fetch_required_splits(games)
+            game_key = f"{req.away_team}@{req.home_team}"
+            betting_splits = splits_dict.get(game_key)
+
         # Build features from FRESH data
         features = await app.state.feature_builder.build_game_features(
-            req.home_team, req.away_team
+            req.home_team, req.away_team, betting_splits=betting_splits
         )
 
         # Predict all 4 markets (1H + FG spreads/totals)

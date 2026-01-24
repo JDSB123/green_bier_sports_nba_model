@@ -1,5 +1,6 @@
-"""
-Build rich features from API-Basketball endpoints.
+"""src.features.rich_features
+
+Build rich features from live API-Basketball endpoints.
 
 FRESH DATA ONLY - No file caching, no silent fallbacks.
 
@@ -16,7 +17,7 @@ records from the SAME source (The Odds API).
 
 See src/utils/slate_analysis.py for unified data source implementation.
 
-Inspired by proven NBA models (FiveThirtyEight, DRatings, Cleaning the Glass):
+Feature design inspiration (high level):
 - Tempo-free efficiency ratings (ORtg/DRtg)
 - Pace adjustment for matchups
 - Home court advantage (~2.5 pts / ~70 Elo)
@@ -46,7 +47,7 @@ import pandas as pd
 from src.config import settings
 from src.ingestion import api_basketball
 from src.ingestion.api_basketball import normalize_standings_response
-from src.modeling.team_factors import (
+from src.utils.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
     calculate_travel_fatigue,
@@ -583,9 +584,23 @@ class RichFeatureBuilder:
 
             if not injuries:
                 print(
-                    "[INJURIES] No injury data available (this is OK - not all players are injured)")
-                self._injuries_cache = None
-                return None
+                    "[INJURIES] No injuries returned (fetch succeeded; no players reported out)"
+                )
+                # Distinguish "fetch succeeded but zero injuries" from "fetch failed".
+                self._injuries_cache = pd.DataFrame(
+                    columns=[
+                        "player_id",
+                        "player_name",
+                        "team",
+                        "status",
+                        "injury_type",
+                        "ppg",
+                        "minutes_per_game",
+                        "usage_rate",
+                        "source",
+                    ]
+                )
+                return self._injuries_cache
 
             # Enrich with player stats
             injuries = await enrich_injuries_with_stats(injuries)
@@ -612,6 +627,10 @@ class RichFeatureBuilder:
             return self._injuries_cache
 
         except Exception as e:
+            if getattr(settings, "require_injury_fetch_success", False):
+                raise ValueError(
+                    f"STRICT MODE: Injury fetch failed and REQUIRE_INJURY_FETCH_SUCCESS=true: {e}"
+                )
             print(
                 f"[INJURIES] Error fetching injuries: {e} - continuing without injury data")
             self._injuries_cache = None
@@ -739,7 +758,7 @@ class RichFeatureBuilder:
             valid_h2h_games = 0
 
         # ============================================================
-        # RECENT FORM (FiveThirtyEight-style rolling performance)
+        # RECENT FORM (rolling performance)
         # ============================================================
         # Calculate last 5 and last 10 game performance
         # This captures "hot" and "cold" streaks
@@ -874,7 +893,7 @@ class RichFeatureBuilder:
         away_form = calc_recent_form(away_recent, away_id, game_date)
 
         # ============================================================
-        # REST/FATIGUE ADJUSTMENT (FiveThirtyEight uses this)
+        # REST/FATIGUE ADJUSTMENT
         # ============================================================
         # Back-to-back (0-1 days rest) = -2 to -3 pts penalty
         # Well rested (3+ days) = slight bonus
@@ -1121,7 +1140,7 @@ class RichFeatureBuilder:
             "h2h_margin": h2h_margin,
             "h2h_games": valid_h2h_games,
 
-            # Recent form (FiveThirtyEight-style)
+            # Recent form (rolling)
             "home_l5_win_pct": home_form["l5_win_pct"],
             "away_l5_win_pct": away_form["l5_win_pct"],
             "home_l5_margin": home_form["l5_margin"],
@@ -1347,15 +1366,37 @@ class RichFeatureBuilder:
 
         # Add betting splits features if available
         if betting_splits:
+            if getattr(settings, "require_action_network_splits", False) and getattr(
+                betting_splits, "source", None
+            ) != "action_network":
+                raise ValueError(
+                    "STRICT MODE: Betting splits must come from Action Network when "
+                    "REQUIRE_ACTION_NETWORK_SPLITS=true"
+                )
             from src.ingestion.betting_splits import splits_to_features
             splits_features = splits_to_features(betting_splits)
             # Ensure explicit indicator is always present when splits are real
             if "has_real_splits" not in splits_features:
                 splits_features["has_real_splits"] = 1
+            if getattr(settings, "require_real_splits", False) and splits_features.get(
+                "has_real_splits", 0
+            ) != 1:
+                raise ValueError(
+                    "STRICT MODE: Action Network splits returned default/empty values "
+                    "(has_real_splits=0) and REQUIRE_REAL_SPLITS=true"
+                )
             features.update(splits_features)
         else:
+            if getattr(settings, "require_action_network_splits", False) or getattr(
+                settings, "require_real_splits", False
+            ):
+                raise ValueError(
+                    "STRICT MODE: Missing betting splits and strict splits are required "
+                    "(REQUIRE_ACTION_NETWORK_SPLITS/REQUIRE_REAL_SPLITS)."
+                )
+
             # No splits available - use defaults so model features are complete
-            # The model expects these 7 features to exist (trained with them)
+            # (Legacy behavior for non-strict environments)
             features["has_real_splits"] = 0
             features["spread_public_home_pct"] = 0.0
             features["spread_ticket_money_diff"] = 0.0
