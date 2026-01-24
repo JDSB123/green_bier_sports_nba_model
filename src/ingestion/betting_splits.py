@@ -190,6 +190,11 @@ class SharpSquareComparison:
     updated_at: Optional[dt.datetime] = None
 
 
+class SharpDataUnavailableError(Exception):
+    """Raised when Pinnacle/sharp book data cannot be fetched. HARD FAILURE - no degradation."""
+    pass
+
+
 async def fetch_sharp_square_lines(
     sport: str = "basketball_nba",
 ) -> List[SharpSquareComparison]:
@@ -197,6 +202,12 @@ async def fetch_sharp_square_lines(
     Fetch odds from The-Odds-API and compare Pinnacle (sharp) vs DraftKings/FanDuel (square).
 
     Returns list of SharpSquareComparison showing where sharp books have different lines.
+
+    HARD FAILURE MODE: Raises SharpDataUnavailableError if:
+    - API key not configured
+    - API request fails
+    - No games returned
+    - API returns data but Pinnacle not present for ANY game
 
     This uses The-Odds-API because:
     - It includes Pinnacle (sharp book) which Action Network doesn't
@@ -208,9 +219,12 @@ async def fetch_sharp_square_lines(
 
     comparisons = []
 
+    # HARD FAILURE: No API key = can't proceed
     if not settings.the_odds_api_key:
-        logger.warning("The-Odds-API key not configured - cannot fetch sharp/square comparison")
-        return comparisons
+        raise SharpDataUnavailableError(
+            "CRITICAL: The-Odds-API key not configured. "
+            "Cannot fetch Pinnacle (sharp) data. Model cannot run without sharp book data."
+        )
 
     url = f"{settings.the_odds_base_url}/sports/{sport}/odds"
     params = {
@@ -220,120 +234,159 @@ async def fetch_sharp_square_lines(
         "oddsFormat": "american",
     }
 
+    # HARD FAILURE: HTTP errors are not recovered from
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(url, params=params)
             resp.raise_for_status()
             data = resp.json()
-
-        logger.info(f"Fetched {len(data)} games for sharp/square comparison")
-
-        for game in data:
-            home_raw = game.get("home_team", "")
-            away_raw = game.get("away_team", "")
-
-            home_team, home_valid = normalize_team_to_espn(home_raw, source="the_odds")
-            away_team, away_valid = normalize_team_to_espn(away_raw, source="the_odds")
-
-            if not home_valid or not away_valid:
-                continue
-
-            # Collect lines from sharp and square books
-            sharp_spreads = []
-            square_spreads = []
-            sharp_totals = []
-            square_totals = []
-            sharp_book_found = None
-            square_books_found = []
-
-            for bm in game.get("bookmakers", []):
-                book_key = bm.get("key", "").lower()
-
-                for market in bm.get("markets", []):
-                    market_key = market.get("key")
-                    outcomes = market.get("outcomes", [])
-
-                    if market_key == "spreads":
-                        # Find home team spread
-                        home_spread = None
-                        for outcome in outcomes:
-                            if outcome.get("name") == game.get("home_team"):
-                                home_spread = outcome.get("point")
-                                break
-
-                        if home_spread is not None:
-                            if book_key in SHARP_BOOKS:
-                                sharp_spreads.append(home_spread)
-                                sharp_book_found = book_key
-                            elif book_key in SQUARE_BOOKS:
-                                square_spreads.append(home_spread)
-                                if book_key not in square_books_found:
-                                    square_books_found.append(book_key)
-
-                    elif market_key == "totals":
-                        # Find total line
-                        total_line = None
-                        for outcome in outcomes:
-                            if outcome.get("name") == "Over":
-                                total_line = outcome.get("point")
-                                break
-
-                        if total_line is not None:
-                            if book_key in SHARP_BOOKS:
-                                sharp_totals.append(total_line)
-                            elif book_key in SQUARE_BOOKS:
-                                square_totals.append(total_line)
-
-            # Calculate averages and differences - NO THRESHOLDS, raw values only
-            sharp_spread = sharp_spreads[0] if sharp_spreads else None
-            square_spread = sum(square_spreads) / len(square_spreads) if square_spreads else None
-            sharp_total = sharp_totals[0] if sharp_totals else None
-            square_total = sum(square_totals) / len(square_totals) if square_totals else None
-
-            # Calculate raw differences (let model decide significance)
-            spread_diff = None
-            total_diff = None
-
-            if sharp_spread is not None and square_spread is not None:
-                spread_diff = sharp_spread - square_spread
-
-            if sharp_total is not None and square_total is not None:
-                total_diff = sharp_total - square_total
-
-            # CRITICAL: Track whether we actually got Pinnacle data
-            has_pinnacle = sharp_book_found == "pinnacle"
-
-            comparison = SharpSquareComparison(
-                event_id=game.get("id", ""),
-                home_team=home_team,
-                away_team=away_team,
-                sharp_spread=sharp_spread,
-                square_spread=round(square_spread, 2) if square_spread else None,
-                spread_diff=round(spread_diff, 2) if spread_diff is not None else None,
-                sharp_total=sharp_total,
-                square_total=round(square_total, 2) if square_total else None,
-                total_diff=round(total_diff, 2) if total_diff is not None else None,
-                has_pinnacle_data=has_pinnacle,
-                sharp_book_used=sharp_book_found,
-                square_books_used=square_books_found,
-                num_square_books=len(square_books_found),
-                updated_at=dt.datetime.now(),
-            )
-
-            # Only add if we have REAL Pinnacle data (no silent fallback)
-            if has_pinnacle:
-                comparisons.append(comparison)
-                logger.info(
-                    f"Sharp/square data: {away_team}@{home_team} - "
-                    f"Pinnacle spread={sharp_spread} vs Square avg={square_spread} (diff={spread_diff}), "
-                    f"Pinnacle total={sharp_total} vs Square avg={square_total} (diff={total_diff})"
-                )
-            else:
-                logger.debug(f"Skipping {away_team}@{home_team} - no Pinnacle data available")
-
+    except httpx.HTTPStatusError as e:
+        raise SharpDataUnavailableError(
+            f"CRITICAL: The-Odds-API HTTP error {e.response.status_code}: {e}. "
+            "Model cannot run without sharp book data."
+        ) from e
+    except httpx.RequestError as e:
+        raise SharpDataUnavailableError(
+            f"CRITICAL: The-Odds-API request failed: {e}. "
+            "Model cannot run without sharp book data."
+        ) from e
     except Exception as e:
-        logger.error(f"Failed to fetch sharp/square comparison: {e}")
+        raise SharpDataUnavailableError(
+            f"CRITICAL: Unexpected error fetching from The-Odds-API: {e}. "
+            "Model cannot run without sharp book data."
+        ) from e
 
+    # HARD FAILURE: No games returned
+    if not data:
+        raise SharpDataUnavailableError(
+            "CRITICAL: The-Odds-API returned 0 games. "
+            "Cannot proceed without sharp book data."
+        )
+
+    logger.info(f"Fetched {len(data)} games for sharp/square comparison")
+
+    games_without_pinnacle = []
+
+    for game in data:
+        home_raw = game.get("home_team", "")
+        away_raw = game.get("away_team", "")
+
+        home_team, home_valid = normalize_team_to_espn(home_raw, source="the_odds")
+        away_team, away_valid = normalize_team_to_espn(away_raw, source="the_odds")
+
+        if not home_valid or not away_valid:
+            continue
+
+        # Collect lines from sharp and square books
+        sharp_spreads = []
+        square_spreads = []
+        sharp_totals = []
+        square_totals = []
+        sharp_book_found = None
+        square_books_found = []
+
+        for bm in game.get("bookmakers", []):
+            book_key = bm.get("key", "").lower()
+
+            for market in bm.get("markets", []):
+                market_key = market.get("key")
+                outcomes = market.get("outcomes", [])
+
+                if market_key == "spreads":
+                    # Find home team spread
+                    home_spread = None
+                    for outcome in outcomes:
+                        if outcome.get("name") == game.get("home_team"):
+                            home_spread = outcome.get("point")
+                            break
+
+                    if home_spread is not None:
+                        if book_key in SHARP_BOOKS:
+                            sharp_spreads.append(home_spread)
+                            sharp_book_found = book_key
+                        elif book_key in SQUARE_BOOKS:
+                            square_spreads.append(home_spread)
+                            if book_key not in square_books_found:
+                                square_books_found.append(book_key)
+
+                elif market_key == "totals":
+                    # Find total line
+                    total_line = None
+                    for outcome in outcomes:
+                        if outcome.get("name") == "Over":
+                            total_line = outcome.get("point")
+                            break
+
+                    if total_line is not None:
+                        if book_key in SHARP_BOOKS:
+                            sharp_totals.append(total_line)
+                        elif book_key in SQUARE_BOOKS:
+                            square_totals.append(total_line)
+
+        # Calculate averages and differences - NO THRESHOLDS, raw values only
+        sharp_spread = sharp_spreads[0] if sharp_spreads else None
+        square_spread = sum(square_spreads) / len(square_spreads) if square_spreads else None
+        sharp_total = sharp_totals[0] if sharp_totals else None
+        square_total = sum(square_totals) / len(square_totals) if square_totals else None
+
+        # Calculate raw differences (let model decide significance)
+        spread_diff = None
+        total_diff = None
+
+        if sharp_spread is not None and square_spread is not None:
+            spread_diff = sharp_spread - square_spread
+
+        if sharp_total is not None and square_total is not None:
+            total_diff = sharp_total - square_total
+
+        # CRITICAL: Track whether we actually got Pinnacle data
+        has_pinnacle = sharp_book_found == "pinnacle"
+
+        comparison = SharpSquareComparison(
+            event_id=game.get("id", ""),
+            home_team=home_team,
+            away_team=away_team,
+            sharp_spread=sharp_spread,
+            square_spread=round(square_spread, 2) if square_spread else None,
+            spread_diff=round(spread_diff, 2) if spread_diff is not None else None,
+            sharp_total=sharp_total,
+            square_total=round(square_total, 2) if square_total else None,
+            total_diff=round(total_diff, 2) if total_diff is not None else None,
+            has_pinnacle_data=has_pinnacle,
+            sharp_book_used=sharp_book_found,
+            square_books_used=square_books_found,
+            num_square_books=len(square_books_found),
+            updated_at=dt.datetime.now(),
+        )
+
+        # HARD FAILURE MODE: Track games without Pinnacle data
+        if has_pinnacle:
+            comparisons.append(comparison)
+            logger.info(
+                f"Sharp/square data: {away_team}@{home_team} - "
+                f"Pinnacle spread={sharp_spread} vs Square avg={square_spread} (diff={spread_diff}), "
+                f"Pinnacle total={sharp_total} vs Square avg={square_total} (diff={total_diff})"
+            )
+        else:
+            games_without_pinnacle.append(f"{away_team}@{home_team}")
+            logger.warning(f"MISSING PINNACLE: {away_team}@{home_team}")
+
+    # HARD FAILURE: If ANY game is missing Pinnacle, fail the entire process
+    if games_without_pinnacle:
+        raise SharpDataUnavailableError(
+            f"CRITICAL: {len(games_without_pinnacle)} games missing Pinnacle data: "
+            f"{', '.join(games_without_pinnacle)}. "
+            "Model cannot run with incomplete sharp book data. NO DEGRADATION ALLOWED."
+        )
+
+    # HARD FAILURE: No comparisons means no data
+    if not comparisons:
+        raise SharpDataUnavailableError(
+            "CRITICAL: No sharp/square comparisons generated from API response. "
+            "Model cannot run without sharp book data."
+        )
+
+    logger.info(f"✓ Sharp/square validation PASSED: {len(comparisons)} games with complete Pinnacle data")
     return comparisons
 
 
@@ -343,7 +396,6 @@ def sharp_square_to_features(comp: SharpSquareComparison) -> Dict[str, Any]:
     
     Raw continuous values - no thresholds applied.
     Model will learn appropriate weights for these signals.
-    
     spread_diff: positive = Pinnacle favors home, negative = favors away
     total_diff: positive = Pinnacle favors over, negative = favors under
     """
