@@ -1,26 +1,55 @@
 """
-Sharp Money Weighted Combination System (v34.2.0).
+Sharp Money Weighted Combination System (v34.3.0).
 
 ARCHITECTURE:
-This module combines ML model predictions with sharp money signals to determine:
-1. WHICH SIDE to bet (not just confidence!)
-2. Whether to play at all (signals cancel = no play)
-3. Final confidence based on signal agreement
+This module combines ML model predictions with ALL AVAILABLE sharp money signals:
+1. Pinnacle vs Square divergence (primary sharp signal)
+2. Reverse Line Movement (RLM) - ticket % vs money %
+3. Line Movement (steam moves from open)
+4. Money vs Ticket divergence magnitude
 
 FORMULA:
+    sharp_edge = (
+        pinnacle_component × 0.50 +   # Primary: Pinnacle divergence
+        rlm_component × 0.25 +        # Secondary: RLM detection
+        line_move_component × 0.15 + # Tertiary: Steam/line movement
+        money_ticket_mag × 0.10      # Quaternary: Money/ticket divergence magnitude
+    )
+    
     combined_edge = (model_edge × MODEL_WEIGHT) + (sharp_edge × SHARP_WEIGHT)
     
     Where:
-        MODEL_WEIGHT = 0.60 (we built the model, we trust it somewhat)
-        SHARP_WEIGHT = 0.40 (Pinnacle knows things we don't)
+        MODEL_WEIGHT = 0.55 (model foundation)
+        SHARP_WEIGHT = 0.45 (sharp signals are MAXIMIZED)
     
     If combined_edge > threshold → Bet that side
     If combined_edge < -threshold → Bet opposite side
     If |combined_edge| < threshold → NO PLAY (signals cancel)
 
+SHARP SIGNAL BREAKDOWN:
+1. PINNACLE DIVERGENCE (50% of sharp_edge):
+   - Pinnacle line vs average of square books (DK, FD, MGM)
+   - If Pinnacle more negative on spread → sharps like HOME
+   - If Pinnacle higher on total → sharps like OVER
+
+2. REVERSE LINE MOVEMENT (25% of sharp_edge):
+   - When line moves AGAINST public ticket %
+   - 70% tickets on HOME but line moves toward AWAY = SHARP AWAY
+   - Calculated as: (money_pct - ticket_pct) / 100 scaled to points
+
+3. LINE MOVEMENT / STEAM (15% of sharp_edge):
+   - Significant move from opening line
+   - Steam = rapid move in one direction
+   - Measured as: current_line - opening_line
+
+4. MONEY vs TICKET MAGNITUDE (10% of sharp_edge):
+   - Pure magnitude of money/ticket split
+   - Large divergence = strong sharp action regardless of direction
+   - Boosts confidence when sharps are heavily positioned
+
 KEY INSIGHT:
-Old system: Model says HOME, sharps say AWAY → Still bet HOME with lower confidence ❌
-New system: Model says HOME, sharps say AWAY → Combined math decides side (or NO PLAY) ✓
+v34.2.0: Only used Pinnacle divergence (40% of potential signal strength)
+v34.3.0: Uses ALL 4 signals (100% of potential signal strength) ← MAXIMUM
 """
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, Tuple, List
@@ -38,8 +67,14 @@ class WeightedConfig:
     """Configuration for weighted combination system."""
     
     # Weight allocation (must sum to 1.0)
-    model_weight: float = 0.60
-    sharp_weight: float = 0.40
+    model_weight: float = 0.55  # Reduced from 0.60 to give sharps more weight
+    sharp_weight: float = 0.45  # Increased from 0.40 - MAXIMIZE sharp signals
+    
+    # Sharp signal component weights (must sum to 1.0)
+    pinnacle_weight: float = 0.50    # Primary: Pinnacle divergence
+    rlm_weight: float = 0.25         # Secondary: Reverse Line Movement
+    line_move_weight: float = 0.15   # Tertiary: Steam/line movement
+    money_ticket_weight: float = 0.10  # Quaternary: Money/ticket magnitude
     
     # Minimum edge threshold for a play (in points)
     # If |combined_edge| < this, NO PLAY
@@ -53,6 +88,10 @@ class WeightedConfig:
     confidence_scale_total: float = 0.05   # Each point of edge = +5% confidence
     max_confidence: float = 0.85
     min_confidence: float = 0.52  # Minimum confidence if we're playing
+    
+    # RLM detection thresholds
+    rlm_threshold: float = 10.0   # Min % difference for RLM (money - ticket)
+    steam_threshold: float = 1.0  # Min line move for steam detection (points)
 
 
 # Global config
@@ -81,7 +120,7 @@ class SharpSignal:
     
     @property
     def has_pinnacle(self) -> bool:
-        return self.pinnacle_line is not None
+        return self.pinnacle_line is not None and self.square_line is not None
     
     @property
     def divergence(self) -> Optional[float]:
@@ -103,7 +142,53 @@ class SharpSignal:
         if self.ticket_pct is None or self.money_pct is None:
             return False
         # RLM = big difference between ticket and money %
-        return abs(self.ticket_pct - self.money_pct) > 15
+        return abs(self.ticket_pct - self.money_pct) > 10
+    
+    @property
+    def rlm_direction(self) -> float:
+        """
+        RLM direction as points-equivalent edge.
+        Positive = sharp money favoring side (higher money % relative to tickets)
+        Example: 30% tickets but 60% money → +0.30 edge toward that side
+        """
+        if self.ticket_pct is None or self.money_pct is None:
+            return 0.0
+        # Scale: (money - ticket) / 100, then multiply by 3 to get points-equivalent
+        # 30% difference → 0.9 pts edge
+        return ((self.money_pct - self.ticket_pct) / 100.0) * 3.0
+    
+    @property 
+    def money_ticket_magnitude(self) -> float:
+        """
+        Magnitude of money vs ticket split (absolute value).
+        Large divergence = strong sharp positioning regardless of direction.
+        Returns 0-1 scale based on divergence.
+        """
+        if self.ticket_pct is None or self.money_pct is None:
+            return 0.0
+        divergence = abs(self.money_pct - self.ticket_pct)
+        # Scale: 0% = 0, 50% = 1.0 (max)
+        return min(1.0, divergence / 50.0)
+    
+    @property
+    def has_steam(self) -> bool:
+        """True if significant line movement detected (potential steam)."""
+        if self.line_move is None:
+            return False
+        return abs(self.line_move) >= 1.0
+    
+    @property
+    def steam_edge(self) -> float:
+        """
+        Steam move edge in points.
+        Line moving toward a side = sharps driving it that way.
+        For spreads: Negative move (more negative) = sharps like HOME
+        For totals: Positive move = sharps like OVER
+        """
+        if self.line_move is None:
+            return 0.0
+        # Cap at +/- 3 points to prevent outliers from dominating
+        return max(-3.0, min(3.0, self.line_move))
 
 
 @dataclass 
@@ -116,15 +201,28 @@ class WeightedResult:
     combined_edge: float      # Combined edge in points
     is_play: bool             # False if signals cancel out
     
-    # Components for transparency
+    # Model component
     model_side: str           # What model originally said
     model_edge: float         # Model's edge in points
-    sharp_side: str           # What sharps say (from divergence)
-    sharp_edge: float         # Sharp edge in points (from divergence magnitude)
+    
+    # Sharp composite components (NEW in v34.3.0)
+    sharp_edge: float         # Total sharp edge (weighted sum of all components)
+    pinnacle_component: float # Pinnacle divergence contribution
+    rlm_component: float      # RLM contribution
+    line_move_component: float  # Steam/line move contribution
+    money_ticket_component: float  # Money/ticket magnitude contribution
+    
+    # Sharp direction
+    sharp_side: str           # What sharps say overall
     
     # Signal alignment
     signals_agree: bool       # True if model and sharps on same side
     side_flipped: bool        # True if final side differs from model
+    
+    # Tracking which signals fired
+    has_pinnacle: bool
+    has_rlm: bool
+    has_steam: bool
     
     # Rationale
     rationale: List[str]      # Explanation bullets
@@ -141,7 +239,13 @@ def combine_spread_signals(
     config: WeightedConfig = WEIGHTED_CONFIG,
 ) -> WeightedResult:
     """
-    Combine ML model spread prediction with sharp money signals.
+    Combine ML model spread prediction with ALL sharp money signals.
+    
+    MAXIMIZES signal integration (v34.3.0):
+    - Pinnacle divergence (50% of sharp weight)
+    - Reverse Line Movement (25% of sharp weight)
+    - Steam/line movement (15% of sharp weight)
+    - Money vs Ticket magnitude (10% of sharp weight)
     
     Args:
         model_predicted_margin: Model's predicted home margin (positive = home wins by X)
@@ -151,76 +255,96 @@ def combine_spread_signals(
         
     Returns:
         WeightedResult with final side and confidence
-        
-    Example:
-        Model predicts home margin +3.0, market spread -1.0
-        Model edge = 3.0 - (-(-1.0)) = 3.0 - 1.0 = +2.0 pts (home covers)
-        
-        Pinnacle at -3.0, Square at -1.0 → divergence = -2.0 (sharps like home MORE)
-        Sharp edge toward HOME = +2.0 pts
-        
-        Combined = (2.0 * 0.6) + (2.0 * 0.4) = 1.2 + 0.8 = +2.0 HOME
     """
     rationale = []
     
     # =========================================================================
     # STEP 1: Calculate model edge
     # =========================================================================
-    # Model edge = predicted_margin - (-spread)
-    # If model predicts home by 5 and spread is -3, edge = 5 - 3 = +2 (home covers)
-    # Positive edge = home covers, negative = away covers
     model_edge = model_predicted_margin - (-market_spread)
     model_side = "home" if model_edge > 0 else "away"
-    
     rationale.append(f"MODEL: {model_side.upper()} by {abs(model_edge):.1f} pts")
     
     # =========================================================================
-    # STEP 2: Calculate sharp edge from Pinnacle divergence
+    # STEP 2: Calculate ALL sharp signal components
     # =========================================================================
-    sharp_edge = 0.0
-    sharp_side = "neutral"
     
+    # Component 1: Pinnacle divergence (primary - 50%)
+    pinnacle_component = 0.0
     if sharp_signal.has_pinnacle and sharp_signal.divergence is not None:
-        # Divergence = Pinnacle - Square
+        divergence = sharp_signal.divergence
         # Negative divergence = Pinnacle more negative = sharps like HOME
         # Positive divergence = Pinnacle less negative = sharps like AWAY
-        divergence = sharp_signal.divergence
-        
-        if divergence < -0.25:
-            # Sharps favor HOME (Pinnacle line is more negative)
-            sharp_side = "home"
-            sharp_edge = abs(divergence)  # Magnitude of their conviction
-            rationale.append(f"SHARP: HOME by {sharp_edge:.1f} pts (Pinnacle {divergence:+.1f} from square)")
-        elif divergence > 0.25:
-            # Sharps favor AWAY (Pinnacle line is less negative)
-            sharp_side = "away"
-            sharp_edge = -abs(divergence)  # Negative = toward away
-            rationale.append(f"SHARP: AWAY by {abs(divergence):.1f} pts (Pinnacle {divergence:+.1f} from square)")
+        if abs(divergence) > 0.25:
+            pinnacle_component = -divergence  # Flip sign: neg divergence → positive (home)
+            rationale.append(f"PINNACLE: {pinnacle_component:+.2f} edge (divergence {divergence:+.1f})")
+    
+    # Component 2: Reverse Line Movement (25%)
+    rlm_component = 0.0
+    if sharp_signal.has_rlm:
+        rlm_component = sharp_signal.rlm_direction
+        rlm_side = "HOME" if rlm_component > 0 else "AWAY"
+        rationale.append(f"RLM: {rlm_component:+.2f} edge → {rlm_side} (money {sharp_signal.money_pct:.0f}% vs ticket {sharp_signal.ticket_pct:.0f}%)")
+    
+    # Component 3: Line movement / Steam (15%)
+    line_move_component = 0.0
+    if sharp_signal.has_steam:
+        # For spreads: line moving more negative = sharps driving toward HOME
+        line_move_component = -sharp_signal.steam_edge  # Flip: neg move → positive (home)
+        steam_side = "HOME" if line_move_component > 0 else "AWAY"
+        rationale.append(f"STEAM: {line_move_component:+.2f} edge → {steam_side} (line moved {sharp_signal.line_move:+.1f})")
+    
+    # Component 4: Money vs Ticket magnitude (10%)
+    # This boosts conviction when sharps are heavily positioned
+    money_ticket_component = 0.0
+    if sharp_signal.money_ticket_magnitude > 0.2:  # Only if significant divergence
+        # Direction follows RLM direction, magnitude from split
+        if rlm_component != 0:
+            direction = 1.0 if rlm_component > 0 else -1.0
+        elif pinnacle_component != 0:
+            direction = 1.0 if pinnacle_component > 0 else -1.0
         else:
-            rationale.append(f"SHARP: Neutral (divergence {divergence:+.1f})")
-    else:
-        rationale.append("SHARP: No Pinnacle data - using model only")
-        # Without sharp data, use 100% model weight
-        sharp_edge = 0.0
+            direction = 0.0
+        money_ticket_component = direction * sharp_signal.money_ticket_magnitude * 2.0  # Scale to points
+        if abs(money_ticket_component) > 0.1:
+            rationale.append(f"MONEY/TICKET MAG: {money_ticket_component:+.2f} edge (split: {sharp_signal.money_ticket_magnitude:.1%})")
     
     # =========================================================================
-    # STEP 3: Combine signals
+    # STEP 3: Combine sharp components into weighted sharp_edge
     # =========================================================================
-    if sharp_signal.has_pinnacle:
+    sharp_edge = (
+        pinnacle_component * config.pinnacle_weight +
+        rlm_component * config.rlm_weight +
+        line_move_component * config.line_move_weight +
+        money_ticket_component * config.money_ticket_weight
+    )
+    
+    sharp_side = "home" if sharp_edge > 0.1 else ("away" if sharp_edge < -0.1 else "neutral")
+    
+    signal_count = sum([
+        1 if sharp_signal.has_pinnacle else 0,
+        1 if sharp_signal.has_rlm else 0,
+        1 if sharp_signal.has_steam else 0,
+    ])
+    rationale.append(f"SHARP TOTAL: {sharp_edge:+.2f} edge → {sharp_side.upper()} ({signal_count}/3 signals active)")
+    
+    # =========================================================================
+    # STEP 4: Combine model + sharp into final edge
+    # =========================================================================
+    if signal_count > 0:
         combined_edge = (model_edge * config.model_weight) + (sharp_edge * config.sharp_weight)
+        rationale.append(f"COMBINED: {combined_edge:+.2f} = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.2f} × {config.sharp_weight})")
     else:
-        # No sharp data - use model alone but reduce confidence
-        combined_edge = model_edge * 0.8  # 20% haircut without sharp confirmation
-    
-    rationale.append(f"COMBINED: {combined_edge:+.2f} pts = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.1f} × {config.sharp_weight})")
+        # No sharp data - use model alone with haircut
+        combined_edge = model_edge * 0.75
+        rationale.append(f"COMBINED: {combined_edge:+.2f} (model only with 25% haircut - no sharp data)")
     
     # =========================================================================
-    # STEP 4: Determine final side and if it's a play
+    # STEP 5: Determine final side and if it's a play
     # =========================================================================
     signals_agree = (model_edge > 0 and sharp_edge >= 0) or (model_edge < 0 and sharp_edge <= 0)
     
     if abs(combined_edge) < config.min_edge_spread:
-        # Signals cancel out - NO PLAY
         final_side = "NO_PLAY"
         is_play = False
         final_confidence = 0.0
@@ -229,7 +353,6 @@ def combine_spread_signals(
         final_side = "home" if combined_edge > 0 else "away"
         is_play = True
         
-        # Calculate confidence based on combined edge magnitude
         raw_confidence = config.base_confidence + (abs(combined_edge) * config.confidence_scale_spread)
         final_confidence = min(config.max_confidence, max(config.min_confidence, raw_confidence))
         
@@ -249,10 +372,17 @@ def combine_spread_signals(
         is_play=is_play,
         model_side=model_side,
         model_edge=model_edge,
-        sharp_side=sharp_side,
         sharp_edge=sharp_edge,
+        pinnacle_component=pinnacle_component,
+        rlm_component=rlm_component,
+        line_move_component=line_move_component,
+        money_ticket_component=money_ticket_component,
+        sharp_side=sharp_side,
         signals_agree=signals_agree,
         side_flipped=side_flipped,
+        has_pinnacle=sharp_signal.has_pinnacle,
+        has_rlm=sharp_signal.has_rlm,
+        has_steam=sharp_signal.has_steam,
         rationale=rationale,
     )
 
@@ -268,7 +398,13 @@ def combine_total_signals(
     config: WeightedConfig = WEIGHTED_CONFIG,
 ) -> WeightedResult:
     """
-    Combine ML model total prediction with sharp money signals.
+    Combine ML model total prediction with ALL sharp money signals.
+    
+    MAXIMIZES signal integration (v34.3.0):
+    - Pinnacle divergence (50% of sharp weight)
+    - Reverse Line Movement (25% of sharp weight)  
+    - Steam/line movement (15% of sharp weight)
+    - Money vs Ticket magnitude (10% of sharp weight)
     
     Args:
         model_predicted_total: Model's predicted total points
@@ -278,65 +414,89 @@ def combine_total_signals(
         
     Returns:
         WeightedResult with final side and confidence
-        
-    Example:
-        Model predicts 228, market total 224
-        Model edge = 228 - 224 = +4.0 pts (model likes OVER)
-        
-        Pinnacle at 226, Square at 224 → divergence = +2.0 (sharps like OVER too)
-        Sharp edge = +2.0 pts
-        
-        Combined = (4.0 * 0.6) + (2.0 * 0.4) = 2.4 + 0.8 = +3.2 OVER
     """
     rationale = []
     
     # =========================================================================
     # STEP 1: Calculate model edge
     # =========================================================================
-    # Positive = over, negative = under
     model_edge = model_predicted_total - market_total
     model_side = "over" if model_edge > 0 else "under"
-    
     rationale.append(f"MODEL: {model_side.upper()} by {abs(model_edge):.1f} pts")
     
     # =========================================================================
-    # STEP 2: Calculate sharp edge from Pinnacle divergence
+    # STEP 2: Calculate ALL sharp signal components
     # =========================================================================
-    sharp_edge = 0.0
-    sharp_side = "neutral"
     
+    # Component 1: Pinnacle divergence (primary - 50%)
+    pinnacle_component = 0.0
     if sharp_signal.has_pinnacle and sharp_signal.divergence is not None:
-        # Divergence = Pinnacle - Square
+        divergence = sharp_signal.divergence
         # Positive divergence = Pinnacle higher = sharps like OVER
         # Negative divergence = Pinnacle lower = sharps like UNDER
-        divergence = sharp_signal.divergence
-        
-        if divergence > 0.5:
-            sharp_side = "over"
-            sharp_edge = abs(divergence)
-            rationale.append(f"SHARP: OVER by {sharp_edge:.1f} pts (Pinnacle {divergence:+.1f} from square)")
-        elif divergence < -0.5:
-            sharp_side = "under"
-            sharp_edge = -abs(divergence)  # Negative = toward under
-            rationale.append(f"SHARP: UNDER by {abs(divergence):.1f} pts (Pinnacle {divergence:+.1f} from square)")
+        if abs(divergence) > 0.5:
+            pinnacle_component = divergence  # Positive = over
+            rationale.append(f"PINNACLE: {pinnacle_component:+.2f} edge (divergence {divergence:+.1f})")
+    
+    # Component 2: Reverse Line Movement (25%)
+    rlm_component = 0.0
+    if sharp_signal.has_rlm:
+        rlm_component = sharp_signal.rlm_direction
+        rlm_side = "OVER" if rlm_component > 0 else "UNDER"
+        rationale.append(f"RLM: {rlm_component:+.2f} edge → {rlm_side} (money {sharp_signal.money_pct:.0f}% vs ticket {sharp_signal.ticket_pct:.0f}%)")
+    
+    # Component 3: Line movement / Steam (15%)
+    line_move_component = 0.0
+    if sharp_signal.has_steam:
+        # For totals: line moving higher = sharps driving toward OVER
+        line_move_component = sharp_signal.steam_edge  # Positive = over
+        steam_side = "OVER" if line_move_component > 0 else "UNDER"
+        rationale.append(f"STEAM: {line_move_component:+.2f} edge → {steam_side} (line moved {sharp_signal.line_move:+.1f})")
+    
+    # Component 4: Money vs Ticket magnitude (10%)
+    money_ticket_component = 0.0
+    if sharp_signal.money_ticket_magnitude > 0.2:
+        if rlm_component != 0:
+            direction = 1.0 if rlm_component > 0 else -1.0
+        elif pinnacle_component != 0:
+            direction = 1.0 if pinnacle_component > 0 else -1.0
         else:
-            rationale.append(f"SHARP: Neutral (divergence {divergence:+.1f})")
-    else:
-        rationale.append("SHARP: No Pinnacle data - using model only")
-        sharp_edge = 0.0
+            direction = 0.0
+        money_ticket_component = direction * sharp_signal.money_ticket_magnitude * 2.0
+        if abs(money_ticket_component) > 0.1:
+            rationale.append(f"MONEY/TICKET MAG: {money_ticket_component:+.2f} edge (split: {sharp_signal.money_ticket_magnitude:.1%})")
     
     # =========================================================================
-    # STEP 3: Combine signals
+    # STEP 3: Combine sharp components into weighted sharp_edge
     # =========================================================================
-    if sharp_signal.has_pinnacle:
+    sharp_edge = (
+        pinnacle_component * config.pinnacle_weight +
+        rlm_component * config.rlm_weight +
+        line_move_component * config.line_move_weight +
+        money_ticket_component * config.money_ticket_weight
+    )
+    
+    sharp_side = "over" if sharp_edge > 0.2 else ("under" if sharp_edge < -0.2 else "neutral")
+    
+    signal_count = sum([
+        1 if sharp_signal.has_pinnacle else 0,
+        1 if sharp_signal.has_rlm else 0,
+        1 if sharp_signal.has_steam else 0,
+    ])
+    rationale.append(f"SHARP TOTAL: {sharp_edge:+.2f} edge → {sharp_side.upper()} ({signal_count}/3 signals active)")
+    
+    # =========================================================================
+    # STEP 4: Combine model + sharp into final edge
+    # =========================================================================
+    if signal_count > 0:
         combined_edge = (model_edge * config.model_weight) + (sharp_edge * config.sharp_weight)
+        rationale.append(f"COMBINED: {combined_edge:+.2f} = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.2f} × {config.sharp_weight})")
     else:
-        combined_edge = model_edge * 0.8
-    
-    rationale.append(f"COMBINED: {combined_edge:+.2f} pts = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.1f} × {config.sharp_weight})")
+        combined_edge = model_edge * 0.75
+        rationale.append(f"COMBINED: {combined_edge:+.2f} (model only with 25% haircut - no sharp data)")
     
     # =========================================================================
-    # STEP 4: Determine final side and if it's a play
+    # STEP 5: Determine final side and if it's a play
     # =========================================================================
     signals_agree = (model_edge > 0 and sharp_edge >= 0) or (model_edge < 0 and sharp_edge <= 0)
     
@@ -368,10 +528,17 @@ def combine_total_signals(
         is_play=is_play,
         model_side=model_side,
         model_edge=model_edge,
-        sharp_side=sharp_side,
         sharp_edge=sharp_edge,
+        pinnacle_component=pinnacle_component,
+        rlm_component=rlm_component,
+        line_move_component=line_move_component,
+        money_ticket_component=money_ticket_component,
+        sharp_side=sharp_side,
         signals_agree=signals_agree,
         side_flipped=side_flipped,
+        has_pinnacle=sharp_signal.has_pinnacle,
+        has_rlm=sharp_signal.has_rlm,
+        has_steam=sharp_signal.has_steam,
         rationale=rationale,
     )
 
@@ -423,9 +590,11 @@ def apply_weighted_combination_spread(
     """
     Apply weighted combination to spread prediction.
     
-    This REPLACES the old sharp_adjustments approach:
-    - Old: Model says HOME → still bet HOME, just lower confidence
-    - New: Model + Sharps combined → may change side or NO PLAY
+    This MAXIMIZES sharp signal integration (v34.3.0):
+    - Uses Pinnacle divergence (50%)
+    - Uses RLM from ticket/money % (25%)
+    - Uses Steam from line movement (15%)
+    - Uses Money/Ticket magnitude (10%)
     
     Args:
         prediction: Original prediction from ML engine
@@ -467,6 +636,15 @@ def apply_weighted_combination_spread(
     updated["side_flipped"] = result.side_flipped
     updated["sharp_rationale"] = result.rationale
     
+    # NEW v34.3.0: Component breakdown
+    updated["pinnacle_component"] = result.pinnacle_component
+    updated["rlm_component"] = result.rlm_component
+    updated["line_move_component"] = result.line_move_component
+    updated["money_ticket_component"] = result.money_ticket_component
+    updated["has_pinnacle"] = result.has_pinnacle
+    updated["has_rlm"] = result.has_rlm
+    updated["has_steam"] = result.has_steam
+    
     return updated, result
 
 
@@ -478,6 +656,12 @@ def apply_weighted_combination_total(
 ) -> Tuple[Dict[str, Any], WeightedResult]:
     """
     Apply weighted combination to total prediction.
+    
+    This MAXIMIZES sharp signal integration (v34.3.0):
+    - Uses Pinnacle divergence (50%)
+    - Uses RLM from ticket/money % (25%)
+    - Uses Steam from line movement (15%)
+    - Uses Money/Ticket magnitude (10%)
     
     Args:
         prediction: Original prediction from ML engine
@@ -517,5 +701,14 @@ def apply_weighted_combination_total(
     updated["signals_agree"] = result.signals_agree
     updated["side_flipped"] = result.side_flipped
     updated["sharp_rationale"] = result.rationale
+    
+    # NEW v34.3.0: Component breakdown
+    updated["pinnacle_component"] = result.pinnacle_component
+    updated["rlm_component"] = result.rlm_component
+    updated["line_move_component"] = result.line_move_component
+    updated["money_ticket_component"] = result.money_ticket_component
+    updated["has_pinnacle"] = result.has_pinnacle
+    updated["has_rlm"] = result.has_rlm
+    updated["has_steam"] = result.has_steam
     
     return updated, result
