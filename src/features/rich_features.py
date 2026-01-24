@@ -303,6 +303,81 @@ class RichFeatureBuilder:
             print(f"[WARN] Failed to calc star availability for team {team_id}: {e}")
             return 1.0
 
+    async def _get_paint_defense(self, team_id: int, recent_games: List[Dict]) -> float:
+        """
+        Calculate Paint Defense Score (Activity of Bigs).
+        
+        Logic:
+        1. Fetch last game player stats.
+        2. Identify Bigs (C, PF).
+        3. Sum their Blocks and Defensive Rebounds.
+        """
+        if not recent_games:
+            return 0.0
+            
+        last_game = recent_games[0]
+        game_id = last_game.get("id")
+        
+        try:
+            players = await self.get_game_player_stats(game_id)
+            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
+            
+            paint_score = 0.0
+            for p in team_players:
+                # Check position (API usually returns "C", "PF", "C-F" etc)
+                pos = p.get("pos", "") or p.get("position", "")
+                if not pos:
+                    continue
+                    
+                if "C" in pos or "PF" in pos or "F-C" in pos:
+                    # Get stats
+                    blocks = float(p.get("blk", 0) or 0)
+                    rebounds_def = float(p.get("rebounds", {}).get("def", 0) or 0)
+                    
+                    # Weighting: Blocks are high value defensive events
+                    paint_score += (blocks * 2.0) + (rebounds_def * 0.5)
+            
+            return paint_score
+            
+        except Exception:
+            return 0.0
+
+    async def _get_bench_scoring(self, team_id: int, recent_games: List[Dict]) -> float:
+        """
+        Calculate Bench Scoring (Points from Non-Starters).
+        
+        Logic:
+        1. Fetch last game player stats.
+        2. Sort by minutes played.
+        3. Bench = Players sorted index 5 onwards.
+        4. Sum their points.
+        """
+        if not recent_games:
+            return 0.0
+            
+        last_game = recent_games[0]
+        game_id = last_game.get("id")
+        
+        try:
+            players = await self.get_game_player_stats(game_id)
+            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
+            
+            # Sort by minutes
+            team_players.sort(key=lambda x: float(x.get("min", 0) or 0), reverse=True)
+            
+            # Identify Bench (approximate: everyone after top 5 minutes-getters)
+            bench_players = team_players[5:]
+            
+            bench_points = 0.0
+            for p in bench_players:
+                pts = float(p.get("points", 0) or 0)
+                bench_points += pts
+                
+            return bench_points
+            
+        except Exception:
+            return 0.0
+
     async def get_team_stats(self, team_id: int) -> Dict[str, Any]:
         """
         Get team season statistics - ALWAYS FRESH.
@@ -1272,6 +1347,18 @@ class RichFeatureBuilder:
             # Note: We use get_game_player_stats on recent games
             "home_star_avail": await self._get_star_availability(home_id, home_recent),
             "away_star_avail": await self._get_star_availability(away_id, away_recent),
+
+            # ============================================================
+            # GRANULAR MODEL 2.0: PAINT DEFENSE
+            # ============================================================
+            "home_paint_defense": await self._get_paint_defense(home_id, home_recent),
+            "away_paint_defense": await self._get_paint_defense(away_id, away_recent),
+
+            # ============================================================
+            # GRANULAR MODEL 2.0: BENCH SCORING
+            # ============================================================
+            "home_bench_scoring": await self._get_bench_scoring(home_id, home_recent),
+            "away_bench_scoring": await self._get_bench_scoring(away_id, away_recent),
             
             # ============================================================
             # BOX SCORE ADVANCED STATS (API-Basketball /games/statistics/teams)
