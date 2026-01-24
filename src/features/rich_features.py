@@ -484,25 +484,116 @@ class RichFeatureBuilder:
 
         return team_games[:limit]
 
-    async def get_box_score_stats(self, game_id: int) -> Optional[Dict]:
+    async def get_box_score_stats(self, game_id: int) -> Optional[List[Dict]]:
         """
         Get box score stats for a specific game.
+
+        STRATEGY: Try /games/statistics/teams first, fallback to aggregating
+        player stats from /games/statistics/players if team stats unavailable.
 
         Returns team stats including: FG%, 3PT%, FT%, rebounds, assists, steals, blocks, turnovers.
         """
         if game_id in self._box_scores_cache:
             return self._box_scores_cache[game_id]
 
+        # Try team stats endpoint first
         try:
             result = await api_basketball.fetch_game_stats_teams(id=game_id)
-            response = result.get("response", [])
+            response = result.data.get("response", []) if hasattr(result, 'data') else result.get("response", [])
             if response:
                 self._box_scores_cache[game_id] = response
                 return response
         except Exception as e:
-            print(f"[API] Failed to fetch box score for game {game_id}: {e}")
+            print(f"[API] Team stats unavailable for game {game_id}, trying player aggregation: {e}")
+
+        # Fallback: Aggregate from player stats
+        try:
+            aggregated = await self._aggregate_player_stats_to_team(game_id)
+            if aggregated:
+                self._box_scores_cache[game_id] = aggregated
+                return aggregated
+        except Exception as e:
+            print(f"[API] Player aggregation also failed for game {game_id}: {e}")
 
         return None
+
+    async def _aggregate_player_stats_to_team(self, game_id: int) -> Optional[List[Dict]]:
+        """
+        Aggregate player box scores into team totals.
+
+        API-Basketball's /games/statistics/teams endpoint sometimes returns empty
+        for recent games, but /games/statistics/players has data. This aggregates
+        player stats by team to create equivalent team box scores.
+        """
+        print(f"[API] Fetching player box scores for game {game_id}")
+        result = await api_basketball.fetch_game_stats_players(id=game_id)
+        players = result.data.get("response", []) if hasattr(result, 'data') else result.get("response", [])
+
+        if not players:
+            return None
+
+        # Aggregate by team
+        team_totals: Dict[int, Dict] = {}
+
+        for player in players:
+            team_id = player.get("team", {}).get("id")
+            if not team_id:
+                continue
+
+            if team_id not in team_totals:
+                team_totals[team_id] = {
+                    "team": {"id": team_id, "name": player.get("team", {}).get("name")},
+                    "field_goals": {"total": 0, "attempts": 0},
+                    "threepoint_goals": {"total": 0, "attempts": 0},
+                    "freethrows_goals": {"total": 0, "attempts": 0},
+                    "rebounds": {"total": 0, "offence": 0, "defense": 0},
+                    "assists": 0,
+                    "steals": 0,
+                    "blocks": 0,
+                    "turnovers": 0,
+                    "personal_fouls": 0,
+                }
+
+            totals = team_totals[team_id]
+
+            # Field goals
+            fg = player.get("field_goals", {})
+            totals["field_goals"]["total"] += fg.get("total", 0) or 0
+            totals["field_goals"]["attempts"] += fg.get("attempts", 0) or 0
+
+            # 3-pointers
+            three = player.get("threepoint_goals", {})
+            totals["threepoint_goals"]["total"] += three.get("total", 0) or 0
+            totals["threepoint_goals"]["attempts"] += three.get("attempts", 0) or 0
+
+            # Free throws
+            ft = player.get("freethrows_goals", {})
+            totals["freethrows_goals"]["total"] += ft.get("total", 0) or 0
+            totals["freethrows_goals"]["attempts"] += ft.get("attempts", 0) or 0
+
+            # Rebounds (player stats may only have total)
+            reb = player.get("rebounds", {})
+            if isinstance(reb, dict):
+                totals["rebounds"]["total"] += reb.get("total", 0) or 0
+                totals["rebounds"]["offence"] += reb.get("offence", 0) or 0
+                totals["rebounds"]["defense"] += reb.get("defense", 0) or 0
+            elif isinstance(reb, (int, float)):
+                totals["rebounds"]["total"] += reb or 0
+
+            # Other stats
+            totals["assists"] += player.get("assists", 0) or 0
+            totals["steals"] += player.get("steals", 0) or 0
+            totals["blocks"] += player.get("blocks", 0) or 0
+            totals["turnovers"] += player.get("turnovers", 0) or 0
+            totals["personal_fouls"] += player.get("personal_fouls", 0) or 0
+
+        if not team_totals:
+            return None
+
+        # Convert to list format matching /games/statistics/teams response
+        result_list = list(team_totals.values())
+        print(f"[API] Aggregated player stats into {len(result_list)} team box scores")
+        return result_list
 
     async def get_team_box_score_averages(self, team_id: int, recent_games: List[Dict]) -> Dict[str, float]:
         """

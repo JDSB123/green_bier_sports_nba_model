@@ -95,6 +95,10 @@ class APIBasketballClient:
     # CORE HTTP METHOD
     # =========================================================================
 
+    # Rate limiting: Track last request time to avoid 503s
+    _last_request_time: float = 0
+    _min_request_interval: float = 0.15  # 150ms between requests (max ~6-7 req/sec)
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=8),
@@ -103,7 +107,16 @@ class APIBasketballClient:
         self, endpoint: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Make HTTP request to API-Basketball with circuit breaker protection."""
+        import asyncio
+        import time
         from src.utils.circuit_breaker import get_api_basketball_breaker
+
+        # Rate limiting: ensure minimum interval between requests
+        now = time.time()
+        elapsed = now - self._last_request_time
+        if elapsed < self._min_request_interval:
+            await asyncio.sleep(self._min_request_interval - elapsed)
+        self._last_request_time = time.time()
 
         url = f"{self.base_url}/{endpoint}"
         logger.debug(f"Fetching endpoint: {url}")
