@@ -4,6 +4,13 @@ Generate predictions for ALL markets using unified prediction engine.
 Production-ready predictor with smart filtering for all markets:
 - Full Game: Spreads, Totals
 - First Half: Spreads, Totals
+
+SHARP MONEY INTEGRATION (v34.1.0):
+Following NCAAM best practices, sharp signals modify CONFIDENCE (not ML predictions):
+- Pinnacle alignment check (-15% penalty if betting against sharps)
+- Sharp-square divergence (±5% adjustment)
+- RLM detection (+5% boost when aligned)
+- Steam moves (±8% adjustment for large line moves)
 """
 from src.prediction import UnifiedPredictionEngine
 from src.features.rich_features import RichFeatureBuilder
@@ -12,6 +19,12 @@ from src.ingestion.betting_splits import (
     fetch_sharp_square_lines,
     sharp_square_to_features,
     SharpDataUnavailableError,
+)
+from src.prediction.sharp_adjustments import (
+    SharpContext,
+    apply_sharp_adjustments_spread,
+    apply_sharp_adjustments_total,
+    build_sharp_context_from_features,
 )
 from src.ingestion import the_odds
 from src.ingestion.standardize import to_cst, CST, UTC
@@ -584,7 +597,17 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 
 
 def display_market_predictions(preds: dict, lines: dict, market_type: str, features: dict, home_team: str, away_team: str, splits: Any = None):
-    """Display predictions for a market type (FG or 1H)."""
+    """
+    Display predictions for a market type (FG or 1H).
+    
+    SHARP ADJUSTMENT INTEGRATION (v34.1.0):
+    After ML model returns raw predictions, we apply sharp money adjustments
+    to confidence following NCAAM best practices:
+    - Sharp alignment penalty (-15% if betting against Pinnacle)
+    - Sharp-square divergence (±5%)
+    - RLM boost (+5% when aligned)
+    - Steam moves (±8% for large moves)
+    """
     if market_type == "fg":
         prefix = "fg"
     elif market_type == "fh":
@@ -592,16 +615,45 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
     else:
         raise ValueError(f"Unsupported market type: {market_type}")
 
-    # Spread
+    # Build sharp context from features (Pinnacle + Action Network data)
+    sharp_context = build_sharp_context_from_features(
+        features,
+        spread_line=lines.get(f'{prefix}_spread'),
+        total_line=lines.get(f'{prefix}_total'),
+    )
+
+    # =========================================================================
+    # SPREAD PREDICTION WITH SHARP ADJUSTMENTS
+    # =========================================================================
     if "spread" in preds:
         spread_pred = preds["spread"]
-        print(
-            f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
+        original_conf = spread_pred['confidence']
+        
+        # APPLY SHARP MONEY ADJUSTMENTS TO CONFIDENCE
+        sharp_result = apply_sharp_adjustments_spread(spread_pred, sharp_context)
+        adjusted_conf = sharp_result.adjusted_confidence
+        spread_pred['confidence'] = adjusted_conf  # Update confidence
+        spread_pred['original_confidence'] = original_conf
+        spread_pred['sharp_aligned'] = sharp_result.sharp_aligned
+        spread_pred['sharp_adjustments'] = sharp_result.adjustments_applied
+        
+        print(f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
         print(f"           Vegas line: {lines[f'{prefix}_spread'] or 'N/A'}")
-        print(
-            f"           Bet: {spread_pred['bet_side']} ({spread_pred['confidence']:.1%})")
+        
+        # Show confidence with sharp adjustment
+        if sharp_result.adjustments_applied:
+            print(f"           Bet: {spread_pred['bet_side']} ({adjusted_conf:.1%} adj, was {original_conf:.1%})")
+            print(f"           Sharp adj: {', '.join(sharp_result.adjustments_applied)}")
+        else:
+            print(f"           Bet: {spread_pred['bet_side']} ({adjusted_conf:.1%})")
+            
         if spread_pred['edge'] is not None:
             print(f"           Edge: {spread_pred['edge']:+.1f} pts")
+        
+        # Show sharp alignment status
+        if sharp_result.rationale:
+            for r in sharp_result.rationale[:2]:  # Max 2 sharp bullets
+                print(f"           {r}")
 
         # Generate rationale
         if spread_pred['edge'] is not None:
@@ -609,9 +661,9 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
                 play_type=f"{market_type.upper()}_SPREAD",
                 pick=spread_pred['bet_side'],
                 line=lines[f'{prefix}_spread'] or 0,
-                odds=None,  # No fake odds - rationale will handle missing odds
+                odds=None,
                 edge=spread_pred['edge'],
-                model_prob=spread_pred['confidence'],
+                model_prob=adjusted_conf,  # Use adjusted confidence
                 features=features,
                 betting_splits=splits,
                 home_team=home_team,
@@ -627,25 +679,47 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
     else:
         print(f"  [SPREAD] Model not loaded")
 
-    # Total
+    # =========================================================================
+    # TOTAL PREDICTION WITH SHARP ADJUSTMENTS
+    # =========================================================================
     if "total" in preds:
         total_pred = preds["total"]
-        print(
-            f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
+        original_conf = total_pred['confidence']
+        
+        # APPLY SHARP MONEY ADJUSTMENTS TO CONFIDENCE
+        sharp_result = apply_sharp_adjustments_total(total_pred, sharp_context)
+        adjusted_conf = sharp_result.adjusted_confidence
+        total_pred['confidence'] = adjusted_conf  # Update confidence
+        total_pred['original_confidence'] = original_conf
+        total_pred['sharp_aligned'] = sharp_result.sharp_aligned
+        total_pred['sharp_adjustments'] = sharp_result.adjustments_applied
+        
+        print(f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
         print(f"          Vegas line: {lines[f'{prefix}_total'] or 'N/A'}")
-        print(
-            f"          Bet: {total_pred['bet_side']} ({total_pred['confidence']:.1%})")
+        
+        # Show confidence with sharp adjustment
+        if sharp_result.adjustments_applied:
+            print(f"          Bet: {total_pred['bet_side']} ({adjusted_conf:.1%} adj, was {original_conf:.1%})")
+            print(f"          Sharp adj: {', '.join(sharp_result.adjustments_applied)}")
+        else:
+            print(f"          Bet: {total_pred['bet_side']} ({adjusted_conf:.1%})")
+            
         if total_pred['edge'] is not None:
             print(f"          Edge: {total_pred['edge']:+.1f} pts")
+        
+        # Show sharp alignment status
+        if sharp_result.rationale:
+            for r in sharp_result.rationale[:2]:  # Max 2 sharp bullets
+                print(f"          {r}")
 
         if total_pred['edge'] is not None:
             rat = generate_rationale(
                 play_type=f"{market_type.upper()}_TOTAL",
                 pick=total_pred['bet_side'],
                 line=lines[f'{prefix}_total'] or 0,
-                odds=None,  # No fake odds - rationale will handle missing odds
+                odds=None,
                 edge=total_pred['edge'],
-                model_prob=total_pred['confidence'],
+                model_prob=adjusted_conf,  # Use adjusted confidence
                 features=features,
                 betting_splits=splits,
                 home_team=home_team,
@@ -663,7 +737,7 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
 
 
 def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
-    """Format predictions for CSV output."""
+    """Format predictions for CSV output (includes sharp adjustment info)."""
     spread_pred = preds.get("spread", {})
     total_pred = preds.get("total", {})
 
@@ -674,6 +748,9 @@ def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
         f"{prefix}_spread_edge": round(spread_pred.get('edge', 0), 1) if spread_pred and spread_pred.get('edge') else None,
         f"{prefix}_spread_bet_side": spread_pred.get('bet_side'),
         f"{prefix}_spread_confidence": round(spread_pred.get('confidence', 0), 3) if spread_pred else None,
+        f"{prefix}_spread_conf_original": round(spread_pred.get('original_confidence', spread_pred.get('confidence', 0)), 3) if spread_pred else None,
+        f"{prefix}_spread_sharp_aligned": spread_pred.get('sharp_aligned', True),
+        f"{prefix}_spread_sharp_adj": "; ".join(spread_pred.get('sharp_adjustments', [])) if spread_pred else "",
         f"{prefix}_spread_passes_filter": spread_pred.get('passes_filter', False),
         f"{prefix}_spread_filter_reason": spread_pred.get('filter_reason', "") or "",
         f"{prefix}_spread_rationale": spread_pred.get('rationale', ""),
@@ -683,6 +760,9 @@ def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
         f"{prefix}_total_edge": round(total_pred.get('edge', 0), 1) if total_pred and total_pred.get('edge') else None,
         f"{prefix}_total_bet_side": total_pred.get('bet_side'),
         f"{prefix}_total_confidence": round(total_pred.get('confidence', 0), 3) if total_pred else None,
+        f"{prefix}_total_conf_original": round(total_pred.get('original_confidence', total_pred.get('confidence', 0)), 3) if total_pred else None,
+        f"{prefix}_total_sharp_aligned": total_pred.get('sharp_aligned', True),
+        f"{prefix}_total_sharp_adj": "; ".join(total_pred.get('sharp_adjustments', [])) if total_pred else "",
         f"{prefix}_total_passes_filter": total_pred.get('passes_filter', False),
         f"{prefix}_total_filter_reason": total_pred.get('filter_reason', "") or "",
         f"{prefix}_total_rationale": total_pred.get('rationale', ""),

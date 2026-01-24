@@ -961,7 +961,8 @@ class RichFeatureBuilder:
                     away_wins = away_espn.wins
                     away_losses = away_espn.losses
                     away_games_played = away_wins + away_losses
-                    print(f"[FALLBACK] Using ESPN standings: {home_team} ({home_wins}-{home_losses}), {away_team} ({away_wins}-{away_losses})")
+                    print(
+                        f"[FALLBACK] Using ESPN standings: {home_team} ({home_wins}-{home_losses}), {away_team} ({away_wins}-{away_losses})")
             except Exception as e:
                 print(f"[WARNING] ESPN standings fallback failed: {e}")
 
