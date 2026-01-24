@@ -6,7 +6,7 @@ for RLM (Reverse Line Movement) detection.
 
 Sources:
 - Action Network (requires subscription)
-- Covers.com 
+- Covers.com
 - VegasInsider (limited)
 
 Note: Most betting splits data requires paid subscriptions.
@@ -38,7 +38,8 @@ def validate_splits_sources_configured() -> Dict[str, bool]:
     sources = {
         # Action Network scoreboard API is PUBLIC - no credentials needed!
         "action_network": True,  # Always available via public scoreboard API
-        "the_odds_splits": bool(settings.the_odds_api_key),  # Available but endpoint may not exist
+        # Available but endpoint may not exist
+        "the_odds_splits": bool(settings.the_odds_api_key),
         "betsapi": bool(getattr(settings, "betsapi_key", None)),
     }
 
@@ -56,7 +57,8 @@ class GameSplits:
     home_team: str
     away_team: str
     game_time: dt.datetime
-    source: str  # Required - must be explicitly set (e.g., "action_network", "the_odds", "api_basketball")
+    # Required - must be explicitly set (e.g., "action_network", "the_odds", "api_basketball")
+    source: str
 
     # Optional fields (with defaults)
     # Spread splits
@@ -65,14 +67,14 @@ class GameSplits:
     spread_away_ticket_pct: float = 50.0
     spread_home_money_pct: float = 50.0   # % of money on home
     spread_away_money_pct: float = 50.0
-    
+
     # Total splits
     total_line: float = 0.0
     over_ticket_pct: float = 50.0
     under_ticket_pct: float = 50.0
     over_money_pct: float = 50.0
     under_money_pct: float = 50.0
-    
+
     # Line movement
     spread_open: float = 0.0
     spread_current: float = 0.0
@@ -91,7 +93,7 @@ class GameSplits:
 def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
     """
     Detect RLM (Reverse Line Movement) from splits data.
-    
+
     RLM occurs when:
     - Public heavily on one side (>60% tickets)
     - But line moves against public
@@ -99,12 +101,12 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
     """
     # Spread RLM
     spread_movement = splits.spread_current - splits.spread_open
-    
+
     # Public on home (>60%), but line moved more negative (toward home)
     # This is NORMAL - no RLM
     # Public on home (>60%), but line moved more positive (toward away)
     # This is RLM - sharps on away
-    
+
     if splits.spread_home_ticket_pct > 60:
         if spread_movement > 0.5:  # Line moved at least 0.5 toward away
             splits.spread_rlm = True
@@ -113,10 +115,10 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
         if spread_movement < -0.5:  # Line moved at least 0.5 toward home
             splits.spread_rlm = True
             splits.sharp_spread_side = "home"
-    
+
     # Total RLM
     total_movement = splits.total_current - splits.total_open
-    
+
     if splits.over_ticket_pct > 60:
         if total_movement < -0.5:  # Line moved down
             splits.total_rlm = True
@@ -125,7 +127,7 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
         if total_movement > 0.5:  # Line moved up
             splits.total_rlm = True
             splits.sharp_total_side = "over"
-    
+
     # Also check ticket vs money divergence (sharp money detection)
     # If tickets are on home but money is on away, sharps on away
     # Standard threshold in sports betting is 5-8% divergence
@@ -139,7 +141,7 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
             splits.sharp_spread_side = "away"
         else:
             splits.sharp_spread_side = "home"
-    
+
     ticket_money_diff_total = splits.over_ticket_pct - splits.over_money_pct
     if abs(ticket_money_diff_total) >= 5:
         if ticket_money_diff_total > 0:
@@ -150,30 +152,250 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
     return splits
 
 
+# ============================================================
+# SHARP VS SQUARE BOOK LINE COMPARISON
+# ============================================================
+# Sharp books: Pinnacle (lowest vig, professionals bet here)
+# Square books: DraftKings, FanDuel, BetMGM (retail bettors)
+#
+# When sharp line differs from square line by >= 0.5 pts,
+# sharps see value on the side closer to their line.
+
+SHARP_BOOKS = {"pinnacle", "bookmaker", "betcris"}
+SQUARE_BOOKS = {"draftkings", "fanduel", "betmgm", "caesars", "fanatics", "espnbet"}
+
+
+@dataclass
+class SharpSquareComparison:
+    """Result of comparing sharp vs square book lines."""
+    event_id: str
+    home_team: str
+    away_team: str
+    # Spread comparison
+    sharp_spread: Optional[float] = None
+    square_spread: Optional[float] = None
+    spread_diff: Optional[float] = None  # sharp - square
+    sharp_spread_side: Optional[str] = None  # "home" or "away" based on where sharp value is
+    # Total comparison
+    sharp_total: Optional[float] = None
+    square_total: Optional[float] = None
+    total_diff: Optional[float] = None  # sharp - square
+    sharp_total_side: Optional[str] = None  # "over" or "under"
+    # Metadata
+    sharp_book_used: Optional[str] = None
+    square_books_avg: Optional[List[str]] = None
+    updated_at: Optional[dt.datetime] = None
+
+
+async def fetch_sharp_square_lines(
+    sport: str = "basketball_nba",
+) -> List[SharpSquareComparison]:
+    """
+    Fetch odds from The-Odds-API and compare Pinnacle (sharp) vs DraftKings/FanDuel (square).
+
+    Returns list of SharpSquareComparison showing where sharp books have different lines.
+
+    This uses The-Odds-API because:
+    - It includes Pinnacle (sharp book) which Action Network doesn't
+    - It has lines from DraftKings, FanDuel, BetMGM (square books)
+    """
+    import httpx
+    from src.config import settings
+    from src.ingestion.standardize import normalize_team_to_espn
+
+    comparisons = []
+
+    if not settings.the_odds_api_key:
+        logger.warning("The-Odds-API key not configured - cannot fetch sharp/square comparison")
+        return comparisons
+
+    url = f"{settings.the_odds_base_url}/sports/{sport}/odds"
+    params = {
+        "apiKey": settings.the_odds_api_key,
+        "regions": "us,us2,eu",  # Include EU for Pinnacle
+        "markets": "spreads,totals",
+        "oddsFormat": "american",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        logger.info(f"Fetched {len(data)} games for sharp/square comparison")
+
+        for game in data:
+            home_raw = game.get("home_team", "")
+            away_raw = game.get("away_team", "")
+
+            home_team, home_valid = normalize_team_to_espn(home_raw, source="the_odds")
+            away_team, away_valid = normalize_team_to_espn(away_raw, source="the_odds")
+
+            if not home_valid or not away_valid:
+                continue
+
+            # Collect lines from sharp and square books
+            sharp_spreads = []
+            square_spreads = []
+            sharp_totals = []
+            square_totals = []
+            sharp_book_found = None
+            square_books_found = []
+
+            for bm in game.get("bookmakers", []):
+                book_key = bm.get("key", "").lower()
+
+                for market in bm.get("markets", []):
+                    market_key = market.get("key")
+                    outcomes = market.get("outcomes", [])
+
+                    if market_key == "spreads":
+                        # Find home team spread
+                        home_spread = None
+                        for outcome in outcomes:
+                            if outcome.get("name") == game.get("home_team"):
+                                home_spread = outcome.get("point")
+                                break
+
+                        if home_spread is not None:
+                            if book_key in SHARP_BOOKS:
+                                sharp_spreads.append(home_spread)
+                                sharp_book_found = book_key
+                            elif book_key in SQUARE_BOOKS:
+                                square_spreads.append(home_spread)
+                                if book_key not in square_books_found:
+                                    square_books_found.append(book_key)
+
+                    elif market_key == "totals":
+                        # Find total line
+                        total_line = None
+                        for outcome in outcomes:
+                            if outcome.get("name") == "Over":
+                                total_line = outcome.get("point")
+                                break
+
+                        if total_line is not None:
+                            if book_key in SHARP_BOOKS:
+                                sharp_totals.append(total_line)
+                            elif book_key in SQUARE_BOOKS:
+                                square_totals.append(total_line)
+
+            # Calculate averages and differences
+            sharp_spread = sharp_spreads[0] if sharp_spreads else None
+            square_spread = sum(square_spreads) / len(square_spreads) if square_spreads else None
+            sharp_total = sharp_totals[0] if sharp_totals else None
+            square_total = sum(square_totals) / len(square_totals) if square_totals else None
+
+            spread_diff = None
+            spread_side = None
+            total_diff = None
+            total_side = None
+
+            # Spread analysis
+            if sharp_spread is not None and square_spread is not None:
+                spread_diff = sharp_spread - square_spread
+                # If Pinnacle has a higher line (more positive), sharps like the home team
+                # If Pinnacle has a lower line (more negative), sharps like the away team
+                if spread_diff >= 0.5:
+                    # Pinnacle is higher -> sharps see value on HOME
+                    spread_side = "home"
+                elif spread_diff <= -0.5:
+                    # Pinnacle is lower -> sharps see value on AWAY
+                    spread_side = "away"
+
+            # Total analysis
+            if sharp_total is not None and square_total is not None:
+                total_diff = sharp_total - square_total
+                if total_diff >= 0.5:
+                    # Pinnacle total is higher -> sharps see value on OVER
+                    total_side = "over"
+                elif total_diff <= -0.5:
+                    # Pinnacle total is lower -> sharps see value on UNDER
+                    total_side = "under"
+
+            comparison = SharpSquareComparison(
+                event_id=game.get("id", ""),
+                home_team=home_team,
+                away_team=away_team,
+                sharp_spread=sharp_spread,
+                square_spread=round(square_spread, 1) if square_spread else None,
+                spread_diff=round(spread_diff, 1) if spread_diff else None,
+                sharp_spread_side=spread_side,
+                sharp_total=sharp_total,
+                square_total=round(square_total, 1) if square_total else None,
+                total_diff=round(total_diff, 1) if total_diff else None,
+                sharp_total_side=total_side,
+                sharp_book_used=sharp_book_found,
+                square_books_avg=square_books_found,
+                updated_at=dt.datetime.now(),
+            )
+
+            comparisons.append(comparison)
+            if spread_side or total_side:
+                logger.info(
+                    f"Sharp/square edge: {away_team}@{home_team} - "
+                    f"Spread: {sharp_spread} vs {square_spread} ({spread_side or 'no edge'}), "
+                    f"Total: {sharp_total} vs {square_total} ({total_side or 'no edge'})"
+                )
+
+    except Exception as e:
+        logger.error(f"Failed to fetch sharp/square comparison: {e}")
+
+    return comparisons
+
+
+def sharp_square_to_features(comp: SharpSquareComparison) -> Dict[str, Any]:
+    """Convert SharpSquareComparison to feature dict for model input."""
+    return {
+        "has_sharp_square_data": 1 if comp.sharp_spread is not None else 0,
+        "sharp_spread": comp.sharp_spread or 0.0,
+        "square_spread": comp.square_spread or 0.0,
+        "spread_sharp_square_diff": comp.spread_diff or 0.0,
+        "sharp_spread_side": (
+            1 if comp.sharp_spread_side == "home"
+            else (-1 if comp.sharp_spread_side == "away" else 0)
+        ),
+        "sharp_total": comp.sharp_total or 0.0,
+        "square_total": comp.square_total or 0.0,
+        "total_sharp_square_diff": comp.total_diff or 0.0,
+        "sharp_total_side": (
+            1 if comp.sharp_total_side == "over"
+            else (-1 if comp.sharp_total_side == "under" else 0)
+        ),
+        "sharp_book": comp.sharp_book_used or "",
+    }
+
+
 def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
     """
     Parse betting splits from Action Network format.
-    
+
     Note: Requires Action Network API subscription.
     """
     game = data.get("game", {})
     markets = data.get("markets", {})
-    
+
     spread_market = markets.get("spread", {})
     total_market = markets.get("total", {})
-    
+
     # Standardize team names to ESPN format (mandatory)
     from src.ingestion.standardize import normalize_team_to_espn
-    home_team_raw = game.get("home_team", {}).get("name", "") if isinstance(game.get("home_team"), dict) else game.get("home_team", "")
-    away_team_raw = game.get("away_team", {}).get("name", "") if isinstance(game.get("away_team"), dict) else game.get("away_team", "")
-    
-    home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="action_network") if home_team_raw else ("", False)
-    away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="action_network") if away_team_raw else ("", False)
-    
+    home_team_raw = game.get("home_team", {}).get("name", "") if isinstance(
+        game.get("home_team"), dict) else game.get("home_team", "")
+    away_team_raw = game.get("away_team", {}).get("name", "") if isinstance(
+        game.get("away_team"), dict) else game.get("away_team", "")
+
+    home_team, home_valid = normalize_team_to_espn(
+        str(home_team_raw), source="action_network") if home_team_raw else ("", False)
+    away_team, away_valid = normalize_team_to_espn(
+        str(away_team_raw), source="action_network") if away_team_raw else ("", False)
+
     if not home_valid or not away_valid:
-        logger.error(f"Invalid team names in betting splits: home='{home_team_raw}' (valid={home_valid}), away='{away_team_raw}' (valid={away_valid})")
+        logger.error(
+            f"Invalid team names in betting splits: home='{home_team_raw}' (valid={home_valid}), away='{away_team_raw}' (valid={away_valid})")
         return None  # Return None to indicate invalid data
-    
+
     splits = GameSplits(
         event_id=str(game.get("id", "")),
         home_team=home_team,
@@ -200,57 +422,65 @@ def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
         total_current=total_market.get("current_line", 0),
         updated_at=dt.datetime.now(),
     )
-    
+
     return detect_reverse_line_movement(splits)
 
 
 def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
     """Parse betting splits from The Odds API format."""
     splits_list = []
-    
+
     # Standardize team names to ESPN format (mandatory)
     from src.ingestion.standardize import normalize_team_to_espn
-    
+
     for game in data:
         try:
             home_team_raw = game.get("home_team", "")
             away_team_raw = game.get("away_team", "")
-            
+
             # Standardize team names
-            home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="the_odds") if home_team_raw else ("", False)
-            away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="the_odds") if away_team_raw else ("", False)
-            
+            home_team, home_valid = normalize_team_to_espn(
+                str(home_team_raw), source="the_odds") if home_team_raw else ("", False)
+            away_team, away_valid = normalize_team_to_espn(
+                str(away_team_raw), source="the_odds") if away_team_raw else ("", False)
+
             # Skip games with invalid team names
             if not home_valid or not away_valid:
-                logger.warning(f"Skipping betting splits with invalid team names: home='{home_team_raw}', away='{away_team_raw}'")
+                logger.warning(
+                    f"Skipping betting splits with invalid team names: home='{home_team_raw}', away='{away_team_raw}'")
                 continue
-            
+
             # The Odds API splits structure:
             # { "id": "...", "home_team": "...", "away_team": "...", "commence_time": "...",
             #   "bookmakers": [{ "key": "...", "markets": [{ "key": "spreads", "outcomes": [{ "name": "...", "public_percentage": 60 }, ...] }] }] }
-            
+
             # Use the first bookmaker that has splits
             bm = game.get("bookmakers", [{}])[0]
             markets = bm.get("markets", [])
-            
-            spread_market = next((m for m in markets if m["key"] == "spreads"), {})
-            total_market = next((m for m in markets if m["key"] == "totals"), {})
-            
+
+            spread_market = next(
+                (m for m in markets if m["key"] == "spreads"), {})
+            total_market = next(
+                (m for m in markets if m["key"] == "totals"), {})
+
             def get_pct(market, outcome_name):
                 outcomes = market.get("outcomes", [])
-                outcome = next((o for o in outcomes if o["name"] == outcome_name), {})
+                outcome = next(
+                    (o for o in outcomes if o["name"] == outcome_name), {})
                 return outcome.get("public_percentage", 50.0)
-            
+
             def get_total_pct(market, selection):
                 outcomes = market.get("outcomes", [])
-                outcome = next((o for o in outcomes if o.get("name", "").lower() == selection.lower()), {})
+                outcome = next((o for o in outcomes if o.get(
+                    "name", "").lower() == selection.lower()), {})
                 return outcome.get("public_percentage", 50.0)
 
             splits = GameSplits(
                 event_id=game.get("id", ""),
                 home_team=home_team,
                 away_team=away_team,
-                game_time=dt.datetime.fromisoformat(game.get("commence_time", dt.datetime.now().isoformat()).replace("Z", "+00:00")),
+                game_time=dt.datetime.fromisoformat(game.get(
+                    "commence_time", dt.datetime.now().isoformat()).replace("Z", "+00:00")),
                 # Spread
                 spread_home_ticket_pct=get_pct(spread_market, home_team),
                 spread_away_ticket_pct=get_pct(spread_market, away_team),
@@ -264,7 +494,7 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
         except Exception as e:
             logger.warning(f"Failed to parse The Odds API game: {e}")
             continue
-            
+
     return splits_list
 
 
@@ -369,7 +599,8 @@ async def fetch_splits_sbro(sport: str = "NBA") -> List[GameSplits]:
                 return parse_sbro_json(data)
             else:
                 # HTML response - would need parsing
-                logger.warning("SBRO returned HTML - may need JavaScript rendering")
+                logger.warning(
+                    "SBRO returned HTML - may need JavaScript rendering")
                 return []
 
     except Exception as e:
@@ -387,28 +618,36 @@ def parse_sbro_json(data: Dict[str, Any]) -> List[GameSplits]:
 
     # Standardize team names to ESPN format (mandatory)
     from src.ingestion.standardize import normalize_team_to_espn
-    
+
     for game in games:
         try:
-            home_team_raw = game.get("home", {}).get("name", "") if isinstance(game.get("home"), dict) else game.get("home", "")
-            away_team_raw = game.get("away", {}).get("name", "") if isinstance(game.get("away"), dict) else game.get("away", "")
-            
-            home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="sbro") if home_team_raw else ("", False)
-            away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="sbro") if away_team_raw else ("", False)
-            
+            home_team_raw = game.get("home", {}).get("name", "") if isinstance(
+                game.get("home"), dict) else game.get("home", "")
+            away_team_raw = game.get("away", {}).get("name", "") if isinstance(
+                game.get("away"), dict) else game.get("away", "")
+
+            home_team, home_valid = normalize_team_to_espn(
+                str(home_team_raw), source="sbro") if home_team_raw else ("", False)
+            away_team, away_valid = normalize_team_to_espn(
+                str(away_team_raw), source="sbro") if away_team_raw else ("", False)
+
             # Skip games with invalid team names
             if not home_valid or not away_valid:
-                logger.warning(f"Skipping SBRO game with invalid team names: home='{home_team_raw}', away='{away_team_raw}'")
+                logger.warning(
+                    f"Skipping SBRO game with invalid team names: home='{home_team_raw}', away='{away_team_raw}'")
                 continue
-            
+
             splits = GameSplits(
                 event_id=str(game.get("id", "")),
                 home_team=home_team,
                 away_team=away_team,
-                game_time=dt.datetime.fromisoformat(game.get("datetime", dt.datetime.now().isoformat())),
+                game_time=dt.datetime.fromisoformat(
+                    game.get("datetime", dt.datetime.now().isoformat())),
                 # Extract betting percentages if available
-                spread_home_ticket_pct=game.get("consensus", {}).get("spread", {}).get("home_pct", 50),
-                spread_away_ticket_pct=game.get("consensus", {}).get("spread", {}).get("away_pct", 50),
+                spread_home_ticket_pct=game.get("consensus", {}).get(
+                    "spread", {}).get("home_pct", 50),
+                spread_away_ticket_pct=game.get("consensus", {}).get(
+                    "spread", {}).get("away_pct", 50),
                 source="sbro",
                 updated_at=dt.datetime.now(),
             )
@@ -440,7 +679,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             # Check if premium credentials are available (Action PRO/Labs)
-            has_premium_creds = bool(settings.action_network_username and settings.action_network_password)
+            has_premium_creds = bool(
+                settings.action_network_username and settings.action_network_password)
 
             # Use the scoreboard API which provides premium data when credentials are configured
             scoreboard_url = "https://api.actionnetwork.com/web/v1/scoreboard/nba"
@@ -462,13 +702,17 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
             response = await client.get(scoreboard_url, headers=headers)
 
             if has_premium_creds:
-                logger.info("✓ Using Action Network with premium credentials configured")
+                logger.info(
+                    "✓ Using Action Network with premium credentials configured")
             else:
-                logger.info("Using Action Network public API (no premium credentials)")
+                logger.info(
+                    "Using Action Network public API (no premium credentials)")
 
             if response.status_code != 200:
-                logger.error(f"Action Network API failed: {response.status_code}")
-                raise ValueError(f"Action Network API returned {response.status_code}")
+                logger.error(
+                    f"Action Network API failed: {response.status_code}")
+                raise ValueError(
+                    f"Action Network API returned {response.status_code}")
 
             data = response.json()
             games = data.get("games", [])
@@ -478,7 +722,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                 return []
 
             cred_status = "with premium credentials" if has_premium_creds else "public access"
-            logger.info(f"Fetched {len(games)} games from Action Network API ({cred_status})")
+            logger.info(
+                f"Fetched {len(games)} games from Action Network API ({cred_status})")
 
             # Parse into GameSplits
             splits_list = []
@@ -507,11 +752,14 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     home_team_raw = home_team_data.get("full_name", "")
                     away_team_raw = away_team_data.get("full_name", "")
 
-                    home_team, home_valid = normalize_team_to_espn(str(home_team_raw), source="action_network")
-                    away_team, away_valid = normalize_team_to_espn(str(away_team_raw), source="action_network")
+                    home_team, home_valid = normalize_team_to_espn(
+                        str(home_team_raw), source="action_network")
+                    away_team, away_valid = normalize_team_to_espn(
+                        str(away_team_raw), source="action_network")
 
                     if not home_valid or not away_valid:
-                        logger.debug(f"Skipping game with invalid team names: {home_team_raw} vs {away_team_raw}")
+                        logger.debug(
+                            f"Skipping game with invalid team names: {home_team_raw} vs {away_team_raw}")
                         continue
 
                     # Get odds data - find "game" type odds with public percentages
@@ -530,7 +778,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                                 break
 
                     if not game_odds:
-                        logger.debug(f"No public betting data for {away_team} @ {home_team}")
+                        logger.debug(
+                            f"No public betting data for {away_team} @ {home_team}")
                         continue
 
                     # Extract betting percentages from odds
@@ -555,36 +804,52 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                         home_team=home_team,
                         away_team=away_team,
                         game_time=dt.datetime.fromisoformat(
-                            game.get("start_time", datetime.now().isoformat()).replace("Z", "+00:00")
+                            game.get("start_time", datetime.now(
+                            ).isoformat()).replace("Z", "+00:00")
                         ),
                         source="action_network",
-                        spread_line=float(spread_line) if spread_line is not None else 0.0,
-                        spread_home_ticket_pct=float(spread_home_pct) if spread_home_pct is not None else 50.0,
-                        spread_away_ticket_pct=float(spread_away_pct) if spread_away_pct is not None else 50.0,
-                        spread_home_money_pct=float(spread_home_money) if spread_home_money is not None else 50.0,
-                        spread_away_money_pct=float(spread_away_money) if spread_away_money is not None else 50.0,
-                        spread_open=float(spread_line) if spread_line is not None else 0.0,
-                        spread_current=float(spread_line) if spread_line is not None else 0.0,
-                        total_line=float(total_line) if total_line is not None else 0.0,
-                        over_ticket_pct=float(over_pct) if over_pct is not None else 50.0,
-                        under_ticket_pct=float(under_pct) if under_pct is not None else 50.0,
-                        over_money_pct=float(over_money) if over_money is not None else 50.0,
-                        under_money_pct=float(under_money) if under_money is not None else 50.0,
-                        total_open=float(total_line) if total_line is not None else 0.0,
-                        total_current=float(total_line) if total_line is not None else 0.0,
+                        spread_line=float(
+                            spread_line) if spread_line is not None else 0.0,
+                        spread_home_ticket_pct=float(
+                            spread_home_pct) if spread_home_pct is not None else 50.0,
+                        spread_away_ticket_pct=float(
+                            spread_away_pct) if spread_away_pct is not None else 50.0,
+                        spread_home_money_pct=float(
+                            spread_home_money) if spread_home_money is not None else 50.0,
+                        spread_away_money_pct=float(
+                            spread_away_money) if spread_away_money is not None else 50.0,
+                        spread_open=float(
+                            spread_line) if spread_line is not None else 0.0,
+                        spread_current=float(
+                            spread_line) if spread_line is not None else 0.0,
+                        total_line=float(
+                            total_line) if total_line is not None else 0.0,
+                        over_ticket_pct=float(
+                            over_pct) if over_pct is not None else 50.0,
+                        under_ticket_pct=float(
+                            under_pct) if under_pct is not None else 50.0,
+                        over_money_pct=float(
+                            over_money) if over_money is not None else 50.0,
+                        under_money_pct=float(
+                            under_money) if under_money is not None else 50.0,
+                        total_open=float(
+                            total_line) if total_line is not None else 0.0,
+                        total_current=float(
+                            total_line) if total_line is not None else 0.0,
                         updated_at=dt.datetime.now(),
                     )
 
                     splits_list.append(detect_reverse_line_movement(splits))
                     logger.debug(f"✓ Parsed betting splits for {away_team} @ {home_team}: "
-                                f"spread={spread_home_pct}/{spread_away_pct}, "
-                                f"total={over_pct}/{under_pct}")
+                                 f"spread={spread_home_pct}/{spread_away_pct}, "
+                                 f"total={over_pct}/{under_pct}")
 
                 except Exception as e:
                     logger.debug(f"Failed to parse Action Network game: {e}")
                     continue
 
-            logger.info(f"✓ Parsed {len(splits_list)} games with betting splits from Action Network")
+            logger.info(
+                f"✓ Parsed {len(splits_list)} games with betting splits from Action Network")
             return splits_list
 
     except Exception as e:
@@ -658,7 +923,8 @@ async def fetch_public_betting_splits(
             for splits in splits_list:
                 game_key = f"{splits.away_team}@{splits.home_team}"
                 splits_dict[game_key] = splits
-            logger.info(f"✓ Loaded betting splits from action_network: {len(splits_list)} games")
+            logger.info(
+                f"✓ Loaded betting splits from action_network: {len(splits_list)} games")
         else:
             # Try sources in order of preference
             # Action Network first (best data if credentials available)
@@ -685,7 +951,8 @@ async def fetch_public_betting_splits(
                         for splits in splits_list:
                             game_key = f"{splits.away_team}@{splits.home_team}"
                             splits_dict[game_key] = splits
-                        logger.info(f"✓ Loaded betting splits from {src}: {len(splits_list)} games")
+                        logger.info(
+                            f"✓ Loaded betting splits from {src}: {len(splits_list)} games")
                         break
                 except Exception as e:
                     logger.warning(f"Failed to fetch splits from {src}: {e}")
@@ -711,14 +978,16 @@ async def fetch_public_betting_splits(
         elif source == "mock":
             splits_list = _create_mock_splits_for_games(games)
         else:
-            raise ValueError(f"Unknown source: {source}. Valid sources: 'action_network', 'the_odds', 'sbro', 'covers', 'mock', 'auto'")
+            raise ValueError(
+                f"Unknown source: {source}. Valid sources: 'action_network', 'the_odds', 'sbro', 'covers', 'mock', 'auto'")
 
         for splits in splits_list:
             game_key = f"{splits.away_team}@{splits.home_team}"
             splits_dict[game_key] = splits
 
     if require_non_empty and not splits_dict:
-        raise RuntimeError("STRICT MODE: No betting splits available (require_non_empty=true)")
+        raise RuntimeError(
+            "STRICT MODE: No betting splits available (require_non_empty=true)")
 
     return splits_dict
 
