@@ -165,7 +165,8 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
 # Negative total_diff = Pinnacle has lower total (favors under)
 
 SHARP_BOOKS = {"pinnacle", "bookmaker", "betcris"}
-SQUARE_BOOKS = {"draftkings", "fanduel", "betmgm", "caesars", "fanatics", "espnbet"}
+SQUARE_BOOKS = {"draftkings", "fanduel",
+                "betmgm", "caesars", "fanatics", "espnbet"}
 
 
 @dataclass
@@ -177,11 +178,13 @@ class SharpSquareComparison:
     # Spread comparison (raw values - no threshold)
     sharp_spread: Optional[float] = None
     square_spread: Optional[float] = None
-    spread_diff: Optional[float] = None  # sharp - square (positive = sharps favor home)
+    # sharp - square (positive = sharps favor home)
+    spread_diff: Optional[float] = None
     # Total comparison (raw values - no threshold)
     sharp_total: Optional[float] = None
     square_total: Optional[float] = None
-    total_diff: Optional[float] = None  # sharp - square (positive = sharps favor over)
+    # sharp - square (positive = sharps favor over)
+    total_diff: Optional[float] = None
     # Metadata - CRITICAL for validation
     has_pinnacle_data: bool = False  # True only if Pinnacle specifically was found
     sharp_book_used: Optional[str] = None
@@ -271,8 +274,10 @@ async def fetch_sharp_square_lines(
         home_raw = game.get("home_team", "")
         away_raw = game.get("away_team", "")
 
-        home_team, home_valid = normalize_team_to_espn(home_raw, source="the_odds")
-        away_team, away_valid = normalize_team_to_espn(away_raw, source="the_odds")
+        home_team, home_valid = normalize_team_to_espn(
+            home_raw, source="the_odds")
+        away_team, away_valid = normalize_team_to_espn(
+            away_raw, source="the_odds")
 
         if not home_valid or not away_valid:
             continue
@@ -325,9 +330,11 @@ async def fetch_sharp_square_lines(
 
         # Calculate averages and differences - NO THRESHOLDS, raw values only
         sharp_spread = sharp_spreads[0] if sharp_spreads else None
-        square_spread = sum(square_spreads) / len(square_spreads) if square_spreads else None
+        square_spread = sum(square_spreads) / \
+            len(square_spreads) if square_spreads else None
         sharp_total = sharp_totals[0] if sharp_totals else None
-        square_total = sum(square_totals) / len(square_totals) if square_totals else None
+        square_total = sum(square_totals) / \
+            len(square_totals) if square_totals else None
 
         # Calculate raw differences (let model decide significance)
         spread_diff = None
@@ -348,10 +355,12 @@ async def fetch_sharp_square_lines(
             away_team=away_team,
             sharp_spread=sharp_spread,
             square_spread=round(square_spread, 2) if square_spread else None,
-            spread_diff=round(spread_diff, 2) if spread_diff is not None else None,
+            spread_diff=round(
+                spread_diff, 2) if spread_diff is not None else None,
             sharp_total=sharp_total,
             square_total=round(square_total, 2) if square_total else None,
-            total_diff=round(total_diff, 2) if total_diff is not None else None,
+            total_diff=round(
+                total_diff, 2) if total_diff is not None else None,
             has_pinnacle_data=has_pinnacle,
             sharp_book_used=sharp_book_found,
             square_books_used=square_books_found,
@@ -386,14 +395,15 @@ async def fetch_sharp_square_lines(
             "Model cannot run without sharp book data."
         )
 
-    logger.info(f"✓ Sharp/square validation PASSED: {len(comparisons)} games with complete Pinnacle data")
+    logger.info(
+        f"✓ Sharp/square validation PASSED: {len(comparisons)} games with complete Pinnacle data")
     return comparisons
 
 
 def sharp_square_to_features(comp: SharpSquareComparison) -> Dict[str, Any]:
     """
     Convert SharpSquareComparison to feature dict for model input.
-    
+
     Raw continuous values - no thresholds applied.
     Model will learn appropriate weights for these signals.
     spread_diff: positive = Pinnacle favors home, negative = favors away
@@ -411,7 +421,7 @@ def sharp_square_to_features(comp: SharpSquareComparison) -> Dict[str, Any]:
             "total_sharp_square_diff": 0.0,
             "num_square_books": 0,
         }
-    
+
     return {
         "has_pinnacle_data": 1,  # Confirmed real Pinnacle data
         "pinnacle_spread": comp.sharp_spread or 0.0,
@@ -856,19 +866,22 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     spread_open = spread_line  # default to current
                     total_open = total_line    # default to current
                     earliest_inserted = None
-                    
+
                     for odds in odds_list:
                         if odds.get("type") == "game" and odds.get("spread_home") is not None:
                             inserted = odds.get("inserted")
                             if inserted:
                                 try:
                                     inserted_dt = dt.datetime.fromisoformat(
-                                        inserted.replace("Z", "+00:00") if isinstance(inserted, str) else str(inserted)
+                                        inserted.replace(
+                                            "Z", "+00:00") if isinstance(inserted, str) else str(inserted)
                                     )
                                     if earliest_inserted is None or inserted_dt < earliest_inserted:
                                         earliest_inserted = inserted_dt
-                                        spread_open = odds.get("spread_home", spread_line)
-                                        total_open = odds.get("total", total_line)
+                                        spread_open = odds.get(
+                                            "spread_home", spread_line)
+                                        total_open = odds.get(
+                                            "total", total_line)
                                 except (ValueError, TypeError):
                                     pass
 
@@ -895,7 +908,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             spread_home_money) if spread_home_money is not None else 50.0,
                         spread_away_money_pct=float(
                             spread_away_money) if spread_away_money is not None else 50.0,
-                        spread_open=float(spread_open) if spread_open is not None else 0.0,
+                        spread_open=float(
+                            spread_open) if spread_open is not None else 0.0,
                         spread_current=float(
                             spread_line) if spread_line is not None else 0.0,
                         total_line=float(
@@ -908,7 +922,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             over_money) if over_money is not None else 50.0,
                         under_money_pct=float(
                             under_money) if under_money is not None else 50.0,
-                        total_open=float(total_open) if total_open is not None else 0.0,
+                        total_open=float(
+                            total_open) if total_open is not None else 0.0,
                         total_current=float(
                             total_line) if total_line is not None else 0.0,
                         updated_at=dt.datetime.now(),

@@ -435,7 +435,7 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
     # Fetch betting splits if enabled
     betting_splits_dict = {}
     sharp_square_dict = {}  # Pinnacle vs Square book comparison
-    
+
     if use_betting_splits:
         print("\nFetching public betting percentages (Action Network)...")
         try:
@@ -453,13 +453,16 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             for comp in sharp_square_data:
                 game_key = f"{comp.away_team}@{comp.home_team}"
                 sharp_square_dict[game_key] = comp
-            print(f"  [OK] Loaded Pinnacle data for {len(sharp_square_dict)} games")
+            print(
+                f"  [OK] Loaded Pinnacle data for {len(sharp_square_dict)} games")
             for comp in sharp_square_data:
-                print(f"    • {comp.away_team}@{comp.home_team}: spread_diff={comp.spread_diff:+.2f}, total_diff={comp.total_diff:+.2f}")
+                print(
+                    f"    • {comp.away_team}@{comp.home_team}: spread_diff={comp.spread_diff:+.2f}, total_diff={comp.total_diff:+.2f}")
         except SharpDataUnavailableError as e:
             # HARD FAILURE - Pinnacle data is REQUIRED
             print(f"  [CRITICAL] Sharp book data unavailable: {e}")
-            print(f"  [CRITICAL] Cannot generate predictions without Pinnacle data!")
+            print(
+                f"  [CRITICAL] Cannot generate predictions without Pinnacle data!")
             raise  # Propagate error - no degraded mode allowed
 
     # Initialize feature builder and unified prediction engine
@@ -508,11 +511,14 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             if sharp_square_comp:
                 sharp_features = sharp_square_to_features(sharp_square_comp)
                 features.update(sharp_features)
-                print(f"  [SHARP] Pinnacle spread={sharp_square_comp.sharp_spread} vs Square avg={sharp_square_comp.square_spread} (diff={sharp_square_comp.spread_diff:+.2f})")
-                print(f"  [SHARP] Pinnacle total={sharp_square_comp.sharp_total} vs Square avg={sharp_square_comp.square_total} (diff={sharp_square_comp.total_diff:+.2f})")
+                print(
+                    f"  [SHARP] Pinnacle spread={sharp_square_comp.sharp_spread} vs Square avg={sharp_square_comp.square_spread} (diff={sharp_square_comp.spread_diff:+.2f})")
+                print(
+                    f"  [SHARP] Pinnacle total={sharp_square_comp.sharp_total} vs Square avg={sharp_square_comp.square_total} (diff={sharp_square_comp.total_diff:+.2f})")
             else:
                 # This should not happen with HARD FAILURE mode, but log it
-                print(f"  [ERROR] No Pinnacle data for {game_key} - this should not happen!")
+                print(
+                    f"  [ERROR] No Pinnacle data for {game_key} - this should not happen!")
 
             # Extract all lines
             lines = extract_lines(game, home_team)

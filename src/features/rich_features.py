@@ -944,12 +944,30 @@ class RichFeatureBuilder:
 
         home_games_played = home_record.get(
             "games_played", home_wins + home_losses)
-        away_games_played = away_record.get(
+        away_games_played = home_record.get(
             "games_played", away_wins + away_losses)
+
+        # FALLBACK: If API-Basketball standings have 0 games, try ESPN standings
+        if home_games_played == 0 or away_games_played == 0:
+            try:
+                from src.ingestion.espn import fetch_espn_standings
+                espn_standings = await fetch_espn_standings()
+                home_espn = espn_standings.get(home_team)
+                away_espn = espn_standings.get(away_team)
+                if home_espn and away_espn:
+                    home_wins = home_espn.wins
+                    home_losses = home_espn.losses
+                    home_games_played = home_wins + home_losses
+                    away_wins = away_espn.wins
+                    away_losses = away_espn.losses
+                    away_games_played = away_wins + away_losses
+                    print(f"[FALLBACK] Using ESPN standings: {home_team} ({home_wins}-{home_losses}), {away_team} ({away_wins}-{away_losses})")
+            except Exception as e:
+                print(f"[WARNING] ESPN standings fallback failed: {e}")
 
         if home_games_played == 0 or away_games_played == 0:
             raise ValueError(
-                f"STRICT MODE: API-B standings missing games played data (home={home_team}, away={away_team})"
+                f"STRICT MODE: Both API-B and ESPN standings missing games played data (home={home_team}, away={away_team})"
             )
 
         home_win_pct = home_wins / home_games_played if home_games_played > 0 else 0.0
