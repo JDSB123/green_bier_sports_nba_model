@@ -126,13 +126,14 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
             splits.total_rlm = True
             splits.sharp_total_side = "over"
     
-    # Also check ticket vs money divergence
+    # Also check ticket vs money divergence (sharp money detection)
     # If tickets are on home but money is on away, sharps on away
+    # Standard threshold in sports betting is 5-8% divergence
     ticket_money_diff_spread = (
         splits.spread_home_ticket_pct - splits.spread_home_money_pct
     )
-    if abs(ticket_money_diff_spread) > 10:
-        # Significant divergence
+    if abs(ticket_money_diff_spread) >= 5:
+        # Meaningful divergence - suggests sharp vs public split
         if ticket_money_diff_spread > 0:
             # More tickets on home than money -> sharps on away
             splits.sharp_spread_side = "away"
@@ -140,7 +141,7 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
             splits.sharp_spread_side = "home"
     
     ticket_money_diff_total = splits.over_ticket_pct - splits.over_money_pct
-    if abs(ticket_money_diff_total) > 10:
+    if abs(ticket_money_diff_total) >= 5:
         if ticket_money_diff_total > 0:
             splits.sharp_total_side = "under"
         else:
