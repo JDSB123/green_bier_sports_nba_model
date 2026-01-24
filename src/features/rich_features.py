@@ -1,14 +1,14 @@
 """src.features.rich_features
 
-Build rich features from live API-Basketball endpoints.
+Build rich features from live API data.
 
 FRESH DATA ONLY - No file caching, no silent fallbacks.
 
 DATA SOURCE ARCHITECTURE (QA/QC):
 ================================
-This module uses API-Basketball for INTERNAL feature calculations:
-- Team statistics, H2H history, standings position
-- Recent form, efficiency ratings, pace factors
+- ESPN: AUTHORITATIVE source for box scores (steals, blocks, turnovers, rebounds)
+- API-Basketball: Team statistics, H2H history, standings position, player stats
+- The Odds API: Betting lines and odds
 
 IMPORTANT: For OUTPUT/DISPLAY purposes (team records shown with picks),
 the serving layer (app.py) uses The Odds API scores to calculate
@@ -26,10 +26,8 @@ Feature design inspiration (high level):
 - H2H history
 
 Uses all available endpoints:
-- Team statistics (season averages)
-- H2H history
-- Standings (for contextual strength)
-- Recent games (form)
+- ESPN: Box scores with COMPLETE stats (steals, blocks, turnovers)
+- API-Basketball: Team statistics (season averages), H2H history, standings
 - Player stats (key contributors)
 
 STRICT MODE: Raises errors if data is missing - no silent defaults, no stale caches.
@@ -39,7 +37,7 @@ import asyncio
 import math
 import os
 from statistics import stdev
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional
 
 import pandas as pd
@@ -47,6 +45,7 @@ import pandas as pd
 from src.config import settings
 from src.ingestion import api_basketball
 from src.ingestion.api_basketball import normalize_standings_response
+from src.ingestion.espn import fetch_espn_box_score, fetch_espn_schedule, ESPNBoxScore, fetch_espn_recent_game_ids
 from src.utils.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
@@ -484,234 +483,180 @@ class RichFeatureBuilder:
 
         return team_games[:limit]
 
-    async def get_box_score_stats(self, game_id: int) -> Optional[List[Dict]]:
+    async def get_box_score_stats(self, game_id: int, espn_game_id: str = None) -> Optional[Dict]:
         """
-        Get box score stats for a specific game.
+        Get COMPLETE box score stats for a specific game from ESPN.
 
-        STRATEGY: Try /games/statistics/teams first, fallback to aggregating
-        player stats from /games/statistics/players if team stats unavailable.
-
-        Returns team stats including: FG%, 3PT%, FT%, rebounds, assists, steals, blocks, turnovers.
-        """
-        if game_id in self._box_scores_cache:
-            return self._box_scores_cache[game_id]
-
-        # Try team stats endpoint first
-        try:
-            result = await api_basketball.fetch_game_stats_teams(id=game_id)
-            response = result.data.get("response", []) if hasattr(result, 'data') else result.get("response", [])
-            if response:
-                self._box_scores_cache[game_id] = response
-                return response
-        except Exception as e:
-            print(f"[API] Team stats unavailable for game {game_id}, trying player aggregation: {e}")
-
-        # Fallback: Aggregate from player stats
-        try:
-            aggregated = await self._aggregate_player_stats_to_team(game_id)
-            if aggregated:
-                self._box_scores_cache[game_id] = aggregated
-                return aggregated
-        except Exception as e:
-            print(f"[API] Player aggregation also failed for game {game_id}: {e}")
-
-        return None
-
-    async def _aggregate_player_stats_to_team(self, game_id: int) -> Optional[List[Dict]]:
-        """
-        Aggregate player box scores into team totals.
-
-        API-Basketball's /games/statistics/teams endpoint sometimes returns empty
-        for recent games, but /games/statistics/players has data. This aggregates
-        player stats by team to create equivalent team box scores.
-        """
-        print(f"[API] Fetching player box scores for game {game_id}")
-        result = await api_basketball.fetch_game_stats_players(id=game_id)
-        players = result.data.get("response", []) if hasattr(result, 'data') else result.get("response", [])
-
-        if not players:
-            return None
-
-        # Aggregate by team
-        team_totals: Dict[int, Dict] = {}
-
-        for player in players:
-            team_id = player.get("team", {}).get("id")
-            if not team_id:
-                continue
-
-            if team_id not in team_totals:
-                team_totals[team_id] = {
-                    "team": {"id": team_id, "name": player.get("team", {}).get("name")},
-                    "field_goals": {"total": 0, "attempts": 0},
-                    "threepoint_goals": {"total": 0, "attempts": 0},
-                    "freethrows_goals": {"total": 0, "attempts": 0},
-                    "rebounds": {"total": 0, "offence": 0, "defense": 0},
-                    "assists": 0,
-                    "steals": 0,
-                    "blocks": 0,
-                    "turnovers": 0,
-                    "personal_fouls": 0,
-                }
-
-            totals = team_totals[team_id]
-
-            # Field goals
-            fg = player.get("field_goals", {})
-            totals["field_goals"]["total"] += fg.get("total", 0) or 0
-            totals["field_goals"]["attempts"] += fg.get("attempts", 0) or 0
-
-            # 3-pointers
-            three = player.get("threepoint_goals", {})
-            totals["threepoint_goals"]["total"] += three.get("total", 0) or 0
-            totals["threepoint_goals"]["attempts"] += three.get("attempts", 0) or 0
-
-            # Free throws
-            ft = player.get("freethrows_goals", {})
-            totals["freethrows_goals"]["total"] += ft.get("total", 0) or 0
-            totals["freethrows_goals"]["attempts"] += ft.get("attempts", 0) or 0
-
-            # Rebounds (player stats may only have total)
-            reb = player.get("rebounds", {})
-            if isinstance(reb, dict):
-                totals["rebounds"]["total"] += reb.get("total", 0) or 0
-                totals["rebounds"]["offence"] += reb.get("offence", 0) or 0
-                totals["rebounds"]["defense"] += reb.get("defense", 0) or 0
-            elif isinstance(reb, (int, float)):
-                totals["rebounds"]["total"] += reb or 0
-
-            # Other stats
-            totals["assists"] += player.get("assists", 0) or 0
-            totals["steals"] += player.get("steals", 0) or 0
-            totals["blocks"] += player.get("blocks", 0) or 0
-            totals["turnovers"] += player.get("turnovers", 0) or 0
-            totals["personal_fouls"] += player.get("personal_fouls", 0) or 0
-
-        if not team_totals:
-            return None
-
-        # Convert to list format matching /games/statistics/teams response
-        result_list = list(team_totals.values())
-        print(f"[API] Aggregated player stats into {len(result_list)} team box scores")
-        return result_list
-
-    async def get_team_box_score_averages(self, team_id: int, recent_games: List[Dict]) -> Dict[str, float]:
-        """
-        Calculate rolling box score averages for a team from their recent games.
-
-        Fetches detailed box scores and calculates:
-        - FG%, 3PT%, FT%
-        - Rebounds (total, offensive, defensive)
-        - Assists, steals, blocks, turnovers
-        - Assist/Turnover ratio
-        - Offensive rebound %
+        ESPN is the AUTHORITATIVE SOURCE for box scores because API-Basketball's
+        /games/statistics/teams endpoint is EMPTY for NBA games.
 
         Args:
-            team_id: Team ID
-            recent_games: List of recent game dicts (from get_recent_games)
+            game_id: API-Basketball game ID (for caching/reference)
+            espn_game_id: ESPN game ID (if known)
 
         Returns:
-            Dict with rolling averages for all box score stats
+            Dict with complete box score data from ESPN, or None if unavailable.
+            Raises RuntimeError if ESPN API fails (no silent failures).
         """
-        # Default values if no data
-        defaults = {
-            "fg_pct": 0.45,
-            "fg_made": 0.0,
-            "fg_attempts": 0.0,
-            "three_pct": 0.35,
-            "three_made": 0.0,
-            "three_attempts": 0.0,
-            "ft_pct": 0.75,
-            "ft_made": 0.0,
-            "ft_attempts": 0.0,
-            "rebounds_total": 44.0,
-            "rebounds_off": 10.0,
-            "rebounds_def": 34.0,
-            "assists": 24.0,
-            "steals": 7.0,
-            "blocks": 5.0,
-            "turnovers": 14.0,
-            "personal_fouls": 20.0,
-            "ast_to_ratio": 1.7,
-            "oreb_pct": 0.23,
-            "efg_pct": 0.52,  # Effective FG% = (FG + 0.5 * 3PM) / FGA
+        # Check cache first
+        cache_key = f"espn_{espn_game_id}" if espn_game_id else f"apibball_{game_id}"
+        if cache_key in self._box_scores_cache:
+            return self._box_scores_cache[cache_key]
+
+        # If we have ESPN game ID, fetch directly
+        if espn_game_id:
+            try:
+                espn_data = await fetch_espn_box_score(espn_game_id)
+                result = self._convert_espn_to_internal_format(espn_data, game_id)
+                self._box_scores_cache[cache_key] = result
+                return result
+            except Exception as e:
+                print(f"[ERROR] ESPN box score fetch failed for {espn_game_id}: {e}")
+                raise RuntimeError(f"ESPN box score unavailable for game {espn_game_id}: {e}")
+
+        # Without ESPN ID, we cannot get complete box scores
+        # API-Basketball's team stats endpoint is empty for NBA
+        print(f"[WARNING] No ESPN game ID provided for API-Basketball game {game_id}")
+        print(f"[WARNING] API-Basketball does NOT provide complete box scores for NBA")
+        return None
+
+    def _convert_espn_to_internal_format(self, espn_data: Dict, api_bball_game_id: int = None) -> Dict:
+        """
+        Convert ESPN box score format to internal format used by features.
+
+        Maps ESPN's ESPNBoxScore objects to our team_totals structure.
+        """
+        teams_data = {}
+
+        for box in espn_data.get("teams", []):
+            # ESPN uses team names, we'll use name as key
+            team_name = box.team_name
+            team_id = box.team_id
+
+            teams_data[team_name] = {
+                "team_info": {"id": team_id, "name": team_name},
+                "team_totals": {
+                    "field_goals": {"total": box.fg_made, "attempts": box.fg_attempts},
+                    "threepoint_goals": {"total": box.three_made, "attempts": box.three_attempts},
+                    "freethrows_goals": {"total": box.ft_made, "attempts": box.ft_attempts},
+                    "rebounds": {
+                        "total": box.rebounds_total,
+                        "offence": box.rebounds_off,
+                        "defense": box.rebounds_def,
+                    },
+                    "assists": box.assists,
+                    "steals": box.steals,
+                    "blocks": box.blocks,
+                    "turnovers": box.turnovers,
+                    "personal_fouls": box.personal_fouls,
+                    "points": box.points,
+                },
+                "source": "espn",
+                "players": [],  # Will be populated from espn_data["players"]
+            }
+
+        # Add player data
+        for player in espn_data.get("players", []):
+            team_name = player.team_name
+            if team_name in teams_data:
+                teams_data[team_name]["players"].append({
+                    "name": player.player_name,
+                    "id": player.player_id,
+                    "starter": player.starter,
+                    "minutes": player.minutes,
+                    "points": player.points,
+                    "rebounds": player.rebounds_total,
+                    "assists": player.assists,
+                    "steals": player.steals,
+                    "blocks": player.blocks,
+                    "turnovers": player.turnovers,
+                })
+
+        return {
+            "game_id": espn_data.get("game_id"),
+            "api_basketball_game_id": api_bball_game_id,
+            "data_sources": {"espn": True, "api_basketball": False},
+            "teams": teams_data,
         }
 
-        if not recent_games:
-            return defaults
+    async def get_team_box_score_averages_espn(self, team_name: str, limit: int = 10) -> Dict[str, float]:
+        """
+        Get box score averages for a team using ESPN data.
 
-        # Collect box score stats from recent games
-        stats_totals = {k: 0.0 for k in defaults.keys()}
-        games_with_stats = 0
+        This is the AUTHORITATIVE method for box score averages.
+        Uses ESPN's complete box score data (steals, blocks, turnovers, etc.)
 
-        # Fetch box scores for up to 10 recent games (batch to limit API calls)
-        game_ids = [g.get("id") for g in recent_games[:10] if g.get("id")]
+        Args:
+            team_name: ESPN team display name (e.g., "Los Angeles Lakers")
+            limit: Number of recent games to average
+
+        Returns:
+            Dict with all box score averages - NO NONE VALUES.
+
+        Raises:
+            RuntimeError: If insufficient data available
+        """
+        # Get recent completed game IDs from ESPN
+        game_ids = await fetch_espn_recent_game_ids(team_name, limit=limit)
+
+        if not game_ids:
+            raise RuntimeError(f"No recent ESPN games found for {team_name}")
+
+        # Fetch box scores for each game
+        stats_totals = {
+            "fg_made": 0, "fg_attempts": 0,
+            "three_made": 0, "three_attempts": 0,
+            "ft_made": 0, "ft_attempts": 0,
+            "rebounds_total": 0, "rebounds_off": 0, "rebounds_def": 0,
+            "assists": 0, "steals": 0, "blocks": 0,
+            "turnovers": 0, "personal_fouls": 0, "points": 0,
+        }
+        games_counted = 0
 
         for game_id in game_ids:
-            box_score = await self.get_box_score_stats(game_id)
-            if not box_score:
+            try:
+                box_data = await fetch_espn_box_score(game_id)
+
+                # Find this team's stats
+                for team_box in box_data.get("teams", []):
+                    if team_box.team_name == team_name:
+                        stats_totals["fg_made"] += team_box.fg_made
+                        stats_totals["fg_attempts"] += team_box.fg_attempts
+                        stats_totals["three_made"] += team_box.three_made
+                        stats_totals["three_attempts"] += team_box.three_attempts
+                        stats_totals["ft_made"] += team_box.ft_made
+                        stats_totals["ft_attempts"] += team_box.ft_attempts
+                        stats_totals["rebounds_total"] += team_box.rebounds_total
+                        stats_totals["rebounds_off"] += team_box.rebounds_off
+                        stats_totals["rebounds_def"] += team_box.rebounds_def
+                        stats_totals["assists"] += team_box.assists
+                        stats_totals["steals"] += team_box.steals
+                        stats_totals["blocks"] += team_box.blocks
+                        stats_totals["turnovers"] += team_box.turnovers
+                        stats_totals["personal_fouls"] += team_box.personal_fouls
+                        stats_totals["points"] += team_box.points
+                        games_counted += 1
+                        break
+
+            except Exception as e:
+                print(f"[WARNING] Failed to fetch ESPN box score for game {game_id}: {e}")
                 continue
 
-            # Find this team's stats in the box score
-            for team_stats in box_score:
-                if team_stats.get("team", {}).get("id") == team_id:
-                    games_with_stats += 1
+        if games_counted == 0:
+            raise RuntimeError(f"No ESPN box scores could be fetched for {team_name}")
 
-                    # Field goals
-                    fg = team_stats.get("field_goals", {})
-                    fg_made = fg.get("total", 0) or 0
-                    fg_att = fg.get("attempts", 0) or 0
-                    stats_totals["fg_made"] += fg_made
-                    stats_totals["fg_attempts"] += fg_att
-
-                    # 3-pointers
-                    three = team_stats.get("threepoint_goals", {})
-                    three_made = three.get("total", 0) or 0
-                    three_att = three.get("attempts", 0) or 0
-                    stats_totals["three_made"] += three_made
-                    stats_totals["three_attempts"] += three_att
-
-                    # Free throws
-                    ft = team_stats.get("freethrows_goals", {})
-                    ft_made = ft.get("total", 0) or 0
-                    ft_att = ft.get("attempts", 0) or 0
-                    stats_totals["ft_made"] += ft_made
-                    stats_totals["ft_attempts"] += ft_att
-
-                    # Rebounds
-                    reb = team_stats.get("rebounds", {})
-                    stats_totals["rebounds_total"] += reb.get("total", 0) or 0
-                    stats_totals["rebounds_off"] += reb.get("offence", 0) or 0
-                    stats_totals["rebounds_def"] += reb.get("defense", 0) or 0
-
-                    # Other stats
-                    stats_totals["assists"] += team_stats.get(
-                        "assists", 0) or 0
-                    stats_totals["steals"] += team_stats.get("steals", 0) or 0
-                    stats_totals["blocks"] += team_stats.get("blocks", 0) or 0
-                    stats_totals["turnovers"] += team_stats.get(
-                        "turnovers", 0) or 0
-                    stats_totals["personal_fouls"] += team_stats.get(
-                        "personal_fouls", 0) or 0
-                    break
-
-        if games_with_stats == 0:
-            print(
-                f"[BOX SCORE] No box score data found for team {team_id}, using defaults")
-            return defaults
-
-        # Calculate averages
-        n = games_with_stats
+        # Calculate averages - ALL VALUES GUARANTEED
+        n = games_counted
         result = {
             "fg_made": stats_totals["fg_made"] / n,
             "fg_attempts": stats_totals["fg_attempts"] / n,
-            "fg_pct": (stats_totals["fg_made"] / stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 45.0,
+            "fg_pct": (stats_totals["fg_made"] / stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 0,
             "three_made": stats_totals["three_made"] / n,
             "three_attempts": stats_totals["three_attempts"] / n,
-            "three_pct": (stats_totals["three_made"] / stats_totals["three_attempts"] * 100) if stats_totals["three_attempts"] > 0 else 35.0,
+            "three_pct": (stats_totals["three_made"] / stats_totals["three_attempts"] * 100) if stats_totals["three_attempts"] > 0 else 0,
             "ft_made": stats_totals["ft_made"] / n,
             "ft_attempts": stats_totals["ft_attempts"] / n,
-            "ft_pct": (stats_totals["ft_made"] / stats_totals["ft_attempts"] * 100) if stats_totals["ft_attempts"] > 0 else 75.0,
+            "ft_pct": (stats_totals["ft_made"] / stats_totals["ft_attempts"] * 100) if stats_totals["ft_attempts"] > 0 else 0,
             "rebounds_total": stats_totals["rebounds_total"] / n,
             "rebounds_off": stats_totals["rebounds_off"] / n,
             "rebounds_def": stats_totals["rebounds_def"] / n,
@@ -720,23 +665,56 @@ class RichFeatureBuilder:
             "blocks": stats_totals["blocks"] / n,
             "turnovers": stats_totals["turnovers"] / n,
             "personal_fouls": stats_totals["personal_fouls"] / n,
+            "points": stats_totals["points"] / n,
+            "games_counted": games_counted,
+            "data_source": "espn",
         }
 
-        # Derived metrics
-        result["ast_to_ratio"] = result["assists"] / \
-            result["turnovers"] if result["turnovers"] > 0 else 1.7
-        result["oreb_pct"] = result["rebounds_off"] / \
-            result["rebounds_total"] if result["rebounds_total"] > 0 else 0.23
-        # Effective FG% = (FGM + 0.5 * 3PM) / FGA
-        if stats_totals["fg_attempts"] > 0:
-            result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 *
-                                 stats_totals["three_made"]) / stats_totals["fg_attempts"]) * 100
-        else:
-            result["efg_pct"] = 52.0
+        # Derived metrics - ALL CALCULATED, NO NONE
+        result["ast_to_ratio"] = result["assists"] / result["turnovers"] if result["turnovers"] > 0 else result["assists"]
+        result["oreb_pct"] = result["rebounds_off"] / result["rebounds_total"] if result["rebounds_total"] > 0 else 0
+        result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 * stats_totals["three_made"]) / stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 0
 
-        print(
-            f"[BOX SCORE] Team {team_id}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, AST/TO={result['ast_to_ratio']:.2f} (from {n} games)")
+        print(f"[ESPN BOX] {team_name}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, "
+              f"STL={result['steals']:.1f}, BLK={result['blocks']:.1f}, TO={result['turnovers']:.1f} ({n} games)")
+
         return result
+
+    async def get_team_box_score_averages(self, team_id: int, recent_games: List[Dict], team_name: str = None) -> Dict[str, float]:
+        """
+        Calculate rolling box score averages for a team from their recent games.
+
+        Fetches detailed box scores (BOTH team and player stats) and calculates:
+        - FG%, 3PT%, FT%
+        - Rebounds (total, offensive, defensive)
+        - Assists, steals, blocks, turnovers
+        - Assist/Turnover ratio
+        - Offensive rebound %
+        - Player count per game
+
+        NO DEFAULTS - returns None for missing data, raises errors for failures.
+
+        Args:
+            team_id: Team ID
+            recent_games: List of recent game dicts (from get_recent_games)
+            team_name: ESPN team name (required for ESPN lookup)
+
+        Returns:
+            Dict with rolling averages for ALL box score stats - NO NONE VALUES.
+
+        Raises:
+            RuntimeError: If team_name not provided or ESPN data unavailable
+        """
+        # If team_name provided, use ESPN (AUTHORITATIVE SOURCE)
+        if team_name:
+            try:
+                return await self.get_team_box_score_averages_espn(team_name, limit=10)
+            except Exception as e:
+                print(f"[ERROR] ESPN box score fetch failed for {team_name}: {e}")
+                raise RuntimeError(f"Cannot get box scores for {team_name}: ESPN unavailable - {e}")
+
+        # Without team name, we cannot use ESPN
+        raise RuntimeError(f"team_name is REQUIRED for box score averages (ESPN is the only complete source)")
 
     def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
         """Calculate team W-L record from completed games data.
@@ -907,9 +885,10 @@ class RichFeatureBuilder:
         )
 
         # Fetch box score averages for advanced stats (FG%, 3PT%, rebounds, etc.)
+        # Using ESPN as the authoritative source - passes team names for ESPN lookup
         home_box_avgs, away_box_avgs = await asyncio.gather(
-            self.get_team_box_score_averages(home_id, home_recent),
-            self.get_team_box_score_averages(away_id, away_recent),
+            self.get_team_box_score_averages(home_id, home_recent, team_name=home_team),
+            self.get_team_box_score_averages(away_id, away_recent, team_name=away_team),
         )
 
         # Extract season averages

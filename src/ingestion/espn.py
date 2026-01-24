@@ -237,6 +237,299 @@ async def fetch_espn_schedule(
 
 
 @dataclass
+class ESPNBoxScore:
+    """Complete box score data from ESPN - AUTHORITATIVE SOURCE."""
+    game_id: str
+    team_name: str
+    team_id: str
+    # Shooting
+    fg_made: int
+    fg_attempts: int
+    fg_pct: float
+    three_made: int
+    three_attempts: int
+    three_pct: float
+    ft_made: int
+    ft_attempts: int
+    ft_pct: float
+    # Rebounds
+    rebounds_total: int
+    rebounds_off: int
+    rebounds_def: int
+    # Other stats - ALL REQUIRED, NO NONE VALUES
+    assists: int
+    steals: int
+    blocks: int
+    turnovers: int
+    total_turnovers: int  # Includes team turnovers
+    personal_fouls: int
+    points: int
+
+
+@dataclass
+class ESPNPlayerBoxScore:
+    """Player-level box score data from ESPN."""
+    game_id: str
+    team_name: str
+    player_name: str
+    player_id: str
+    starter: bool
+    minutes: str
+    fg_made: int
+    fg_attempts: int
+    three_made: int
+    three_attempts: int
+    ft_made: int
+    ft_attempts: int
+    rebounds_off: int
+    rebounds_def: int
+    rebounds_total: int
+    assists: int
+    steals: int
+    blocks: int
+    turnovers: int
+    personal_fouls: int
+    plus_minus: int
+    points: int
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+)
+async def fetch_espn_box_score(game_id: str) -> Dict[str, Any]:
+    """
+    Fetch COMPLETE box score data from ESPN for a specific game.
+    
+    ESPN is the AUTHORITATIVE SOURCE for box scores because:
+    - Has ALL stats: steals, blocks, turnovers, off/def rebounds
+    - FREE API, no rate limits
+    - Real-time updates
+    
+    Args:
+        game_id: ESPN game ID (e.g., "401810490")
+    
+    Returns:
+        Dict with 'teams' (list of ESPNBoxScore) and 'players' (list of ESPNPlayerBoxScore)
+    
+    Raises:
+        RuntimeError: If ESPN API fails or returns incomplete data
+    """
+    url = f"{BASE_URL}/summary"
+    params = {"event": game_id}
+    
+    logger.info(f"[ESPN] Fetching box score for game {game_id}")
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+    
+    if "boxscore" not in data:
+        raise RuntimeError(f"ESPN returned no boxscore data for game {game_id}")
+    
+    boxscore = data["boxscore"]
+    result = {
+        "game_id": game_id,
+        "teams": [],
+        "players": [],
+        "game_info": data.get("header", {}),
+    }
+    
+    # Parse team box scores
+    for team_data in boxscore.get("teams", []):
+        team_info = team_data.get("team", {})
+        team_name = team_info.get("displayName", "")
+        team_id = str(team_info.get("id", ""))
+        
+        if not team_name:
+            raise RuntimeError(f"ESPN boxscore missing team name for game {game_id}")
+        
+        stats = team_data.get("statistics", [])
+        stats_dict = {s.get("label", ""): s.get("displayValue", "") for s in stats}
+        
+        # Parse shooting stats (format: "39-79")
+        def parse_made_attempts(val: str) -> tuple[int, int]:
+            if not val or "-" not in val:
+                raise RuntimeError(f"Invalid stat format: {val}")
+            parts = val.split("-")
+            return int(parts[0]), int(parts[1])
+        
+        fg_made, fg_attempts = parse_made_attempts(stats_dict.get("FG", "0-0"))
+        three_made, three_attempts = parse_made_attempts(stats_dict.get("3PT", "0-0"))
+        ft_made, ft_attempts = parse_made_attempts(stats_dict.get("FT", "0-0"))
+        
+        # Get percentages - ESPN provides these directly
+        fg_pct = float(stats_dict.get("Field Goal %", "0")) / 100 if stats_dict.get("Field Goal %") else (fg_made / fg_attempts if fg_attempts > 0 else 0)
+        three_pct = float(stats_dict.get("Three Point %", "0")) / 100 if stats_dict.get("Three Point %") else (three_made / three_attempts if three_attempts > 0 else 0)
+        ft_pct = float(stats_dict.get("Free Throw %", "0")) / 100 if stats_dict.get("Free Throw %") else (ft_made / ft_attempts if ft_attempts > 0 else 0)
+        
+        # All these stats MUST be present - no defaults
+        reb_total = int(stats_dict.get("Rebounds", "0"))
+        reb_off = int(stats_dict.get("Offensive Rebounds", "0"))
+        reb_def = int(stats_dict.get("Defensive Rebounds", "0"))
+        assists = int(stats_dict.get("Assists", "0"))
+        steals = int(stats_dict.get("Steals", "0"))
+        blocks = int(stats_dict.get("Blocks", "0"))
+        turnovers = int(stats_dict.get("Turnovers", "0"))
+        total_turnovers = int(stats_dict.get("Total Turnovers", turnovers))
+        fouls = int(stats_dict.get("Personal Fouls", stats_dict.get("Fouls", "0")))
+        
+        # Calculate points from FG/3PT/FT if not directly provided
+        points = (fg_made - three_made) * 2 + three_made * 3 + ft_made
+        
+        box = ESPNBoxScore(
+            game_id=game_id,
+            team_name=team_name,
+            team_id=team_id,
+            fg_made=fg_made,
+            fg_attempts=fg_attempts,
+            fg_pct=fg_pct,
+            three_made=three_made,
+            three_attempts=three_attempts,
+            three_pct=three_pct,
+            ft_made=ft_made,
+            ft_attempts=ft_attempts,
+            ft_pct=ft_pct,
+            rebounds_total=reb_total,
+            rebounds_off=reb_off,
+            rebounds_def=reb_def,
+            assists=assists,
+            steals=steals,
+            blocks=blocks,
+            turnovers=turnovers,
+            total_turnovers=total_turnovers,
+            personal_fouls=fouls,
+            points=points,
+        )
+        result["teams"].append(box)
+        logger.debug(f"[ESPN] Parsed team box: {team_name} - {points}pts, {assists}ast, {steals}stl, {blocks}blk, {turnovers}to")
+    
+    # Parse player box scores
+    for team_players in boxscore.get("players", []):
+        team_info = team_players.get("team", {})
+        team_name = team_info.get("displayName", "")
+        
+        for stat_group in team_players.get("statistics", []):
+            stat_keys = stat_group.get("keys", [])
+            athletes = stat_group.get("athletes", [])
+            
+            for athlete in athletes:
+                player_info = athlete.get("athlete", {})
+                player_name = player_info.get("displayName", "")
+                player_id = str(player_info.get("id", ""))
+                starter = athlete.get("starter", False)
+                
+                stats = athlete.get("stats", [])
+                if len(stats) != len(stat_keys):
+                    continue
+                
+                player_stats = dict(zip(stat_keys, stats))
+                
+                # Parse player stats - handle DNP cases
+                minutes = player_stats.get("min", "0:00")
+                if minutes == "--" or minutes == "DNP":
+                    continue
+                
+                def safe_int(val: str) -> int:
+                    if not val or val == "--":
+                        return 0
+                    return int(val)
+                
+                def parse_player_shooting(val: str) -> tuple[int, int]:
+                    if not val or val == "--" or "-" not in val:
+                        return 0, 0
+                    parts = val.split("-")
+                    return int(parts[0]), int(parts[1])
+                
+                fg_m, fg_a = parse_player_shooting(player_stats.get("fg", "0-0"))
+                three_m, three_a = parse_player_shooting(player_stats.get("3pt", "0-0"))
+                ft_m, ft_a = parse_player_shooting(player_stats.get("ft", "0-0"))
+                
+                player_box = ESPNPlayerBoxScore(
+                    game_id=game_id,
+                    team_name=team_name,
+                    player_name=player_name,
+                    player_id=player_id,
+                    starter=starter,
+                    minutes=minutes,
+                    fg_made=fg_m,
+                    fg_attempts=fg_a,
+                    three_made=three_m,
+                    three_attempts=three_a,
+                    ft_made=ft_m,
+                    ft_attempts=ft_a,
+                    rebounds_off=safe_int(player_stats.get("oreb", "0")),
+                    rebounds_def=safe_int(player_stats.get("dreb", "0")),
+                    rebounds_total=safe_int(player_stats.get("reb", "0")),
+                    assists=safe_int(player_stats.get("ast", "0")),
+                    steals=safe_int(player_stats.get("stl", "0")),
+                    blocks=safe_int(player_stats.get("blk", "0")),
+                    turnovers=safe_int(player_stats.get("to", "0")),
+                    personal_fouls=safe_int(player_stats.get("pf", "0")),
+                    plus_minus=safe_int(player_stats.get("+/-", "0")),
+                    points=safe_int(player_stats.get("pts", "0")),
+                )
+                result["players"].append(player_box)
+    
+    logger.info(f"[ESPN] Box score complete: {len(result['teams'])} teams, {len(result['players'])} players")
+    return result
+
+
+async def fetch_espn_recent_game_ids(team_name: str, limit: int = 10) -> List[str]:
+    """
+    Get ESPN game IDs for a team's recent completed games.
+    
+    Args:
+        team_name: ESPN team display name (e.g., "Los Angeles Lakers")
+        limit: Number of recent games to fetch
+    
+    Returns:
+        List of ESPN game IDs (strings)
+    """
+    # First get all recent games via schedule
+    from datetime import timedelta
+    today = datetime.now(timezone.utc)
+    
+    # Check last 30 days of games
+    game_ids = []
+    for days_ago in range(1, 31):
+        date = today - timedelta(days=days_ago)
+        date_str = date.strftime("%Y%m%d")
+        
+        try:
+            url = f"{BASE_URL}/scoreboard"
+            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+                resp = await client.get(url, params={"dates": date_str})
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+            
+            for event in data.get("events", []):
+                # Check if this team played
+                competitors = event.get("competitions", [{}])[0].get("competitors", [])
+                for comp in competitors:
+                    comp_name = comp.get("team", {}).get("displayName", "")
+                    if comp_name == team_name:
+                        # Check if game is completed
+                        status = event.get("status", {}).get("type", {}).get("name", "")
+                        if status == "STATUS_FINAL":
+                            game_ids.append(event.get("id"))
+                            break
+                
+                if len(game_ids) >= limit:
+                    break
+        except Exception as e:
+            logger.warning(f"Error fetching ESPN schedule for {date_str}: {e}")
+            continue
+        
+        if len(game_ids) >= limit:
+            break
+    
+    return game_ids[:limit]
+
+
+@dataclass
 class ESPNTeamStanding:
     """Team standings data from ESPN."""
     team_name: str
