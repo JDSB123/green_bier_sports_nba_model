@@ -337,6 +337,31 @@ BETTING_FEATURES = [
             "Reverse line movement on total (0/1)", default=0.0),
     Feature("sharp_side_total", FeatureCategory.BETTING,
             "Sharp money side on total (-1/0/1)", default=0.0),
+    # -----------------------------------------------------------------------------
+    # SHARP VS SQUARE BOOK LINE COMPARISON (Pinnacle vs DraftKings/FanDuel)
+    # -----------------------------------------------------------------------------
+    # Pinnacle = sharp book (professionals bet here, lowest vig)
+    # DraftKings/FanDuel/BetMGM = square books (retail bettors)
+    # Raw line differences indicate where sharp money is positioned.
+    # Positive spread_diff = Pinnacle favors home more than square books
+    # Negative spread_diff = Pinnacle favors away more than square books
+    # -----------------------------------------------------------------------------
+    Feature("has_pinnacle_data", FeatureCategory.BETTING,
+            "Pinnacle data available (0/1)", default=0.0),
+    Feature("pinnacle_spread", FeatureCategory.BETTING,
+            "Pinnacle spread line", default=0.0),
+    Feature("square_spread_avg", FeatureCategory.BETTING,
+            "Square books average spread", default=0.0),
+    Feature("spread_sharp_square_diff", FeatureCategory.BETTING,
+            "Pinnacle spread minus square avg (+ = sharps on home)", default=0.0),
+    Feature("pinnacle_total", FeatureCategory.BETTING,
+            "Pinnacle total line", default=0.0),
+    Feature("square_total_avg", FeatureCategory.BETTING,
+            "Square books average total", default=0.0),
+    Feature("total_sharp_square_diff", FeatureCategory.BETTING,
+            "Pinnacle total minus square avg (+ = sharps on over)", default=0.0),
+    Feature("num_square_books", FeatureCategory.BETTING,
+            "Number of square books in comparison", default=0.0),
 ]
 
 # -----------------------------------------------------------------------------

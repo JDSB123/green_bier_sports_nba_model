@@ -7,7 +7,12 @@ Production-ready predictor with smart filtering for all markets:
 """
 from src.prediction import UnifiedPredictionEngine
 from src.features.rich_features import RichFeatureBuilder
-from src.ingestion.betting_splits import fetch_public_betting_splits
+from src.ingestion.betting_splits import (
+    fetch_public_betting_splits,
+    fetch_sharp_square_lines,
+    sharp_square_to_features,
+    SharpDataUnavailableError,
+)
 from src.ingestion import the_odds
 from src.ingestion.standardize import to_cst, CST, UTC
 from src.config import settings
@@ -117,6 +122,32 @@ def generate_rationale(
     # ============================================================
     sharp_action = []
 
+    # PINNACLE VS SQUARE BOOK LINE COMPARISON (Most reliable sharp indicator)
+    has_pinnacle = features.get("has_pinnacle_data", 0) > 0
+    if has_pinnacle:
+        if "SPREAD" in play_type:
+            spread_diff = features.get("spread_sharp_square_diff", 0)
+            is_home_pick = "home" in pick.lower()
+            # Positive spread_diff = Pinnacle favors home more than square books
+            if abs(spread_diff) >= 0.3:  # Meaningful difference
+                pinnacle_favors = "home" if spread_diff > 0 else "away"
+                if (is_home_pick and spread_diff > 0) or (not is_home_pick and spread_diff < 0):
+                    sharp_action.append(
+                        f"[PINNACLE] Sharp book (Pinnacle) shows {abs(spread_diff):.1f} pts difference vs square books, "
+                        f"favoring {pick} — professional money positioned here."
+                    )
+        elif "TOTAL" in play_type:
+            total_diff = features.get("total_sharp_square_diff", 0)
+            is_over = "OVER" in pick.upper()
+            # Positive total_diff = Pinnacle total higher than square books (sharps on over)
+            if abs(total_diff) >= 0.5:  # Meaningful difference for totals
+                if (is_over and total_diff > 0) or (not is_over and total_diff < 0):
+                    sharp_action.append(
+                        f"[PINNACLE] Sharp book (Pinnacle) total differs by {abs(total_diff):.1f} pts from square books, "
+                        f"favoring {pick}."
+                    )
+
+    # ACTION NETWORK SPLITS (Ticket % vs Money % divergence)
     if betting_splits:
         try:
             # We use features built from splits in BuildRichFeatures
@@ -403,8 +434,10 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 
     # Fetch betting splits if enabled
     betting_splits_dict = {}
+    sharp_square_dict = {}  # Pinnacle vs Square book comparison
+    
     if use_betting_splits:
-        print("\nFetching public betting percentages...")
+        print("\nFetching public betting percentages (Action Network)...")
         try:
             betting_splits_dict = await fetch_public_betting_splits(games, source="auto")
             print(
@@ -412,6 +445,22 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
         except Exception as e:
             print(f"  [WARN] Failed to fetch betting splits: {e}")
             print(f"  [INFO] Continuing without betting splits data")
+
+        # CRITICAL: Fetch sharp vs square book line comparison (Pinnacle vs DraftKings/FanDuel)
+        print("\nFetching sharp vs square book lines (Pinnacle vs Square)...")
+        try:
+            sharp_square_data = await fetch_sharp_square_lines()
+            for comp in sharp_square_data:
+                game_key = f"{comp.away_team}@{comp.home_team}"
+                sharp_square_dict[game_key] = comp
+            print(f"  [OK] Loaded Pinnacle data for {len(sharp_square_dict)} games")
+            for comp in sharp_square_data:
+                print(f"    • {comp.away_team}@{comp.home_team}: spread_diff={comp.spread_diff:+.2f}, total_diff={comp.total_diff:+.2f}")
+        except SharpDataUnavailableError as e:
+            # HARD FAILURE - Pinnacle data is REQUIRED
+            print(f"  [CRITICAL] Sharp book data unavailable: {e}")
+            print(f"  [CRITICAL] Cannot generate predictions without Pinnacle data!")
+            raise  # Propagate error - no degraded mode allowed
 
     # Initialize feature builder and unified prediction engine
     feature_builder = RichFeatureBuilder(
@@ -453,6 +502,17 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 
             # Build features
             features = await feature_builder.build_game_features(home_team, away_team, betting_splits=splits)
+
+            # CRITICAL: Merge sharp/square book features (Pinnacle vs DraftKings/FanDuel)
+            sharp_square_comp = sharp_square_dict.get(game_key)
+            if sharp_square_comp:
+                sharp_features = sharp_square_to_features(sharp_square_comp)
+                features.update(sharp_features)
+                print(f"  [SHARP] Pinnacle spread={sharp_square_comp.sharp_spread} vs Square avg={sharp_square_comp.square_spread} (diff={sharp_square_comp.spread_diff:+.2f})")
+                print(f"  [SHARP] Pinnacle total={sharp_square_comp.sharp_total} vs Square avg={sharp_square_comp.square_total} (diff={sharp_square_comp.total_diff:+.2f})")
+            else:
+                # This should not happen with HARD FAILURE mode, but log it
+                print(f"  [ERROR] No Pinnacle data for {game_key} - this should not happen!")
 
             # Extract all lines
             lines = extract_lines(game, home_team)
