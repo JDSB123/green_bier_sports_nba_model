@@ -428,6 +428,25 @@ TOTALS_SPECIFIC_FEATURES = [
 ]
 
 
+# -----------------------------------------------------------------------------
+# GRANULAR MODEL 2.0 FEATURES - Interior & Depth
+# -----------------------------------------------------------------------------
+GRANULAR_FEATURES = [
+    Feature("home_star_avail", FeatureCategory.INJURY,
+            "Home star availability score (0-1)", default=1.0),
+    Feature("away_star_avail", FeatureCategory.INJURY,
+            "Away star availability score (0-1)", default=1.0),
+    Feature("home_paint_defense", FeatureCategory.EFFICIENCY,
+            "Home interior defense score", default=0.0),
+    Feature("away_paint_defense", FeatureCategory.EFFICIENCY,
+            "Away interior defense score", default=0.0),
+    Feature("home_bench_scoring", FeatureCategory.EFFICIENCY,
+            "Home bench scoring average", default=30.0),
+    Feature("away_bench_scoring", FeatureCategory.EFFICIENCY,
+            "Away bench scoring average", default=30.0),
+]
+
+
 # =============================================================================
 # UNIFIED FEATURE LIST - ALL MODELS USE THIS
 # =============================================================================
@@ -445,7 +464,8 @@ ALL_FEATURES: List[Feature] = (
     STANDINGS_FEATURES +
     ATS_FEATURES +
     MARKET_FEATURES +
-    TOTALS_SPECIFIC_FEATURES
+    TOTALS_SPECIFIC_FEATURES +
+    GRANULAR_FEATURES
 )
 
 # Feature name list for quick access

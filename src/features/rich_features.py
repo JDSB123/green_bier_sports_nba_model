@@ -257,7 +257,7 @@ class RichFeatureBuilder:
     async def _get_star_availability(self, team_id: int, recent_games: List[Dict]) -> float:
         """
         Calculate Star Availability Score (0.0 to 1.0)
-        
+
         Logic:
         1. Identify top 2 scorers from the last 5 games.
         2. Check if they played in the MOST RECENT game.
@@ -265,48 +265,51 @@ class RichFeatureBuilder:
         """
         if not recent_games:
             return 1.0
-            
+
         # Get the most recent game ID
         last_game = recent_games[0]
         game_id = last_game.get("id")
-        
+
         try:
             # CALL THE UNLOCKED API METHOD
             players = await self.get_game_player_stats(game_id)
-            
+
             # Filter for this team
-            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
-            
+            team_players = [p for p in players if p.get(
+                "team", {}).get("id") == team_id]
+
             # Cannot determine stars without data
             if not team_players:
                 return 1.0
-                
+
             # Sort by minutes played to find key contributors
             # (In a real implementation, we'd average over 5 games, but this is a start)
-            team_players.sort(key=lambda x: float(x.get("min", 0) or 0), reverse=True)
-            
+            team_players.sort(key=lambda x: float(
+                x.get("min", 0) or 0), reverse=True)
+
             # Check availability: Did the top players actually play meaningful minutes?
             # For the most recent game, they inherently "played" if they are in the box score with minutes > 0
             # A true "Availability" check would compare vs Season Leaders.
             # IMPUTATION: If the top 2 players have > 20 minutes, we assume stars are active.
-            
+
             active_stars = 0
             for i in range(min(2, len(team_players))):
                 minutes = float(team_players[i].get("min", 0) or 0)
-                if minutes > 20: 
+                if minutes > 20:
                     active_stars += 1
-            
+
             # Score: 0.5 per active star
             return active_stars * 0.5
-            
+
         except Exception as e:
-            print(f"[WARN] Failed to calc star availability for team {team_id}: {e}")
+            print(
+                f"[WARN] Failed to calc star availability for team {team_id}: {e}")
             return 1.0
 
     async def _get_paint_defense(self, team_id: int, recent_games: List[Dict]) -> float:
         """
         Calculate Paint Defense Score (Activity of Bigs).
-        
+
         Logic:
         1. Fetch last game player stats.
         2. Identify Bigs (C, PF).
@@ -314,38 +317,40 @@ class RichFeatureBuilder:
         """
         if not recent_games:
             return 0.0
-            
+
         last_game = recent_games[0]
         game_id = last_game.get("id")
-        
+
         try:
             players = await self.get_game_player_stats(game_id)
-            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
-            
+            team_players = [p for p in players if p.get(
+                "team", {}).get("id") == team_id]
+
             paint_score = 0.0
             for p in team_players:
                 # Check position (API usually returns "C", "PF", "C-F" etc)
                 pos = p.get("pos", "") or p.get("position", "")
                 if not pos:
                     continue
-                    
+
                 if "C" in pos or "PF" in pos or "F-C" in pos:
                     # Get stats
                     blocks = float(p.get("blk", 0) or 0)
-                    rebounds_def = float(p.get("rebounds", {}).get("def", 0) or 0)
-                    
+                    rebounds_def = float(
+                        p.get("rebounds", {}).get("def", 0) or 0)
+
                     # Weighting: Blocks are high value defensive events
                     paint_score += (blocks * 2.0) + (rebounds_def * 0.5)
-            
+
             return paint_score
-            
+
         except Exception:
             return 0.0
 
     async def _get_bench_scoring(self, team_id: int, recent_games: List[Dict]) -> float:
         """
         Calculate Bench Scoring (Points from Non-Starters).
-        
+
         Logic:
         1. Fetch last game player stats.
         2. Sort by minutes played.
@@ -354,27 +359,29 @@ class RichFeatureBuilder:
         """
         if not recent_games:
             return 0.0
-            
+
         last_game = recent_games[0]
         game_id = last_game.get("id")
-        
+
         try:
             players = await self.get_game_player_stats(game_id)
-            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
-            
+            team_players = [p for p in players if p.get(
+                "team", {}).get("id") == team_id]
+
             # Sort by minutes
-            team_players.sort(key=lambda x: float(x.get("min", 0) or 0), reverse=True)
-            
+            team_players.sort(key=lambda x: float(
+                x.get("min", 0) or 0), reverse=True)
+
             # Identify Bench (approximate: everyone after top 5 minutes-getters)
             bench_players = team_players[5:]
-            
+
             bench_points = 0.0
             for p in bench_players:
                 pts = float(p.get("points", 0) or 0)
                 bench_points += pts
-                
+
             return bench_points
-            
+
         except Exception:
             return 0.0
 
@@ -1359,7 +1366,7 @@ class RichFeatureBuilder:
             # ============================================================
             "home_bench_scoring": await self._get_bench_scoring(home_id, home_recent),
             "away_bench_scoring": await self._get_bench_scoring(away_id, away_recent),
-            
+
             # ============================================================
             # BOX SCORE ADVANCED STATS (API-Basketball /games/statistics/teams)
             # ============================================================

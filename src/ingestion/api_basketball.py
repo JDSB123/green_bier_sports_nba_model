@@ -950,4 +950,3 @@ async def fetch_game_stats_teams(**params: Any) -> dict[str, Any]:
 
 async def fetch_game_stats_players(**params: Any) -> dict[str, Any]:
     return (await _client().fetch_game_stats_players(**params)).data
-
