@@ -604,7 +604,7 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
 def display_market_predictions(preds: dict, lines: dict, market_type: str, features: dict, home_team: str, away_team: str, splits: Any = None):
     """
     Display predictions for a market type (FG or 1H).
-    
+
     WEIGHTED COMBINATION SYSTEM (v34.2.0):
     Sharp signals now affect THE PICK (not just confidence):
     - combined_edge = (model_edge × 0.60) + (sharp_edge × 0.40)
@@ -626,7 +626,7 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
         spread_pred = preds["spread"]
         original_side = spread_pred.get('bet_side', '')
         original_conf = spread_pred.get('confidence', 0.5)
-        
+
         # APPLY WEIGHTED COMBINATION (sharp signals affect THE PICK!)
         spread_pred, weighted_result = apply_weighted_combination_spread(
             spread_pred,
@@ -634,10 +634,11 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
             market_spread=lines.get(f'{prefix}_spread'),
         )
         preds["spread"] = spread_pred  # Update in place
-        
-        print(f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
+
+        print(
+            f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
         print(f"           Vegas line: {lines[f'{prefix}_spread'] or 'N/A'}")
-        
+
         # Show weighted combination result
         if weighted_result.is_play:
             side_indicator = ""
@@ -645,16 +646,19 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
                 side_indicator = f" [FLIPPED from {weighted_result.model_side.upper()}]"
             elif weighted_result.signals_agree:
                 side_indicator = " [SIGNALS AGREE]"
-            print(f"           Bet: {spread_pred['bet_side'].upper()} ({spread_pred['confidence']:.1%}){side_indicator}")
+            print(
+                f"           Bet: {spread_pred['bet_side'].upper()} ({spread_pred['confidence']:.1%}){side_indicator}")
         else:
             print(f"           Bet: NO PLAY (signals cancel)")
-            
+
         # Show combination breakdown
         print(f"           Model: {weighted_result.model_side.upper()} {weighted_result.model_edge:+.1f} pts | Sharp: {weighted_result.sharp_side.upper()} {weighted_result.sharp_edge:+.1f} pts")
-        print(f"           Combined edge: {weighted_result.combined_edge:+.2f} pts")
-        
+        print(
+            f"           Combined edge: {weighted_result.combined_edge:+.2f} pts")
+
         # Show sharp rationale
-        for r in weighted_result.rationale[-2:]:  # Last 2 lines (most important)
+        # Last 2 lines (most important)
+        for r in weighted_result.rationale[-2:]:
             print(f"           {r}")
 
         # Generate rationale
@@ -688,7 +692,7 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
         total_pred = preds["total"]
         original_side = total_pred.get('bet_side', '')
         original_conf = total_pred.get('confidence', 0.5)
-        
+
         # APPLY WEIGHTED COMBINATION (sharp signals affect THE PICK!)
         total_pred, weighted_result = apply_weighted_combination_total(
             total_pred,
@@ -696,10 +700,11 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
             market_total=lines.get(f'{prefix}_total'),
         )
         preds["total"] = total_pred  # Update in place
-        
-        print(f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
+
+        print(
+            f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
         print(f"          Vegas line: {lines[f'{prefix}_total'] or 'N/A'}")
-        
+
         # Show weighted combination result
         if weighted_result.is_play:
             side_indicator = ""
@@ -707,16 +712,19 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
                 side_indicator = f" [FLIPPED from {weighted_result.model_side.upper()}]"
             elif weighted_result.signals_agree:
                 side_indicator = " [SIGNALS AGREE]"
-            print(f"          Bet: {total_pred['bet_side'].upper()} ({total_pred['confidence']:.1%}){side_indicator}")
+            print(
+                f"          Bet: {total_pred['bet_side'].upper()} ({total_pred['confidence']:.1%}){side_indicator}")
         else:
             print(f"          Bet: NO PLAY (signals cancel)")
-            
+
         # Show combination breakdown
         print(f"          Model: {weighted_result.model_side.upper()} {weighted_result.model_edge:+.1f} pts | Sharp: {weighted_result.sharp_side.upper()} {weighted_result.sharp_edge:+.1f} pts")
-        print(f"          Combined edge: {weighted_result.combined_edge:+.2f} pts")
-        
+        print(
+            f"          Combined edge: {weighted_result.combined_edge:+.2f} pts")
+
         # Show sharp rationale
-        for r in weighted_result.rationale[-2:]:  # Last 2 lines (most important)
+        # Last 2 lines (most important)
+        for r in weighted_result.rationale[-2:]:
             print(f"          {r}")
 
         if total_pred.get('edge') is not None and weighted_result.is_play:

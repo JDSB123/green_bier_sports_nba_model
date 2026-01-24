@@ -16,12 +16,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - 'models/**'
-      - 'Dockerfile*'
-      - 'requirements.txt'
-      - 'VERSION'
-      - '.github/workflows/deploy.yml'
+      - "src/**"
+      - "models/**"
+      - "Dockerfile*"
+      - "requirements.txt"
+      - "VERSION"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 env:
@@ -40,7 +40,7 @@ jobs:
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Python dependencies
         run: |
@@ -119,4 +119,5 @@ jobs:
           sleep 30
           FQDN=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
           curl -sf "https://$FQDN/health" && echo "✓ Health check passed"
+
 # OIDC test

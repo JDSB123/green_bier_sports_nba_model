@@ -596,11 +596,11 @@ def get_period_markets(period: str) -> List[str]:
 def get_model_features(period: str, market: str) -> List[str]:
     """
     Get feature list for a model. All models use unified features.
-    
+
     Args:
-        period: "1h" or "fg"  
+        period: "1h" or "fg"
         market: "spread" or "total"
-    
+
     Returns:
         List of feature names (same for all markets)
     """
