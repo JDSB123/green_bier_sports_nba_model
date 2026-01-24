@@ -63,7 +63,7 @@ jobs:
           API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
 
       - name: Run invariant tests
-        run: pytest tests/test_prediction_invariants.py -v
+        run: pytest tests/test_prediction_invariants.py -v --no-cov
 
       - name: Read version
         id: version
