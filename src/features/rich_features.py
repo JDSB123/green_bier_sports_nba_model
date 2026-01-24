@@ -104,6 +104,7 @@ class RichFeatureBuilder:
                 'games_cached': self._games_cache is not None,
                 'standings_cached': self._standings_cache is not None,
                 'injuries_cached': self._injuries_cache is not None,
+                'box_scores': len(self._box_scores_cache),
             },
             'persistent_cache': {
                 'teams': len(_REFERENCE_CACHE['teams']),
@@ -148,6 +149,27 @@ class RichFeatureBuilder:
         _REFERENCE_CACHE['seasons'].clear()
         _REFERENCE_CACHE['last_updated'].clear()
         print("[CACHE] Persistent reference cache cleared")
+
+    async def get_game_player_stats(self, game_id: int) -> List[Dict]:
+        """
+        Get player statistics (box score) for a specific game.
+
+        This enables GRANULAR MODELING (Model 2.0):
+        - Star Availability: Check minutes/points of key players
+        - Matchup Modeling: Center vs Center defense
+        - Bench Depth: Sum of stats for players 6-12
+        """
+        # Session memory cache (within-request deduplication)
+        if game_id in self._box_scores_cache:
+            return self._box_scores_cache[game_id]
+
+        print(f"[API] Fetching player box scores for game {game_id}")
+        result = await api_basketball.fetch_game_stats_players(game=game_id)
+        players = result.get("response", [])
+
+        # Cache even if empty (to avoid re-fetching bad games)
+        self._box_scores_cache[game_id] = players
+        return players
 
     async def get_team_id(self, team_name: str) -> int:
         """Get team ID from name, with lazy persistent caching."""
