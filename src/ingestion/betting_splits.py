@@ -839,7 +839,7 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             f"No public betting data for {away_team} @ {home_team}")
                         continue
 
-                    # Extract betting percentages from odds
+                    # Extract betting percentages from odds (current line with public data)
                     spread_line = game_odds.get("spread_home")
                     spread_home_pct = game_odds.get("spread_home_public")
                     spread_away_pct = game_odds.get("spread_away_public")
@@ -851,6 +851,26 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     under_pct = game_odds.get("total_under_public")
                     over_money = game_odds.get("total_over_money")
                     under_money = game_odds.get("total_under_money")
+
+                    # Find OPENING line from earliest inserted timestamp across all books
+                    spread_open = spread_line  # default to current
+                    total_open = total_line    # default to current
+                    earliest_inserted = None
+                    
+                    for odds in odds_list:
+                        if odds.get("type") == "game" and odds.get("spread_home") is not None:
+                            inserted = odds.get("inserted")
+                            if inserted:
+                                try:
+                                    inserted_dt = dt.datetime.fromisoformat(
+                                        inserted.replace("Z", "+00:00") if isinstance(inserted, str) else str(inserted)
+                                    )
+                                    if earliest_inserted is None or inserted_dt < earliest_inserted:
+                                        earliest_inserted = inserted_dt
+                                        spread_open = odds.get("spread_home", spread_line)
+                                        total_open = odds.get("total", total_line)
+                                except (ValueError, TypeError):
+                                    pass
 
                     # Skip if no public data at all
                     if spread_home_pct is None and over_pct is None:
@@ -875,8 +895,7 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             spread_home_money) if spread_home_money is not None else 50.0,
                         spread_away_money_pct=float(
                             spread_away_money) if spread_away_money is not None else 50.0,
-                        spread_open=float(
-                            spread_line) if spread_line is not None else 0.0,
+                        spread_open=float(spread_open) if spread_open is not None else 0.0,
                         spread_current=float(
                             spread_line) if spread_line is not None else 0.0,
                         total_line=float(
@@ -889,8 +908,7 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                             over_money) if over_money is not None else 50.0,
                         under_money_pct=float(
                             under_money) if under_money is not None else 50.0,
-                        total_open=float(
-                            total_line) if total_line is not None else 0.0,
+                        total_open=float(total_open) if total_open is not None else 0.0,
                         total_current=float(
                             total_line) if total_line is not None else 0.0,
                         updated_at=dt.datetime.now(),
