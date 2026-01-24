@@ -507,16 +507,20 @@ class RichFeatureBuilder:
         if espn_game_id:
             try:
                 espn_data = await fetch_espn_box_score(espn_game_id)
-                result = self._convert_espn_to_internal_format(espn_data, game_id)
+                result = self._convert_espn_to_internal_format(
+                    espn_data, game_id)
                 self._box_scores_cache[cache_key] = result
                 return result
             except Exception as e:
-                print(f"[ERROR] ESPN box score fetch failed for {espn_game_id}: {e}")
-                raise RuntimeError(f"ESPN box score unavailable for game {espn_game_id}: {e}")
+                print(
+                    f"[ERROR] ESPN box score fetch failed for {espn_game_id}: {e}")
+                raise RuntimeError(
+                    f"ESPN box score unavailable for game {espn_game_id}: {e}")
 
         # Without ESPN ID, we cannot get complete box scores
         # API-Basketball's team stats endpoint is empty for NBA
-        print(f"[WARNING] No ESPN game ID provided for API-Basketball game {game_id}")
+        print(
+            f"[WARNING] No ESPN game ID provided for API-Basketball game {game_id}")
         print(f"[WARNING] API-Basketball does NOT provide complete box scores for NBA")
         return None
 
@@ -639,11 +643,13 @@ class RichFeatureBuilder:
                         break
 
             except Exception as e:
-                print(f"[WARNING] Failed to fetch ESPN box score for game {game_id}: {e}")
+                print(
+                    f"[WARNING] Failed to fetch ESPN box score for game {game_id}: {e}")
                 continue
 
         if games_counted == 0:
-            raise RuntimeError(f"No ESPN box scores could be fetched for {team_name}")
+            raise RuntimeError(
+                f"No ESPN box scores could be fetched for {team_name}")
 
         # Calculate averages - ALL VALUES GUARANTEED
         n = games_counted
@@ -671,9 +677,12 @@ class RichFeatureBuilder:
         }
 
         # Derived metrics - ALL CALCULATED, NO NONE
-        result["ast_to_ratio"] = result["assists"] / result["turnovers"] if result["turnovers"] > 0 else result["assists"]
-        result["oreb_pct"] = result["rebounds_off"] / result["rebounds_total"] if result["rebounds_total"] > 0 else 0
-        result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 * stats_totals["three_made"]) / stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 0
+        result["ast_to_ratio"] = result["assists"] / \
+            result["turnovers"] if result["turnovers"] > 0 else result["assists"]
+        result["oreb_pct"] = result["rebounds_off"] / \
+            result["rebounds_total"] if result["rebounds_total"] > 0 else 0
+        result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 * stats_totals["three_made"]) /
+                             stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 0
 
         print(f"[ESPN BOX] {team_name}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, "
               f"STL={result['steals']:.1f}, BLK={result['blocks']:.1f}, TO={result['turnovers']:.1f} ({n} games)")
@@ -710,11 +719,14 @@ class RichFeatureBuilder:
             try:
                 return await self.get_team_box_score_averages_espn(team_name, limit=10)
             except Exception as e:
-                print(f"[ERROR] ESPN box score fetch failed for {team_name}: {e}")
-                raise RuntimeError(f"Cannot get box scores for {team_name}: ESPN unavailable - {e}")
+                print(
+                    f"[ERROR] ESPN box score fetch failed for {team_name}: {e}")
+                raise RuntimeError(
+                    f"Cannot get box scores for {team_name}: ESPN unavailable - {e}")
 
         # Without team name, we cannot use ESPN
-        raise RuntimeError(f"team_name is REQUIRED for box score averages (ESPN is the only complete source)")
+        raise RuntimeError(
+            f"team_name is REQUIRED for box score averages (ESPN is the only complete source)")
 
     def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
         """Calculate team W-L record from completed games data.
@@ -887,8 +899,10 @@ class RichFeatureBuilder:
         # Fetch box score averages for advanced stats (FG%, 3PT%, rebounds, etc.)
         # Using ESPN as the authoritative source - passes team names for ESPN lookup
         home_box_avgs, away_box_avgs = await asyncio.gather(
-            self.get_team_box_score_averages(home_id, home_recent, team_name=home_team),
-            self.get_team_box_score_averages(away_id, away_recent, team_name=away_team),
+            self.get_team_box_score_averages(
+                home_id, home_recent, team_name=home_team),
+            self.get_team_box_score_averages(
+                away_id, away_recent, team_name=away_team),
         )
 
         # Extract season averages

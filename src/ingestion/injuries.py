@@ -144,8 +144,8 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
             
             injuries = []
             for team_data in data.get("injuries", []):
-                team_obj = team_data.get("team", {})
-                team_name = team_obj.get("displayName")
+                # ESPN format: team_data has 'displayName' directly (not nested under 'team')
+                team_name = team_data.get("displayName")
                 
                 # Skip if team name is missing - no placeholder values
                 if not team_name:
@@ -159,11 +159,26 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
                         logger.warning(f"Skipping injury with missing player name for team {team_name} from ESPN")
                         continue
                     
+                    # Extract injury details from nested structure
+                    details = player.get("details", {})
+                    injury_type = details.get("type")  # e.g., "Knee", "Ankle"
+                    injury_location = details.get("location")  # e.g., "Leg", "Arm"
+                    injury_detail = details.get("detail")  # e.g., "Bruise", "Strain"
+                    injury_side = details.get("side")  # e.g., "Left", "Right"
+                    
+                    # Format injury description
+                    injury_desc = None
+                    if injury_type:
+                        parts = [p for p in [injury_side, injury_type, injury_detail] if p and p != "Not Specified"]
+                        if parts:
+                            injury_desc = " ".join(parts)
+                    
                     injuries.append({
                         "player_name": player_name,
                         "team": normalize_team(team_name),
                         "status": normalize_status(player.get("status", "questionable")),
-                        "injury_type": player.get("type", {}).get("text"),
+                        "injury_type": injury_desc,
+                        "injury_location": injury_location,
                         "source": "espn",
                     })
             

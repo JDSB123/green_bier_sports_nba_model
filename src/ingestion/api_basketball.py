@@ -97,7 +97,8 @@ class APIBasketballClient:
 
     # Rate limiting: Track last request time to avoid 503s
     _last_request_time: float = 0
-    _min_request_interval: float = 0.15  # 150ms between requests (max ~6-7 req/sec)
+    # 150ms between requests (max ~6-7 req/sec)
+    _min_request_interval: float = 0.15
 
     @retry(
         stop=stop_after_attempt(3),
