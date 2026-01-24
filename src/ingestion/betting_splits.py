@@ -158,8 +158,11 @@ def detect_reverse_line_movement(splits: GameSplits) -> GameSplits:
 # Sharp books: Pinnacle (lowest vig, professionals bet here)
 # Square books: DraftKings, FanDuel, BetMGM (retail bettors)
 #
-# When sharp line differs from square line by >= 0.5 pts,
-# sharps see value on the side closer to their line.
+# Raw line differences are passed to the model as continuous features.
+# Positive spread_diff = Pinnacle has higher spread (favors home)
+# Negative spread_diff = Pinnacle has lower spread (favors away)
+# Positive total_diff = Pinnacle has higher total (favors over)
+# Negative total_diff = Pinnacle has lower total (favors under)
 
 SHARP_BOOKS = {"pinnacle", "bookmaker", "betcris"}
 SQUARE_BOOKS = {"draftkings", "fanduel", "betmgm", "caesars", "fanatics", "espnbet"}
@@ -171,19 +174,19 @@ class SharpSquareComparison:
     event_id: str
     home_team: str
     away_team: str
-    # Spread comparison
+    # Spread comparison (raw values - no threshold)
     sharp_spread: Optional[float] = None
     square_spread: Optional[float] = None
-    spread_diff: Optional[float] = None  # sharp - square
-    sharp_spread_side: Optional[str] = None  # "home" or "away" based on where sharp value is
-    # Total comparison
+    spread_diff: Optional[float] = None  # sharp - square (positive = sharps favor home)
+    # Total comparison (raw values - no threshold)
     sharp_total: Optional[float] = None
     square_total: Optional[float] = None
-    total_diff: Optional[float] = None  # sharp - square
-    sharp_total_side: Optional[str] = None  # "over" or "under"
-    # Metadata
+    total_diff: Optional[float] = None  # sharp - square (positive = sharps favor over)
+    # Metadata - CRITICAL for validation
+    has_pinnacle_data: bool = False  # True only if Pinnacle specifically was found
     sharp_book_used: Optional[str] = None
-    square_books_avg: Optional[List[str]] = None
+    square_books_used: Optional[List[str]] = None
+    num_square_books: int = 0
     updated_at: Optional[dt.datetime] = None
 
 
@@ -281,63 +284,52 @@ async def fetch_sharp_square_lines(
                             elif book_key in SQUARE_BOOKS:
                                 square_totals.append(total_line)
 
-            # Calculate averages and differences
+            # Calculate averages and differences - NO THRESHOLDS, raw values only
             sharp_spread = sharp_spreads[0] if sharp_spreads else None
             square_spread = sum(square_spreads) / len(square_spreads) if square_spreads else None
             sharp_total = sharp_totals[0] if sharp_totals else None
             square_total = sum(square_totals) / len(square_totals) if square_totals else None
 
+            # Calculate raw differences (let model decide significance)
             spread_diff = None
-            spread_side = None
             total_diff = None
-            total_side = None
 
-            # Spread analysis
             if sharp_spread is not None and square_spread is not None:
                 spread_diff = sharp_spread - square_spread
-                # If Pinnacle has a higher line (more positive), sharps like the home team
-                # If Pinnacle has a lower line (more negative), sharps like the away team
-                if spread_diff >= 0.5:
-                    # Pinnacle is higher -> sharps see value on HOME
-                    spread_side = "home"
-                elif spread_diff <= -0.5:
-                    # Pinnacle is lower -> sharps see value on AWAY
-                    spread_side = "away"
 
-            # Total analysis
             if sharp_total is not None and square_total is not None:
                 total_diff = sharp_total - square_total
-                if total_diff >= 0.5:
-                    # Pinnacle total is higher -> sharps see value on OVER
-                    total_side = "over"
-                elif total_diff <= -0.5:
-                    # Pinnacle total is lower -> sharps see value on UNDER
-                    total_side = "under"
+
+            # CRITICAL: Track whether we actually got Pinnacle data
+            has_pinnacle = sharp_book_found == "pinnacle"
 
             comparison = SharpSquareComparison(
                 event_id=game.get("id", ""),
                 home_team=home_team,
                 away_team=away_team,
                 sharp_spread=sharp_spread,
-                square_spread=round(square_spread, 1) if square_spread else None,
-                spread_diff=round(spread_diff, 1) if spread_diff else None,
-                sharp_spread_side=spread_side,
+                square_spread=round(square_spread, 2) if square_spread else None,
+                spread_diff=round(spread_diff, 2) if spread_diff is not None else None,
                 sharp_total=sharp_total,
-                square_total=round(square_total, 1) if square_total else None,
-                total_diff=round(total_diff, 1) if total_diff else None,
-                sharp_total_side=total_side,
+                square_total=round(square_total, 2) if square_total else None,
+                total_diff=round(total_diff, 2) if total_diff is not None else None,
+                has_pinnacle_data=has_pinnacle,
                 sharp_book_used=sharp_book_found,
-                square_books_avg=square_books_found,
+                square_books_used=square_books_found,
+                num_square_books=len(square_books_found),
                 updated_at=dt.datetime.now(),
             )
 
-            comparisons.append(comparison)
-            if spread_side or total_side:
+            # Only add if we have REAL Pinnacle data (no silent fallback)
+            if has_pinnacle:
+                comparisons.append(comparison)
                 logger.info(
-                    f"Sharp/square edge: {away_team}@{home_team} - "
-                    f"Spread: {sharp_spread} vs {square_spread} ({spread_side or 'no edge'}), "
-                    f"Total: {sharp_total} vs {square_total} ({total_side or 'no edge'})"
+                    f"Sharp/square data: {away_team}@{home_team} - "
+                    f"Pinnacle spread={sharp_spread} vs Square avg={square_spread} (diff={spread_diff}), "
+                    f"Pinnacle total={sharp_total} vs Square avg={square_total} (diff={total_diff})"
                 )
+            else:
+                logger.debug(f"Skipping {away_team}@{home_team} - no Pinnacle data available")
 
     except Exception as e:
         logger.error(f"Failed to fetch sharp/square comparison: {e}")
@@ -346,24 +338,37 @@ async def fetch_sharp_square_lines(
 
 
 def sharp_square_to_features(comp: SharpSquareComparison) -> Dict[str, Any]:
-    """Convert SharpSquareComparison to feature dict for model input."""
+    """
+    Convert SharpSquareComparison to feature dict for model input.
+    
+    Raw continuous values - no thresholds applied.
+    Model will learn appropriate weights for these signals.
+    
+    spread_diff: positive = Pinnacle favors home, negative = favors away
+    total_diff: positive = Pinnacle favors over, negative = favors under
+    """
+    # CRITICAL: Only return valid data if we have confirmed Pinnacle data
+    if not comp.has_pinnacle_data:
+        return {
+            "has_pinnacle_data": 0,
+            "pinnacle_spread": 0.0,
+            "square_spread_avg": 0.0,
+            "spread_sharp_square_diff": 0.0,
+            "pinnacle_total": 0.0,
+            "square_total_avg": 0.0,
+            "total_sharp_square_diff": 0.0,
+            "num_square_books": 0,
+        }
+    
     return {
-        "has_sharp_square_data": 1 if comp.sharp_spread is not None else 0,
-        "sharp_spread": comp.sharp_spread or 0.0,
-        "square_spread": comp.square_spread or 0.0,
-        "spread_sharp_square_diff": comp.spread_diff or 0.0,
-        "sharp_spread_side": (
-            1 if comp.sharp_spread_side == "home"
-            else (-1 if comp.sharp_spread_side == "away" else 0)
-        ),
-        "sharp_total": comp.sharp_total or 0.0,
-        "square_total": comp.square_total or 0.0,
-        "total_sharp_square_diff": comp.total_diff or 0.0,
-        "sharp_total_side": (
-            1 if comp.sharp_total_side == "over"
-            else (-1 if comp.sharp_total_side == "under" else 0)
-        ),
-        "sharp_book": comp.sharp_book_used or "",
+        "has_pinnacle_data": 1,  # Confirmed real Pinnacle data
+        "pinnacle_spread": comp.sharp_spread or 0.0,
+        "square_spread_avg": comp.square_spread or 0.0,
+        "spread_sharp_square_diff": comp.spread_diff or 0.0,  # Raw diff, no threshold
+        "pinnacle_total": comp.sharp_total or 0.0,
+        "square_total_avg": comp.square_total or 0.0,
+        "total_sharp_square_diff": comp.total_diff or 0.0,  # Raw diff, no threshold
+        "num_square_books": comp.num_square_books,
     }
 
 
