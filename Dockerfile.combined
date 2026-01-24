@@ -40,8 +40,7 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 # Copy application code
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser scripts/ ./scripts/
-COPY --chown=appuser:appuser models/production/ /app/data/processed/models/
-COPY --chown=appuser:appuser models/production/model_pack.json /app/models/production/model_pack.json
+COPY --chown=appuser:appuser models/production/ /app/models/production/
 COPY --chown=appuser:appuser VERSION /app/VERSION
 
 # Environment
@@ -51,6 +50,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/app
 ENV DATA_RAW_DIR=data/raw
 ENV DATA_PROCESSED_DIR=/app/data/processed
+ENV MODELS_DIR=/app/models/production
 ENV THE_ODDS_BASE_URL=https://api.the-odds-api.com/v4
 ENV API_BASKETBALL_BASE_URL=https://v1.basketball.api-sports.io
 ENV CURRENT_SEASON=2025-2026
@@ -70,7 +70,7 @@ ENV SEASONS_TO_PROCESS=2025-2026
 
 # Verify models directory (4 markets: 1H + FG only)
 RUN echo "=== NBA Models (${MODEL_VERSION}) ===" && \
-    if [ -d /app/data/processed/models ]; then \
+    if [ -d /app/models/production ]; then \
     echo "✓ Models directory exists"; \
     else \
     echo "⚠ Models directory not found - will download at runtime"; \

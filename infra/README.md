@@ -2,9 +2,10 @@
 
 ## Single Entry Points
 
-**Prediction-only entry point:** `infra/nba/prediction.bicep`
+**Single entry point:** `infra/main.bicep`
 
-**Full stack entry point (includes Teams Bot):** `infra/nba/main.bicep`
+This entrypoint deploys the NBA prediction API and can optionally deploy trigger adapters
+(e.g., Teams Bot resources) via parameters.
 
 Prediction entry point deploys everything required for the NBA prediction API to `nba-gbsv-model-rg`:
 
@@ -32,6 +33,7 @@ Teams Bot resources are **only** deployed via `infra/nba/main.bicep`.
 
 ```
 infra/
+├── main.bicep          ← SINGLE entry point (recommended)
 ├── nba/
 │   ├── prediction.bicep ← Prediction-only entry point
 │   ├── main.bicep      ← Full stack (prediction + Teams Bot)
@@ -56,16 +58,17 @@ pwsh ./infra/nba/deploy.ps1 -Tag (Get-Content VERSION -Raw).Trim()
 pwsh ./infra/nba/deploy.ps1 -WhatIf
 
 # Direct az CLI (prediction-only)
-az deployment group create -g nba-gbsv-model-rg -f infra/nba/prediction.bicep `
+az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
   -p theOddsApiKey=<secret> `
      apiBasketballKey=<secret> `
      requireApiAuth=<true|false>
 
 # Direct az CLI (full deployment including Teams Bot)
-az deployment group create -g nba-gbsv-model-rg -f infra/nba/main.bicep `
+az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
   -p theOddsApiKey=<secret> `
      apiBasketballKey=<secret> `
      requireApiAuth=<true|false> `
+  deployTeamsBot=true `
      microsoftAppId=<bot-app-id> `
      microsoftAppTenantId=<tenant-id> `
      microsoftAppPassword=<bot-secret>

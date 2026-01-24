@@ -246,6 +246,10 @@ var appEnvVars = concat(
     { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
     { name: 'NBA_PERIODS', value: 'first_half,full_game' }
     { name: 'REQUIRE_API_AUTH', value: string(requireApiAuth) }
+    { name: 'MODELS_DIR', value: '/app/models/production' }
+    { name: 'REQUIRE_ACTION_NETWORK_SPLITS', value: 'true' }
+    { name: 'REQUIRE_REAL_SPLITS', value: 'true' }
+    { name: 'REQUIRE_INJURY_FETCH_SUCCESS', value: 'true' }
     { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
   ],
   databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]
@@ -346,7 +350,7 @@ resource botService 'Microsoft.BotService/botServices@2022-09-15' = if (deployTe
   }
   properties: {
     displayName: 'NBA Picks Bot'
-    endpoint: 'https://${functionApp.properties.defaultHostName}/api/bot'
+    endpoint: 'https://${functionApp!.properties.defaultHostName}/api/bot'
     msaAppId: microsoftAppId
     msaAppTenantId: microsoftAppTenantId
     msaAppType: 'SingleTenant'
@@ -363,6 +367,6 @@ output storageAccountName string = storage.outputs.storageAccountName
 output acrLoginServer string = acr.properties.loginServer
 output keyVaultUri string = keyVault.properties.vaultUri
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
-output functionAppUrl string = deployTeamsBot ? 'https://${functionApp.properties.defaultHostName}' : ''
-output botEndpoint string = deployTeamsBot && microsoftAppId != '' ? 'https://${functionApp.properties.defaultHostName}/api/bot' : ''
+output functionAppUrl string = deployTeamsBot ? 'https://${functionApp!.properties.defaultHostName}' : ''
+output botEndpoint string = deployTeamsBot && microsoftAppId != '' ? 'https://${functionApp!.properties.defaultHostName}/api/bot' : ''
 

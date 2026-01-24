@@ -221,6 +221,10 @@ var appEnvVars = concat(
     { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
     { name: 'NBA_PERIODS', value: 'first_half,full_game' }
     { name: 'REQUIRE_API_AUTH', value: string(requireApiAuth) }
+    { name: 'MODELS_DIR', value: '/app/models/production' }
+    { name: 'REQUIRE_ACTION_NETWORK_SPLITS', value: 'true' }
+    { name: 'REQUIRE_REAL_SPLITS', value: 'true' }
+    { name: 'REQUIRE_INJURY_FETCH_SUCCESS', value: 'true' }
     { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
   ],
   databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]
