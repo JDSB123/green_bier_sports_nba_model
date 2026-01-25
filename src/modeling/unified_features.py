@@ -63,9 +63,26 @@ LEAKY_FEATURES_BLACKLIST = [
     # ACTUAL GAME RESULTS (definitely leaky - these are the answers)
     # ==========================================================================
     "home_score", "away_score",
+    "score_home", "score_away",
     "home_1h", "away_1h",
+    "home_2h", "away_2h",
     "home_q1", "away_q1",
+    "home_q2", "away_q2",
+    "home_q3", "away_q3",
+    "home_q4", "away_q4",
+    "q2_home", "q2_away",
+    "q3_home", "q3_away",
+    "q4_home", "q4_away",
+    "ot_home", "ot_away",
     "fg_margin", "actual_margin",
+    "actual_total", "actual_1h_total", "actual_1h_margin",
+    "home_1h_score", "away_1h_score",
+    "fg_total_actual", "1h_total_actual",
+
+    # Labels / targets
+    "spread_covered", "1h_spread_covered", "fg_spread_covered",
+    "total_over", "1h_total_over", "fg_total_over",
+    "home_win", "1h_home_win", "fg_home_win",
 
     # ==========================================================================
     # BOX SCORE STATS FROM THIS GAME (leaky - computed from final stats)
@@ -75,6 +92,17 @@ LEAKY_FEATURES_BLACKLIST = [
     "home_fgm", "away_fgm",
     "home_dreb", "away_dreb",
     "home_efg_pct", "away_efg_pct",
+
+    # ==========================================================================
+    # LEAK-PRONE IN MASTER TRAINING DATA (POST-GAME CONTAMINATION)
+    # ==========================================================================
+    # NOTE: The Azure master training_data.csv currently contains post-game values
+    # for these fields (e.g., net ratings ~= actual margin, H2H margin includes
+    # the current game). Until the dataset is rebuilt with strict pre-game
+    # calculations, we blacklist them for training to avoid inflated accuracy.
+    "home_net_rtg", "away_net_rtg", "net_rating_diff",
+    "h2h_margin", "h2h_games",
+    "predicted_margin", "spread_vs_predicted",
 
     # ==========================================================================
     # DO NOT BLACKLIST THESE - They are model outputs, not leaky inputs:
