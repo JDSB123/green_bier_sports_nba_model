@@ -148,7 +148,7 @@ QUICK_START_TEAMS.md           - Teams quick start
 **Check:**
 1. Azure environment variables are set
 2. API is running v33.0.21.0
-3. Thresholds are active (0.55 conf, 0.0 edge)
+3. Thresholds are active (edge-only: spread 5.0, total 3.0, 1H 2.5; confidence 0.0)
 
 **Verify:**
 ```bash

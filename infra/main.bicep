@@ -37,6 +37,14 @@ param theOddsApiKey string
 @secure()
 param apiBasketballKey string
 
+@description('Action Network username (optional; required for premium splits)')
+@secure()
+param actionNetworkUsername string = ''
+
+@description('Action Network password (optional; required for premium splits)')
+@secure()
+param actionNetworkPassword string = ''
+
 @description('Microsoft App ID for Teams Bot')
 param microsoftAppId string = ''
 
@@ -52,7 +60,6 @@ param websiteDomain string = 'greenbiersportventures.com'
 
 @description('Allowed origins for CORS (passed through to container app and API)')
 param allowedOrigins array = [
-  'http://localhost:3000'
   'https://*.azurewebsites.net'
   'https://${websiteDomain}'
   'https://www.${websiteDomain}'
@@ -85,6 +92,8 @@ module nba 'nba/main.bicep' = {
     deployTeamsBot: deployTeamsBot
     theOddsApiKey: theOddsApiKey
     apiBasketballKey: apiBasketballKey
+    actionNetworkUsername: actionNetworkUsername
+    actionNetworkPassword: actionNetworkPassword
     microsoftAppId: microsoftAppId
     microsoftAppTenantId: microsoftAppTenantId
     microsoftAppPassword: microsoftAppPassword

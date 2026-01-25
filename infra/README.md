@@ -61,12 +61,16 @@ pwsh ./infra/nba/deploy.ps1 -WhatIf
 az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
   -p theOddsApiKey=<secret> `
      apiBasketballKey=<secret> `
+     actionNetworkUsername=<secret> `
+     actionNetworkPassword=<secret> `
      requireApiAuth=<true|false>
 
 # Direct az CLI (full deployment including Teams Bot)
 az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
   -p theOddsApiKey=<secret> `
      apiBasketballKey=<secret> `
+     actionNetworkUsername=<secret> `
+     actionNetworkPassword=<secret> `
      requireApiAuth=<true|false> `
   deployTeamsBot=true `
      microsoftAppId=<bot-app-id> `
@@ -75,6 +79,7 @@ az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
 
 # Optional parameters
 - `requireApiAuth` (default `false`): toggles the `REQUIRE_API_AUTH` env var on the container app
+- `actionNetworkUsername` / `actionNetworkPassword`: required when strict splits are enabled
 ```
 
 ## CI/CD (GitHub Actions)

@@ -20,8 +20,6 @@ class MarketCatalog:
 
 def _candidate_model_pack_paths(project_root: Path, data_processed_dir: str) -> List[Path]:
     return [
-        Path(data_processed_dir) / "models" / "model_pack.json",  # Docker: /app/data/processed/models/
-        Path(data_processed_dir).parent / "models" / "production" / "model_pack.json",
         project_root / "models" / "production" / "model_pack.json",
     ]
 

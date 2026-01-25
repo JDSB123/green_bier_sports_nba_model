@@ -110,7 +110,8 @@ Expected: `[PASS] ALL CHECKS PASSED`
 ### API Verification
 
 ```bash
-curl http://localhost:8090/verify
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/verify"
 ```
 
 Returns:

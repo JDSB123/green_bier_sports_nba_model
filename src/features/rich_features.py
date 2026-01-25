@@ -46,6 +46,7 @@ from src.config import settings
 from src.ingestion import api_basketball
 from src.ingestion.api_basketball import normalize_standings_response
 from src.ingestion.espn import fetch_espn_box_score, fetch_espn_schedule, ESPNBoxScore, fetch_espn_recent_game_ids
+from src.utils.logging import get_logger
 from src.utils.team_factors import (
     get_home_court_advantage,
     get_team_context_features,
@@ -61,6 +62,9 @@ _REFERENCE_CACHE = {
     'seasons': {},  # season validation cache
     'last_updated': {}  # cache timestamps
 }
+
+# Module logger
+logger = get_logger(__name__)
 
 # ESPN to API-Basketball name mapping
 # API-Basketball uses full names (e.g., "Los Angeles Clippers")
@@ -93,6 +97,8 @@ class RichFeatureBuilder:
         self._injuries_fetched: bool = False
         # game_id -> box score stats
         self._box_scores_cache: Dict[int, Dict] = {}
+        # sharp/square comparison cache keyed by "away@home"
+        self._sharp_square_cache: Optional[Dict[str, Any]] = None
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get statistics about cache usage and performance."""
@@ -104,6 +110,8 @@ class RichFeatureBuilder:
                 'standings_cached': self._standings_cache is not None,
                 'injuries_cached': self._injuries_cache is not None,
                 'box_scores': len(self._box_scores_cache),
+                'sharp_square_cached': self._sharp_square_cache is not None,
+                'sharp_square_games': len(self._sharp_square_cache or {}),
             },
             'persistent_cache': {
                 'teams': len(_REFERENCE_CACHE['teams']),
@@ -123,7 +131,42 @@ class RichFeatureBuilder:
         self._injuries_cache = None
         self._injuries_fetched = False
         self._box_scores_cache.clear()
+        self._sharp_square_cache = None
         print("[CACHE] Session cache cleared - next calls will fetch fresh data")
+
+    async def _get_sharp_square_cache(self) -> Dict[str, Any]:
+        """Fetch sharp vs square comparison data once per request."""
+        if self._sharp_square_cache is not None:
+            return self._sharp_square_cache
+
+        require_sharp = bool(getattr(settings, "require_sharp_book_data", False))
+        try:
+            from src.ingestion.betting_splits import fetch_sharp_square_lines
+            comparisons = await fetch_sharp_square_lines()
+        except Exception as e:
+            logger.warning(f"[API] Sharp/square fetch failed: {e}")
+            if require_sharp:
+                raise
+            self._sharp_square_cache = {}
+            return self._sharp_square_cache
+
+        if not comparisons:
+            if require_sharp:
+                raise ValueError("STRICT MODE: Sharp/square data unavailable for all games.")
+            self._sharp_square_cache = {}
+            return self._sharp_square_cache
+
+        cache: Dict[str, Any] = {}
+        for comp in comparisons:
+            try:
+                key = f"{comp.away_team}@{comp.home_team}"
+                cache[key] = comp
+            except Exception:
+                continue
+
+        self._sharp_square_cache = cache
+        logger.info(f"[API] Cached sharp/square comparisons for {len(cache)} games")
+        return self._sharp_square_cache
 
     @staticmethod
     def _is_cache_valid(cache_key: str, max_age_hours: int = 24) -> bool:
@@ -1262,6 +1305,10 @@ class RichFeatureBuilder:
         injuries_df = await self.get_injuries_df()
         has_injury_data = injuries_df is not None and len(injuries_df) > 0
 
+        # Research suggests 50-70% replacement value for star players
+        # Using 65% replacement efficiency = 35% of star's PPG is lost
+        REPLACEMENT_LOSS_FACTOR = 0.35  # 35% of PPG lost when player is out
+
         if has_injury_data:
             out_injuries = injuries_df[injuries_df['status'] == 'out']
 
@@ -1274,10 +1321,6 @@ class RichFeatureBuilder:
             # Calculate injury impact on margin
             # Negative home_out_ppg hurts home team (subtracts from margin)
             # Positive away_out_ppg helps home team (adds to margin)
-            # Research suggests 50-70% replacement value for star players
-            # Using 65% replacement efficiency = 35% of star's PPG is lost
-            # This accounts for both scoring and intangible impact (playmaking, gravity)
-            REPLACEMENT_LOSS_FACTOR = 0.35  # 35% of PPG lost when player is out
             injury_margin_adj = (-home_out_ppg +
                                  away_out_ppg) * REPLACEMENT_LOSS_FACTOR
 
@@ -1303,6 +1346,11 @@ class RichFeatureBuilder:
             home_out_ppg = away_out_ppg = 0.0
             injury_margin_adj = 0.0
             home_star_out = away_star_out = 0
+
+        # Injury impact on totals (negative values reduce total)
+        home_injury_total_impact = -home_out_ppg * REPLACEMENT_LOSS_FACTOR
+        away_injury_total_impact = -away_out_ppg * REPLACEMENT_LOSS_FACTOR
+        injury_total_diff = home_injury_total_impact + away_injury_total_impact
 
         # ============================================================
         # 1H MODELING (v33.0.7.0: Independent matchup-based predictions)
@@ -1446,6 +1494,9 @@ class RichFeatureBuilder:
             "home_injury_impact_ppg": home_out_ppg,
             "away_injury_impact_ppg": away_out_ppg,
             "injury_margin_adj": injury_margin_adj,
+            "home_injury_total_impact": home_injury_total_impact,
+            "away_injury_total_impact": away_injury_total_impact,
+            "injury_total_diff": injury_total_diff,
             "home_star_out": home_star_out,
             "away_star_out": away_star_out,
 
@@ -1639,6 +1690,15 @@ class RichFeatureBuilder:
             "sharp_side_total": 0,
             "spread_ticket_money_diff": 0.0,
             "total_ticket_money_diff": 0.0,
+            # Sharp vs square book comparison (Pinnacle vs square books)
+            "has_pinnacle_data": 0,
+            "pinnacle_spread": 0.0,
+            "square_spread_avg": 0.0,
+            "spread_sharp_square_diff": 0.0,
+            "pinnacle_total": 0.0,
+            "square_total_avg": 0.0,
+            "total_sharp_square_diff": 0.0,
+            "num_square_books": 0,
         }
 
         # Add betting splits features if available
@@ -1676,12 +1736,83 @@ class RichFeatureBuilder:
             # (Legacy behavior for non-strict environments)
             features["has_real_splits"] = 0
             features["spread_public_home_pct"] = 0.0
+            features["spread_public_away_pct"] = 0.0
+            features["spread_money_home_pct"] = 0.0
+            features["spread_money_away_pct"] = 0.0
             features["spread_ticket_money_diff"] = 0.0
+            features["spread_open"] = 0.0
+            features["spread_current"] = 0.0
             features["spread_movement"] = 0.0
             features["is_rlm_spread"] = 0
             features["sharp_side_spread"] = 0
+            features["over_public_pct"] = 0.0
+            features["under_public_pct"] = 0.0
+            features["over_money_pct"] = 0.0
+            features["under_money_pct"] = 0.0
+            features["total_ticket_money_diff"] = 0.0
+            features["total_open"] = 0.0
+            features["total_current"] = 0.0
+            features["total_movement"] = 0.0
             features["is_rlm_total"] = 0
             features["sharp_side_total"] = 0
+
+        # Sharp vs square comparison (Pinnacle divergence)
+        try:
+            from src.ingestion.betting_splits import sharp_square_to_features
+            from src.ingestion.standardize import normalize_team_to_espn
+
+            require_sharp = bool(getattr(settings, "require_sharp_book_data", False))
+            home_name, _ = normalize_team_to_espn(home_team, source="sharp_square")
+            away_name, _ = normalize_team_to_espn(away_team, source="sharp_square")
+            key = f"{away_name}@{home_name}"
+
+            sharp_cache = await self._get_sharp_square_cache()
+            comp = sharp_cache.get(key)
+            if comp:
+                features.update(sharp_square_to_features(comp, fill_missing=not require_sharp))
+                if require_sharp:
+                    missing = [
+                        k
+                        for k in (
+                            "pinnacle_spread",
+                            "square_spread_avg",
+                            "pinnacle_total",
+                            "square_total_avg",
+                        )
+                        if features.get(k) is None
+                    ]
+                    if missing or not features.get("num_square_books"):
+                        raise ValueError(
+                            "STRICT MODE: Missing sharp/square book data "
+                            f"for {away_name}@{home_name}. Missing: {missing}"
+                        )
+            else:
+                # Defaults when sharp data is unavailable for this game
+                if require_sharp:
+                    raise ValueError(
+                        "STRICT MODE: Missing sharp/square book data "
+                        f"for {away_name}@{home_name}."
+                    )
+                features.setdefault("has_pinnacle_data", 0)
+                features.setdefault("pinnacle_spread", 0.0)
+                features.setdefault("square_spread_avg", 0.0)
+                features.setdefault("spread_sharp_square_diff", 0.0)
+                features.setdefault("pinnacle_total", 0.0)
+                features.setdefault("square_total_avg", 0.0)
+                features.setdefault("total_sharp_square_diff", 0.0)
+                features.setdefault("num_square_books", 0)
+        except Exception as e:
+            logger.warning(f"Sharp/square feature enrichment failed: {e}")
+            if bool(getattr(settings, "require_sharp_book_data", False)):
+                raise
+            features.setdefault("has_pinnacle_data", 0)
+            features.setdefault("pinnacle_spread", 0.0)
+            features.setdefault("square_spread_avg", 0.0)
+            features.setdefault("spread_sharp_square_diff", 0.0)
+            features.setdefault("pinnacle_total", 0.0)
+            features.setdefault("square_total_avg", 0.0)
+            features.setdefault("total_sharp_square_diff", 0.0)
+            features.setdefault("num_square_books", 0)
 
         # ATS (against the spread) cover rates - estimate from margin performance
         # Teams that consistently outperform their expected margin tend to cover more often

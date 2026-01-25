@@ -63,6 +63,14 @@ param theOddsApiKey string
 @secure()
 param apiBasketballKey string
 
+@description('Action Network username (optional; required for premium splits)')
+@secure()
+param actionNetworkUsername string = ''
+
+@description('Action Network password (optional; required for premium splits)')
+@secure()
+param actionNetworkPassword string = ''
+
 // Optional integrations
 @description('Database URL (optional)')
 @secure()
@@ -207,6 +215,8 @@ var apiSecrets = concat(
     { name: 'api-basketball-key', value: apiBasketballKey }
     { name: 'app-insights-connection-string', value: appInsights.properties.ConnectionString }
   ],
+  actionNetworkUsername == '' ? [] : [{ name: 'action-network-username', value: actionNetworkUsername }],
+  actionNetworkPassword == '' ? [] : [{ name: 'action-network-password', value: actionNetworkPassword }],
   databaseUrl == '' ? [] : [{ name: 'database-url', value: databaseUrl }]
 )
 
@@ -224,9 +234,13 @@ var appEnvVars = concat(
     { name: 'MODELS_DIR', value: '/app/models/production' }
     { name: 'REQUIRE_ACTION_NETWORK_SPLITS', value: 'true' }
     { name: 'REQUIRE_REAL_SPLITS', value: 'true' }
+    { name: 'REQUIRE_SHARP_BOOK_DATA', value: 'true' }
     { name: 'REQUIRE_INJURY_FETCH_SUCCESS', value: 'true' }
+    { name: 'MIN_FEATURE_COMPLETENESS', value: '0.95' }
     { name: 'AZURE_STORAGE_CONNECTION_STRING', value: storage.outputs.connectionString }
   ],
+  actionNetworkUsername == '' ? [] : [{ name: 'ACTION_NETWORK_USERNAME', secretRef: 'action-network-username' }],
+  actionNetworkPassword == '' ? [] : [{ name: 'ACTION_NETWORK_PASSWORD', secretRef: 'action-network-password' }],
   databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]
 )
 
@@ -247,7 +261,6 @@ module containerApp '../modules/containerApp.bicep' = {
       }
     ]
     ingressOrigins: [
-      'http://localhost:3000'
       'https://*.azurewebsites.net'
       'https://${websiteDomain}'
       'https://www.${websiteDomain}'

@@ -24,10 +24,12 @@ if not TEAMS_WEBHOOK_URL:
     print("  Set it via: export TEAMS_WEBHOOK_URL='your_webhook_url'")
     sys.exit(1)
 
-# API URL - defaults to localhost, override with NBA_API_URL env var
+# API URL - Azure Container App (required)
 # For Azure: export NBA_API_URL=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv | xargs -I{} echo "https://{}")
-API_PORT = os.getenv("NBA_API_PORT", "8090")
-API_BASE = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
+API_BASE = os.getenv("NBA_API_URL", "").strip()
+if not API_BASE:
+    print("[ERROR] NBA_API_URL environment variable is required (Azure Container App URL)")
+    sys.exit(1)
 NBA_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "").strip()
 MODEL_PACK_PATH = os.getenv("NBA_MODEL_PACK_PATH", "models/production/model_pack.json")
 PUBLIC_WEEKLY_LINEUP_URL = os.getenv(
@@ -313,17 +315,11 @@ def post_to_teams(message: dict) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="Post NBA picks to Teams")
     parser.add_argument("--date", default="today", help="Date (YYYY-MM-DD or 'today')")
-    parser.add_argument("--local", action="store_true", help="Use local Docker API instead of Azure")
     args = parser.parse_args()
     
-    # Set API source based on flag (or use environment variable)
-    if args.local:
-        api_base = f"http://localhost:{API_PORT}"
-        print(f"[CONFIG] Using LOCAL API: {api_base}")
-    else:
-        # Use environment variable or default to localhost
-        api_base = os.getenv("NBA_API_URL", f"http://localhost:{API_PORT}")
-        print(f"[CONFIG] Using API: {api_base}")
+    # Use configured Azure API base
+    api_base = API_BASE
+    print(f"[CONFIG] Using API: {api_base}")
     
     print(f"[FETCH] Fetching predictions for {args.date}...")
     data = fetch_executive_data(args.date, api_base)

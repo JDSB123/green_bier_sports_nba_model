@@ -21,6 +21,7 @@ import asyncio
 
 from src.config import settings
 from src.ingestion import the_odds
+from src.ingestion.standardize import to_cst
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -41,6 +42,14 @@ def validate_splits_sources_configured() -> Dict[str, bool]:
 
 def detect_reverse_line_movement(splits: "GameSplits") -> "GameSplits":
     """Detect RLM (Reverse Line Movement) from splits data."""
+    if (
+        splits.spread_current is None
+        or splits.spread_open is None
+        or splits.spread_home_ticket_pct is None
+        or splits.spread_away_ticket_pct is None
+    ):
+        return splits
+
     spread_movement = splits.spread_current - splits.spread_open
 
     if splits.spread_home_ticket_pct > 60:
@@ -51,6 +60,14 @@ def detect_reverse_line_movement(splits: "GameSplits") -> "GameSplits":
         if spread_movement < -0.5:
             splits.spread_rlm = True
             splits.sharp_spread_side = "home"
+
+    if (
+        splits.total_current is None
+        or splits.total_open is None
+        or splits.over_ticket_pct is None
+        or splits.under_ticket_pct is None
+    ):
+        return splits
 
     total_movement = splits.total_current - splits.total_open
 
@@ -92,23 +109,23 @@ class GameSplits:
     game_time: dt.datetime
     source: str  # e.g., "action_network", "the_odds"
 
-    # Optional fields with defaults
-    spread_line: float = 0.0
-    spread_home_ticket_pct: float = 50.0
-    spread_away_ticket_pct: float = 50.0
-    spread_home_money_pct: float = 50.0
-    spread_away_money_pct: float = 50.0
+    # Optional fields (None if missing; no placeholders in production)
+    spread_line: Optional[float] = None
+    spread_home_ticket_pct: Optional[float] = None
+    spread_away_ticket_pct: Optional[float] = None
+    spread_home_money_pct: Optional[float] = None
+    spread_away_money_pct: Optional[float] = None
 
-    total_line: float = 0.0
-    over_ticket_pct: float = 50.0
-    under_ticket_pct: float = 50.0
-    over_money_pct: float = 50.0
-    under_money_pct: float = 50.0
+    total_line: Optional[float] = None
+    over_ticket_pct: Optional[float] = None
+    under_ticket_pct: Optional[float] = None
+    over_money_pct: Optional[float] = None
+    under_money_pct: Optional[float] = None
 
-    spread_open: float = 0.0
-    spread_current: float = 0.0
-    total_open: float = 0.0
-    total_current: float = 0.0
+    spread_open: Optional[float] = None
+    spread_current: Optional[float] = None
+    total_open: Optional[float] = None
+    total_current: Optional[float] = None
 
     spread_rlm: bool = False
     total_rlm: bool = False
@@ -367,17 +384,24 @@ async def fetch_sharp_square_lines(
         "CRITICAL: Unknown error fetching sharp book data.")
 
 
-def sharp_square_to_features(comp: SharpSquareComparison) -> Dict[str, Any]:
+def sharp_square_to_features(
+    comp: SharpSquareComparison, fill_missing: bool = True
+) -> Dict[str, Any]:
     """Convert sharp vs square comparison into model-ready features."""
+    def _val(value, default=0.0):
+        if value is None:
+            return default if fill_missing else None
+        return value
+
     return {
         "has_pinnacle_data": 1 if comp.has_pinnacle_data else 0,
-        "pinnacle_spread": comp.sharp_spread or 0.0,
-        "square_spread_avg": comp.square_spread or 0.0,
-        "spread_sharp_square_diff": comp.spread_diff or 0.0,
-        "pinnacle_total": comp.sharp_total or 0.0,
-        "square_total_avg": comp.square_total or 0.0,
-        "total_sharp_square_diff": comp.total_diff or 0.0,
-        "num_square_books": comp.num_square_books,
+        "pinnacle_spread": _val(comp.sharp_spread),
+        "square_spread_avg": _val(comp.square_spread),
+        "spread_sharp_square_diff": _val(comp.spread_diff),
+        "pinnacle_total": _val(comp.sharp_total),
+        "square_total_avg": _val(comp.square_total),
+        "total_sharp_square_diff": _val(comp.total_diff),
+        "num_square_books": _val(comp.num_square_books, default=0),
     }
 
 
@@ -410,30 +434,63 @@ def parse_action_network_splits(data: Dict[str, Any]) -> Optional[GameSplits]:
             f"Invalid team names in betting splits: home='{home_team_raw}' (valid={home_valid}), away='{away_team_raw}' (valid={away_valid})")
         return None  # Return None to indicate invalid data
 
+    required_fields = {
+        "spread_line": spread_market.get("line"),
+        "spread_home_ticket_pct": spread_market.get("home_tickets_pct"),
+        "spread_away_ticket_pct": spread_market.get("away_tickets_pct"),
+        "spread_home_money_pct": spread_market.get("home_money_pct"),
+        "spread_away_money_pct": spread_market.get("away_money_pct"),
+        "total_line": total_market.get("line"),
+        "over_ticket_pct": total_market.get("over_tickets_pct"),
+        "under_ticket_pct": total_market.get("under_tickets_pct"),
+        "over_money_pct": total_market.get("over_money_pct"),
+        "under_money_pct": total_market.get("under_money_pct"),
+    }
+    missing = [k for k, v in required_fields.items() if v is None]
+    if missing:
+        logger.debug(
+            f"Action Network splits missing fields for {away_team}@{home_team}: {missing}")
+        return None
+
     splits = GameSplits(
         event_id=str(game.get("id", "")),
         home_team=home_team,
         away_team=away_team,
-        game_time=dt.datetime.fromisoformat(
-            game.get("start_time", dt.datetime.now().isoformat())
-        ),
+        game_time=to_cst(game.get("start_time", dt.datetime.now().isoformat()))
+        or dt.datetime.now(dt.timezone.utc),
         source="action_network",
         # Spread
-        spread_line=spread_market.get("line", 0),
-        spread_home_ticket_pct=spread_market.get("home_tickets_pct", 50),
-        spread_away_ticket_pct=spread_market.get("away_tickets_pct", 50),
-        spread_home_money_pct=spread_market.get("home_money_pct", 50),
-        spread_away_money_pct=spread_market.get("away_money_pct", 50),
-        spread_open=spread_market.get("opening_line", 0),
-        spread_current=spread_market.get("current_line", 0),
+        spread_line=float(spread_market.get("line")),
+        spread_home_ticket_pct=float(spread_market.get("home_tickets_pct")),
+        spread_away_ticket_pct=float(spread_market.get("away_tickets_pct")),
+        spread_home_money_pct=float(spread_market.get("home_money_pct")),
+        spread_away_money_pct=float(spread_market.get("away_money_pct")),
+        spread_open=(
+            float(spread_market.get("opening_line"))
+            if spread_market.get("opening_line") is not None
+            else None
+        ),
+        spread_current=(
+            float(spread_market.get("current_line"))
+            if spread_market.get("current_line") is not None
+            else None
+        ),
         # Total
-        total_line=total_market.get("line", 0),
-        over_ticket_pct=total_market.get("over_tickets_pct", 50),
-        under_ticket_pct=total_market.get("under_tickets_pct", 50),
-        over_money_pct=total_market.get("over_money_pct", 50),
-        under_money_pct=total_market.get("under_money_pct", 50),
-        total_open=total_market.get("opening_line", 0),
-        total_current=total_market.get("current_line", 0),
+        total_line=float(total_market.get("line")),
+        over_ticket_pct=float(total_market.get("over_tickets_pct")),
+        under_ticket_pct=float(total_market.get("under_tickets_pct")),
+        over_money_pct=float(total_market.get("over_money_pct")),
+        under_money_pct=float(total_market.get("under_money_pct")),
+        total_open=(
+            float(total_market.get("opening_line"))
+            if total_market.get("opening_line") is not None
+            else None
+        ),
+        total_current=(
+            float(total_market.get("current_line"))
+            if total_market.get("current_line") is not None
+            else None
+        ),
         updated_at=dt.datetime.now(),
     )
 
@@ -512,25 +569,53 @@ def parse_the_odds_splits(data: List[Dict[str, Any]]) -> List[GameSplits]:
     return splits_list
 
 
-def splits_to_features(splits: GameSplits) -> Dict[str, float]:
+def splits_to_features(splits: GameSplits) -> Dict[str, Any]:
     """
     Convert GameSplits to feature dict for model input.
 
     Maps to the BettingSplits dataclass in features.py.
     Includes a has_real_splits flag to indicate whether data is real or synthetic.
     """
-    # Determine if this is real data (not mock, not defaults)
-    # Real splits should have non-50/50 percentages from an actual source
+    # Determine if this is real data (not mock/synthetic)
     is_real_data = splits.source not in ("mock", "synthetic", "default")
-    is_non_default = (
-        splits.spread_home_ticket_pct != 50.0
-        or splits.spread_home_money_pct != 50.0
-        or splits.over_ticket_pct != 50.0
-    )
+    core_fields = {
+        "spread_home_ticket_pct": splits.spread_home_ticket_pct,
+        "spread_away_ticket_pct": splits.spread_away_ticket_pct,
+        "spread_home_money_pct": splits.spread_home_money_pct,
+        "spread_away_money_pct": splits.spread_away_money_pct,
+        "over_ticket_pct": splits.over_ticket_pct,
+        "under_ticket_pct": splits.under_ticket_pct,
+        "over_money_pct": splits.over_money_pct,
+        "under_money_pct": splits.under_money_pct,
+        "spread_current": splits.spread_current,
+        "total_current": splits.total_current,
+    }
+    missing_core = [k for k, v in core_fields.items() if v is None]
+
+    spread_movement = None
+    if splits.spread_open is not None and splits.spread_current is not None:
+        spread_movement = splits.spread_current - splits.spread_open
+
+    total_movement = None
+    if splits.total_open is not None and splits.total_current is not None:
+        total_movement = splits.total_current - splits.total_open
+
+    spread_ticket_money_diff = None
+    if (
+        splits.spread_home_ticket_pct is not None
+        and splits.spread_home_money_pct is not None
+    ):
+        spread_ticket_money_diff = (
+            splits.spread_home_ticket_pct - splits.spread_home_money_pct
+        )
+
+    total_ticket_money_diff = None
+    if splits.over_ticket_pct is not None and splits.over_money_pct is not None:
+        total_ticket_money_diff = splits.over_ticket_pct - splits.over_money_pct
 
     return {
         # Flag: 1 = real splits data, 0 = missing/synthetic
-        "has_real_splits": 1 if (is_real_data and is_non_default) else 0,
+        "has_real_splits": 1 if (is_real_data and not missing_core) else 0,
         "splits_source": splits.source,
         # Spread splits
         "spread_public_home_pct": splits.spread_home_ticket_pct,
@@ -545,10 +630,10 @@ def splits_to_features(splits: GameSplits) -> Dict[str, float]:
         # Line movement
         "spread_open": splits.spread_open,
         "spread_current": splits.spread_current,
-        "spread_movement": splits.spread_current - splits.spread_open,
+        "spread_movement": spread_movement,
         "total_open": splits.total_open,
         "total_current": splits.total_current,
-        "total_movement": splits.total_current - splits.total_open,
+        "total_movement": total_movement,
         # RLM signals
         "is_rlm_spread": 1 if splits.spread_rlm else 0,
         "is_rlm_total": 1 if splits.total_rlm else 0,
@@ -561,12 +646,8 @@ def splits_to_features(splits: GameSplits) -> Dict[str, float]:
             else (-1 if splits.sharp_total_side == "under" else 0)
         ),
         # Ticket vs money divergence (sharp indicator)
-        "spread_ticket_money_diff": (
-            splits.spread_home_ticket_pct - splits.spread_home_money_pct
-        ),
-        "total_ticket_money_diff": (
-            splits.over_ticket_pct - splits.over_money_pct
-        ),
+        "spread_ticket_money_diff": spread_ticket_money_diff,
+        "total_ticket_money_diff": total_ticket_money_diff,
     }
 
 
@@ -808,8 +889,8 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     under_money = game_odds.get("total_under_money")
 
                     # Find OPENING line from earliest inserted timestamp across all books
-                    spread_open = spread_line  # default to current
-                    total_open = total_line    # default to current
+                    spread_open = None
+                    total_open = None
                     earliest_inserted = None
 
                     for odds in odds_list:
@@ -823,54 +904,55 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                                     )
                                     if earliest_inserted is None or inserted_dt < earliest_inserted:
                                         earliest_inserted = inserted_dt
-                                        spread_open = odds.get(
-                                            "spread_home", spread_line)
-                                        total_open = odds.get(
-                                            "total", total_line)
+                                        spread_open = odds.get("spread_home")
+                                        total_open = odds.get("total")
                                 except (ValueError, TypeError):
                                     pass
 
-                    # Skip if no public data at all
-                    if spread_home_pct is None and over_pct is None:
+                    # Require core splits fields (no placeholders)
+                    required_fields = {
+                        "spread_line": spread_line,
+                        "spread_home_public": spread_home_pct,
+                        "spread_away_public": spread_away_pct,
+                        "spread_home_money": spread_home_money,
+                        "spread_away_money": spread_away_money,
+                        "total_line": total_line,
+                        "over_public": over_pct,
+                        "under_public": under_pct,
+                        "over_money": over_money,
+                        "under_money": under_money,
+                    }
+                    missing = [k for k, v in required_fields.items() if v is None]
+                    if missing:
+                        logger.debug(
+                            f"Missing splits fields for {away_team} @ {home_team}: {missing}")
                         continue
 
                     splits = GameSplits(
                         event_id=str(game.get("id", "")),
                         home_team=home_team,
                         away_team=away_team,
-                        game_time=dt.datetime.fromisoformat(
-                            game.get("start_time", datetime.now(
-                            ).isoformat()).replace("Z", "+00:00")
-                        ),
+                        game_time=to_cst(
+                            game.get("start_time", dt.datetime.now().isoformat())
+                        )
+                        or dt.datetime.now(dt.timezone.utc),
                         source="action_network",
-                        spread_line=float(
-                            spread_line) if spread_line is not None else 0.0,
-                        spread_home_ticket_pct=float(
-                            spread_home_pct) if spread_home_pct is not None else 50.0,
-                        spread_away_ticket_pct=float(
-                            spread_away_pct) if spread_away_pct is not None else 50.0,
-                        spread_home_money_pct=float(
-                            spread_home_money) if spread_home_money is not None else 50.0,
-                        spread_away_money_pct=float(
-                            spread_away_money) if spread_away_money is not None else 50.0,
+                        spread_line=float(spread_line),
+                        spread_home_ticket_pct=float(spread_home_pct),
+                        spread_away_ticket_pct=float(spread_away_pct),
+                        spread_home_money_pct=float(spread_home_money),
+                        spread_away_money_pct=float(spread_away_money),
                         spread_open=float(
-                            spread_open) if spread_open is not None else 0.0,
-                        spread_current=float(
-                            spread_line) if spread_line is not None else 0.0,
-                        total_line=float(
-                            total_line) if total_line is not None else 0.0,
-                        over_ticket_pct=float(
-                            over_pct) if over_pct is not None else 50.0,
-                        under_ticket_pct=float(
-                            under_pct) if under_pct is not None else 50.0,
-                        over_money_pct=float(
-                            over_money) if over_money is not None else 50.0,
-                        under_money_pct=float(
-                            under_money) if under_money is not None else 50.0,
+                            spread_open) if spread_open is not None else None,
+                        spread_current=float(spread_line),
+                        total_line=float(total_line),
+                        over_ticket_pct=float(over_pct),
+                        under_ticket_pct=float(under_pct),
+                        over_money_pct=float(over_money),
+                        under_money_pct=float(under_money),
                         total_open=float(
-                            total_open) if total_open is not None else 0.0,
-                        total_current=float(
-                            total_line) if total_line is not None else 0.0,
+                            total_open) if total_open is not None else None,
+                        total_current=float(total_line),
                         updated_at=dt.datetime.now(),
                     )
 

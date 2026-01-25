@@ -27,7 +27,7 @@ param registries array
 param ingressOrigins array = []
 
 @description('Ingress target port')
-param targetPort int = 8080
+param targetPort int = 8090
 
 @description('Ingress transport')
 param transport string = 'auto'

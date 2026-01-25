@@ -38,7 +38,8 @@ One-time utilities and deprecated scripts are in `archive/legacy_scripts/` and `
 |--------|---------|
 | `validate_environment.py` | Validate Python environment |
 | `data_unified_validate_training.py` | Validate training data |
-| `predict_validate_production_readiness.py` | Production readiness check |
+| `predict_validate_production_readiness.py` | Production readiness check (`--live` runs live endpoints + end-to-end pipeline) |
+| `check_production_runtime_isolation.py` | Production runtime isolation test (no coverage threshold) |
 | `predict_test_all_api_endpoints.py` | Test API endpoints |
 | `ci_sanity_check.py` | CI validation |
 

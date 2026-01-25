@@ -89,6 +89,26 @@ def get_feature_mode() -> FeatureMode:
         return FeatureMode.STRICT
 
 
+def get_min_feature_completeness() -> float:
+    """
+    Minimum allowed feature completeness (0-1). 0 disables enforcement.
+
+    Accepts either 0-1 (e.g., 0.95) or percent (e.g., 95).
+    """
+    value = os.getenv("MIN_FEATURE_COMPLETENESS", "").strip()
+    if not value:
+        return 0.0
+    try:
+        val = float(value)
+    except ValueError:
+        return 0.0
+    if val > 1:
+        val = val / 100.0
+    if val < 0:
+        return 0.0
+    return min(val, 1.0)
+
+
 def validate_and_prepare_features(
     feature_df: pd.DataFrame,
     required_features: List[str],
@@ -117,15 +137,39 @@ def validate_and_prepare_features(
     if mode is None:
         mode = get_feature_mode()
 
-    # Find missing features
+    # Find missing features (missing columns OR null values)
     available = set(feature_df.columns)
     required = set(required_features)
-    missing = required - available
+    missing_cols = required - available
+
+    null_missing = []
+    for col in required_features:
+        if col in feature_df.columns:
+            value = feature_df.iloc[0][col]
+            if pd.isna(value):
+                null_missing.append(col)
+
+    missing = set(missing_cols) | set(null_missing)
     missing_list = sorted(missing)
 
     # No missing features - return as-is
     if not missing:
         return feature_df[required_features], []
+
+    # Enforce completeness threshold if configured
+    total = len(required_features)
+    completeness = (total - len(missing)) / total if total > 0 else 1.0
+    min_required = get_min_feature_completeness()
+    if min_required and completeness < min_required:
+        logger.error(
+            f"[{market}] FEATURE COMPLETENESS {completeness:.1%} below required "
+            f"{min_required:.1%}. Missing: {missing_list[:5]}..."
+        )
+        raise MissingFeaturesError(
+            market=market,
+            missing_features=missing_list,
+            available_features=sorted(available),
+        )
 
     # Handle based on mode
     if mode == FeatureMode.STRICT:
@@ -144,7 +188,10 @@ def validate_and_prepare_features(
 
     # mode == SILENT or WARN: zero-fill missing features
     for col in missing:
-        feature_df[col] = 0
+        if col not in feature_df.columns:
+            feature_df[col] = 0
+        else:
+            feature_df[col] = feature_df[col].fillna(0)
 
     return feature_df[required_features], missing_list
 

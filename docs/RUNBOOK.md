@@ -15,87 +15,21 @@ That's it for daily predictions.
 
 ---
 
-## Local Development
+## Azure‑First Workflow
 
-### Prerequisites
-
-- Python 3.11+
-- Docker Desktop or Docker Engine
-- Azure CLI (for deployments)
-
-### Setup
-
-```bash
-# Clone and enter repo
-cd green_bier_sports_nba_model
-
-# Create venv
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\Activate.ps1  # Windows
-
-# Install deps
-pip install -r requirements.txt
-
-# Copy environment template
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-### Run Scripts
-
-```bash
-# Predictions
-python scripts/predict_unified_slate.py
-
-# Run tests
-pytest tests -v
-```
+Local container runs are intentionally removed to prevent conflicting environments.
+Use Azure Container Apps for all production predictions.
 
 ---
 
-## Docker (Local)
-
-### Start API
+## Backtest (Scripts)
 
 ```bash
-docker compose up -d
-```
+# Production backtest (audited canonical dataset)
+python scripts/historical_backtest_production.py
 
-**API:** http://localhost:8090
-
-### Health Check
-
-```bash
-curl http://localhost:8090/health
-```
-
-### Test Endpoints
-
-```bash
-curl http://localhost:8090/slate/today
-curl http://localhost:8090/markets
-```
-
-### Stop
-
-```bash
-docker compose down
-```
-
----
-
-## Backtest (Docker)
-
-```bash
-# Full pipeline
-docker compose -f docker-compose.backtest.yml up backtest-full
-
-# Data only (no backtest)
-docker compose -f docker-compose.backtest.yml up backtest-data
-
-# Interactive shell
-docker compose -f docker-compose.backtest.yml run --rm backtest-shell
+# Extended backtest (per-market configuration)
+python scripts/historical_backtest_extended.py
 ```
 
 ---
@@ -193,8 +127,9 @@ See [SECRETS.md](SECRETS.md)
 
 ### Container health fails
 ```bash
-docker logs nba-v33-api
-curl http://localhost:8090/health
+az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/health"
 ```
 
 ### Azure deployment fails
@@ -218,6 +153,5 @@ This:
 
 Then:
 ```bash
-docker compose up -d
-curl http://localhost:8090/health
+pytest tests -v
 ```

@@ -160,9 +160,9 @@ Setup complete.
 
 Next steps:
 - Validate: python scripts/validate_environment.py
-- Start API: docker compose up -d
-- Health check: curl http://localhost:8090/health
-- Predictions: curl http://localhost:8090/slate/today
+- Health check (Azure): 
+  FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+  curl "https://$FQDN/health"
 
 Note: Codespaces secrets are synced to .env and secrets/ when present.
 EOF

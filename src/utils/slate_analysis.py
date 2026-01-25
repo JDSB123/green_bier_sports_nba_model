@@ -349,14 +349,10 @@ def parse_utc_time(iso_string: str) -> datetime:
     """Parse ISO UTC time string to datetime."""
     if iso_string.endswith("Z"):
         iso_string = f"{iso_string[:-1]}+00:00"
-    dt = datetime.fromisoformat(iso_string).replace(tzinfo=timezone.utc)
-    # Round to nearest 5 minutes if odd
-    minutes = dt.minute
-    rounded_min = round(minutes / 5.0) * 5
-    if rounded_min == 60:
-        dt = dt.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-    else:
-        dt = dt.replace(minute=rounded_min, second=0, microsecond=0)
+    dt = datetime.fromisoformat(iso_string)
+    # If no timezone info, assume UTC (API default)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     return dt
 
 
@@ -518,6 +514,28 @@ def filter_games_for_date(games: list, target_date: date) -> list:
         return []
     filtered = []
     for game in games:
+        # Prefer standardized CST date if available
+        game_date = game.get("date")
+        if game_date:
+            try:
+                if date.fromisoformat(str(game_date)) == target_date:
+                    filtered.append(game)
+                continue
+            except Exception:
+                pass
+
+        commence_time_cst = game.get("commence_time_cst")
+        if commence_time_cst:
+            try:
+                game_cst = datetime.fromisoformat(commence_time_cst)
+                if game_cst.tzinfo is None:
+                    game_cst = game_cst.replace(tzinfo=CST)
+                if game_cst.astimezone(CST).date() == target_date:
+                    filtered.append(game)
+                continue
+            except Exception:
+                pass
+
         commence_time = game.get("commence_time")
         if not commence_time:
             continue

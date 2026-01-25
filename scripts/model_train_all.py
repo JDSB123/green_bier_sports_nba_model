@@ -452,8 +452,7 @@ def train_all_markets(
     """
     from typing import List, Dict
 
-    output_dir = output_dir or os.path.join(
-        settings.data_processed_dir, "models")
+    output_dir = output_dir or settings.models_dir
     os.makedirs(output_dir, exist_ok=True)
     tracker = ModelTracker()
 

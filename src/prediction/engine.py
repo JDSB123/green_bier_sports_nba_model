@@ -324,7 +324,7 @@ class PeriodPredictor:
             classifier_extreme=classifier_extreme,
         )
 
-        return {
+        prediction = {
             "home_cover_prob": home_cover_prob,
             "away_cover_prob": away_cover_prob,
             "predicted_margin": predicted_margin,
@@ -343,6 +343,39 @@ class PeriodPredictor:
             "passes_filter": resolved.passes_filter,
             "filter_reason": resolved.filter_reason,
         }
+
+        # ---------------------------------------------------------------------
+        # OPTIONAL: Apply sharp-weighted combination (Pinnacle + RLM + steam)
+        # ---------------------------------------------------------------------
+        use_sharp = bool(feature_payload.get("has_real_splits")) or bool(
+            feature_payload.get("has_pinnacle_data")
+        )
+        if use_sharp:
+            try:
+                from src.prediction.sharp_weighted import apply_weighted_combination_spread
+                weighted_pred, _ = apply_weighted_combination_spread(
+                    prediction,
+                    feature_payload,
+                    market_spread=spread_line,
+                )
+                combined_edge = weighted_pred.get("combined_edge")
+                if combined_edge is not None:
+                    edge_abs = abs(combined_edge)
+                    weighted_pred["edge"] = edge_abs
+                    weighted_pred["raw_edge"] = combined_edge
+                    weighted_pred["passes_filter"] = edge_abs >= min_edge
+                    weighted_pred["filter_reason"] = (
+                        None if weighted_pred["passes_filter"]
+                        else f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
+                    )
+                    weighted_pred["model_edge_pct"] = abs(
+                        weighted_pred.get("confidence", 0) - 0.5
+                    )
+                prediction = weighted_pred
+            except Exception as e:
+                logger.warning(f"[{self.period}_spread] Sharp-weighted combine failed: {e}")
+
+        return prediction
 
     def predict_total(
         self,
@@ -461,7 +494,7 @@ class PeriodPredictor:
         passes_filter = resolved.passes_filter
         filter_reason = resolved.filter_reason
 
-        return {
+        prediction = {
             "over_prob": over_prob,
             "under_prob": under_prob,
             "predicted_total": predicted_total,
@@ -480,6 +513,39 @@ class PeriodPredictor:
             "passes_filter": passes_filter,
             "filter_reason": filter_reason,
         }
+
+        # ---------------------------------------------------------------------
+        # OPTIONAL: Apply sharp-weighted combination (Pinnacle + RLM + steam)
+        # ---------------------------------------------------------------------
+        use_sharp = bool(feature_payload.get("has_real_splits")) or bool(
+            feature_payload.get("has_pinnacle_data")
+        )
+        if use_sharp:
+            try:
+                from src.prediction.sharp_weighted import apply_weighted_combination_total
+                weighted_pred, _ = apply_weighted_combination_total(
+                    prediction,
+                    feature_payload,
+                    market_total=total_line,
+                )
+                combined_edge = weighted_pred.get("combined_edge")
+                if combined_edge is not None:
+                    edge_abs = abs(combined_edge)
+                    weighted_pred["edge"] = edge_abs
+                    weighted_pred["raw_edge"] = combined_edge
+                    weighted_pred["passes_filter"] = edge_abs >= min_edge
+                    weighted_pred["filter_reason"] = (
+                        None if weighted_pred["passes_filter"]
+                        else f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
+                    )
+                    weighted_pred["model_edge_pct"] = abs(
+                        weighted_pred.get("confidence", 0) - 0.5
+                    )
+                prediction = weighted_pred
+            except Exception as e:
+                logger.warning(f"[{self.period}_total] Sharp-weighted combine failed: {e}")
+
+        return prediction
 
     def predict_all(
         self,

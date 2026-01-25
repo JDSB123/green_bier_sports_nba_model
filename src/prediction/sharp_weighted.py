@@ -586,18 +586,41 @@ def combine_total_signals(
 # HELPER: Build SharpSignal from features dict
 # ============================================================================
 
+def _first_present(features: Dict[str, Any], *keys: str) -> Optional[float]:
+    """Return the first non-None value for any of the provided keys."""
+    for key in keys:
+        if key in features and features.get(key) is not None:
+            return features.get(key)
+    return None
+
+
 def build_sharp_signal_spread(
     features: Dict[str, Any],
     market_spread: Optional[float] = None,
 ) -> SharpSignal:
     """Build SharpSignal for spread from features dictionary."""
+    square_line = _first_present(features, "square_spread_avg", "square_avg_spread")
+    if square_line is None:
+        square_line = market_spread
+    current_line = market_spread if market_spread is not None else _first_present(
+        features, "spread_current"
+    )
     return SharpSignal(
-        pinnacle_line=features.get("pinnacle_spread"),
-        square_line=features.get("square_avg_spread") or market_spread,
-        ticket_pct=features.get("spread_ticket_home_pct"),
-        money_pct=features.get("spread_money_home_pct"),
-        opening_line=features.get("spread_open"),
-        current_line=market_spread,
+        pinnacle_line=_first_present(features, "pinnacle_spread"),
+        square_line=square_line,
+        ticket_pct=_first_present(
+            features,
+            "spread_public_home_pct",
+            "spread_ticket_home_pct",
+            "spread_home_ticket_pct",
+        ),
+        money_pct=_first_present(
+            features,
+            "spread_money_home_pct",
+            "spread_home_money_pct",
+        ),
+        opening_line=_first_present(features, "spread_open"),
+        current_line=current_line,
     )
 
 
@@ -606,13 +629,28 @@ def build_sharp_signal_total(
     market_total: Optional[float] = None,
 ) -> SharpSignal:
     """Build SharpSignal for total from features dictionary."""
+    square_line = _first_present(features, "square_total_avg", "square_avg_total")
+    if square_line is None:
+        square_line = market_total
+    current_line = market_total if market_total is not None else _first_present(
+        features, "total_current"
+    )
     return SharpSignal(
-        pinnacle_line=features.get("pinnacle_total"),
-        square_line=features.get("square_avg_total") or market_total,
-        ticket_pct=features.get("total_ticket_over_pct"),
-        money_pct=features.get("total_money_over_pct"),
-        opening_line=features.get("total_open"),
-        current_line=market_total,
+        pinnacle_line=_first_present(features, "pinnacle_total"),
+        square_line=square_line,
+        ticket_pct=_first_present(
+            features,
+            "over_public_pct",
+            "total_ticket_over_pct",
+            "over_ticket_pct",
+        ),
+        money_pct=_first_present(
+            features,
+            "over_money_pct",
+            "total_money_over_pct",
+        ),
+        opening_line=_first_present(features, "total_open"),
+        current_line=current_line,
     )
 
 
@@ -645,7 +683,9 @@ def apply_weighted_combination_spread(
         (updated_prediction, weighted_result)
     """
     model_margin = prediction.get("predicted_margin", 0)
-    spread = market_spread or prediction.get("spread_line", 0)
+    spread = market_spread if market_spread is not None else prediction.get("spread_line")
+    if spread is None:
+        spread = 0
 
     sharp_signal = build_sharp_signal_spread(features, spread)
     result = combine_spread_signals(model_margin, spread, sharp_signal, config)
@@ -712,7 +752,9 @@ def apply_weighted_combination_total(
         (updated_prediction, weighted_result)
     """
     model_total = prediction.get("predicted_total", 0)
-    total = market_total or prediction.get("total_line", 0)
+    total = market_total if market_total is not None else prediction.get("total_line")
+    if total is None:
+        total = 0
 
     sharp_signal = build_sharp_signal_total(features, total)
     result = combine_total_signals(model_total, total, sharp_signal, config)

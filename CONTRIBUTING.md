@@ -19,7 +19,7 @@ This is the **SINGLE SOURCE OF TRUTH** for the NBA prediction system:
 
 2. **Check existing issues:** Search for similar problems or features before opening new issues
 
-3. **Test locally:** Always test changes before committing
+3. **Test in CI or Codespaces:** Avoid local container runs to prevent conflicting environments
 
 ## 🔄 Development Workflow
 
@@ -64,7 +64,7 @@ git add .
 # Commit with descriptive message
 git commit -m "feat: add new prediction feature"
 
-# Push to GitHub (ALWAYS before building Docker)
+# Push to GitHub (triggers Azure build/deploy)
 git push origin main
 ```
 
@@ -76,7 +76,7 @@ git push origin main
 
 # This will:
 # - Read version from VERSION file
-# - Build Docker image
+# - Build container image
 # - Push to Azure Container Registry
 # - Update Azure Container App
 # - Verify deployment
@@ -113,10 +113,8 @@ pytest tests -v
 pytest tests/test_serving.py -v
 ```
 
-### Run Tests in Docker
-```powershell
-docker compose -f docker-compose.yml up test
-```
+### Run Tests in CI (recommended)
+Push to `main` to trigger CI. For local test runs, use pytest only (no containers).
 
 ## 🚨 Critical Rules
 
@@ -141,17 +139,14 @@ docker compose -f docker-compose.yml up test
 Secrets are stored in **Azure Key Vault** (`nbagbs-keyvault`):
 
 ```powershell
-# Create .env file for local development (NEVER commit)
-cp .env.example .env
-
-# Fetch secrets from Key Vault
-az keyvault secret show --vault-name nbagbs-keyvault --name THE-ODDS-API-KEY --query value -o tsv > secrets/THE_ODDS_API_KEY
-az keyvault secret show --vault-name nbagbs-keyvault --name API-BASKETBALL-KEY --query value -o tsv > secrets/API_BASKETBALL_KEY
+# Fetch secrets from Key Vault (Azure-first)
+az keyvault secret show --vault-name nbagbs-keyvault --name THE-ODDS-API-KEY --query value -o tsv
+az keyvault secret show --vault-name nbagbs-keyvault --name API-BASKETBALL-KEY --query value -o tsv
 ```
 
-See [docs/DOCKER_SECRETS.md](docs/DOCKER_SECRETS.md) for details.
+See [docs/SECRETS.md](docs/SECRETS.md) for details.
 
-## 📦 Docker Guidelines
+## 📦 Container Build (Azure)
 
 ### Build Images
 ```powershell
@@ -160,16 +155,12 @@ $VERSION = (Get-Content VERSION -Raw).Trim()
 docker build --build-arg MODEL_VERSION=$VERSION -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined .
 
 # Build backtest image
-docker build -t nba-backtest:latest -f Dockerfile.backtest .
+# Backtests run via scripts (no separate backtest container)
 ```
 
-### Run Locally
+### Backtests (Scripts Only)
 ```powershell
-# Start all services
-docker compose up
-
-# Start backtest
-docker compose -f docker-compose.backtest.yml up
+python scripts/historical_backtest_production.py
 ```
 
 ## 🔧 Maintenance
@@ -203,7 +194,7 @@ This checks:
 ## 🐛 Troubleshooting
 
 ### Docker Issues
-See [docs/DOCKER_TROUBLESHOOTING.md](docs/DOCKER_TROUBLESHOOTING.md)
+See [docs/AZURE_OPERATIONS.md](docs/AZURE_OPERATIONS.md)
 
 ### Version Conflicts
 ```powershell
@@ -271,4 +262,3 @@ Thank you for contributing to the NBA prediction system! Your efforts help maint
 
 **Last Updated:** 2025-12-29
 **Version:** See `VERSION`
-

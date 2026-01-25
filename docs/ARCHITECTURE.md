@@ -27,7 +27,7 @@
 │                src/prediction/engine.py                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  Markets: 1h_spread, 1h_total, fg_spread, fg_total             │
-│  Models: 4 independent XGBoost models                           │
+│  Models: 4 independent scikit-learn models                      │
 └────────────────────────────┬────────────────────────────────────┘
                              │
                              ▼
@@ -67,7 +67,8 @@
 ### Example: Get Today's Slate
 
 ```bash
-curl http://localhost:8090/slate/today
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/slate/today"
 ```
 
 Response:
@@ -104,27 +105,6 @@ Request → Fetch Live Data → Build Features → Model Predict → Filter → 
 
 ---
 
-## Docker Services
-
-### Main Service
-
-```yaml
-nba-v33-api:
-  image: nbagbsacr.azurecr.io/nba-gbsv-api:${VERSION}
-  ports: 8090:8090
-```
-
-### Backtest Services
-
-| Service | Purpose |
-|---------|---------|
-| `backtest-full` | Full pipeline |
-| `backtest-data` | Data only |
-| `backtest-only` | Backtest only |
-| `backtest-shell` | Debug shell |
-
----
-
 ## Ingestion Endpoints
 
 ### The Odds API
@@ -151,10 +131,7 @@ nba-v33-api:
 ## Container Startup
 
 ```
-docker-entrypoint.sh
-    │
-    ├─ validate_env()        # Check API keys
-    ├─ validate_python()     # Check imports
+/app/start.sh (Dockerfile.combined)
     │
     └─ uvicorn src.serving.app:app --port 8090
 ```
@@ -188,7 +165,7 @@ Features → XGBoost models → Predicted margins/totals
 
 ### Step 5: Filter
 
-Apply confidence and edge thresholds.
+Apply edge-only thresholds (confidence is informational only).
 
 ---
 

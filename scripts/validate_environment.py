@@ -6,8 +6,7 @@ This script validates that ALL required secrets/configs are present
 BEFORE anything tries to run and fails cryptically.
 
 Run this FIRST in any environment:
-  - Local development: python scripts/validate_environment.py
-  - Docker build:      Added to Dockerfile as health check
+  - Azure/CI build:    Added to Dockerfile.combined as health check
   - GitHub Actions:    First step in every workflow
   - Codespace:         Run on terminal open
 

@@ -3,7 +3,7 @@ Docker Secrets Utility
 
 Reads secrets from multiple sources in priority order:
 1. Environment variables (for Azure Container Apps, GitHub Actions)
-2. Docker secrets at /run/secrets/ (for Docker Compose/Swarm)
+2. Container secrets at /run/secrets/ (if mounted)
 3. Local secrets directory ./secrets/ (for local development)
 
 This ensures the same code works in all environments.

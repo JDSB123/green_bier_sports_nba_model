@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nba-prediction-system"
-version = "33.0.15.0"
+version = "34.3.0"
 description = "NBA sports betting prediction system using machine learning"
 readme = "README.md"
 requires-python = ">=3.11"

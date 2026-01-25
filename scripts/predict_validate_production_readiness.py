@@ -10,6 +10,11 @@ Validates that the system is ready for production deployment by checking:
 5. Test suite status
 """
 import sys
+import os
+import argparse
+import asyncio
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 import importlib
 import traceback
@@ -130,6 +135,7 @@ def test_config():
     
     try:
         from src.config import settings, get_current_nba_season
+        from src.prediction.feature_validation import get_feature_mode, FeatureMode, get_min_feature_completeness
         
         # Test settings object exists
         print(f"  [OK] Settings object initialized")
@@ -161,6 +167,42 @@ def test_config():
             print(f"  [FAIL] Invalid season format: {season}")
             return False
         
+        # Production guardrails (fail if not strict)
+        guardrail_failures = []
+
+        mode = get_feature_mode()
+        if mode != FeatureMode.STRICT:
+            guardrail_failures.append(
+                f"PREDICTION_FEATURE_MODE must be strict (current: {mode.value})"
+            )
+
+        min_comp = get_min_feature_completeness()
+        if min_comp < 0.95:
+            guardrail_failures.append(
+                f"MIN_FEATURE_COMPLETENESS must be >= 0.95 (current: {min_comp:.2f})"
+            )
+
+        if not getattr(settings, "require_action_network_splits", False):
+            guardrail_failures.append("REQUIRE_ACTION_NETWORK_SPLITS must be true for production")
+        if not getattr(settings, "require_real_splits", False):
+            guardrail_failures.append("REQUIRE_REAL_SPLITS must be true for production")
+        if not getattr(settings, "require_sharp_book_data", False):
+            guardrail_failures.append("REQUIRE_SHARP_BOOK_DATA must be true for production")
+        if not getattr(settings, "require_injury_fetch_success", False):
+            guardrail_failures.append("REQUIRE_INJURY_FETCH_SUCCESS must be true for production")
+
+        if getattr(settings, "require_action_network_splits", False) or getattr(settings, "require_real_splits", False):
+            if not getattr(settings, "action_network_username", "") or not getattr(settings, "action_network_password", ""):
+                guardrail_failures.append(
+                    "Action Network premium credentials are required when splits are strict"
+                )
+
+        if guardrail_failures:
+            print("\n[FAIL] Production guardrails not satisfied:")
+            for msg in guardrail_failures:
+                print(f"  - {msg}")
+            return False
+
         print("\n[OK] Configuration is valid")
         return True
         
@@ -263,8 +305,269 @@ def test_error_handling():
         return False
 
 
+def _extract_market_line(game: dict, market_key: str, team_name: str | None = None, outcome_name: str | None = None) -> float | None:
+    """Extract a market line from The Odds API payload (returns None if missing)."""
+    bookmakers = game.get("bookmakers", []) or []
+    for bm in bookmakers:
+        for market in bm.get("markets", []) or []:
+            if market.get("key") != market_key:
+                continue
+            for outcome in market.get("outcomes", []) or []:
+                if team_name and outcome.get("name") == team_name and "point" in outcome:
+                    return outcome.get("point")
+                if outcome_name and outcome.get("name") == outcome_name and "point" in outcome:
+                    return outcome.get("point")
+    return None
+
+
+def _offset_is_cst(dt_value: datetime) -> bool:
+    """Return True if datetime offset is CST/CDT (-06:00 or -05:00)."""
+    if not dt_value or dt_value.tzinfo is None:
+        return False
+    offset = dt_value.utcoffset()
+    if offset is None:
+        return False
+    return offset.total_seconds() in (-21600, -18000)
+
+
+async def _test_live_pipeline_async() -> bool:
+    """Live endpoint + pipeline check (odds, splits, sharp/square, injuries, features)."""
+    print("\n" + "=" * 60)
+    print("6. Live Endpoint + Pipeline Validation")
+    print("=" * 60)
+
+    try:
+        from src.config import settings
+        from src.ingestion.the_odds import fetch_odds, fetch_events, fetch_event_odds
+        from src.ingestion.standardize import normalize_team_to_espn
+        from src.ingestion.betting_splits import fetch_public_betting_splits, splits_to_features
+        from src.features.rich_features import RichFeatureBuilder
+        from src.ingestion.api_basketball import APIBasketballClient
+        from src.ingestion.injuries import fetch_all_injuries
+        from src.prediction.feature_validation import validate_and_prepare_features
+        from src.modeling.unified_features import MODEL_CONFIGS
+        import pandas as pd
+    except Exception as e:
+        print(f"  [FAIL] Imports for live pipeline failed: {e}")
+        traceback.print_exc()
+        return False
+
+    # --- The Odds API (full game odds) ---
+    try:
+        games = await fetch_odds(markets="spreads,totals")
+        print(f"  [OK] The Odds API returned {len(games)} games")
+    except Exception as e:
+        print(f"  [FAIL] The Odds API fetch_odds failed: {e}")
+        return False
+
+    if not games:
+        print("  [WARN] No games returned. Skipping downstream live checks.")
+        return True
+
+    invalid_games = [g for g in games if not g.get("_data_valid")]
+    if invalid_games:
+        print(f"  [FAIL] {len(invalid_games)} games had invalid team names after standardization")
+        return False
+
+    # Verify CST conversion on at least one game
+    cst_checked = False
+    for g in games:
+        cst_value = g.get("commence_time_cst")
+        if not cst_value:
+            continue
+        try:
+            dt_value = datetime.fromisoformat(cst_value)
+            if not _offset_is_cst(dt_value):
+                print(f"  [FAIL] commence_time_cst not CST/CDT: {cst_value}")
+                return False
+            if g.get("date") and dt_value.date().isoformat() != g.get("date"):
+                print(f"  [FAIL] date mismatch after CST conversion: {g.get('date')} vs {dt_value.date().isoformat()}")
+                return False
+            cst_checked = True
+            break
+        except Exception as e:
+            print(f"  [FAIL] Failed parsing commence_time_cst '{cst_value}': {e}")
+            return False
+
+    if not cst_checked:
+        print("  [WARN] No commence_time_cst field found to validate CST conversion")
+
+    # --- API-Basketball (timezone-aware games fetch) ---
+    try:
+        client = APIBasketballClient()
+        today_cst = datetime.now(ZoneInfo("America/Chicago")).date().isoformat()
+        result = await client.fetch_games_by_date(today_cst, timezone="America/Chicago")
+        print(f"  [OK] API-Basketball games by date ({today_cst} CST): {result.count}")
+    except Exception as e:
+        print(f"  [FAIL] API-Basketball fetch_games_by_date failed: {e}")
+        return False
+
+    # --- Action Network splits (strict if configured) ---
+    try:
+        splits_dict = await fetch_public_betting_splits(
+            games,
+            source="auto",
+            require_action_network=bool(getattr(settings, "require_action_network_splits", False)),
+            require_non_empty=bool(getattr(settings, "require_real_splits", False)),
+        )
+        print(f"  [OK] Betting splits loaded: {len(splits_dict)} games")
+    except Exception as e:
+        print(f"  [FAIL] Betting splits fetch failed: {e}")
+        return False
+
+    strict_splits = bool(getattr(settings, "require_action_network_splits", False)) or bool(
+        getattr(settings, "require_real_splits", False)
+    )
+    if strict_splits:
+        missing_keys = []
+        for g in games:
+            home_team = g.get("home_team")
+            away_team = g.get("away_team")
+            if home_team and away_team:
+                key = f"{away_team}@{home_team}"
+                if key not in splits_dict:
+                    missing_keys.append(key)
+        if missing_keys:
+            print(f"  [FAIL] Missing splits for {len(missing_keys)} games (strict): {missing_keys[:5]}")
+            return False
+
+    sample_split = next(iter(splits_dict.values()), None)
+    if sample_split:
+        if not _offset_is_cst(sample_split.game_time):
+            print(f"  [FAIL] Action Network game_time not CST/CDT: {sample_split.game_time}")
+            return False
+        split_features = splits_to_features(sample_split)
+        if getattr(settings, "require_real_splits", False) and split_features.get("has_real_splits") != 1:
+            print("  [FAIL] Splits returned has_real_splits=0 while REQUIRE_REAL_SPLITS=true")
+            return False
+
+    # --- Injuries (strict if configured) ---
+    try:
+        injuries = await fetch_all_injuries()
+        print(f"  [OK] Injury fetch succeeded ({len(injuries)} records)")
+    except Exception as e:
+        print(f"  [FAIL] Injury fetch failed: {e}")
+        return False
+
+    # --- Event odds: verify 1H markets available for at least one game ---
+    event_spread_1h = None
+    event_total_1h = None
+    try:
+        events = await fetch_events()
+        event_id = None
+        target_game = games[0]
+        target_home = target_game.get("home_team")
+        target_away = target_game.get("away_team")
+        for ev in events:
+            if ev.get("home_team") == target_home and ev.get("away_team") == target_away:
+                event_id = ev.get("id")
+                break
+        if not event_id and events:
+            event_id = events[0].get("id")
+        if not event_id:
+            print("  [WARN] No event ID available for 1H odds validation")
+        else:
+            event_odds = await fetch_event_odds(event_id)
+            event_spread_1h = _extract_market_line(
+                event_odds, "spreads_h1", team_name=event_odds.get("home_team")
+            )
+            event_total_1h = _extract_market_line(
+                event_odds, "totals_h1", outcome_name="Over"
+            )
+            if event_spread_1h is None or event_total_1h is None:
+                print("  [FAIL] 1H odds missing (spreads_h1 or totals_h1) for event")
+                return False
+            print("  [OK] 1H odds validated (spreads_h1 / totals_h1)")
+    except Exception as e:
+        print(f"  [FAIL] Event odds validation failed: {e}")
+        return False
+
+    # --- End-to-end features build + validation ---
+    try:
+        target_game = games[0]
+        home_team = target_game.get("home_team")
+        away_team = target_game.get("away_team")
+
+        # Normalize to ensure consistent splits keying
+        home_norm, _ = normalize_team_to_espn(str(home_team), source="odds")
+        away_norm, _ = normalize_team_to_espn(str(away_team), source="odds")
+        splits_key = f"{away_norm}@{home_norm}"
+        betting_splits = splits_dict.get(splits_key)
+
+        # Extract full-game market lines
+        fg_spread = _extract_market_line(target_game, "spreads", team_name=home_team)
+        fg_total = _extract_market_line(target_game, "totals", outcome_name="Over")
+        if fg_spread is None or fg_total is None:
+            print("  [FAIL] Missing full-game spread/total lines from The Odds API")
+            return False
+
+        # Use 1H lines from event odds if available
+        h1_spread = event_spread_1h
+        h1_total = event_total_1h
+        if h1_spread is None or h1_total is None:
+            print("  [FAIL] Missing 1H spread/total lines from The Odds API")
+            return False
+
+        builder = RichFeatureBuilder(season=settings.current_season)
+        features = await builder.build_game_features(
+            home_norm, away_norm, betting_splits=betting_splits
+        )
+
+        def _validate_market_features(market_key: str, spread_line: float, total_line: float) -> None:
+            payload = dict(features)
+            payload["spread_line"] = spread_line
+            payload["total_line"] = total_line
+            payload["spread_vs_predicted"] = 0.0
+            payload["total_vs_predicted"] = 0.0
+            payload["1h_spread_line"] = spread_line
+            payload["1h_total_line"] = total_line
+            required = MODEL_CONFIGS[market_key]["features"]
+            df = pd.DataFrame([payload])
+            validate_and_prepare_features(df, required, market=market_key)
+
+        for market_key in sorted(MODEL_CONFIGS.keys()):
+            if market_key.startswith("1h_"):
+                _validate_market_features(market_key, h1_spread, h1_total)
+            else:
+                _validate_market_features(market_key, fg_spread, fg_total)
+
+        print("  [OK] Feature build + validation passed for all markets")
+    except Exception as e:
+        print(f"  [FAIL] Feature build/validation failed: {e}")
+        traceback.print_exc()
+        return False
+
+    return True
+
+
+def test_live_pipeline() -> bool:
+    """Wrapper to run async live pipeline check."""
+    return asyncio.run(_test_live_pipeline_async())
+
+
 def main():
     """Run all production readiness checks."""
+    parser = argparse.ArgumentParser(description="Production readiness validation")
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Run live endpoint + end-to-end pipeline checks (requires API access)",
+    )
+    args = parser.parse_args()
+
+    if args.live:
+        # Enforce strict production guardrails for live readiness checks
+        strict_env = {
+            "PREDICTION_FEATURE_MODE": "strict",
+            "MIN_FEATURE_COMPLETENESS": "0.95",
+            "REQUIRE_ACTION_NETWORK_SPLITS": "true",
+            "REQUIRE_REAL_SPLITS": "true",
+            "REQUIRE_SHARP_BOOK_DATA": "true",
+            "REQUIRE_INJURY_FETCH_SUCCESS": "true",
+        }
+        for key, value in strict_env.items():
+            os.environ.setdefault(key, value)
+
     print("\n" + "=" * 60)
     print("PRODUCTION READINESS VALIDATION")
     print("=" * 60)
@@ -278,6 +581,9 @@ def main():
         ("No Fake Data Policy", test_no_fake_data),
         ("Error Handling", test_error_handling),
     ]
+
+    if args.live:
+        checks.append(("Live Endpoint + Pipeline", test_live_pipeline))
     
     results = []
     for name, test_func in checks:

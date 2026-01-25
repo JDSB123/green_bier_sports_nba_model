@@ -85,28 +85,16 @@ breaker = get_odds_api_breaker()
 result = await breaker.call_async(fetch_odds_function)
 ```
 
-### 4. Docker Security Hardening
+### 4. Azure Container Apps Hardening
 
-**Location:** `docker-compose.yml`
+**Location:** `infra/nba/*.bicep`
 
 **Implemented:**
-- ✅ **Environment Variable Validation:** Required vars must be set (Docker Compose fails if missing)
-- ✅ **Resource Limits:** CPU and memory limits per service
-- ✅ **Non-Root Users:** All containers run as non-root (already implemented)
-- ✅ **Health Checks:** All services have health checks
-- ✅ **Restart Policies:** `unless-stopped` for automatic recovery
-
-**Example:**
-```yaml
-strict-api:
-  environment:
-    - THE_ODDS_API_KEY=${THE_ODDS_API_KEY:?THE_ODDS_API_KEY environment variable is required}
-  deploy:
-    resources:
-      limits:
-        cpus: '2.0'
-        memory: 2G
-```
+- ✅ **Secrets Management:** Container App secrets via Azure (no local secrets)
+- ✅ **Resource Limits:** CPU/memory set in infra
+- ✅ **Ingress Controls:** HTTPS-only via ACA ingress
+- ✅ **Health Checks:** `/health` used for readiness
+- ✅ **Scaling Guards:** min/max replicas + concurrency configured
 
 ### 5. API Key Protection
 
@@ -178,9 +166,9 @@ fail_fast_on_missing_keys()  # Validates API keys
 - [ ] Set `SERVICE_API_KEY` (generate with `openssl rand -hex 32`)
 - [ ] Set `REQUIRE_API_AUTH=true` to enable API authentication
 - [ ] Configure `ALLOWED_ORIGINS` to your actual frontend domain(s)
-- [ ] Review resource limits in `docker-compose.yml`
-- [ ] Set up HTTPS/TLS (reverse proxy with nginx/traefik)
-- [ ] Use Docker secrets or external secret management (AWS Secrets Manager, HashiCorp Vault)
+- [ ] Review resource limits in `infra/nba/main.bicep`
+- [ ] Ensure HTTPS/TLS via ACA ingress
+- [ ] Use Azure Container App secrets / Key Vault
 - [ ] Enable monitoring and alerting
 - [ ] Review and test circuit breaker thresholds
 
@@ -216,27 +204,25 @@ fail_fast_on_missing_keys()  # Validates API keys
 
 ### Validate API Keys:
 ```bash
-# Start service - should fail if keys missing
-docker compose up strict-api
-
 # Check health endpoint (shows key status)
-curl http://localhost:8090/health
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/health"
 ```
 
 ### Test API Authentication:
 ```bash
 # Without API key (should fail if REQUIRE_API_AUTH=true)
-curl http://localhost:8090/slate/today
+curl "https://$FQDN/slate/today"
 
 # With API key
-curl -H "X-API-Key: your_service_api_key" http://localhost:8090/slate/today
+curl -H "X-API-Key: your_service_api_key" "https://$FQDN/slate/today"
 ```
 
 ### Test Circuit Breaker:
 ```bash
 # Simulate API failures - circuit breaker should open after 5 failures
 # Check circuit breaker stats in logs
-docker compose logs strict-api | grep circuit
+az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg | grep circuit
 ```
 
 ---
@@ -248,9 +234,9 @@ docker compose logs strict-api | grep circuit
 **Error:** `SecurityError: Missing required API keys`
 
 **Solution:**
-1. Check `.env` file exists and has all required keys
+1. Check Container App environment variables / Key Vault secrets
 2. Verify keys are not empty
-3. Check Docker Compose environment variable syntax
+3. Check Container App environment variable configuration
 
 ### API Authentication Not Working
 
@@ -294,7 +280,7 @@ docker compose logs strict-api | grep circuit
 4. **Secret Management:**
    - Integrate with AWS Secrets Manager
    - Use HashiCorp Vault
-   - Docker secrets for production
+   - Azure Container App secrets / Key Vault
 
 5. **Network Security:**
    - Private networks for internal services
@@ -311,7 +297,7 @@ The NBA v5.0 BETA system now includes:
 ✅ **API authentication** - Optional but recommended for production  
 ✅ **Circuit breakers** - Prevents cascading API failures  
 ✅ **Key masking** - API keys never logged  
-✅ **Docker hardening** - Resource limits and validation  
+✅ **Azure hardening** - Resource limits and validation  
 ✅ **Enhanced error handling** - No sensitive data in errors  
 
 **Security Status:** **Production-Ready** with recommended authentication enabled
@@ -321,5 +307,5 @@ The NBA v5.0 BETA system now includes:
 ## References
 
 - [OWASP API Security Top 10](https://owasp.org/www-project-api-security/)
-- [Docker Security Best Practices](https://docs.docker.com/engine/security/)
+- [Azure Container Apps security](https://learn.microsoft.com/azure/container-apps/secure)
 - [FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)

@@ -1,4 +1,4 @@
-# NBA Basketball Prediction System v33.0.11.0
+# NBA Basketball Prediction System (versioned by `VERSION`)
 
 Production-grade containerized system for NBA betting predictions with **4 independent markets**.
 
@@ -36,27 +36,20 @@ python scripts/predict_unified_slate.py --date 2025-12-19 --matchup Celtics
 
 ## Architecture Overview
 
-**All prediction/model computation runs through Docker containers.**
-`scripts/predict_unified_slate.py` is a thin local *orchestrator* (starts the container and calls the API); it does not run models locally.
+**All prediction/model computation runs in Azure Container Apps.**
+Local containers and localhost endpoints are intentionally not supported to avoid conflicting environments.
 
-### Services (Docker Compose)
+### Backtests (Script-Driven)
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| `nba-v33-api` | 8090 | **Main prediction API** - FastAPI with 4 independent markets (1H + FG) |
-
-### Backtest Services (On-Demand)
-
-| Service | Purpose |
-|---------|---------|
-| `backtest-full` | Full pipeline: fetch data + build training + run backtest |
-| `backtest-data` | Fetch and build training data only |
-| `backtest-only` | Run backtest on existing data |
-| `backtest-shell` | Interactive debugging shell |
+Backtests run directly via Python scripts (no separate backtest containers).
 
 ## Quick Start
 
-### Prerequisites
+### Azure Deployment (Primary)
+
+This repo is Azure‑first. CI/CD builds the container and deploys to Azure Container Apps.
+For manual operations, see `docs/AZURE_OPERATIONS.md`.
+
 ## CI/CD
 
 ### CI/CD Workflows
@@ -79,95 +72,32 @@ FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query propert
 curl "https://$FQDN/health" | jq .
 ```
 
-
-- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
-- Docker Compose v2.x
-
-### Setup
-
-**Option 1: Docker Secrets (Recommended for Production)**
-
-1. **Create secrets from `.env` file:**
-   ```powershell
-   python scripts/manage_secrets.py create-from-env
-   ```
-
-2. **Or create secrets manually:**
-   ```powershell
-   mkdir secrets
-   echo "your_key_here" > secrets\THE_ODDS_API_KEY
-   echo "your_key_here" > secrets\API_BASKETBALL_KEY
-   echo "your_password" > secrets\DB_PASSWORD
-   ```
-
-   Secrets are automatically mounted and take precedence over environment variables.
-
-**Option 2: Environment Variables (Development)**
-
-1. **Copy environment template:**
-   ```powershell
-   copy .env.example .env
-   ```
-
-2. **Fill in API keys in `.env`:**
-   ```env
-   # REQUIRED - System will not start without these
-   THE_ODDS_API_KEY=your_key_here
-   API_BASKETBALL_KEY=your_key_here
-
-   # OPTIONAL - For production API authentication
-   SERVICE_API_KEY=your_service_api_key
-   REQUIRE_API_AUTH=false  # Set to true for production
-   ```
-
-   **Note:** The system prefers Docker secrets over `.env` files. See [`docs/DOCKER_SECRETS.md`](docs/DOCKER_SECRETS.md) for full secrets guide.
-
-### Running Production
-
-**Start the production container:**
-```powershell
-docker compose up -d
-```
-
-**Check health:**
-```powershell
-curl http://localhost:8090/health   # Main API
-```
-
-**View logs:**
-```powershell
-docker compose logs -f strict-api
-```
-
-**Stop all services:**
-```powershell
-docker compose down
-```
-
 ## API Usage
 
 ### Get Today's Predictions
 
 ```bash
-curl http://localhost:8090/slate/today
+# Get current API FQDN
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/slate/today"
 ```
 
 ### List Enabled Markets
 
 ```bash
-curl http://localhost:8090/markets
+curl "https://$FQDN/markets"
 ```
 
 ### Get Comprehensive Analysis
 
 ```bash
-curl "http://localhost:8090/slate/today/comprehensive?use_splits=true"
+curl "https://$FQDN/slate/today/comprehensive?use_splits=true"
 ```
 
 ### Single Game Prediction
 
 ```bash
-curl -X POST http://localhost:8090/predict/game \
+curl -X POST "https://$FQDN/predict/game" \
   -H "Content-Type: application/json" \
   -d '{
     "home_team": "Cleveland Cavaliers",
@@ -185,20 +115,14 @@ curl -X POST http://localhost:8090/predict/game \
 
 ## Running Backtests
 
-All backtests run in containers:
+Run backtests directly:
 
 ```powershell
-# Full backtest pipeline (fetch data + train + backtest)
-docker compose -f docker-compose.backtest.yml up backtest-full
+# Production backtest (uses audited canonical data)
+python scripts/historical_backtest_production.py
 
-# Just build training data (no backtest)
-docker compose -f docker-compose.backtest.yml up backtest-data
-
-# Run backtest on existing data
-docker compose -f docker-compose.backtest.yml up backtest-only
-
-# Interactive debugging shell
-docker compose -f docker-compose.backtest.yml run --rm backtest-shell
+# Extended backtest (per-market config)
+python scripts/historical_backtest_extended.py
 ```
 
 ### Backtest Configuration
@@ -236,10 +160,7 @@ NBA_main/
 ├── scripts/                     # Utility scripts (see scripts/README.md)
 ├── tests/                       # pytest test suite
 ├── docs/                        # Documentation
-├── docker-compose.yml           # Main stack
-├── docker-compose.backtest.yml  # Backtest stack
-├── Dockerfile                   # Main API container
-└── Dockerfile.backtest          # Backtest container
+└── Dockerfile.combined          # Container image used in Azure
 ```
 
 ## API Keys Required
@@ -267,7 +188,7 @@ Optional:
 
 ## Documentation
 
-- `docs/DEV_WORKFLOW.md` - Development workflow (Codespaces/local/backtesting)
+- `docs/DEV_WORKFLOW.md` - Development workflow (Azure‑first)
 - `docs/CURRENT_STACK_AND_FLOW.md` - Detailed architecture
 - `docs/BACKTEST_QUICKSTART.md` - Backtesting guide
 - `docs/DATA_INGESTION_METHODOLOGY.md` - Data sources and processing
@@ -277,16 +198,15 @@ Optional:
 
 The system includes comprehensive security hardening:
 
-- ✅ **Docker Secrets** - Production-grade secret management (Compose-mounted secret files)
+- ✅ **Azure Container App secrets** - Production secret management
 - ✅ **API Key Validation** - Fails fast if keys missing at startup
 - ✅ **Optional API Authentication** - Protect endpoints with API keys
 - ✅ **Circuit Breakers** - Prevent cascading API failures
 - ✅ **Key Masking** - API keys never logged
-- ✅ **Docker Hardening** - Resource limits and validation
 
 **See:**
 - `docs/SECURITY_HARDENING.md` - Full security guide
-- `docs/DOCKER_SECRETS.md` - Docker secrets management
+- `docs/AZURE_OPERATIONS.md` - Azure deployment & operations
 
 **Quick Setup:**
 ```env
@@ -297,16 +217,16 @@ REQUIRE_API_AUTH=true
 
 ## Troubleshooting
 
-See `docs/DOCKER_TROUBLESHOOTING.md` for common issues.
+See `docs/AZURE_OPERATIONS.md` for common issues.
 
 **Quick checks:**
 ```powershell
-# Ensure containers are running
-docker ps --filter "name=nba"
+# Get current API FQDN
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
 
 # Check API health (shows API key status)
-curl http://localhost:8090/health
+curl "https://$FQDN/health"
 
 # View container logs
-docker compose logs -f strict-api
+az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg
 ```

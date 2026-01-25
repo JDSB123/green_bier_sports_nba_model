@@ -44,7 +44,7 @@ class ModelTracker:
     """
     Track model versions and performance.
 
-    Stores metadata in data/processed/models/manifest.json
+    Stores metadata in models/production/manifest.json (single source of truth)
     """
 
     def __init__(self, manifest_path: Optional[str] = None):
@@ -52,7 +52,7 @@ class ModelTracker:
 
         if manifest_path is None:
             manifest_path = os.path.join(
-                settings.data_processed_dir, "models", "manifest.json"
+                settings.models_dir, "manifest.json"
             )
 
         self.manifest_path = Path(manifest_path)

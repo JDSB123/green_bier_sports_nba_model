@@ -31,7 +31,7 @@ async def test_rich_feature_builder_build_game_features_smoke(monkeypatch):
 
     # Keep strict split flags off for this smoke run.
     monkeypatch.setattr(settings, "require_action_network_splits", False, raising=False)
-    monkeypatch.setattr(settings, "require_real_splits", False, raising=False)
+    monkeypatch.setattr(settings, "require_real_splits", True, raising=False)
 
     async def fetch_teams(search: str, **_kwargs):
         if "Lakers" in search:

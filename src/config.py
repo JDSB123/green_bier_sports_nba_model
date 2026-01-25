@@ -90,6 +90,17 @@ def _env_float_required(key: str, default: float = None) -> float:
         f"Required environment variable not set or invalid: {key}")
 
 
+def _env_float_optional(key: str, default: float = 0.0) -> float:
+    """Resolve optional float environment variable with fallback."""
+    value = os.getenv(key)
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
+
 def _current_season() -> str:
     """Resolve the current season from env (required) or raise."""
     return _env_required("CURRENT_SEASON") or get_current_nba_season()  # Fallback only if not set, but raise per strict
@@ -234,9 +245,19 @@ class Settings:
             "REQUIRE_REAL_SPLITS", False
         )
     )
+    require_sharp_book_data: bool = field(
+        default_factory=lambda: _env_bool_optional(
+            "REQUIRE_SHARP_BOOK_DATA", False
+        )
+    )
     require_injury_fetch_success: bool = field(
         default_factory=lambda: _env_bool_optional(
             "REQUIRE_INJURY_FETCH_SUCCESS", False
+        )
+    )
+    min_feature_completeness: float = field(
+        default_factory=lambda: _env_float_optional(
+            "MIN_FEATURE_COMPLETENESS", 0.0
         )
     )
 

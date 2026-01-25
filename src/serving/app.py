@@ -263,6 +263,34 @@ def _models_dir() -> PathLib:
     return configured
 
 
+def _canonical_game_key(home_team: str | None, away_team: str | None, source: str = "odds") -> str:
+    """Build a canonical game key using ESPN-normalized team names."""
+    if not home_team or not away_team:
+        return ""
+    try:
+        from src.ingestion.standardize import normalize_team_to_espn
+        home_norm, home_valid = normalize_team_to_espn(str(home_team), source=source)
+        away_norm, away_valid = normalize_team_to_espn(str(away_team), source=source)
+        if home_valid and away_valid:
+            return f"{away_norm}@{home_norm}"
+    except Exception:
+        pass
+    return f"{away_team}@{home_team}"
+
+
+def _require_splits_if_strict(use_splits: bool) -> bool:
+    """Enforce betting splits when strict live-data flags are enabled."""
+    strict = bool(getattr(settings, "require_action_network_splits", False)) or bool(
+        getattr(settings, "require_real_splits", False)
+    )
+    if strict and not use_splits:
+        raise HTTPException(
+            status_code=400,
+            detail="STRICT MODE: Betting splits are required; cannot disable use_splits.",
+        )
+    return True if strict else use_splits
+
+
 async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Fetch betting splits, enforcing strict Action Network requirements when configured."""
     require_action_network = bool(
@@ -299,7 +327,7 @@ async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
         home_team = g.get("home_team")
         away_team = g.get("away_team")
         if home_team and away_team:
-            game_key = f"{away_team}@{home_team}"
+            game_key = _canonical_game_key(home_team, away_team, source="odds")
             if game_key not in splits:
                 missing_keys.append(game_key)
 
@@ -917,6 +945,7 @@ async def get_slate_predictions(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(
             status_code=503, detail=f"{RELEASE_VERSION}: Engine not loaded - models missing")
+    use_splits = _require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
@@ -984,7 +1013,7 @@ async def get_slate_predictions(
 
         try:
             # Build features
-            game_key = f"{away_team}@{home_team}"
+            game_key = _canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
@@ -1143,6 +1172,7 @@ async def get_executive_summary(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(
             status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
+    use_splits = _require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
@@ -1221,16 +1251,26 @@ async def get_executive_summary(
         home_team = game.get("home_team")
         away_team = game.get("away_team")
         commence_time = game.get("commence_time")
+        commence_time_cst = game.get("commence_time_cst")
 
         try:
-            # Parse time
-            game_dt = parse_utc_time(commence_time) if commence_time else None
-            game_cst = to_cst(game_dt) if game_dt else None
+            # Parse time (prefer standardized CST time if present)
+            game_cst = None
+            if commence_time_cst:
+                try:
+                    game_cst = datetime.fromisoformat(commence_time_cst)
+                    if game_cst.tzinfo is None:
+                        game_cst = game_cst.replace(tzinfo=ZoneInfo("America/Chicago"))
+                except Exception:
+                    game_cst = None
+            if game_cst is None:
+                game_dt = parse_utc_time(commence_time) if commence_time else None
+                game_cst = to_cst(game_dt) if game_dt else None
             time_cst_str = game_cst.strftime(
                 "%m/%d %I:%M %p") if game_cst else "TBD"
 
             # Build features
-            game_key = f"{away_team}@{home_team}"
+            game_key = _canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
@@ -1859,6 +1899,7 @@ async def get_comprehensive_slate_analysis(
     if not hasattr(app.state, 'engine') or app.state.engine is None:
         raise HTTPException(
             status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
+    use_splits = _require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
@@ -1942,15 +1983,26 @@ async def get_comprehensive_slate_analysis(
         home_team = game.get("home_team")
         away_team = game.get("away_team")
         commence_time = game.get("commence_time")
+        commence_time_cst = game.get("commence_time_cst")
 
         try:
-            # Parse time
-            game_dt = parse_utc_time(commence_time) if commence_time else None
-            time_cst = to_cst(game_dt).strftime(
-                "%I:%M %p %Z") if game_dt else "TBD"
+            # Parse time (prefer standardized CST time if present)
+            game_cst = None
+            if commence_time_cst:
+                try:
+                    game_cst = datetime.fromisoformat(commence_time_cst)
+                    if game_cst.tzinfo is None:
+                        game_cst = game_cst.replace(tzinfo=ZoneInfo("America/Chicago"))
+                except Exception:
+                    game_cst = None
+            if game_cst is None:
+                game_dt = parse_utc_time(commence_time) if commence_time else None
+                game_cst = to_cst(game_dt) if game_dt else None
+            time_cst = game_cst.strftime(
+                "%I:%M %p %Z") if game_cst else "TBD"
 
             # Build features
-            game_key = f"{away_team}@{home_team}"
+            game_key = _canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
@@ -2133,7 +2185,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         ):
             games = [{"home_team": req.home_team, "away_team": req.away_team}]
             splits_dict = await _fetch_required_splits(games)
-            game_key = f"{req.away_team}@{req.home_team}"
+            game_key = _canonical_game_key(req.home_team, req.away_team, source="odds")
             betting_splits = splits_dict.get(game_key)
 
         # Build features from FRESH data

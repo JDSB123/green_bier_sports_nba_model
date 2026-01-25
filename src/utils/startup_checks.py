@@ -117,14 +117,14 @@ def _validate_filter_thresholds() -> List[str]:
 
     # Check if env vars are explicitly set vs using defaults
     filter_env_vars = [
-        ("FILTER_SPREAD_MIN_CONFIDENCE", "0.62"),
-        ("FILTER_SPREAD_MIN_EDGE", "2.0"),
-        ("FILTER_TOTAL_MIN_CONFIDENCE", "0.72"),
+        ("FILTER_SPREAD_MIN_CONFIDENCE", "0.0"),
+        ("FILTER_SPREAD_MIN_EDGE", "5.0"),
+        ("FILTER_TOTAL_MIN_CONFIDENCE", "0.0"),
         ("FILTER_TOTAL_MIN_EDGE", "3.0"),
-        ("FILTER_1H_SPREAD_MIN_CONFIDENCE", "0.68"),
-        ("FILTER_1H_SPREAD_MIN_EDGE", "1.5"),
-        ("FILTER_1H_TOTAL_MIN_CONFIDENCE", "0.66"),
-        ("FILTER_1H_TOTAL_MIN_EDGE", "2.0"),
+        ("FILTER_1H_SPREAD_MIN_CONFIDENCE", "0.0"),
+        ("FILTER_1H_SPREAD_MIN_EDGE", "2.5"),
+        ("FILTER_1H_TOTAL_MIN_CONFIDENCE", "0.0"),
+        ("FILTER_1H_TOTAL_MIN_EDGE", "2.5"),
     ]
 
     for env_var, default_value in filter_env_vars:

@@ -143,11 +143,9 @@ docker build --no-cache -f Dockerfile.combined .
 # Check container logs
 az containerapp logs show -n nba-gbsv-api -g nba-gbsv-model-rg
 
-# Test locally first
-docker run -p 8090:8090 \
-  -e THE_ODDS_API_KEY=$(cat secrets/THE_ODDS_API_KEY) \
-  -e API_BASKETBALL_KEY=$(cat secrets/API_BASKETBALL_KEY) \
-  nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
+# Verify in Azure after deploy
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl -s "https://$FQDN/health"
 ```
 
 ### OIDC Login Failed

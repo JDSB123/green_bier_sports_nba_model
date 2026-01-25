@@ -15,6 +15,9 @@
 .PARAMETER WhatIf
     Run deployment in what-if mode (no changes applied).
 
+.PARAMETER SkipReadiness
+    Skip the live production readiness checks before deploy.
+
 .EXAMPLE
     .\deploy.ps1
     .\deploy.ps1 -Tag (Get-Content VERSION -Raw).Trim()
@@ -24,7 +27,8 @@
 param(
     [string]$ResourceGroup = "nba-gbsv-model-rg",
     [string]$Tag = "",
-    [switch]$WhatIf
+    [switch]$WhatIf,
+    [switch]$SkipReadiness
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,12 +50,41 @@ if (-not $Tag) {
 # Check for required environment variables or prompt
 $TheOddsApiKey = $env:THE_ODDS_API_KEY
 $ApiBasketballKey = $env:API_BASKETBALL_KEY
+$ActionNetworkUser = $env:ACTION_NETWORK_USERNAME
+$ActionNetworkPass = $env:ACTION_NETWORK_PASSWORD
 
 if (-not $TheOddsApiKey) {
     $TheOddsApiKey = Read-Host "Enter THE_ODDS_API_KEY" -AsSecureString | ConvertFrom-SecureString -AsPlainText
 }
 if (-not $ApiBasketballKey) {
     $ApiBasketballKey = Read-Host "Enter API_BASKETBALL_KEY" -AsSecureString | ConvertFrom-SecureString -AsPlainText
+}
+if (-not $ActionNetworkUser) {
+    $ActionNetworkUser = Read-Host "Enter ACTION_NETWORK_USERNAME (required for strict splits)"
+}
+if (-not $ActionNetworkPass) {
+    $ActionNetworkPass = Read-Host "Enter ACTION_NETWORK_PASSWORD (required for strict splits)" -AsSecureString | ConvertFrom-SecureString -AsPlainText
+}
+
+# Export env vars for readiness script
+$env:THE_ODDS_API_KEY = $TheOddsApiKey
+$env:API_BASKETBALL_KEY = $ApiBasketballKey
+$env:ACTION_NETWORK_USERNAME = $ActionNetworkUser
+$env:ACTION_NETWORK_PASSWORD = $ActionNetworkPass
+$env:PREDICTION_FEATURE_MODE = "strict"
+$env:MIN_FEATURE_COMPLETENESS = "0.95"
+$env:REQUIRE_ACTION_NETWORK_SPLITS = "true"
+$env:REQUIRE_REAL_SPLITS = "true"
+$env:REQUIRE_SHARP_BOOK_DATA = "true"
+$env:REQUIRE_INJURY_FETCH_SUCCESS = "true"
+
+if (-not $SkipReadiness) {
+    Write-Host "`nRunning production readiness checks (live)..." -ForegroundColor Yellow
+    & python (Join-Path $RepoRoot "scripts" "predict_validate_production_readiness.py") --live
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Production readiness checks failed. Fix issues before deploy."
+        exit $LASTEXITCODE
+    }
 }
 
 # Validate Azure CLI login
@@ -81,7 +114,9 @@ $params = @(
     "--name", $DeploymentName,
     "--parameters", "imageTag=$Tag",
     "--parameters", "theOddsApiKey=$TheOddsApiKey",
-    "--parameters", "apiBasketballKey=$ApiBasketballKey"
+    "--parameters", "apiBasketballKey=$ApiBasketballKey",
+    "--parameters", "actionNetworkUsername=$ActionNetworkUser",
+    "--parameters", "actionNetworkPassword=$ActionNetworkPass"
 )
 
 if ($WhatIf) {

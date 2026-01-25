@@ -55,7 +55,7 @@ class FeatureCompletenessTracker:
     Alerts when feature completeness drops below threshold.
     """
 
-    WARNING_THRESHOLD = 0.90  # Alert if completeness drops below 90%
+    WARNING_THRESHOLD = 0.95  # Alert if completeness drops below 95%
     MAX_RECENT_INCOMPLETE = 50  # Keep last N incomplete predictions
 
     def __init__(self, output_dir: Optional[Path] = None):

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "7186083248103104406"
+      "templateHash": "2116765158702641208"
     }
   },
   "parameters": {
@@ -146,6 +146,20 @@
         "description": "API-Basketball Key (required)"
       }
     },
+    "actionNetworkUsername": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Action Network username (optional; required for premium splits)"
+      }
+    },
+    "actionNetworkPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Action Network password (optional; required for premium splits)"
+      }
+    },
     "microsoftAppId": {
       "type": "string",
       "defaultValue": "",
@@ -179,6 +193,17 @@
       "defaultValue": "greenbiersportventures.com",
       "metadata": {
         "description": "Website domain for CORS"
+      }
+    },
+    "allowedOrigins": {
+      "type": "array",
+      "defaultValue": [
+        "https://*.azurewebsites.net",
+        "[format('https://{0}', parameters('websiteDomain'))]",
+        "[format('https://www.{0}', parameters('websiteDomain'))]"
+      ],
+      "metadata": {
+        "description": "Allowed origins for CORS (also provided to application via ALLOWED_ORIGINS)"
       }
     },
     "requireApiAuth": {
@@ -604,10 +629,10 @@
             "value": "[format('{0}/nba-gbsv-api:{1}', reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').loginServer, parameters('imageTag'))]"
           },
           "envVars": {
-            "value": "[concat(createArray(createObject('name', 'THE_ODDS_API_KEY', 'secretRef', 'the-odds-api-key'), createObject('name', 'API_BASKETBALL_KEY', 'secretRef', 'api-basketball-key'), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'), createObject('name', 'GBS_SPORT', 'value', 'nba'), createObject('name', 'NBA_MODEL_VERSION', 'value', parameters('imageTag')), createObject('name', 'NBA_MARKETS', 'value', '1h_spread,1h_total,fg_spread,fg_total'), createObject('name', 'NBA_PERIODS', 'value', 'first_half,full_game'), createObject('name', 'REQUIRE_API_AUTH', 'value', string(parameters('requireApiAuth'))), createObject('name', 'AZURE_STORAGE_CONNECTION_STRING', 'value', reference(resourceId('Microsoft.Resources/deployments', 'data-storage'), '2025-04-01').outputs.connectionString.value)), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'DATABASE_URL', 'secretRef', 'database-url'))))]"
+            "value": "[concat(createArray(createObject('name', 'THE_ODDS_API_KEY', 'secretRef', 'the-odds-api-key'), createObject('name', 'API_BASKETBALL_KEY', 'secretRef', 'api-basketball-key'), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'), createObject('name', 'GBS_SPORT', 'value', 'nba'), createObject('name', 'NBA_MODEL_VERSION', 'value', parameters('imageTag')), createObject('name', 'NBA_MARKETS', 'value', '1h_spread,1h_total,fg_spread,fg_total'), createObject('name', 'NBA_PERIODS', 'value', 'first_half,full_game'), createObject('name', 'REQUIRE_API_AUTH', 'value', string(parameters('requireApiAuth'))), createObject('name', 'ALLOWED_ORIGINS', 'value', string(join(parameters('allowedOrigins'), ','))), createObject('name', 'MODELS_DIR', 'value', '/app/models/production'), createObject('name', 'REQUIRE_ACTION_NETWORK_SPLITS', 'value', 'true'), createObject('name', 'REQUIRE_REAL_SPLITS', 'value', 'true'), createObject('name', 'REQUIRE_SHARP_BOOK_DATA', 'value', 'true'), createObject('name', 'REQUIRE_INJURY_FETCH_SUCCESS', 'value', 'true'), createObject('name', 'MIN_FEATURE_COMPLETENESS', 'value', '0.95'), createObject('name', 'AZURE_STORAGE_CONNECTION_STRING', 'value', reference(resourceId('Microsoft.Resources/deployments', 'data-storage'), '2025-04-01').outputs.connectionString.value)), if(equals(parameters('actionNetworkUsername'), ''), createArray(), createArray(createObject('name', 'ACTION_NETWORK_USERNAME', 'secretRef', 'action-network-username'))), if(equals(parameters('actionNetworkPassword'), ''), createArray(), createArray(createObject('name', 'ACTION_NETWORK_PASSWORD', 'secretRef', 'action-network-password'))), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'DATABASE_URL', 'secretRef', 'database-url'))))]"
           },
           "secrets": {
-            "value": "[concat(createArray(createObject('name', 'acr-password', 'value', listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').passwords[0].value), createObject('name', 'the-odds-api-key', 'value', parameters('theOddsApiKey')), createObject('name', 'api-basketball-key', 'value', parameters('apiBasketballKey')), createObject('name', 'app-insights-connection-string', 'value', reference(resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment'))), '2020-02-02').ConnectionString)), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'database-url', 'value', parameters('databaseUrl')))))]"
+            "value": "[concat(createArray(createObject('name', 'acr-password', 'value', listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').passwords[0].value), createObject('name', 'the-odds-api-key', 'value', parameters('theOddsApiKey')), createObject('name', 'api-basketball-key', 'value', parameters('apiBasketballKey')), createObject('name', 'app-insights-connection-string', 'value', reference(resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment'))), '2020-02-02').ConnectionString)), if(equals(parameters('actionNetworkUsername'), ''), createArray(), createArray(createObject('name', 'action-network-username', 'value', parameters('actionNetworkUsername')))), if(equals(parameters('actionNetworkPassword'), ''), createArray(), createArray(createObject('name', 'action-network-password', 'value', parameters('actionNetworkPassword')))), if(equals(parameters('databaseUrl'), ''), createArray(), createArray(createObject('name', 'database-url', 'value', parameters('databaseUrl')))))]"
           },
           "registries": {
             "value": [
@@ -619,12 +644,7 @@
             ]
           },
           "ingressOrigins": {
-            "value": [
-              "http://localhost:3000",
-              "https://*.azurewebsites.net",
-              "[format('https://{0}', parameters('websiteDomain'))]",
-              "[format('https://www.{0}', parameters('websiteDomain'))]"
-            ]
+            "value": "[parameters('allowedOrigins')]"
           },
           "targetPort": {
             "value": 8090
@@ -658,7 +678,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "437798482756026501"
+              "templateHash": "3884997957699163640"
             }
           },
           "parameters": {
@@ -719,7 +739,7 @@
             },
             "targetPort": {
               "type": "int",
-              "defaultValue": 8080,
+              "defaultValue": 8090,
               "metadata": {
                 "description": "Ingress target port"
               }

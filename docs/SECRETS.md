@@ -1,7 +1,7 @@
 # Secrets Management
 
 **Last Updated:** 2026-01-23
-**Status:** Consolidated from DOCKER_SECRETS, SECRETS_SETUP_CHECKLIST, guides/SECRETS_CONFIGURATION
+**Status:** Azure‑first secrets management guide
 
 ---
 
@@ -16,43 +16,14 @@
 
 | Secret | Description | Used |
 |--------|-------------|------|
-| `ACTION_NETWORK_USERNAME` | Premium betting splits | No (fallback to free sources) |
-| `ACTION_NETWORK_PASSWORD` | Premium betting splits | No |
+| `ACTION_NETWORK_USERNAME` | Premium betting splits | Required when `REQUIRE_ACTION_NETWORK_SPLITS` or `REQUIRE_REAL_SPLITS` is true |
+| `ACTION_NETWORK_PASSWORD` | Premium betting splits | Required when `REQUIRE_ACTION_NETWORK_SPLITS` or `REQUIRE_REAL_SPLITS` is true |
 
 ---
 
-## Local Development
+## Secret Resolution Order (Azure)
 
-### Option 1: Environment File
-
-```bash
-cp .env.example .env
-# Edit .env with your actual values
-```
-
-`.env` format:
-```
-THE_ODDS_API_KEY=your_key_here
-API_BASKETBALL_KEY=your_key_here
-```
-
-### Option 2: Docker Secrets (Recommended)
-
-```bash
-# Create from .env
-python scripts/manage_secrets.py create-from-env
-
-# Or create manually
-mkdir -p secrets
-echo "your_odds_key" > secrets/THE_ODDS_API_KEY
-echo "your_basketball_key" > secrets/API_BASKETBALL_KEY
-```
-
-Docker Compose mounts `./secrets` → `/run/secrets` in containers.
-
-### Secret Resolution Order
-
-1. Mounted secret files (`/run/secrets/{name}`)
+1. Container App secret references (`secretRef`)
 2. Environment variables
 3. Default (fail if required)
 
@@ -139,14 +110,15 @@ python scripts/manage_secrets.py validate
 
 ## Verification
 
-### Local
+### Script Validation
 ```bash
 python scripts/manage_secrets.py validate
 ```
 
 ### Container
 ```bash
-curl http://localhost:8090/health | jq '.api_keys'
+FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
+curl "https://$FQDN/health" | jq '.api_keys'
 ```
 
 Expected:

@@ -90,11 +90,11 @@ class TestFilterThresholds:
         thresholds = FilterThresholds()
 
         # Spread defaults
-        assert thresholds.spread_min_confidence == 0.62
-        assert thresholds.spread_min_edge == 2.0
+        assert thresholds.spread_min_confidence == 0.0
+        assert thresholds.spread_min_edge == 5.0
 
         # Total defaults
-        assert thresholds.total_min_confidence == 0.72
+        assert thresholds.total_min_confidence == 0.0
         assert thresholds.total_min_edge == 3.0
 
 
