@@ -5,9 +5,9 @@ Production-ready predictor with smart filtering for all markets:
 - Full Game: Spreads, Totals
 - First Half: Spreads, Totals
 
-WEIGHTED COMBINATION SYSTEM (v34.2.0):
+WEIGHTED COMBINATION SYSTEM (v34.3.0):
 Sharp signals now affect THE PICK (not just confidence):
-- combined_edge = (model_edge × 0.60) + (sharp_edge × 0.40)
+- combined_edge = (model_edge × 0.55) + (sharp_edge × 0.45)
 - If signals agree → strong play with high confidence
 - If signals conflict → combined edge determines final side (or NO PLAY)
 - NO more "bet against sharps with lower confidence"
@@ -24,7 +24,7 @@ from src.ingestion.betting_splits import (
     sharp_square_to_features,
     SharpDataUnavailableError,
 )
-# v34.2.0: Weighted Combination System (sharp signals affect THE PICK, not just confidence)
+# v34.3.0: Weighted Combination System (sharp signals affect THE PICK, not just confidence)
 from src.prediction.sharp_weighted import (
     apply_weighted_combination_spread,
     apply_weighted_combination_total,
@@ -612,13 +612,51 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
         print("\n[ERROR] No predictions generated")
 
 
+def _is_already_weighted(pred: dict) -> bool:
+    """Return True if sharp-weighted fields are already present on prediction."""
+    return pred.get("combined_edge") is not None and pred.get("sharp_edge") is not None
+
+
+def _weighted_view(pred: dict, min_edge: float) -> dict:
+    """Normalize weighted fields for display without reapplying weights."""
+    combined_edge = pred.get("combined_edge")
+    model_side = pred.get("model_side")
+    model_edge = pred.get("model_edge")
+    sharp_side = pred.get("sharp_side") or "neutral"
+    sharp_edge = pred.get("sharp_edge")
+    signals_agree = bool(pred.get("signals_agree", False))
+
+    side_flipped = pred.get("side_flipped")
+    if side_flipped is None:
+        bet_side = pred.get("bet_side")
+        side_flipped = bool(model_side and bet_side and bet_side != "NO_PLAY" and model_side != bet_side)
+
+    is_play = False
+    if combined_edge is not None:
+        is_play = abs(combined_edge) >= min_edge
+
+    rationale = pred.get("sharp_rationale", [])
+
+    return {
+        "combined_edge": combined_edge,
+        "model_side": model_side,
+        "model_edge": model_edge,
+        "sharp_side": sharp_side,
+        "sharp_edge": sharp_edge,
+        "signals_agree": signals_agree,
+        "side_flipped": side_flipped,
+        "is_play": is_play,
+        "rationale": rationale,
+    }
+
+
 def display_market_predictions(preds: dict, lines: dict, market_type: str, features: dict, home_team: str, away_team: str, splits: Any = None):
     """
     Display predictions for a market type (FG or 1H).
 
-    WEIGHTED COMBINATION SYSTEM (v34.2.0):
+    WEIGHTED COMBINATION SYSTEM (v34.3.0):
     Sharp signals now affect THE PICK (not just confidence):
-    - combined_edge = (model_edge × 0.60) + (sharp_edge × 0.40)
+    - combined_edge = (model_edge × 0.55) + (sharp_edge × 0.45)
     - If signals agree → strong play
     - If signals conflict → combined math determines side (or NO PLAY)
     - NO more "bet against sharps with lower confidence"
@@ -638,24 +676,27 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
         original_side = spread_pred.get('bet_side', '')
         original_conf = spread_pred.get('confidence', 0.5)
 
-        # APPLY WEIGHTED COMBINATION (sharp signals affect THE PICK!)
-        spread_pred, weighted_result = apply_weighted_combination_spread(
-            spread_pred,
-            features,
-            market_spread=lines.get(f'{prefix}_spread'),
-        )
-        preds["spread"] = spread_pred  # Update in place
+        # APPLY WEIGHTED COMBINATION only if not already applied in engine
+        if not _is_already_weighted(spread_pred):
+            spread_pred, _ = apply_weighted_combination_spread(
+                spread_pred,
+                features,
+                market_spread=lines.get(f'{prefix}_spread'),
+            )
+            preds["spread"] = spread_pred  # Update in place
+
+        weighted_view = _weighted_view(spread_pred, WEIGHTED_CONFIG.min_edge_spread)
 
         print(
             f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
         print(f"           Vegas line: {lines[f'{prefix}_spread'] or 'N/A'}")
 
         # Show weighted combination result
-        if weighted_result.is_play:
+        if weighted_view["is_play"]:
             side_indicator = ""
-            if weighted_result.side_flipped:
-                side_indicator = f" [FLIPPED from {weighted_result.model_side.upper()}]"
-            elif weighted_result.signals_agree:
+            if weighted_view["side_flipped"]:
+                side_indicator = f" [FLIPPED from {weighted_view['model_side'].upper()}]"
+            elif weighted_view["signals_agree"]:
                 side_indicator = " [SIGNALS AGREE]"
             print(
                 f"           Bet: {spread_pred['bet_side'].upper()} ({spread_pred['confidence']:.1%}){side_indicator}")
@@ -663,23 +704,23 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
             print(f"           Bet: NO PLAY (signals cancel)")
 
         # Show combination breakdown
-        print(f"           Model: {weighted_result.model_side.upper()} {weighted_result.model_edge:+.1f} pts | Sharp: {weighted_result.sharp_side.upper()} {weighted_result.sharp_edge:+.1f} pts")
+        print(f"           Model: {weighted_view['model_side'].upper()} {weighted_view['model_edge']:+.1f} pts | Sharp: {weighted_view['sharp_side'].upper()} {weighted_view['sharp_edge']:+.1f} pts")
         print(
-            f"           Combined edge: {weighted_result.combined_edge:+.2f} pts")
+            f"           Combined edge: {weighted_view['combined_edge']:+.2f} pts")
 
         # Show sharp rationale
         # Last 2 lines (most important)
-        for r in weighted_result.rationale[-2:]:
+        for r in weighted_view["rationale"][-2:]:
             print(f"           {r}")
 
         # Generate rationale
-        if spread_pred.get('edge') is not None and weighted_result.is_play:
+        if spread_pred.get('edge') is not None and weighted_view["is_play"]:
             rat = generate_rationale(
                 play_type=f"{market_type.upper()}_SPREAD",
                 pick=spread_pred['bet_side'],
                 line=lines[f'{prefix}_spread'] or 0,
                 odds=None,
-                edge=spread_pred.get('edge', weighted_result.combined_edge),
+                edge=spread_pred.get('edge', weighted_view["combined_edge"]),
                 model_prob=spread_pred['confidence'],
                 features=features,
                 betting_splits=splits,
@@ -704,24 +745,27 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
         original_side = total_pred.get('bet_side', '')
         original_conf = total_pred.get('confidence', 0.5)
 
-        # APPLY WEIGHTED COMBINATION (sharp signals affect THE PICK!)
-        total_pred, weighted_result = apply_weighted_combination_total(
-            total_pred,
-            features,
-            market_total=lines.get(f'{prefix}_total'),
-        )
-        preds["total"] = total_pred  # Update in place
+        # APPLY WEIGHTED COMBINATION only if not already applied in engine
+        if not _is_already_weighted(total_pred):
+            total_pred, _ = apply_weighted_combination_total(
+                total_pred,
+                features,
+                market_total=lines.get(f'{prefix}_total'),
+            )
+            preds["total"] = total_pred  # Update in place
+
+        weighted_view = _weighted_view(total_pred, WEIGHTED_CONFIG.min_edge_total)
 
         print(
             f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")
         print(f"          Vegas line: {lines[f'{prefix}_total'] or 'N/A'}")
 
         # Show weighted combination result
-        if weighted_result.is_play:
+        if weighted_view["is_play"]:
             side_indicator = ""
-            if weighted_result.side_flipped:
-                side_indicator = f" [FLIPPED from {weighted_result.model_side.upper()}]"
-            elif weighted_result.signals_agree:
+            if weighted_view["side_flipped"]:
+                side_indicator = f" [FLIPPED from {weighted_view['model_side'].upper()}]"
+            elif weighted_view["signals_agree"]:
                 side_indicator = " [SIGNALS AGREE]"
             print(
                 f"          Bet: {total_pred['bet_side'].upper()} ({total_pred['confidence']:.1%}){side_indicator}")
@@ -729,22 +773,22 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
             print(f"          Bet: NO PLAY (signals cancel)")
 
         # Show combination breakdown
-        print(f"          Model: {weighted_result.model_side.upper()} {weighted_result.model_edge:+.1f} pts | Sharp: {weighted_result.sharp_side.upper()} {weighted_result.sharp_edge:+.1f} pts")
+        print(f"          Model: {weighted_view['model_side'].upper()} {weighted_view['model_edge']:+.1f} pts | Sharp: {weighted_view['sharp_side'].upper()} {weighted_view['sharp_edge']:+.1f} pts")
         print(
-            f"          Combined edge: {weighted_result.combined_edge:+.2f} pts")
+            f"          Combined edge: {weighted_view['combined_edge']:+.2f} pts")
 
         # Show sharp rationale
         # Last 2 lines (most important)
-        for r in weighted_result.rationale[-2:]:
+        for r in weighted_view["rationale"][-2:]:
             print(f"          {r}")
 
-        if total_pred.get('edge') is not None and weighted_result.is_play:
+        if total_pred.get('edge') is not None and weighted_view["is_play"]:
             rat = generate_rationale(
                 play_type=f"{market_type.upper()}_TOTAL",
                 pick=total_pred['bet_side'],
                 line=lines[f'{prefix}_total'] or 0,
                 odds=None,
-                edge=total_pred.get('edge', weighted_result.combined_edge),
+                edge=total_pred.get('edge', weighted_view["combined_edge"]),
                 model_prob=total_pred['confidence'],
                 features=features,
                 betting_splits=splits,

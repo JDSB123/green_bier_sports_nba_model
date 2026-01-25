@@ -118,6 +118,9 @@ class SharpSignal:
     # Line movement
     opening_line: Optional[float] = None
     current_line: Optional[float] = None
+    # Detection thresholds
+    rlm_threshold: float = WEIGHTED_CONFIG.rlm_threshold
+    steam_threshold: float = WEIGHTED_CONFIG.steam_threshold
 
     @property
     def has_pinnacle(self) -> bool:
@@ -143,7 +146,7 @@ class SharpSignal:
         if self.ticket_pct is None or self.money_pct is None:
             return False
         # RLM = big difference between ticket and money %
-        return abs(self.ticket_pct - self.money_pct) > 10
+        return abs(self.ticket_pct - self.money_pct) > self.rlm_threshold
 
     @property
     def rlm_direction(self) -> float:
@@ -176,7 +179,7 @@ class SharpSignal:
         """True if significant line movement detected (potential steam)."""
         if self.line_move is None:
             return False
-        return abs(self.line_move) >= 1.0
+        return abs(self.line_move) >= self.steam_threshold
 
     @property
     def steam_edge(self) -> float:
@@ -597,6 +600,8 @@ def _first_present(features: Dict[str, Any], *keys: str) -> Optional[float]:
 def build_sharp_signal_spread(
     features: Dict[str, Any],
     market_spread: Optional[float] = None,
+    rlm_threshold: float = WEIGHTED_CONFIG.rlm_threshold,
+    steam_threshold: float = WEIGHTED_CONFIG.steam_threshold,
 ) -> SharpSignal:
     """Build SharpSignal for spread from features dictionary."""
     square_line = _first_present(features, "square_spread_avg", "square_avg_spread")
@@ -621,12 +626,16 @@ def build_sharp_signal_spread(
         ),
         opening_line=_first_present(features, "spread_open"),
         current_line=current_line,
+        rlm_threshold=rlm_threshold,
+        steam_threshold=steam_threshold,
     )
 
 
 def build_sharp_signal_total(
     features: Dict[str, Any],
     market_total: Optional[float] = None,
+    rlm_threshold: float = WEIGHTED_CONFIG.rlm_threshold,
+    steam_threshold: float = WEIGHTED_CONFIG.steam_threshold,
 ) -> SharpSignal:
     """Build SharpSignal for total from features dictionary."""
     square_line = _first_present(features, "square_total_avg", "square_avg_total")
@@ -651,6 +660,8 @@ def build_sharp_signal_total(
         ),
         opening_line=_first_present(features, "total_open"),
         current_line=current_line,
+        rlm_threshold=rlm_threshold,
+        steam_threshold=steam_threshold,
     )
 
 

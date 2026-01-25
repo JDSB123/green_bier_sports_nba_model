@@ -92,6 +92,7 @@ class RichFeatureBuilder:
         self._team_cache: Dict[str, int] = {}
         self._stats_cache: Dict[int, Dict] = {}
         self._games_cache: Optional[List[Dict]] = None
+        self._games_cache_lock = asyncio.Lock()
         self._standings_cache: Optional[Dict[int, Dict]] = None
         self._injuries_cache: Optional[pd.DataFrame] = None
         self._injuries_fetched: bool = False
@@ -495,18 +496,20 @@ class RichFeatureBuilder:
         """
         # Fetch all games for team this season - session cache only
         if self._games_cache is None:
-            print(f"[API] Fetching fresh games for season {self.season}")
-            result = await api_basketball.fetch_games(
-                season=self.season,
-                league=self.league_id
-            )
-            self._games_cache = result.get("response", [])
+            async with self._games_cache_lock:
+                if self._games_cache is None:
+                    print(f"[API] Fetching fresh games for season {self.season}")
+                    result = await api_basketball.fetch_games(
+                        season=self.season,
+                        league=self.league_id
+                    )
+                    self._games_cache = result.get("response", [])
 
-            if not self._games_cache:
-                raise ValueError(
-                    f"STRICT MODE: No games found for season {self.season} - API returned empty")
+                    if not self._games_cache:
+                        raise ValueError(
+                            f"STRICT MODE: No games found for season {self.season} - API returned empty")
 
-            print(f"[API] Fetched {len(self._games_cache)} games")
+                    print(f"[API] Fetched {len(self._games_cache)} games")
 
         all_games = self._games_cache
 
