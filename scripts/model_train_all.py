@@ -31,10 +31,10 @@ Features include:
 """
 from __future__ import annotations
 from src.utils.version import resolve_version
-from src.modeling.unified_features import MODEL_CONFIGS, get_model_features, UNIFIED_FEATURE_NAMES
 from src.modeling.feature_config import (
     get_spreads_features,
     get_totals_features,
+    get_trainable_features,
     filter_available_features,
 )
 from src.modeling.model_tracker import ModelTracker, ModelVersion
@@ -219,6 +219,7 @@ def train_single_market(
     model_type: str,
     output_dir: str,
     tracker: ModelTracker,
+    feature_manifest: Optional[str] = None,
 ) -> Optional[ModelMetrics]:
     """
     Train a single market model (one of the 4 independent models).
@@ -254,32 +255,17 @@ def train_single_market(
         print(f"  [WARN] Label column '{label_col}' not found. Skipping.")
         return None
 
-    # Get features for this market
+    # Get features for this market (manifest-driven when available)
     try:
-        if period == "fg":
-            if "spread" in market_key:
-                features = get_spreads_features()
-            else:
-                features = get_totals_features()
-        else:
-            market_type = "spread" if "spread" in market_key else "total"
-            # 1H TOTAL: Use unified feature set (all 4 models use same features)
-            if market_key == "1h_total":
-                features = UNIFIED_FEATURE_NAMES.copy()
-                print(
-                    f"  [1H Total] Using unified feature set ({len(features)} features)")
-            else:
-                try:
-                    features = get_model_features(period, market_type)
-                except Exception:
-                    # Fallback to FG features
-                    if market_type == "spread":
-                        features = get_spreads_features()
-                    else:
-                        features = get_totals_features()
+        features = get_trainable_features(manifest_path=feature_manifest)
+        print(f"  [Feature Manifest] Using {len(features)} features")
     except Exception as e:
-        print(f"  [WARN] Could not get features: {e}")
-        features = get_spreads_features() if "spread" in market_key else get_totals_features()
+        print(f"  [WARN] Could not load feature manifest: {e}")
+        features = (
+            get_spreads_features(manifest_path=feature_manifest)
+            if "spread" in market_key
+            else get_totals_features(manifest_path=feature_manifest)
+        )
 
     # For 1H models, use lower threshold and fallback to FG features if needed
     min_pct = 0.3
@@ -299,24 +285,10 @@ def train_single_market(
         from src.modeling.unified_features import LEAKY_FEATURES_BLACKLIST
         blacklist = set(LEAKY_FEATURES_BLACKLIST)
 
-        if "1h" in market_key:
-            # 1H STRATEGY: Use ALL unified features + simple logistic model
-            # Rationale: FG Total works at 56% using all 102 unified features
-            # These features capture team strength from full-game data (large sample)
-            # Model learns 1H dynamics by predicting 1H outcomes from FG-level statistics
-            # Logistic regression prevents overfitting on noisy 1H-specific patterns
-
-            whitelist = set(available_features)  # Keep all features
-            effective_blacklist = blacklist - whitelist
-            available_features = [
-                f for f in available_features if f not in effective_blacklist]
-            print(
-                f"  [1H Config] ALL FEATURES (same as FG Total) - Logistic learns 1H dynamics from FG-level data")
-        else:
-            # STRICT for FG models
-            available_features = [
-                f for f in available_features if f not in blacklist]
-            print(f"  [FG Config] Strict Blacklist Applied")
+        # Apply leakage blacklist consistently across markets
+        available_features = [
+            f for f in available_features if f not in blacklist]
+        print("  [Leakage Guard] Blacklist applied")
 
     except ValueError:
 
@@ -324,9 +296,9 @@ def train_single_market(
         print(
             f"  [INFO] Using FG features for {market_key} (period features unavailable)")
         if "spread" in market_key:
-            features = get_spreads_features()
+            features = get_spreads_features(manifest_path=feature_manifest)
         else:
-            features = get_totals_features()
+            features = get_totals_features(manifest_path=feature_manifest)
         available_features = filter_available_features(
             features, train_df.columns.tolist(), min_required_pct=0.3)
 
@@ -437,6 +409,7 @@ def train_all_markets(
     markets: Optional[List[str]] = None,
     cutoff_date: Optional[str] = None,
     data_file: Optional[str] = None,
+    feature_manifest: Optional[str] = None,
 ) -> Dict[str, ModelMetrics]:
     """
     Train all 4 independent market models.
@@ -548,6 +521,7 @@ def train_all_markets(
             model_type=model_type,
             output_dir=output_dir,
             tracker=tracker,
+            feature_manifest=feature_manifest,
         )
         if metrics:
             results[market_key] = metrics
@@ -635,6 +609,7 @@ def train_models(
     model_type: str = "logistic",
     test_size: float = 0.2,
     output_dir: Optional[str] = None,
+    feature_manifest: Optional[str] = None,
 ) -> None:
     """Train and evaluate spreads and totals models."""
 
@@ -703,7 +678,7 @@ def train_models(
     print("="*60)
 
     # Features for spreads prediction (from centralized config)
-    spreads_features = get_spreads_features()
+    spreads_features = get_spreads_features(manifest_path=feature_manifest)
     available_spreads = filter_available_features(
         spreads_features, train_df.columns.tolist())
     print(
@@ -806,7 +781,7 @@ def train_models(
     print("="*60)
 
     # Features for totals prediction (from centralized config)
-    totals_features = get_totals_features()
+    totals_features = get_totals_features(manifest_path=feature_manifest)
     available_totals = filter_available_features(
         totals_features, train_df.columns.tolist())
     print(
@@ -1165,6 +1140,12 @@ def main():
         default=None,
         help="Path to training data CSV (overrides default)",
     )
+    parser.add_argument(
+        "--feature-manifest",
+        type=str,
+        default=None,
+        help="Path to trainable feature manifest JSON (optional)",
+    )
     args = parser.parse_args()
 
     # Determine which markets to train
@@ -1183,17 +1164,27 @@ def main():
         model_type = args.model_type
         if args.ensemble:
             if args.market in ["fg", "all"]:
-                train_models(model_type="logistic",
-                             test_size=args.test_size, output_dir=args.output_dir)
+                train_models(
+                    model_type="logistic",
+                    test_size=args.test_size,
+                    output_dir=args.output_dir,
+                    feature_manifest=args.feature_manifest,
+                )
                 train_models(model_type="gradient_boosting",
-                             test_size=args.test_size, output_dir=args.output_dir)
+                             test_size=args.test_size,
+                             output_dir=args.output_dir,
+                             feature_manifest=args.feature_manifest)
             if args.market in ["1h", "all"]:
                 train_first_half_models(
                     test_size=args.test_size, output_dir=args.output_dir)
         else:
             if args.market in ["fg", "all"]:
-                train_models(model_type=model_type,
-                             test_size=args.test_size, output_dir=args.output_dir)
+                train_models(
+                    model_type=model_type,
+                    test_size=args.test_size,
+                    output_dir=args.output_dir,
+                    feature_manifest=args.feature_manifest,
+                )
             if args.market in ["1h", "all"]:
                 train_first_half_models(
                     model_type=model_type, test_size=args.test_size, output_dir=args.output_dir)
@@ -1217,6 +1208,7 @@ def main():
                 markets=fg_markets,
                 cutoff_date=args.cutoff_date,
                 data_file=args.data_file,
+                feature_manifest=args.feature_manifest,
             )
             print("\n>>> Training FG with gradient boosting...")
             train_all_markets(
@@ -1226,6 +1218,7 @@ def main():
                 markets=fg_markets,
                 cutoff_date=args.cutoff_date,
                 data_file=args.data_file,
+                feature_manifest=args.feature_manifest,
             )
 
         if h1_markets:
@@ -1238,6 +1231,7 @@ def main():
                 markets=h1_markets,
                 cutoff_date=args.cutoff_date,
                 data_file=args.data_file,
+                feature_manifest=args.feature_manifest,
             )
 
         # Export feature contract for the trained models
@@ -1259,6 +1253,7 @@ def main():
             markets=markets,
             cutoff_date=args.cutoff_date,
             data_file=args.data_file,
+            feature_manifest=args.feature_manifest,
         )
 
         # Export feature contract for the trained models

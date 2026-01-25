@@ -5,8 +5,11 @@ All feature definitions live in unified_features.py (single source of truth).
 This module provides training-specific helper functions.
 """
 from __future__ import annotations
+import json
 import logging
-from typing import List
+import os
+from pathlib import Path
+from typing import List, Optional
 
 from src.modeling.unified_features import (
     UNIFIED_FEATURE_NAMES,
@@ -14,23 +17,65 @@ from src.modeling.unified_features import (
     REQUIRED_FEATURES,
     LEAKY_FEATURES_BLACKLIST,
 )
+from src.config import PROJECT_ROOT
 
 logger = logging.getLogger(__name__)
 
 
-def get_spreads_features() -> List[str]:
+DEFAULT_MANIFEST_PATH = PROJECT_ROOT / "models" / "production" / "trainable_features.json"
+
+
+def _load_manifest(path: Path) -> Optional[List[str]]:
+    if not path or not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text())
+    except Exception as exc:
+        logger.warning(f"Failed to read feature manifest at {path}: {exc}")
+        return None
+    features = payload.get("features") or payload.get("trainable_features")
+    if not isinstance(features, list):
+        logger.warning(f"Manifest at {path} missing 'features' list")
+        return None
+    return [str(f) for f in features]
+
+
+def get_trainable_features(manifest_path: Optional[str] = None) -> List[str]:
+    """
+    Return trainable features from a manifest when available, else fall back
+    to the unified feature list.
+    """
+    if manifest_path:
+        features = _load_manifest(Path(manifest_path))
+        if features:
+            return features
+
+    env_path = os.getenv("TRAINABLE_FEATURE_MANIFEST", "").strip()
+    if env_path:
+        features = _load_manifest(Path(env_path))
+        if features:
+            return features
+
+    features = _load_manifest(DEFAULT_MANIFEST_PATH)
+    if features:
+        return features
+
+    return UNIFIED_FEATURE_NAMES.copy()
+
+
+def get_spreads_features(manifest_path: Optional[str] = None) -> List[str]:
     """Get all features for spreads prediction model."""
-    return UNIFIED_FEATURE_NAMES.copy()
+    return get_trainable_features(manifest_path=manifest_path)
 
 
-def get_totals_features() -> List[str]:
+def get_totals_features(manifest_path: Optional[str] = None) -> List[str]:
     """Get all features for totals prediction model."""
-    return UNIFIED_FEATURE_NAMES.copy()
+    return get_trainable_features(manifest_path=manifest_path)
 
 
-def get_all_features() -> List[str]:
+def get_all_features(manifest_path: Optional[str] = None) -> List[str]:
     """Get complete list of all available features."""
-    return UNIFIED_FEATURE_NAMES.copy()
+    return get_trainable_features(manifest_path=manifest_path)
 
 
 def remove_leaky_features(features: List[str]) -> List[str]:

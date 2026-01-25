@@ -54,7 +54,6 @@ from src.utils.logging import get_logger
 from src.utils.version import resolve_version
 from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.markets import get_market_catalog
-from src.utils.model_features import get_union_features
 from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegrityError
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
 from src.tracking import PickTracker
@@ -394,11 +393,6 @@ async def lifespan(app: FastAPI):
         models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(
         season=settings.current_season)
-    app.state.required_features = get_union_features(models_dir)
-    if app.state.required_features:
-        logger.info(
-            f"Loaded feature contract with {len(app.state.required_features)} required features")
-
     # NO FILE CACHING - all data fetched fresh from APIs per request
     logger.info(
         f"{RELEASE_VERSION} STRICT MODE: File caching DISABLED - all data fetched fresh per request")
@@ -1023,7 +1017,6 @@ async def get_slate_predictions(
                 home_team,
                 away_team,
                 betting_splits=splits_dict.get(game_key),
-                required_features=app.state.required_features or None,
             )
 
             # UNIFIED SOURCE: records are attached to the game object by fetch_todays_games(include_records=True)
@@ -1295,7 +1288,6 @@ async def get_executive_summary(
                 home_team,
                 away_team,
                 betting_splits=splits_dict.get(game_key),
-                required_features=app.state.required_features or None,
             )
 
             home_record_data = game.get("home_team_record") or {}
@@ -2216,7 +2208,6 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
             req.home_team,
             req.away_team,
             betting_splits=betting_splits,
-            required_features=app.state.required_features or None,
         )
 
         # Predict all 4 markets (1H + FG spreads/totals)
