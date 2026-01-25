@@ -1,6 +1,6 @@
 # Scripts Directory
 
-**Last Cleanup:** 2026-01-23 | **Scripts:** 18 (down from 73)
+**Last Cleanup:** 2026-01-23 | **Scripts:** 19 (down from 73)
 
 This directory contains ONLY the essential scripts needed for production workflows.
 One-time utilities and deprecated scripts are in `archive/legacy_scripts/` and `archive/legacy_data_scripts/`.
@@ -49,6 +49,8 @@ One-time utilities and deprecated scripts are in `archive/legacy_scripts/` and `
 |--------|---------|
 | `bump_version.py` | Bump VERSION file |
 | `post_to_teams.py` | Post picks to MS Teams |
+| `post_to_teams_scheduled.py` | Scheduled Teams poster (uses API slate window + hourly cadence) |
+| `export_model_feature_contract.py` | Generate prediction feature contract JSON |
 | `download_training_data_from_azure.py` | Download training data from Azure |
 | `upload_training_data_to_azure.py` | Upload training data to Azure |
 | `data_unified_ingest_all.py` | Bulk data ingestion (rarely needed) |

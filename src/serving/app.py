@@ -54,6 +54,7 @@ from src.utils.logging import get_logger
 from src.utils.version import resolve_version
 from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
 from src.utils.markets import get_market_catalog
+from src.utils.model_features import get_union_features
 from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegrityError
 from src.utils.api_auth import get_api_key, APIKeyMiddleware
 from src.tracking import PickTracker
@@ -393,6 +394,10 @@ async def lifespan(app: FastAPI):
         models_dir=models_dir, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(
         season=settings.current_season)
+    app.state.required_features = get_union_features(models_dir)
+    if app.state.required_features:
+        logger.info(
+            f"Loaded feature contract with {len(app.state.required_features)} required features")
 
     # NO FILE CACHING - all data fetched fresh from APIs per request
     logger.info(
@@ -954,7 +959,7 @@ async def get_slate_predictions(
         f"{RELEASE_VERSION}: Caches cleared - fetching fresh data (odds from The Odds API, records from ESPN when available)")
 
     # Resolve date
-    from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds
+    from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds, parse_utc_time, to_cst
     try:
         target_date = get_target_date(date)
     except ValueError:
@@ -1015,7 +1020,10 @@ async def get_slate_predictions(
             # Build features
             game_key = _canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
-                home_team, away_team, betting_splits=splits_dict.get(game_key)
+                home_team,
+                away_team,
+                betting_splits=splits_dict.get(game_key),
+                required_features=app.state.required_features or None,
             )
 
             # UNIFIED SOURCE: records are attached to the game object by fetch_todays_games(include_records=True)
@@ -1091,11 +1099,23 @@ async def get_slate_predictions(
 
             total_plays += game_plays
 
+            commence_time = game.get("commence_time")
+            commence_time_cst = game.get("commence_time_cst")
+            if not commence_time_cst and commence_time:
+                try:
+                    dt_utc = parse_utc_time(commence_time)
+                    dt_cst = to_cst(dt_utc) if dt_utc else None
+                    commence_time_cst = dt_cst.isoformat() if dt_cst else None
+                except Exception:
+                    commence_time_cst = None
+
             results.append({
                 "matchup": f"{away_team} @ {home_team}",
                 "home_team": home_team,
                 "away_team": away_team,
-                "commence_time": game.get("commence_time"),
+                "commence_time": commence_time,
+                "commence_time_cst": commence_time_cst,
+                "date": game.get("date"),
                 "predictions": preds,
                 "has_plays": game_plays > 0
             })
@@ -1272,7 +1292,10 @@ async def get_executive_summary(
             # Build features
             game_key = _canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
-                home_team, away_team, betting_splits=splits_dict.get(game_key)
+                home_team,
+                away_team,
+                betting_splits=splits_dict.get(game_key),
+                required_features=app.state.required_features or None,
             )
 
             home_record_data = game.get("home_team_record") or {}
@@ -2190,7 +2213,10 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
 
         # Build features from FRESH data
         features = await app.state.feature_builder.build_game_features(
-            req.home_team, req.away_team, betting_splits=betting_splits
+            req.home_team,
+            req.away_team,
+            betting_splits=betting_splits,
+            required_features=app.state.required_features or None,
         )
 
         # Predict all 4 markets (1H + FG spreads/totals)

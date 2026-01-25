@@ -1240,6 +1240,16 @@ def main():
                 data_file=args.data_file,
             )
 
+        # Export feature contract for the trained models
+        try:
+            from pathlib import Path
+            from src.utils.model_features import export_model_feature_contract
+            models_dir = Path(args.output_dir or settings.models_dir)
+            export_model_feature_contract(models_dir=models_dir)
+            print(f"[OK] Feature contract exported to {models_dir / 'model_features.json'}")
+        except Exception as e:
+            print(f"[WARN] Could not export feature contract: {e}")
+
         return
     else:
         train_all_markets(
@@ -1250,6 +1260,16 @@ def main():
             cutoff_date=args.cutoff_date,
             data_file=args.data_file,
         )
+
+        # Export feature contract for the trained models
+        try:
+            from pathlib import Path
+            from src.utils.model_features import export_model_feature_contract
+            models_dir = Path(args.output_dir or settings.models_dir)
+            export_model_feature_contract(models_dir=models_dir)
+            print(f"[OK] Feature contract exported to {models_dir / 'model_features.json'}")
+        except Exception as e:
+            print(f"[WARN] Could not export feature contract: {e}")
 
 
 if __name__ == "__main__":

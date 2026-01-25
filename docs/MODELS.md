@@ -144,11 +144,9 @@ Defines the 102-feature training schema.
 
 ### Actual Model Inputs
 
-From trained models (`.joblib` files):
-- FG spread: 35 features
-- FG total: 35 features
-- 1H spread: 40 features
-- 1H total: 40 features
+From trained models (`.joblib` files) and contract:
+- `models/production/model_features.json` is the prediction-time source of truth
+- All 4 markets currently use the same 60 features (see contract)
 
 ---
 

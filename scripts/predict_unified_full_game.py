@@ -31,6 +31,7 @@ from src.prediction.sharp_weighted import (
     WeightedResult,
     WEIGHTED_CONFIG,
 )
+from src.utils.model_features import get_union_features
 from src.ingestion import the_odds
 from src.ingestion.standardize import to_cst, CST, UTC
 from src.config import settings
@@ -493,6 +494,10 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
     print(f"  [OK] Loaded spread predictor")
     print(f"  [OK] Loaded total predictor")
 
+    required_features = get_union_features(MODELS_DIR)
+    if required_features:
+        print(f"  [OK] Loaded feature contract ({len(required_features)} features)")
+
     # Generate predictions
     predictions = []
 
@@ -523,7 +528,12 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             splits = betting_splits_dict.get(game_key)
 
             # Build features
-            features = await feature_builder.build_game_features(home_team, away_team, betting_splits=splits)
+            features = await feature_builder.build_game_features(
+                home_team,
+                away_team,
+                betting_splits=splits,
+                required_features=required_features or None,
+            )
 
             # CRITICAL: Merge sharp/square book features (Pinnacle vs DraftKings/FanDuel)
             sharp_square_comp = sharp_square_dict.get(game_key)

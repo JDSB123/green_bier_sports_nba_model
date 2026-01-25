@@ -12,6 +12,7 @@ import joblib
 
 from src.config import settings
 from src.modeling.unified_features import MODEL_CONFIGS
+from src.utils.model_features import load_model_feature_contract, get_market_features
 from src.utils.logging import get_logger
 from src.utils.markets import get_expected_markets, get_market_catalog
 from src.utils.security import validate_required_api_keys
@@ -40,6 +41,16 @@ def _collect_builder_feature_keys() -> Set[str]:
 
 
 def _load_model_features(models_dir: Path, market_key: str) -> Tuple[List[str], Optional[str]]:
+    contract = load_model_feature_contract(models_dir)
+    if contract:
+        contract_markets = contract.get("markets", {})
+        if market_key in contract_markets:
+            features = contract_markets.get(market_key) or []
+            if features:
+                return list(features), None
+            return [], f"{market_key}: feature contract empty"
+        return [], f"{market_key}: feature contract missing market"
+
     config = MODEL_CONFIGS.get(market_key)
     if not config:
         return [], f"Unknown market key in MODEL_CONFIGS: {market_key}"
@@ -71,7 +82,10 @@ def _load_model_features(models_dir: Path, market_key: str) -> Tuple[List[str], 
             return [], f"{market_key}: model file missing ({model_path.name})"
 
     if not features:
+        # Fallback to unified config, then final attempt via joblib helper
         features = config.get("features", []) or []
+        if not features:
+            features = get_market_features(models_dir, market_key)
 
     return list(features), None
 

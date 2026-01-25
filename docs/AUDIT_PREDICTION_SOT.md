@@ -4,39 +4,28 @@
 Prediction models only (1H/FG spreads & totals). Excludes historical/backtest workflows unless explicitly referenced.
 
 ## 1) Feature schema vs runtime payload
-- **Canonical schema**: `UNIFIED_FEATURE_NAMES` (102 features) in [src/modeling/unified_features.py](../src/modeling/unified_features.py).
+- **Training schema**: `UNIFIED_FEATURE_NAMES` (102 features) in [src/modeling/unified_features.py](../src/modeling/unified_features.py).
+- **Prediction contract**: `models/production/model_features.json` (source of truth for required features per market).
 - **Runtime payload**: `RichFeatureBuilder.build_game_features()` in [src/features/rich_features.py](../src/features/rich_features.py).
 
-### Runtime payload vs unified schema (code-derived)
-- Builder keys detected: ~194
-- Unified feature names: 102
-- **Missing in builder** (present in unified, not emitted):
-  - `home_injury_total_impact`
-  - `away_injury_total_impact`
-  - `injury_total_diff`
-- **Extra in builder** (present in payload, not in unified list): 95+ keys (aliases, derived, compatibility, display-only)
+### Current state (fixed)
+- Prediction-time contract is generated directly from production `.joblib` artifacts.
+- Startup checks and production readiness validation now read the contract.
+- RichFeatureBuilder can skip expensive computations when contract is provided.
 
-### Production models (actual inputs)
-From `models/production/*.joblib`:
-- FG spread: 35 features
-- FG total: 35 features
-- 1H spread: 40 features
-- 1H total: 40 features
-
-**Conclusion:** unified schema ≠ runtime payload ≠ actual model inputs.
+**Conclusion:** training schema ≠ runtime payload, but prediction-time requirements are now explicit and enforced.
 
 ## 2) Feature integrity checks
-Startup integrity uses regex scraping of `RichFeatureBuilder.build_game_features`:
-- [src/utils/startup_checks.py](../src/utils/startup_checks.py)
-- This is fragile (static source scan vs runtime output), and relies on `_SPLITS_FEATURE_SCHEMA` being hard-coded.
+Startup integrity validates:
+- Required markets (from `model_pack.json`)
+- Feature availability (from `model_features.json` when present)
+- RichFeatureBuilder key coverage (static scan for safety)
 
-## 3) Canonicalization/standardization duplication
-Multiple modules claim to be the single source of truth:
-- [src/data/standardization.py](../src/data/standardization.py)
-- [src/ingestion/standardize.py](../src/ingestion/standardize.py)
-- [src/utils/team_names.py](../src/utils/team_names.py)
+## 3) Canonicalization/standardization
+- **ESPN-format names**: `src/ingestion/standardize.py`
+- **Canonical IDs & variants**: `src/utils/team_names.py`
 
-This creates ambiguity and drift risk.
+Both share the same `team_mapping.json`, but serve different layers (ingestion vs canonical IDs).
 
 ## 4) Bicep entry points (prediction vs historical)
 Single entry point currently:

@@ -1045,7 +1045,9 @@ async def fetch_public_betting_splits(
         else:
             # Try sources in order of preference
             # Action Network first (best data if credentials available)
-            sources = ["action_network", "the_odds", "sbro", "covers"]
+            sources = ["action_network", "the_odds", "sbro"]
+            if os.getenv("ENABLE_COVERS_SPLITS", "false").lower() == "true":
+                sources.append("covers")
             for src in sources:
                 try:
                     if src == "action_network":
@@ -1060,6 +1062,9 @@ async def fetch_public_betting_splits(
                     elif src == "sbro":
                         splits_list = await fetch_splits_sbro()
                     elif src == "covers":
+                        logger.warning(
+                            "Covers splits scraper is experimental; enable with ENABLE_COVERS_SPLITS=true"
+                        )
                         splits_list = await scrape_splits_covers()
                     else:
                         continue
@@ -1091,6 +1096,10 @@ async def fetch_public_betting_splits(
         elif source == "sbro":
             splits_list = await fetch_splits_sbro()
         elif source == "covers":
+            if os.getenv("ENABLE_COVERS_SPLITS", "false").lower() != "true":
+                raise ValueError(
+                    "Covers splits scraper disabled. Set ENABLE_COVERS_SPLITS=true to allow."
+                )
             splits_list = await scrape_splits_covers()
         elif source == "mock":
             splits_list = _create_mock_splits_for_games(games)

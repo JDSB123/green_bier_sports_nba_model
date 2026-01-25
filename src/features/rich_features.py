@@ -74,6 +74,47 @@ ESPN_TO_API_BASKETBALL = {
     # Other names match between ESPN and API-Basketball
 }
 
+# Prediction-time feature groups for optional heavy computations.
+BOX_SCORE_FEATURES = {
+    "home_fg_pct", "away_fg_pct", "fg_pct_diff",
+    "home_three_pct", "away_three_pct", "three_pct_diff",
+    "home_ft_pct", "away_ft_pct", "ft_pct_diff",
+    "home_efg_pct", "away_efg_pct", "efg_pct_diff",
+    "home_rebounds", "away_rebounds", "rebounds_diff",
+    "home_oreb", "away_oreb", "oreb_diff",
+    "home_dreb", "away_dreb",
+    "home_oreb_pct", "away_oreb_pct",
+    "home_assists", "away_assists", "assists_diff",
+    "home_turnovers", "away_turnovers", "turnovers_diff",
+    "home_ast_to_ratio", "away_ast_to_ratio", "ast_to_ratio_diff",
+    "home_steals", "away_steals", "steals_diff",
+    "home_blocks", "away_blocks", "blocks_diff",
+    "home_fouls", "away_fouls", "fouls_diff",
+}
+
+PLAYER_STAT_FEATURES = {
+    "home_star_avail", "away_star_avail",
+    "home_paint_defense", "away_paint_defense",
+    "home_bench_scoring", "away_bench_scoring",
+}
+
+BOX_SCORE_DEFAULTS = {
+    "fg_pct": 0.0,
+    "three_pct": 0.0,
+    "ft_pct": 0.0,
+    "efg_pct": 0.0,
+    "rebounds_total": 0.0,
+    "rebounds_off": 0.0,
+    "rebounds_def": 0.0,
+    "oreb_pct": 0.0,
+    "assists": 0.0,
+    "turnovers": 0.0,
+    "ast_to_ratio": 0.0,
+    "steals": 0.0,
+    "blocks": 0.0,
+    "personal_fouls": 0.0,
+}
+
 
 class RichFeatureBuilder:
     """
@@ -921,13 +962,22 @@ class RichFeatureBuilder:
         home_team: str,
         away_team: str,
         game_date: Optional[datetime] = None,
-        betting_splits: Optional[Any] = None
+        betting_splits: Optional[Any] = None,
+        required_features: Optional[List[str]] = None,
     ) -> Dict[str, float]:
         """
         Build rich features for a game using all available API endpoints.
 
+        If required_features is provided, skip expensive feature groups that are
+        not needed for prediction-time contracts.
+
         Raises ValueError if required data is missing.
         """
+        required = set(required_features or [])
+
+        def _needs(candidates: set[str]) -> bool:
+            # If no contract provided, compute everything (default behavior).
+            return not required or bool(required.intersection(candidates))
         # Get team IDs
         home_id = await self.get_team_id(home_team)
         away_id = await self.get_team_id(away_team)
@@ -944,12 +994,17 @@ class RichFeatureBuilder:
 
         # Fetch box score averages for advanced stats (FG%, 3PT%, rebounds, etc.)
         # Using ESPN as the authoritative source - passes team names for ESPN lookup
-        home_box_avgs, away_box_avgs = await asyncio.gather(
-            self.get_team_box_score_averages(
-                home_id, home_recent, team_name=home_team),
-            self.get_team_box_score_averages(
-                away_id, away_recent, team_name=away_team),
-        )
+        if _needs(BOX_SCORE_FEATURES):
+            home_box_avgs, away_box_avgs = await asyncio.gather(
+                self.get_team_box_score_averages(
+                    home_id, home_recent, team_name=home_team),
+                self.get_team_box_score_averages(
+                    away_id, away_recent, team_name=away_team),
+            )
+        else:
+            # Defaults to avoid expensive ESPN box score fetches when unused.
+            home_box_avgs = BOX_SCORE_DEFAULTS
+            away_box_avgs = BOX_SCORE_DEFAULTS
 
         # Extract season averages
         # Stats structure: {games: {...}, points: {for: {average: {all: "112.1"}}, against: {...}}}
@@ -1394,6 +1449,22 @@ class RichFeatureBuilder:
         away_form_trend = away_form.get(
             "l5_margin", 0.0) - away_form.get("l10_margin", 0.0)
 
+        # Optional heavy player-stat features (skip if not required)
+        if _needs(PLAYER_STAT_FEATURES):
+            home_star_avail = await self._get_star_availability(home_id, home_recent)
+            away_star_avail = await self._get_star_availability(away_id, away_recent)
+            home_paint_defense = await self._get_paint_defense(home_id, home_recent)
+            away_paint_defense = await self._get_paint_defense(away_id, away_recent)
+            home_bench_scoring = await self._get_bench_scoring(home_id, home_recent)
+            away_bench_scoring = await self._get_bench_scoring(away_id, away_recent)
+        else:
+            home_star_avail = 0.0
+            away_star_avail = 0.0
+            home_paint_defense = 0.0
+            away_paint_defense = 0.0
+            home_bench_scoring = 0.0
+            away_bench_scoring = 0.0
+
         # Build feature dict
         features = {
             # Team averages (raw)
@@ -1509,20 +1580,20 @@ class RichFeatureBuilder:
             # Fetch recent player stats to determine star availability
             # This is a key differentiator for the granular model
             # Note: We use get_game_player_stats on recent games
-            "home_star_avail": await self._get_star_availability(home_id, home_recent),
-            "away_star_avail": await self._get_star_availability(away_id, away_recent),
+            "home_star_avail": home_star_avail,
+            "away_star_avail": away_star_avail,
 
             # ============================================================
             # GRANULAR MODEL 2.0: PAINT DEFENSE
             # ============================================================
-            "home_paint_defense": await self._get_paint_defense(home_id, home_recent),
-            "away_paint_defense": await self._get_paint_defense(away_id, away_recent),
+            "home_paint_defense": home_paint_defense,
+            "away_paint_defense": away_paint_defense,
 
             # ============================================================
             # GRANULAR MODEL 2.0: BENCH SCORING
             # ============================================================
-            "home_bench_scoring": await self._get_bench_scoring(home_id, home_recent),
-            "away_bench_scoring": await self._get_bench_scoring(away_id, away_recent),
+            "home_bench_scoring": home_bench_scoring,
+            "away_bench_scoring": away_bench_scoring,
 
             # ============================================================
             # BOX SCORE ADVANCED STATS (API-Basketball /games/statistics/teams)

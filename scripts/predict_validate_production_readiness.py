@@ -346,6 +346,7 @@ async def _test_live_pipeline_async() -> bool:
         from src.ingestion.injuries import fetch_all_injuries
         from src.prediction.feature_validation import validate_and_prepare_features
         from src.modeling.unified_features import MODEL_CONFIGS
+        from src.utils.model_features import get_market_features, get_union_features
         import pandas as pd
     except Exception as e:
         print(f"  [FAIL] Imports for live pipeline failed: {e}")
@@ -509,8 +510,13 @@ async def _test_live_pipeline_async() -> bool:
             return False
 
         builder = RichFeatureBuilder(season=settings.current_season)
+        models_dir = PROJECT_ROOT / "models" / "production"
+        required_features = get_union_features(models_dir)
         features = await builder.build_game_features(
-            home_norm, away_norm, betting_splits=betting_splits
+            home_norm,
+            away_norm,
+            betting_splits=betting_splits,
+            required_features=required_features or None,
         )
 
         def _validate_market_features(market_key: str, spread_line: float, total_line: float) -> None:
@@ -521,7 +527,7 @@ async def _test_live_pipeline_async() -> bool:
             payload["total_vs_predicted"] = 0.0
             payload["1h_spread_line"] = spread_line
             payload["1h_total_line"] = total_line
-            required = MODEL_CONFIGS[market_key]["features"]
+            required = get_market_features(models_dir, market_key) or MODEL_CONFIGS[market_key]["features"]
             df = pd.DataFrame([payload])
             validate_and_prepare_features(df, required, market=market_key)
 

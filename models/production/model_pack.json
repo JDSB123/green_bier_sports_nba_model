@@ -59,7 +59,7 @@
     "fg_spread": {
       "status": "production",
       "model_file": "fg_spread_model.joblib",
-      "features": 55,
+      "features": 60,
       "feature_source": "bundled in joblib",
       "retrained": "2026-01-05",
       "note": "Includes RLM/splits features for live predictions (fetched from Action Network)"
@@ -67,7 +67,7 @@
     "fg_total": {
       "status": "production",
       "model_file": "fg_total_model.joblib",
-      "features": 55,
+      "features": 60,
       "feature_source": "bundled in joblib",
       "retrained": "2026-01-05",
       "note": "Includes RLM/splits features for live predictions (fetched from Action Network)"
@@ -75,7 +75,7 @@
     "1h_spread": {
       "status": "production",
       "model_file": "1h_spread_model.joblib",
-      "features": 55,
+      "features": 60,
       "feature_source": "bundled in joblib",
       "retrained": "2026-01-05",
       "note": "Includes RLM/splits features for live predictions (fetched from Action Network)"
@@ -83,7 +83,7 @@
     "1h_total": {
       "status": "production",
       "model_file": "1h_total_model.joblib",
-      "features": 55,
+      "features": 60,
       "feature_source": "bundled in joblib",
       "retrained": "2026-01-05",
       "note": "Includes RLM/splits features for live predictions (fetched from Action Network)"
@@ -150,7 +150,7 @@
       "date_range": "2023-01-01 to 2026-01-09",
       "injury_coverage": "100%",
       "odds_coverage": "100%",
-      "model_features_coverage": "55/55 (100%)"
+      "model_features_coverage": "60/60 (100%)"
     },
     "audit_status": {
       "last_audit": "2026-01-14",

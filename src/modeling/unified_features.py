@@ -1,8 +1,8 @@
 """
 UNIFIED FEATURE SPECIFICATION - SINGLE SOURCE OF TRUTH
 
-This module defines ALL features used by the NBA prediction models.
-Both 1H and FG markets use IDENTICAL feature sets for consistency.
+This module defines the TRAINING feature schema for the NBA prediction models.
+Prediction-time models may use a strict subset (see models/production/model_features.json).
 
 Architecture:
 - All 4 models (1h_spread, 1h_total, fg_spread, fg_total) use the SAME features

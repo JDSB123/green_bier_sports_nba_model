@@ -1,11 +1,9 @@
 """
-Automated team name reconciliation across different APIs.
+Canonical team ID reconciliation across data sources.
 
-Handles inconsistent team naming between:
-- The Odds API (e.g., "Los Angeles Lakers")
-- API-Basketball (e.g., "Lakers")
-- BetsAPI (various formats)
-- ESPN (e.g., "LAL")
+This module maps arbitrary team name variants to canonical IDs (nba_*).
+For ESPN-format names used in ingestion and prediction, use
+src/ingestion/standardize.normalize_team_to_espn (source of truth).
 """
 import json
 from pathlib import Path
