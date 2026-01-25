@@ -95,6 +95,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.combined
+          build-args: |
+            MODEL_VERSION=${{ steps.version.outputs.ver }}
           push: true
           tags: |
             ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
@@ -107,12 +109,24 @@ jobs:
         with:
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           containerAppName: ${{ env.CONTAINER_APP_NAME }}
-          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          environmentVariables: >-
-            REQUIRE_API_AUTH=false
-            NBA_MODEL_VERSION=${{ steps.version.outputs.ver }}
-            THE_ODDS_API_KEY=secretref:the-odds-api-key
-            API_BASKETBALL_KEY=secretref:api-basketball-key
+          # IMPORTANT: Do not set environment variables here.
+          # The container app's full env var set is managed by Bicep/IaC; setting env vars in this
+          # deploy step can overwrite and delete existing env vars (breaking prod safeguards).
+          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
+
+      - name: Ensure Container App tag matches version
+        run: |
+          APP_ID=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query id -o tsv)
+          az resource tag --ids "$APP_ID" -i --tags version=${{ steps.version.outputs.ver }}
+
+      - name: Verify required env vars still present
+        run: |
+          ENV_NAMES=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query "properties.template.containers[0].env[].name" -o tsv)
+          REQUIRED_VARS=(THE_ODDS_API_KEY API_BASKETBALL_KEY APPLICATIONINSIGHTS_CONNECTION_STRING NBA_MARKETS NBA_PERIODS MODELS_DIR REQUIRE_ACTION_NETWORK_SPLITS REQUIRE_REAL_SPLITS REQUIRE_INJURY_FETCH_SUCCESS)
+          for VAR in "${REQUIRED_VARS[@]}"; do
+            echo "$ENV_NAMES" | tr '\t' '\n' | grep -qx "$VAR" || (echo "❌ Missing required env var: $VAR" && exit 1)
+          done
+          echo "✓ Required env vars present"
 
       - name: Smoke test
         run: |

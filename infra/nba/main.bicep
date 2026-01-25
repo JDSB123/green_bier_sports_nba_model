@@ -95,6 +95,14 @@ param databaseUrl string = ''
 @description('Website domain for CORS')
 param websiteDomain string = 'greenbiersportventures.com'
 
+@description('Allowed origins for CORS (also provided to application via ALLOWED_ORIGINS)')
+param allowedOrigins array = [
+  'http://localhost:3000'
+  'https://*.azurewebsites.net'
+  'https://${websiteDomain}'
+  'https://www.${websiteDomain}'
+]
+
 @description('Require API authentication for the container app')
 param requireApiAuth bool = false
 
@@ -246,6 +254,7 @@ var appEnvVars = concat(
     { name: 'NBA_MARKETS', value: '1h_spread,1h_total,fg_spread,fg_total' }
     { name: 'NBA_PERIODS', value: 'first_half,full_game' }
     { name: 'REQUIRE_API_AUTH', value: string(requireApiAuth) }
+    { name: 'ALLOWED_ORIGINS', value: string(join(allowedOrigins, ',')) }
     { name: 'MODELS_DIR', value: '/app/models/production' }
     { name: 'REQUIRE_ACTION_NETWORK_SPLITS', value: 'true' }
     { name: 'REQUIRE_REAL_SPLITS', value: 'true' }
@@ -272,12 +281,7 @@ module containerApp '../modules/containerApp.bicep' = {
         passwordSecretRef: 'acr-password'
       }
     ]
-    ingressOrigins: [
-      'http://localhost:3000'
-      'https://*.azurewebsites.net'
-      'https://${websiteDomain}'
-      'https://www.${websiteDomain}'
-    ]
+    ingressOrigins: allowedOrigins
     targetPort: 8090
     transport: 'auto'
     minReplicas: minReplicas
@@ -368,5 +372,6 @@ output acrLoginServer string = acr.properties.loginServer
 output keyVaultUri string = keyVault.properties.vaultUri
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
 output functionAppUrl string = deployTeamsBot ? 'https://${functionApp!.properties.defaultHostName}' : ''
-output botEndpoint string = deployTeamsBot && microsoftAppId != '' ? 'https://${functionApp!.properties.defaultHostName}/api/bot' : ''
-
+output botEndpoint string = deployTeamsBot && microsoftAppId != ''
+  ? 'https://${functionApp!.properties.defaultHostName}/api/bot'
+  : ''

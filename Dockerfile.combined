@@ -43,6 +43,16 @@ COPY --chown=appuser:appuser scripts/ ./scripts/
 COPY --chown=appuser:appuser models/production/ /app/models/production/
 COPY --chown=appuser:appuser VERSION /app/VERSION
 
+# Fail fast if required production models are missing
+RUN set -e; \
+    for f in \
+    /app/models/production/1h_spread_model.joblib \
+    /app/models/production/1h_total_model.joblib \
+    /app/models/production/fg_spread_model.joblib \
+    /app/models/production/fg_total_model.joblib; do \
+    test -f "$f" || { echo "Missing required model file: $f"; exit 1; }; \
+    done
+
 # Environment
 ENV PATH=/home/appuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1

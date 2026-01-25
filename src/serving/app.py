@@ -265,7 +265,8 @@ def _models_dir() -> PathLib:
 
 async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Fetch betting splits, enforcing strict Action Network requirements when configured."""
-    require_action_network = bool(getattr(settings, "require_action_network_splits", False))
+    require_action_network = bool(
+        getattr(settings, "require_action_network_splits", False))
     require_real = bool(getattr(settings, "require_real_splits", False))
 
     if not (require_action_network or require_real):
@@ -285,7 +286,8 @@ async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
             require_non_empty=True,
         )
     except Exception as e:
-        logger.error(f"STRICT MODE: Failed to fetch required betting splits: {e}")
+        logger.error(
+            f"STRICT MODE: Failed to fetch required betting splits: {e}")
         raise HTTPException(
             status_code=502,
             detail=f"STRICT MODE: Action Network betting splits unavailable: {e}",
@@ -403,12 +405,14 @@ if os.getenv("REQUIRE_API_AUTH", "false").lower() == "true":
 # CORS configuration - STRICT: Must be explicitly configured for production
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
 if not allowed_origins_str:
-    logger.warning(
-        "ALLOWED_ORIGINS not set - CORS will reject all cross-origin requests")
-    allowed_origins = []
-else:
-    allowed_origins = [origin.strip()
-                       for origin in allowed_origins_str.split(",") if origin.strip()]
+    # Hard fail to avoid silently running without CORS configuration
+    raise RuntimeError(
+        "ALLOWED_ORIGINS is required but not set; set ALLOWED_ORIGINS to a comma-separated list of allowed origins.")
+allowed_origins = [origin.strip()
+                   for origin in allowed_origins_str.split(",") if origin.strip()]
+if not allowed_origins:
+    raise RuntimeError(
+        "ALLOWED_ORIGINS resolved to an empty list; provide at least one origin.")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -1540,16 +1544,18 @@ async def get_executive_summary(
 @limiter.limit("30/minute")
 async def teams_workflow_get(
     request: Request,
-    date: str = Query("today", description="Date: today, tomorrow, or YYYY-MM-DD"),
-    elite: bool = Query(False, description="Only show elite picks (4+ fire rating)"),
+    date: str = Query(
+        "today", description="Date: today, tomorrow, or YYYY-MM-DD"),
+    elite: bool = Query(
+        False, description="Only show elite picks (4+ fire rating)"),
     team: Optional[str] = Query(None, description="Filter by team name"),
 ):
     """
     Power Automate Workflow endpoint - returns formatted picks for Teams.
-    
+
     Use this with Power Automate to post picks to Teams channels.
     Returns Adaptive Card JSON for rich formatting.
-    
+
     Example Power Automate flow:
     1. Trigger: Recurrence (daily at 9 AM) or Manual
     2. HTTP action: GET https://nba.greenbiersportventures.com/teams/workflow?date=today
@@ -1558,7 +1564,7 @@ async def teams_workflow_get(
     # Use cache for fast response
     cache_key = f"{date}_{elite}_{team or 'all'}"
     cached_data = _get_cached_picks(date)
-    
+
     if cached_data is not None:
         data = cached_data
     else:
@@ -1577,24 +1583,25 @@ async def teams_workflow_get(
                 "type": "message",
                 "text": "❌ Failed to fetch picks."
             })
-    
+
     if not isinstance(data, dict):
         return JSONResponse(status_code=200, content={
             "type": "message",
             "text": "No picks available."
         })
-    
+
     plays = data.get("plays", [])
     date_label = data.get("date", date)
-    
+
     # Apply filters
     if team:
         team_lower = team.lower()
-        plays = [p for p in plays if team_lower in p.get("matchup", "").lower()]
-    
+        plays = [p for p in plays if team_lower in p.get(
+            "matchup", "").lower()]
+
     if elite:
         plays = [p for p in plays if int(p.get("fire_rating", 0) or 0) >= 4]
-    
+
     if not plays:
         filter_desc = []
         if elite:
@@ -1606,12 +1613,12 @@ async def teams_workflow_get(
             "type": "message",
             "text": f"📭 No{filter_str} picks for {date_label}."
         })
-    
+
     # Build formatted message for Teams
     fire_emoji = {5: "🔥🔥🔥🔥🔥", 4: "🔥🔥🔥🔥", 3: "🔥🔥🔥", 2: "🔥🔥", 1: "🔥"}
-    
+
     lines = [f"**🏀 NBA Picks for {date_label}**", ""]
-    
+
     for p in plays[:10]:  # Limit to 10 picks for readability
         matchup = p.get("matchup", "Unknown")
         market = p.get("market", "")
@@ -1622,17 +1629,18 @@ async def teams_workflow_get(
             edge = 0.0
         rating = int(p.get("fire_rating", 0) or 0)
         fires = fire_emoji.get(rating, "")
-        
+
         lines.append(f"**{matchup}**")
         lines.append(f"  {market}: **{pick}** ({edge:+.1f}% edge) {fires}")
         lines.append("")
-    
+
     if len(plays) > 10:
         lines.append(f"_...and {len(plays) - 10} more picks_")
-    
+
     lines.append("")
-    lines.append(f"📊 **Total: {len(plays)} picks** | [View Full Lineup](https://nba.greenbiersportventures.com/weekly-lineup/html?date={date_label})")
-    
+    lines.append(
+        f"📊 **Total: {len(plays)} picks** | [View Full Lineup](https://nba.greenbiersportventures.com/weekly-lineup/html?date={date_label})")
+
     return JSONResponse(status_code=200, content={
         "type": "message",
         "text": "\n".join(lines)

@@ -50,6 +50,14 @@ param microsoftAppPassword string = ''
 @description('Website domain for CORS')
 param websiteDomain string = 'greenbiersportventures.com'
 
+@description('Allowed origins for CORS (passed through to container app and API)')
+param allowedOrigins array = [
+  'http://localhost:3000'
+  'https://*.azurewebsites.net'
+  'https://${websiteDomain}'
+  'https://www.${websiteDomain}'
+]
+
 @description('Require API authentication for the container app')
 param requireApiAuth bool = false
 
@@ -81,6 +89,7 @@ module nba 'nba/main.bicep' = {
     microsoftAppTenantId: microsoftAppTenantId
     microsoftAppPassword: microsoftAppPassword
     websiteDomain: websiteDomain
+    allowedOrigins: allowedOrigins
     requireApiAuth: requireApiAuth
     minReplicas: minReplicas
     maxReplicas: maxReplicas
