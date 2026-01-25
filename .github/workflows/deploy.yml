@@ -52,18 +52,35 @@ jobs:
         env:
           THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
           API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
+          ACTION_NETWORK_USERNAME: ${{ secrets.ACTION_NETWORK_USERNAME }}
+          ACTION_NETWORK_PASSWORD: ${{ secrets.ACTION_NETWORK_PASSWORD }}
 
       - name: Require deployment secrets
         run: |
           if [ -z "$THE_ODDS_API_KEY" ]; then echo "❌ Missing THE_ODDS_API_KEY"; exit 1; fi
           if [ -z "$API_BASKETBALL_KEY" ]; then echo "❌ Missing API_BASKETBALL_KEY"; exit 1; fi
+          if [ -z "$ACTION_NETWORK_USERNAME" ]; then echo "❌ Missing ACTION_NETWORK_USERNAME"; exit 1; fi
+          if [ -z "$ACTION_NETWORK_PASSWORD" ]; then echo "❌ Missing ACTION_NETWORK_PASSWORD"; exit 1; fi
           echo "✓ Required secrets present"
         env:
           THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
           API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
+          ACTION_NETWORK_USERNAME: ${{ secrets.ACTION_NETWORK_USERNAME }}
+          ACTION_NETWORK_PASSWORD: ${{ secrets.ACTION_NETWORK_PASSWORD }}
 
       - name: Run invariant tests
         run: pytest tests/test_prediction_invariants.py -v --no-cov
+
+      - name: Run production isolation check
+        run: python scripts/check_production_runtime_isolation.py
+
+      - name: Run production readiness checks (live)
+        run: python scripts/predict_validate_production_readiness.py --live
+        env:
+          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+          API_BASKETBALL_KEY: ${{ secrets.API_BASKETBALL_KEY }}
+          ACTION_NETWORK_USERNAME: ${{ secrets.ACTION_NETWORK_USERNAME }}
+          ACTION_NETWORK_PASSWORD: ${{ secrets.ACTION_NETWORK_PASSWORD }}
 
       - name: Read version
         id: version
