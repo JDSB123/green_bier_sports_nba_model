@@ -652,6 +652,31 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     return "", False
 
 
+def normalize_outcome_name(outcome_name: str, source: str = "unknown") -> str:
+    """
+    Normalize a bookmaker outcome name to canonical team format when applicable.
+
+    - Leaves totals outcomes (Over/Under) as-is.
+    - Attempts team normalization for spread/moneyline outcomes.
+    - Returns original string if normalization fails.
+    """
+    if outcome_name is None:
+        return ""
+
+    name = str(outcome_name).strip()
+    if not name:
+        return ""
+
+    lowered = name.lower()
+    if lowered in {"over", "under"}:
+        return lowered.title()
+    if lowered in {"draw", "tie", "push"}:
+        return name
+
+    normalized, ok = normalize_team_to_espn(name, source=f"{source}_outcome")
+    return normalized if ok else name
+
+
 def _record_team_variant(*, source: str, raw: str, normalized: str, is_valid: bool, reason: str) -> None:
     """Append observed team-name variants to a JSONL cache for later reconciliation.
 
@@ -811,6 +836,22 @@ def standardize_game_data(
                             f"Could not convert date to CST: {date_value}")
             except Exception as e:
                 logger.warning(f"Error normalizing date '{date_value}': {e}")
+
+    # Normalize bookmaker outcome names to canonical team format (if present)
+    # This ensures spread outcomes match standardized home/away team names.
+    bookmakers = result.get("bookmakers")
+    if isinstance(bookmakers, list):
+        for bm in bookmakers:
+            markets = bm.get("markets", []) if isinstance(bm, dict) else []
+            for market in markets:
+                outcomes = market.get("outcomes", []) if isinstance(market, dict) else []
+                for outcome in outcomes:
+                    if not isinstance(outcome, dict):
+                        continue
+                    if "name" in outcome:
+                        outcome["name"] = normalize_outcome_name(
+                            outcome.get("name"), source=source
+                        )
 
     # Add source metadata
     result["_source"] = source

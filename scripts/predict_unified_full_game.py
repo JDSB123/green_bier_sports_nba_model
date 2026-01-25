@@ -32,7 +32,13 @@ from src.prediction.sharp_weighted import (
     WEIGHTED_CONFIG,
 )
 from src.ingestion import the_odds
-from src.ingestion.standardize import to_cst, CST, UTC
+from src.ingestion.standardize import (
+    to_cst,
+    CST,
+    UTC,
+    normalize_outcome_name,
+    standardize_game_data,
+)
 from src.config import settings
 import sys
 import numpy as np
@@ -315,6 +321,23 @@ def filter_games_for_date(games: list, target_date: datetime.date) -> list:
     """Filter games to only include those on the target date (in CST)."""
     filtered = []
     for game in games:
+        # Prefer standardized CST date if present
+        date_str = game.get("date")
+        if date_str:
+            try:
+                # date_str may be a date-only string from standardize_game_data
+                if isinstance(date_str, str) and len(date_str) == 10 and date_str[4] == "-" and date_str[7] == "-":
+                    if datetime.strptime(date_str, "%Y-%m-%d").date() == target_date:
+                        filtered.append(game)
+                    continue
+                # Otherwise treat as datetime-like and convert to CST
+                cst_dt = to_cst(date_str)
+                if cst_dt and cst_dt.date() == target_date:
+                    filtered.append(game)
+                continue
+            except Exception:
+                pass
+
         commence_time = game.get("commence_time")
         if not commence_time:
             continue
@@ -377,7 +400,20 @@ async def fetch_upcoming_games(target_date: datetime.date):
                     f"  [WARN] Could not fetch 1H odds for event {event_id}: {e}")
         enriched_games.append(game)
 
-    return enriched_games
+    # Enforce standardization + CST date normalization after enrichment
+    standardized_games = []
+    invalid = 0
+    for game in enriched_games:
+        standardized = standardize_game_data(game, source="the_odds")
+        if standardized.get("_data_valid", False):
+            standardized_games.append(standardized)
+        else:
+            invalid += 1
+
+    if invalid:
+        print(f"  [WARN] Skipped {invalid} invalid game(s) after standardization")
+
+    return standardized_games
 
 
 def extract_lines(game: dict, home_team: str):
@@ -396,6 +432,8 @@ def extract_lines(game: dict, home_team: str):
         "fh_total": None,
     }
 
+    home_team_norm = normalize_outcome_name(home_team, source="the_odds")
+
     for bm in game.get("bookmakers", []):
         for market in bm.get("markets", []):
             market_key = market.get("key")
@@ -403,7 +441,10 @@ def extract_lines(game: dict, home_team: str):
             # Full game spreads
             if market_key == "spreads":
                 for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == home_team:
+                    outcome_name = normalize_outcome_name(
+                        outcome.get("name"), source="the_odds"
+                    )
+                    if outcome_name == home_team_norm:
                         lines["fg_spread"] = outcome.get("point")
                         break
 
@@ -416,7 +457,10 @@ def extract_lines(game: dict, home_team: str):
             # First half spreads
             elif market_key == "spreads_h1":
                 for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == home_team:
+                    outcome_name = normalize_outcome_name(
+                        outcome.get("name"), source="the_odds"
+                    )
+                    if outcome_name == home_team_norm:
                         lines["fh_spread"] = outcome.get("point")
                         break
 

@@ -306,17 +306,19 @@ def test_error_handling():
 
 
 def _extract_market_line(game: dict, market_key: str, team_name: str | None = None, outcome_name: str | None = None) -> float | None:
+    from src.ingestion.standardize import normalize_outcome_name
     """Extract a market line from The Odds API payload (returns None if missing)."""
     bookmakers = game.get("bookmakers", []) or []
     for bm in bookmakers:
         for market in bm.get("markets", []) or []:
             if market.get("key") != market_key:
                 continue
-            for outcome in market.get("outcomes", []) or []:
-                if team_name and outcome.get("name") == team_name and "point" in outcome:
-                    return outcome.get("point")
-                if outcome_name and outcome.get("name") == outcome_name and "point" in outcome:
-                    return outcome.get("point")
+        for outcome in market.get("outcomes", []) or []:
+            normalized = normalize_outcome_name(outcome.get("name"), source="the_odds")
+            if team_name and normalized == team_name and "point" in outcome:
+                return outcome.get("point")
+            if outcome_name and normalized == outcome_name and "point" in outcome:
+                return outcome.get("point")
     return None
 
 

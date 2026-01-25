@@ -171,7 +171,7 @@ async def fetch_sharp_square_lines(
     - Hard-fail only if zero games have any sharp book or API errors persist.
     """
     import httpx
-    from src.ingestion.standardize import normalize_team_to_espn
+    from src.ingestion.standardize import normalize_team_to_espn, normalize_outcome_name
 
     if not settings.the_odds_api_key:
         raise SharpDataUnavailableError(
@@ -246,7 +246,10 @@ async def fetch_sharp_square_lines(
                             if market_key == "spreads":
                                 home_spread = None
                                 for outcome in outcomes:
-                                    if outcome.get("name") == game.get("home_team"):
+                                    outcome_name = normalize_outcome_name(
+                                        outcome.get("name"), source="the_odds"
+                                    )
+                                    if outcome_name == home_team:
                                         home_spread = outcome.get("point")
                                         break
 
@@ -261,7 +264,10 @@ async def fetch_sharp_square_lines(
                             elif market_key == "totals":
                                 total_line = None
                                 for outcome in outcomes:
-                                    if outcome.get("name") == "Over":
+                                    outcome_name = normalize_outcome_name(
+                                        outcome.get("name"), source="the_odds"
+                                    )
+                                    if outcome_name == "Over":
                                         total_line = outcome.get("point")
                                         break
 
@@ -1135,12 +1141,19 @@ def _create_mock_splits_for_games(games: List[Dict[str, Any]]) -> List[GameSplit
 
 def _extract_spread(game: Dict[str, Any]) -> float:
     """Extract spread line from game data."""
+    from src.ingestion.standardize import normalize_outcome_name
     bookmakers = game.get("bookmakers", [])
+    home_team_norm = normalize_outcome_name(
+        game.get("home_team", ""), source="the_odds"
+    )
     for bm in bookmakers:
         for market in bm.get("markets", []):
             if market.get("key") == "spreads":
                 for outcome in market.get("outcomes", []):
-                    if outcome.get("name") == game.get("home_team"):
+                    outcome_name = normalize_outcome_name(
+                        outcome.get("name"), source="the_odds"
+                    )
+                    if outcome_name == home_team_norm:
                         return outcome.get("point", 0.0)
     return 0.0
 

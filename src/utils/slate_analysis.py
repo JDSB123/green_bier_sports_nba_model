@@ -19,7 +19,7 @@ import statistics
 import logging
 
 from src.ingestion import the_odds
-from src.ingestion.standardize import CST, to_cst as _canonical_to_cst
+from src.ingestion.standardize import CST, to_cst as _canonical_to_cst, normalize_outcome_name
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +161,12 @@ async def fetch_team_records_from_odds_api(
             away_score = None
 
             for score in scores_data:
-                if score.get("name") == home_team:
+                score_name = normalize_outcome_name(
+                    score.get("name"), source="the_odds"
+                )
+                if score_name == home_team:
                     home_score = score.get("score")
-                elif score.get("name") == away_team:
+                elif score_name == away_team:
                     away_score = score.get("score")
 
             if home_score is None or away_score is None:
@@ -583,12 +586,15 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
 
             if key == "spreads":
                 for out in outcomes:
-                    if out.get("name") == home_team:
+                    out_name = normalize_outcome_name(
+                        out.get("name"), source="the_odds"
+                    )
+                    if out_name == home_team:
                         spreads_home.append({
                             "price": out.get("price"),
                             "point": out.get("point")
                         })
-                    elif out.get("name") == away_team:
+                    elif out_name == away_team:
                         spreads_away.append({
                             "price": out.get("price"),
                             "point": out.get("point")
@@ -596,13 +602,16 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
 
             elif key == "totals":
                 for out in outcomes:
-                    if out.get("name") == "Over":
+                    out_name = normalize_outcome_name(
+                        out.get("name"), source="the_odds"
+                    )
+                    if out_name == "Over":
                         totals.append({
                             "point": out.get("point"),
                             "price": out.get("price")
                         })
                         totals_over.append(out.get("price"))
-                    elif out.get("name") == "Under":
+                    elif out_name == "Under":
                         totals.append({
                             "point": out.get("point"),
                             "price": out.get("price"),
@@ -615,19 +624,24 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
                 k = str(key).lower()
                 if k == "spreads_h1":
                     for out in outcomes:
-                        if out.get("name") == home_team:
+                        out_name = normalize_outcome_name(
+                            out.get("name"), source="the_odds"
+                        )
+                        if out_name == home_team:
                             fh_spreads_home.append({
                                 "price": out.get("price"),
                                 "point": out.get("point")
                             })
-                        elif out.get("name") == away_team:
+                        elif out_name == away_team:
                             fh_spreads_away.append({
                                 "price": out.get("price"),
                                 "point": out.get("point")
                             })
                 elif k == "totals_h1":
                     for out in outcomes:
-                        name = out.get("name")
+                        name = normalize_outcome_name(
+                            out.get("name"), source="the_odds"
+                        )
                         point = out.get("point")
                         price = out.get("price")
                         # Sanity bounds for 1H totals to avoid misparsed FG/alt lines
@@ -659,24 +673,30 @@ def extract_consensus_odds(game: Dict, as_of_utc: str | None = None) -> Dict[str
             elif key and ("q1" in key.lower() or "first_quarter" in key.lower() or "1q" in key.lower()):
                 if "spread" in key.lower() or "handicap" in key.lower() or key.lower() == "spreads_q1":
                     for out in outcomes:
-                        if out.get("name") == home_team:
+                        out_name = normalize_outcome_name(
+                            out.get("name"), source="the_odds"
+                        )
+                        if out_name == home_team:
                             q1_spreads_home.append({
                                 "price": out.get("price"),
                                 "point": out.get("point")
                             })
-                        elif out.get("name") == away_team:
+                        elif out_name == away_team:
                             q1_spreads_away.append({
                                 "price": out.get("price"),
                                 "point": out.get("point")
                             })
                 elif "total" in key.lower() or "over_under" in key.lower() or key.lower() == "totals_q1":
                     for out in outcomes:
-                        if out.get("name") == "Over":
+                        out_name = normalize_outcome_name(
+                            out.get("name"), source="the_odds"
+                        )
+                        if out_name == "Over":
                             q1_totals.append({
                                 "point": out.get("point"),
                                 "price": out.get("price")
                             })
-                        elif out.get("name") == "Under":
+                        elif out_name == "Under":
                             q1_totals.append({
                                 "point": out.get("point"),
                                 "price": out.get("price"),
