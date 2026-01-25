@@ -801,6 +801,442 @@ def format_predictions_for_csv(preds: dict, lines: dict, prefix: str) -> dict:
     }
 
 
+def generate_executive_html(all_plays: list, target_date: datetime.date) -> str:
+    """
+    Generate EXECUTIVE SUMMARY HTML - clean, scannable betting card.
+    
+    This is the "BLUF" (Bottom Line Up Front) view for quick decision making.
+    Shows: Time | Matchup | Pick | Edge | Fire Rating
+    """
+    date_str = target_date.strftime("%A, %B %d, %Y")
+    generated_at = datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST")
+    
+    # Sort by fire rating (desc), then by edge (desc)
+    def sort_key(p):
+        fire = p.get('fire_rating', 0)
+        edge = abs(p.get('edge', 0)) if p.get('edge') else 0
+        return (-fire, -edge)
+    
+    sorted_plays = sorted(all_plays, key=sort_key)
+    
+    # Build rows
+    rows_html = ""
+    for p in sorted_plays:
+        fire = p.get('fire_rating', 1)
+        fire_class = "elite" if fire >= 4 else "strong" if fire == 3 else "good" if fire == 2 else ""
+        fire_label = "🔥" * fire
+        
+        edge = p.get('edge', 0)
+        edge_str = f"{edge:+.1f}" if edge else "—"
+        edge_class = "positive" if edge and edge > 0 else "negative" if edge and edge < 0 else ""
+        
+        conf = p.get('confidence', 0)
+        conf_str = f"{conf:.0%}" if conf else "—"
+        
+        rows_html += f"""
+        <tr class="{fire_class}">
+            <td>{p.get('time_cst', p.get('date', ''))}</td>
+            <td class="matchup">{p.get('matchup', '')}</td>
+            <td class="period">{p.get('period', '')}</td>
+            <td class="pick"><strong>{p.get('pick', '')}</strong></td>
+            <td class="{edge_class}">{edge_str}</td>
+            <td>{conf_str}</td>
+            <td class="fire">{fire_label}</td>
+        </tr>"""
+    
+    # Count by tier
+    elite_count = sum(1 for p in sorted_plays if p.get('fire_rating', 0) >= 4)
+    strong_count = sum(1 for p in sorted_plays if p.get('fire_rating', 0) == 3)
+    
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Executive Summary - {date_str}</title>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ 
+            font-family: 'Segoe UI', -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e8e8e8; 
+            padding: 20px;
+            min-height: 100vh;
+        }}
+        .container {{ max-width: 1200px; margin: 0 auto; }}
+        
+        .header {{ 
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 16px; 
+            padding: 24px 32px; 
+            margin-bottom: 24px;
+            border: 1px solid #0f3460;
+        }}
+        .header h1 {{ 
+            font-size: 28px; 
+            font-weight: 700; 
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        .header .subtitle {{ color: #94a3b8; font-size: 14px; }}
+        
+        .summary-cards {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }}
+        .summary-card {{
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #334155;
+        }}
+        .summary-card .number {{ font-size: 32px; font-weight: 700; color: #00d4ff; }}
+        .summary-card .label {{ font-size: 12px; color: #94a3b8; text-transform: uppercase; }}
+        .summary-card.elite .number {{ color: #f59e0b; }}
+        .summary-card.strong .number {{ color: #10b981; }}
+        
+        table {{ 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+        }}
+        th {{ 
+            background: #0f172a; 
+            padding: 14px 12px; 
+            text-align: left; 
+            font-weight: 600;
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        td {{ 
+            padding: 14px 12px; 
+            border-bottom: 1px solid #334155;
+            font-size: 14px;
+        }}
+        tr:hover {{ background: #334155; }}
+        tr.elite {{ background: rgba(245, 158, 11, 0.1); }}
+        tr.strong {{ background: rgba(16, 185, 129, 0.1); }}
+        
+        .matchup {{ font-weight: 500; }}
+        .period {{ 
+            color: #94a3b8; 
+            font-size: 12px;
+            background: #334155;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }}
+        .pick {{ color: #00d4ff; }}
+        .positive {{ color: #10b981; }}
+        .negative {{ color: #ef4444; }}
+        .fire {{ font-size: 16px; }}
+        
+        .footer {{ 
+            text-align: center; 
+            padding: 24px; 
+            color: #64748b; 
+            font-size: 12px; 
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 NBA EXECUTIVE SUMMARY</h1>
+            <div class="subtitle">{date_str} • Generated {generated_at}</div>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="number">{len(sorted_plays)}</div>
+                <div class="label">Total Plays</div>
+            </div>
+            <div class="summary-card elite">
+                <div class="number">{elite_count}</div>
+                <div class="label">Elite (4-5🔥)</div>
+            </div>
+            <div class="summary-card strong">
+                <div class="number">{strong_count}</div>
+                <div class="label">Strong (3🔥)</div>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Matchup</th>
+                    <th>Period</th>
+                    <th>Pick</th>
+                    <th>Edge</th>
+                    <th>Conf</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            Green Bier Sports Ventures • NBA Model v34.3.0
+        </div>
+    </div>
+</body>
+</html>"""
+    return html
+
+
+def generate_detailed_html(all_plays: list, target_date: datetime.date) -> str:
+    """
+    Generate DETAILED RATIONALE HTML - full analysis for each pick.
+    
+    Shows complete rationale, sharp signals, model breakdown for each pick.
+    """
+    date_str = target_date.strftime("%A, %B %d, %Y")
+    generated_at = datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST")
+    
+    # Sort by fire rating (desc), then by edge (desc)
+    def sort_key(p):
+        fire = p.get('fire_rating', 0)
+        edge = abs(p.get('edge', 0)) if p.get('edge') else 0
+        return (-fire, -edge)
+    
+    sorted_plays = sorted(all_plays, key=sort_key)
+    
+    # Build cards
+    cards_html = ""
+    for p in sorted_plays:
+        fire = p.get('fire_rating', 1)
+        fire_label = "🔥" * fire
+        tier = "ELITE" if fire >= 4 else "STRONG" if fire == 3 else "GOOD" if fire == 2 else "STANDARD"
+        tier_class = tier.lower()
+        
+        edge = p.get('edge', 0)
+        edge_str = f"{edge:+.1f} pts" if edge else "—"
+        
+        conf = p.get('confidence', 0)
+        conf_str = f"{conf:.0%}" if conf else "—"
+        
+        rationale = p.get('rationale', 'No rationale available')
+        # Parse rationale into bullets
+        rationale_parts = rationale.split(' | ') if rationale else []
+        rationale_html = ""
+        for part in rationale_parts:
+            if part.startswith('[MODEL]'):
+                icon = "🤖"
+                part = part.replace('[MODEL]', '').strip()
+            elif part.startswith('[SHARP]'):
+                icon = "💰"
+                part = part.replace('[SHARP]', '').strip()
+            elif part.startswith('[PINNACLE]'):
+                icon = "📊"
+                part = part.replace('[PINNACLE]', '').strip()
+            elif part.startswith('[STATS]'):
+                icon = "📈"
+                part = part.replace('[STATS]', '').strip()
+            elif part.startswith('[REST]'):
+                icon = "😴"
+                part = part.replace('[REST]', '').strip()
+            elif part.startswith('[LINE]'):
+                icon = "📉"
+                part = part.replace('[LINE]', '').strip()
+            elif part.startswith('[ELO]'):
+                icon = "🏆"
+                part = part.replace('[ELO]', '').strip()
+            else:
+                icon = "•"
+            rationale_html += f'<li><span class="icon">{icon}</span> {part}</li>'
+        
+        cards_html += f"""
+        <div class="pick-card {tier_class}">
+            <div class="card-header">
+                <div class="tier-badge {tier_class}">{tier} {fire_label}</div>
+                <div class="time">{p.get('time_cst', p.get('date', ''))}</div>
+            </div>
+            <div class="matchup">{p.get('matchup', '')}</div>
+            <div class="pick-line">
+                <span class="period-badge">{p.get('period', '')}</span>
+                <span class="market-badge">{p.get('market', '')}</span>
+                <span class="pick-value">{p.get('pick', '')}</span>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value">{edge_str}</div>
+                    <div class="metric-label">Edge</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">{conf_str}</div>
+                    <div class="metric-label">Confidence</div>
+                </div>
+            </div>
+            <div class="rationale">
+                <div class="rationale-title">Analysis</div>
+                <ul>{rationale_html}</ul>
+            </div>
+        </div>"""
+    
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Detailed Analysis - {date_str}</title>
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ 
+            font-family: 'Segoe UI', -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e8e8e8; 
+            padding: 20px;
+            min-height: 100vh;
+        }}
+        .container {{ max-width: 900px; margin: 0 auto; }}
+        
+        .header {{ 
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 16px; 
+            padding: 24px 32px; 
+            margin-bottom: 24px;
+            border: 1px solid #0f3460;
+            text-align: center;
+        }}
+        .header h1 {{ 
+            font-size: 28px; 
+            font-weight: 700; 
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        .header .subtitle {{ color: #94a3b8; font-size: 14px; }}
+        
+        .pick-card {{
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-left: 4px solid #334155;
+        }}
+        .pick-card.elite {{ border-left-color: #f59e0b; background: linear-gradient(90deg, rgba(245,158,11,0.1) 0%, #1e293b 100%); }}
+        .pick-card.strong {{ border-left-color: #10b981; background: linear-gradient(90deg, rgba(16,185,129,0.1) 0%, #1e293b 100%); }}
+        .pick-card.good {{ border-left-color: #3b82f6; }}
+        
+        .card-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }}
+        .tier-badge {{
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #334155;
+        }}
+        .tier-badge.elite {{ background: #f59e0b; color: #000; }}
+        .tier-badge.strong {{ background: #10b981; color: #000; }}
+        .time {{ color: #64748b; font-size: 13px; }}
+        
+        .matchup {{ 
+            font-size: 20px; 
+            font-weight: 600; 
+            margin-bottom: 12px;
+        }}
+        
+        .pick-line {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }}
+        .period-badge, .market-badge {{
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #334155;
+            color: #94a3b8;
+        }}
+        .pick-value {{
+            font-size: 18px;
+            font-weight: 700;
+            color: #00d4ff;
+        }}
+        
+        .metrics {{
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 8px;
+        }}
+        .metric {{ text-align: center; }}
+        .metric-value {{ font-size: 20px; font-weight: 700; color: #10b981; }}
+        .metric-label {{ font-size: 11px; color: #64748b; text-transform: uppercase; }}
+        
+        .rationale {{
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 16px;
+        }}
+        .rationale-title {{
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }}
+        .rationale ul {{ list-style: none; }}
+        .rationale li {{
+            padding: 8px 0;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }}
+        .rationale li:last-child {{ border-bottom: none; }}
+        .rationale .icon {{ font-size: 16px; }}
+        
+        .footer {{ 
+            text-align: center; 
+            padding: 24px; 
+            color: #64748b; 
+            font-size: 12px; 
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 NBA DETAILED ANALYSIS</h1>
+            <div class="subtitle">{date_str} • Generated {generated_at} • {len(sorted_plays)} Picks</div>
+        </div>
+        
+        {cards_html}
+        
+        <div class="footer">
+            Green Bier Sports Ventures • NBA Model v34.3.0 • Full Rationale Report
+        </div>
+    </div>
+</body>
+</html>"""
+    return html
+
+
 def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date) -> str:
     """Generate formatted text report in table format as requested."""
     lines = []
@@ -1060,19 +1496,65 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
         print(f"[WARN] Failed to archive slate analysis: {e}")
 
     if all_plays:
+        # Calculate fire rating for each play
+        def calculate_fire_rating(confidence: float, edge: float) -> int:
+            edge_norm = min(abs(edge) / 10.0, 1.0) if edge else 0
+            combined_score = (confidence * 0.6) + (edge_norm * 0.4) if confidence else 0
+            if combined_score >= 0.85:
+                return 5
+            elif combined_score >= 0.70:
+                return 4
+            elif combined_score >= 0.60:
+                return 3
+            elif combined_score >= 0.52:
+                return 2
+            return 1
+        
+        for play in all_plays:
+            play['fire_rating'] = calculate_fire_rating(
+                play.get('confidence', 0), 
+                play.get('edge', 0)
+            )
+            play['time_cst'] = play.get('date', '')  # For HTML compatibility
+        
         # Save betting card CSV
         betting_card_df = pd.DataFrame(all_plays)
         betting_card_path = DATA_DIR / "processed" / "betting_card_v3.csv"
         betting_card_df.to_csv(betting_card_path, index=False)
         print(f"[OK] Saved betting card to {betting_card_path}")
+        
+        # Generate and save EXECUTIVE SUMMARY HTML
+        executive_html = generate_executive_html(all_plays, target_date)
+        executive_path = DATA_DIR / "processed" / "executive_summary.html"
+        with open(executive_path, "w", encoding="utf-8") as f:
+            f.write(executive_html)
+        print(f"[OK] Saved executive summary HTML to {executive_path}")
+        
+        # Generate and save DETAILED RATIONALE HTML
+        detailed_html = generate_detailed_html(all_plays, target_date)
+        detailed_path = DATA_DIR / "processed" / "detailed_rationale.html"
+        with open(detailed_path, "w", encoding="utf-8") as f:
+            f.write(detailed_html)
+        print(f"[OK] Saved detailed rationale HTML to {detailed_path}")
+        
         try:
             archive_copy(
                 betting_card_path,
                 ARCHIVE_DIR / "picks",
                 f"betting_card_{date_tag}_{archive_ts}.csv",
             )
+            archive_copy(
+                executive_path,
+                ARCHIVE_DIR / "picks",
+                f"executive_summary_{date_tag}_{archive_ts}.html",
+            )
+            archive_copy(
+                detailed_path,
+                ARCHIVE_DIR / "picks",
+                f"detailed_rationale_{date_tag}_{archive_ts}.html",
+            )
         except Exception as e:
-            print(f"[WARN] Failed to archive betting card: {e}")
+            print(f"[WARN] Failed to archive betting card/HTML: {e}")
     else:
         print("\nNO PLAYS TODAY")
         print("All games filtered out - no bets meet criteria")
