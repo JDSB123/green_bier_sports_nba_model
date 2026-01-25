@@ -227,13 +227,7 @@ def generate_rationale(
             team_fundamentals.append(
                 f"[STATS] Combined offensive output: {combined_ppg:.1f} PPG season average.")
 
-        home_elo = features.get("home_elo", 1500)
-        away_elo = features.get("away_elo", 1500)
-        elo_diff = abs(home_elo - away_elo)
-        if elo_diff >= 50:
-            stronger = home_team if home_elo > away_elo else away_team
-            team_fundamentals.append(
-                f"[ELO] {stronger} holds significant ELO advantage ({elo_diff:.0f} pts).")
+        # ELO removed: we rely on live features only; avoid referencing legacy ratings
 
     # ============================================================
     # 3. SITUATIONAL FACTORS (Medium Priority)
@@ -294,13 +288,18 @@ def format_cst_time(dt: datetime) -> str:
 
 
 def get_target_date(date_str: str = None) -> datetime.date:
-    """Get target date for predictions."""
+    """Get target date for predictions.
+    
+    IMPORTANT: Defaults to TODAY (CST) to avoid timezone confusion.
+    The Odds API returns UTC times, so a game at 7pm CST on Jan 24
+    appears as Jan 25 00:00 UTC. We always convert to CST first.
+    """
     now_cst = get_cst_now()
 
-    if date_str is None or date_str.lower() == "tomorrow":
-        return (now_cst + timedelta(days=1)).date()
-    elif date_str.lower() == "today":
+    if date_str is None or date_str.lower() == "today":
         return now_cst.date()
+    elif date_str.lower() == "tomorrow":
+        return (now_cst + timedelta(days=1)).date()
     else:
         return datetime.strptime(date_str, "%Y-%m-%d").date()
 
@@ -474,8 +473,10 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             print(
                 f"  [OK] Loaded Pinnacle data for {len(sharp_square_dict)} games")
             for comp in sharp_square_data:
+                spread_diff_fmt = f"{comp.spread_diff:+.2f}" if comp.spread_diff is not None else "NA"
+                total_diff_fmt = f"{comp.total_diff:+.2f}" if comp.total_diff is not None else "NA"
                 print(
-                    f"    • {comp.away_team}@{comp.home_team}: spread_diff={comp.spread_diff:+.2f}, total_diff={comp.total_diff:+.2f}")
+                    f"    • {comp.away_team}@{comp.home_team}: spread_diff={spread_diff_fmt}, total_diff={total_diff_fmt}")
         except SharpDataUnavailableError as e:
             # HARD FAILURE - Pinnacle data is REQUIRED
             print(f"  [CRITICAL] Sharp book data unavailable: {e}")
@@ -529,10 +530,20 @@ async def predict_games_async(date: str = None, use_betting_splits: bool = True)
             if sharp_square_comp:
                 sharp_features = sharp_square_to_features(sharp_square_comp)
                 features.update(sharp_features)
+                spread_diff_fmt = (
+                    f"{sharp_square_comp.spread_diff:+.2f}"
+                    if sharp_square_comp.spread_diff is not None
+                    else "NA"
+                )
+                total_diff_fmt = (
+                    f"{sharp_square_comp.total_diff:+.2f}"
+                    if sharp_square_comp.total_diff is not None
+                    else "NA"
+                )
                 print(
-                    f"  [SHARP] Pinnacle spread={sharp_square_comp.sharp_spread} vs Square avg={sharp_square_comp.square_spread} (diff={sharp_square_comp.spread_diff:+.2f})")
+                    f"  [SHARP] Pinnacle spread={sharp_square_comp.sharp_spread} vs Square avg={sharp_square_comp.square_spread} (diff={spread_diff_fmt})")
                 print(
-                    f"  [SHARP] Pinnacle total={sharp_square_comp.sharp_total} vs Square avg={sharp_square_comp.square_total} (diff={sharp_square_comp.total_diff:+.2f})")
+                    f"  [SHARP] Pinnacle total={sharp_square_comp.sharp_total} vs Square avg={sharp_square_comp.square_total} (diff={total_diff_fmt})")
             else:
                 # This should not happen with HARD FAILURE mode, but log it
                 print(
@@ -888,23 +899,51 @@ def generate_formatted_text_report(df: pd.DataFrame, target_date: datetime.date)
 
         # FG Spread
         if pd.notna(row.get('fg_spread_line')):
-            add_row("FG Spread", row['fg_spread_bet_side'], row['fg_spread_pred_margin'], row['fg_spread_line'],
-                    row['fg_spread_edge'], row['fg_spread_confidence'], row['fg_spread_passes_filter'])
+            add_row(
+                "FG Spread",
+                row.get('fg_spread_bet_side'),
+                row.get('fg_spread_pred_margin'),
+                row.get('fg_spread_line'),
+                row.get('fg_spread_combined_edge', np.nan),
+                row.get('fg_spread_confidence', np.nan),
+                row.get('fg_spread_passes_filter', False),
+            )
 
         # FG Total
         if pd.notna(row.get('fg_total_line')):
-            add_row("FG Total", row['fg_total_bet_side'], row['fg_total_pred'], row['fg_total_line'],
-                    row['fg_total_edge'], row['fg_total_confidence'], row['fg_total_passes_filter'])
+            add_row(
+                "FG Total",
+                row.get('fg_total_bet_side'),
+                row.get('fg_total_pred'),
+                row.get('fg_total_line'),
+                row.get('fg_total_combined_edge', np.nan),
+                row.get('fg_total_confidence', np.nan),
+                row.get('fg_total_passes_filter', False),
+            )
 
         # 1H Spread
         if pd.notna(row.get('fh_spread_line')):
-            add_row("1H Spread", row['fh_spread_bet_side'], row['fh_spread_pred_margin'], row['fh_spread_line'],
-                    row['fh_spread_edge'], row['fh_spread_confidence'], row['fh_spread_passes_filter'])
+            add_row(
+                "1H Spread",
+                row.get('fh_spread_bet_side'),
+                row.get('fh_spread_pred_margin'),
+                row.get('fh_spread_line'),
+                row.get('fh_spread_combined_edge', np.nan),
+                row.get('fh_spread_confidence', np.nan),
+                row.get('fh_spread_passes_filter', False),
+            )
 
         # 1H Total
         if pd.notna(row.get('fh_total_line')):
-            add_row("1H Total", row['fh_total_bet_side'], row['fh_total_pred'], row['fh_total_line'],
-                    row['fh_total_edge'], row['fh_total_confidence'], row['fh_total_passes_filter'])
+            add_row(
+                "1H Total",
+                row.get('fh_total_bet_side'),
+                row.get('fh_total_pred'),
+                row.get('fh_total_line'),
+                row.get('fh_total_combined_edge', np.nan),
+                row.get('fh_total_confidence', np.nan),
+                row.get('fh_total_passes_filter', False),
+            )
 
     lines.append("")
     lines.append("=" * 120)
@@ -956,7 +995,7 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "market": "SPREAD",
                 "pick": f"{row['fg_spread_bet_side']} {row['fg_spread_line']}",
                 "confidence": row['fg_spread_confidence'],
-                "edge": row.get('fg_spread_edge'),
+                "edge": row.get('fg_spread_combined_edge'),
                 "rationale": row.get('fg_spread_rationale', ""),
             })
 
@@ -969,7 +1008,7 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "market": "TOTAL",
                 "pick": f"{row['fg_total_bet_side']} {row['fg_total_line']:.1f}",
                 "confidence": row['fg_total_confidence'],
-                "edge": row.get('fg_total_edge'),
+                "edge": row.get('fg_total_combined_edge'),
                 "rationale": row.get('fg_total_rationale', ""),
             })
 
@@ -982,7 +1021,7 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "market": "SPREAD",
                 "pick": f"{row['fh_spread_bet_side']} {row['fh_spread_line']}",
                 "confidence": row['fh_spread_confidence'],
-                "edge": row.get('fh_spread_edge'),
+                "edge": row.get('fh_spread_combined_edge'),
                 "rationale": row.get('fh_spread_rationale', ""),
             })
 
@@ -995,7 +1034,7 @@ def save_predictions(predictions: list, target_date: Optional[datetime.date] = N
                 "market": "TOTAL",
                 "pick": f"{row['fh_total_bet_side']} {row['fh_total_line']:.1f}",
                 "confidence": row['fh_total_confidence'],
-                "edge": row.get('fh_total_edge'),
+                "edge": row.get('fh_total_combined_edge'),
                 "rationale": row.get('fh_total_rationale', ""),
             })
 
@@ -1068,7 +1107,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate NBA predictions for all markets")
     parser.add_argument(
-        "--date", help="Date for predictions (YYYY-MM-DD, 'today', or 'tomorrow')")
+        "--date", default="today",
+        help="Date for predictions: 'today' (default), 'tomorrow', or YYYY-MM-DD")
     parser.add_argument("--no-betting-splits", action="store_true",
                         help="Disable betting splits integration")
     args = parser.parse_args()
