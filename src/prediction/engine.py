@@ -861,27 +861,48 @@ class UnifiedPredictionEngine:
             "full_game": {},
         }
 
+        # Enforce required market lines - NO silent fallbacks
+        missing_lines = []
+        for name, value in [
+            ("fg_spread_line", fg_spread_line),
+            ("fg_total_line", fg_total_line),
+            ("1h_spread_line", fh_spread_line),
+            ("1h_total_line", fh_total_line),
+        ]:
+            if value is None:
+                missing_lines.append(name)
+        if missing_lines:
+            raise ValueError(
+                f"[predict_all_markets] Missing required market lines: {missing_lines}. "
+                f"Ensure odds ingestion pulls spreads + totals for FG and 1H markets."
+            )
+
+        # Inject line features so models that require cross-market lines can validate
+        features = dict(features)
+        features["spread_line"] = fg_spread_line
+        features["fg_spread_line"] = fg_spread_line
+        features["total_line"] = fg_total_line
+        features["fg_total_line"] = fg_total_line
+        features["1h_spread_line"] = fh_spread_line
+        features["fh_spread_line"] = fh_spread_line
+        features["1h_total_line"] = fh_total_line
+        features["fh_total_line"] = fh_total_line
+
         # 1H predictions
-        if self.h1_predictor and (fh_spread_line is not None or fh_total_line is not None):
-            try:
-                result["first_half"] = self.predict_first_half(
-                    features,
-                    spread_line=fh_spread_line,
-                    total_line=fh_total_line,
-                )
-            except Exception as e:
-                logger.warning(f"1H prediction failed: {e}")
+        if self.h1_predictor:
+            result["first_half"] = self.predict_first_half(
+                features,
+                spread_line=fh_spread_line,
+                total_line=fh_total_line,
+            )
 
         # FG predictions
-        if self.fg_predictor and (fg_spread_line is not None or fg_total_line is not None):
-            try:
-                result["full_game"] = self.predict_full_game(
-                    features,
-                    spread_line=fg_spread_line,
-                    total_line=fg_total_line,
-                )
-            except Exception as e:
-                logger.warning(f"FG prediction failed: {e}")
+        if self.fg_predictor:
+            result["full_game"] = self.predict_full_game(
+                features,
+                spread_line=fg_spread_line,
+                total_line=fg_total_line,
+            )
 
         return result
 

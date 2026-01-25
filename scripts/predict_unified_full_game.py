@@ -470,6 +470,33 @@ def extract_lines(game: dict, home_team: str):
                     lines["fh_total"] = outcome.get("point")
                     break
 
+    # Coerce to float where possible
+    for key in list(lines.keys()):
+        value = lines[key]
+        if value is None:
+            continue
+        try:
+            lines[key] = float(value)
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"[extract_lines] Invalid line value for {key}: {value}"
+            )
+
+    # Enforce presence of all market lines (no silent fallbacks)
+    missing = [k for k, v in lines.items() if v is None]
+    if missing:
+        market_keys = sorted({
+            m.get("key")
+            for bm in game.get("bookmakers", [])
+            for m in bm.get("markets", [])
+            if m.get("key") is not None
+        })
+        raise ValueError(
+            f"[extract_lines] Missing required market lines {missing} for "
+            f"{game.get('away_team')} @ {game.get('home_team')}. "
+            f"Available markets: {market_keys}"
+        )
+
     return lines
 
 
