@@ -164,15 +164,19 @@ class SharpSquareComparison:
 
 async def fetch_sharp_square_lines(
     sport: str = "basketball_nba",
-    max_attempts: int = 3,
-    retry_delay_seconds: int = 20,
+    max_attempts: int = 2,
+    retry_delay_seconds: int = 3,
 ) -> List[SharpSquareComparison]:
     """
     Fetch odds from The-Odds-API and compare sharp vs square books.
 
     - Prefer Pinnacle; fall back to any SHARP_BOOKS member.
-    - Skip games with no sharp books after retries (log and continue).
-    - Hard-fail only if zero games have any sharp book or API errors persist.
+    - Return partial results for games that HAVE sharp data.
+    - Log warnings for games missing sharp books (graceful degradation).
+    - Hard-fail only if ALL games are missing sharp data or API completely fails.
+
+    NOTE: Reduced from 3 attempts × 20s to 2 attempts × 3s to avoid blocking.
+    When some games have sharp data and others don't, we return the partial set.
     """
     import httpx
 
@@ -363,20 +367,31 @@ async def fetch_sharp_square_lines(
                             f"Pinnacle missing; using sharp fallback {sharp_book_used}: {away_team}@{home_team}"
                         )
 
-                # Acceptable rule: succeed if every game has either Pinnacle or a preferred sharp fallback
-                if comparisons and not games_without_sharp:
-                    logger.info(
-                        f"✓ Sharp/square validation PASSED (attempt {attempt}) with {len(games_without_pinnacle)} games on fallbacks"
-                    )
+                # Success criteria (v34.4): Return partial results when MOST games have sharp data.
+                # This allows graceful degradation for games missing sharp books (like PHI@CHA).
+                # Individual game features will use defaults for missing sharp data.
+                if comparisons:
+                    total_games = len(comparisons) + len(games_without_sharp)
+                    coverage_pct = len(comparisons) / total_games * 100 if total_games > 0 else 0
+
+                    if games_without_sharp:
+                        logger.warning(
+                            f"Sharp data partial success: {len(comparisons)}/{total_games} games ({coverage_pct:.0f}% coverage). "
+                            f"Missing: {', '.join(games_without_sharp)}"
+                        )
+                    else:
+                        logger.info(
+                            f"✓ Sharp/square validation PASSED (attempt {attempt}) - "
+                            f"{len(comparisons)} games, {len(games_without_pinnacle)} using fallback books"
+                        )
+
+                    # Return partial results - let feature builder handle missing games with defaults
                     return comparisons
 
+                # Only fail if NO games have sharp data at all
                 last_error = SharpDataUnavailableError(
-                    "CRITICAL: No acceptable sharp book for one or more games."
+                    f"CRITICAL: 0/{len(data)} games have sharp book data. Cannot proceed."
                 )
-                if games_without_sharp:
-                    logger.error(
-                        f"{len(games_without_sharp)} games missing all preferred sharp books: {', '.join(games_without_sharp)}"
-                    )
 
         if attempt < max_attempts:
             logger.warning(
