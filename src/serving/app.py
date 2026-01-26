@@ -17,10 +17,7 @@ STRICT MODE: Every request fetches fresh data from APIs.
 No assumptions, no defaults - all data must be explicitly provided.
 """
 
-import base64
 import csv
-import hashlib
-import hmac
 import io
 import json
 import logging
@@ -31,7 +28,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path as PathLib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
@@ -39,7 +36,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, Path, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -47,15 +44,8 @@ from starlette.responses import Response
 
 from src.config import PROJECT_ROOT, settings
 from src.features import RichFeatureBuilder
-from src.ingestion import the_odds
-from src.ingestion.betting_splits import (
-    fetch_public_betting_splits,
-    validate_splits_sources_configured,
-)
-from src.ingestion.standardize import normalize_team_to_espn
-from src.modeling.edge_thresholds import get_edge_thresholds_for_game
-from src.modeling.unified_features import get_feature_defaults
-from src.prediction import ModelNotFoundError, UnifiedPredictionEngine
+from src.ingestion.betting_splits import validate_splits_sources_configured
+from src.prediction import UnifiedPredictionEngine
 from src.prediction.feature_validation import MissingFeaturesError
 from src.serving.dependencies import (
     RELEASE_VERSION,
@@ -77,11 +67,10 @@ from src.serving.routes.health import router as health_router
 from src.serving.routes.teams import set_executive_summary_func, teams_router
 from src.serving.routes.tracking import router as tracking_router
 from src.tracking import PickTracker
-from src.utils.api_auth import APIKeyMiddleware, get_api_key
+from src.utils.api_auth import APIKeyMiddleware
 from src.utils.comprehensive_edge import calculate_comprehensive_edge
 from src.utils.logging import get_logger
-from src.utils.markets import get_market_catalog
-from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
+from src.utils.security import validate_premium_features
 
 # Additional imports for comprehensive edge calculation
 from src.utils.slate_analysis import (
@@ -90,7 +79,6 @@ from src.utils.slate_analysis import (
 from src.utils.slate_analysis import (
     extract_consensus_odds,
     fetch_todays_games,
-    get_target_date,
     parse_utc_time,
     to_cst,
 )
