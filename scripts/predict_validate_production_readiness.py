@@ -313,12 +313,12 @@ def _extract_market_line(game: dict, market_key: str, team_name: str | None = No
         for market in bm.get("markets", []) or []:
             if market.get("key") != market_key:
                 continue
-        for outcome in market.get("outcomes", []) or []:
-            normalized = normalize_outcome_name(outcome.get("name"), source="the_odds")
-            if team_name and normalized == team_name and "point" in outcome:
-                return outcome.get("point")
-            if outcome_name and normalized == outcome_name and "point" in outcome:
-                return outcome.get("point")
+            for outcome in market.get("outcomes", []) or []:
+                normalized = normalize_outcome_name(outcome.get("name"), source="the_odds")
+                if team_name and normalized == team_name and "point" in outcome:
+                    return outcome.get("point")
+                if outcome_name and normalized == outcome_name and "point" in outcome:
+                    return outcome.get("point")
     return None
 
 
@@ -455,41 +455,59 @@ async def _test_live_pipeline_async() -> bool:
     # --- Event odds: verify 1H markets available for at least one game ---
     event_spread_1h = None
     event_total_1h = None
+    target_game = None
+    target_home = None
+    target_away = None
     try:
         events = await fetch_events()
-        event_id = None
-        target_game = games[0]
-        target_home = target_game.get("home_team")
-        target_away = target_game.get("away_team")
-        for ev in events:
-            if ev.get("home_team") == target_home and ev.get("away_team") == target_away:
-                event_id = ev.get("id")
-                break
-        if not event_id and events:
-            event_id = events[0].get("id")
-        if not event_id:
-            print("  [WARN] No event ID available for 1H odds validation")
-        else:
+        event_lookup = {
+            (ev.get("home_team"), ev.get("away_team")): ev for ev in events or []
+        }
+        # Find any game with valid 1H markets
+        for game in games:
+            home_team = game.get("home_team")
+            away_team = game.get("away_team")
+            ev = event_lookup.get((home_team, away_team))
+            if not ev:
+                continue
+            event_id = ev.get("id")
+            if not event_id:
+                continue
             event_odds = await fetch_event_odds(event_id)
-            event_spread_1h = _extract_market_line(
+            spread_1h = _extract_market_line(
                 event_odds, "spreads_h1", team_name=event_odds.get("home_team")
             )
-            event_total_1h = _extract_market_line(
+            total_1h = _extract_market_line(
                 event_odds, "totals_h1", outcome_name="Over"
             )
-            if event_spread_1h is None or event_total_1h is None:
-                print("  [FAIL] 1H odds missing (spreads_h1 or totals_h1) for event")
-                return False
-            print("  [OK] 1H odds validated (spreads_h1 / totals_h1)")
+            if spread_1h is None or total_1h is None:
+                continue
+            event_spread_1h = spread_1h
+            event_total_1h = total_1h
+            target_game = game
+            target_home = home_team
+            target_away = away_team
+            break
+
+        if event_spread_1h is None or event_total_1h is None:
+            print("  [FAIL] 1H odds missing (spreads_h1 or totals_h1) for all events")
+            return False
+        print(
+            f"  [OK] 1H odds validated (spreads_h1 / totals_h1) for {target_away} @ {target_home}"
+        )
     except Exception as e:
         print(f"  [FAIL] Event odds validation failed: {e}")
         return False
 
     # --- End-to-end features build + validation ---
     try:
-        target_game = games[0]
-        home_team = target_game.get("home_team")
-        away_team = target_game.get("away_team")
+        if target_game is None:
+            target_game = games[0]
+            home_team = target_game.get("home_team")
+            away_team = target_game.get("away_team")
+        else:
+            home_team = target_home
+            away_team = target_away
 
         # Normalize to ensure consistent splits keying
         home_norm, _ = normalize_team_to_espn(str(home_team), source="odds")
@@ -519,23 +537,51 @@ async def _test_live_pipeline_async() -> bool:
             betting_splits=betting_splits,
         )
 
-        def _validate_market_features(market_key: str, spread_line: float, total_line: float) -> None:
+        def _validate_market_features(
+            market_key: str,
+            spread_line: float,
+            total_line: float,
+            fg_spread_line: float,
+            fg_total_line: float,
+            h1_spread_line: float,
+            h1_total_line: float,
+        ) -> None:
             payload = dict(features)
             payload["spread_line"] = spread_line
             payload["total_line"] = total_line
+            payload["fg_spread_line"] = fg_spread_line
+            payload["fg_total_line"] = fg_total_line
             payload["spread_vs_predicted"] = 0.0
             payload["total_vs_predicted"] = 0.0
-            payload["1h_spread_line"] = spread_line
-            payload["1h_total_line"] = total_line
+            payload["1h_spread_line"] = h1_spread_line
+            payload["1h_total_line"] = h1_total_line
+            payload["fh_spread_line"] = h1_spread_line
+            payload["fh_total_line"] = h1_total_line
             required = get_market_features(models_dir, market_key) or MODEL_CONFIGS[market_key]["features"]
             df = pd.DataFrame([payload])
             validate_and_prepare_features(df, required, market=market_key)
 
         for market_key in sorted(MODEL_CONFIGS.keys()):
             if market_key.startswith("1h_"):
-                _validate_market_features(market_key, h1_spread, h1_total)
+                _validate_market_features(
+                    market_key,
+                    h1_spread,
+                    h1_total,
+                    fg_spread,
+                    fg_total,
+                    h1_spread,
+                    h1_total,
+                )
             else:
-                _validate_market_features(market_key, fg_spread, fg_total)
+                _validate_market_features(
+                    market_key,
+                    fg_spread,
+                    fg_total,
+                    fg_spread,
+                    fg_total,
+                    h1_spread,
+                    h1_total,
+                )
 
         print("  [OK] Feature build + validation passed for all markets")
     except Exception as e:
