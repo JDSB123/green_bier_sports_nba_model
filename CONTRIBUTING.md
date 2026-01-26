@@ -153,14 +153,6 @@ See [docs/SECRETS.md](docs/SECRETS.md) for details.
 # Build combined API + model image
 $VERSION = (Get-Content VERSION -Raw).Trim()
 docker build --build-arg MODEL_VERSION=$VERSION -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined .
-
-# Build backtest image
-# Backtests run via scripts (no separate backtest container)
-```
-
-### Backtests (Scripts Only)
-```powershell
-python scripts/historical_backtest_production.py
 ```
 
 ## 🔧 Maintenance

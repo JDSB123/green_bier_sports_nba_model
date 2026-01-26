@@ -8,7 +8,7 @@
 ## The One Command
 
 ```bash
-python scripts/predict_unified_slate.py
+python scripts/predict_unified_full_game.py
 ```
 
 That's it for daily predictions.
@@ -19,18 +19,6 @@ That's it for daily predictions.
 
 Local container runs are intentionally removed to prevent conflicting environments.
 Use Azure Container Apps for all production predictions.
-
----
-
-## Backtest (Scripts)
-
-```bash
-# Production backtest (audited canonical dataset)
-python scripts/historical_backtest_production.py
-
-# Extended backtest (per-market configuration)
-python scripts/historical_backtest_extended.py
-```
 
 ---
 
@@ -93,9 +81,6 @@ cat VERSION
 ```bash
 # Train all markets
 python scripts/model_train_all.py
-
-# Validate models
-python scripts/model_validate.py
 ```
 
 ---
@@ -104,13 +89,11 @@ python scripts/model_validate.py
 
 | Task | Command |
 |------|---------|
-| Today's predictions | `python scripts/predict_unified_slate.py` |
-| Tomorrow's predictions | `python scripts/predict_unified_slate.py --date tomorrow` |
-| Specific team | `python scripts/predict_unified_slate.py --matchup Lakers` |
+| Today's predictions | `python scripts/predict_unified_full_game.py` |
+| Tomorrow's predictions | `python scripts/predict_unified_full_game.py --date tomorrow` |
 | Run tests | `pytest tests -v` |
 | Validate training data | `python scripts/data_unified_validate_training.py --strict` |
 | Train models | `python scripts/model_train_all.py` |
-| Backtest | `python scripts/historical_backtest_production.py` |
 
 ---
 

@@ -88,31 +88,26 @@ This is a proposed mapping; needs approval before renames.
 - `validate_training_data.py` → `data_unified_validate_training.py`
 
 ## Backtest / historical
-- `backtest_production.py` → `historical_backtest_production.py`
-- `backtest_extended.py` → `historical_backtest_extended.py`
-- `export_historical_odds.py` → `historical_export_odds.py`
-- `export_period_odds_to_csv.py` → `historical_export_period_odds.py`
-- `audit_historical_data_integrity.py` → `historical_audit_data_integrity.py`
-- `fetch_quarter_scores.py` → `historical_fetch_quarter_scores.py`
-- `ingest_elo_ratings.py` → `historical_ingest_elo_ratings.py`
-- `ingest_historical_period_odds.py` → `historical_ingest_period_odds.py`
+> **Note:** Historical backtest scripts have been removed due to missing dependencies (src/utils/historical_guard.py).
+> Use model training with cross-validation for performance validation.
 
 ---
 
-# Deletion Candidates (Needs Explicit Approval)
-**Proposed cleanup candidates** (non-production artifacts):
-- [archive/analysis_snapshots](../archive/analysis_snapshots)
-- [archive/predictions](../archive/predictions)
-- [archive/slate_outputs](../archive/slate_outputs)
-- [data/processed/*](../data/processed)
-- [data/raw/github](../data/raw/github) (empty)
-- [data/raw/espn](../data/raw/espn) (empty)
+# Completed Cleanup (2026-01-26)
 
-These will be removed **only after approval**.
+The following scripts were deleted during the v35 cleanup:
+- `historical_backtest_production.py` (broken imports)
+- `historical_backtest_extended.py` (broken imports)
+- `backfill_espn_boxscore_features.py`
+- `build_trainable_feature_manifest.py`
+- `export_model_feature_contract.py`
+- `pilot_player_feature_backfill.py`
+- `sync_model_metadata.py`
+
+The `archive/` folder was also removed.
 
 ---
 
 # Next Step (Approval Needed)
 1) Approve the rename mapping list (or modify it).
-2) Confirm deletion candidates.
-3) Prediction-only Bicep entry point added in `infra/nba/prediction.bicep` (use this for prediction deployments).
+2) Prediction-only Bicep entry point added in `infra/nba/prediction.bicep` (use this for prediction deployments).

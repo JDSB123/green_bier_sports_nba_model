@@ -16,16 +16,14 @@ Each market uses independent feature engineering and model training, tailored to
 ## 🚀 THE ONE COMMAND
 
 ```powershell
-python scripts/predict_unified_slate.py
+python scripts/predict_unified_full_game.py
 ```
 
 That's it. This handles everything automatically.
 
 **Options:**
 ```powershell
-python scripts/predict_unified_slate.py --date tomorrow        # Tomorrow's games
-python scripts/predict_unified_slate.py --matchup Lakers       # Filter to Lakers
-python scripts/predict_unified_slate.py --date 2025-12-19 --matchup Celtics
+python scripts/predict_unified_full_game.py --date tomorrow        # Tomorrow's games
 ```
 
 ---
@@ -113,35 +111,13 @@ curl -X POST "https://$FQDN/predict/game" \
   }'
 ```
 
-## Running Backtests
-
-Run backtests directly:
-
-```powershell
-# Production backtest (uses audited canonical data)
-python scripts/historical_backtest_production.py
-
-# Extended backtest (per-market config)
-python scripts/historical_backtest_extended.py
-```
-
-### Backtest Configuration
-
-Set these in your `.env` file:
-```env
-SEASONS=2024-2025,2025-2026
-MARKETS=all          # Or: fg_spread,fg_total,1h_spread,1h_total
-MIN_TRAINING=80      # Minimum training games before predictions
-```
-
 ## Analyzing Slates
 
 Use the main prediction script to analyze slates:
 
 ```powershell
-python scripts/predict_unified_slate.py               # Today's games
-python scripts/predict_unified_slate.py --date tomorrow
-python scripts/predict_unified_slate.py --date 2025-12-18
+python scripts/predict_unified_full_game.py               # Today's games
+python scripts/predict_unified_full_game.py --date tomorrow
 ```
 
 This generates comprehensive predictions and analysis for the specified date.

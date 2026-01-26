@@ -115,20 +115,16 @@ az storage blob download-batch \
 
 ## Historical Scripts
 
+> **Note:** Historical backtest scripts have been removed due to missing dependencies.
+> Use the model training workflow instead for validating model performance.
+
 | Script | Purpose |
 |--------|---------|
-| `historical_ingest_period_odds.py` | Ingest period odds from The Odds API |
-| `historical_ingest_elo_ratings.py` | Ingest FiveThirtyEight Elo ratings |
-| `historical_export_odds.py` | Export historical odds to CSV |
-| `historical_export_period_odds.py` | Export period odds |
-| `historical_fetch_quarter_scores.py` | Fetch Q1-Q4 scores |
-| `historical_backtest_production.py` | Production backtest |
-| `historical_backtest_extended.py` | Extended backtest |
-| `historical_audit_data_integrity.py` | Audit data quality |
-| `historical_audit_backtest_caching.py` | Audit backtest caching |
+| `model_train_all.py` | Train and validate all models |
+| `data_unified_build_training_complete.py` | Build training data from historical sources |
 
-All historical scripts:
-- Require `HISTORICAL_MODE=true`
+All data workflows:
+- Require `HISTORICAL_MODE=true` for Azure-backed operations
 - Default output to `HISTORICAL_OUTPUT_ROOT` (Azure path)
 - Fail if local paths detected without override
 

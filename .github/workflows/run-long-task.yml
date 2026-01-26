@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: "Command to run (e.g., python scripts/historical_backtest_extended.py)"
+        description: "Command to run (e.g., python scripts/model_train_all.py)"
         required: true
-        default: "python scripts/historical_backtest_extended.py"
+        default: "python scripts/model_train_all.py"
 
 jobs:
   run-task:
