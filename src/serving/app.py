@@ -41,9 +41,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pydantic import BaseModel, Field
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from starlette.responses import Response
 
 from src.config import PROJECT_ROOT, settings
@@ -63,6 +62,7 @@ from src.serving.routes.admin import router as admin_router
 
 # Import route modules for incremental migration
 from src.serving.routes.health import router as health_router
+from src.serving.routes.tracking import router as tracking_router
 from src.tracking import PickTracker
 from src.utils.api_auth import APIKeyMiddleware, get_api_key
 from src.utils.comprehensive_edge import calculate_comprehensive_edge
@@ -190,9 +190,8 @@ REQUEST_DURATION = Histogram(
     "nba_api_request_duration_seconds", "API request duration in seconds", ["method", "endpoint"]
 )
 
-# Rate limiter
-limiter = Limiter(key_func=get_remote_address)
-
+# Rate limiter - use shared instance from dependencies
+from src.serving.dependencies import limiter
 
 # --- Request/Response Models ---
 
@@ -533,6 +532,9 @@ async def metrics_middleware(request: Request, call_next):
 app.include_router(health_router)  # ✓ ENABLED - health, metrics, verify
 app.include_router(admin_router)  # ✓ ENABLED - admin/monitoring, admin/cache
 app.include_router(meta_router)  # ✓ ENABLED - meta, registry, markets
+app.include_router(
+    tracking_router
+)  # ✓ ENABLED - tracking/summary, tracking/picks, tracking/validate
 
 
 # --- Endpoints (legacy - will be migrated to routes/) ---
@@ -1961,82 +1963,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# =============================================================================
-# LIVE PICK TRACKING ENDPOINTS
-# =============================================================================
-
-
-@app.get("/tracking/summary")
-@limiter.limit("30/minute")
-async def get_tracking_summary(
-    request: Request,
-    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
-    period: Optional[str] = Query(None, description="Filter by period (1h, fg)"),
-    market_type: Optional[str] = Query(None, description="Filter by market (spread, total)"),
-):
-    """
-    Get ROI summary for tracked picks.
-
-    Provides accuracy, ROI, and win/loss breakdown for live tracked predictions.
-    Only includes picks that passed the betting filter.
-    """
-    # Use app.state.tracker for consistency with slate endpoint
-    tracker = app.state.tracker
-    summary = tracker.get_roi_summary(
-        date=date, period=period, market_type=market_type, passes_filter_only=True
-    )
-    streak = tracker.get_streak(passes_filter_only=True)
-
-    return {
-        "summary": summary,
-        "current_streak": streak,
-        "filters": {"date": date, "period": period, "market_type": market_type},
-    }
-
-
-@app.get("/tracking/picks")
-@limiter.limit("30/minute")
-async def get_tracked_picks(
-    request: Request,
-    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
-    status: Optional[str] = Query(None, description="Filter by status (pending, win, loss, push)"),
-    limit: int = Query(50, ge=1, le=500),
-):
-    """
-    Get list of tracked picks with optional filters.
-    """
-    # Use app.state.tracker for consistency with slate endpoint
-    tracker = app.state.tracker
-    picks = tracker.get_picks(date=date, status=status, passes_filter_only=True)
-
-    # Sort by creation time, newest first
-    picks.sort(key=lambda p: p.created_at, reverse=True)
-
-    return {"total": len(picks), "picks": [p.to_dict() for p in picks[:limit]]}
-
-
-@app.post("/tracking/validate")
-@limiter.limit("10/minute")
-async def validate_pick_outcomes(
-    request: Request, date: Optional[str] = Query(None, description="Date to validate (YYYY-MM-DD)")
-):
-    """
-    Validate pending picks against game outcomes.
-
-    Fetches completed game results and updates pick statuses.
-    Only processes games that are confirmed complete.
-    """
-    # Use app.state.tracker for consistency with slate endpoint
-    tracker = app.state.tracker
-    results = await tracker.validate_outcomes(date=date)
-
-    return {
-        "validated": results["validated"],
-        "wins": results["wins"],
-        "losses": results["losses"],
-        "pushes": results["pushes"],
-        "details": results.get("details", []),
-    }
+# /tracking/summary, /tracking/picks, /tracking/validate -> MIGRATED to src/serving/routes/tracking.py
 
 
 @app.get("/picks/html", response_class=HTMLResponse, tags=["Display"])

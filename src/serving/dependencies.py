@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 from fastapi import HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.config import settings
 from src.ingestion.standardize import normalize_team_to_espn
@@ -23,6 +25,9 @@ logger = get_logger(__name__)
 
 # Centralized release/version identifier for API surfaces
 RELEASE_VERSION = resolve_version()
+
+# Rate limiter (shared across all route modules)
+limiter = Limiter(key_func=get_remote_address)
 
 
 def convert_numpy_types(obj):
