@@ -84,6 +84,29 @@ param actionNetworkUsername string = ''
 @secure()
 param actionNetworkPassword string = ''
 
+// Teams scheduled poster job (optional)
+@description('Deploy scheduled Teams poster job (Container Apps Job)')
+param deployTeamsPoster bool = false
+
+@description('Teams incoming webhook URL (required when deployTeamsPoster=true)')
+@secure()
+param teamsWebhookUrl string = ''
+
+@description('Teams scheduled job name')
+param teamsJobName string = 'nba-picks-teams-poster'
+
+@description('Teams job cron schedule (UTC)')
+param teamsJobCron string = '0 * * * *'
+
+@description('Minutes before first game to start posting')
+param teamsScheduleLeadMinutes int = 60
+
+@description('Minutes between posts (cadence)')
+param teamsScheduleIntervalMinutes int = 60
+
+@description('Allowed minutes drift for cadence matching')
+param teamsScheduleToleranceMinutes int = 2
+
 // Teams Bot credentials (required for bot)
 @description('Microsoft App ID for Teams Bot')
 param microsoftAppId string = ''
@@ -277,6 +300,29 @@ var appEnvVars = concat(
   databaseUrl == '' ? [] : [{ name: 'DATABASE_URL', secretRef: 'database-url' }]
 )
 
+var teamsJobEnabled = deployTeamsPoster && teamsWebhookUrl != ''
+
+var teamsJobSecrets = teamsJobEnabled
+  ? [
+      { name: 'acr-password', value: acr.listCredentials().passwords[0].value }
+      { name: 'teams-webhook-url', value: teamsWebhookUrl }
+      { name: 'storage-connection-string', value: storage.outputs.connectionString }
+    ]
+  : []
+
+var teamsJobEnvVars = teamsJobEnabled
+  ? [
+      { name: 'NBA_API_URL', value: containerApp.outputs.containerAppUrl }
+      { name: 'TEAMS_WEBHOOK_URL', secretRef: 'teams-webhook-url' }
+      { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-connection-string' }
+      { name: 'TEAMS_SCHEDULE_LEAD_MINUTES', value: string(teamsScheduleLeadMinutes) }
+      { name: 'TEAMS_SCHEDULE_INTERVAL_MINUTES', value: string(teamsScheduleIntervalMinutes) }
+      { name: 'TEAMS_SCHEDULE_TOLERANCE_MINUTES', value: string(teamsScheduleToleranceMinutes) }
+      { name: 'TEAMS_ALLOW_EMPTY', value: 'true' }
+      { name: 'NBA_MODEL_VERSION', value: imageTag }
+    ]
+  : []
+
 module containerApp '../modules/containerApp.bicep' = {
   name: 'compute-app'
   params: {
@@ -303,6 +349,33 @@ module containerApp '../modules/containerApp.bicep' = {
     cpu: containerCpu
     memory: containerMemory
     activeRevisionsMode: 'Single'
+  }
+}
+
+module teamsPosterJob '../modules/containerAppJob.bicep' = if (teamsJobEnabled) {
+  name: 'teams-poster-job'
+  params: {
+    name: teamsJobName
+    location: location
+    managedEnvironmentId: containerAppEnv.id
+    tags: tags
+    image: '${acr.properties.loginServer}/nba-gbsv-api:${imageTag}'
+    envVars: teamsJobEnvVars
+    secrets: teamsJobSecrets
+    registries: [
+      {
+        server: acr.properties.loginServer
+        username: acr.listCredentials().username
+        passwordSecretRef: 'acr-password'
+      }
+    ]
+    scheduleCron: teamsJobCron
+    cpu: '0.25'
+    memory: '0.5Gi'
+    command: [
+      'python'
+      'scripts/post_to_teams_scheduled.py'
+    ]
   }
 }
 

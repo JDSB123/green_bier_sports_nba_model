@@ -21,11 +21,15 @@ Prediction entry point deploys everything required for the NBA prediction API to
 ### Compute Layer
 - Container Apps Environment (`nba-gbsv-model-env`)
 - Container App (`nba-gbsv-api`)
+- Optional Container Apps Job (`nba-picks-teams-poster`) - scheduled Teams poster
 
 ### Teams Bot Layer
 - App Service Plan (`nba-gbsv-func-plan`) - Consumption/Dynamic
 - Function App (`nba-picks-trigger`) - Python 3.11
 - Bot Service (`nba-picks-bot`)
+
+### Teams Scheduled Poster (Optional)
+- Container Apps Job (`nba-picks-teams-poster`) - posts hourly within slate window to incoming webhook
 
 Teams Bot resources are **only** deployed via `infra/nba/main.bicep`.
 
@@ -64,6 +68,15 @@ az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
      actionNetworkUsername=<secret> `
      actionNetworkPassword=<secret> `
      requireApiAuth=<true|false>
+
+# Enable Teams scheduled poster job
+az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `
+  -p theOddsApiKey=<secret> `
+     apiBasketballKey=<secret> `
+     actionNetworkUsername=<secret> `
+     actionNetworkPassword=<secret> `
+     deployTeamsPoster=true `
+     teamsWebhookUrl=<teams-incoming-webhook-url>
 
 # Direct az CLI (full deployment including Teams Bot)
 az deployment group create -g nba-gbsv-model-rg -f infra/main.bicep `

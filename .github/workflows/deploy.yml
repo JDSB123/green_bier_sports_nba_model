@@ -138,6 +138,17 @@ jobs:
           APP_ID=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query id -o tsv)
           az tag update --resource-id "$APP_ID" --operation merge --tags version=${{ steps.version.outputs.ver }} || echo "⚠ Tagging skipped (non-critical)"
 
+      - name: Update Teams poster job image (if exists)
+        run: |
+          JOB_NAME="nba-picks-teams-poster"
+          if az containerapp job show -n "$JOB_NAME" -g ${{ env.RESOURCE_GROUP }} >/dev/null 2>&1; then
+            az containerapp job update -n "$JOB_NAME" -g ${{ env.RESOURCE_GROUP }} \
+              --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.ver }}
+            echo "✓ Updated Teams poster job image"
+          else
+            echo "ℹ Teams poster job not found; skipping"
+          fi
+
       - name: Verify required env vars still present
         run: |
           ENV_NAMES=$(az containerapp show -n ${{ env.CONTAINER_APP_NAME }} -g ${{ env.RESOURCE_GROUP }} --query "properties.template.containers[0].env[].name" -o tsv)

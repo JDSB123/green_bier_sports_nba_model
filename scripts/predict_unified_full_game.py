@@ -28,8 +28,6 @@ from src.ingestion.betting_splits import (
 from src.prediction.sharp_weighted import (
     apply_weighted_combination_spread,
     apply_weighted_combination_total,
-    WeightedResult,
-    WEIGHTED_CONFIG,
 )
 from src.ingestion import the_odds
 from src.ingestion.standardize import (
@@ -39,7 +37,7 @@ from src.ingestion.standardize import (
     normalize_outcome_name,
     standardize_game_data,
 )
-from src.config import settings
+from src.config import settings, filter_thresholds
 import sys
 import numpy as np
 import pandas as pd
@@ -754,14 +752,25 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
 
         # APPLY WEIGHTED COMBINATION only if not already applied in engine
         if not _is_already_weighted(spread_pred):
+            min_edge_override = (
+                filter_thresholds.fh_spread_min_edge
+                if market_type == "fh"
+                else filter_thresholds.spread_min_edge
+            )
             spread_pred, _ = apply_weighted_combination_spread(
                 spread_pred,
                 features,
                 market_spread=lines.get(f'{prefix}_spread'),
+                min_edge_override=min_edge_override,
             )
             preds["spread"] = spread_pred  # Update in place
 
-        weighted_view = _weighted_view(spread_pred, WEIGHTED_CONFIG.min_edge_spread)
+        min_edge_display = (
+            filter_thresholds.fh_spread_min_edge
+            if market_type == "fh"
+            else filter_thresholds.spread_min_edge
+        )
+        weighted_view = _weighted_view(spread_pred, min_edge_display)
 
         print(
             f"  [SPREAD] Predicted margin: {spread_pred['predicted_margin']:+.1f} (home)")
@@ -823,14 +832,25 @@ def display_market_predictions(preds: dict, lines: dict, market_type: str, featu
 
         # APPLY WEIGHTED COMBINATION only if not already applied in engine
         if not _is_already_weighted(total_pred):
+            min_edge_override = (
+                filter_thresholds.fh_total_min_edge
+                if market_type == "fh"
+                else filter_thresholds.total_min_edge
+            )
             total_pred, _ = apply_weighted_combination_total(
                 total_pred,
                 features,
                 market_total=lines.get(f'{prefix}_total'),
+                min_edge_override=min_edge_override,
             )
             preds["total"] = total_pred  # Update in place
 
-        weighted_view = _weighted_view(total_pred, WEIGHTED_CONFIG.min_edge_total)
+        min_edge_display = (
+            filter_thresholds.fh_total_min_edge
+            if market_type == "fh"
+            else filter_thresholds.total_min_edge
+        )
+        weighted_view = _weighted_view(total_pred, min_edge_display)
 
         print(
             f"  [TOTAL] Predicted total: {total_pred['predicted_total']:.1f}")

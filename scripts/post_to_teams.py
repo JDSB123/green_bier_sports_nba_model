@@ -5,6 +5,7 @@ Post NBA betting card to Microsoft Teams via webhook.
 Usage:
     python scripts/post_to_teams.py
     python scripts/post_to_teams.py --date 2025-12-19
+    python scripts/post_to_teams.py --date today --allow-empty
 """
 import json
 import sys
@@ -18,18 +19,11 @@ from urllib.parse import urlencode
 # Configuration from environment (no hardcoded secrets or URLs)
 import os
 
-TEAMS_WEBHOOK_URL = os.getenv("TEAMS_WEBHOOK_URL", "")
-if not TEAMS_WEBHOOK_URL:
-    print("[ERROR] TEAMS_WEBHOOK_URL environment variable is required")
-    print("  Set it via: export TEAMS_WEBHOOK_URL='your_webhook_url'")
-    sys.exit(1)
+TEAMS_WEBHOOK_URL = os.getenv("TEAMS_WEBHOOK_URL", "").strip() or None
 
 # API URL - Azure Container App (required)
 # For Azure: export NBA_API_URL=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv | xargs -I{} echo "https://{}")
-API_BASE = os.getenv("NBA_API_URL", "").strip()
-if not API_BASE:
-    print("[ERROR] NBA_API_URL environment variable is required (Azure Container App URL)")
-    sys.exit(1)
+API_BASE = os.getenv("NBA_API_URL", "").strip() or None
 NBA_MODEL_VERSION = os.getenv("NBA_MODEL_VERSION", "").strip()
 MODEL_PACK_PATH = os.getenv("NBA_MODEL_PACK_PATH", "models/production/model_pack.json")
 PUBLIC_WEEKLY_LINEUP_URL = os.getenv(
@@ -59,6 +53,8 @@ def fetch_executive_data(date: str = "today", api_base: str = None) -> dict:
     """Fetch executive summary from the API."""
     if api_base is None:
         api_base = API_BASE
+    if not api_base:
+        raise ValueError("NBA_API_URL is required to fetch executive data")
     url = f"{api_base}/slate/{date}/executive"
     try:
         req = Request(url, headers={"Accept": "application/json"})
@@ -69,9 +65,21 @@ def fetch_executive_data(date: str = "today", api_base: str = None) -> dict:
         sys.exit(1)
 
 
-def get_fire_tier(rating: str) -> str:
-    """Convert fire emoji rating to tier name."""
-    fire_count = rating.count("\U0001F525")  # Count fire emojis
+def _fire_count(rating: object) -> int:
+    """Normalize fire rating to an integer count."""
+    if rating is None:
+        return 0
+    if isinstance(rating, (int, float)):
+        try:
+            return max(0, min(3, int(rating)))
+        except (ValueError, TypeError):
+            return 0
+    return str(rating).count("\U0001F525")
+
+
+def get_fire_tier(rating: object) -> str:
+    """Convert fire rating to tier name."""
+    fire_count = _fire_count(rating)
     if fire_count >= 3:
         return "ELITE"
     elif fire_count == 2:
@@ -87,6 +95,8 @@ def format_teams_message(data: dict) -> dict:
     model_version = NBA_MODEL_VERSION or data.get("version") or "unknown"
     model_updated_cst = load_model_timestamp()
     date_label = data.get("date", "today")
+    snapshot_at_cst = data.get("snapshot_at_cst")
+    locked_snapshot_at_cst = data.get("locked_snapshot_at_cst")
 
     def _append_query(base_url: str, params: dict) -> str:
         if not base_url:
@@ -98,7 +108,8 @@ def format_teams_message(data: dict) -> dict:
         return f"{base_url}{joiner}{query}"
 
     lineup_params = {"date": date_label}
-    api_lineup_url = _append_query(f"{API_BASE.rstrip('/')}/weekly-lineup/html", lineup_params)
+    api_base = (API_BASE or "").strip()
+    api_lineup_url = _append_query(f"{api_base.rstrip('/')}/weekly-lineup/html", lineup_params) if api_base else ""
     public_lineup_url = _append_query(PUBLIC_WEEKLY_LINEUP_URL, lineup_params)
 
     # Generate title with CST timestamp
@@ -107,16 +118,20 @@ def format_teams_message(data: dict) -> dict:
     subtitle_parts = [f"Model: {model_version}"]
     if model_updated_cst:
         subtitle_parts.append(f"Model updated: {model_updated_cst}")
+    if snapshot_at_cst:
+        subtitle_parts.append(f"Snapshot: {snapshot_at_cst}")
+    if locked_snapshot_at_cst:
+        subtitle_parts.append(f"Locked picks: {locked_snapshot_at_cst}")
     subtitle = " | ".join(subtitle_parts)
     
     # Count by tier
-    elite = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
-    strong = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"]
-    good = [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "GOOD"]
+    elite = [p for p in plays if get_fire_tier(p.get("fire_rating")) == "ELITE"]
+    strong = [p for p in plays if get_fire_tier(p.get("fire_rating")) == "STRONG"]
+    good = [p for p in plays if get_fire_tier(p.get("fire_rating")) == "GOOD"]
     
     # Sort by fire rating (most fires first), then by edge
     sorted_plays = sorted(plays, key=lambda p: (
-        -p.get("fire_rating", "").count("\U0001F525"),
+        -_fire_count(p.get("fire_rating")),
         -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
     ))
     
@@ -195,6 +210,14 @@ def format_teams_message(data: dict) -> dict:
     if actions:
         card["actions"] = actions
 
+    if not plays:
+        card["body"].append({
+            "type": "TextBlock",
+            "text": "No official plays yet. Monitoring markets and will update as edges appear.",
+            "wrap": True,
+            "spacing": "Medium"
+        })
+
     # Add rows - one per pick
     for p in sorted_plays:
         # Extract data
@@ -238,12 +261,13 @@ def format_teams_message(data: dict) -> dict:
         else:
             edge_pts = "N/A"
         
-        fire_rating = p.get("fire_rating", "")
+        fire_rating = p.get("fire_rating")
         tier = get_fire_tier(fire_rating)
         
         # Tier color
         tier_color = "Attention" if tier == "ELITE" else "Warning" if tier == "STRONG" else "Good"
         tier_emoji = "🔥🔥🔥" if tier == "ELITE" else "🔥🔥" if tier == "STRONG" else "🔥"
+        lock_emoji = "🔒" if p.get("locked") else ""
         
         # Combine pick + confidence
         pick_with_conf = f"{pick}" + (f"\n({conf_pct})" if conf_pct else "")
@@ -255,7 +279,7 @@ def format_teams_message(data: dict) -> dict:
                 {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": f"{away}\n@\n{home}", "size": "Small", "weight": "Bolder", "wrap": True}]},
                 {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": pick_with_conf, "size": "Small", "weight": "Bolder", "color": "Accent", "wrap": True}]},
                 {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": str(market_line)[:15], "size": "Small", "wrap": True}]},
-                {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": f"{edge_pts}\n{tier_emoji}", "size": "Small", "weight": "Bolder", "color": tier_color, "wrap": True}]}
+                {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": f"{edge_pts}\n{tier_emoji}{lock_emoji}", "size": "Small", "weight": "Bolder", "color": tier_color, "wrap": True}]}
             ],
             "spacing": "Small",
             "separator": True
@@ -292,6 +316,9 @@ def format_teams_message(data: dict) -> dict:
 
 def post_to_teams(message: dict) -> bool:
     """Post message to Teams webhook."""
+    if not TEAMS_WEBHOOK_URL:
+        print("[ERROR] TEAMS_WEBHOOK_URL environment variable is required")
+        return False
     try:
         data = json.dumps(message).encode("utf-8")
         req = Request(
@@ -315,7 +342,16 @@ def post_to_teams(message: dict) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="Post NBA picks to Teams")
     parser.add_argument("--date", default="today", help="Date (YYYY-MM-DD or 'today')")
+    parser.add_argument("--allow-empty", action="store_true", help="Post even if no plays are found")
     args = parser.parse_args()
+
+    if not TEAMS_WEBHOOK_URL:
+        print("[ERROR] TEAMS_WEBHOOK_URL environment variable is required")
+        print("  Set it via: export TEAMS_WEBHOOK_URL='your_webhook_url'")
+        sys.exit(1)
+    if not API_BASE:
+        print("[ERROR] NBA_API_URL environment variable is required (Azure Container App URL)")
+        sys.exit(1)
     
     # Use configured Azure API base
     api_base = API_BASE
@@ -327,7 +363,8 @@ def main():
     plays = data.get("plays", [])
     if not plays:
         print("[WARN] No plays found for this date")
-        return
+        if not args.allow_empty:
+            return
     
     print(f"[DATA] Found {len(plays)} plays")
     

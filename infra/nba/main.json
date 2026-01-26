@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.39.26.7824",
-      "templateHash": "2116765158702641208"
+      "version": "0.40.2.10011",
+      "templateHash": "2969960313771509027"
     }
   },
   "parameters": {
@@ -160,6 +160,55 @@
         "description": "Action Network password (optional; required for premium splits)"
       }
     },
+    "deployTeamsPoster": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Deploy scheduled Teams poster job (Container Apps Job)"
+      }
+    },
+    "teamsWebhookUrl": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Teams incoming webhook URL (required when deployTeamsPoster=true)"
+      }
+    },
+    "teamsJobName": {
+      "type": "string",
+      "defaultValue": "nba-picks-teams-poster",
+      "metadata": {
+        "description": "Teams scheduled job name"
+      }
+    },
+    "teamsJobCron": {
+      "type": "string",
+      "defaultValue": "0 * * * *",
+      "metadata": {
+        "description": "Teams job cron schedule (UTC)"
+      }
+    },
+    "teamsScheduleLeadMinutes": {
+      "type": "int",
+      "defaultValue": 60,
+      "metadata": {
+        "description": "Minutes before first game to start posting"
+      }
+    },
+    "teamsScheduleIntervalMinutes": {
+      "type": "int",
+      "defaultValue": 60,
+      "metadata": {
+        "description": "Minutes between posts (cadence)"
+      }
+    },
+    "teamsScheduleToleranceMinutes": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Allowed minutes drift for cadence matching"
+      }
+    },
     "microsoftAppId": {
       "type": "string",
       "defaultValue": "",
@@ -260,7 +309,8 @@
       "version": "[parameters('imageTag')]",
       "managedBy": "bicep"
     },
-    "tags": "[union(variables('requiredTags'), parameters('extraTags'))]"
+    "tags": "[union(variables('requiredTags'), parameters('extraTags'))]",
+    "teamsJobEnabled": "[and(parameters('deployTeamsPoster'), not(equals(parameters('teamsWebhookUrl'), '')))]"
   },
   "resources": [
     {
@@ -484,8 +534,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "10607476698922302036"
+              "version": "0.40.2.10011",
+              "templateHash": "8338041616455748849"
             }
           },
           "parameters": {
@@ -677,8 +727,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "3884997957699163640"
+              "version": "0.40.2.10011",
+              "templateHash": "1802942123956982146"
             }
           },
           "parameters": {
@@ -899,6 +949,228 @@
       "dependsOn": [
         "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
         "[resourceId('Microsoft.Insights/components', format('gbs-insights-{0}', parameters('environment')))]",
+        "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppEnvName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'data-storage')]"
+      ]
+    },
+    {
+      "condition": "[variables('teamsJobEnabled')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "teams-poster-job",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[parameters('teamsJobName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "managedEnvironmentId": {
+            "value": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppEnvName'))]"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          },
+          "image": {
+            "value": "[format('{0}/nba-gbsv-api:{1}', reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').loginServer, parameters('imageTag'))]"
+          },
+          "envVars": "[if(variables('teamsJobEnabled'), createObject('value', createArray(createObject('name', 'NBA_API_URL', 'value', reference(resourceId('Microsoft.Resources/deployments', 'compute-app'), '2025-04-01').outputs.containerAppUrl.value), createObject('name', 'TEAMS_WEBHOOK_URL', 'secretRef', 'teams-webhook-url'), createObject('name', 'AZURE_STORAGE_CONNECTION_STRING', 'secretRef', 'storage-connection-string'), createObject('name', 'TEAMS_SCHEDULE_LEAD_MINUTES', 'value', string(parameters('teamsScheduleLeadMinutes'))), createObject('name', 'TEAMS_SCHEDULE_INTERVAL_MINUTES', 'value', string(parameters('teamsScheduleIntervalMinutes'))), createObject('name', 'TEAMS_SCHEDULE_TOLERANCE_MINUTES', 'value', string(parameters('teamsScheduleToleranceMinutes'))), createObject('name', 'TEAMS_ALLOW_EMPTY', 'value', 'true'), createObject('name', 'NBA_MODEL_VERSION', 'value', parameters('imageTag')))), createObject('value', createArray()))]",
+          "secrets": "[if(variables('teamsJobEnabled'), createObject('value', createArray(createObject('name', 'acr-password', 'value', listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').passwords[0].value), createObject('name', 'teams-webhook-url', 'value', parameters('teamsWebhookUrl')), createObject('name', 'storage-connection-string', 'value', reference(resourceId('Microsoft.Resources/deployments', 'data-storage'), '2025-04-01').outputs.connectionString.value))), createObject('value', createArray()))]",
+          "registries": {
+            "value": [
+              {
+                "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').loginServer]",
+                "username": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), '2023-07-01').username]",
+                "passwordSecretRef": "acr-password"
+              }
+            ]
+          },
+          "scheduleCron": {
+            "value": "[parameters('teamsJobCron')]"
+          },
+          "cpu": {
+            "value": "0.25"
+          },
+          "memory": {
+            "value": "0.5Gi"
+          },
+          "command": {
+            "value": [
+              "python",
+              "scripts/post_to_teams_scheduled.py"
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.40.2.10011",
+              "templateHash": "2463832299647321208"
+            }
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "metadata": {
+                "description": "Container App Job name"
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure region"
+              }
+            },
+            "managedEnvironmentId": {
+              "type": "string",
+              "metadata": {
+                "description": "Managed Environment resource ID"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "Tags to apply to the job"
+              }
+            },
+            "image": {
+              "type": "string",
+              "metadata": {
+                "description": "Container image (registry/repository:tag)"
+              }
+            },
+            "envVars": {
+              "type": "array",
+              "metadata": {
+                "description": "Container environment variables (name/value or name/secretRef objects)"
+              }
+            },
+            "secrets": {
+              "type": "array",
+              "metadata": {
+                "description": "Container job secrets array [{ name, value }]"
+              }
+            },
+            "registries": {
+              "type": "array",
+              "metadata": {
+                "description": "Registry configuration array [{ server, username, passwordSecretRef }]"
+              }
+            },
+            "scheduleCron": {
+              "type": "string",
+              "defaultValue": "*/5 * * * *",
+              "metadata": {
+                "description": "Schedule cron expression (UTC)"
+              }
+            },
+            "parallelism": {
+              "type": "int",
+              "defaultValue": 1,
+              "metadata": {
+                "description": "Parallelism for scheduled job"
+              }
+            },
+            "replicaCompletionCount": {
+              "type": "int",
+              "defaultValue": 1,
+              "metadata": {
+                "description": "Replica completion count"
+              }
+            },
+            "replicaTimeout": {
+              "type": "int",
+              "defaultValue": 1800,
+              "metadata": {
+                "description": "Replica timeout in seconds"
+              }
+            },
+            "replicaRetryLimit": {
+              "type": "int",
+              "defaultValue": 1,
+              "metadata": {
+                "description": "Replica retry limit"
+              }
+            },
+            "cpu": {
+              "type": "string",
+              "defaultValue": "0.25",
+              "metadata": {
+                "description": "CPU cores"
+              }
+            },
+            "memory": {
+              "type": "string",
+              "defaultValue": "0.5Gi",
+              "metadata": {
+                "description": "Memory allocation"
+              }
+            },
+            "command": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "Container command (entrypoint)"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/jobs",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('name')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "environmentId": "[parameters('managedEnvironmentId')]",
+                "configuration": {
+                  "triggerType": "Schedule",
+                  "scheduleTriggerConfig": {
+                    "cronExpression": "[parameters('scheduleCron')]",
+                    "parallelism": "[parameters('parallelism')]",
+                    "replicaCompletionCount": "[parameters('replicaCompletionCount')]"
+                  },
+                  "registries": "[parameters('registries')]",
+                  "secrets": "[parameters('secrets')]",
+                  "replicaTimeout": "[parameters('replicaTimeout')]",
+                  "replicaRetryLimit": "[parameters('replicaRetryLimit')]"
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "[parameters('name')]",
+                      "image": "[parameters('image')]",
+                      "resources": {
+                        "cpu": "[json(parameters('cpu'))]",
+                        "memory": "[parameters('memory')]"
+                      },
+                      "env": "[parameters('envVars')]",
+                      "command": "[parameters('command')]"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "jobName": {
+              "type": "string",
+              "value": "[parameters('name')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
+        "[resourceId('Microsoft.Resources/deployments', 'compute-app')]",
         "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppEnvName'))]",
         "[resourceId('Microsoft.Resources/deployments', 'data-storage')]"
       ]

@@ -46,3 +46,6 @@ rapidfuzz==3.10.0
 # Data sources
 kagglehub>=0.3.0
 nba_api>=1.11.3
+
+# Azure storage (Teams snapshot persistence)
+azure-storage-blob==12.19.1

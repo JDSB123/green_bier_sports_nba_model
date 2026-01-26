@@ -45,6 +45,29 @@ param actionNetworkUsername string = ''
 @secure()
 param actionNetworkPassword string = ''
 
+// Teams scheduled poster job (optional)
+@description('Deploy scheduled Teams poster job (Container Apps Job)')
+param deployTeamsPoster bool = false
+
+@description('Teams incoming webhook URL (required when deployTeamsPoster=true)')
+@secure()
+param teamsWebhookUrl string = ''
+
+@description('Teams scheduled job name')
+param teamsJobName string = 'nba-picks-teams-poster'
+
+@description('Teams job cron schedule (UTC)')
+param teamsJobCron string = '0 * * * *'
+
+@description('Minutes before first game to start posting')
+param teamsScheduleLeadMinutes int = 60
+
+@description('Minutes between posts (cadence)')
+param teamsScheduleIntervalMinutes int = 60
+
+@description('Allowed minutes drift for cadence matching')
+param teamsScheduleToleranceMinutes int = 2
+
 @description('Microsoft App ID for Teams Bot')
 param microsoftAppId string = ''
 
@@ -94,6 +117,13 @@ module nba 'nba/main.bicep' = {
     apiBasketballKey: apiBasketballKey
     actionNetworkUsername: actionNetworkUsername
     actionNetworkPassword: actionNetworkPassword
+    deployTeamsPoster: deployTeamsPoster
+    teamsWebhookUrl: teamsWebhookUrl
+    teamsJobName: teamsJobName
+    teamsJobCron: teamsJobCron
+    teamsScheduleLeadMinutes: teamsScheduleLeadMinutes
+    teamsScheduleIntervalMinutes: teamsScheduleIntervalMinutes
+    teamsScheduleToleranceMinutes: teamsScheduleToleranceMinutes
     microsoftAppId: microsoftAppId
     microsoftAppTenantId: microsoftAppTenantId
     microsoftAppPassword: microsoftAppPassword

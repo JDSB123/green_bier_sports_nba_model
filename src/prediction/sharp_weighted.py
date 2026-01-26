@@ -673,6 +673,7 @@ def apply_weighted_combination_spread(
     prediction: Dict[str, Any],
     features: Dict[str, Any],
     market_spread: Optional[float] = None,
+    min_edge_override: Optional[float] = None,
     config: WeightedConfig = WEIGHTED_CONFIG,
 ) -> Tuple[Dict[str, Any], WeightedResult]:
     """
@@ -699,7 +700,11 @@ def apply_weighted_combination_spread(
         spread = 0
 
     sharp_signal = build_sharp_signal_spread(features, spread)
-    result = combine_spread_signals(model_margin, spread, sharp_signal, config)
+    effective_config = config
+    if min_edge_override is not None and min_edge_override > config.min_edge_spread:
+        from dataclasses import replace
+        effective_config = replace(config, min_edge_spread=min_edge_override)
+    result = combine_spread_signals(model_margin, spread, sharp_signal, effective_config)
 
     # Update prediction with combined result
     updated = prediction.copy()
@@ -742,6 +747,7 @@ def apply_weighted_combination_total(
     prediction: Dict[str, Any],
     features: Dict[str, Any],
     market_total: Optional[float] = None,
+    min_edge_override: Optional[float] = None,
     config: WeightedConfig = WEIGHTED_CONFIG,
 ) -> Tuple[Dict[str, Any], WeightedResult]:
     """
@@ -768,7 +774,11 @@ def apply_weighted_combination_total(
         total = 0
 
     sharp_signal = build_sharp_signal_total(features, total)
-    result = combine_total_signals(model_total, total, sharp_signal, config)
+    effective_config = config
+    if min_edge_override is not None and min_edge_override > config.min_edge_total:
+        from dataclasses import replace
+        effective_config = replace(config, min_edge_total=min_edge_override)
+    result = combine_total_signals(model_total, total, sharp_signal, effective_config)
 
     # Update prediction with combined result
     updated = prediction.copy()

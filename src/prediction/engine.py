@@ -357,6 +357,7 @@ class PeriodPredictor:
                     prediction,
                     feature_payload,
                     market_spread=spread_line,
+                    min_edge_override=min_edge,
                 )
                 combined_edge = weighted_pred.get("combined_edge")
                 if combined_edge is not None:
@@ -527,6 +528,7 @@ class PeriodPredictor:
                     prediction,
                     feature_payload,
                     market_total=total_line,
+                    min_edge_override=min_edge,
                 )
                 combined_edge = weighted_pred.get("combined_edge")
                 if combined_edge is not None:

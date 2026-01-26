@@ -28,7 +28,9 @@ param(
     [string]$ResourceGroup = "nba-gbsv-model-rg",
     [string]$Tag = "",
     [switch]$WhatIf,
-    [switch]$SkipReadiness
+    [switch]$SkipReadiness,
+    [switch]$EnableTeamsPoster,
+    [string]$TeamsWebhookUrl = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -52,6 +54,10 @@ $TheOddsApiKey = $env:THE_ODDS_API_KEY
 $ApiBasketballKey = $env:API_BASKETBALL_KEY
 $ActionNetworkUser = $env:ACTION_NETWORK_USERNAME
 $ActionNetworkPass = $env:ACTION_NETWORK_PASSWORD
+$TeamsWebhook = $TeamsWebhookUrl
+if (-not $TeamsWebhook) {
+    $TeamsWebhook = $env:TEAMS_WEBHOOK_URL
+}
 
 if (-not $TheOddsApiKey) {
     $TheOddsApiKey = Read-Host "Enter THE_ODDS_API_KEY" -AsSecureString | ConvertFrom-SecureString -AsPlainText
@@ -64,6 +70,9 @@ if (-not $ActionNetworkUser) {
 }
 if (-not $ActionNetworkPass) {
     $ActionNetworkPass = Read-Host "Enter ACTION_NETWORK_PASSWORD (required for strict splits)" -AsSecureString | ConvertFrom-SecureString -AsPlainText
+}
+if ($EnableTeamsPoster -and -not $TeamsWebhook) {
+    $TeamsWebhook = Read-Host "Enter TEAMS_WEBHOOK_URL (required for Teams poster)"
 }
 
 # Export env vars for readiness script
@@ -118,6 +127,15 @@ $params = @(
     "--parameters", "actionNetworkUsername=$ActionNetworkUser",
     "--parameters", "actionNetworkPassword=$ActionNetworkPass"
 )
+
+if ($EnableTeamsPoster) {
+    if (-not $TeamsWebhook) {
+        Write-Error "TEAMS_WEBHOOK_URL is required when -EnableTeamsPoster is set."
+        exit 1
+    }
+    $params += @("--parameters", "deployTeamsPoster=true")
+    $params += @("--parameters", "teamsWebhookUrl=$TeamsWebhook")
+}
 
 if ($WhatIf) {
     $params[2] = "what-if"

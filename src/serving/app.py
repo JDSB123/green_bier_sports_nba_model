@@ -1039,13 +1039,15 @@ async def get_slate_predictions(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            # Require spread or total lines
-            has_fg_lines = fg_spread is not None or fg_total is not None
-            has_fh_lines = fh_spread is not None or fh_total is not None
-
-            if not has_fg_lines and not has_fh_lines:
-                logger.warning(
-                    f"Skipping {home_team} vs {away_team} - no betting lines available")
+            missing_lines = _missing_market_lines(
+                fg_spread, fg_total, fh_spread, fh_total)
+            if missing_lines:
+                msg = (
+                    f"{home_team} vs {away_team}: missing required market lines "
+                    f"{missing_lines}"
+                )
+                logger.warning(f"{RELEASE_VERSION}: {msg}")
+                errors.append(msg)
                 continue
 
             # Predict markets (1H + FG)
@@ -1145,6 +1147,24 @@ def format_american_odds(odds: int) -> str:
     if odds is None:
         return "N/A"
     return f"+{odds}" if odds > 0 else str(odds)
+
+
+def _missing_market_lines(
+    fg_spread: Optional[float],
+    fg_total: Optional[float],
+    fh_spread: Optional[float],
+    fh_total: Optional[float],
+) -> List[str]:
+    missing = []
+    if fg_spread is None:
+        missing.append("fg_spread_line")
+    if fg_total is None:
+        missing.append("fg_total_line")
+    if fh_spread is None:
+        missing.append("1h_spread_line")
+    if fh_total is None:
+        missing.append("1h_total_line")
+    return missing
 
 
 def get_fire_rating(confidence: float, edge: float) -> int:
@@ -1318,9 +1338,15 @@ async def get_executive_summary(
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
 
-            has_fg_lines = fg_spread is not None or fg_total is not None
-            has_fh_lines = fh_spread is not None or fh_total is not None
-            if not has_fg_lines and not has_fh_lines:
+            missing_lines = _missing_market_lines(
+                fg_spread, fg_total, fh_spread, fh_total)
+            if missing_lines:
+                msg = (
+                    f"{home_team} vs {away_team}: missing required market lines "
+                    f"{missing_lines}"
+                )
+                logger.warning(f"{RELEASE_VERSION}: {msg}")
+                errors.append(msg)
                 continue
 
             # Get predictions for 4 markets (1H + FG spreads/totals)
@@ -2050,7 +2076,14 @@ async def get_comprehensive_slate_analysis(
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
             engine_predictions = None
-            if fg_spread is not None and fg_total is not None:
+            missing_lines = _missing_market_lines(
+                fg_spread, fg_total, fh_spread, fh_total)
+            if missing_lines:
+                logger.warning(
+                    f"{RELEASE_VERSION}: {home_team} vs {away_team} missing required market lines "
+                    f"{missing_lines} - skipping engine predictions"
+                )
+            else:
                 try:
                     engine_predictions = app.state.engine.predict_all_markets(
                         features,
