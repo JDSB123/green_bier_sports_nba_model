@@ -2,12 +2,18 @@
 Admin routes for monitoring, cache management, and metadata.
 """
 
+import os
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Request
 
+from src.config import settings
 from src.serving.dependencies import RELEASE_VERSION, logger
 from src.utils.markets import get_market_catalog
+
+# Get project root for market catalog
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -200,36 +206,65 @@ meta_router = APIRouter(tags=["Meta"])
 @meta_router.get("/meta")
 def get_meta(request: Request):
     """Get API metadata."""
+    import sys
+
+    catalog = get_market_catalog(PROJECT_ROOT, settings.data_processed_dir)
     return {
         "version": RELEASE_VERSION,
-        "mode": "STRICT",
-        "markets": ["1h_spread", "1h_total", "fg_spread", "fg_total"],
-        "timestamp": datetime.now().isoformat(),
+        "markets": catalog.markets,
+        "market_types": catalog.market_types,
+        "periods": catalog.periods,
+        "markets_source": catalog.source,
+        "model_pack_version": catalog.model_pack_version,
+        "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
+        "server_time": datetime.now().isoformat(),
+        "python_version": sys.version,
     }
 
 
 @meta_router.get("/registry")
 def get_registry(request: Request):
-    """Get market registry information."""
-    catalog = get_market_catalog()
+    """Compatibility registry for web clients expecting /api/registry."""
+    base_url = str(request.base_url).rstrip("/")
+    paths = {
+        "health": "/health",
+        "meta": "/meta",
+        "markets": "/markets",
+        "picks": "/api/v1/picks",
+        "picks_v1": "/api/v1/picks",
+        "weekly_lineup": "/weekly-lineup/nba",
+        "slate": "/slate/{date}",
+        "executive": "/slate/{date}/executive",
+        "registry": "/api/registry",
+    }
+    endpoints = {key: f"{base_url}{path}" for key, path in paths.items()}
+
     return {
+        "status": "ok",
+        "service": "nba-picks",
         "version": RELEASE_VERSION,
-        "catalog": catalog,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "api_base_url": base_url,
+        "apiBaseUrl": base_url,
+        "baseUrl": base_url,
+        "paths": paths,
+        "endpoints": endpoints,
+        "api": {"v1": {"picks": endpoints["picks_v1"]}},
+        "defaults": {"sport": "nba", "date": "today"},
     }
 
 
 @meta_router.get("/markets")
 def get_markets(request: Request):
-    """Get available markets list."""
-    catalog = get_market_catalog()
+    """List enabled markets and periods from the model pack or configs."""
+    catalog = get_market_catalog(PROJECT_ROOT, settings.data_processed_dir)
     return {
         "version": RELEASE_VERSION,
-        "source": "unified_config",
-        "markets": catalog.get("markets", []),
-        "market_count": len(catalog.get("markets", [])),
-        "periods": catalog.get("periods", {}),
-        "market_types": catalog.get("market_types", []),
-        "model_pack_version": catalog.get("model_pack_version"),
-        "model_pack_path": catalog.get("model_pack_path"),
+        "source": catalog.source,
+        "markets": catalog.markets,
+        "market_count": len(catalog.markets),
+        "periods": catalog.periods,
+        "market_types": catalog.market_types,
+        "model_pack_version": catalog.model_pack_version,
+        "model_pack_path": catalog.model_pack_path,
     }
