@@ -1,10 +1,10 @@
 {
-  "version": "NBA_v34.3.3",
+  "version": "NBA_v34.3.4",
   "created_at": "2026-01-25T21:47:31.106501Z",
-  "last_reviewed": "2026-01-26T14:29:10.315402Z",
-  "git_commit": "2455b29eee389e6855ba0073315538c8d4d4d52b",
-  "git_tag": "NBA_v34.3.3",
-  "release_notes": "NBA_v34.3.3 - Metadata sync, strict market-line enforcement, normalized odds outcomes, and sharp-weighted filters aligned to production min-edge thresholds. Includes 63-feature retrained FG/1H models.",
+  "last_reviewed": "2026-01-26T15:11:16.855754Z",
+  "git_commit": "225f62b50c55812e0549eff8c5df2d477fd9cdaf",
+  "git_tag": "NBA_v34.3.4",
+  "release_notes": "NBA_v34.3.4 - Metadata sync, strict market-line enforcement, normalized odds outcomes, and sharp-weighted filters aligned to production min-edge thresholds. Includes 63-feature retrained FG/1H models.",
   "backtest_window": {
     "start_date": "2025-10-02",
     "end_date": "2025-12-20",
@@ -111,7 +111,7 @@
   "deployment": {
     "container_app": "nba-gbsv-api",
     "resource_group": "nba-gbsv-model-rg",
-    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v34.3.3",
+    "acr": "nbagbsacr.azurecr.io/nba-gbsv-api:NBA_v34.3.4",
     "health_endpoint": "/health",
     "markets_required": 4
   },
