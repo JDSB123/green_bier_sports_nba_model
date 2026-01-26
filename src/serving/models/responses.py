@@ -4,7 +4,7 @@ Pydantic models for API responses.
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PredictRequest(BaseModel):
@@ -50,6 +50,8 @@ class SlateResponse(BaseModel):
 
 class MarketsResponse(BaseModel):
     """Response for markets endpoint."""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     version: str
     source: str

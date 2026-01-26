@@ -58,6 +58,11 @@ from src.modeling.edge_thresholds import get_edge_thresholds_for_game
 from src.modeling.unified_features import get_feature_defaults
 from src.prediction import ModelNotFoundError, UnifiedPredictionEngine
 from src.prediction.feature_validation import MissingFeaturesError
+from src.serving.routes.admin import meta_router
+from src.serving.routes.admin import router as admin_router
+
+# Import route modules for incremental migration
+from src.serving.routes.health import router as health_router
 from src.tracking import PickTracker
 from src.utils.api_auth import APIKeyMiddleware, get_api_key
 from src.utils.comprehensive_edge import calculate_comprehensive_edge
@@ -522,7 +527,15 @@ async def metrics_middleware(request: Request, call_next):
             logger.warning(f"[{request_id}] Slow request: {method} {endpoint} took {duration:.2f}s")
 
 
-# --- Endpoints ---
+# --- Include Route Modules (incremental migration) ---
+# NOTE: Routes are duplicated during migration. New routes take precedence.
+# Once verified, remove the inline endpoint definitions below.
+# app.include_router(health_router)  # Uncomment to use new health routes
+# app.include_router(admin_router)   # Uncomment to use new admin routes
+# app.include_router(meta_router)    # Uncomment to use new meta routes
+
+
+# --- Endpoints (legacy - will be migrated to routes/) ---
 
 
 @app.get("/health")
