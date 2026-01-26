@@ -99,12 +99,28 @@ def _validate_feature_alignment(models_dir: Path, expected_markets: List[str]) -
         errors.append("Feature builder keys not detected (RichFeatureBuilder.build_game_features).")
         return StartupIntegrityReport(errors=errors, warnings=warnings)
 
+    # Some feature aliases are injected at prediction time (not directly in builder source)
+    # and therefore won't appear in the simple source scan. Ignore these to avoid false negatives.
+    ignored_alias_keys = {
+        "spread_line",
+        "total_line",
+        "fg_spread_line",
+        "fg_total_line",
+        "1h_spread_line",
+        "1h_total_line",
+        "fh_spread_line",
+        "fh_total_line",
+    }
+
     for market_key in expected_markets:
         features, err = _load_model_features(models_dir, market_key)
         if err:
             errors.append(err)
             continue
-        missing = sorted(set(features) - builder_keys)
+        missing_keys = set(features) - builder_keys
+        # Drop known injected alias keys from the missing set (these are provided by odds ingestion)
+        missing_keys -= ignored_alias_keys
+        missing = sorted(missing_keys)
         if missing:
             preview = ", ".join(missing[:8])
             suffix = f" (+{len(missing) - 8} more)" if len(missing) > 8 else ""
