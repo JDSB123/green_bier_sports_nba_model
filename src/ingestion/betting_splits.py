@@ -822,15 +822,16 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
             )
 
             # Use the scoreboard API which provides premium data when credentials are configured
-            # The date parameter allows fetching specific dates
+            # NOTE: Action Network scoreboard API does NOT accept a date parameter.
+            # It always returns today's games. We validate the returned games match
+            # our target date client-side.
             scoreboard_url = "https://api.actionnetwork.com/web/v1/scoreboard/nba"
 
-            # Build query params - Action Network uses date parameter for specific dates
-            params = {}
+            # Log the date we're trying to fetch (for debugging)
             if date:
-                # Action Network expects date in YYYY-MM-DD format (ET timezone)
-                params["date"] = date
-                logger.info(f"[ACTION NETWORK] Requesting splits for date={date}")
+                logger.info(
+                    f"[ACTION NETWORK] Fetching scoreboard (target_date={date}, API returns today's games)"
+                )
 
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -848,7 +849,7 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     }
                 )
 
-            response = await client.get(scoreboard_url, headers=headers, params=params)
+            response = await client.get(scoreboard_url, headers=headers)
 
             if has_premium_creds:
                 logger.info("✓ Using Action Network with premium credentials configured")
