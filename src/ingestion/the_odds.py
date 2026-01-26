@@ -93,6 +93,8 @@ async def fetch_odds(
     sport: str = "basketball_nba",
     regions: str = "us",
     markets: str = "spreads,totals",
+    commence_time_from: str | None = None,
+    commence_time_to: str | None = None,
 ) -> list[Dict[str, Any]]:
     """
     Fetch odds from The Odds API and standardize to ESPN format.
@@ -104,6 +106,8 @@ async def fetch_odds(
         sport: Sport identifier
         regions: Regions to fetch odds for
         markets: Markets to fetch
+        commence_time_from: ISO8601 UTC timestamp for earliest game start (e.g., "2026-01-26T06:00:00Z")
+        commence_time_to: ISO8601 UTC timestamp for latest game start (e.g., "2026-01-27T05:59:59Z")
 
     Returns:
         List of game dictionaries with standardized team names in ESPN format
@@ -112,7 +116,10 @@ async def fetch_odds(
         ValueError: If THE_ODDS_API_KEY is not set
         httpx.HTTPStatusError: If the API request fails
     """
-    logger.info(f"Fetching odds for {sport} with markets: {markets}")
+    date_filter_msg = ""
+    if commence_time_from and commence_time_to:
+        date_filter_msg = f" (UTC window: {commence_time_from} to {commence_time_to})"
+    logger.info(f"Fetching odds for {sport} with markets: {markets}{date_filter_msg}")
 
     # Validate API key
     if not settings.the_odds_api_key:
@@ -125,6 +132,13 @@ async def fetch_odds(
         "oddsFormat": "american",
         "dateFormat": "iso",
     }
+
+    # Add date filtering if provided (server-side filtering at The Odds API)
+    # This ensures we only fetch games for the target date, avoiding UTC/CST drift
+    if commence_time_from:
+        params["commenceTimeFrom"] = commence_time_from
+    if commence_time_to:
+        params["commenceTimeTo"] = commence_time_to
 
     # Use circuit breaker to prevent cascading failures
     breaker = get_odds_api_breaker()

@@ -803,7 +803,9 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
     Public endpoint: GET /web/v1/scoreboard/nba
 
     Args:
-        date: Optional date string (YYYY-MM-DD) for historical data
+        date: Optional date string (YYYY-MM-DD) for specific date data.
+              If None, fetches today's games (Action Network default).
+              NOTE: Action Network API uses ET (Eastern Time) for dates.
 
     Returns:
         List of GameSplits with betting percentages (premium data when available)
@@ -820,7 +822,15 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
             )
 
             # Use the scoreboard API which provides premium data when credentials are configured
+            # The date parameter allows fetching specific dates
             scoreboard_url = "https://api.actionnetwork.com/web/v1/scoreboard/nba"
+
+            # Build query params - Action Network uses date parameter for specific dates
+            params = {}
+            if date:
+                # Action Network expects date in YYYY-MM-DD format (ET timezone)
+                params["date"] = date
+                logger.info(f"[ACTION NETWORK] Requesting splits for date={date}")
 
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -838,7 +848,7 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
                     }
                 )
 
-            response = await client.get(scoreboard_url, headers=headers)
+            response = await client.get(scoreboard_url, headers=headers, params=params)
 
             if has_premium_creds:
                 logger.info("✓ Using Action Network with premium credentials configured")
@@ -853,11 +863,15 @@ async def fetch_splits_action_network(date: Optional[str] = None) -> List[GameSp
             games = data.get("games", [])
 
             if not games:
-                logger.warning("Action Network returned no games")
+                date_msg = f" for date={date}" if date else ""
+                logger.warning(f"Action Network returned no games{date_msg}")
                 return []
 
             cred_status = "with premium credentials" if has_premium_creds else "public access"
-            logger.info(f"Fetched {len(games)} games from Action Network API ({cred_status})")
+            date_msg = f" for date={date}" if date else ""
+            logger.info(
+                f"Fetched {len(games)} games from Action Network API ({cred_status}){date_msg}"
+            )
 
             # Parse into GameSplits
             splits_list = []
@@ -1064,6 +1078,7 @@ async def fetch_public_betting_splits(
     source: str = "auto",
     require_action_network: bool = False,
     require_non_empty: bool = False,
+    target_date: Optional[str] = None,
 ) -> Dict[str, GameSplits]:
     """
     Fetch public betting splits for a list of games.
@@ -1071,16 +1086,27 @@ async def fetch_public_betting_splits(
     Args:
         games: List of game dicts with home_team, away_team, spread, total
         source: Data source ("action_network", "the_odds", "sbro", "covers", "mock", or "auto")
+        require_action_network: If True, raise error if Action Network fails
+        require_non_empty: If True, raise error if no splits returned
+        target_date: Target date in YYYY-MM-DD format (ensures date alignment)
 
     Returns:
         Dict mapping game_id to GameSplits
     """
     splits_dict = {}
 
+    # Log date context for debugging
+    if target_date:
+        logger.info(f"[SPLITS] Fetching betting splits for target_date={target_date}")
+    else:
+        logger.info(
+            "[SPLITS] Fetching betting splits (no target_date specified - using API defaults)"
+        )
+
     if source == "auto":
         # STRICT MODE: if Action Network is required, do not silently fall back.
         if require_action_network:
-            splits_list = await fetch_splits_action_network()
+            splits_list = await fetch_splits_action_network(date=target_date)
             if not splits_list:
                 raise RuntimeError(
                     "STRICT MODE: Action Network returned no betting splits and require_action_network=true"
@@ -1099,7 +1125,7 @@ async def fetch_public_betting_splits(
                 try:
                     if src == "action_network":
                         # Attempt to fetch from Action Network (credentials should be in .env)
-                        splits_list = await fetch_splits_action_network()
+                        splits_list = await fetch_splits_action_network(date=target_date)
                     elif src == "the_odds":
                         raw_splits = await the_odds.fetch_betting_splits()
                         if not raw_splits:

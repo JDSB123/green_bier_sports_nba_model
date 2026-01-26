@@ -8,6 +8,9 @@ fallback to The Odds API scores (recent games only) if ESPN is unavailable.
 QA/QC Principle: All sources are normalized to ESPN team names to prevent
 team mismatch across odds, records, and feature generation.
 
+DATE ALIGNMENT PRINCIPLE: All data sources MUST query the SAME target date.
+The DateContext class ensures consistent date formatting for each API.
+
 Extracted from deprecated analyze_todays_slate.py script.
 These functions are used by the API and Docker analysis scripts.
 """
@@ -16,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import statistics
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
@@ -26,6 +30,219 @@ from src.ingestion.standardize import to_cst as _canonical_to_cst
 
 logger = logging.getLogger(__name__)
 
+# Eastern Time - NBA's official scheduling timezone
+# ESPN and all NBA schedules use ET for game dates
+ET = ZoneInfo("America/New_York")
+
+
+# =============================================================================
+# DATE CONTEXT - SINGLE SOURCE OF TRUTH FOR DATE ALIGNMENT
+# =============================================================================
+# All data sources must query the SAME target date. This class provides
+# date formatting for each API to ensure consistency.
+#
+# IMPORTANT: NBA uses Eastern Time (ET) for scheduling, NOT UTC or CST.
+# All date calculations should use ET to match ESPN and NBA official times.
+# =============================================================================
+
+
+@dataclass
+class DateContext:
+    """
+    Single source of truth for date alignment across all data sources.
+
+    When requesting a slate for a specific date, ALL data sources must
+    query the same date. This class provides the proper date format
+    for each API endpoint.
+
+    Date Format Reference:
+    - The Odds API: UTC ISO8601 (YYYY-MM-DDTHH:MM:SSZ), filters by commence_time
+    - ESPN: YYYYMMDD string (interpreted as Eastern Time)
+    - API-Basketball: YYYY-MM-DD string
+    - Action Network: YYYY-MM-DD string (Eastern Time)
+
+    CRITICAL: NBA uses EASTERN TIME (ET) for scheduling. All date windows
+    are calculated from midnight ET to 11:59:59 PM ET, then converted to UTC
+    for The Odds API filtering. This matches ESPN's behavior.
+    """
+
+    target_date: date
+    # When this context was created (for staleness checks)
+    created_at: datetime
+
+    @classmethod
+    def from_request(cls, date_str: str | None = None) -> "DateContext":
+        """
+        Create DateContext from a request date string.
+
+        Args:
+            date_str: Date string (YYYY-MM-DD, 'today', 'tomorrow', or None)
+
+        Returns:
+            DateContext with validated target date
+        """
+        # Use ET (Eastern Time) as the reference - NBA's official timezone
+        now_et = datetime.now(ET)
+
+        if date_str is None or date_str.lower() == "today":
+            target = now_et.date()
+        elif date_str.lower() == "tomorrow":
+            target = (now_et + timedelta(days=1)).date()
+        else:
+            try:
+                target = datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError as e:
+                raise ValueError(f"Invalid date format '{date_str}'. Use YYYY-MM-DD.") from e
+
+        return cls(target_date=target, created_at=now_et)
+
+    @property
+    def as_iso(self) -> str:
+        """YYYY-MM-DD format (API-Basketball, general use)."""
+        return self.target_date.isoformat()
+
+    @property
+    def as_espn(self) -> str:
+        """YYYYMMDD format (ESPN - interprets this as Eastern Time)."""
+        return self.target_date.strftime("%Y%m%d")
+
+    @property
+    def as_utc_start(self) -> str:
+        """
+        UTC start of day ISO8601 (The Odds API filtering).
+
+        Converts midnight ET to UTC to match ESPN's date interpretation.
+        Example: 2026-01-26 midnight ET = 2026-01-26T05:00:00Z
+        """
+        # Start of day in ET (midnight), converted to UTC
+        start_et = datetime.combine(self.target_date, datetime.min.time(), tzinfo=ET)
+        start_utc = start_et.astimezone(timezone.utc)
+        return start_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @property
+    def as_utc_end(self) -> str:
+        """
+        UTC end of day ISO8601 (The Odds API filtering).
+
+        Converts 23:59:59 ET to UTC to match ESPN's date interpretation.
+        Example: 2026-01-26 23:59:59 ET = 2026-01-27T04:59:59Z
+        """
+        # End of day in ET (23:59:59), converted to UTC
+        end_et = datetime.combine(
+            self.target_date, datetime.max.time().replace(microsecond=0), tzinfo=ET
+        )
+        end_utc = end_et.astimezone(timezone.utc)
+        return end_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @property
+    def as_action_network(self) -> str:
+        """YYYY-MM-DD format (Action Network uses ET, same as ISO)."""
+        return self.as_iso
+
+    @property
+    def as_api_basketball_tz(self) -> str:
+        """
+        IANA timezone string for API-Basketball queries.
+
+        API-Basketball requires explicit timezone parameter to interpret
+        the date correctly. Without it, dates are interpreted as UTC,
+        causing late-night ET games to appear on the wrong date.
+        """
+        return "America/New_York"
+
+    def is_stale(self, max_age_seconds: int = 300) -> bool:
+        """Check if this context is stale (>5 minutes old by default)."""
+        now = datetime.now(ET)
+        age = (now - self.created_at).total_seconds()
+        return age > max_age_seconds
+
+    def validate_game_date(self, commence_time_utc: str) -> bool:
+        """
+        Validate that a game's commence time falls on the target date (ET).
+
+        Args:
+            commence_time_utc: ISO8601 UTC timestamp from The Odds API
+
+        Returns:
+            True if game is on target date in Eastern Time, False otherwise
+        """
+        try:
+            if commence_time_utc.endswith("Z"):
+                commence_time_utc = f"{commence_time_utc[:-1]}+00:00"
+            dt_utc = datetime.fromisoformat(commence_time_utc)
+            dt_et = dt_utc.astimezone(ET)  # Convert to ET (NBA's timezone)
+            return dt_et.date() == self.target_date
+        except (ValueError, TypeError):
+            return False
+
+    def __str__(self) -> str:
+        return f"DateContext({self.as_iso}, created={self.created_at.isoformat()})"
+
+
+def validate_date_alignment(
+    date_ctx: DateContext,
+    games: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """
+    Validate that fetched games align with the requested date.
+
+    Args:
+        date_ctx: The DateContext for this request
+        games: List of game dicts with commence_time
+
+    Returns:
+        Dict with validation results:
+        - is_valid: True if all games are on target date
+        - target_date: The requested date
+        - games_on_date: Count of games matching target date
+        - games_off_date: Count of games NOT on target date
+        - off_date_games: List of mismatched games (for debugging)
+
+    Raises:
+        ValueError: If more than 20% of games are off-date (data source issue)
+    """
+    on_date = []
+    off_date = []
+
+    for game in games:
+        commence_time = game.get("commence_time")
+        if not commence_time:
+            off_date.append(game)
+            continue
+
+        if date_ctx.validate_game_date(commence_time):
+            on_date.append(game)
+        else:
+            off_date.append(game)
+
+    total = len(games)
+    off_date_pct = len(off_date) / total if total > 0 else 0
+
+    result = {
+        "is_valid": len(off_date) == 0,
+        "target_date": date_ctx.as_iso,
+        "games_on_date": len(on_date),
+        "games_off_date": len(off_date),
+        "off_date_games": [
+            {
+                "home": g.get("home_team"),
+                "away": g.get("away_team"),
+                "commence": g.get("commence_time"),
+            }
+            for g in off_date[:5]  # Limit for payload size
+        ],
+    }
+
+    # Warn if significant date mismatch
+    if off_date_pct > 0.2 and total > 0:
+        logger.warning(
+            f"DATE ALIGNMENT WARNING: {len(off_date)}/{total} games ({off_date_pct:.0%}) "
+            f"not on target date {date_ctx.as_iso}. This may indicate a timezone issue."
+        )
+
+    return result
+
+
 # NOTE: CST imported from src.ingestion.standardize (single source of truth)
 
 # =============================================================================
@@ -34,6 +251,7 @@ logger = logging.getLogger(__name__)
 # ESPN standings provide season W-L records. If ESPN fails, fall back to The
 # Odds API scores endpoint (limited to recent days) to avoid missing records.
 # =============================================================================
+
 
 # Cache for team records (session-level, cleared between API calls)
 _UNIFIED_RECORDS_CACHE: Dict[str, Dict[str, int]] = {}
@@ -360,18 +578,20 @@ def to_cst(dt: datetime) -> datetime:
 
 
 def get_target_date(date_str: str | None = None) -> date:
-    """Get target date for analysis."""
-    now_cst = get_cst_now()
+    """
+    Get target date for analysis.
 
-    if date_str is None or date_str.lower() == "today":
-        return now_cst.date()
-    elif date_str.lower() == "tomorrow":
-        return (now_cst + timedelta(days=1)).date()
-    else:
-        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    DEPRECATED: Use DateContext.from_request() for new code.
+    This function is kept for backward compatibility.
+    """
+    return DateContext.from_request(date_str).target_date
 
 
-async def fetch_todays_games(target_date: date, include_records: bool = True) -> List[Dict]:
+async def fetch_todays_games(
+    target_date: date,
+    include_records: bool = True,
+    date_context: DateContext | None = None,
+) -> List[Dict]:
     """
     Fetch games for a specific date, including first half markets and team records.
 
@@ -382,9 +602,13 @@ async def fetch_todays_games(target_date: date, include_records: bool = True) ->
     First half markets (spreads_h1, totals_h1) are only available
     through the event-specific endpoint, so we fetch them separately for each game.
 
+    DATE ALIGNMENT: When date_context is provided, uses UTC window filtering
+    at the API level to ensure all data sources query the same date.
+
     Args:
         target_date: Date to fetch games for
         include_records: If True, include team W-L records from the records source
+        date_context: Optional DateContext for precise UTC window filtering
 
     Returns:
         List of game dicts with odds and optionally team records
@@ -392,9 +616,30 @@ async def fetch_todays_games(target_date: date, include_records: bool = True) ->
     # Clear the unified records cache to ensure fresh data
     clear_unified_records_cache()
 
-    # Fetch main odds data (full game markets)
-    raw_games = await the_odds.fetch_odds()
+    # Build date context if not provided (for backwards compatibility)
+    if date_context is None:
+        date_context = DateContext(target_date)
+        logger.debug(f"[DATE ALIGNMENT] Created DateContext for {target_date}")
+
+    # Fetch main odds data with DATE FILTERING at API level
+    # This prevents UTC/CST drift issues by filtering server-side
+    logger.info(
+        f"[DATE ALIGNMENT] Fetching odds for {target_date} "
+        f"(UTC window: {date_context.as_utc_start} to {date_context.as_utc_end})"
+    )
+    raw_games = await the_odds.fetch_odds(
+        commence_time_from=date_context.as_utc_start,
+        commence_time_to=date_context.as_utc_end,
+    )
+
+    # Additional client-side filter as safety net (handles edge cases)
     filtered_games = filter_games_for_date(raw_games, target_date)
+
+    if len(filtered_games) != len(raw_games):
+        logger.warning(
+            f"[DATE ALIGNMENT] API returned {len(raw_games)} games, "
+            f"filtered to {len(filtered_games)} for {target_date} CST"
+        )
 
     # Fetch team records from the records source (ESPN primary, The Odds fallback)
     unified_records = {}

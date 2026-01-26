@@ -242,17 +242,18 @@ class APIBasketballClient:
         return EndpointResult(name="games", data=data, count=len(self._games), path=path)
 
     async def fetch_games_by_date(
-        self, game_date: str, timezone: str = "America/Chicago"
+        self, game_date: str, timezone: str = "America/New_York"
     ) -> EndpointResult:
         """Fetch games for a specific date in the given timezone.
 
-        IMPORTANT: API-Basketball stores dates in UTC. A 7pm EST game on Dec 4
+        IMPORTANT: API-Basketball stores dates in UTC. A 7pm ET game on Dec 4
         appears as Dec 5 00:00 UTC in the API. This method queries by local
         timezone to get the correct games for that date.
 
         Args:
             game_date: Date string in YYYY-MM-DD format (e.g., "2025-12-04")
-            timezone: IANA timezone string (default: America/Chicago for CST)
+            timezone: IANA timezone string (default: America/New_York for ET)
+                      NBA uses Eastern Time for scheduling.
 
         Returns:
             EndpointResult with games for that date in the specified timezone
@@ -539,7 +540,7 @@ class APIBasketballClient:
         self,
         start_date: str,
         end_date: str,
-        timezone: str = "America/Chicago",
+        timezone: str = "America/New_York",
     ) -> EndpointResult:
         """
         Fetch all games in a date range for backtesting.
@@ -547,7 +548,7 @@ class APIBasketballClient:
         Args:
             start_date: Start date in YYYY-MM-DD format
             end_date: End date in YYYY-MM-DD format
-            timezone: IANA timezone string
+            timezone: IANA timezone string (default: America/New_York for ET)
 
         Returns:
             EndpointResult with all games in the date range

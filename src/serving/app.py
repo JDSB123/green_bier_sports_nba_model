@@ -295,15 +295,26 @@ def _require_splits_if_strict(use_splits: bool) -> bool:
     return True if strict else use_splits
 
 
-async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Fetch betting splits, enforcing strict Action Network requirements when configured."""
+async def _fetch_required_splits(
+    games: List[Dict[str, Any]], target_date: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Fetch betting splits, enforcing strict Action Network requirements when configured.
+
+    Args:
+        games: List of game dicts
+        target_date: Target date in YYYY-MM-DD format (ensures date alignment with Action Network)
+
+    Returns:
+        Dict mapping game_key to GameSplits
+    """
     require_action_network = bool(getattr(settings, "require_action_network_splits", False))
     require_real = bool(getattr(settings, "require_real_splits", False))
 
     if not (require_action_network or require_real):
         # Non-strict mode: keep existing behavior (best-effort)
         try:
-            return await fetch_public_betting_splits(games, source="auto")
+            return await fetch_public_betting_splits(games, source="auto", target_date=target_date)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
             return {}
@@ -315,6 +326,7 @@ async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
             source="auto",
             require_action_network=require_action_network,
             require_non_empty=True,
+            target_date=target_date,
         )
     except Exception as e:
         logger.error(f"STRICT MODE: Failed to fetch required betting splits: {e}")
@@ -932,6 +944,9 @@ async def get_slate_predictions(
 
     4 markets (1H + FG spreads/totals). Q1 removed entirely.
     Returns 1H/FG for spread and total when available.
+
+    DATE ALIGNMENT: All data sources (The Odds API, ESPN, API-Basketball, Action Network)
+    are queried with the same target date to ensure consistency.
     """
     if not hasattr(app.state, "engine") or app.state.engine is None:
         raise HTTPException(
@@ -946,24 +961,32 @@ async def get_slate_predictions(
         f"{RELEASE_VERSION}: Caches cleared - fetching fresh data (odds from The Odds API, records from ESPN when available)"
     )
 
-    # Resolve date
+    # =========================================================================
+    # DATE VALIDATION GATE - Single source of truth for date across all sources
+    # =========================================================================
     from src.utils.slate_analysis import (
+        DateContext,
         extract_consensus_odds,
         fetch_todays_games,
-        get_target_date,
         parse_utc_time,
         to_cst,
+        validate_date_alignment,
     )
 
     try:
-        target_date = get_target_date(date)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        date_ctx = DateContext.from_request(date)
+        target_date = date_ctx.target_date
+        logger.info(
+            f"{RELEASE_VERSION}: Date context created: {date_ctx} "
+            f"(ISO={date_ctx.as_iso}, ESPN={date_ctx.as_espn}, UTC_start={date_ctx.as_utc_start})"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    # Fetch games
+    # Fetch games with DATE ALIGNMENT - pass DateContext for UTC window filtering
     try:
         # Records are sourced from ESPN standings when available (odds remain from The Odds API)
-        games = await fetch_todays_games(target_date, include_records=True)
+        games = await fetch_todays_games(target_date, include_records=True, date_context=date_ctx)
     except Exception as e:
         logger.error("Error fetching odds for %s: %s", target_date, e, exc_info=True)
         fallback_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -977,6 +1000,14 @@ async def get_slate_predictions(
 
     if not games:
         return SlateResponse(date=str(target_date), predictions=[], total_plays=0)
+
+    # Validate date alignment (log warning if games don't match target date)
+    date_validation = validate_date_alignment(date_ctx, games)
+    if not date_validation["is_valid"]:
+        logger.warning(
+            f"{RELEASE_VERSION}: DATE ALIGNMENT: {date_validation['games_off_date']} games "
+            f"not on target date {date_ctx.as_iso}"
+        )
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
@@ -996,10 +1027,10 @@ async def get_slate_predictions(
     except Exception as e:
         logger.warning(f"Could not save odds snapshot: {e}")
 
-    # Fetch splits
+    # Fetch splits with DATE ALIGNMENT - ensure splits match the target slate date
     splits_dict = {}
     if use_splits:
-        splits_dict = await _fetch_required_splits(games)
+        splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
 
     # Process slate
     results = []
@@ -1216,23 +1247,29 @@ async def get_executive_summary(
         kelly_fraction,
     )
     from src.utils.slate_analysis import (
+        DateContext,
         extract_consensus_odds,
         fetch_todays_games,
-        get_target_date,
         parse_utc_time,
         to_cst,
+        validate_date_alignment,
     )
 
     CST = ZoneInfo("America/Chicago")
 
-    # Resolve date
+    # DATE VALIDATION GATE - Single source of truth for date across all sources
     try:
-        target_date = get_target_date(date)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        date_ctx = DateContext.from_request(date)
+        target_date = date_ctx.target_date
+        logger.info(
+            f"{RELEASE_VERSION}: Executive - date context: {date_ctx} "
+            f"(ISO={date_ctx.as_iso}, ESPN={date_ctx.as_espn})"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    # Fetch games
-    games = await fetch_todays_games(target_date, include_records=True)
+    # Fetch games with DATE ALIGNMENT - pass DateContext for UTC window filtering
+    games = await fetch_todays_games(target_date, include_records=True, date_context=date_ctx)
     if not games:
         return {
             "date": str(target_date),
@@ -1242,6 +1279,14 @@ async def get_executive_summary(
             "plays": [],
             "summary": "No games scheduled",
         }
+
+    # Validate date alignment
+    date_validation = validate_date_alignment(date_ctx, games)
+    if not date_validation["is_valid"]:
+        logger.warning(
+            f"{RELEASE_VERSION}: Executive DATE ALIGNMENT: {date_validation['games_off_date']} games "
+            f"not on target date {date_ctx.as_iso}"
+        )
 
     odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
@@ -1261,11 +1306,11 @@ async def get_executive_summary(
     except Exception as e:
         logger.warning(f"Could not save odds snapshot: {e}")
 
-    # Fetch betting splits
+    # Fetch betting splits with DATE ALIGNMENT
     splits_dict = {}
     if use_splits:
         try:
-            splits_dict = await _fetch_required_splits(games)
+            splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
@@ -2012,11 +2057,18 @@ async def get_comprehensive_slate_analysis(
     except Exception as e:
         logger.warning(f"Failed to clear feature caches before slate fetch: {e}")
 
-    # Resolve date
+    # DATE VALIDATION GATE - Single source of truth for date across all sources
+    from src.utils.slate_analysis import DateContext, validate_date_alignment
+
     try:
-        target_date = get_target_date(date)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        date_ctx = DateContext.from_request(date)
+        target_date = date_ctx.target_date
+        logger.info(
+            f"{RELEASE_VERSION}: Comprehensive - date context: {date_ctx} "
+            f"(ISO={date_ctx.as_iso}, ESPN={date_ctx.as_espn})"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # Get edge thresholds - use SAME source as engine for consistency
     try:
@@ -2037,10 +2089,18 @@ async def get_comprehensive_slate_analysis(
             "1h_total": 2.0,
         }
 
-    # Fetch games
-    games = await fetch_todays_games(target_date, include_records=True)
+    # Fetch games with DATE ALIGNMENT - pass DateContext for UTC window filtering
+    games = await fetch_todays_games(target_date, include_records=True, date_context=date_ctx)
     if not games:
         return {"date": str(target_date), "analysis": [], "summary": "No games found"}
+
+    # Validate date alignment
+    date_validation = validate_date_alignment(date_ctx, games)
+    if not date_validation["is_valid"]:
+        logger.warning(
+            f"{RELEASE_VERSION}: Comprehensive DATE ALIGNMENT: {date_validation['games_off_date']} games "
+            f"not on target date {date_ctx.as_iso}"
+        )
 
     odds_as_of_utc = request_started_utc
     odds_snapshot_path = None
@@ -2060,11 +2120,11 @@ async def get_comprehensive_slate_analysis(
     except Exception as e:
         logger.warning(f"Could not save odds snapshot: {e}")
 
-    # Fetch betting splits
+    # Fetch betting splits with DATE ALIGNMENT
     splits_dict = {}
     if use_splits:
         try:
-            splits_dict = await _fetch_required_splits(games)
+            splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
@@ -2274,8 +2334,12 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         if bool(getattr(settings, "require_action_network_splits", False)) or bool(
             getattr(settings, "require_real_splits", False)
         ):
+            # Use today's date for single game prediction
+            from src.utils.slate_analysis import DateContext
+
+            date_ctx = DateContext.from_request("today")
             games = [{"home_team": req.home_team, "away_team": req.away_team}]
-            splits_dict = await _fetch_required_splits(games)
+            splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
             game_key = _canonical_game_key(req.home_team, req.away_team, source="odds")
             betting_splits = splits_dict.get(game_key)
 
