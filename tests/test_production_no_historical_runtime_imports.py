@@ -1,7 +1,6 @@
 import ast
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # We explicitly allow some modeling modules at runtime because they define
@@ -62,7 +61,9 @@ def test_production_runtime_does_not_import_training_or_historical_modules():
                     rel = py_path.relative_to(PROJECT_ROOT)
                     offenders.append(f"{rel}: {imp}")
 
-    assert offenders == [], "\n".join([
-        "Production runtime imports training/historical modules (not allowed):",
-        *sorted(offenders),
-    ])
+    assert offenders == [], "\n".join(
+        [
+            "Production runtime imports training/historical modules (not allowed):",
+            *sorted(offenders),
+        ]
+    )

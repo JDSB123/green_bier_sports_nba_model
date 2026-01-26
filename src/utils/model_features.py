@@ -10,7 +10,6 @@ import joblib
 from src.modeling.unified_features import MODEL_CONFIGS
 from src.utils.version import resolve_version
 
-
 CONTRACT_FILENAME = "model_features.json"
 
 

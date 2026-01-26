@@ -42,6 +42,7 @@ def import_config():
     """Import src.config to ensure required envs are present."""
     try:
         import src.config  # noqa: F401
+
         print("[OK] src.config import succeeded (env requirements met)")
     except Exception as e:
         print(f"[FAIL] src.config import failed: {e}")
@@ -66,7 +67,12 @@ def run_bicep_validate():
         print(f"[SKIP] Bicep file not found: {BICEP_FILE}")
         return
     try:
-        subprocess.run(["az", "bicep", "version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            ["az", "bicep", "version"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     except Exception:
         print("[SKIP] az bicep not available; skipping Bicep validation")
         return

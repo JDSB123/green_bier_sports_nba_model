@@ -23,24 +23,19 @@ STANDARD FORMAT: "AWAY TEAM vs. HOME TEAM"
 - away_team always comes before home_team
 - Display format: "AWAY TEAM vs. HOME TEAM"
 """
-from __future__ import annotations
-from src.config import settings
-from src.utils.team_names import (
-    normalize_team_name as master_normalize,
-    get_canonical_name,
-    VARIANT_TO_CANONICAL,
-    CANONICAL_NAMES,
-)
 
+from __future__ import annotations
+
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
 
-import json
-
-from src.config import get_nba_season
+from src.config import get_nba_season, settings
 from src.utils.logging import get_logger
+from src.utils.team_names import CANONICAL_NAMES, VARIANT_TO_CANONICAL, get_canonical_name
+from src.utils.team_names import normalize_team_name as master_normalize
 
 # Central Standard Time - SINGLE SOURCE OF TRUTH for all game times
 CST = ZoneInfo("America/Chicago")
@@ -51,8 +46,9 @@ UTC = ZoneInfo("UTC")
 logger = get_logger(__name__)
 
 # Best-effort read-through cache with TTL (does NOT replace team_mapping.json as source of truth)
-_VARIANT_OVERRIDE_CACHE_PATH = Path(
-    settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
+_VARIANT_OVERRIDE_CACHE_PATH = (
+    Path(settings.data_processed_dir) / "cache" / "team_variant_overrides.json"
+)
 _VARIANT_OVERRIDE_CACHE: dict[str, str] | None = None
 _VARIANT_OVERRIDE_CACHE_LOADED_AT: float | None = None
 _VARIANT_OVERRIDE_CACHE_TTL_HOURS = 24  # Team names rarely change, 24h TTL
@@ -74,8 +70,7 @@ def _load_variant_override_cache() -> dict[str, str]:
         if age_hours < _VARIANT_OVERRIDE_CACHE_TTL_HOURS:
             return _VARIANT_OVERRIDE_CACHE
         else:
-            logger.info(
-                f"Team variant cache expired (age: {age_hours:.1f}h), reloading")
+            logger.info(f"Team variant cache expired (age: {age_hours:.1f}h), reloading")
             _VARIANT_OVERRIDE_CACHE = None
 
     try:
@@ -83,8 +78,7 @@ def _load_variant_override_cache() -> dict[str, str]:
             with open(_VARIANT_OVERRIDE_CACHE_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict):
-                    _VARIANT_OVERRIDE_CACHE = {
-                        str(k).lower(): str(v) for k, v in data.items()}
+                    _VARIANT_OVERRIDE_CACHE = {str(k).lower(): str(v) for k, v in data.items()}
                     _VARIANT_OVERRIDE_CACHE_LOADED_AT = current_time
                     return _VARIANT_OVERRIDE_CACHE
     except Exception as e:
@@ -167,14 +161,12 @@ TEAM_NAME_MAPPING = {
     "Hawks": "Atlanta Hawks",
     "ATL": "Atlanta Hawks",
     "Atlanta": "Atlanta Hawks",
-
     # === BOSTON CELTICS ===
     "Boston Celtics": "Boston Celtics",
     "BOS Celtics": "Boston Celtics",
     "Celtics": "Boston Celtics",
     "BOS": "Boston Celtics",
     "Boston": "Boston Celtics",
-
     # === BROOKLYN NETS ===
     "Brooklyn Nets": "Brooklyn Nets",
     "BKN Nets": "Brooklyn Nets",
@@ -182,21 +174,18 @@ TEAM_NAME_MAPPING = {
     "Nets": "Brooklyn Nets",
     "BKN": "Brooklyn Nets",
     "Brooklyn": "Brooklyn Nets",
-
     # === CHARLOTTE HORNETS ===
     "Charlotte Hornets": "Charlotte Hornets",
     "CHA Hornets": "Charlotte Hornets",
     "Hornets": "Charlotte Hornets",
     "CHA": "Charlotte Hornets",
     "Charlotte": "Charlotte Hornets",
-
     # === CHICAGO BULLS ===
     "Chicago Bulls": "Chicago Bulls",
     "CHI Bulls": "Chicago Bulls",
     "Bulls": "Chicago Bulls",
     "CHI": "Chicago Bulls",
     "Chicago": "Chicago Bulls",
-
     # === CLEVELAND CAVALIERS ===
     "Cleveland Cavaliers": "Cleveland Cavaliers",
     "CLE Cavaliers": "Cleveland Cavaliers",
@@ -204,7 +193,6 @@ TEAM_NAME_MAPPING = {
     "Cavs": "Cleveland Cavaliers",
     "CLE": "Cleveland Cavaliers",
     "Cleveland": "Cleveland Cavaliers",
-
     # === DALLAS MAVERICKS ===
     "Dallas Mavericks": "Dallas Mavericks",
     "DAL Mavericks": "Dallas Mavericks",
@@ -212,21 +200,18 @@ TEAM_NAME_MAPPING = {
     "Mavs": "Dallas Mavericks",
     "DAL": "Dallas Mavericks",
     "Dallas": "Dallas Mavericks",
-
     # === DENVER NUGGETS ===
     "Denver Nuggets": "Denver Nuggets",
     "DEN Nuggets": "Denver Nuggets",
     "Nuggets": "Denver Nuggets",
     "DEN": "Denver Nuggets",
     "Denver": "Denver Nuggets",
-
     # === DETROIT PISTONS ===
     "Detroit Pistons": "Detroit Pistons",
     "DET Pistons": "Detroit Pistons",
     "Pistons": "Detroit Pistons",
     "DET": "Detroit Pistons",
     "Detroit": "Detroit Pistons",
-
     # === GOLDEN STATE WARRIORS ===
     "Golden State Warriors": "Golden State Warriors",
     "GS Warriors": "Golden State Warriors",
@@ -235,21 +220,18 @@ TEAM_NAME_MAPPING = {
     "GSW": "Golden State Warriors",
     "GS": "Golden State Warriors",
     "Golden State": "Golden State Warriors",
-
     # === HOUSTON ROCKETS ===
     "Houston Rockets": "Houston Rockets",
     "HOU Rockets": "Houston Rockets",
     "Rockets": "Houston Rockets",
     "HOU": "Houston Rockets",
     "Houston": "Houston Rockets",
-
     # === INDIANA PACERS ===
     "Indiana Pacers": "Indiana Pacers",
     "IND Pacers": "Indiana Pacers",
     "Pacers": "Indiana Pacers",
     "IND": "Indiana Pacers",
     "Indiana": "Indiana Pacers",
-
     # === LA CLIPPERS ===
     "LA Clippers": "LA Clippers",
     "Los Angeles Clippers": "LA Clippers",
@@ -257,7 +239,6 @@ TEAM_NAME_MAPPING = {
     "L.A. Clippers": "LA Clippers",
     "Clippers": "LA Clippers",
     "LAC": "LA Clippers",
-
     # === LOS ANGELES LAKERS ===
     "Los Angeles Lakers": "Los Angeles Lakers",
     "LA Lakers": "Los Angeles Lakers",
@@ -265,7 +246,6 @@ TEAM_NAME_MAPPING = {
     "L.A. Lakers": "Los Angeles Lakers",
     "Lakers": "Los Angeles Lakers",
     "LAL": "Los Angeles Lakers",
-
     # === MEMPHIS GRIZZLIES ===
     "Memphis Grizzlies": "Memphis Grizzlies",
     "MEM Grizzlies": "Memphis Grizzlies",
@@ -273,21 +253,18 @@ TEAM_NAME_MAPPING = {
     "Grizz": "Memphis Grizzlies",
     "MEM": "Memphis Grizzlies",
     "Memphis": "Memphis Grizzlies",
-
     # === MIAMI HEAT ===
     "Miami Heat": "Miami Heat",
     "MIA Heat": "Miami Heat",
     "Heat": "Miami Heat",
     "MIA": "Miami Heat",
     "Miami": "Miami Heat",
-
     # === MILWAUKEE BUCKS ===
     "Milwaukee Bucks": "Milwaukee Bucks",
     "MIL Bucks": "Milwaukee Bucks",
     "Bucks": "Milwaukee Bucks",
     "MIL": "Milwaukee Bucks",
     "Milwaukee": "Milwaukee Bucks",
-
     # === MINNESOTA TIMBERWOLVES ===
     "Minnesota Timberwolves": "Minnesota Timberwolves",
     "MIN Timberwolves": "Minnesota Timberwolves",
@@ -297,7 +274,6 @@ TEAM_NAME_MAPPING = {
     "Wolves": "Minnesota Timberwolves",
     "MIN": "Minnesota Timberwolves",
     "Minnesota": "Minnesota Timberwolves",
-
     # === NEW ORLEANS PELICANS ===
     "New Orleans Pelicans": "New Orleans Pelicans",
     "NO Pelicans": "New Orleans Pelicans",
@@ -307,7 +283,6 @@ TEAM_NAME_MAPPING = {
     "NOP": "New Orleans Pelicans",
     "NO": "New Orleans Pelicans",
     "New Orleans": "New Orleans Pelicans",
-
     # === NEW YORK KNICKS ===
     "New York Knicks": "New York Knicks",
     "NY Knicks": "New York Knicks",
@@ -316,7 +291,6 @@ TEAM_NAME_MAPPING = {
     "NYK": "New York Knicks",
     "NY": "New York Knicks",
     "New York": "New York Knicks",
-
     # === OKLAHOMA CITY THUNDER ===
     "Oklahoma City Thunder": "Oklahoma City Thunder",
     "OKC Thunder": "Oklahoma City Thunder",
@@ -324,14 +298,12 @@ TEAM_NAME_MAPPING = {
     "OKC": "Oklahoma City Thunder",
     "Oklahoma City": "Oklahoma City Thunder",
     "Oklahoma": "Oklahoma City Thunder",
-
     # === ORLANDO MAGIC ===
     "Orlando Magic": "Orlando Magic",
     "ORL Magic": "Orlando Magic",
     "Magic": "Orlando Magic",
     "ORL": "Orlando Magic",
     "Orlando": "Orlando Magic",
-
     # === PHILADELPHIA 76ERS ===
     "Philadelphia 76ers": "Philadelphia 76ers",
     "PHI 76ers": "Philadelphia 76ers",
@@ -341,7 +313,6 @@ TEAM_NAME_MAPPING = {
     "PHI": "Philadelphia 76ers",
     "Philadelphia": "Philadelphia 76ers",
     "Philly": "Philadelphia 76ers",
-
     # === PHOENIX SUNS ===
     "Phoenix Suns": "Phoenix Suns",
     "PHX Suns": "Phoenix Suns",
@@ -350,7 +321,6 @@ TEAM_NAME_MAPPING = {
     "PHX": "Phoenix Suns",
     "PHO": "Phoenix Suns",
     "Phoenix": "Phoenix Suns",
-
     # === PORTLAND TRAIL BLAZERS ===
     "Portland Trail Blazers": "Portland Trail Blazers",
     "POR Trail Blazers": "Portland Trail Blazers",
@@ -358,14 +328,12 @@ TEAM_NAME_MAPPING = {
     "Blazers": "Portland Trail Blazers",
     "POR": "Portland Trail Blazers",
     "Portland": "Portland Trail Blazers",
-
     # === SACRAMENTO KINGS ===
     "Sacramento Kings": "Sacramento Kings",
     "SAC Kings": "Sacramento Kings",
     "Kings": "Sacramento Kings",
     "SAC": "Sacramento Kings",
     "Sacramento": "Sacramento Kings",
-
     # === SAN ANTONIO SPURS ===
     "San Antonio Spurs": "San Antonio Spurs",
     "SA Spurs": "San Antonio Spurs",
@@ -374,7 +342,6 @@ TEAM_NAME_MAPPING = {
     "SAS": "San Antonio Spurs",
     "SA": "San Antonio Spurs",
     "San Antonio": "San Antonio Spurs",
-
     # === TORONTO RAPTORS ===
     "Toronto Raptors": "Toronto Raptors",
     "TOR Raptors": "Toronto Raptors",
@@ -382,14 +349,12 @@ TEAM_NAME_MAPPING = {
     "Raps": "Toronto Raptors",
     "TOR": "Toronto Raptors",
     "Toronto": "Toronto Raptors",
-
     # === UTAH JAZZ ===
     "Utah Jazz": "Utah Jazz",
     "UTA Jazz": "Utah Jazz",
     "Jazz": "Utah Jazz",
     "UTA": "Utah Jazz",
     "Utah": "Utah Jazz",
-
     # === WASHINGTON WIZARDS ===
     "Washington Wizards": "Washington Wizards",
     "WAS Wizards": "Washington Wizards",
@@ -493,7 +458,9 @@ def to_cst(dt_value) -> Optional[datetime]:
     return None
 
 
-def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_failure: bool = False) -> Tuple[str, bool]:
+def normalize_team_to_espn(
+    team_name: str, source: str = "unknown", raise_on_failure: bool = False
+) -> Tuple[str, bool]:
     """
     Normalize team name from any source to standard format.
 
@@ -520,10 +487,10 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         ValueError: If raise_on_failure=True and normalization fails
     """
     if not team_name:
-        logger.error(
-            f"Empty team name from source '{source}' - CANNOT STANDARDIZE")
-        _record_team_variant(source=source, raw=team_name,
-                             normalized="", is_valid=False, reason="empty")
+        logger.error(f"Empty team name from source '{source}' - CANNOT STANDARDIZE")
+        _record_team_variant(
+            source=source, raw=team_name, normalized="", is_valid=False, reason="empty"
+        )
         if raise_on_failure:
             raise ValueError(f"Empty team name from source '{source}'")
         return "", False
@@ -532,29 +499,38 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     team_name = team_name.strip()
 
     if not team_name:
-        logger.error(
-            f"Team name is whitespace only from source '{source}' - CANNOT STANDARDIZE")
-        _record_team_variant(source=source, raw=original_name,
-                             normalized="", is_valid=False, reason="whitespace")
+        logger.error(f"Team name is whitespace only from source '{source}' - CANNOT STANDARDIZE")
+        _record_team_variant(
+            source=source, raw=original_name, normalized="", is_valid=False, reason="whitespace"
+        )
         if raise_on_failure:
-            raise ValueError(
-                f"Whitespace-only team name from source '{source}'")
+            raise ValueError(f"Whitespace-only team name from source '{source}'")
         return "", False
 
     # Fast path: cached resolved variant
     try:
         cached = _load_variant_override_cache().get(original_name.strip().lower())
         if cached and cached in ESPN_TEAM_NAMES:
-            _record_team_variant(source=source, raw=original_name,
-                                 normalized=cached, is_valid=True, reason="variant_cache")
+            _record_team_variant(
+                source=source,
+                raw=original_name,
+                normalized=cached,
+                is_valid=True,
+                reason="variant_cache",
+            )
             return cached, True
     except Exception:
         pass
 
     # Check if already in ESPN format (exact match)
     if team_name in ESPN_TEAM_NAMES:
-        _record_team_variant(source=source, raw=original_name,
-                             normalized=team_name, is_valid=True, reason="already_espn")
+        _record_team_variant(
+            source=source,
+            raw=original_name,
+            normalized=team_name,
+            is_valid=True,
+            reason="already_espn",
+        )
         _cache_variant_override(raw=original_name, normalized=team_name)
         return team_name, True
 
@@ -568,9 +544,15 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         # Found in MASTER database - get ESPN full name
         espn_name = get_canonical_name(canonical_id)
         logger.debug(
-            f"MASTER matched '{original_name}' -> {canonical_id} -> '{espn_name}' (source: {source})")
-        _record_team_variant(source=source, raw=original_name,
-                             normalized=espn_name, is_valid=True, reason="master_db")
+            f"MASTER matched '{original_name}' -> {canonical_id} -> '{espn_name}' (source: {source})"
+        )
+        _record_team_variant(
+            source=source,
+            raw=original_name,
+            normalized=espn_name,
+            is_valid=True,
+            reason="master_db",
+        )
         _cache_variant_override(raw=original_name, normalized=espn_name)
         return espn_name, True
 
@@ -582,10 +564,14 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     # Check direct mapping (exact match)
     if team_name in TEAM_NAME_MAPPING:
         result = TEAM_NAME_MAPPING[team_name]
-        logger.debug(
-            f"Legacy mapped '{original_name}' -> '{result}' (source: {source})")
-        _record_team_variant(source=source, raw=original_name,
-                             normalized=result, is_valid=True, reason="legacy_map_exact")
+        logger.debug(f"Legacy mapped '{original_name}' -> '{result}' (source: {source})")
+        _record_team_variant(
+            source=source,
+            raw=original_name,
+            normalized=result,
+            is_valid=True,
+            reason="legacy_map_exact",
+        )
         _cache_variant_override(raw=original_name, normalized=result)
         return result, True
 
@@ -594,9 +580,15 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
     for key, espn_name in TEAM_NAME_MAPPING.items():
         if key.lower().strip() == team_lower:
             logger.debug(
-                f"Case-insensitive mapped '{original_name}' -> '{espn_name}' (source: {source})")
-            _record_team_variant(source=source, raw=original_name, normalized=espn_name,
-                                 is_valid=True, reason="legacy_map_case_insensitive")
+                f"Case-insensitive mapped '{original_name}' -> '{espn_name}' (source: {source})"
+            )
+            _record_team_variant(
+                source=source,
+                raw=original_name,
+                normalized=espn_name,
+                is_valid=True,
+                reason="legacy_map_case_insensitive",
+            )
             _cache_variant_override(raw=original_name, normalized=espn_name)
             return espn_name, True
 
@@ -605,31 +597,46 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         espn_lower = espn_name.lower()
         # Check if team name contains ESPN name or vice versa
         if team_lower in espn_lower or espn_lower in team_lower:
-            logger.info(
-                f"Fuzzy matched '{original_name}' -> '{espn_name}' (source: {source})")
-            _record_team_variant(source=source, raw=original_name,
-                                 normalized=espn_name, is_valid=True, reason="fuzzy_contains")
+            logger.info(f"Fuzzy matched '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(
+                source=source,
+                raw=original_name,
+                normalized=espn_name,
+                is_valid=True,
+                reason="fuzzy_contains",
+            )
             _cache_variant_override(raw=original_name, normalized=espn_name)
             return espn_name, True
         # Check abbreviations
         for abbrev in abbrevs:
             abbrev_lower = abbrev.lower().strip()
-            if abbrev_lower == team_lower or team_lower in abbrev_lower or abbrev_lower in team_lower:
-                logger.info(
-                    f"Abbrev matched '{original_name}' -> '{espn_name}' (source: {source})")
-                _record_team_variant(source=source, raw=original_name,
-                                     normalized=espn_name, is_valid=True, reason="fuzzy_abbrev")
-                _cache_variant_override(
-                    raw=original_name, normalized=espn_name)
+            if (
+                abbrev_lower == team_lower
+                or team_lower in abbrev_lower
+                or abbrev_lower in team_lower
+            ):
+                logger.info(f"Abbrev matched '{original_name}' -> '{espn_name}' (source: {source})")
+                _record_team_variant(
+                    source=source,
+                    raw=original_name,
+                    normalized=espn_name,
+                    is_valid=True,
+                    reason="fuzzy_abbrev",
+                )
+                _cache_variant_override(raw=original_name, normalized=espn_name)
                 return espn_name, True
 
     # Try matching against ESPN team names directly (case-insensitive substring)
     for espn_name in ESPN_TEAM_NAMES:
         if team_lower in espn_name.lower() or espn_name.lower() in team_lower:
-            logger.info(
-                f"Substring matched '{original_name}' -> '{espn_name}' (source: {source})")
-            _record_team_variant(source=source, raw=original_name,
-                                 normalized=espn_name, is_valid=True, reason="fuzzy_substring")
+            logger.info(f"Substring matched '{original_name}' -> '{espn_name}' (source: {source})")
+            _record_team_variant(
+                source=source,
+                raw=original_name,
+                normalized=espn_name,
+                is_valid=True,
+                reason="fuzzy_substring",
+            )
             _cache_variant_override(raw=original_name, normalized=espn_name)
             return espn_name, True
 
@@ -639,8 +646,9 @@ def normalize_team_to_espn(team_name: str, source: str = "unknown", raise_on_fai
         f"Not found in MASTER database (team_mapping.json) or legacy mappings. "
         f"Add variant to team_mapping.json to fix."
     )
-    _record_team_variant(source=source, raw=original_name,
-                         normalized="", is_valid=False, reason="no_match")
+    _record_team_variant(
+        source=source, raw=original_name, normalized="", is_valid=False, reason="no_match"
+    )
 
     if raise_on_failure:
         raise ValueError(
@@ -677,7 +685,9 @@ def normalize_outcome_name(outcome_name: str, source: str = "unknown") -> str:
     return normalized if ok else name
 
 
-def _record_team_variant(*, source: str, raw: str, normalized: str, is_valid: bool, reason: str) -> None:
+def _record_team_variant(
+    *, source: str, raw: str, normalized: str, is_valid: bool, reason: str
+) -> None:
     """Append observed team-name variants to a JSONL cache for later reconciliation.
 
     This is intentionally best-effort and must never crash ingestion/prediction.
@@ -736,14 +746,22 @@ def standardize_game_data(
         standardized.get("home_team")
         or standardized.get("homeTeam")
         or standardized.get("home")
-        or (standardized.get("teams", {}).get("home", {}) if isinstance(standardized.get("teams"), dict) else {}).get("name", "")
+        or (
+            standardized.get("teams", {}).get("home", {})
+            if isinstance(standardized.get("teams"), dict)
+            else {}
+        ).get("name", "")
         or ""
     )
     away_team_raw = (
         standardized.get("away_team")
         or standardized.get("awayTeam")
         or standardized.get("away")
-        or (standardized.get("teams", {}).get("away", {}) if isinstance(standardized.get("teams"), dict) else {}).get("name", "")
+        or (
+            standardized.get("teams", {}).get("away", {})
+            if isinstance(standardized.get("teams"), dict)
+            else {}
+        ).get("name", "")
         or ""
     )
 
@@ -754,26 +772,28 @@ def standardize_game_data(
 
     if home_team_raw:
         standardized["home_team"], home_team_valid = normalize_team_to_espn(
-            str(home_team_raw), source)
+            str(home_team_raw), source
+        )
         if not home_team_valid:
             logger.error(
-                f"❌ INVALID DATA: Failed to standardize home_team '{home_team_raw}' from source '{source}'")
+                f"❌ INVALID DATA: Failed to standardize home_team '{home_team_raw}' from source '{source}'"
+            )
             standardized["home_team"] = ""  # Set to empty to indicate invalid
     else:
-        logger.error(
-            f"❌ MISSING DATA: Missing home_team in game data from source '{source}'")
+        logger.error(f"❌ MISSING DATA: Missing home_team in game data from source '{source}'")
         standardized["home_team"] = ""
 
     if away_team_raw:
         standardized["away_team"], away_team_valid = normalize_team_to_espn(
-            str(away_team_raw), source)
+            str(away_team_raw), source
+        )
         if not away_team_valid:
             logger.error(
-                f"❌ INVALID DATA: Failed to standardize away_team '{away_team_raw}' from source '{source}'")
+                f"❌ INVALID DATA: Failed to standardize away_team '{away_team_raw}' from source '{source}'"
+            )
             standardized["away_team"] = ""  # Set to empty to indicate invalid
     else:
-        logger.error(
-            f"❌ MISSING DATA: Missing away_team in game data from source '{source}'")
+        logger.error(f"❌ MISSING DATA: Missing away_team in game data from source '{source}'")
         standardized["away_team"] = ""
 
     # Add validation flags to the standardized data
@@ -812,18 +832,27 @@ def standardize_game_data(
     # The Odds API returns UTC times, which can cause date mismatches
     # Example: A 10pm CST game is 4am UTC the NEXT day
     if "date" in result or "commence_time" in result or "start_time" in result:
-        date_key = "date" if "date" in result else (
-            "commence_time" if "commence_time" in result else "start_time")
+        date_key = (
+            "date"
+            if "date" in result
+            else ("commence_time" if "commence_time" in result else "start_time")
+        )
         date_value = result.get(date_key)
         if date_value:
             try:
                 # Check if this is a date-only string (no time component)
                 # Date-only strings should be treated as local dates, not UTC midnight
-                if isinstance(date_value, str) and len(date_value) == 10 and date_value[4] == "-" and date_value[7] == "-":
+                if (
+                    isinstance(date_value, str)
+                    and len(date_value) == 10
+                    and date_value[4] == "-"
+                    and date_value[7] == "-"
+                ):
                     # Pure date string like "2025-01-15" - treat as local CST date
                     result["date"] = date_value
                     result["season"] = get_nba_season(
-                        datetime.strptime(date_value, "%Y-%m-%d").date())
+                        datetime.strptime(date_value, "%Y-%m-%d").date()
+                    )
                 else:
                     # Full datetime - convert to CST first, then extract date
                     cst_dt = to_cst(date_value)
@@ -832,8 +861,7 @@ def standardize_game_data(
                         result["commence_time_cst"] = cst_dt.isoformat()
                         result["season"] = get_nba_season(cst_dt.date())
                     else:
-                        logger.warning(
-                            f"Could not convert date to CST: {date_value}")
+                        logger.warning(f"Could not convert date to CST: {date_value}")
             except Exception as e:
                 logger.warning(f"Error normalizing date '{date_value}': {e}")
 
@@ -849,9 +877,7 @@ def standardize_game_data(
                     if not isinstance(outcome, dict):
                         continue
                     if "name" in outcome:
-                        outcome["name"] = normalize_outcome_name(
-                            outcome.get("name"), source=source
-                        )
+                        outcome["name"] = normalize_outcome_name(outcome.get("name"), source=source)
 
     # Add source metadata
     result["_source"] = source
@@ -903,7 +929,7 @@ def match_game_to_espn_schedule(
         espn_date = espn_game.get("date")
 
         # Match: AWAY vs. HOME format
-        if (espn_away == away_team and espn_home == home_team):
+        if espn_away == away_team and espn_home == home_team:
             # Check date if available
             if game_date and espn_date:
                 if game_date == espn_date:
@@ -917,6 +943,7 @@ def match_game_to_espn_schedule(
 # =============================================================================
 # MATCH KEY GENERATION
 # =============================================================================
+
 
 def generate_match_key(
     game_date,

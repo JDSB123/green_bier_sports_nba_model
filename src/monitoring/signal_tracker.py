@@ -13,14 +13,14 @@ Both signals must agree for a bet to pass the filter.
 
 from __future__ import annotations
 
-import logging
 import json
-from datetime import datetime, date
-from typing import Any, Dict, List, Optional
+import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from pathlib import Path
 from threading import Lock
-from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,18 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SignalAgreementStats:
     """Statistics for signal agreement tracking."""
+
     total_predictions: int = 0
     agreements: int = 0
     disagreements: int = 0
     # By market
-    by_market: Dict[str, Dict[str, int]] = field(default_factory=lambda: defaultdict(lambda: {"agree": 0, "disagree": 0}))
+    by_market: Dict[str, Dict[str, int]] = field(
+        default_factory=lambda: defaultdict(lambda: {"agree": 0, "disagree": 0})
+    )
     # By period
-    by_period: Dict[str, Dict[str, int]] = field(default_factory=lambda: defaultdict(lambda: {"agree": 0, "disagree": 0}))
+    by_period: Dict[str, Dict[str, int]] = field(
+        default_factory=lambda: defaultdict(lambda: {"agree": 0, "disagree": 0})
+    )
     # Recent disagreements for debugging
     recent_disagreements: List[Dict[str, Any]] = field(default_factory=list)
 
@@ -49,6 +54,7 @@ class SignalAgreementStats:
 @dataclass
 class SignalRecord:
     """Record of a single signal comparison."""
+
     timestamp: str
     game_date: str
     home_team: str
@@ -160,7 +166,9 @@ class SignalAgreementTracker:
 
                 # Keep only recent disagreements
                 if len(self.stats.recent_disagreements) > self.MAX_RECENT_DISAGREEMENTS:
-                    self.stats.recent_disagreements = self.stats.recent_disagreements[-self.MAX_RECENT_DISAGREEMENTS:]
+                    self.stats.recent_disagreements = self.stats.recent_disagreements[
+                        -self.MAX_RECENT_DISAGREEMENTS :
+                    ]
 
             # Check for warning threshold
             if self.stats.total_predictions >= 20:  # Minimum sample size
@@ -212,7 +220,9 @@ class SignalAgreementTracker:
 
     def save_report(self, output_path: Optional[Path] = None) -> None:
         """Save signal agreement report to file."""
-        path = output_path or (self.output_dir / "signal_agreement_report.json" if self.output_dir else None)
+        path = output_path or (
+            self.output_dir / "signal_agreement_report.json" if self.output_dir else None
+        )
         if not path:
             return
 
@@ -247,6 +257,7 @@ def get_signal_tracker() -> SignalAgreementTracker:
     global _signal_tracker
     if _signal_tracker is None:
         from src.config import settings
+
         output_dir = Path(settings.data_processed_dir) / "monitoring"
         _signal_tracker = SignalAgreementTracker(output_dir=output_dir)
     return _signal_tracker

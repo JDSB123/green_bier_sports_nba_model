@@ -24,7 +24,9 @@ def _candidate_model_pack_paths(project_root: Path, data_processed_dir: str) -> 
     ]
 
 
-def load_model_pack(project_root: Path, data_processed_dir: str) -> Tuple[Optional[Dict], Optional[Path]]:
+def load_model_pack(
+    project_root: Path, data_processed_dir: str
+) -> Tuple[Optional[Dict], Optional[Path]]:
     for path in _candidate_model_pack_paths(project_root, data_processed_dir):
         if path.exists():
             try:

@@ -4,6 +4,7 @@ Dynamic edge threshold calculation based on season sample size.
 Early in the season, we should be more conservative with edge thresholds
 as we have less data to validate model performance.
 """
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -18,19 +19,19 @@ def calculate_dynamic_edge_threshold(
 ) -> float:
     """
     Calculate dynamic edge threshold based on how far into the season we are.
-    
+
     Args:
         game_date: Date of the game
         season_start_date: Start date of the NBA season (typically mid-October)
         bet_type: Type of bet ("spread", "total", "1h_spread", "1h_total")
         base_threshold: Base threshold in points (default 2.0 for spreads)
-        
+
     Returns:
         Adjusted edge threshold
     """
     # Calculate days into season
     days_into_season = (game_date - season_start_date).days
-    
+
     # Base thresholds by bet type
     base_thresholds = {
         "spread": 2.0,
@@ -38,12 +39,12 @@ def calculate_dynamic_edge_threshold(
         "1h_spread": 1.5,
         "1h_total": 2.0,
     }
-    
+
     if bet_type in base_thresholds:
         base = base_thresholds[bet_type]
     else:
         base = base_threshold
-    
+
     # Early season (first 30 days): More conservative (+50% threshold)
     if days_into_season < 30:
         multiplier = 1.5
@@ -56,7 +57,7 @@ def calculate_dynamic_edge_threshold(
     # Late season (120+ days): Slightly more aggressive (-10% threshold)
     else:
         multiplier = 0.9
-    
+
     # For point-based thresholds (spreads, totals)
     return base * multiplier
 
@@ -64,10 +65,10 @@ def calculate_dynamic_edge_threshold(
 def get_season_start_date(season_year: int) -> date:
     """
     Get the start date of an NBA season.
-    
+
     Args:
         season_year: Year the season starts (e.g., 2024 for 2024-25 season)
-        
+
     Returns:
         Season start date (typically mid-October)
     """
@@ -91,16 +92,16 @@ def get_edge_thresholds_for_game(
 ) -> Dict[str, float]:
     """
     Get edge thresholds for multiple bet types for a game.
-    
+
     Args:
         game_date: Date of the game
         bet_types: List of bet types to get thresholds for
-        
+
     Returns:
         Dict mapping bet_type -> threshold
     """
     season_start = get_current_season_start()
-    
+
     thresholds = {}
     for bet_type in bet_types:
         thresholds[bet_type] = calculate_dynamic_edge_threshold(
@@ -108,5 +109,5 @@ def get_edge_thresholds_for_game(
             season_start_date=season_start,
             bet_type=bet_type,
         )
-    
+
     return thresholds

@@ -3,10 +3,11 @@
 Active markets: First Half and Full Game (spreads, totals).
 """
 
-import pytest
-import numpy as np
-from unittest.mock import Mock, MagicMock, patch
 from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
+import pytest
 
 
 class TestPeriodPredictor:
@@ -59,8 +60,7 @@ class TestPeriodPredictor:
 
     def test_predict_spread_returns_correct_structure(self, period_predictor, sample_features):
         """Test spread prediction returns expected keys."""
-        result = period_predictor.predict_spread(
-            sample_features, spread_line=-3.5)
+        result = period_predictor.predict_spread(sample_features, spread_line=-3.5)
 
         assert "home_cover_prob" in result
         assert "away_cover_prob" in result
@@ -72,8 +72,7 @@ class TestPeriodPredictor:
 
     def test_predict_spread_home_favorite(self, period_predictor, sample_features):
         """Test spread prediction when home team is favorite."""
-        result = period_predictor.predict_spread(
-            sample_features, spread_line=-3.5)
+        result = period_predictor.predict_spread(sample_features, spread_line=-3.5)
 
         assert result["home_cover_prob"] == 0.60
         assert result["away_cover_prob"] == 0.40
@@ -101,8 +100,7 @@ class TestPeriodPredictor:
 
     def test_predict_total_returns_correct_structure(self, period_predictor, sample_features):
         """Test total prediction returns expected keys."""
-        result = period_predictor.predict_total(
-            sample_features, total_line=220.0)
+        result = period_predictor.predict_total(sample_features, total_line=220.0)
 
         assert "over_prob" in result
         assert "under_prob" in result
@@ -119,33 +117,32 @@ class TestPeriodPredictor:
 
     def test_predict_total_over(self, period_predictor, sample_features):
         """Test total prediction when model predicts over."""
-        result = period_predictor.predict_total(
-            sample_features, total_line=220.0)
+        result = period_predictor.predict_total(sample_features, total_line=220.0)
 
         assert result["over_prob"] == 0.55
         assert result["under_prob"] == 0.45
         assert result["bet_side"] == "over"
         # Confidence must correspond to bet_side (not max(probabilities))
-        assert result["confidence"] == pytest.approx(
-            result["over_prob"], rel=1e-6)
+        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(
-            max(result["over_prob"], result["under_prob"]), rel=1e-6)
+            max(result["over_prob"], result["under_prob"]), rel=1e-6
+        )
         # Edge = predicted_total - total_line = 225.0 - 220.0 = 5.0
         assert result["edge"] == pytest.approx(5.0, rel=0.01)
 
-    def test_predict_total_conflict_signals_agree_field_accurate(self, period_predictor, sample_features):
+    def test_predict_total_conflict_signals_agree_field_accurate(
+        self, period_predictor, sample_features
+    ):
         """When classifier and point prediction disagree, signals_agree=False but edge-only filter applies.
 
         Note: As of v33.1.5 we use EDGE-ONLY filtering. Signal conflicts are tracked
         for diagnostics but do NOT filter predictions. Filter only checks edge threshold.
         """
         # Force classifier to prefer UNDER (array is [under, over])
-        period_predictor.total_model.predict_proba.return_value = np.array([
-                                                                           [0.80, 0.20]])
+        period_predictor.total_model.predict_proba.return_value = np.array([[0.80, 0.20]])
 
         # Point prediction (predicted_total=225, line=220) implies OVER with edge=5
-        result = period_predictor.predict_total(
-            sample_features, total_line=220.0)
+        result = period_predictor.predict_total(sample_features, total_line=220.0)
 
         assert result["classifier_side"] == "under"
         assert result["prediction_side"] == "over"
@@ -153,8 +150,7 @@ class TestPeriodPredictor:
 
         # bet_side follows point prediction; confidence follows bet_side probability
         assert result["bet_side"] == "over"
-        assert result["confidence"] == pytest.approx(
-            result["over_prob"], rel=1e-6)
+        assert result["confidence"] == pytest.approx(result["over_prob"], rel=1e-6)
         assert result["classifier_confidence"] == pytest.approx(0.80, rel=1e-6)
 
         # EDGE-ONLY: passes_filter depends on edge, not signal agreement
@@ -205,7 +201,7 @@ class TestUnifiedPredictionEngine:
 
     def test_engine_init_requires_all_models_strict_mode(self, tmp_path):
         """Test engine fails when models are missing in strict mode."""
-        from src.prediction.engine import UnifiedPredictionEngine, ModelNotFoundError
+        from src.prediction.engine import ModelNotFoundError, UnifiedPredictionEngine
 
         empty_dir = tmp_path / "empty_models"
         empty_dir.mkdir()
@@ -215,7 +211,7 @@ class TestUnifiedPredictionEngine:
 
     def test_get_model_info_returns_correct_structure(self, tmp_path):
         """Test get_model_info returns expected structure."""
-        from src.prediction.engine import UnifiedPredictionEngine, MODEL_VERSION
+        from src.prediction.engine import MODEL_VERSION, UnifiedPredictionEngine
 
         # Create engine directly without calling __init__
         engine = UnifiedPredictionEngine.__new__(UnifiedPredictionEngine)
@@ -223,8 +219,10 @@ class TestUnifiedPredictionEngine:
         engine.h1_predictor = MagicMock()
         engine.fg_predictor = MagicMock()
         engine.loaded_models = {
-            "1h_spread": True, "1h_total": True,
-            "fg_spread": True, "fg_total": True,
+            "1h_spread": True,
+            "1h_total": True,
+            "fg_spread": True,
+            "fg_total": True,
         }
 
         info = engine.get_model_info()
@@ -232,8 +230,7 @@ class TestUnifiedPredictionEngine:
         assert "version" in info
         assert info["version"] == MODEL_VERSION
         assert "markets" in info
-        assert info["markets"] == len(
-            [k for k, v in engine.loaded_models.items() if v])
+        assert info["markets"] == len([k for k, v in engine.loaded_models.items() if v])
         assert "markets_list" in info
 
     def test_predict_all_markets_returns_expected_periods(self):
@@ -256,11 +253,12 @@ class TestUnifiedPredictionEngine:
         engine.fg_predictor = mock_predictor
 
         # Mock the predict methods to return full period results
-        with patch.object(engine, 'predict_first_half', return_value=mock_period_result), \
-                patch.object(engine, 'predict_full_game', return_value=mock_period_result):
+        with (
+            patch.object(engine, "predict_first_half", return_value=mock_period_result),
+            patch.object(engine, "predict_full_game", return_value=mock_period_result),
+        ):
 
-            features = {"home_ppg": 110,
-                        "away_ppg": 105, "predicted_margin": 5}
+            features = {"home_ppg": 110, "away_ppg": 105, "predicted_margin": 5}
 
             result = engine.predict_all_markets(
                 features=features,

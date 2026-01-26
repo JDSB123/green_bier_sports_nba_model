@@ -24,22 +24,23 @@ Usage:
     odds = await client.fetch_odds(event_id="12345")
     live = await client.fetch_inplay_events()
 """
+
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
-from datetime import datetime, date, timezone
-from typing import Any, Dict, List, Optional
 import json
+from dataclasses import dataclass
+from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.config import settings
-from src.utils.logging import get_logger
-from src.utils.api_cache import api_cache, APICache
 from src.ingestion.standardize import normalize_team_to_espn
+from src.utils.api_cache import APICache, api_cache
+from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -55,6 +56,7 @@ TIMEOUT = 30
 @dataclass
 class BetsAPIEvent:
     """Parsed BetsAPI event."""
+
     event_id: str
     home_team: str
     away_team: str
@@ -72,6 +74,7 @@ class BetsAPIEvent:
 @dataclass
 class BetsAPIOdds:
     """Parsed BetsAPI odds."""
+
     event_id: str
     bookmaker: str
     market_type: str  # spreads, totals, h2h, props
@@ -181,11 +184,14 @@ class BetsAPIClient:
         cache_key = f"betsapi_upcoming_{league_id}_{target_day}"
 
         async def fetch():
-            data = await self._fetch("events/upcoming", {
-                "sport_id": sport_id,
-                "league_id": league_id,
-                "day": target_day,
-            })
+            data = await self._fetch(
+                "events/upcoming",
+                {
+                    "sport_id": sport_id,
+                    "league_id": league_id,
+                    "day": target_day,
+                },
+            )
             self._save(f"upcoming_{target_day}", data)
             return data
 
@@ -215,9 +221,12 @@ class BetsAPIClient:
         cache_key = f"betsapi_inplay_{sport_id}_{datetime.now().strftime('%Y%m%d_%H%M')}"
 
         async def fetch():
-            data = await self._fetch("events/inplay", {
-                "sport_id": sport_id,
-            })
+            data = await self._fetch(
+                "events/inplay",
+                {
+                    "sport_id": sport_id,
+                },
+            )
             self._save("inplay", data)
             return data
 
@@ -231,8 +240,7 @@ class BetsAPIClient:
 
         # Filter to NBA only
         nba_events = [
-            e for e in data.get("results", [])
-            if e.get("league", {}).get("id") == NBA_LEAGUE_ID
+            e for e in data.get("results", []) if e.get("league", {}).get("id") == NBA_LEAGUE_ID
         ]
 
         return self._parse_events(nba_events, is_inplay=True)
@@ -258,11 +266,14 @@ class BetsAPIClient:
         cache_key = f"betsapi_ended_{league_id}_{target_day}"
 
         async def fetch():
-            data = await self._fetch("events/ended", {
-                "sport_id": sport_id,
-                "league_id": league_id,
-                "day": target_day,
-            })
+            data = await self._fetch(
+                "events/ended",
+                {
+                    "sport_id": sport_id,
+                    "league_id": league_id,
+                    "day": target_day,
+                },
+            )
             self._save(f"ended_{target_day}", data)
             return data
 
@@ -297,10 +308,13 @@ class BetsAPIClient:
         cache_key = f"betsapi_odds_{event_id}_{source}_{datetime.now().strftime('%Y%m%d_%H')}"
 
         async def fetch():
-            data = await self._fetch(f"event/odds", {
-                "event_id": event_id,
-                "source": source,
-            })
+            data = await self._fetch(
+                f"event/odds",
+                {
+                    "event_id": event_id,
+                    "source": source,
+                },
+            )
             return data
 
         data = await api_cache.get_or_fetch(
@@ -328,9 +342,12 @@ class BetsAPIClient:
         cache_key = f"betsapi_odds_summary_{event_id}_{datetime.now().strftime('%Y%m%d_%H')}"
 
         async def fetch():
-            data = await self._fetch("event/odds/summary", {
-                "event_id": event_id,
-            })
+            data = await self._fetch(
+                "event/odds/summary",
+                {
+                    "event_id": event_id,
+                },
+            )
             return data
 
         return await api_cache.get_or_fetch(
@@ -437,20 +454,22 @@ class BetsAPIClient:
                     score_home = int(scores.get("home", {}).get("score", 0))
                     score_away = int(scores.get("away", {}).get("score", 0))
 
-                parsed.append(BetsAPIEvent(
-                    event_id=str(event.get("id", "")),
-                    home_team=home_raw,
-                    away_team=away_raw,
-                    home_team_espn=home_espn,
-                    away_team_espn=away_espn,
-                    commence_time=commence,
-                    league=event.get("league", {}).get("name", "NBA"),
-                    is_inplay=is_inplay,
-                    score_home=score_home,
-                    score_away=score_away,
-                    quarter=event.get("timer", {}).get("q"),
-                    time_remaining=event.get("timer", {}).get("tm"),
-                ))
+                parsed.append(
+                    BetsAPIEvent(
+                        event_id=str(event.get("id", "")),
+                        home_team=home_raw,
+                        away_team=away_raw,
+                        home_team_espn=home_espn,
+                        away_team_espn=away_espn,
+                        commence_time=commence,
+                        league=event.get("league", {}).get("name", "NBA"),
+                        is_inplay=is_inplay,
+                        score_home=score_home,
+                        score_away=score_away,
+                        quarter=event.get("timer", {}).get("q"),
+                        time_remaining=event.get("timer", {}).get("tm"),
+                    )
+                )
             except Exception as e:
                 logger.warning(f"Failed to parse BetsAPI event: {e}")
 
@@ -491,18 +510,20 @@ class BetsAPIClient:
                 if isinstance(market_data, dict):
                     for bookmaker, bookie_odds in market_data.items():
                         if isinstance(bookie_odds, dict):
-                            parsed.append(BetsAPIOdds(
-                                event_id=event_id,
-                                bookmaker=bookmaker,
-                                market_type=market_type,
-                                period=period,
-                                home_odds=self._safe_float(bookie_odds.get("home")),
-                                away_odds=self._safe_float(bookie_odds.get("away")),
-                                spread_line=self._safe_float(bookie_odds.get("handicap")),
-                                total_line=self._safe_float(bookie_odds.get("total")),
-                                over_odds=self._safe_float(bookie_odds.get("over")),
-                                under_odds=self._safe_float(bookie_odds.get("under")),
-                            ))
+                            parsed.append(
+                                BetsAPIOdds(
+                                    event_id=event_id,
+                                    bookmaker=bookmaker,
+                                    market_type=market_type,
+                                    period=period,
+                                    home_odds=self._safe_float(bookie_odds.get("home")),
+                                    away_odds=self._safe_float(bookie_odds.get("away")),
+                                    spread_line=self._safe_float(bookie_odds.get("handicap")),
+                                    total_line=self._safe_float(bookie_odds.get("total")),
+                                    over_odds=self._safe_float(bookie_odds.get("over")),
+                                    under_odds=self._safe_float(bookie_odds.get("under")),
+                                )
+                            )
 
             except Exception as e:
                 logger.warning(f"Failed to parse odds for {market_key}: {e}")
@@ -522,6 +543,7 @@ class BetsAPIClient:
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 async def fetch_betsapi_events(day: Optional[str] = None) -> List[BetsAPIEvent]:
     """Fetch upcoming NBA events from BetsAPI."""

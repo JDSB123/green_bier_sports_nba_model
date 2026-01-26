@@ -58,8 +58,12 @@ def test_load_first_half_models_joblib_and_legacy(tmp_path: Path):
     from src.prediction.models import load_first_half_spread_model, load_first_half_total_model
 
     # New combined joblib format
-    joblib.dump({"model": "fh_spread", "feature_columns": ["f1"]}, tmp_path / "1h_spread_model.joblib")
-    joblib.dump({"pipeline": "fh_total", "model_columns": ["t1", "t2"]}, tmp_path / "1h_total_model.joblib")
+    joblib.dump(
+        {"model": "fh_spread", "feature_columns": ["f1"]}, tmp_path / "1h_spread_model.joblib"
+    )
+    joblib.dump(
+        {"pipeline": "fh_total", "model_columns": ["t1", "t2"]}, tmp_path / "1h_total_model.joblib"
+    )
 
     m, cols = load_first_half_spread_model(tmp_path)
     assert m == "fh_spread"
@@ -89,10 +93,10 @@ def test_load_first_half_models_joblib_and_legacy(tmp_path: Path):
 
 def test_load_models_missing_raises(tmp_path):
     from src.prediction.models import (
-        load_spread_model,
-        load_total_model,
         load_first_half_spread_model,
         load_first_half_total_model,
+        load_spread_model,
+        load_total_model,
     )
 
     with pytest.raises(FileNotFoundError):

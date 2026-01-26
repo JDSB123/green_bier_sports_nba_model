@@ -9,12 +9,15 @@ Sources:
 This module provides infrastructure for fetching and standardizing
 injury data that can be used by the FeatureEngineer for impact estimation.
 """
+
 from __future__ import annotations
-import os
+
 import datetime as dt
-from typing import Any, Dict, List, Optional
-import httpx
+import os
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 from src.config import settings
 
@@ -27,6 +30,7 @@ class InjuryReport:
     All fields are required except where explicitly Optional.
     No placeholder values - source must be explicitly set.
     """
+
     player_id: str
     player_name: str
     team: str
@@ -47,33 +51,71 @@ class InjuryReport:
 
 # Team name normalization for matching
 TEAM_ABBREV_MAP = {
-    "ATL": "Hawks", "BOS": "Celtics", "BKN": "Nets", "CHA": "Hornets",
-    "CHI": "Bulls", "CLE": "Cavaliers", "DAL": "Mavericks", "DEN": "Nuggets",
-    "DET": "Pistons", "GSW": "Warriors", "HOU": "Rockets", "IND": "Pacers",
-    "LAC": "Clippers", "LAL": "Lakers", "MEM": "Grizzlies", "MIA": "Heat",
-    "MIL": "Bucks", "MIN": "Timberwolves", "NOP": "Pelicans", "NYK": "Knicks",
-    "OKC": "Thunder", "ORL": "Magic", "PHI": "76ers", "PHX": "Suns",
-    "POR": "Trail Blazers", "SAC": "Kings", "SAS": "Spurs", "TOR": "Raptors",
-    "UTA": "Jazz", "WAS": "Wizards",
+    "ATL": "Hawks",
+    "BOS": "Celtics",
+    "BKN": "Nets",
+    "CHA": "Hornets",
+    "CHI": "Bulls",
+    "CLE": "Cavaliers",
+    "DAL": "Mavericks",
+    "DEN": "Nuggets",
+    "DET": "Pistons",
+    "GSW": "Warriors",
+    "HOU": "Rockets",
+    "IND": "Pacers",
+    "LAC": "Clippers",
+    "LAL": "Lakers",
+    "MEM": "Grizzlies",
+    "MIA": "Heat",
+    "MIL": "Bucks",
+    "MIN": "Timberwolves",
+    "NOP": "Pelicans",
+    "NYK": "Knicks",
+    "OKC": "Thunder",
+    "ORL": "Magic",
+    "PHI": "76ers",
+    "PHX": "Suns",
+    "POR": "Trail Blazers",
+    "SAC": "Kings",
+    "SAS": "Spurs",
+    "TOR": "Raptors",
+    "UTA": "Jazz",
+    "WAS": "Wizards",
 }
 
 TEAM_FULL_NAMES = {
-    "Atlanta Hawks": "Hawks", "Boston Celtics": "Celtics",
-    "Brooklyn Nets": "Nets", "Charlotte Hornets": "Hornets",
-    "Chicago Bulls": "Bulls", "Cleveland Cavaliers": "Cavaliers",
-    "Dallas Mavericks": "Mavericks", "Denver Nuggets": "Nuggets",
-    "Detroit Pistons": "Pistons", "Golden State Warriors": "Warriors",
-    "Houston Rockets": "Rockets", "Indiana Pacers": "Pacers",
-    "Los Angeles Clippers": "Clippers", "LA Clippers": "Clippers",
-    "Los Angeles Lakers": "Lakers", "LA Lakers": "Lakers",
-    "Memphis Grizzlies": "Grizzlies", "Miami Heat": "Heat",
-    "Milwaukee Bucks": "Bucks", "Minnesota Timberwolves": "Timberwolves",
-    "New Orleans Pelicans": "Pelicans", "New York Knicks": "Knicks",
-    "Oklahoma City Thunder": "Thunder", "Orlando Magic": "Magic",
-    "Philadelphia 76ers": "76ers", "Phoenix Suns": "Suns",
-    "Portland Trail Blazers": "Trail Blazers", "Sacramento Kings": "Kings",
-    "San Antonio Spurs": "Spurs", "Toronto Raptors": "Raptors",
-    "Utah Jazz": "Jazz", "Washington Wizards": "Wizards",
+    "Atlanta Hawks": "Hawks",
+    "Boston Celtics": "Celtics",
+    "Brooklyn Nets": "Nets",
+    "Charlotte Hornets": "Hornets",
+    "Chicago Bulls": "Bulls",
+    "Cleveland Cavaliers": "Cavaliers",
+    "Dallas Mavericks": "Mavericks",
+    "Denver Nuggets": "Nuggets",
+    "Detroit Pistons": "Pistons",
+    "Golden State Warriors": "Warriors",
+    "Houston Rockets": "Rockets",
+    "Indiana Pacers": "Pacers",
+    "Los Angeles Clippers": "Clippers",
+    "LA Clippers": "Clippers",
+    "Los Angeles Lakers": "Lakers",
+    "LA Lakers": "Lakers",
+    "Memphis Grizzlies": "Grizzlies",
+    "Miami Heat": "Heat",
+    "Milwaukee Bucks": "Bucks",
+    "Minnesota Timberwolves": "Timberwolves",
+    "New Orleans Pelicans": "Pelicans",
+    "New York Knicks": "Knicks",
+    "Oklahoma City Thunder": "Thunder",
+    "Orlando Magic": "Magic",
+    "Philadelphia 76ers": "76ers",
+    "Phoenix Suns": "Suns",
+    "Portland Trail Blazers": "Trail Blazers",
+    "Sacramento Kings": "Kings",
+    "San Antonio Spurs": "Spurs",
+    "Toronto Raptors": "Raptors",
+    "Utah Jazz": "Jazz",
+    "Washington Wizards": "Wizards",
 }
 
 # Status normalization
@@ -151,8 +193,7 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
 
                 # Skip if team name is missing - no placeholder values
                 if not team_name:
-                    logger.warning(
-                        f"Skipping injury data with missing team name from ESPN")
+                    logger.warning(f"Skipping injury data with missing team name from ESPN")
                     continue
 
                 for player in team_data.get("injuries", []):
@@ -160,14 +201,14 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
                     # Skip if player name is missing - no placeholder values
                     if not player_name:
                         logger.warning(
-                            f"Skipping injury with missing player name for team {team_name} from ESPN")
+                            f"Skipping injury with missing player name for team {team_name} from ESPN"
+                        )
                         continue
 
                     # Extract injury details from nested structure
                     details = player.get("details", {})
                     injury_type = details.get("type")  # e.g., "Knee", "Ankle"
-                    injury_location = details.get(
-                        "location")  # e.g., "Leg", "Arm"
+                    injury_location = details.get("location")  # e.g., "Leg", "Arm"
                     # e.g., "Bruise", "Strain"
                     injury_detail = details.get("detail")
                     injury_side = details.get("side")  # e.g., "Left", "Right"
@@ -175,30 +216,37 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
                     # Format injury description
                     injury_desc = None
                     if injury_type:
-                        parts = [p for p in [injury_side, injury_type,
-                                             injury_detail] if p and p != "Not Specified"]
+                        parts = [
+                            p
+                            for p in [injury_side, injury_type, injury_detail]
+                            if p and p != "Not Specified"
+                        ]
                         if parts:
                             injury_desc = " ".join(parts)
 
-                    injuries.append({
-                        "player_name": player_name,
-                        "team": normalize_team(team_name),
-                        "status": normalize_status(player.get("status", "questionable")),
-                        "injury_type": injury_desc,
-                        "injury_location": injury_location,
-                        "source": "espn",
-                    })
+                    injuries.append(
+                        {
+                            "player_name": player_name,
+                            "team": normalize_team(team_name),
+                            "status": normalize_status(player.get("status", "questionable")),
+                            "injury_type": injury_desc,
+                            "injury_location": injury_location,
+                            "source": "espn",
+                        }
+                    )
 
             if not injuries:
                 logger.warning(
-                    "ESPN returned empty injury data - this may be normal for future dates or off-season")
+                    "ESPN returned empty injury data - this may be normal for future dates or off-season"
+                )
                 return []
 
             logger.info(f"Fetched {len(injuries)} injuries from ESPN")
             return injuries
     except httpx.HTTPStatusError as e:
         logger.error(
-            f"HTTP error fetching ESPN injuries: {e.response.status_code} {e.response.reason_phrase}. URL: {url}")
+            f"HTTP error fetching ESPN injuries: {e.response.status_code} {e.response.reason_phrase}. URL: {url}"
+        )
         # Explicit failure - log and return empty, do not raise (other sources may succeed)
         return []
     except httpx.RequestError as e:
@@ -207,7 +255,9 @@ async def fetch_injuries_espn() -> List[Dict[str, Any]]:
         return []
     except Exception as e:
         logger.error(
-            f"Unexpected error fetching ESPN injuries: {type(e).__name__}: {e}. URL: {url}", exc_info=True)
+            f"Unexpected error fetching ESPN injuries: {type(e).__name__}: {e}. URL: {url}",
+            exc_info=True,
+        )
         # Explicit failure - log with full traceback and return empty, do not raise (other sources may succeed)
         return []
 
@@ -252,13 +302,15 @@ async def fetch_injuries_api_basketball(
                     resp.raise_for_status()
                 except httpx.HTTPStatusError as e:
                     logger.error(
-                        f"HTTP error fetching API-Basketball injuries: {e.response.status_code} {e.response.reason_phrase}. URL: {url} season={season} body_snip={resp_text}")
+                        f"HTTP error fetching API-Basketball injuries: {e.response.status_code} {e.response.reason_phrase}. URL: {url} season={season} body_snip={resp_text}"
+                    )
                     continue
 
                 data = resp.json()
                 if not data.get("response"):
                     logger.info(
-                        f"API-Basketball empty response for season {season}. body_snip={resp_text}")
+                        f"API-Basketball empty response for season {season}. body_snip={resp_text}"
+                    )
                     continue
 
                 for item in data.get("response", []):
@@ -271,45 +323,51 @@ async def fetch_injuries_api_basketball(
                     # Skip if required fields are missing - no placeholder values
                     if not player_name:
                         logger.warning(
-                            f"Skipping injury data with missing player name from API-Basketball")
+                            f"Skipping injury data with missing player name from API-Basketball"
+                        )
                         continue
                     if not team_name:
                         logger.warning(
-                            f"Skipping injury data with missing team name for player {player_name} from API-Basketball")
+                            f"Skipping injury data with missing team name for player {player_name} from API-Basketball"
+                        )
                         continue
 
                     player_id = player.get("id")
                     if not player_id:
                         logger.warning(
-                            f"Skipping injury for player {player_name} with missing player_id from API-Basketball")
+                            f"Skipping injury for player {player_name} with missing player_id from API-Basketball"
+                        )
                         continue
 
-                    injuries.append({
-                        "player_id": str(player_id),
-                        "player_name": player_name,
-                        "team": normalize_team(team_name),
-                        "team_id": str(team.get("id", "")) if team.get("id") else None,
-                        "status": normalize_status(item.get("status", "questionable")),
-                        "injury_type": item.get("reason"),
-                        "report_date": item.get("date"),
-                        "source": "api_basketball",
-                    })
+                    injuries.append(
+                        {
+                            "player_id": str(player_id),
+                            "player_name": player_name,
+                            "team": normalize_team(team_name),
+                            "team_id": str(team.get("id", "")) if team.get("id") else None,
+                            "status": normalize_status(item.get("status", "questionable")),
+                            "injury_type": item.get("reason"),
+                            "report_date": item.get("date"),
+                            "source": "api_basketball",
+                        }
+                    )
 
         if injuries:
             logger.info(
-                f"Fetched {len(injuries)} injuries from API-Basketball across seasons {seasons}")
+                f"Fetched {len(injuries)} injuries from API-Basketball across seasons {seasons}"
+            )
         else:
-            logger.debug(
-                f"API-Basketball returned empty injury data across seasons {seasons}")
+            logger.debug(f"API-Basketball returned empty injury data across seasons {seasons}")
         return injuries
     except httpx.RequestError as e:
-        logger.error(
-            f"Request error fetching API-Basketball injuries: {e}. URL: {url}")
+        logger.error(f"Request error fetching API-Basketball injuries: {e}. URL: {url}")
         # Explicit failure - log and return empty, do not raise (other sources may succeed)
         return []
     except Exception as e:
         logger.error(
-            f"Unexpected error fetching API-Basketball injuries: {type(e).__name__}: {e}. URL: {url}", exc_info=True)
+            f"Unexpected error fetching API-Basketball injuries: {type(e).__name__}: {e}. URL: {url}",
+            exc_info=True,
+        )
         # Explicit failure - log with full traceback and return empty, do not raise (other sources may succeed)
         return []
 
@@ -402,7 +460,8 @@ async def fetch_all_injuries() -> List[InjuryReport]:
 
     if final_count > 0:
         logger.info(
-            f"Successfully fetched {final_count} unique injuries from: {', '.join(sources_used)}")
+            f"Successfully fetched {final_count} unique injuries from: {', '.join(sources_used)}"
+        )
     else:
         # Explicit warning - no silent failures
         logger.warning(
@@ -427,21 +486,23 @@ async def save_injuries(
     # Convert to DataFrame
     rows = []
     for inj in injuries:
-        rows.append({
-            "player_id": inj.player_id,
-            "player_name": inj.player_name,
-            "team": inj.team,
-            "team_id": inj.team_id,
-            "status": inj.status,
-            "injury_type": inj.injury_type,
-            "injury_location": inj.injury_location,
-            "report_date": inj.report_date,
-            "expected_return": inj.expected_return,
-            "ppg": inj.ppg,
-            "minutes_per_game": inj.minutes_per_game,
-            "usage_rate": inj.usage_rate,
-            "source": inj.source,
-        })
+        rows.append(
+            {
+                "player_id": inj.player_id,
+                "player_name": inj.player_name,
+                "team": inj.team,
+                "team_id": inj.team_id,
+                "status": inj.status,
+                "injury_type": inj.injury_type,
+                "injury_location": inj.injury_location,
+                "report_date": inj.report_date,
+                "expected_return": inj.expected_return,
+                "ppg": inj.ppg,
+                "minutes_per_game": inj.minutes_per_game,
+                "usage_rate": inj.usage_rate,
+                "source": inj.source,
+            }
+        )
 
     df = pd.DataFrame(rows)
     out_path = os.path.join(out_dir, "injuries.csv")
@@ -461,10 +522,10 @@ async def enrich_injuries_with_stats(
     """
     if player_stats_df is None:
         # Try to load from file
-        stats_path = os.path.join(
-            settings.data_processed_dir, "player_stats.csv")
+        stats_path = os.path.join(settings.data_processed_dir, "player_stats.csv")
         if os.path.exists(stats_path):
             import pandas as pd
+
             player_stats_df = pd.read_csv(stats_path)
         else:
             return injuries  # No stats available

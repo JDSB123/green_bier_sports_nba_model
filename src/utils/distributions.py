@@ -38,10 +38,12 @@ def estimate_spread_std(features: Dict[str, float], period: str) -> float:
         base = base * math.sqrt(PERIOD_SCALING["1h"]["scoring_pct"])
 
     suffix = "_1h" if period == "1h" else ""
-    std = _mean([
-        features.get(f"home_margin_std{suffix}"),
-        features.get(f"away_margin_std{suffix}"),
-    ])
+    std = _mean(
+        [
+            features.get(f"home_margin_std{suffix}"),
+            features.get(f"away_margin_std{suffix}"),
+        ]
+    )
     if std is None:
         std = base
 
@@ -54,10 +56,12 @@ def estimate_total_std(features: Dict[str, float], period: str) -> float:
     if period != "fg":
         base = base * math.sqrt(PERIOD_SCALING["1h"]["scoring_pct"])
 
-    std = _mean([
-        features.get("home_score_std"),
-        features.get("away_score_std"),
-    ])
+    std = _mean(
+        [
+            features.get("home_score_std"),
+            features.get("away_score_std"),
+        ]
+    )
     if std is None:
         std = base
 

@@ -32,35 +32,42 @@ Uses all available endpoints:
 
 STRICT MODE: Raises errors if data is missing - no silent defaults, no stale caches.
 """
+
 from __future__ import annotations
+
 import asyncio
 import math
 import os
-from statistics import stdev
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Any, Optional
+from statistics import stdev
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
 from src.config import settings
 from src.ingestion import api_basketball
 from src.ingestion.api_basketball import normalize_standings_response
-from src.ingestion.espn import fetch_espn_box_score, fetch_espn_schedule, ESPNBoxScore, fetch_espn_recent_game_ids
+from src.ingestion.espn import (
+    ESPNBoxScore,
+    fetch_espn_box_score,
+    fetch_espn_recent_game_ids,
+    fetch_espn_schedule,
+)
 from src.utils.logging import get_logger
 from src.utils.team_factors import (
+    calculate_travel_fatigue,
     get_home_court_advantage,
     get_team_context_features,
-    calculate_travel_fatigue,
-    get_travel_distance,
     get_timezone_difference,
+    get_travel_distance,
 )
 
 # Lazy persistent cache for frequently accessed reference data
 _REFERENCE_CACHE = {
-    'teams': {},  # team_name -> team_id mappings
-    'leagues': {},  # league info
-    'seasons': {},  # season validation cache
-    'last_updated': {}  # cache timestamps
+    "teams": {},  # team_name -> team_id mappings
+    "leagues": {},  # league info
+    "seasons": {},  # season validation cache
+    "last_updated": {},  # cache timestamps
 }
 
 # Module logger
@@ -76,26 +83,55 @@ ESPN_TO_API_BASKETBALL = {
 
 # Prediction-time feature groups for optional heavy computations.
 BOX_SCORE_FEATURES = {
-    "home_fg_pct", "away_fg_pct", "fg_pct_diff",
-    "home_three_pct", "away_three_pct", "three_pct_diff",
-    "home_ft_pct", "away_ft_pct", "ft_pct_diff",
-    "home_efg_pct", "away_efg_pct", "efg_pct_diff",
-    "home_rebounds", "away_rebounds", "rebounds_diff",
-    "home_oreb", "away_oreb", "oreb_diff",
-    "home_dreb", "away_dreb",
-    "home_oreb_pct", "away_oreb_pct",
-    "home_assists", "away_assists", "assists_diff",
-    "home_turnovers", "away_turnovers", "turnovers_diff",
-    "home_ast_to_ratio", "away_ast_to_ratio", "ast_to_ratio_diff",
-    "home_steals", "away_steals", "steals_diff",
-    "home_blocks", "away_blocks", "blocks_diff",
-    "home_fouls", "away_fouls", "fouls_diff",
+    "home_fg_pct",
+    "away_fg_pct",
+    "fg_pct_diff",
+    "home_three_pct",
+    "away_three_pct",
+    "three_pct_diff",
+    "home_ft_pct",
+    "away_ft_pct",
+    "ft_pct_diff",
+    "home_efg_pct",
+    "away_efg_pct",
+    "efg_pct_diff",
+    "home_rebounds",
+    "away_rebounds",
+    "rebounds_diff",
+    "home_oreb",
+    "away_oreb",
+    "oreb_diff",
+    "home_dreb",
+    "away_dreb",
+    "home_oreb_pct",
+    "away_oreb_pct",
+    "home_assists",
+    "away_assists",
+    "assists_diff",
+    "home_turnovers",
+    "away_turnovers",
+    "turnovers_diff",
+    "home_ast_to_ratio",
+    "away_ast_to_ratio",
+    "ast_to_ratio_diff",
+    "home_steals",
+    "away_steals",
+    "steals_diff",
+    "home_blocks",
+    "away_blocks",
+    "blocks_diff",
+    "home_fouls",
+    "away_fouls",
+    "fouls_diff",
 }
 
 PLAYER_STAT_FEATURES = {
-    "home_star_avail", "away_star_avail",
-    "home_paint_defense", "away_paint_defense",
-    "home_bench_scoring", "away_bench_scoring",
+    "home_star_avail",
+    "away_star_avail",
+    "home_paint_defense",
+    "away_paint_defense",
+    "home_bench_scoring",
+    "away_bench_scoring",
 }
 
 BOX_SCORE_DEFAULTS = {
@@ -145,23 +181,27 @@ class RichFeatureBuilder:
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get statistics about cache usage and performance."""
         return {
-            'session_cache': {
-                'teams': len(self._team_cache),
-                'stats': len(self._stats_cache),
-                'games_cached': self._games_cache is not None,
-                'standings_cached': self._standings_cache is not None,
-                'injuries_cached': self._injuries_cache is not None,
-                'box_scores': len(self._box_scores_cache),
-                'sharp_square_cached': self._sharp_square_cache is not None,
-                'sharp_square_games': len(self._sharp_square_cache or {}),
+            "session_cache": {
+                "teams": len(self._team_cache),
+                "stats": len(self._stats_cache),
+                "games_cached": self._games_cache is not None,
+                "standings_cached": self._standings_cache is not None,
+                "injuries_cached": self._injuries_cache is not None,
+                "box_scores": len(self._box_scores_cache),
+                "sharp_square_cached": self._sharp_square_cache is not None,
+                "sharp_square_games": len(self._sharp_square_cache or {}),
             },
-            'persistent_cache': {
-                'teams': len(_REFERENCE_CACHE['teams']),
-                'leagues': len(_REFERENCE_CACHE['leagues']),
-                'seasons': len(_REFERENCE_CACHE['seasons']),
-                'total_entries': len(_REFERENCE_CACHE['teams']) + len(_REFERENCE_CACHE['leagues']) + len(_REFERENCE_CACHE['seasons']),
-                'last_updated': {k: v.isoformat() for k, v in _REFERENCE_CACHE['last_updated'].items()},
-            }
+            "persistent_cache": {
+                "teams": len(_REFERENCE_CACHE["teams"]),
+                "leagues": len(_REFERENCE_CACHE["leagues"]),
+                "seasons": len(_REFERENCE_CACHE["seasons"]),
+                "total_entries": len(_REFERENCE_CACHE["teams"])
+                + len(_REFERENCE_CACHE["leagues"])
+                + len(_REFERENCE_CACHE["seasons"]),
+                "last_updated": {
+                    k: v.isoformat() for k, v in _REFERENCE_CACHE["last_updated"].items()
+                },
+            },
         }
 
     def clear_session_cache(self):
@@ -184,6 +224,7 @@ class RichFeatureBuilder:
         require_sharp = bool(getattr(settings, "require_sharp_book_data", False))
         try:
             from src.ingestion.betting_splits import fetch_sharp_square_lines
+
             comparisons = await fetch_sharp_square_lines()
         except Exception as e:
             logger.warning(f"[API] Sharp/square fetch failed: {e}")
@@ -213,25 +254,25 @@ class RichFeatureBuilder:
     @staticmethod
     def _is_cache_valid(cache_key: str, max_age_hours: int = 24) -> bool:
         """Check if cached data is still valid based on age."""
-        if cache_key not in _REFERENCE_CACHE['last_updated']:
+        if cache_key not in _REFERENCE_CACHE["last_updated"]:
             return False
 
-        cache_time = _REFERENCE_CACHE['last_updated'][cache_key]
+        cache_time = _REFERENCE_CACHE["last_updated"][cache_key]
         age_hours = (datetime.now() - cache_time).total_seconds() / 3600
         return age_hours < max_age_hours
 
     @staticmethod
     def _update_cache_timestamp(cache_key: str):
         """Update the last updated timestamp for a cache key."""
-        _REFERENCE_CACHE['last_updated'][cache_key] = datetime.now()
+        _REFERENCE_CACHE["last_updated"][cache_key] = datetime.now()
 
     @staticmethod
     def clear_persistent_cache():
         """Clear all persistent reference caches (admin function)."""
-        _REFERENCE_CACHE['teams'].clear()
-        _REFERENCE_CACHE['leagues'].clear()
-        _REFERENCE_CACHE['seasons'].clear()
-        _REFERENCE_CACHE['last_updated'].clear()
+        _REFERENCE_CACHE["teams"].clear()
+        _REFERENCE_CACHE["leagues"].clear()
+        _REFERENCE_CACHE["seasons"].clear()
+        _REFERENCE_CACHE["last_updated"].clear()
         print("[CACHE] Persistent reference cache cleared")
 
     async def get_game_player_stats(self, game_id: int) -> List[Dict]:
@@ -263,8 +304,8 @@ class RichFeatureBuilder:
 
         # Check persistent cache (lazy-loaded, survives across requests)
         cache_key = f"{self.league_id}_{self.season}_{team_name}"
-        if cache_key in _REFERENCE_CACHE['teams'] and self._is_cache_valid(cache_key):
-            team_id = _REFERENCE_CACHE['teams'][cache_key]
+        if cache_key in _REFERENCE_CACHE["teams"] and self._is_cache_valid(cache_key):
+            team_id = _REFERENCE_CACHE["teams"][cache_key]
             # Still populate session cache for this request
             self._team_cache[team_name] = team_id
             return team_id
@@ -275,7 +316,9 @@ class RichFeatureBuilder:
         search_name = ESPN_TO_API_BASKETBALL.get(team_name, team_name)
 
         # Fetch fresh data from API
-        result = await api_basketball.fetch_teams(search=search_name, league=self.league_id, season=self.season)
+        result = await api_basketball.fetch_teams(
+            search=search_name, league=self.league_id, season=self.season
+        )
         teams = result.get("response", [])
 
         if not teams:
@@ -285,7 +328,7 @@ class RichFeatureBuilder:
 
         # Cache in both session and persistent caches
         self._team_cache[team_name] = team_id
-        _REFERENCE_CACHE['teams'][cache_key] = team_id
+        _REFERENCE_CACHE["teams"][cache_key] = team_id
         self._update_cache_timestamp(cache_key)
 
         print(f"[CACHE] Team ID cached: {team_name} -> {team_id}")
@@ -296,8 +339,8 @@ class RichFeatureBuilder:
         cache_key = f"league_{self.league_id}"
 
         # Check persistent cache
-        if cache_key in _REFERENCE_CACHE['leagues'] and self._is_cache_valid(cache_key):
-            return _REFERENCE_CACHE['leagues'][cache_key]
+        if cache_key in _REFERENCE_CACHE["leagues"] and self._is_cache_valid(cache_key):
+            return _REFERENCE_CACHE["leagues"][cache_key]
 
         # Fetch fresh league data
         result = await api_basketball.fetch_leagues(league_id=self.league_id)
@@ -309,11 +352,10 @@ class RichFeatureBuilder:
         league_info = leagues[0]
 
         # Cache persistently
-        _REFERENCE_CACHE['leagues'][cache_key] = league_info
+        _REFERENCE_CACHE["leagues"][cache_key] = league_info
         self._update_cache_timestamp(cache_key)
 
-        print(
-            f"[CACHE] League info cached: {league_info.get('name', 'Unknown')}")
+        print(f"[CACHE] League info cached: {league_info.get('name', 'Unknown')}")
         return league_info
 
     async def validate_season(self, season: str) -> bool:
@@ -322,8 +364,10 @@ class RichFeatureBuilder:
 
         # Check persistent cache
         # 1 week
-        if cache_key in _REFERENCE_CACHE['seasons'] and self._is_cache_valid(cache_key, max_age_hours=168):
-            return _REFERENCE_CACHE['seasons'][cache_key]
+        if cache_key in _REFERENCE_CACHE["seasons"] and self._is_cache_valid(
+            cache_key, max_age_hours=168
+        ):
+            return _REFERENCE_CACHE["seasons"][cache_key]
 
         # Fetch seasons to validate
         result = await api_basketball.fetch_seasons(league=self.league_id)
@@ -331,11 +375,12 @@ class RichFeatureBuilder:
         season_exists = season in seasons
 
         # Cache result
-        _REFERENCE_CACHE['seasons'][cache_key] = season_exists
+        _REFERENCE_CACHE["seasons"][cache_key] = season_exists
         self._update_cache_timestamp(cache_key)
 
         print(
-            f"[CACHE] Season validation cached: {season} -> {'valid' if season_exists else 'invalid'}")
+            f"[CACHE] Season validation cached: {season} -> {'valid' if season_exists else 'invalid'}"
+        )
         return season_exists
 
     async def _get_star_availability(self, team_id: int, recent_games: List[Dict]) -> float:
@@ -359,8 +404,7 @@ class RichFeatureBuilder:
             players = await self.get_game_player_stats(game_id)
 
             # Filter for this team
-            team_players = [p for p in players if p.get(
-                "team", {}).get("id") == team_id]
+            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
 
             # Cannot determine stars without data
             if not team_players:
@@ -368,8 +412,7 @@ class RichFeatureBuilder:
 
             # Sort by minutes played to find key contributors
             # (In a real implementation, we'd average over 5 games, but this is a start)
-            team_players.sort(key=lambda x: float(
-                x.get("min", 0) or 0), reverse=True)
+            team_players.sort(key=lambda x: float(x.get("min", 0) or 0), reverse=True)
 
             # Check availability: Did the top players actually play meaningful minutes?
             # For the most recent game, they inherently "played" if they are in the box score with minutes > 0
@@ -386,8 +429,7 @@ class RichFeatureBuilder:
             return active_stars * 0.5
 
         except Exception as e:
-            print(
-                f"[WARN] Failed to calc star availability for team {team_id}: {e}")
+            print(f"[WARN] Failed to calc star availability for team {team_id}: {e}")
             return 1.0
 
     async def _get_paint_defense(self, team_id: int, recent_games: List[Dict]) -> float:
@@ -407,8 +449,7 @@ class RichFeatureBuilder:
 
         try:
             players = await self.get_game_player_stats(game_id)
-            team_players = [p for p in players if p.get(
-                "team", {}).get("id") == team_id]
+            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
 
             paint_score = 0.0
             for p in team_players:
@@ -420,8 +461,7 @@ class RichFeatureBuilder:
                 if "C" in pos or "PF" in pos or "F-C" in pos:
                     # Get stats
                     blocks = float(p.get("blk", 0) or 0)
-                    rebounds_def = float(
-                        p.get("rebounds", {}).get("def", 0) or 0)
+                    rebounds_def = float(p.get("rebounds", {}).get("def", 0) or 0)
 
                     # Weighting: Blocks are high value defensive events
                     paint_score += (blocks * 2.0) + (rebounds_def * 0.5)
@@ -449,12 +489,10 @@ class RichFeatureBuilder:
 
         try:
             players = await self.get_game_player_stats(game_id)
-            team_players = [p for p in players if p.get(
-                "team", {}).get("id") == team_id]
+            team_players = [p for p in players if p.get("team", {}).get("id") == team_id]
 
             # Sort by minutes
-            team_players.sort(key=lambda x: float(
-                x.get("min", 0) or 0), reverse=True)
+            team_players.sort(key=lambda x: float(x.get("min", 0) or 0), reverse=True)
 
             # Identify Bench (approximate: everyone after top 5 minutes-getters)
             bench_players = team_players[5:]
@@ -483,15 +521,14 @@ class RichFeatureBuilder:
         # Fetch fresh statistics from API - NO FILE CACHE
         print(f"[API] Fetching fresh stats for team {team_id}")
         result = await api_basketball.fetch_statistics(
-            league=self.league_id,
-            season=self.season,
-            team=team_id
+            league=self.league_id, season=self.season, team=team_id
         )
 
         response = result.get("response", {})
         if not response:
             raise ValueError(
-                f"STRICT MODE: No statistics found for team {team_id} - API returned empty")
+                f"STRICT MODE: No statistics found for team {team_id} - API returned empty"
+            )
 
         self._stats_cache[team_id] = response
         return response
@@ -508,21 +545,19 @@ class RichFeatureBuilder:
 
         # Check session cache first
         cache_key = f"h2h_{h2h_string}"
-        if hasattr(self, '_h2h_cache') and cache_key in self._h2h_cache:
+        if hasattr(self, "_h2h_cache") and cache_key in self._h2h_cache:
             return self._h2h_cache[cache_key]
 
         # Fetch fresh from API - NO FILE CACHE
         print(f"[API] Fetching fresh H2H for {h2h_string}")
         result = await api_basketball.fetch_h2h(
-            h2h=h2h_string,
-            league=self.league_id,
-            season=self.season
+            h2h=h2h_string, league=self.league_id, season=self.season
         )
 
         response = result.get("response", [])
 
         # Session cache only
-        if not hasattr(self, '_h2h_cache'):
+        if not hasattr(self, "_h2h_cache"):
             self._h2h_cache = {}
         self._h2h_cache[cache_key] = response
 
@@ -541,14 +576,14 @@ class RichFeatureBuilder:
                 if self._games_cache is None:
                     print(f"[API] Fetching fresh games for season {self.season}")
                     result = await api_basketball.fetch_games(
-                        season=self.season,
-                        league=self.league_id
+                        season=self.season, league=self.league_id
                     )
                     self._games_cache = result.get("response", [])
 
                     if not self._games_cache:
                         raise ValueError(
-                            f"STRICT MODE: No games found for season {self.season} - API returned empty")
+                            f"STRICT MODE: No games found for season {self.season} - API returned empty"
+                        )
 
                     print(f"[API] Fetched {len(self._games_cache)} games")
 
@@ -556,17 +591,17 @@ class RichFeatureBuilder:
 
         # Filter to this team's completed games
         team_games = [
-            g for g in all_games
-            if (g.get("teams", {}).get("home", {}).get("id") == team_id or
-                g.get("teams", {}).get("away", {}).get("id") == team_id) and
-            g.get("status", {}).get("short") == "FT"  # Finished
+            g
+            for g in all_games
+            if (
+                g.get("teams", {}).get("home", {}).get("id") == team_id
+                or g.get("teams", {}).get("away", {}).get("id") == team_id
+            )
+            and g.get("status", {}).get("short") == "FT"  # Finished
         ]
 
         # Sort by date desc
-        team_games.sort(
-            key=lambda x: x.get("date", ""),
-            reverse=True
-        )
+        team_games.sort(key=lambda x: x.get("date", ""), reverse=True)
 
         return team_games[:limit]
 
@@ -594,24 +629,22 @@ class RichFeatureBuilder:
         if espn_game_id:
             try:
                 espn_data = await fetch_espn_box_score(espn_game_id)
-                result = self._convert_espn_to_internal_format(
-                    espn_data, game_id)
+                result = self._convert_espn_to_internal_format(espn_data, game_id)
                 self._box_scores_cache[cache_key] = result
                 return result
             except Exception as e:
-                print(
-                    f"[ERROR] ESPN box score fetch failed for {espn_game_id}: {e}")
-                raise RuntimeError(
-                    f"ESPN box score unavailable for game {espn_game_id}: {e}")
+                print(f"[ERROR] ESPN box score fetch failed for {espn_game_id}: {e}")
+                raise RuntimeError(f"ESPN box score unavailable for game {espn_game_id}: {e}")
 
         # Without ESPN ID, we cannot get complete box scores
         # API-Basketball's team stats endpoint is empty for NBA
-        print(
-            f"[WARNING] No ESPN game ID provided for API-Basketball game {game_id}")
+        print(f"[WARNING] No ESPN game ID provided for API-Basketball game {game_id}")
         print(f"[WARNING] API-Basketball does NOT provide complete box scores for NBA")
         return None
 
-    def _convert_espn_to_internal_format(self, espn_data: Dict, api_bball_game_id: int = None) -> Dict:
+    def _convert_espn_to_internal_format(
+        self, espn_data: Dict, api_bball_game_id: int = None
+    ) -> Dict:
         """
         Convert ESPN box score format to internal format used by features.
 
@@ -650,18 +683,20 @@ class RichFeatureBuilder:
         for player in espn_data.get("players", []):
             team_name = player.team_name
             if team_name in teams_data:
-                teams_data[team_name]["players"].append({
-                    "name": player.player_name,
-                    "id": player.player_id,
-                    "starter": player.starter,
-                    "minutes": player.minutes,
-                    "points": player.points,
-                    "rebounds": player.rebounds_total,
-                    "assists": player.assists,
-                    "steals": player.steals,
-                    "blocks": player.blocks,
-                    "turnovers": player.turnovers,
-                })
+                teams_data[team_name]["players"].append(
+                    {
+                        "name": player.player_name,
+                        "id": player.player_id,
+                        "starter": player.starter,
+                        "minutes": player.minutes,
+                        "points": player.points,
+                        "rebounds": player.rebounds_total,
+                        "assists": player.assists,
+                        "steals": player.steals,
+                        "blocks": player.blocks,
+                        "turnovers": player.turnovers,
+                    }
+                )
 
         return {
             "game_id": espn_data.get("game_id"),
@@ -670,7 +705,9 @@ class RichFeatureBuilder:
             "teams": teams_data,
         }
 
-    async def get_team_box_score_averages_espn(self, team_name: str, limit: int = 10) -> Dict[str, float]:
+    async def get_team_box_score_averages_espn(
+        self, team_name: str, limit: int = 10
+    ) -> Dict[str, float]:
         """
         Get box score averages for a team using ESPN data.
 
@@ -695,12 +732,21 @@ class RichFeatureBuilder:
 
         # Fetch box scores for each game
         stats_totals = {
-            "fg_made": 0, "fg_attempts": 0,
-            "three_made": 0, "three_attempts": 0,
-            "ft_made": 0, "ft_attempts": 0,
-            "rebounds_total": 0, "rebounds_off": 0, "rebounds_def": 0,
-            "assists": 0, "steals": 0, "blocks": 0,
-            "turnovers": 0, "personal_fouls": 0, "points": 0,
+            "fg_made": 0,
+            "fg_attempts": 0,
+            "three_made": 0,
+            "three_attempts": 0,
+            "ft_made": 0,
+            "ft_attempts": 0,
+            "rebounds_total": 0,
+            "rebounds_off": 0,
+            "rebounds_def": 0,
+            "assists": 0,
+            "steals": 0,
+            "blocks": 0,
+            "turnovers": 0,
+            "personal_fouls": 0,
+            "points": 0,
         }
         games_counted = 0
 
@@ -730,26 +776,36 @@ class RichFeatureBuilder:
                         break
 
             except Exception as e:
-                print(
-                    f"[WARNING] Failed to fetch ESPN box score for game {game_id}: {e}")
+                print(f"[WARNING] Failed to fetch ESPN box score for game {game_id}: {e}")
                 continue
 
         if games_counted == 0:
-            raise RuntimeError(
-                f"No ESPN box scores could be fetched for {team_name}")
+            raise RuntimeError(f"No ESPN box scores could be fetched for {team_name}")
 
         # Calculate averages - ALL VALUES GUARANTEED
         n = games_counted
         result = {
             "fg_made": stats_totals["fg_made"] / n,
             "fg_attempts": stats_totals["fg_attempts"] / n,
-            "fg_pct": (stats_totals["fg_made"] / stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 0,
+            "fg_pct": (
+                (stats_totals["fg_made"] / stats_totals["fg_attempts"] * 100)
+                if stats_totals["fg_attempts"] > 0
+                else 0
+            ),
             "three_made": stats_totals["three_made"] / n,
             "three_attempts": stats_totals["three_attempts"] / n,
-            "three_pct": (stats_totals["three_made"] / stats_totals["three_attempts"] * 100) if stats_totals["three_attempts"] > 0 else 0,
+            "three_pct": (
+                (stats_totals["three_made"] / stats_totals["three_attempts"] * 100)
+                if stats_totals["three_attempts"] > 0
+                else 0
+            ),
             "ft_made": stats_totals["ft_made"] / n,
             "ft_attempts": stats_totals["ft_attempts"] / n,
-            "ft_pct": (stats_totals["ft_made"] / stats_totals["ft_attempts"] * 100) if stats_totals["ft_attempts"] > 0 else 0,
+            "ft_pct": (
+                (stats_totals["ft_made"] / stats_totals["ft_attempts"] * 100)
+                if stats_totals["ft_attempts"] > 0
+                else 0
+            ),
             "rebounds_total": stats_totals["rebounds_total"] / n,
             "rebounds_off": stats_totals["rebounds_off"] / n,
             "rebounds_def": stats_totals["rebounds_def"] / n,
@@ -764,19 +820,34 @@ class RichFeatureBuilder:
         }
 
         # Derived metrics - ALL CALCULATED, NO NONE
-        result["ast_to_ratio"] = result["assists"] / \
-            result["turnovers"] if result["turnovers"] > 0 else result["assists"]
-        result["oreb_pct"] = result["rebounds_off"] / \
-            result["rebounds_total"] if result["rebounds_total"] > 0 else 0
-        result["efg_pct"] = ((stats_totals["fg_made"] + 0.5 * stats_totals["three_made"]) /
-                             stats_totals["fg_attempts"] * 100) if stats_totals["fg_attempts"] > 0 else 0
+        result["ast_to_ratio"] = (
+            result["assists"] / result["turnovers"]
+            if result["turnovers"] > 0
+            else result["assists"]
+        )
+        result["oreb_pct"] = (
+            result["rebounds_off"] / result["rebounds_total"] if result["rebounds_total"] > 0 else 0
+        )
+        result["efg_pct"] = (
+            (
+                (stats_totals["fg_made"] + 0.5 * stats_totals["three_made"])
+                / stats_totals["fg_attempts"]
+                * 100
+            )
+            if stats_totals["fg_attempts"] > 0
+            else 0
+        )
 
-        print(f"[ESPN BOX] {team_name}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, "
-              f"STL={result['steals']:.1f}, BLK={result['blocks']:.1f}, TO={result['turnovers']:.1f} ({n} games)")
+        print(
+            f"[ESPN BOX] {team_name}: FG%={result['fg_pct']:.1f}, 3P%={result['three_pct']:.1f}, "
+            f"STL={result['steals']:.1f}, BLK={result['blocks']:.1f}, TO={result['turnovers']:.1f} ({n} games)"
+        )
 
         return result
 
-    async def get_team_box_score_averages(self, team_id: int, recent_games: List[Dict], team_name: str = None) -> Dict[str, float]:
+    async def get_team_box_score_averages(
+        self, team_id: int, recent_games: List[Dict], team_name: str = None
+    ) -> Dict[str, float]:
         """
         Calculate rolling box score averages for a team from their recent games.
 
@@ -806,14 +877,13 @@ class RichFeatureBuilder:
             try:
                 return await self.get_team_box_score_averages_espn(team_name, limit=10)
             except Exception as e:
-                print(
-                    f"[ERROR] ESPN box score fetch failed for {team_name}: {e}")
-                raise RuntimeError(
-                    f"Cannot get box scores for {team_name}: ESPN unavailable - {e}")
+                print(f"[ERROR] ESPN box score fetch failed for {team_name}: {e}")
+                raise RuntimeError(f"Cannot get box scores for {team_name}: ESPN unavailable - {e}")
 
         # Without team name, we cannot use ESPN
         raise RuntimeError(
-            f"team_name is REQUIRED for box score averages (ESPN is the only complete source)")
+            f"team_name is REQUIRED for box score averages (ESPN is the only complete source)"
+        )
 
     def calculate_team_record_from_games(self, team_id: int) -> Dict[str, int]:
         """Calculate team W-L record from completed games data.
@@ -848,10 +918,8 @@ class RichFeatureBuilder:
                 continue
 
             # Get scores
-            home_score = game.get("scores", {}).get(
-                "home", {}).get("total", 0) or 0
-            away_score = game.get("scores", {}).get(
-                "away", {}).get("total", 0) or 0
+            home_score = game.get("scores", {}).get("home", {}).get("total", 0) or 0
+            away_score = game.get("scores", {}).get("away", {}).get("total", 0) or 0
 
             # Skip games with no score (shouldn't happen for finished games)
             if home_score == 0 and away_score == 0:
@@ -869,18 +937,11 @@ class RichFeatureBuilder:
                 else:
                     losses += 1
 
-        return {
-            "wins": wins,
-            "losses": losses,
-            "games_played": wins + losses
-        }
+        return {"wins": wins, "losses": losses, "games_played": wins + losses}
 
     async def get_standings(self) -> Dict[str, Dict]:
         """Get normalized standings (API-Basketball) keyed by team ID and canonical name."""
-        result = await api_basketball.fetch_standings(
-            league=self.league_id,
-            season=self.season
-        )
+        result = await api_basketball.fetch_standings(league=self.league_id, season=self.season)
         return normalize_standings_response(result)
 
     async def get_injuries_df(self) -> Optional[pd.DataFrame]:
@@ -898,15 +959,13 @@ class RichFeatureBuilder:
 
         # Fetch fresh injuries from all sources - NO FILE CACHE
         try:
-            from src.ingestion.injuries import fetch_all_injuries, enrich_injuries_with_stats
+            from src.ingestion.injuries import enrich_injuries_with_stats, fetch_all_injuries
 
             print("[API] Fetching fresh injury data...")
             injuries = await fetch_all_injuries()
 
             if not injuries:
-                print(
-                    "[INJURIES] No injuries returned (fetch succeeded; no players reported out)"
-                )
+                print("[INJURIES] No injuries returned (fetch succeeded; no players reported out)")
                 # Distinguish "fetch succeeded but zero injuries" from "fetch failed".
                 self._injuries_cache = pd.DataFrame(
                     columns=[
@@ -929,21 +988,22 @@ class RichFeatureBuilder:
             # Convert to DataFrame
             rows = []
             for inj in injuries:
-                rows.append({
-                    "player_id": inj.player_id,
-                    "player_name": inj.player_name,
-                    "team": inj.team,
-                    "status": inj.status,
-                    "injury_type": inj.injury_type,
-                    "ppg": inj.ppg,
-                    "minutes_per_game": inj.minutes_per_game,
-                    "usage_rate": inj.usage_rate,
-                    "source": inj.source,
-                })
+                rows.append(
+                    {
+                        "player_id": inj.player_id,
+                        "player_name": inj.player_name,
+                        "team": inj.team,
+                        "status": inj.status,
+                        "injury_type": inj.injury_type,
+                        "ppg": inj.ppg,
+                        "minutes_per_game": inj.minutes_per_game,
+                        "usage_rate": inj.usage_rate,
+                        "source": inj.source,
+                    }
+                )
 
             self._injuries_cache = pd.DataFrame(rows)
-            print(
-                f"[API] Fetched {len(self._injuries_cache)} injuries from live API")
+            print(f"[API] Fetched {len(self._injuries_cache)} injuries from live API")
 
             return self._injuries_cache
 
@@ -952,8 +1012,7 @@ class RichFeatureBuilder:
                 raise ValueError(
                     f"STRICT MODE: Injury fetch failed and REQUIRE_INJURY_FETCH_SUCCESS=true: {e}"
                 )
-            print(
-                f"[INJURIES] Error fetching injuries: {e} - continuing without injury data")
+            print(f"[INJURIES] Error fetching injuries: {e} - continuing without injury data")
             self._injuries_cache = None
             return None
 
@@ -978,28 +1037,29 @@ class RichFeatureBuilder:
         def _needs(candidates: set[str]) -> bool:
             # If no contract provided, compute everything (default behavior).
             return not required or bool(required.intersection(candidates))
+
         # Get team IDs
         home_id = await self.get_team_id(home_team)
         away_id = await self.get_team_id(away_team)
 
         # Fetch all data in parallel (API-Basketball standings used for W-L records)
-        home_stats, away_stats, h2h, standings_norm, home_recent, away_recent = await asyncio.gather(
-            self.get_team_stats(home_id),
-            self.get_team_stats(away_id),
-            self.get_h2h_history(home_id, away_id),
-            self.get_standings(),
-            self.get_recent_games(home_id, limit=10),
-            self.get_recent_games(away_id, limit=10),
+        home_stats, away_stats, h2h, standings_norm, home_recent, away_recent = (
+            await asyncio.gather(
+                self.get_team_stats(home_id),
+                self.get_team_stats(away_id),
+                self.get_h2h_history(home_id, away_id),
+                self.get_standings(),
+                self.get_recent_games(home_id, limit=10),
+                self.get_recent_games(away_id, limit=10),
+            )
         )
 
         # Fetch box score averages for advanced stats (FG%, 3PT%, rebounds, etc.)
         # Using ESPN as the authoritative source - passes team names for ESPN lookup
         if _needs(BOX_SCORE_FEATURES):
             home_box_avgs, away_box_avgs = await asyncio.gather(
-                self.get_team_box_score_averages(
-                    home_id, home_recent, team_name=home_team),
-                self.get_team_box_score_averages(
-                    away_id, away_recent, team_name=away_team),
+                self.get_team_box_score_averages(home_id, home_recent, team_name=home_team),
+                self.get_team_box_score_averages(away_id, away_recent, team_name=away_team),
             )
         else:
             # Defaults to avoid expensive ESPN box score fetches when unused.
@@ -1012,46 +1072,39 @@ class RichFeatureBuilder:
         away_points = away_stats.get("points", {})
 
         # Points per game
-        home_ppg = float(home_points.get(
-            "for", {}).get("average", {}).get("all", 0))
-        away_ppg = float(away_points.get(
-            "for", {}).get("average", {}).get("all", 0))
-        home_papg = float(home_points.get(
-            "against", {}).get("average", {}).get("all", 0))
-        away_papg = float(away_points.get(
-            "against", {}).get("average", {}).get("all", 0))
+        home_ppg = float(home_points.get("for", {}).get("average", {}).get("all", 0))
+        away_ppg = float(away_points.get("for", {}).get("average", {}).get("all", 0))
+        home_papg = float(home_points.get("against", {}).get("average", {}).get("all", 0))
+        away_papg = float(away_points.get("against", {}).get("average", {}).get("all", 0))
 
         if home_ppg == 0 or away_ppg == 0:
-            raise ValueError(
-                f"Missing PPG data: home={home_ppg}, away={away_ppg}")
+            raise ValueError(f"Missing PPG data: home={home_ppg}, away={away_ppg}")
 
-        standings_by_id = standings_norm.get(
-            "by_id", {}) if isinstance(standings_norm, dict) else {}
+        standings_by_id = (
+            standings_norm.get("by_id", {}) if isinstance(standings_norm, dict) else {}
+        )
 
         # Standings position and records (API-Basketball)
         home_standing = standings_by_id.get(home_id, {})
         away_standing = standings_by_id.get(away_id, {})
 
         # Use API-B standings for W/L; fall back to computed record if missing
-        home_record = home_standing or self.calculate_team_record_from_games(
-            home_id)
-        away_record = away_standing or self.calculate_team_record_from_games(
-            away_id)
+        home_record = home_standing or self.calculate_team_record_from_games(home_id)
+        away_record = away_standing or self.calculate_team_record_from_games(away_id)
 
         home_wins = home_record.get("wins", 0)
         home_losses = home_record.get("losses", 0)
         away_wins = away_record.get("wins", 0)
         away_losses = away_record.get("losses", 0)
 
-        home_games_played = home_record.get(
-            "games_played", home_wins + home_losses)
-        away_games_played = home_record.get(
-            "games_played", away_wins + away_losses)
+        home_games_played = home_record.get("games_played", home_wins + home_losses)
+        away_games_played = home_record.get("games_played", away_wins + away_losses)
 
         # FALLBACK: If API-Basketball standings have 0 games, try ESPN standings
         if home_games_played == 0 or away_games_played == 0:
             try:
                 from src.ingestion.espn import fetch_espn_standings
+
                 espn_standings = await fetch_espn_standings()
                 home_espn = espn_standings.get(home_team)
                 away_espn = espn_standings.get(away_team)
@@ -1063,7 +1116,8 @@ class RichFeatureBuilder:
                     away_losses = away_espn.losses
                     away_games_played = away_wins + away_losses
                     print(
-                        f"[FALLBACK] Using ESPN standings: {home_team} ({home_wins}-{home_losses}), {away_team} ({away_wins}-{away_losses})")
+                        f"[FALLBACK] Using ESPN standings: {home_team} ({home_wins}-{home_losses}), {away_team} ({away_wins}-{away_losses})"
+                    )
             except Exception as e:
                 print(f"[WARNING] ESPN standings fallback failed: {e}")
 
@@ -1075,8 +1129,7 @@ class RichFeatureBuilder:
         home_win_pct = home_wins / home_games_played if home_games_played > 0 else 0.0
         away_win_pct = away_wins / away_games_played if away_games_played > 0 else 0.0
 
-        home_position = home_standing.get(
-            "position", 15)  # Mid-table if missing
+        home_position = home_standing.get("position", 15)  # Mid-table if missing
         away_position = away_standing.get("position", 15)
 
         # H2H metrics (symmetric: count wins regardless of venue)
@@ -1088,10 +1141,8 @@ class RichFeatureBuilder:
                 try:
                     g_home_id = g.get("teams", {}).get("home", {}).get("id")
                     g_away_id = g.get("teams", {}).get("away", {}).get("id")
-                    g_home_score = g.get("scores", {}).get(
-                        "home", {}).get("total")
-                    g_away_score = g.get("scores", {}).get(
-                        "away", {}).get("total")
+                    g_home_score = g.get("scores", {}).get("home", {}).get("total")
+                    g_away_score = g.get("scores", {}).get("away", {}).get("total")
                     if g_home_score is None or g_away_score is None:
                         continue
                     if g_home_id == home_id:
@@ -1107,8 +1158,7 @@ class RichFeatureBuilder:
                 except (TypeError, AttributeError):
                     continue
             h2h_win_rate = home_h2h_wins / valid_h2h_games if valid_h2h_games > 0 else 0.5
-            h2h_margin = sum(h2h_margins) / \
-                len(h2h_margins) if h2h_margins else 0.0
+            h2h_margin = sum(h2h_margins) / len(h2h_margins) if h2h_margins else 0.0
         else:
             h2h_win_rate = 0.5  # Neutral if no history
             h2h_margin = 0.0
@@ -1125,11 +1175,23 @@ class RichFeatureBuilder:
         ) -> Dict:
             """Calculate recent form metrics from game history (1H, FG)."""
             if not recent_games:
-                return {"l5_win_pct": 0.5, "l10_win_pct": 0.5, "l5_margin": 0, "l10_margin": 0,
-                        "l5_ppg": 0, "l5_papg": 0, "rest_days": 3, "prev_game_location": None,
-                        "l5_ppg_1h": 0, "l5_papg_1h": 0, "l5_margin_1h": 0,
-                        "l5_win_pct_1h": 0.5, "win_pct_1h": 0.5,
-                        "score_std": 0.0, "margin_std": 0.0}
+                return {
+                    "l5_win_pct": 0.5,
+                    "l10_win_pct": 0.5,
+                    "l5_margin": 0,
+                    "l10_margin": 0,
+                    "l5_ppg": 0,
+                    "l5_papg": 0,
+                    "rest_days": 3,
+                    "prev_game_location": None,
+                    "l5_ppg_1h": 0,
+                    "l5_papg_1h": 0,
+                    "l5_margin_1h": 0,
+                    "l5_win_pct_1h": 0.5,
+                    "win_pct_1h": 0.5,
+                    "score_std": 0.0,
+                    "margin_std": 0.0,
+                }
 
             wins_l5 = wins_l10 = 0
             margin_l5 = margin_l10 = 0
@@ -1143,22 +1205,19 @@ class RichFeatureBuilder:
 
             for i, g in enumerate(recent_games[:10]):
                 try:
-                    is_home = g.get("teams", {}).get(
-                        "home", {}).get("id") == team_id
-                    home_score = g.get("scores", {}).get(
-                        "home", {}).get("total", 0) or 0
-                    away_score = g.get("scores", {}).get(
-                        "away", {}).get("total", 0) or 0
+                    is_home = g.get("teams", {}).get("home", {}).get("id") == team_id
+                    home_score = g.get("scores", {}).get("home", {}).get("total", 0) or 0
+                    away_score = g.get("scores", {}).get("away", {}).get("total", 0) or 0
 
                     # First half scores (Q1 + Q2)
-                    home_q1 = g.get("scores", {}).get(
-                        "home", {}).get("quarter_1", 0) or 0
-                    away_q1 = g.get("scores", {}).get(
-                        "away", {}).get("quarter_1", 0) or 0
-                    home_1h = home_q1 + \
-                        (g.get("scores", {}).get("home", {}).get("quarter_2", 0) or 0)
-                    away_1h = away_q1 + \
-                        (g.get("scores", {}).get("away", {}).get("quarter_2", 0) or 0)
+                    home_q1 = g.get("scores", {}).get("home", {}).get("quarter_1", 0) or 0
+                    away_q1 = g.get("scores", {}).get("away", {}).get("quarter_1", 0) or 0
+                    home_1h = home_q1 + (
+                        g.get("scores", {}).get("home", {}).get("quarter_2", 0) or 0
+                    )
+                    away_1h = away_q1 + (
+                        g.get("scores", {}).get("away", {}).get("quarter_2", 0) or 0
+                    )
 
                     if is_home:
                         team_score, opp_score = home_score, away_score
@@ -1205,12 +1264,10 @@ class RichFeatureBuilder:
                     last_game_date = last_game.get("date", "")
 
                     # Extract previous game location (the home team's arena)
-                    prev_game_location = last_game.get(
-                        "teams", {}).get("home", {}).get("name")
+                    prev_game_location = last_game.get("teams", {}).get("home", {}).get("name")
 
                     if last_game_date:
-                        last_dt = datetime.fromisoformat(
-                            last_game_date.replace("Z", "+00:00"))
+                        last_dt = datetime.fromisoformat(last_game_date.replace("Z", "+00:00"))
                         # Use scheduled game datetime when available to avoid "now" drift
                         ref_dt = (
                             game_dt.astimezone(last_dt.tzinfo)
@@ -1324,10 +1381,8 @@ class RichFeatureBuilder:
 
         # Predicted points for each team
         # Home scores: average of (home offense, opponent defense) at expected pace
-        home_expected_pts = ((home_ortg + away_drtg) /
-                             2) * expected_pace_factor
-        away_expected_pts = ((away_ortg + home_drtg) /
-                             2) * expected_pace_factor
+        home_expected_pts = ((home_ortg + away_drtg) / 2) * expected_pace_factor
+        away_expected_pts = ((away_ortg + home_drtg) / 2) * expected_pace_factor
 
         # Apply rest to team totals directly (per-team impact instead of averaging)
         home_expected_pts += home_rest_adj
@@ -1343,11 +1398,11 @@ class RichFeatureBuilder:
         FORM_WEIGHT = 0.20  # 20% weight on recent form
 
         # Scale form adjustment by expected pace so margins remain on per-game units
-        home_form_adj = FORM_WEIGHT * expected_pace_factor * (
-            home_form["l5_margin"] - (home_ppg - home_papg)
+        home_form_adj = (
+            FORM_WEIGHT * expected_pace_factor * (home_form["l5_margin"] - (home_ppg - home_papg))
         )
-        away_form_adj = FORM_WEIGHT * expected_pace_factor * (
-            away_form["l5_margin"] - (away_ppg - away_papg)
+        away_form_adj = (
+            FORM_WEIGHT * expected_pace_factor * (away_form["l5_margin"] - (away_ppg - away_papg))
         )
 
         # Predicted margin (home perspective)
@@ -1356,8 +1411,7 @@ class RichFeatureBuilder:
         rest_margin_adj = home_rest_adj - away_rest_adj  # Positive = home better rested
         form_margin_adj = home_form_adj - away_form_adj  # Positive = home hotter
 
-        predicted_margin_nba = base_margin + \
-            HOME_COURT_ADV + rest_margin_adj + form_margin_adj
+        predicted_margin_nba = base_margin + HOME_COURT_ADV + rest_margin_adj + form_margin_adj
 
         # Injury integration - DYNAMIC FETCH from ESPN + API-Basketball
         injuries_df = await self.get_injuries_df()
@@ -1368,19 +1422,20 @@ class RichFeatureBuilder:
         REPLACEMENT_LOSS_FACTOR = 0.35  # 35% of PPG lost when player is out
 
         if has_injury_data:
-            out_injuries = injuries_df[injuries_df['status'] == 'out']
+            out_injuries = injuries_df[injuries_df["status"] == "out"]
 
             # Match team names (partial match for flexibility)
-            home_out_ppg = out_injuries[out_injuries['team'].str.contains(
-                home_team, case=False, na=False)]['ppg'].sum()
-            away_out_ppg = out_injuries[out_injuries['team'].str.contains(
-                away_team, case=False, na=False)]['ppg'].sum()
+            home_out_ppg = out_injuries[
+                out_injuries["team"].str.contains(home_team, case=False, na=False)
+            ]["ppg"].sum()
+            away_out_ppg = out_injuries[
+                out_injuries["team"].str.contains(away_team, case=False, na=False)
+            ]["ppg"].sum()
 
             # Calculate injury impact on margin
             # Negative home_out_ppg hurts home team (subtracts from margin)
             # Positive away_out_ppg helps home team (adds to margin)
-            injury_margin_adj = (-home_out_ppg +
-                                 away_out_ppg) * REPLACEMENT_LOSS_FACTOR
+            injury_margin_adj = (-home_out_ppg + away_out_ppg) * REPLACEMENT_LOSS_FACTOR
 
             # ADD injury adjustment to existing margin
             # (preserves HOME_COURT_ADV and form_margin_adj)
@@ -1392,14 +1447,18 @@ class RichFeatureBuilder:
             predicted_total_nba = home_expected_pts + away_expected_pts
 
             # Count star players out (players with 15+ PPG)
-            home_star_out = len(out_injuries[
-                (out_injuries['team'].str.contains(home_team, case=False, na=False)) &
-                (out_injuries['ppg'] >= 15)
-            ])
-            away_star_out = len(out_injuries[
-                (out_injuries['team'].str.contains(away_team, case=False, na=False)) &
-                (out_injuries['ppg'] >= 15)
-            ])
+            home_star_out = len(
+                out_injuries[
+                    (out_injuries["team"].str.contains(home_team, case=False, na=False))
+                    & (out_injuries["ppg"] >= 15)
+                ]
+            )
+            away_star_out = len(
+                out_injuries[
+                    (out_injuries["team"].str.contains(away_team, case=False, na=False))
+                    & (out_injuries["ppg"] >= 15)
+                ]
+            )
         else:
             home_out_ppg = away_out_ppg = 0.0
             injury_margin_adj = 0.0
@@ -1444,10 +1503,8 @@ class RichFeatureBuilder:
         predicted_margin_1h = (home_1h_margin - away_1h_margin) / 2 + hca_1h
 
         # Form trend proxies (recent vs longer-term performance)
-        home_form_trend = home_form.get(
-            "l5_margin", 0.0) - home_form.get("l10_margin", 0.0)
-        away_form_trend = away_form.get(
-            "l5_margin", 0.0) - away_form.get("l10_margin", 0.0)
+        home_form_trend = home_form.get("l5_margin", 0.0) - home_form.get("l10_margin", 0.0)
+        away_form_trend = away_form.get("l5_margin", 0.0) - away_form.get("l10_margin", 0.0)
 
         # Optional heavy player-stat features (skip if not required)
         if _needs(PLAYER_STAT_FEATURES):
@@ -1472,7 +1529,6 @@ class RichFeatureBuilder:
             "away_ppg": away_ppg,
             "home_papg": home_papg,
             "away_papg": away_papg,
-
             # Tempo-free ratings (Torvik-style)
             "home_ortg": home_ortg,
             "away_ortg": away_ortg,
@@ -1480,12 +1536,10 @@ class RichFeatureBuilder:
             "away_drtg": away_drtg,
             "home_net_rtg": home_net_rtg,
             "away_net_rtg": away_net_rtg,
-
             # Pace factors
             "home_pace_factor": home_pace_factor,
             "away_pace_factor": away_pace_factor,
             "expected_pace_factor": expected_pace_factor,
-
             # NBA model predictions
             "home_expected_pts": home_expected_pts,
             "away_expected_pts": away_expected_pts,
@@ -1495,29 +1549,24 @@ class RichFeatureBuilder:
             "total_line": 0.0,
             "spread_vs_predicted": 0.0,
             "total_vs_predicted": 0.0,
-
             # Legacy derived (for compatibility)
             "home_avg_margin": home_ppg - home_papg,
             "away_avg_margin": away_ppg - away_papg,
             "home_total_ppg": home_ppg + home_papg,
             "away_total_ppg": away_ppg + away_papg,
             "ppg_diff": home_ppg - away_ppg,
-
             # Win rates
             "home_win_pct": home_win_pct,
             "away_win_pct": away_win_pct,
             "win_pct_diff": home_win_pct - away_win_pct,
-
             # Standings (lower is better)
             "home_position": home_position,
             "away_position": away_position,
             "position_diff": away_position - home_position,  # Positive = home better
-
             # H2H
             "h2h_win_rate": h2h_win_rate,
             "h2h_margin": h2h_margin,
             "h2h_games": valid_h2h_games,
-
             # Recent form (rolling)
             "home_l5_win_pct": home_form["l5_win_pct"],
             "away_l5_win_pct": away_form["l5_win_pct"],
@@ -1527,7 +1576,6 @@ class RichFeatureBuilder:
             "away_l10_margin": away_form["l10_margin"],
             "home_form_trend": home_form_trend,
             "away_form_trend": away_form_trend,
-
             # 1H-specific features (first half stats from recent form)
             "home_ppg_1h": home_form["l5_ppg_1h"],
             "home_papg_1h": home_form["l5_papg_1h"],
@@ -1537,14 +1585,11 @@ class RichFeatureBuilder:
             "away_spread_margin_1h": away_form["l5_margin_1h"],
             "ppg_diff_1h": home_form["l5_ppg_1h"] - away_form["l5_ppg_1h"],
             "papg_diff_1h": home_form["l5_papg_1h"] - away_form["l5_papg_1h"],
-
             # STRICT MODE: 1H models get NO FG features (temporal isolation)
             # Only 1H-specific features for 1H predictions
-
             # Predicted values for 1H model (v33.0.7.0: matchup-based, not scaled)
             "predicted_margin_1h": predicted_margin_1h,
             "predicted_total_1h": predicted_total_1h,
-
             # Rest/fatigue
             "home_rest_days": home_form["rest_days"],
             "away_rest_days": away_form["rest_days"],
@@ -1554,12 +1599,10 @@ class RichFeatureBuilder:
             "home_rest_adj": home_rest_adj,
             "away_rest_adj": away_rest_adj,
             "rest_margin_adj": rest_margin_adj,
-
             # Form adjustment
             "home_form_adj": home_form_adj,
             "away_form_adj": away_form_adj,
             "form_margin_adj": form_margin_adj,
-
             # ELO proxy (derived from win% and margin)
             "home_elo": 1500 + (home_win_pct - 0.5) * 400 + (home_ppg - home_papg) * 10,
             "away_elo": 1500 + (away_win_pct - 0.5) * 400 + (away_ppg - away_papg) * 10,
@@ -1573,7 +1616,6 @@ class RichFeatureBuilder:
             "injury_total_diff": injury_total_diff,
             "home_star_out": home_star_out,
             "away_star_out": away_star_out,
-
             # ============================================================
             # GRANULAR MODEL 2.0: STAR AVAILABILITY
             # ============================================================
@@ -1582,19 +1624,16 @@ class RichFeatureBuilder:
             # Note: We use get_game_player_stats on recent games
             "home_star_avail": home_star_avail,
             "away_star_avail": away_star_avail,
-
             # ============================================================
             # GRANULAR MODEL 2.0: PAINT DEFENSE
             # ============================================================
             "home_paint_defense": home_paint_defense,
             "away_paint_defense": away_paint_defense,
-
             # ============================================================
             # GRANULAR MODEL 2.0: BENCH SCORING
             # ============================================================
             "home_bench_scoring": home_bench_scoring,
             "away_bench_scoring": away_bench_scoring,
-
             # ============================================================
             # BOX SCORE ADVANCED STATS (API-Basketball /games/statistics/teams)
             # ============================================================
@@ -1611,7 +1650,6 @@ class RichFeatureBuilder:
             "home_efg_pct": home_box_avgs["efg_pct"],
             "away_efg_pct": away_box_avgs["efg_pct"],
             "efg_pct_diff": home_box_avgs["efg_pct"] - away_box_avgs["efg_pct"],
-
             # Rebounding
             "home_rebounds": home_box_avgs["rebounds_total"],
             "away_rebounds": away_box_avgs["rebounds_total"],
@@ -1623,7 +1661,6 @@ class RichFeatureBuilder:
             "away_dreb": away_box_avgs["rebounds_def"],
             "home_oreb_pct": home_box_avgs["oreb_pct"],
             "away_oreb_pct": away_box_avgs["oreb_pct"],
-
             # Playmaking & Turnovers
             "home_assists": home_box_avgs["assists"],
             "away_assists": away_box_avgs["assists"],
@@ -1634,7 +1671,6 @@ class RichFeatureBuilder:
             "home_ast_to_ratio": home_box_avgs["ast_to_ratio"],
             "away_ast_to_ratio": away_box_avgs["ast_to_ratio"],
             "ast_to_ratio_diff": home_box_avgs["ast_to_ratio"] - away_box_avgs["ast_to_ratio"],
-
             # Defense (steals, blocks)
             "home_steals": home_box_avgs["steals"],
             "away_steals": away_box_avgs["steals"],
@@ -1642,7 +1678,6 @@ class RichFeatureBuilder:
             "home_blocks": home_box_avgs["blocks"],
             "away_blocks": away_box_avgs["blocks"],
             "blocks_diff": home_box_avgs["blocks"] - away_box_avgs["blocks"],
-
             # Fouls
             "home_fouls": home_box_avgs["personal_fouls"],
             "away_fouls": away_box_avgs["personal_fouls"],
@@ -1654,37 +1689,30 @@ class RichFeatureBuilder:
         features["away_margin"] = features["away_avg_margin"]
         features["home_rest"] = features["home_rest_days"]
         features["away_rest"] = features["away_rest_days"]
-        features["rest_diff"] = features["home_rest_days"] - \
-            features["away_rest_days"]
+        features["rest_diff"] = features["home_rest_days"] - features["away_rest_days"]
         features["home_pace"] = home_ppg + home_papg
         features["away_pace"] = away_ppg + away_papg
-        features["expected_pace"] = (
-            features["home_pace"] + features["away_pace"]) / 2
+        features["expected_pace"] = (features["home_pace"] + features["away_pace"]) / 2
         features["home_score_std"] = home_form["score_std"]
         features["away_score_std"] = away_form["score_std"]
         features["home_margin_std"] = home_form["margin_std"]
         features["away_margin_std"] = away_form["margin_std"]
         features["home_net_rating"] = features["home_net_rtg"]
         features["away_net_rating"] = features["away_net_rtg"]
-        features["net_rating_diff"] = features["home_net_rtg"] - \
-            features["away_net_rtg"]
+        features["net_rating_diff"] = features["home_net_rtg"] - features["away_net_rtg"]
         features["home_1h_win_pct"] = home_form["win_pct_1h"]
         features["away_1h_win_pct"] = away_form["win_pct_1h"]
         features["home_margin_1h"] = features["home_spread_margin_1h"]
         features["away_margin_1h"] = features["away_spread_margin_1h"]
-        features["home_pace_1h"] = features["home_ppg_1h"] + \
-            features["home_papg_1h"]
-        features["away_pace_1h"] = features["away_ppg_1h"] + \
-            features["away_papg_1h"]
-        features["expected_pace_1h"] = (
-            features["home_pace_1h"] + features["away_pace_1h"]) / 2
+        features["home_pace_1h"] = features["home_ppg_1h"] + features["home_papg_1h"]
+        features["away_pace_1h"] = features["away_ppg_1h"] + features["away_papg_1h"]
+        features["expected_pace_1h"] = (features["home_pace_1h"] + features["away_pace_1h"]) / 2
         features["dynamic_hca"] = HOME_COURT_ADV
         features["dynamic_hca_1h"] = HOME_COURT_ADV * 0.5
         features["h2h_win_pct"] = h2h_win_rate
 
         features["elo_diff"] = features["home_elo"] - features["away_elo"]
-        features["elo_prob_home"] = 1 / \
-            (1 + 10 ** (-features["elo_diff"] / 400))
+        features["elo_prob_home"] = 1 / (1 + 10 ** (-features["elo_diff"] / 400))
 
         # ============================================================
         # TRAVEL/FATIGUE FEATURES
@@ -1698,14 +1726,11 @@ class RichFeatureBuilder:
         # Calculate travel: from previous game location to current game (home team's arena)
         # If no previous location data, fall back to away team's home arena
         if away_prev_location:
-            away_travel_distance = get_travel_distance(
-                away_prev_location, home_team) or 0
-            away_tz_change = get_timezone_difference(
-                away_prev_location, home_team)
+            away_travel_distance = get_travel_distance(away_prev_location, home_team) or 0
+            away_tz_change = get_timezone_difference(away_prev_location, home_team)
         else:
             # Fallback: assume traveling from home arena
-            away_travel_distance = get_travel_distance(
-                away_team, home_team) or 0
+            away_travel_distance = get_travel_distance(away_team, home_team) or 0
             away_tz_change = get_timezone_difference(away_team, home_team)
 
         away_is_b2b = away_form["rest_days"] <= 1
@@ -1734,8 +1759,7 @@ class RichFeatureBuilder:
             features["away_b2b_travel_penalty"] = -1.5  # Additional penalty
 
         # Travel advantage for home team
-        features["travel_advantage"] = - \
-            away_travel_fatigue  # Away fatigue helps home
+        features["travel_advantage"] = -away_travel_fatigue  # Away fatigue helps home
 
         # Store team-specific HCA for transparency
         features["home_court_advantage"] = HOME_COURT_ADV
@@ -1777,21 +1801,24 @@ class RichFeatureBuilder:
 
         # Add betting splits features if available
         if betting_splits:
-            if getattr(settings, "require_action_network_splits", False) and getattr(
-                betting_splits, "source", None
-            ) != "action_network":
+            if (
+                getattr(settings, "require_action_network_splits", False)
+                and getattr(betting_splits, "source", None) != "action_network"
+            ):
                 raise ValueError(
                     "STRICT MODE: Betting splits must come from Action Network when "
                     "REQUIRE_ACTION_NETWORK_SPLITS=true"
                 )
             from src.ingestion.betting_splits import splits_to_features
+
             splits_features = splits_to_features(betting_splits)
             # Ensure explicit indicator is always present when splits are real
             if "has_real_splits" not in splits_features:
                 splits_features["has_real_splits"] = 1
-            if getattr(settings, "require_real_splits", False) and splits_features.get(
-                "has_real_splits", 0
-            ) != 1:
+            if (
+                getattr(settings, "require_real_splits", False)
+                and splits_features.get("has_real_splits", 0) != 1
+            ):
                 raise ValueError(
                     "STRICT MODE: Action Network splits returned default/empty values "
                     "(has_real_splits=0) and REQUIRE_REAL_SPLITS=true"
@@ -1891,13 +1918,10 @@ class RichFeatureBuilder:
         # ATS (against the spread) cover rates - estimate from margin performance
         # Teams that consistently outperform their expected margin tend to cover more often
         # Formula: base 50% + adjustment based on how team performs vs expected scoring
-        home_margin_performance = (
-            home_ppg - home_papg) / 10  # Net rating scaled
+        home_margin_performance = (home_ppg - home_papg) / 10  # Net rating scaled
         away_margin_performance = (away_ppg - away_papg) / 10
-        features["home_ats_pct"] = max(
-            0.35, min(0.65, 0.50 + home_margin_performance * 0.05))
-        features["away_ats_pct"] = max(
-            0.35, min(0.65, 0.50 + away_margin_performance * 0.05))
+        features["home_ats_pct"] = max(0.35, min(0.65, 0.50 + home_margin_performance * 0.05))
+        features["away_ats_pct"] = max(0.35, min(0.65, 0.50 + away_margin_performance * 0.05))
         # Use same for 1H
         features["home_ats_pct_1h"] = features["home_ats_pct"]
         features["away_ats_pct_1h"] = features["away_ats_pct"]
@@ -1906,21 +1930,18 @@ class RichFeatureBuilder:
         league_avg_total = LEAGUE_AVG_PPG * 2
         home_total_bias = (features["home_total_ppg"] - league_avg_total) / 10
         away_total_bias = (features["away_total_ppg"] - league_avg_total) / 10
-        features["home_over_pct"] = max(
-            0.35, min(0.65, 0.50 + home_total_bias * 0.05))
-        features["away_over_pct"] = max(
-            0.35, min(0.65, 0.50 + away_total_bias * 0.05))
+        features["home_over_pct"] = max(0.35, min(0.65, 0.50 + home_total_bias * 0.05))
+        features["away_over_pct"] = max(0.35, min(0.65, 0.50 + away_total_bias * 0.05))
 
         # Injury spread impact - calculated from actual injury PPG data
         # Losing scorers directly impacts expected margin
-        features["home_injury_spread_impact"] = - \
-            home_out_ppg  # Negative = hurts spread
+        features["home_injury_spread_impact"] = -home_out_ppg  # Negative = hurts spread
         features["away_injury_spread_impact"] = -away_out_ppg
-        features["injury_spread_diff"] = features["home_injury_spread_impact"] - \
-            features["away_injury_spread_impact"]
+        features["injury_spread_diff"] = (
+            features["home_injury_spread_impact"] - features["away_injury_spread_impact"]
+        )
 
         # Rest advantage for spread betting (home rest - away rest)
-        features["rest_advantage"] = home_form["rest_days"] - \
-            away_form["rest_days"]
+        features["rest_advantage"] = home_form["rest_days"] - away_form["rest_days"]
 
         return features

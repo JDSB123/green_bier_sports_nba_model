@@ -16,59 +16,68 @@ Full Game (FG):
 STRICT MODE: Every request fetches fresh data from APIs.
 No assumptions, no defaults - all data must be explicitly provided.
 """
+
 import base64
 import csv
 import hashlib
 import hmac
 import io
-import os
 import json
 import logging
-import numpy as np
+import os
 import re
 import sys
 import uuid
-from typing import Any, Dict, List, Optional, Union
-from pathlib import Path as PathLib
-from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode
-
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Path, Request
+from datetime import datetime, timedelta, timezone
+from pathlib import Path as PathLib
+from typing import Any, Dict, List, Optional, Union
+from urllib.parse import urlencode
+from zoneinfo import ZoneInfo
+
+import numpy as np
+from fastapi import FastAPI, HTTPException, Path, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from slowapi.util import get_remote_address
 from starlette.responses import Response
 
-from src.config import settings, PROJECT_ROOT
-from src.prediction import UnifiedPredictionEngine, ModelNotFoundError
-from src.prediction.feature_validation import MissingFeaturesError
-from src.ingestion import the_odds
-from src.ingestion.betting_splits import fetch_public_betting_splits, validate_splits_sources_configured
+from src.config import PROJECT_ROOT, settings
 from src.features import RichFeatureBuilder
-from src.utils.logging import get_logger
-from src.utils.version import resolve_version
-from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
-from src.utils.markets import get_market_catalog
-from src.utils.startup_checks import run_startup_integrity_checks, StartupIntegrityError
-from src.utils.api_auth import get_api_key, APIKeyMiddleware
+from src.ingestion import the_odds
+from src.ingestion.betting_splits import (
+    fetch_public_betting_splits,
+    validate_splits_sources_configured,
+)
+from src.ingestion.standardize import normalize_team_to_espn
+from src.modeling.edge_thresholds import get_edge_thresholds_for_game
+from src.modeling.unified_features import get_feature_defaults
+from src.prediction import ModelNotFoundError, UnifiedPredictionEngine
+from src.prediction.feature_validation import MissingFeaturesError
 from src.tracking import PickTracker
+from src.utils.api_auth import APIKeyMiddleware, get_api_key
+from src.utils.comprehensive_edge import calculate_comprehensive_edge
+from src.utils.logging import get_logger
+from src.utils.markets import get_market_catalog
+from src.utils.security import get_api_key_status, mask_api_key, validate_premium_features
 
 # Additional imports for comprehensive edge calculation
 from src.utils.slate_analysis import (
-    get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds,
-    clear_unified_records_cache  # QA/QC: Clear records cache for fresh data
+    clear_unified_records_cache,  # QA/QC: Clear records cache for fresh data
 )
-from src.utils.comprehensive_edge import calculate_comprehensive_edge
-from src.modeling.edge_thresholds import get_edge_thresholds_for_game
-from src.modeling.unified_features import get_feature_defaults
-from zoneinfo import ZoneInfo
-
-from src.ingestion.standardize import normalize_team_to_espn
+from src.utils.slate_analysis import (
+    extract_consensus_odds,
+    fetch_todays_games,
+    get_target_date,
+    parse_utc_time,
+    to_cst,
+)
+from src.utils.startup_checks import StartupIntegrityError, run_startup_integrity_checks
+from src.utils.version import resolve_version
 
 logger = get_logger(__name__)
 
@@ -97,40 +106,33 @@ async def _validate_teams_outgoing_webhook(request: Request) -> None:
     """Validate Teams outgoing webhook signature if configured."""
     webhook_secret = os.environ.get("TEAMS_WEBHOOK_SECRET", "").strip()
     if not webhook_secret:
-        logger.warning(
-            "TEAMS_WEBHOOK_SECRET not set - skipping Teams outgoing webhook validation")
+        logger.warning("TEAMS_WEBHOOK_SECRET not set - skipping Teams outgoing webhook validation")
         return
 
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("HMAC "):
-        logger.error(
-            "Missing HMAC Authorization header for Teams outgoing webhook")
-        raise HTTPException(
-            status_code=401, detail="Unauthorized - missing HMAC signature")
+        logger.error("Missing HMAC Authorization header for Teams outgoing webhook")
+        raise HTTPException(status_code=401, detail="Unauthorized - missing HMAC signature")
 
     try:
         secret_bytes = base64.b64decode(webhook_secret)
     except Exception:
         logger.error("Invalid TEAMS_WEBHOOK_SECRET - expected base64")
-        raise HTTPException(
-            status_code=500, detail="Server configuration error")
+        raise HTTPException(status_code=500, detail="Server configuration error")
 
     body = await request.body()
     computed_hash = hmac.new(secret_bytes, body, hashlib.sha256)
-    computed_signature = base64.b64encode(
-        computed_hash.digest()).decode("utf-8")
+    computed_signature = base64.b64encode(computed_hash.digest()).decode("utf-8")
     provided_signature = auth_header[5:]
     if not hmac.compare_digest(provided_signature, computed_signature):
         logger.error("HMAC validation failed for Teams outgoing webhook")
-        raise HTTPException(
-            status_code=401, detail="Unauthorized - invalid signature")
+        raise HTTPException(status_code=401, detail="Unauthorized - invalid signature")
 
 
 def _parse_teams_command(text: str) -> dict:
     """Parse Teams outgoing webhook commands into filters."""
     normalized = text.lower().strip()
-    result = {"date": "today", "team_filter": None,
-              "elite_only": False, "show_menu": False}
+    result = {"date": "today", "team_filter": None, "elite_only": False, "show_menu": False}
 
     if not normalized or "help" in normalized or "menu" in normalized or "options" in normalized:
         result["show_menu"] = True
@@ -158,6 +160,7 @@ _TEAMS_CACHE_TTL_SECONDS = 300  # 5 minutes
 def _get_cached_picks(date_key: str) -> Optional[Dict[str, Any]]:
     """Get cached picks if still valid (within TTL)."""
     import time
+
     if date_key in _teams_picks_cache:
         cached_time = _teams_picks_cache_time.get(date_key, 0)
         if time.time() - cached_time < _TEAMS_CACHE_TTL_SECONDS:
@@ -168,21 +171,18 @@ def _get_cached_picks(date_key: str) -> Optional[Dict[str, Any]]:
 def _set_cached_picks(date_key: str, data: Dict[str, Any]) -> None:
     """Cache picks data with timestamp."""
     import time
+
     _teams_picks_cache[date_key] = data
     _teams_picks_cache_time[date_key] = time.time()
 
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
-    'nba_api_requests_total',
-    'Total number of API requests',
-    ['method', 'endpoint', 'status']
+    "nba_api_requests_total", "Total number of API requests", ["method", "endpoint", "status"]
 )
 
 REQUEST_DURATION = Histogram(
-    'nba_api_request_duration_seconds',
-    'API request duration in seconds',
-    ['method', 'endpoint']
+    "nba_api_request_duration_seconds", "API request duration in seconds", ["method", "endpoint"]
 )
 
 # Rate limiter
@@ -191,8 +191,10 @@ limiter = Limiter(key_func=get_remote_address)
 
 # --- Request/Response Models ---
 
+
 class GamePredictionRequest(BaseModel):
     """Request for single game prediction - 4 markets (1H + FG spreads/totals)."""
+
     home_team: str = Field(..., example="Cleveland Cavaliers")
     away_team: str = Field(..., example="Chicago Bulls")
     # Full game lines - REQUIRED
@@ -240,6 +242,7 @@ class MarketsResponse(BaseModel):
 
 # --- API Setup ---
 
+
 def _models_dir() -> PathLib:
     """
     Resolve models directory from a single configured path.
@@ -269,6 +272,7 @@ def _canonical_game_key(home_team: str | None, away_team: str | None, source: st
         return ""
     try:
         from src.ingestion.standardize import normalize_team_to_espn
+
         home_norm, home_valid = normalize_team_to_espn(str(home_team), source=source)
         away_norm, away_valid = normalize_team_to_espn(str(away_team), source=source)
         if home_valid and away_valid:
@@ -293,8 +297,7 @@ def _require_splits_if_strict(use_splits: bool) -> bool:
 
 async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Fetch betting splits, enforcing strict Action Network requirements when configured."""
-    require_action_network = bool(
-        getattr(settings, "require_action_network_splits", False))
+    require_action_network = bool(getattr(settings, "require_action_network_splits", False))
     require_real = bool(getattr(settings, "require_real_splits", False))
 
     if not (require_action_network or require_real):
@@ -314,8 +317,7 @@ async def _fetch_required_splits(games: List[Dict[str, Any]]) -> Dict[str, Any]:
             require_non_empty=True,
         )
     except Exception as e:
-        logger.error(
-            f"STRICT MODE: Failed to fetch required betting splits: {e}")
+        logger.error(f"STRICT MODE: Failed to fetch required betting splits: {e}")
         raise HTTPException(
             status_code=502,
             detail=f"STRICT MODE: Action Network betting splits unavailable: {e}",
@@ -374,7 +376,8 @@ async def lifespan(app: FastAPI):
 
     models_dir = _models_dir()
     logger.info(
-        f"{RELEASE_VERSION} STRICT MODE: Loading Unified Prediction Engine from {models_dir}")
+        f"{RELEASE_VERSION} STRICT MODE: Loading Unified Prediction Engine from {models_dir}"
+    )
 
     # Diagnostic: List files in models directory
     if models_dir.exists():
@@ -387,15 +390,13 @@ async def lifespan(app: FastAPI):
         logger.error(f"Models directory does not exist: {models_dir}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
-    logger.info(
-        f"{RELEASE_VERSION} STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
-    app.state.engine = UnifiedPredictionEngine(
-        models_dir=models_dir, require_all=True)
-    app.state.feature_builder = RichFeatureBuilder(
-        season=settings.current_season)
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
+    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
+    app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
     # NO FILE CACHING - all data fetched fresh from APIs per request
     logger.info(
-        f"{RELEASE_VERSION} STRICT MODE: File caching DISABLED - all data fetched fresh per request")
+        f"{RELEASE_VERSION} STRICT MODE: File caching DISABLED - all data fetched fresh per request"
+    )
 
     # Initialize live pick tracker
     picks_dir = PathLib(settings.data_processed_dir) / "picks"
@@ -406,7 +407,8 @@ async def lifespan(app: FastAPI):
     # Log model info
     model_info = app.state.engine.get_model_info()
     logger.info(
-        f"{RELEASE_VERSION} initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}")
+        f"{RELEASE_VERSION} initialized - {model_info['markets']} markets loaded: {model_info['markets_list']}"
+    )
 
     yield  # Application runs here
 
@@ -418,7 +420,7 @@ app = FastAPI(
     title=f"NBA {RELEASE_VERSION} - STRICT MODE Production Picks",
     description="4 INDEPENDENT Markets: 1H+FG for Spread and Total. FRESH DATA ONLY - No caching, no fallbacks, no placeholders.",
     version=RELEASE_VERSION,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add rate limiter
@@ -434,12 +436,11 @@ allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
 if not allowed_origins_str:
     # Hard fail to avoid silently running without CORS configuration
     raise RuntimeError(
-        "ALLOWED_ORIGINS is required but not set; set ALLOWED_ORIGINS to a comma-separated list of allowed origins.")
-allowed_origins = [origin.strip()
-                   for origin in allowed_origins_str.split(",") if origin.strip()]
+        "ALLOWED_ORIGINS is required but not set; set ALLOWED_ORIGINS to a comma-separated list of allowed origins."
+    )
+allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
 if not allowed_origins:
-    raise RuntimeError(
-        "ALLOWED_ORIGINS resolved to an empty list; provide at least one origin.")
+    raise RuntimeError("ALLOWED_ORIGINS resolved to an empty list; provide at least one origin.")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -496,31 +497,27 @@ async def metrics_middleware(request: Request, call_next):
     try:
         response = await call_next(request)
         status = response.status_code
-        REQUEST_COUNT.labels(
-            method=method, endpoint=endpoint, status=status).inc()
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status).inc()
         return response
     except Exception as e:
         logger.error(f"[{request_id}] Request failed: {e}")
-        REQUEST_COUNT.labels(
-            method=method, endpoint=endpoint, status=500).inc()
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=500).inc()
         raise
     finally:
         duration = (datetime.now() - start_time).total_seconds()
-        REQUEST_DURATION.labels(
-            method=method, endpoint=endpoint).observe(duration)
+        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
         if duration > 5.0:  # Log slow requests
-            logger.warning(
-                f"[{request_id}] Slow request: {method} {endpoint} took {duration:.2f}s")
+            logger.warning(f"[{request_id}] Slow request: {method} {endpoint} took {duration:.2f}s")
 
 
 # --- Endpoints ---
+
 
 @app.get("/health")
 @limiter.limit("100/minute")
 def health(request: Request):
     """Check API health - 4 markets (spread/total only)."""
-    engine_loaded = hasattr(
-        app.state, 'engine') and app.state.engine is not None
+    engine_loaded = hasattr(app.state, "engine") and app.state.engine is not None
     api_keys = get_api_key_status()
     try:
         splits_sources = validate_splits_sources_configured()
@@ -551,7 +548,7 @@ def health(request: Request):
         "season": settings.current_season,
         "api_keys": api_keys,
         "betting_splits_sources": splits_sources,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -559,10 +556,8 @@ def health(request: Request):
 @limiter.limit("60/minute")
 async def root_picks(
     request: Request,
-    date: str = Query(
-        "today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    tier: str = Query(
-        "all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'")
+    date: str = Query("today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query("all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'"),
 ):
     """
     Root endpoint returning weekly NBA picks.
@@ -578,19 +573,18 @@ async def root_picks(
         result = await _build_weekly_lineup_payload(request, date=date, tier=tier)
         if not isinstance(result, dict) or result.get("error"):
             return JSONResponse(
-                content=result if isinstance(result, dict) else {
-                    "sport": "NBA",
-                    "error": "Failed to fetch predictions",
-                    "date": date
-                },
-                status_code=500
+                content=(
+                    result
+                    if isinstance(result, dict)
+                    else {"sport": "NBA", "error": "Failed to fetch predictions", "date": date}
+                ),
+                status_code=500,
             )
         return JSONResponse(content=result)
     except Exception as e:
         logger.error(f"Error in root picks endpoint: {str(e)}", exc_info=True)
         return JSONResponse(
-            content={"sport": "NBA", "error": str(e), "date": date},
-            status_code=500
+            content={"sport": "NBA", "error": str(e), "date": date}, status_code=500
         )
 
 
@@ -620,35 +614,37 @@ def get_monitoring_stats(request: Request):
     # Signal agreement tracking
     try:
         from src.monitoring.signal_tracker import get_signal_tracker
+
         signal_tracker = get_signal_tracker()
         stats["signal_agreement"] = signal_tracker.get_stats()
         stats["signal_agreement"]["market_rates"] = signal_tracker.get_market_rates()
         stats["signal_agreement"]["recent_disagreements"] = signal_tracker.get_recent_disagreements(
-            5)
+            5
+        )
     except Exception as e:
         stats["signal_agreement"] = {"error": str(e)}
 
     # Feature completeness tracking
     try:
         from src.monitoring.feature_completeness import get_feature_tracker
+
         feature_tracker = get_feature_tracker()
         stats["feature_completeness"] = feature_tracker.get_stats()
         stats["feature_completeness"]["market_rates"] = feature_tracker.get_market_completeness()
-        stats["feature_completeness"]["top_missing"] = feature_tracker.get_most_missing_features(
-            10)
+        stats["feature_completeness"]["top_missing"] = feature_tracker.get_most_missing_features(10)
     except Exception as e:
         stats["feature_completeness"] = {"error": str(e)}
 
     # Model drift detection
     try:
         from src.monitoring.drift_detection import get_drift_detector
+
         drift_detector = get_drift_detector()
         stats["drift_detection"] = {
             "market_stats": drift_detector.get_all_stats(),
             "recent_alerts": drift_detector.get_recent_alerts(5),
             "drifting_markets": [
-                market for market in drift_detector.metrics
-                if drift_detector.is_drifting(market)[0]
+                market for market in drift_detector.metrics if drift_detector.is_drifting(market)[0]
             ],
         }
     except Exception as e:
@@ -656,7 +652,8 @@ def get_monitoring_stats(request: Request):
 
     # Rate limiter stats
     try:
-        from src.utils.rate_limiter import get_odds_api_limiter, get_api_basketball_limiter
+        from src.utils.rate_limiter import get_api_basketball_limiter, get_odds_api_limiter
+
         stats["rate_limiters"] = {
             "the_odds_api": get_odds_api_limiter().get_stats(),
             "api_basketball": get_api_basketball_limiter().get_stats(),
@@ -666,7 +663,8 @@ def get_monitoring_stats(request: Request):
 
     # Circuit breaker stats
     try:
-        from src.utils.circuit_breaker import get_odds_api_breaker, get_api_basketball_breaker
+        from src.utils.circuit_breaker import get_api_basketball_breaker, get_odds_api_breaker
+
         stats["circuit_breakers"] = {
             "the_odds_api": get_odds_api_breaker().get_stats(),
             "api_basketball": get_api_basketball_breaker().get_stats(),
@@ -689,6 +687,7 @@ def reset_monitoring_stats(request: Request):
 
     try:
         from src.monitoring.signal_tracker import get_signal_tracker
+
         get_signal_tracker().reset()
         reset_results["signal_tracker"] = "reset"
     except Exception as e:
@@ -696,6 +695,7 @@ def reset_monitoring_stats(request: Request):
 
     try:
         from src.monitoring.feature_completeness import get_feature_tracker
+
         get_feature_tracker().reset()
         reset_results["feature_tracker"] = "reset"
     except Exception as e:
@@ -703,6 +703,7 @@ def reset_monitoring_stats(request: Request):
 
     try:
         from src.monitoring.drift_detection import get_drift_detector
+
         get_drift_detector().reset()
         reset_results["drift_detector"] = "reset"
     except Exception as e:
@@ -729,13 +730,14 @@ async def clear_cache(request: Request):
     cleared = {"session_cache": False, "api_cache": 0}
 
     # Clear session caches in feature builder (the only cache that exists now)
-    if hasattr(app.state, 'feature_builder'):
+    if hasattr(app.state, "feature_builder"):
         app.state.feature_builder.clear_session_cache()
         cleared["session_cache"] = True
 
     # Clear API cache layer if it exists
     try:
         from src.utils.api_cache import api_cache
+
         cleared["api_cache"] = api_cache.clear_all()
     except Exception:
         pass  # API cache may not be configured
@@ -747,7 +749,7 @@ async def clear_cache(request: Request):
         "cleared": cleared,
         "mode": "STRICT",
         "message": "Session caches cleared. Next API call will fetch fresh data from all sources.",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
 
@@ -763,12 +765,13 @@ async def get_cache_stats(request: Request):
     stats = {"session_cache": {}, "persistent_cache": {}}
 
     # Get feature builder cache stats
-    if hasattr(app.state, 'feature_builder'):
+    if hasattr(app.state, "feature_builder"):
         stats.update(app.state.feature_builder.get_cache_stats())
 
     # Get API cache stats if available
     try:
         from src.utils.api_cache import api_cache
+
         api_stats = api_cache.get_stats()
         stats["api_cache"] = api_stats
     except Exception:
@@ -779,7 +782,7 @@ async def get_cache_stats(request: Request):
         "timestamp": datetime.now().isoformat(),
         "caching_strategy": "LAZY_PERSISTENT",
         "description": "Session caches clear between requests. Persistent caches lazy-load on first use.",
-        "stats": stats
+        "stats": stats,
     }
 
 
@@ -799,11 +802,11 @@ def verify_integrity(request: Request):
             "fg": ["spread", "total"],
         },
         "checks": {},
-        "errors": []
+        "errors": [],
     }
 
     # Check 1: Engine loaded
-    if not hasattr(app.state, 'engine') or app.state.engine is None:
+    if not hasattr(app.state, "engine") or app.state.engine is None:
         results["status"] = "fail"
         results["errors"].append("Engine not loaded")
         results["checks"]["engine_loaded"] = False
@@ -811,8 +814,8 @@ def verify_integrity(request: Request):
         results["checks"]["engine_loaded"] = True
 
         # Check 2: Period predictors exist (1H + FG only)
-        has_fg = hasattr(app.state.engine, 'fg_predictor')
-        has_1h = hasattr(app.state.engine, 'h1_predictor')
+        has_fg = hasattr(app.state.engine, "fg_predictor")
+        has_1h = hasattr(app.state.engine, "h1_predictor")
 
         results["checks"]["period_predictors"] = {
             "full_game": has_fg,
@@ -820,8 +823,8 @@ def verify_integrity(request: Request):
         }
 
         # Also check legacy predictors if present
-        has_spread = hasattr(app.state.engine, 'spread_predictor')
-        has_total = hasattr(app.state.engine, 'total_predictor')
+        has_spread = hasattr(app.state.engine, "spread_predictor")
+        has_total = hasattr(app.state.engine, "total_predictor")
         results["checks"]["legacy_predictors"] = {
             "spread": has_spread,
             "total": has_total,
@@ -835,15 +838,11 @@ def verify_integrity(request: Request):
         required_features = set()
         try:
             if has_fg and hasattr(app.state.engine, "fg_predictor"):
-                required_features.update(
-                    app.state.engine.fg_predictor.spread_features or [])
-                required_features.update(
-                    app.state.engine.fg_predictor.total_features or [])
+                required_features.update(app.state.engine.fg_predictor.spread_features or [])
+                required_features.update(app.state.engine.fg_predictor.total_features or [])
             if has_1h and hasattr(app.state.engine, "h1_predictor"):
-                required_features.update(
-                    app.state.engine.h1_predictor.spread_features or [])
-                required_features.update(
-                    app.state.engine.h1_predictor.total_features or [])
+                required_features.update(app.state.engine.h1_predictor.spread_features or [])
+                required_features.update(app.state.engine.h1_predictor.total_features or [])
         except Exception as e:
             logger.warning(f"Unable to read model feature requirements: {e}")
 
@@ -875,18 +874,13 @@ def verify_integrity(request: Request):
         }
         defaults.update(overrides)
 
-        test_features = {name: defaults.get(
-            name, 0.0) for name in required_features}
+        test_features = {name: defaults.get(name, 0.0) for name in required_features}
         # CRITICAL: Always include predicted_margin/predicted_total - needed for edge calculation
         # These are computed by RichFeatureBuilder at inference time, not part of model columns
-        test_features.setdefault(
-            "predicted_margin", overrides["predicted_margin"])
-        test_features.setdefault(
-            "predicted_total", overrides["predicted_total"])
-        test_features.setdefault(
-            "predicted_margin_1h", overrides["predicted_margin_1h"])
-        test_features.setdefault("predicted_total_1h",
-                                 overrides["predicted_total_1h"])
+        test_features.setdefault("predicted_margin", overrides["predicted_margin"])
+        test_features.setdefault("predicted_total", overrides["predicted_total"])
+        test_features.setdefault("predicted_margin_1h", overrides["predicted_margin_1h"])
+        test_features.setdefault("predicted_total_1h", overrides["predicted_total_1h"])
 
         # Check 3: Test 1H prediction
         try:
@@ -929,10 +923,8 @@ def verify_integrity(request: Request):
 @limiter.limit("30/minute")
 async def get_slate_predictions(
     request: Request,
-    date: str = Path(...,
-                     description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    use_splits: bool = Query(
-        True, description="Whether to fetch and use betting splits"),
+    date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    use_splits: bool = Query(True, description="Whether to fetch and use betting splits"),
     api_key: str = None,
 ):
     """
@@ -941,34 +933,40 @@ async def get_slate_predictions(
     4 markets (1H + FG spreads/totals). Q1 removed entirely.
     Returns 1H/FG for spread and total when available.
     """
-    if not hasattr(app.state, 'engine') or app.state.engine is None:
+    if not hasattr(app.state, "engine") or app.state.engine is None:
         raise HTTPException(
-            status_code=503, detail=f"{RELEASE_VERSION}: Engine not loaded - models missing")
+            status_code=503, detail=f"{RELEASE_VERSION}: Engine not loaded - models missing"
+        )
     use_splits = _require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
     logger.info(
-        f"{RELEASE_VERSION}: Caches cleared - fetching fresh data (odds from The Odds API, records from ESPN when available)")
+        f"{RELEASE_VERSION}: Caches cleared - fetching fresh data (odds from The Odds API, records from ESPN when available)"
+    )
 
     # Resolve date
-    from src.utils.slate_analysis import get_target_date, fetch_todays_games, extract_consensus_odds, parse_utc_time, to_cst
+    from src.utils.slate_analysis import (
+        extract_consensus_odds,
+        fetch_todays_games,
+        get_target_date,
+        parse_utc_time,
+        to_cst,
+    )
+
     try:
         target_date = get_target_date(date)
     except ValueError:
-        raise HTTPException(
-            status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
     # Fetch games
     try:
         # Records are sourced from ESPN standings when available (odds remain from The Odds API)
         games = await fetch_todays_games(target_date, include_records=True)
     except Exception as e:
-        logger.error("Error fetching odds for %s: %s",
-                     target_date, e, exc_info=True)
-        fallback_timestamp = datetime.now(
-            timezone.utc).isoformat().replace("+00:00", "Z")
+        logger.error("Error fetching odds for %s: %s", target_date, e, exc_info=True)
+        fallback_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         return SlateResponse(
             date=str(target_date),
             predictions=[],
@@ -980,13 +978,15 @@ async def get_slate_predictions(
     if not games:
         return SlateResponse(date=str(target_date), predictions=[], total_plays=0)
 
-    odds_as_of_utc = datetime.now(
-        timezone.utc).isoformat().replace("+00:00", "Z")
+    odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
     odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
-        odds_snapshot_path = await save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+
+        odds_snapshot_path = await save_odds(
+            games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}"
+        )
         archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
         odds_archive_path = await save_odds(
             games,
@@ -1024,13 +1024,10 @@ async def get_slate_predictions(
             away_record_data = game.get("away_team_record") or {}
 
             features["home_wins"] = int(home_record_data.get("wins", 0) or 0)
-            features["home_losses"] = int(
-                home_record_data.get("losses", 0) or 0)
+            features["home_losses"] = int(home_record_data.get("losses", 0) or 0)
             features["away_wins"] = int(away_record_data.get("wins", 0) or 0)
-            features["away_losses"] = int(
-                away_record_data.get("losses", 0) or 0)
-            features["_records_source"] = home_record_data.get(
-                "source", "unknown")
+            features["away_losses"] = int(away_record_data.get("losses", 0) or 0)
+            features["_records_source"] = home_record_data.get("source", "unknown")
             features["_data_unified"] = bool(game.get("_data_unified", False))
 
             # Extract consensus lines
@@ -1039,12 +1036,10 @@ async def get_slate_predictions(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            missing_lines = _missing_market_lines(
-                fg_spread, fg_total, fh_spread, fh_total)
+            missing_lines = _missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
             if missing_lines:
                 msg = (
-                    f"{home_team} vs {away_team}: missing required market lines "
-                    f"{missing_lines}"
+                    f"{home_team} vs {away_team}: missing required market lines " f"{missing_lines}"
                 )
                 logger.warning(f"{RELEASE_VERSION}: {msg}")
                 errors.append(msg)
@@ -1067,11 +1062,9 @@ async def get_slate_predictions(
                 for market in ["spread", "total"]:
                     pred_data = period_preds.get(market, {})
                     if pred_data.get("passes_filter"):
-                        side = pred_data.get(
-                            "side") or pred_data.get("bet_side")
+                        side = pred_data.get("side") or pred_data.get("bet_side")
                         if not side:
-                            logger.warning(
-                                f"Missing side for {period} {market} - skipping track")
+                            logger.warning(f"Missing side for {period} {market} - skipping track")
                             continue
                         game_plays += 1
                         # Record the pick for live tracking
@@ -1104,16 +1097,18 @@ async def get_slate_predictions(
                 except Exception:
                     commence_time_cst = None
 
-            results.append({
-                "matchup": f"{away_team} @ {home_team}",
-                "home_team": home_team,
-                "away_team": away_team,
-                "commence_time": commence_time,
-                "commence_time_cst": commence_time_cst,
-                "date": game.get("date"),
-                "predictions": preds,
-                "has_plays": game_plays > 0
-            })
+            results.append(
+                {
+                    "matchup": f"{away_team} @ {home_team}",
+                    "home_team": home_team,
+                    "away_team": away_team,
+                    "commence_time": commence_time,
+                    "commence_time_cst": commence_time_cst,
+                    "date": game.get("date"),
+                    "predictions": preds,
+                    "has_plays": game_plays > 0,
+                }
+            )
 
         except MissingFeaturesError as e:
             msg = f"{home_team} vs {away_team}: {e}"
@@ -1190,10 +1185,8 @@ def get_fire_rating(confidence: float, edge: float) -> int:
 @limiter.limit("30/minute")
 async def get_executive_summary(
     request: Request,
-    date: str = Path(...,
-                     description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    use_splits: bool = Query(
-        True, description="Whether to fetch and use betting splits")
+    date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    use_splits: bool = Query(True, description="Whether to fetch and use betting splits"),
 ):
     """
     BLUF (Bottom Line Up Front) Executive Summary.
@@ -1202,22 +1195,33 @@ async def get_executive_summary(
     Returns a clean actionable betting card with all picks that pass filters.
     Sorted by EV% (desc), then game time.
     """
-    if not hasattr(app.state, 'engine') or app.state.engine is None:
+    if not hasattr(app.state, "engine") or app.state.engine is None:
         raise HTTPException(
-            status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
+            status_code=503,
+            detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing",
+        )
     use_splits = _require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
-    logger.info(
-        f"{RELEASE_VERSION} STRICT MODE: Executive summary - fetching fresh unified data")
+    logger.info(f"{RELEASE_VERSION} STRICT MODE: Executive summary - fetching fresh unified data")
 
-    from src.utils.slate_analysis import (
-        get_target_date, fetch_todays_games, parse_utc_time, to_cst, extract_consensus_odds
-    )
-    from src.utils.odds import devig_two_way, expected_value, kelly_fraction, american_to_implied_prob
     from zoneinfo import ZoneInfo
+
+    from src.utils.odds import (
+        american_to_implied_prob,
+        devig_two_way,
+        expected_value,
+        kelly_fraction,
+    )
+    from src.utils.slate_analysis import (
+        extract_consensus_odds,
+        fetch_todays_games,
+        get_target_date,
+        parse_utc_time,
+        to_cst,
+    )
 
     CST = ZoneInfo("America/Chicago")
 
@@ -1225,8 +1229,7 @@ async def get_executive_summary(
     try:
         target_date = get_target_date(date)
     except ValueError:
-        raise HTTPException(
-            status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
     # Fetch games
     games = await fetch_todays_games(target_date, include_records=True)
@@ -1237,16 +1240,18 @@ async def get_executive_summary(
             "version": RELEASE_VERSION,
             "total_plays": 0,
             "plays": [],
-            "summary": "No games scheduled"
+            "summary": "No games scheduled",
         }
 
-    odds_as_of_utc = datetime.now(
-        timezone.utc).isoformat().replace("+00:00", "Z")
+    odds_as_of_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     odds_snapshot_path = None
     odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
-        odds_snapshot_path = await save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+
+        odds_snapshot_path = await save_odds(
+            games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}"
+        )
         archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
         odds_archive_path = await save_odds(
             games,
@@ -1264,7 +1269,13 @@ async def get_executive_summary(
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
-    def _pick_ev_fields(p_model: float | None, pick_odds: int | None, odds_a: int | None, odds_b: int | None, pick_is_a: bool) -> tuple[float | None, float | None, float | None]:
+    def _pick_ev_fields(
+        p_model: float | None,
+        pick_odds: int | None,
+        odds_a: int | None,
+        odds_b: int | None,
+        pick_is_a: bool,
+    ) -> tuple[float | None, float | None, float | None]:
         if pick_odds is None or p_model is None:
             return None, None, None
         p_fair_a, p_fair_b = devig_two_way(odds_a, odds_b)
@@ -1299,8 +1310,7 @@ async def get_executive_summary(
             if game_cst is None:
                 game_dt = parse_utc_time(commence_time) if commence_time else None
                 game_cst = to_cst(game_dt) if game_dt else None
-            time_cst_str = game_cst.strftime(
-                "%m/%d %I:%M %p") if game_cst else "TBD"
+            time_cst_str = game_cst.strftime("%m/%d %I:%M %p") if game_cst else "TBD"
 
             # Build features
             game_key = _canonical_game_key(home_team, away_team, source="odds")
@@ -1323,8 +1333,7 @@ async def get_executive_summary(
             features["home_losses"] = home_losses
             features["away_wins"] = away_wins
             features["away_losses"] = away_losses
-            features["_records_source"] = home_record_data.get(
-                "source", "unknown")
+            features["_records_source"] = home_record_data.get("source", "unknown")
             features["_data_unified"] = bool(game.get("_data_unified", False))
 
             home_record = f"({home_wins}-{home_losses})"
@@ -1338,12 +1347,10 @@ async def get_executive_summary(
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
 
-            missing_lines = _missing_market_lines(
-                fg_spread, fg_total, fh_spread, fh_total)
+            missing_lines = _missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
             if missing_lines:
                 msg = (
-                    f"{home_team} vs {away_team}: missing required market lines "
-                    f"{missing_lines}"
+                    f"{home_team} vs {away_team}: missing required market lines " f"{missing_lines}"
                 )
                 logger.warning(f"{RELEASE_VERSION}: {msg}")
                 errors.append(msg)
@@ -1367,12 +1374,18 @@ async def get_executive_summary(
                 bet_side = fg_spread_pred.get("bet_side", "home")
                 pick_team = home_team if bet_side == "home" else away_team
                 pick_line = fg_spread if bet_side == "home" else -fg_spread
-                pick_price = odds.get("home_spread_price") if bet_side == "home" else odds.get(
-                    "away_spread_price")
+                pick_price = (
+                    odds.get("home_spread_price")
+                    if bet_side == "home"
+                    else odds.get("away_spread_price")
+                )
                 if pick_price is None:
                     pick_price = odds.get("home_spread_price")
-                p_model = fg_spread_pred.get(
-                    "home_cover_prob") if bet_side == "home" else fg_spread_pred.get("away_cover_prob")
+                p_model = (
+                    fg_spread_pred.get("home_cover_prob")
+                    if bet_side == "home"
+                    else fg_spread_pred.get("away_cover_prob")
+                )
                 p_fair, ev_pct, kelly = _pick_ev_fields(
                     p_model,
                     pick_price,
@@ -1391,26 +1404,30 @@ async def get_executive_summary(
                     model_spread = model_margin
                     margin_display = f"{away_team} {model_spread:+.1f}"
 
-                all_plays.append({
-                    "time_cst": time_cst_str,
-                    "sort_time": game_cst.isoformat() if game_cst else "",
-                    "matchup": matchup_display,
-                    "period": "FG",
-                    "market": "SPREAD",
-                    "pick": f"{pick_team} {pick_line:+.1f}",
-                    "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": margin_display,
-                    "market_line": f"{fg_spread:+.1f}",
-                    "edge": f"{fg_spread_pred.get('edge', 0):+.1f} pts",
-                    "edge_raw": abs(fg_spread_pred.get('edge', 0)),
-                    "confidence": fg_spread_pred.get("confidence", 0),
-                    "p_model": p_model,
-                    "p_fair": p_fair,
-                    "ev_pct": ev_pct,
-                    "kelly_fraction": kelly,
-                    "odds_as_of_utc": odds_as_of_utc,
-                    "fire_rating": get_fire_rating(fg_spread_pred.get("confidence", 0), fg_spread_pred.get("edge", 0))
-                })
+                all_plays.append(
+                    {
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "FG",
+                        "market": "SPREAD",
+                        "pick": f"{pick_team} {pick_line:+.1f}",
+                        "pick_odds": format_american_odds(pick_price),
+                        "model_prediction": margin_display,
+                        "market_line": f"{fg_spread:+.1f}",
+                        "edge": f"{fg_spread_pred.get('edge', 0):+.1f} pts",
+                        "edge_raw": abs(fg_spread_pred.get("edge", 0)),
+                        "confidence": fg_spread_pred.get("confidence", 0),
+                        "p_model": p_model,
+                        "p_fair": p_fair,
+                        "ev_pct": ev_pct,
+                        "kelly_fraction": kelly,
+                        "odds_as_of_utc": odds_as_of_utc,
+                        "fire_rating": get_fire_rating(
+                            fg_spread_pred.get("confidence", 0), fg_spread_pred.get("edge", 0)
+                        ),
+                    }
+                )
 
             # FG Total
             fg_total_pred = fg.get("total", {})
@@ -1418,12 +1435,18 @@ async def get_executive_summary(
                 bet_side = fg_total_pred.get("bet_side", "over")
                 model_total = features.get("predicted_total", 0)
                 pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {fg_total}"
-                pick_price = odds.get("total_over_price") if bet_side == "over" else odds.get(
-                    "total_under_price")
+                pick_price = (
+                    odds.get("total_over_price")
+                    if bet_side == "over"
+                    else odds.get("total_under_price")
+                )
                 if pick_price is None:
                     pick_price = odds.get("total_price")
-                p_model = fg_total_pred.get(
-                    "over_prob") if bet_side == "over" else fg_total_pred.get("under_prob")
+                p_model = (
+                    fg_total_pred.get("over_prob")
+                    if bet_side == "over"
+                    else fg_total_pred.get("under_prob")
+                )
                 p_fair, ev_pct, kelly = _pick_ev_fields(
                     p_model,
                     pick_price,
@@ -1432,26 +1455,30 @@ async def get_executive_summary(
                     bet_side == "over",
                 )
 
-                all_plays.append({
-                    "time_cst": time_cst_str,
-                    "sort_time": game_cst.isoformat() if game_cst else "",
-                    "matchup": matchup_display,
-                    "period": "FG",
-                    "market": "TOTAL",
-                    "pick": pick_display,
-                    "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": f"{model_total:.1f}",
-                    "market_line": f"{fg_total}",
-                    "edge": f"{fg_total_pred.get('edge', 0):+.1f} pts",
-                    "edge_raw": abs(fg_total_pred.get('edge', 0)),
-                    "confidence": fg_total_pred.get("confidence", 0),
-                    "p_model": p_model,
-                    "p_fair": p_fair,
-                    "ev_pct": ev_pct,
-                    "kelly_fraction": kelly,
-                    "odds_as_of_utc": odds_as_of_utc,
-                    "fire_rating": get_fire_rating(fg_total_pred.get("confidence", 0), fg_total_pred.get("edge", 0))
-                })
+                all_plays.append(
+                    {
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "FG",
+                        "market": "TOTAL",
+                        "pick": pick_display,
+                        "pick_odds": format_american_odds(pick_price),
+                        "model_prediction": f"{model_total:.1f}",
+                        "market_line": f"{fg_total}",
+                        "edge": f"{fg_total_pred.get('edge', 0):+.1f} pts",
+                        "edge_raw": abs(fg_total_pred.get("edge", 0)),
+                        "confidence": fg_total_pred.get("confidence", 0),
+                        "p_model": p_model,
+                        "p_fair": p_fair,
+                        "ev_pct": ev_pct,
+                        "kelly_fraction": kelly,
+                        "odds_as_of_utc": odds_as_of_utc,
+                        "fire_rating": get_fire_rating(
+                            fg_total_pred.get("confidence", 0), fg_total_pred.get("edge", 0)
+                        ),
+                    }
+                )
 
             # Process First Half markets
             fh = preds.get("first_half", {})
@@ -1462,12 +1489,18 @@ async def get_executive_summary(
                 bet_side = fh_spread_pred.get("bet_side", "home")
                 pick_team = home_team if bet_side == "home" else away_team
                 pick_line = fh_spread if bet_side == "home" else -fh_spread
-                pick_price = odds.get("fh_home_spread_price") if bet_side == "home" else odds.get(
-                    "fh_away_spread_price")
+                pick_price = (
+                    odds.get("fh_home_spread_price")
+                    if bet_side == "home"
+                    else odds.get("fh_away_spread_price")
+                )
                 if pick_price is None:
                     pick_price = odds.get("fh_home_spread_price")
-                p_model = fh_spread_pred.get(
-                    "home_cover_prob") if bet_side == "home" else fh_spread_pred.get("away_cover_prob")
+                p_model = (
+                    fh_spread_pred.get("home_cover_prob")
+                    if bet_side == "home"
+                    else fh_spread_pred.get("away_cover_prob")
+                )
                 p_fair, ev_pct, kelly = _pick_ev_fields(
                     p_model,
                     pick_price,
@@ -1486,26 +1519,30 @@ async def get_executive_summary(
                     model_spread_1h = model_margin_1h
                     margin_display_1h = f"{away_team} {model_spread_1h:+.1f}"
 
-                all_plays.append({
-                    "time_cst": time_cst_str,
-                    "sort_time": game_cst.isoformat() if game_cst else "",
-                    "matchup": matchup_display,
-                    "period": "1H",
-                    "market": "SPREAD",
-                    "pick": f"{pick_team} {pick_line:+.1f}",
-                    "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": margin_display_1h,
-                    "market_line": f"{fh_spread:+.1f}",
-                    "edge": f"{fh_spread_pred.get('edge', 0):+.1f} pts",
-                    "edge_raw": abs(fh_spread_pred.get('edge', 0)),
-                    "confidence": fh_spread_pred.get("confidence", 0),
-                    "p_model": p_model,
-                    "p_fair": p_fair,
-                    "ev_pct": ev_pct,
-                    "kelly_fraction": kelly,
-                    "odds_as_of_utc": odds_as_of_utc,
-                    "fire_rating": get_fire_rating(fh_spread_pred.get("confidence", 0), fh_spread_pred.get("edge", 0))
-                })
+                all_plays.append(
+                    {
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "1H",
+                        "market": "SPREAD",
+                        "pick": f"{pick_team} {pick_line:+.1f}",
+                        "pick_odds": format_american_odds(pick_price),
+                        "model_prediction": margin_display_1h,
+                        "market_line": f"{fh_spread:+.1f}",
+                        "edge": f"{fh_spread_pred.get('edge', 0):+.1f} pts",
+                        "edge_raw": abs(fh_spread_pred.get("edge", 0)),
+                        "confidence": fh_spread_pred.get("confidence", 0),
+                        "p_model": p_model,
+                        "p_fair": p_fair,
+                        "ev_pct": ev_pct,
+                        "kelly_fraction": kelly,
+                        "odds_as_of_utc": odds_as_of_utc,
+                        "fire_rating": get_fire_rating(
+                            fh_spread_pred.get("confidence", 0), fh_spread_pred.get("edge", 0)
+                        ),
+                    }
+                )
 
             # 1H Total
             fh_total_pred = fh.get("total", {})
@@ -1513,12 +1550,18 @@ async def get_executive_summary(
                 bet_side = fh_total_pred.get("bet_side", "over")
                 model_total_1h = features.get("predicted_total_1h", 0)
                 pick_display = f"{'OVER' if bet_side == 'over' else 'UNDER'} {fh_total}"
-                pick_price = odds.get("fh_total_over_price") if bet_side == "over" else odds.get(
-                    "fh_total_under_price")
+                pick_price = (
+                    odds.get("fh_total_over_price")
+                    if bet_side == "over"
+                    else odds.get("fh_total_under_price")
+                )
                 if pick_price is None:
                     pick_price = odds.get("fh_total_price")
-                p_model = fh_total_pred.get(
-                    "over_prob") if bet_side == "over" else fh_total_pred.get("under_prob")
+                p_model = (
+                    fh_total_pred.get("over_prob")
+                    if bet_side == "over"
+                    else fh_total_pred.get("under_prob")
+                )
                 p_fair, ev_pct, kelly = _pick_ev_fields(
                     p_model,
                     pick_price,
@@ -1527,26 +1570,30 @@ async def get_executive_summary(
                     bet_side == "over",
                 )
 
-                all_plays.append({
-                    "time_cst": time_cst_str,
-                    "sort_time": game_cst.isoformat() if game_cst else "",
-                    "matchup": matchup_display,
-                    "period": "1H",
-                    "market": "TOTAL",
-                    "pick": pick_display,
-                    "pick_odds": format_american_odds(pick_price),
-                    "model_prediction": f"{model_total_1h:.1f}",
-                    "market_line": f"{fh_total}",
-                    "edge": f"{fh_total_pred.get('edge', 0):+.1f} pts",
-                    "edge_raw": abs(fh_total_pred.get('edge', 0)),
-                    "confidence": fh_total_pred.get("confidence", 0),
-                    "p_model": p_model,
-                    "p_fair": p_fair,
-                    "ev_pct": ev_pct,
-                    "kelly_fraction": kelly,
-                    "odds_as_of_utc": odds_as_of_utc,
-                    "fire_rating": get_fire_rating(fh_total_pred.get("confidence", 0), fh_total_pred.get("edge", 0))
-                })
+                all_plays.append(
+                    {
+                        "time_cst": time_cst_str,
+                        "sort_time": game_cst.isoformat() if game_cst else "",
+                        "matchup": matchup_display,
+                        "period": "1H",
+                        "market": "TOTAL",
+                        "pick": pick_display,
+                        "pick_odds": format_american_odds(pick_price),
+                        "model_prediction": f"{model_total_1h:.1f}",
+                        "market_line": f"{fh_total}",
+                        "edge": f"{fh_total_pred.get('edge', 0):+.1f} pts",
+                        "edge_raw": abs(fh_total_pred.get("edge", 0)),
+                        "confidence": fh_total_pred.get("confidence", 0),
+                        "p_model": p_model,
+                        "p_fair": p_fair,
+                        "ev_pct": ev_pct,
+                        "kelly_fraction": kelly,
+                        "odds_as_of_utc": odds_as_of_utc,
+                        "fire_rating": get_fire_rating(
+                            fh_total_pred.get("confidence", 0), fh_total_pred.get("edge", 0)
+                        ),
+                    }
+                )
 
         except MissingFeaturesError as e:
             msg = f"{home_team} vs {away_team}: {e}"
@@ -1574,61 +1621,64 @@ async def get_executive_summary(
     # Format for output - remove internal fields
     formatted_plays = []
     for play in all_plays:
-        formatted_plays.append({
-            "time_cst": play["time_cst"],
-            "matchup": play["matchup"],
-            "period": play["period"],
-            "market": play["market"],
-            "pick": play["pick"],
-            "pick_odds": play["pick_odds"],
-            "model_prediction": play["model_prediction"],
-            "market_line": play["market_line"],
-            "edge": play["edge"],
-            "confidence": f"{play['confidence']*100:.0f}%",
-            "p_model": play.get("p_model"),
-            "p_fair": play.get("p_fair"),
-            "ev_pct": play.get("ev_pct"),
-            "kelly_fraction": play.get("kelly_fraction"),
-            "odds_as_of_utc": play.get("odds_as_of_utc"),
-            "fire_rating": play["fire_rating"]
-        })
+        formatted_plays.append(
+            {
+                "time_cst": play["time_cst"],
+                "matchup": play["matchup"],
+                "period": play["period"],
+                "market": play["market"],
+                "pick": play["pick"],
+                "pick_odds": play["pick_odds"],
+                "model_prediction": play["model_prediction"],
+                "market_line": play["market_line"],
+                "edge": play["edge"],
+                "confidence": f"{play['confidence']*100:.0f}%",
+                "p_model": play.get("p_model"),
+                "p_fair": play.get("p_fair"),
+                "ev_pct": play.get("ev_pct"),
+                "kelly_fraction": play.get("kelly_fraction"),
+                "odds_as_of_utc": play.get("odds_as_of_utc"),
+                "fire_rating": play["fire_rating"],
+            }
+        )
 
-    return convert_numpy_types({
-        "date": str(target_date),
-        "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
-        "version": RELEASE_VERSION,
-        "total_plays": len(formatted_plays),
-        "plays": formatted_plays,
-        "errors": errors or None,
-        "odds_as_of_utc": odds_as_of_utc,
-        "odds_snapshot_path": odds_snapshot_path,
-        "odds_archive_path": odds_archive_path,
-        "legend": {
-            "fire_rating": {
-                "ELITE": "70%+ confidence AND 5+ pt edge",
-                "STRONG": "60%+ confidence AND 3+ pt edge",
-                "GOOD": "Passes all filters"
+    return convert_numpy_types(
+        {
+            "date": str(target_date),
+            "generated_at": datetime.now(CST).strftime("%Y-%m-%d %I:%M %p CST"),
+            "version": RELEASE_VERSION,
+            "total_plays": len(formatted_plays),
+            "plays": formatted_plays,
+            "errors": errors or None,
+            "odds_as_of_utc": odds_as_of_utc,
+            "odds_snapshot_path": odds_snapshot_path,
+            "odds_archive_path": odds_archive_path,
+            "legend": {
+                "fire_rating": {
+                    "ELITE": "70%+ confidence AND 5+ pt edge",
+                    "STRONG": "60%+ confidence AND 3+ pt edge",
+                    "GOOD": "Passes all filters",
+                },
+                "sorting": "EV% (desc), then game time",
+                "periods": {"FG": "Full Game", "1H": "First Half"},
+                "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under"},
             },
-            "sorting": "EV% (desc), then game time",
-            "periods": {"FG": "Full Game", "1H": "First Half"},
-            "markets": {"SPREAD": "Point Spread", "TOTAL": "Over/Under"}
         }
-    })
+    )
 
 
 # =============================================================================
 # TEAMS POWER AUTOMATE WORKFLOW ENDPOINT
 # =============================================================================
 
+
 @app.get("/teams/workflow")
 @app.get("/teams/workflow/")
 @limiter.limit("30/minute")
 async def teams_workflow_get(
     request: Request,
-    date: str = Query(
-        "today", description="Date: today, tomorrow, or YYYY-MM-DD"),
-    elite: bool = Query(
-        False, description="Only show elite picks (4+ fire rating)"),
+    date: str = Query("today", description="Date: today, tomorrow, or YYYY-MM-DD"),
+    elite: bool = Query(False, description="Only show elite picks (4+ fire rating)"),
     team: Optional[str] = Query(None, description="Filter by team name"),
 ):
     """
@@ -1654,22 +1704,19 @@ async def teams_workflow_get(
             if isinstance(data, dict):
                 _set_cached_picks(date, data)
         except HTTPException as e:
-            return JSONResponse(status_code=200, content={
-                "type": "message",
-                "text": f"❌ Error: {e.detail}"
-            })
+            return JSONResponse(
+                status_code=200, content={"type": "message", "text": f"❌ Error: {e.detail}"}
+            )
         except Exception as e:
             logger.error("Teams workflow request failed: %s", e)
-            return JSONResponse(status_code=200, content={
-                "type": "message",
-                "text": "❌ Failed to fetch picks."
-            })
+            return JSONResponse(
+                status_code=200, content={"type": "message", "text": "❌ Failed to fetch picks."}
+            )
 
     if not isinstance(data, dict):
-        return JSONResponse(status_code=200, content={
-            "type": "message",
-            "text": "No picks available."
-        })
+        return JSONResponse(
+            status_code=200, content={"type": "message", "text": "No picks available."}
+        )
 
     plays = data.get("plays", [])
     date_label = data.get("date", date)
@@ -1677,8 +1724,7 @@ async def teams_workflow_get(
     # Apply filters
     if team:
         team_lower = team.lower()
-        plays = [p for p in plays if team_lower in p.get(
-            "matchup", "").lower()]
+        plays = [p for p in plays if team_lower in p.get("matchup", "").lower()]
 
     if elite:
         plays = [p for p in plays if int(p.get("fire_rating", 0) or 0) >= 4]
@@ -1690,10 +1736,10 @@ async def teams_workflow_get(
         if team:
             filter_desc.append(f"for {team}")
         filter_str = f" ({', '.join(filter_desc)})" if filter_desc else ""
-        return JSONResponse(status_code=200, content={
-            "type": "message",
-            "text": f"📭 No{filter_str} picks for {date_label}."
-        })
+        return JSONResponse(
+            status_code=200,
+            content={"type": "message", "text": f"📭 No{filter_str} picks for {date_label}."},
+        )
 
     # Build formatted message for Teams
     fire_emoji = {5: "🔥🔥🔥🔥🔥", 4: "🔥🔥🔥🔥", 3: "🔥🔥🔥", 2: "🔥🔥", 1: "🔥"}
@@ -1720,12 +1766,10 @@ async def teams_workflow_get(
 
     lines.append("")
     lines.append(
-        f"📊 **Total: {len(plays)} picks** | [View Full Lineup](https://nba.greenbiersportventures.com/weekly-lineup/html?date={date_label})")
+        f"📊 **Total: {len(plays)} picks** | [View Full Lineup](https://nba.greenbiersportventures.com/weekly-lineup/html?date={date_label})"
+    )
 
-    return JSONResponse(status_code=200, content={
-        "type": "message",
-        "text": "\n".join(lines)
-    })
+    return JSONResponse(status_code=200, content={"type": "message", "text": "\n".join(lines)})
 
 
 @app.api_route(
@@ -1746,7 +1790,9 @@ async def teams_outgoing_get(request: Request, validationToken: Optional[str] = 
     if request.method in {"OPTIONS", "HEAD"}:
         return Response(status_code=200)
 
-    return JSONResponse(status_code=200, content={"text": "Teams webhook is reachable. Use POST for commands."})
+    return JSONResponse(
+        status_code=200, content={"text": "Teams webhook is reachable. Use POST for commands."}
+    )
 
 
 @app.post("/teams/outgoing")
@@ -1772,8 +1818,7 @@ async def teams_outgoing_webhook(request: Request):
 
     if parsed["show_menu"]:
         help_text = (
-            "Commands: picks, picks tomorrow, picks YYYY-MM-DD, "
-            "picks lakers, elite, help"
+            "Commands: picks, picks tomorrow, picks YYYY-MM-DD, " "picks lakers, elite, help"
         )
         return JSONResponse(status_code=200, content={"text": help_text})
 
@@ -1804,22 +1849,23 @@ async def teams_outgoing_webhook(request: Request):
     total_plays = data.get("total_plays", len(plays))
     if not plays:
         date_label = data.get("date", parsed["date"])
-        return JSONResponse(status_code=200, content={"text": f"No picks available for {date_label}."})
+        return JSONResponse(
+            status_code=200, content={"text": f"No picks available for {date_label}."}
+        )
 
     team_filter = parsed["team_filter"]
     if team_filter:
-        plays = [p for p in plays if team_filter in p.get(
-            "matchup", "").lower()]
+        plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
 
     if parsed["elite_only"]:
+
         def _fire_rating_value(value) -> int:
             try:
                 return int(value)
             except (TypeError, ValueError):
                 return 0
 
-        plays = [p for p in plays if _fire_rating_value(
-            p.get("fire_rating")) >= 4]
+        plays = [p for p in plays if _fire_rating_value(p.get("fire_rating")) >= 4]
 
     if not plays:
         parts = []
@@ -1830,7 +1876,9 @@ async def teams_outgoing_webhook(request: Request):
         label = " ".join(parts).strip()
         label = f"{label} " if label else ""
         date_label = data.get("date", parsed["date"])
-        return JSONResponse(status_code=200, content={"text": f"No {label}picks found for {date_label}."})
+        return JSONResponse(
+            status_code=200, content={"text": f"No {label}picks found for {date_label}."}
+        )
 
     date_label = data.get("date", parsed["date"])
     label_parts = []
@@ -1844,7 +1892,9 @@ async def teams_outgoing_webhook(request: Request):
         lineup_params["team"] = team_filter
     if parsed["elite_only"]:
         lineup_params["elite"] = "true"
-    lineup_url = f"{str(request.base_url).rstrip('/')}/weekly-lineup/html?{urlencode(lineup_params)}"
+    lineup_url = (
+        f"{str(request.base_url).rstrip('/')}/weekly-lineup/html?{urlencode(lineup_params)}"
+    )
     csv_url = f"{str(request.base_url).rstrip('/')}/weekly-lineup/csv?{urlencode(lineup_params)}"
     public_lineup_base = os.getenv(
         "PUBLIC_WEEKLY_LINEUP_URL",
@@ -1868,7 +1918,7 @@ async def teams_outgoing_webhook(request: Request):
             return text.ljust(width)
         if width <= 3:
             return text[:width]
-        return text[:width - 3] + "..."
+        return text[: width - 3] + "..."
 
     columns = [
         ("TIME", 12),
@@ -1913,8 +1963,7 @@ async def teams_outgoing_webhook(request: Request):
             p.get("edge", ""),
             _fire_display(p.get("fire_rating", "")),
         ]
-        row = " | ".join(_fmt_cell(value, width)
-                         for value, (_, width) in zip(row_values, columns))
+        row = " | ".join(_fmt_cell(value, width) for value, (_, width) in zip(row_values, columns))
         table_lines.append(row)
 
     lines = lines_before + ["\n".join(table_lines)] + lines_after
@@ -1926,10 +1975,8 @@ async def teams_outgoing_webhook(request: Request):
 @limiter.limit("20/minute")
 async def get_comprehensive_slate_analysis(
     request: Request,
-    date: str = Path(...,
-                     description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    use_splits: bool = Query(
-        True, description="Whether to fetch and use betting splits")
+    date: str = Path(..., description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    use_splits: bool = Query(True, description="Whether to fetch and use betting splits"),
 ):
     """
     Get comprehensive slate analysis with full edge calculations.
@@ -1937,9 +1984,11 @@ async def get_comprehensive_slate_analysis(
     STRICT MODE: Fetches fresh data from all APIs.
     Full analysis for all 4 markets (1H + FG spreads/totals).
     """
-    if not hasattr(app.state, 'engine') or app.state.engine is None:
+    if not hasattr(app.state, "engine") or app.state.engine is None:
         raise HTTPException(
-            status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
+            status_code=503,
+            detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing",
+        )
     use_splits = _require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
@@ -1947,13 +1996,13 @@ async def get_comprehensive_slate_analysis(
     app.state.feature_builder.clear_persistent_cache()
     clear_unified_records_cache()  # QA/QC: Ensure records cache is fresh
     logger.info(
-        f"{RELEASE_VERSION} STRICT MODE: Comprehensive analysis - fetching fresh unified data")
+        f"{RELEASE_VERSION} STRICT MODE: Comprehensive analysis - fetching fresh unified data"
+    )
 
     CST = ZoneInfo("America/Chicago")
 
     # Enforce fresh data: clear ALL caches before fetching
-    request_started_utc = datetime.now(
-        timezone.utc).isoformat().replace("+00:00", "Z")
+    request_started_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     request_started_cst = datetime.now(CST).strftime("%Y-%m-%d %I:%M:%S %p %Z")
     try:
         # Session cache (per-request)
@@ -1961,24 +2010,23 @@ async def get_comprehensive_slate_analysis(
         # Persistent reference cache (team/league lookups)
         RichFeatureBuilder.clear_persistent_cache()
     except Exception as e:
-        logger.warning(
-            f"Failed to clear feature caches before slate fetch: {e}")
+        logger.warning(f"Failed to clear feature caches before slate fetch: {e}")
 
     # Resolve date
     try:
         target_date = get_target_date(date)
     except ValueError:
-        raise HTTPException(
-            status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
     # Get edge thresholds - use SAME source as engine for consistency
     try:
         from src.config import filter_thresholds
+
         edge_thresholds = {
             "spread": filter_thresholds.spread_min_edge,
             "total": filter_thresholds.total_min_edge,
             "1h_spread": filter_thresholds.spread_min_edge * 0.75,  # Scale for 1H
-            "1h_total": filter_thresholds.total_min_edge * 0.67,   # Scale for 1H
+            "1h_total": filter_thresholds.total_min_edge * 0.67,  # Scale for 1H
         }
     except ImportError:
         # Fallback if config not available
@@ -1999,7 +2047,10 @@ async def get_comprehensive_slate_analysis(
     odds_archive_path = None
     try:
         from src.ingestion.the_odds import save_odds
-        odds_snapshot_path = await save_odds(games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}")
+
+        odds_snapshot_path = await save_odds(
+            games, prefix=f"slate_odds_{target_date.strftime('%Y%m%d')}"
+        )
         archive_dir = PROJECT_ROOT / "archive" / "odds_snapshots"
         odds_archive_path = await save_odds(
             games,
@@ -2039,8 +2090,7 @@ async def get_comprehensive_slate_analysis(
             if game_cst is None:
                 game_dt = parse_utc_time(commence_time) if commence_time else None
                 game_cst = to_cst(game_dt) if game_dt else None
-            time_cst = game_cst.strftime(
-                "%I:%M %p %Z") if game_cst else "TBD"
+            time_cst = game_cst.strftime("%I:%M %p %Z") if game_cst else "TBD"
 
             # Build features
             game_key = _canonical_game_key(home_team, away_team, source="odds")
@@ -2052,13 +2102,10 @@ async def get_comprehensive_slate_analysis(
             away_record_data = game.get("away_team_record") or {}
 
             features["home_wins"] = int(home_record_data.get("wins", 0) or 0)
-            features["home_losses"] = int(
-                home_record_data.get("losses", 0) or 0)
+            features["home_losses"] = int(home_record_data.get("losses", 0) or 0)
             features["away_wins"] = int(away_record_data.get("wins", 0) or 0)
-            features["away_losses"] = int(
-                away_record_data.get("losses", 0) or 0)
-            features["_records_source"] = home_record_data.get(
-                "source", "unknown")
+            features["away_losses"] = int(away_record_data.get("losses", 0) or 0)
+            features["_records_source"] = home_record_data.get("source", "unknown")
             features["_data_unified"] = bool(game.get("_data_unified", False))
 
             # Build first half features
@@ -2076,8 +2123,7 @@ async def get_comprehensive_slate_analysis(
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
             engine_predictions = None
-            missing_lines = _missing_market_lines(
-                fg_spread, fg_total, fh_spread, fh_total)
+            missing_lines = _missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
             if missing_lines:
                 logger.warning(
                     f"{RELEASE_VERSION}: {home_team} vs {away_team} missing required market lines "
@@ -2094,7 +2140,8 @@ async def get_comprehensive_slate_analysis(
                     )
                 except Exception as e:
                     logger.warning(
-                        f"Could not get engine predictions for {home_team} vs {away_team}: {e}")
+                        f"Could not get engine predictions for {home_team} vs {away_team}: {e}"
+                    )
 
             # Calculate comprehensive edge
             comprehensive_edge = calculate_comprehensive_edge(
@@ -2104,38 +2151,39 @@ async def get_comprehensive_slate_analysis(
                 game=game,
                 betting_splits=betting_splits,
                 edge_thresholds=edge_thresholds,
-                engine_predictions=engine_predictions
+                engine_predictions=engine_predictions,
             )
 
-            analysis_results.append({
-                "home_team": home_team,
-                "away_team": away_team,
-                "time_cst": time_cst,
-                "commence_time": commence_time,
-                "odds": odds,
-                "features": features,
-                "comprehensive_edge": comprehensive_edge,
-                "betting_splits": betting_splits
-            })
+            analysis_results.append(
+                {
+                    "home_team": home_team,
+                    "away_team": away_team,
+                    "time_cst": time_cst,
+                    "commence_time": commence_time,
+                    "odds": odds,
+                    "features": features,
+                    "comprehensive_edge": comprehensive_edge,
+                    "betting_splits": betting_splits,
+                }
+            )
 
         except Exception as e:
             logger.error(f"Error processing {home_team} vs {away_team}: {e}")
             continue
 
-    return convert_numpy_types({
-        "date": str(target_date),
-        "version": RELEASE_VERSION,
-        "data_fetched_at_cst": request_started_cst,
-        "markets": [
-            "1h_spread", "1h_total",
-            "fg_spread", "fg_total"
-        ],
-        "analysis": analysis_results,
-        "edge_thresholds": edge_thresholds,
-        "odds_as_of_utc": odds_as_of_utc,
-        "odds_snapshot_path": odds_snapshot_path,
-        "odds_archive_path": odds_archive_path,
-    })
+    return convert_numpy_types(
+        {
+            "date": str(target_date),
+            "version": RELEASE_VERSION,
+            "data_fetched_at_cst": request_started_cst,
+            "markets": ["1h_spread", "1h_total", "fg_spread", "fg_total"],
+            "analysis": analysis_results,
+            "edge_thresholds": edge_thresholds,
+            "odds_as_of_utc": odds_as_of_utc,
+            "odds_snapshot_path": odds_snapshot_path,
+            "odds_archive_path": odds_archive_path,
+        }
+    )
 
 
 @app.get("/meta", tags=["Ops"])
@@ -2151,7 +2199,7 @@ async def get_meta_info():
         "model_pack_version": catalog.model_pack_version,
         "strict_mode": os.getenv("NBA_STRICT_MODE", "false").lower() == "true",
         "server_time": datetime.now().isoformat(),
-        "python_version": sys.version
+        "python_version": sys.version,
     }
 
 
@@ -2168,7 +2216,7 @@ def get_registry(request: Request):
         "weekly_lineup": "/weekly-lineup/nba",
         "slate": "/slate/{date}",
         "executive": "/slate/{date}/executive",
-        "registry": "/api/registry"
+        "registry": "/api/registry",
     }
     endpoints = {key: f"{base_url}{path}" for key, path in paths.items()}
 
@@ -2182,15 +2230,8 @@ def get_registry(request: Request):
         "baseUrl": base_url,
         "paths": paths,
         "endpoints": endpoints,
-        "api": {
-            "v1": {
-                "picks": endpoints["picks_v1"]
-            }
-        },
-        "defaults": {
-            "sport": "nba",
-            "date": "today"
-        }
+        "api": {"v1": {"picks": endpoints["picks_v1"]}},
+        "defaults": {"sport": "nba", "date": "today"},
     }
 
 
@@ -2219,9 +2260,11 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
     STRICT MODE - Fetches fresh data from all APIs.
     4 markets (1H+FG for Spread, Total).
     """
-    if not hasattr(app.state, 'engine') or app.state.engine is None:
+    if not hasattr(app.state, "engine") or app.state.engine is None:
         raise HTTPException(
-            status_code=503, detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing")
+            status_code=503,
+            detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing",
+        )
 
     # STRICT MODE: Clear session cache to force fresh data
     app.state.feature_builder.clear_session_cache()
@@ -2258,6 +2301,7 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # =============================================================================
 # LIVE PICK TRACKING ENDPOINTS
 # =============================================================================
@@ -2267,12 +2311,9 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
 @limiter.limit("30/minute")
 async def get_tracking_summary(
     request: Request,
-    date: Optional[str] = Query(
-        None, description="Filter by date (YYYY-MM-DD)"),
-    period: Optional[str] = Query(
-        None, description="Filter by period (1h, fg)"),
-    market_type: Optional[str] = Query(
-        None, description="Filter by market (spread, total)")
+    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
+    period: Optional[str] = Query(None, description="Filter by period (1h, fg)"),
+    market_type: Optional[str] = Query(None, description="Filter by market (spread, total)"),
 ):
     """
     Get ROI summary for tracked picks.
@@ -2283,21 +2324,14 @@ async def get_tracking_summary(
     # Use app.state.tracker for consistency with slate endpoint
     tracker = app.state.tracker
     summary = tracker.get_roi_summary(
-        date=date,
-        period=period,
-        market_type=market_type,
-        passes_filter_only=True
+        date=date, period=period, market_type=market_type, passes_filter_only=True
     )
     streak = tracker.get_streak(passes_filter_only=True)
 
     return {
         "summary": summary,
         "current_streak": streak,
-        "filters": {
-            "date": date,
-            "period": period,
-            "market_type": market_type
-        }
+        "filters": {"date": date, "period": period, "market_type": market_type},
     }
 
 
@@ -2305,35 +2339,27 @@ async def get_tracking_summary(
 @limiter.limit("30/minute")
 async def get_tracked_picks(
     request: Request,
-    date: Optional[str] = Query(
-        None, description="Filter by date (YYYY-MM-DD)"),
-    status: Optional[str] = Query(
-        None, description="Filter by status (pending, win, loss, push)"),
-    limit: int = Query(50, ge=1, le=500)
+    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
+    status: Optional[str] = Query(None, description="Filter by status (pending, win, loss, push)"),
+    limit: int = Query(50, ge=1, le=500),
 ):
     """
     Get list of tracked picks with optional filters.
     """
     # Use app.state.tracker for consistency with slate endpoint
     tracker = app.state.tracker
-    picks = tracker.get_picks(
-        date=date, status=status, passes_filter_only=True)
+    picks = tracker.get_picks(date=date, status=status, passes_filter_only=True)
 
     # Sort by creation time, newest first
     picks.sort(key=lambda p: p.created_at, reverse=True)
 
-    return {
-        "total": len(picks),
-        "picks": [p.to_dict() for p in picks[:limit]]
-    }
+    return {"total": len(picks), "picks": [p.to_dict() for p in picks[:limit]]}
 
 
 @app.post("/tracking/validate")
 @limiter.limit("10/minute")
 async def validate_pick_outcomes(
-    request: Request,
-    date: Optional[str] = Query(
-        None, description="Date to validate (YYYY-MM-DD)")
+    request: Request, date: Optional[str] = Query(None, description="Date to validate (YYYY-MM-DD)")
 ):
     """
     Validate pending picks against game outcomes.
@@ -2350,7 +2376,7 @@ async def validate_pick_outcomes(
         "wins": results["wins"],
         "losses": results["losses"],
         "pushes": results["pushes"],
-        "details": results.get("details", [])
+        "details": results.get("details", []),
     }
 
 
@@ -2358,8 +2384,7 @@ async def validate_pick_outcomes(
 @limiter.limit("20/minute")
 async def get_picks_html(
     request: Request,
-    date: Optional[str] = Query(
-        None, description="Date (YYYY-MM-DD), defaults to today")
+    date: Optional[str] = Query(None, description="Date (YYYY-MM-DD), defaults to today"),
 ):
     """
     Render NBA picks as an interactive Adaptive Card HTML page.
@@ -2369,6 +2394,7 @@ async def get_picks_html(
     try:
         # Use date from query or default to today
         from datetime import datetime as dt
+
         if not date:
             date = dt.now().strftime("%Y-%m-%d")
 
@@ -2376,7 +2402,8 @@ async def get_picks_html(
         summary = await get_executive_summary(request, date=date)
 
         if not summary.get("plays"):
-            return """
+            return (
+                """
             <html>
             <head>
                 <title>NBA Picks - No Games</title>
@@ -2390,11 +2417,14 @@ async def get_picks_html(
             <body>
                 <div class="container">
                     <h1>🏀 NBA Picks</h1>
-                    <p>No games scheduled for """ + date + """</p>
+                    <p>No games scheduled for """
+                + date
+                + """</p>
                 </div>
             </body>
             </html>
             """
+            )
 
         # Build picks array for card
         picks_data = []
@@ -2403,25 +2433,26 @@ async def get_picks_html(
             edge = pick.get("edge", "N/A")
             confidence = pick.get("confidence", "50%")
             # Handle confidence as string percentage like "91%"
-            if isinstance(confidence, str) and confidence.endswith('%'):
-                confidence_pct = int(confidence.rstrip('%'))
+            if isinstance(confidence, str) and confidence.endswith("%"):
+                confidence_pct = int(confidence.rstrip("%"))
             else:
-                confidence_pct = int(float(confidence) *
-                                     100) if confidence else 50
+                confidence_pct = int(float(confidence) * 100) if confidence else 50
             fire_rating = pick.get("fire_rating", 0)
             # Ensure fire_rating is an int
             if isinstance(fire_rating, str):
                 fire_rating = int(fire_rating) if fire_rating.isdigit() else 0
             fire_emoji = "🔥" * int(fire_rating) if fire_rating else ""
-            picks_data.append({
-                "period": pick.get("period", "FG"),
-                "matchup": pick.get("matchup", "TBD"),
-                "pick": pick.get("pick", "N/A"),
-                "confidence": confidence_pct,
-                "market_line": market_line,
-                "edge": edge,
-                "fire": fire_emoji
-            })
+            picks_data.append(
+                {
+                    "period": pick.get("period", "FG"),
+                    "matchup": pick.get("matchup", "TBD"),
+                    "pick": pick.get("pick", "N/A"),
+                    "confidence": confidence_pct,
+                    "market_line": market_line,
+                    "edge": edge,
+                    "fire": fire_emoji,
+                }
+            )
 
         # Generate card JSON
         card = {
@@ -2437,9 +2468,9 @@ async def get_picks_html(
                             "text": "🏀 NBA PICKS - " + date.upper(),
                             "weight": "bolder",
                             "size": "large",
-                            "color": "light"
+                            "color": "light",
                         }
-                    ]
+                    ],
                 },
                 {
                     "type": "Table",
@@ -2450,7 +2481,7 @@ async def get_picks_html(
                         {"width": "20%"},
                         {"width": "25%"},
                         {"width": "20%"},
-                        {"width": "20%"}
+                        {"width": "20%"},
                     ],
                     "rows": [
                         {
@@ -2459,35 +2490,38 @@ async def get_picks_html(
                                 {"text": "Matchup"},
                                 {"text": "Pick (Confidence)"},
                                 {"text": "Market"},
-                                {"text": "Edge"}
+                                {"text": "Edge"},
                             ]
                         }
-                    ] + [
+                    ]
+                    + [
                         {
                             "cells": [
                                 {"text": p["period"]},
                                 {"text": p["matchup"]},
-                                {"text": p["pick"] +
-                                    " (" + str(p["confidence"]) + "%)"},
+                                {"text": p["pick"] + " (" + str(p["confidence"]) + "%)"},
                                 {"text": p["market_line"]},
-                                {"text": p["edge"] + " " + p["fire"]}
+                                {"text": p["edge"] + " " + p["fire"]},
                             ]
                         }
                         for p in picks_data
-                    ]
-                }
+                    ],
+                },
             ],
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
         }
 
         card_json_str = json.dumps(card)
 
-        html_content = """<!DOCTYPE html>
+        html_content = (
+            """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBA Picks - """ + date + """</title>
+    <title>NBA Picks - """
+            + date
+            + """</title>
     <script src="https://cdn.jsdelivr.net/npm/adaptivecards@1.4.7/dist/adaptive-cards.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -2598,7 +2632,9 @@ async def get_picks_html(
     <div class="container">
         <div class="header">
             <h1>🏀 NBA PICKS</h1>
-            <p>""" + date + """</p>
+            <p>"""
+            + date
+            + """</p>
         </div>
         <div class="content">
             <div id="cardContainer"></div>
@@ -2617,7 +2653,9 @@ async def get_picks_html(
     <div class="toast" id="toast"></div>
 
     <script>
-        const cardData = """ + card_json_str + """;
+        const cardData = """
+            + card_json_str
+            + """;
 
         // Render Adaptive Card
         AdaptiveCards.AdaptiveCard.onProcessMarkdown = function(text, result) {
@@ -2640,7 +2678,9 @@ async def get_picks_html(
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'nba_picks_""" + date + """.json';
+            link.download = 'nba_picks_"""
+            + date
+            + """.json';
             link.click();
             showToast('JSON downloaded!');
         }
@@ -2659,6 +2699,7 @@ async def get_picks_html(
     </script>
 </body>
 </html>"""
+        )
 
         return html_content
 
@@ -2687,11 +2728,9 @@ async def get_picks_html(
 @limiter.limit("20/minute")
 async def get_weekly_lineup_html(
     request: Request,
-    date: Optional[str] = Query(
-        None, description="Date (YYYY-MM-DD), defaults to today"),
-    team: Optional[str] = Query(
-        None, description="Filter by team name/abbreviation"),
-    elite: bool = Query(False, description="Elite picks only")
+    date: Optional[str] = Query(None, description="Date (YYYY-MM-DD), defaults to today"),
+    team: Optional[str] = Query(None, description="Filter by team name/abbreviation"),
+    elite: bool = Query(False, description="Elite picks only"),
 ):
     """Render full weekly lineup as sortable HTML."""
     try:
@@ -2711,12 +2750,10 @@ async def get_weekly_lineup_html(
 
         if team:
             team_filter = team.lower().strip()
-            plays = [p for p in plays if team_filter in p.get(
-                "matchup", "").lower()]
+            plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
 
         if elite:
-            plays = [p for p in plays if _fire_value(
-                p.get("fire_rating")) >= 4]
+            plays = [p for p in plays if _fire_value(p.get("fire_rating")) >= 4]
 
         if not plays:
             return f"""<!DOCTYPE html>
@@ -2743,8 +2780,7 @@ async def get_weekly_lineup_html(
         def _edge_value(edge_text: str) -> float:
             if not edge_text:
                 return 0.0
-            cleaned = edge_text.replace("pts", "").replace(
-                "%", "").replace("+", "").strip()
+            cleaned = edge_text.replace("pts", "").replace("%", "").replace("+", "").strip()
             try:
                 return float(cleaned)
             except ValueError:
@@ -2963,8 +2999,7 @@ async def get_weekly_lineup_html(
 
         return html_content
     except Exception as e:
-        logger.error(
-            f"Error rendering weekly lineup HTML: {str(e)}", exc_info=True)
+        logger.error(f"Error rendering weekly lineup HTML: {str(e)}", exc_info=True)
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2991,11 +3026,9 @@ async def get_weekly_lineup_html(
 @limiter.limit("20/minute")
 async def get_weekly_lineup_csv(
     request: Request,
-    date: Optional[str] = Query(
-        None, description="Date (YYYY-MM-DD), defaults to today"),
-    team: Optional[str] = Query(
-        None, description="Filter by team name/abbreviation"),
-    elite: bool = Query(False, description="Elite picks only")
+    date: Optional[str] = Query(None, description="Date (YYYY-MM-DD), defaults to today"),
+    team: Optional[str] = Query(None, description="Filter by team name/abbreviation"),
+    elite: bool = Query(False, description="Elite picks only"),
 ):
     """Download weekly lineup picks as CSV."""
     try:
@@ -3015,51 +3048,56 @@ async def get_weekly_lineup_csv(
 
         if team:
             team_filter = team.lower().strip()
-            plays = [p for p in plays if team_filter in p.get(
-                "matchup", "").lower()]
+            plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
 
         if elite:
-            plays = [p for p in plays if _fire_value(
-                p.get("fire_rating")) >= 4]
+            plays = [p for p in plays if _fire_value(p.get("fire_rating")) >= 4]
 
         buffer = io.StringIO()
         writer = csv.writer(buffer, lineterminator="\n")
-        writer.writerow([
-            "Time (CST)", "Matchup", "Segment", "Pick", "Model", "Market",
-            "Edge", "Confidence", "Fire Rating"
-        ])
+        writer.writerow(
+            [
+                "Time (CST)",
+                "Matchup",
+                "Segment",
+                "Pick",
+                "Model",
+                "Market",
+                "Edge",
+                "Confidence",
+                "Fire Rating",
+            ]
+        )
         for p in plays:
-            writer.writerow([
-                p.get("time_cst", ""),
-                p.get("matchup", ""),
-                p.get("period", ""),
-                p.get("pick", ""),
-                p.get("model_prediction", ""),
-                p.get("market_line", ""),
-                p.get("edge", ""),
-                p.get("confidence", ""),
-                p.get("fire_rating", ""),
-            ])
+            writer.writerow(
+                [
+                    p.get("time_cst", ""),
+                    p.get("matchup", ""),
+                    p.get("period", ""),
+                    p.get("pick", ""),
+                    p.get("model_prediction", ""),
+                    p.get("market_line", ""),
+                    p.get("edge", ""),
+                    p.get("confidence", ""),
+                    p.get("fire_rating", ""),
+                ]
+            )
 
         filename = f"NBA_Picks_{date}.csv"
         return Response(
             content=buffer.getvalue(),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
     except Exception as e:
-        logger.error(
-            f"Error generating weekly lineup CSV: {str(e)}", exc_info=True)
-        return Response(
-            content="Failed to generate CSV",
-            media_type="text/plain",
-            status_code=500
-        )
+        logger.error(f"Error generating weekly lineup CSV: {str(e)}", exc_info=True)
+        return Response(content="Failed to generate CSV", media_type="text/plain", status_code=500)
 
 
 # =============================================================================
 # WEBSITE INTEGRATION - JSON API for greenbiersportventures.com
 # =============================================================================
+
 
 def _get_fire_tier(fire_rating) -> str:
     """Convert fire rating to tier name. Handles both numeric and string formats."""
@@ -3088,15 +3126,10 @@ def _get_fire_tier(fire_rating) -> str:
 
 
 async def _build_weekly_lineup_payload(
-    request: Request,
-    date: str,
-    tier: str = "all",
-    team: Optional[str] = None,
-    elite: bool = False
+    request: Request, date: str, tier: str = "all", team: Optional[str] = None, elite: bool = False
 ) -> dict:
     if date == "tomorrow":
-        resolved_date = (datetime.now() + timedelta(days=1)
-                         ).strftime("%Y-%m-%d")
+        resolved_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     elif date == "today":
         resolved_date = datetime.now().strftime("%Y-%m-%d")
     else:
@@ -3105,11 +3138,7 @@ async def _build_weekly_lineup_payload(
     data = await get_executive_summary(request, date=resolved_date, use_splits=True)
 
     if not data or not isinstance(data, dict):
-        return {
-            "sport": "NBA",
-            "error": "Failed to fetch predictions",
-            "date": resolved_date
-        }
+        return {"sport": "NBA", "error": "Failed to fetch predictions", "date": resolved_date}
 
     all_plays = data.get("plays", [])
     tier_filter = (tier or "all").lower().strip()
@@ -3119,42 +3148,45 @@ async def _build_weekly_lineup_payload(
     plays = all_plays
     if team:
         team_filter = team.lower().strip()
-        plays = [p for p in plays if team_filter in p.get(
-            "matchup", "").lower()]
+        plays = [p for p in plays if team_filter in p.get("matchup", "").lower()]
 
     if tier_filter == "elite":
-        plays = [p for p in plays if _get_fire_tier(
-            p.get("fire_rating", "")) == "ELITE"]
+        plays = [p for p in plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"]
     elif tier_filter == "strong":
-        plays = [p for p in plays if _get_fire_tier(
-            p.get("fire_rating", "")) in ["ELITE", "STRONG"]]
+        plays = [
+            p for p in plays if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG"]
+        ]
     elif tier_filter == "good":
-        plays = [p for p in plays if _get_fire_tier(p.get("fire_rating", "")) in [
-            "ELITE", "STRONG", "GOOD"]]
+        plays = [
+            p
+            for p in plays
+            if _get_fire_tier(p.get("fire_rating", "")) in ["ELITE", "STRONG", "GOOD"]
+        ]
 
-    elite_count = len([p for p in all_plays if _get_fire_tier(
-        p.get("fire_rating", "")) == "ELITE"])
-    strong_count = len([p for p in all_plays if _get_fire_tier(
-        p.get("fire_rating", "")) == "STRONG"])
-    good_count = len([p for p in all_plays if _get_fire_tier(
-        p.get("fire_rating", "")) == "GOOD"])
+    elite_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
+    strong_count = len(
+        [p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "STRONG"]
+    )
+    good_count = len([p for p in all_plays if _get_fire_tier(p.get("fire_rating", "")) == "GOOD"])
 
     formatted_picks = []
     for p in plays:
-        formatted_picks.append({
-            "time": p.get("time_cst", ""),
-            "matchup": p.get("matchup", ""),
-            "period": p.get("period", "FG"),
-            "market": p.get("market", ""),
-            "pick": p.get("pick", ""),
-            "odds": p.get("pick_odds", "N/A"),
-            "model_prediction": p.get("model_prediction", ""),
-            "market_line": p.get("market_line", ""),
-            "edge": p.get("edge", "N/A"),
-            "confidence": p.get("confidence", ""),
-            "tier": _get_fire_tier(p.get("fire_rating", "")),
-            "fire_rating": p.get("fire_rating", "")
-        })
+        formatted_picks.append(
+            {
+                "time": p.get("time_cst", ""),
+                "matchup": p.get("matchup", ""),
+                "period": p.get("period", "FG"),
+                "market": p.get("market", ""),
+                "pick": p.get("pick", ""),
+                "odds": p.get("pick_odds", "N/A"),
+                "model_prediction": p.get("model_prediction", ""),
+                "market_line": p.get("market_line", ""),
+                "edge": p.get("edge", "N/A"),
+                "confidence": p.get("confidence", ""),
+                "tier": _get_fire_tier(p.get("fire_rating", "")),
+                "fire_rating": p.get("fire_rating", ""),
+            }
+        )
 
     return {
         "sport": "NBA",
@@ -3166,9 +3198,9 @@ async def _build_weekly_lineup_payload(
             "elite": elite_count,
             "strong": strong_count,
             "good": good_count,
-            "filtered": len(formatted_picks)
+            "filtered": len(formatted_picks),
         },
-        "picks": formatted_picks
+        "picks": formatted_picks,
     }
 
 
@@ -3176,10 +3208,8 @@ async def _build_weekly_lineup_payload(
 @limiter.limit("60/minute")
 async def get_weekly_lineup_nba_json(
     request: Request,
-    date: str = Query(
-        "today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    tier: str = Query(
-        "all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'")
+    date: str = Query("today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query("all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'"),
 ):
     """
     Website integration endpoint for greenbiersportventures.com/weekly-lineup.
@@ -3205,24 +3235,19 @@ async def get_weekly_lineup_nba_json(
         result = await _build_weekly_lineup_payload(request, date=date, tier=tier)
         if not isinstance(result, dict) or result.get("error"):
             return JSONResponse(
-                content=result if isinstance(result, dict) else {
-                    "sport": "NBA",
-                    "error": "Failed to fetch predictions",
-                    "date": date
-                },
-                status_code=500
+                content=(
+                    result
+                    if isinstance(result, dict)
+                    else {"sport": "NBA", "error": "Failed to fetch predictions", "date": date}
+                ),
+                status_code=500,
             )
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Error in weekly-lineup/nba: {str(e)}", exc_info=True)
         return JSONResponse(
-            content={
-                "sport": "NBA",
-                "error": str(e),
-                "date": date
-            },
-            status_code=500
+            content={"sport": "NBA", "error": str(e), "date": date}, status_code=500
         )
 
 
@@ -3230,52 +3255,35 @@ async def get_weekly_lineup_nba_json(
 @limiter.limit("60/minute")
 async def get_v1_picks(
     request: Request,
-    date: str = Query(
-        "today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
-    tier: str = Query(
-        "all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'"),
-    team: Optional[str] = Query(
-        None, description="Filter by team name or abbreviation"),
-    elite: bool = Query(False, description="Elite picks only (overrides tier)")
+    date: str = Query("today", description="Date in YYYY-MM-DD format, 'today', or 'tomorrow'"),
+    tier: str = Query("all", description="Filter by tier: 'elite', 'strong', 'good', or 'all'"),
+    team: Optional[str] = Query(None, description="Filter by team name or abbreviation"),
+    elite: bool = Query(False, description="Elite picks only (overrides tier)"),
 ):
     """
     Legacy compatibility endpoint for clients expecting /api/v1/picks.
     """
     try:
         result = await _build_weekly_lineup_payload(
-            request,
-            date=date,
-            tier=tier,
-            team=team,
-            elite=elite
+            request, date=date, tier=tier, team=team, elite=elite
         )
         if not isinstance(result, dict) or result.get("error"):
             return JSONResponse(
-                content=result if isinstance(result, dict) else {
-                    "sport": "NBA",
-                    "error": "Failed to fetch predictions",
-                    "date": date
-                },
-                status_code=500
+                content=(
+                    result
+                    if isinstance(result, dict)
+                    else {"sport": "NBA", "error": "Failed to fetch predictions", "date": date}
+                ),
+                status_code=500,
             )
 
         result = dict(result)
         result["api_version"] = "v1"
         if team or elite or (tier and tier.lower().strip() != "all"):
-            result["filters"] = {
-                "date": date,
-                "tier": tier,
-                "team": team,
-                "elite": elite
-            }
+            result["filters"] = {"date": date, "tier": tier, "team": team, "elite": elite}
         return JSONResponse(content=result)
     except Exception as e:
         logger.error(f"Error in v1/picks: {str(e)}", exc_info=True)
         return JSONResponse(
-            content={
-                "sport": "NBA",
-                "error": str(e),
-                "date": date
-            },
-            status_code=500
+            content={"sport": "NBA", "error": str(e), "date": date}, status_code=500
         )

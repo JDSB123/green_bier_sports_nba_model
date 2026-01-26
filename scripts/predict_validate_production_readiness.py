@@ -9,15 +9,16 @@ Validates that the system is ready for production deployment by checking:
 4. Code quality (imports, syntax)
 5. Test suite status
 """
-import sys
-import os
 import argparse
 import asyncio
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from pathlib import Path
 import importlib
+import os
+import sys
 import traceback
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -26,12 +27,13 @@ load_dotenv()
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+
 def test_imports():
     """Test that all critical modules can be imported."""
     print("=" * 60)
     print("1. Testing Module Imports")
     print("=" * 60)
-    
+
     modules = [
         "src.config",
         "src.ingestion.standardize",
@@ -42,7 +44,7 @@ def test_imports():
         "src.modeling.features",
         "src.prediction.engine",
     ]
-    
+
     failed = []
     for module_name in modules:
         try:
@@ -51,11 +53,11 @@ def test_imports():
         except Exception as e:
             print(f"  [FAIL] {module_name}: {e}")
             failed.append(module_name)
-    
+
     if failed:
         print(f"\n[FAILED] {len(failed)} modules could not be imported")
         return False
-    
+
     print(f"\n[OK] All {len(modules)} modules imported successfully")
     return True
 
@@ -65,15 +67,15 @@ def test_standardization():
     print("\n" + "=" * 60)
     print("2. Testing Team Name Standardization")
     print("=" * 60)
-    
+
     try:
         from src.ingestion.standardize import (
-            normalize_team_to_espn,
+            ESPN_TEAM_NAMES,
             is_valid_espn_team_name,
+            normalize_team_to_espn,
             standardize_game_data,
-            ESPN_TEAM_NAMES
         )
-        
+
         # Test valid team names
         test_cases = [
             ("Los Angeles Lakers", True),
@@ -82,10 +84,10 @@ def test_standardization():
             ("Boston Celtics", True),
             ("Invalid Team Name XYZ", False),
         ]
-        
+
         passed = 0
         failed = 0
-        
+
         for team_name, should_be_valid in test_cases:
             normalized, is_valid = normalize_team_to_espn(team_name, source="test")
             if should_be_valid:
@@ -93,16 +95,20 @@ def test_standardization():
                     print(f"  [OK] '{team_name}' -> '{normalized}' (valid={is_valid})")
                     passed += 1
                 else:
-                    print(f"  [FAIL] '{team_name}' -> '{normalized}' (valid={is_valid}) - Expected valid")
+                    print(
+                        f"  [FAIL] '{team_name}' -> '{normalized}' (valid={is_valid}) - Expected valid"
+                    )
                     failed += 1
             else:
                 if not is_valid:
                     print(f"  [OK] '{team_name}' correctly rejected (valid={is_valid})")
                     passed += 1
                 else:
-                    print(f"  [FAIL] '{team_name}' incorrectly accepted (valid={is_valid}) - Expected invalid")
+                    print(
+                        f"  [FAIL] '{team_name}' incorrectly accepted (valid={is_valid}) - Expected invalid"
+                    )
                     failed += 1
-        
+
         # Test standardize_game_data validation flags
         print("\n  Testing standardize_game_data validation:")
         test_game = {
@@ -110,17 +116,17 @@ def test_standardization():
             "away_team": "Boston Celtics",
         }
         standardized = standardize_game_data(test_game, source="test")
-        
+
         if standardized.get("_data_valid"):
             print(f"  [OK] Validation flags present: _data_valid={standardized.get('_data_valid')}")
             passed += 1
         else:
             print(f"  [FAIL] Validation flags missing or invalid")
             failed += 1
-        
+
         print(f"\n  Results: {passed} passed, {failed} failed")
         return failed == 0
-        
+
     except Exception as e:
         print(f"  ✗ Standardization test failed: {e}")
         traceback.print_exc()
@@ -132,14 +138,18 @@ def test_config():
     print("\n" + "=" * 60)
     print("3. Testing Configuration")
     print("=" * 60)
-    
+
     try:
-        from src.config import settings, get_current_nba_season
-        from src.prediction.feature_validation import get_feature_mode, FeatureMode, get_min_feature_completeness
-        
+        from src.config import get_current_nba_season, settings
+        from src.prediction.feature_validation import (
+            FeatureMode,
+            get_feature_mode,
+            get_min_feature_completeness,
+        )
+
         # Test settings object exists
         print(f"  [OK] Settings object initialized")
-        
+
         # Test API key fields exist
         required_fields = [
             "the_odds_api_key",
@@ -149,7 +159,7 @@ def test_config():
             "action_network_password",
             "kaggle_api_token",
         ]
-        
+
         for field in required_fields:
             if hasattr(settings, field):
                 value = getattr(settings, field)
@@ -158,7 +168,7 @@ def test_config():
             else:
                 print(f"  [FAIL] {field}: missing")
                 return False
-        
+
         # Test season calculation
         season = get_current_nba_season()
         if season and len(season) == 9 and "-" in season:
@@ -166,7 +176,7 @@ def test_config():
         else:
             print(f"  [FAIL] Invalid season format: {season}")
             return False
-        
+
         # Production guardrails (fail if not strict)
         guardrail_failures = []
 
@@ -191,8 +201,12 @@ def test_config():
         if not getattr(settings, "require_injury_fetch_success", False):
             guardrail_failures.append("REQUIRE_INJURY_FETCH_SUCCESS must be true for production")
 
-        if getattr(settings, "require_action_network_splits", False) or getattr(settings, "require_real_splits", False):
-            if not getattr(settings, "action_network_username", "") or not getattr(settings, "action_network_password", ""):
+        if getattr(settings, "require_action_network_splits", False) or getattr(
+            settings, "require_real_splits", False
+        ):
+            if not getattr(settings, "action_network_username", "") or not getattr(
+                settings, "action_network_password", ""
+            ):
                 guardrail_failures.append(
                     "Action Network premium credentials are required when splits are strict"
                 )
@@ -205,7 +219,7 @@ def test_config():
 
         print("\n[OK] Configuration is valid")
         return True
-        
+
     except Exception as e:
         print(f"  [FAIL] Configuration test failed: {e}")
         traceback.print_exc()
@@ -217,49 +231,49 @@ def test_no_fake_data():
     print("\n" + "=" * 60)
     print("4. Testing No Fake Data Policy")
     print("=" * 60)
-    
+
     try:
         from src.ingestion.standardize import normalize_team_to_espn, standardize_game_data
-        
+
         # Test that invalid team names return empty string, not original
         invalid_name = "Totally Fake Team Name 12345"
         normalized, is_valid = normalize_team_to_espn(invalid_name, source="test")
-        
+
         if not is_valid and normalized == "":
             print(f"  [OK] Invalid team name correctly returns empty string (not fake data)")
         else:
             print(f"  [FAIL] Invalid team name returned '{normalized}' (should be empty)")
             return False
-        
+
         # Test that invalid games are marked invalid
         invalid_game = {
             "home_team": "Fake Home Team",
             "away_team": "Fake Away Team",
         }
         standardized = standardize_game_data(invalid_game, source="test")
-        
+
         if not standardized.get("_data_valid"):
             print(f"  [OK] Invalid game data correctly marked as invalid")
         else:
             print(f"  [FAIL] Invalid game data incorrectly marked as valid")
             return False
-        
+
         # Test that empty team names are handled
         empty_game = {
             "home_team": "",
             "away_team": "",
         }
         standardized_empty = standardize_game_data(empty_game, source="test")
-        
+
         if not standardized_empty.get("_data_valid"):
             print(f"  [OK] Empty team names correctly rejected")
         else:
             print(f"  [FAIL] Empty team names incorrectly accepted")
             return False
-        
+
         print("\n[OK] No fake data policy enforced")
         return True
-        
+
     except Exception as e:
         print(f"  ✗ No fake data test failed: {e}")
         traceback.print_exc()
@@ -271,10 +285,10 @@ def test_error_handling():
     print("\n" + "=" * 60)
     print("5. Testing Error Handling")
     print("=" * 60)
-    
+
     try:
         from src.ingestion.standardize import normalize_team_to_espn
-        
+
         # Test that function doesn't crash on invalid input
         test_cases = [
             None,
@@ -282,7 +296,7 @@ def test_error_handling():
             "   ",
             "Invalid Team",
         ]
-        
+
         for invalid_input in test_cases:
             try:
                 if invalid_input is None:
@@ -295,18 +309,21 @@ def test_error_handling():
             except Exception as e:
                 print(f"  [FAIL] Crashed on '{invalid_input}': {e}")
                 return False
-        
+
         print("\n[OK] Error handling is robust")
         return True
-        
+
     except Exception as e:
         print(f"  [FAIL] Error handling test failed: {e}")
         traceback.print_exc()
         return False
 
 
-def _extract_market_line(game: dict, market_key: str, team_name: str | None = None, outcome_name: str | None = None) -> float | None:
+def _extract_market_line(
+    game: dict, market_key: str, team_name: str | None = None, outcome_name: str | None = None
+) -> float | None:
     from src.ingestion.standardize import normalize_outcome_name
+
     """Extract a market line from The Odds API payload (returns None if missing)."""
     bookmakers = game.get("bookmakers", []) or []
     for bm in bookmakers:
@@ -339,17 +356,18 @@ async def _test_live_pipeline_async() -> bool:
     print("=" * 60)
 
     try:
+        import pandas as pd
+
         from src.config import settings
-        from src.ingestion.the_odds import fetch_odds, fetch_events, fetch_event_odds
-        from src.ingestion.standardize import normalize_team_to_espn
-        from src.ingestion.betting_splits import fetch_public_betting_splits, splits_to_features
         from src.features.rich_features import RichFeatureBuilder
         from src.ingestion.api_basketball import APIBasketballClient
+        from src.ingestion.betting_splits import fetch_public_betting_splits, splits_to_features
         from src.ingestion.injuries import fetch_all_injuries
-        from src.prediction.feature_validation import validate_and_prepare_features
+        from src.ingestion.standardize import normalize_team_to_espn
+        from src.ingestion.the_odds import fetch_event_odds, fetch_events, fetch_odds
         from src.modeling.unified_features import MODEL_CONFIGS
+        from src.prediction.feature_validation import validate_and_prepare_features
         from src.utils.model_features import get_market_features
-        import pandas as pd
     except Exception as e:
         print(f"  [FAIL] Imports for live pipeline failed: {e}")
         traceback.print_exc()
@@ -384,7 +402,9 @@ async def _test_live_pipeline_async() -> bool:
                 print(f"  [FAIL] commence_time_cst not CST/CDT: {cst_value}")
                 return False
             if g.get("date") and dt_value.date().isoformat() != g.get("date"):
-                print(f"  [FAIL] date mismatch after CST conversion: {g.get('date')} vs {dt_value.date().isoformat()}")
+                print(
+                    f"  [FAIL] date mismatch after CST conversion: {g.get('date')} vs {dt_value.date().isoformat()}"
+                )
                 return False
             cst_checked = True
             break
@@ -431,7 +451,9 @@ async def _test_live_pipeline_async() -> bool:
                 if key not in splits_dict:
                     missing_keys.append(key)
         if missing_keys:
-            print(f"  [FAIL] Missing splits for {len(missing_keys)} games (strict): {missing_keys[:5]}")
+            print(
+                f"  [FAIL] Missing splits for {len(missing_keys)} games (strict): {missing_keys[:5]}"
+            )
             return False
 
     sample_split = next(iter(splits_dict.values()), None)
@@ -440,7 +462,10 @@ async def _test_live_pipeline_async() -> bool:
             print(f"  [FAIL] Action Network game_time not CST/CDT: {sample_split.game_time}")
             return False
         split_features = splits_to_features(sample_split)
-        if getattr(settings, "require_real_splits", False) and split_features.get("has_real_splits") != 1:
+        if (
+            getattr(settings, "require_real_splits", False)
+            and split_features.get("has_real_splits") != 1
+        ):
             print("  [FAIL] Splits returned has_real_splits=0 while REQUIRE_REAL_SPLITS=true")
             return False
 
@@ -460,9 +485,7 @@ async def _test_live_pipeline_async() -> bool:
     target_away = None
     try:
         events = await fetch_events()
-        event_lookup = {
-            (ev.get("home_team"), ev.get("away_team")): ev for ev in events or []
-        }
+        event_lookup = {(ev.get("home_team"), ev.get("away_team")): ev for ev in events or []}
         # Find any game with valid 1H markets
         for game in games:
             home_team = game.get("home_team")
@@ -477,9 +500,7 @@ async def _test_live_pipeline_async() -> bool:
             spread_1h = _extract_market_line(
                 event_odds, "spreads_h1", team_name=event_odds.get("home_team")
             )
-            total_1h = _extract_market_line(
-                event_odds, "totals_h1", outcome_name="Over"
-            )
+            total_1h = _extract_market_line(event_odds, "totals_h1", outcome_name="Over")
             if spread_1h is None or total_1h is None:
                 continue
             event_spread_1h = spread_1h
@@ -557,7 +578,9 @@ async def _test_live_pipeline_async() -> bool:
             payload["1h_total_line"] = h1_total_line
             payload["fh_spread_line"] = h1_spread_line
             payload["fh_total_line"] = h1_total_line
-            required = get_market_features(models_dir, market_key) or MODEL_CONFIGS[market_key]["features"]
+            required = (
+                get_market_features(models_dir, market_key) or MODEL_CONFIGS[market_key]["features"]
+            )
             df = pd.DataFrame([payload])
             validate_and_prepare_features(df, required, market=market_key)
 
@@ -625,7 +648,7 @@ def main():
     print("=" * 60)
     print(f"Running checks at: {Path.cwd()}")
     print()
-    
+
     checks = [
         ("Module Imports", test_imports),
         ("Team Name Standardization", test_standardization),
@@ -636,7 +659,7 @@ def main():
 
     if args.live:
         checks.append(("Live Endpoint + Pipeline", test_live_pipeline))
-    
+
     results = []
     for name, test_func in checks:
         try:
@@ -646,19 +669,19 @@ def main():
             print(f"\n[FAIL] {name} check crashed: {e}")
             traceback.print_exc()
             results.append((name, False))
-    
+
     # Summary
     print("\n" + "=" * 60)
     print("VALIDATION SUMMARY")
     print("=" * 60)
-    
+
     passed = sum(1 for _, result in results if result)
     total = len(results)
-    
+
     for name, result in results:
         status = "[PASS]" if result else "[FAIL]"
         print(f"  {status}: {name}")
-    
+
     print("\n" + "=" * 60)
     if passed == total:
         print(f"[OK] PRODUCTION READY: All {total} checks passed")
@@ -670,4 +693,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

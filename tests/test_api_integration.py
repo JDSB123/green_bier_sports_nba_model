@@ -1,8 +1,11 @@
-from fastapi.testclient import TestClient
-from src.serving.app import app
 import os
 
+from fastapi.testclient import TestClient
+
+from src.serving.app import app
+
 client = TestClient(app)
+
 
 def test_health_check():
     """Test the health check endpoint."""
@@ -12,6 +15,7 @@ def test_health_check():
     assert data["status"] == "ok"
     assert "engine_loaded" in data
 
+
 def test_meta_endpoint():
     """Test the meta endpoint."""
     response = client.get("/meta")
@@ -20,6 +24,7 @@ def test_meta_endpoint():
     assert "version" in data
     assert "server_time" in data
     assert "python_version" in data
+
 
 def test_metrics_endpoint():
     """Test the prometheus metrics endpoint."""

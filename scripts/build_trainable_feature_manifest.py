@@ -19,11 +19,10 @@ import pandas as pd
 
 from src.config import PROJECT_ROOT, settings
 from src.modeling.unified_features import (
-    UNIFIED_FEATURE_NAMES,
     LEAKY_FEATURES_BLACKLIST,
     MODEL_CONFIGS,
+    UNIFIED_FEATURE_NAMES,
 )
-
 
 EXTRA_CONTEXT_FEATURES: Set[str] = {
     # Period-specific line context injected by prediction engine

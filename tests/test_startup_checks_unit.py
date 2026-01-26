@@ -51,7 +51,9 @@ def test_validate_filter_thresholds_warns_when_defaults_used(monkeypatch):
 
 def test_validate_feature_alignment_reports_missing_features(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(sc, "_collect_builder_feature_keys", lambda: {"a", "b"})
-    monkeypatch.setattr(sc, "_load_model_features", lambda models_dir, market_key: (["a", "b", "c"], None))
+    monkeypatch.setattr(
+        sc, "_load_model_features", lambda models_dir, market_key: (["a", "b", "c"], None)
+    )
 
     report = sc._validate_feature_alignment(tmp_path, ["fg_spread"])
     assert report.errors
@@ -64,12 +66,22 @@ def test_run_startup_integrity_checks_raises_on_market_mismatch(monkeypatch, tmp
     project_root.mkdir()
     models_dir.mkdir()
 
-    monkeypatch.setattr(sc, "validate_required_api_keys", lambda: _FakeValidationResult(True, [], []))
+    monkeypatch.setattr(
+        sc, "validate_required_api_keys", lambda: _FakeValidationResult(True, [], [])
+    )
     monkeypatch.setattr(sc, "_validate_api_auth_config", lambda: None)
     monkeypatch.setattr(sc, "_validate_filter_thresholds", lambda: [])
-    monkeypatch.setattr(sc, "get_expected_markets", lambda: ["fg_spread", "fg_total"]) 
-    monkeypatch.setattr(sc, "get_market_catalog", lambda *args, **kwargs: _FakeCatalog(source="model_pack", markets=["fg_spread"]))
-    monkeypatch.setattr(sc, "_validate_feature_alignment", lambda *args, **kwargs: sc.StartupIntegrityReport(errors=[], warnings=[]))
+    monkeypatch.setattr(sc, "get_expected_markets", lambda: ["fg_spread", "fg_total"])
+    monkeypatch.setattr(
+        sc,
+        "get_market_catalog",
+        lambda *args, **kwargs: _FakeCatalog(source="model_pack", markets=["fg_spread"]),
+    )
+    monkeypatch.setattr(
+        sc,
+        "_validate_feature_alignment",
+        lambda *args, **kwargs: sc.StartupIntegrityReport(errors=[], warnings=[]),
+    )
 
     with pytest.raises(sc.StartupIntegrityError) as exc:
         sc.run_startup_integrity_checks(project_root=project_root, models_dir=models_dir)
@@ -83,11 +95,21 @@ def test_run_startup_integrity_checks_succeeds(monkeypatch, tmp_path: Path):
     project_root.mkdir()
     models_dir.mkdir()
 
-    monkeypatch.setattr(sc, "validate_required_api_keys", lambda: _FakeValidationResult(True, [], []))
+    monkeypatch.setattr(
+        sc, "validate_required_api_keys", lambda: _FakeValidationResult(True, [], [])
+    )
     monkeypatch.setattr(sc, "_validate_api_auth_config", lambda: None)
     monkeypatch.setattr(sc, "_validate_filter_thresholds", lambda: [])
-    monkeypatch.setattr(sc, "get_expected_markets", lambda: ["fg_spread"]) 
-    monkeypatch.setattr(sc, "get_market_catalog", lambda *args, **kwargs: _FakeCatalog(source="model_pack", markets=["fg_spread"]))
-    monkeypatch.setattr(sc, "_validate_feature_alignment", lambda *args, **kwargs: sc.StartupIntegrityReport(errors=[], warnings=[]))
+    monkeypatch.setattr(sc, "get_expected_markets", lambda: ["fg_spread"])
+    monkeypatch.setattr(
+        sc,
+        "get_market_catalog",
+        lambda *args, **kwargs: _FakeCatalog(source="model_pack", markets=["fg_spread"]),
+    )
+    monkeypatch.setattr(
+        sc,
+        "_validate_feature_alignment",
+        lambda *args, **kwargs: sc.StartupIntegrityReport(errors=[], warnings=[]),
+    )
 
     sc.run_startup_integrity_checks(project_root=project_root, models_dir=models_dir)

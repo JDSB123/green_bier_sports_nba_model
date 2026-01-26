@@ -55,4 +55,3 @@ markers = [
     "unit: marks tests as unit tests",
     "requires_api: marks tests that require API keys"
 ]
-

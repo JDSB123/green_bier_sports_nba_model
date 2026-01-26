@@ -12,15 +12,15 @@ DRIFT TYPES DETECTED:
 
 from __future__ import annotations
 
-import logging
 import json
-from datetime import datetime, date, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
-from pathlib import Path
-from threading import Lock
+import logging
 from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from pathlib import Path
 from statistics import mean, stdev
+from threading import Lock
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DriftMetrics:
     """Metrics for drift detection."""
+
     # Accuracy tracking
     predictions: int = 0
     correct: int = 0
@@ -68,6 +69,7 @@ class DriftMetrics:
 @dataclass
 class DriftAlert:
     """Alert for detected drift."""
+
     timestamp: str
     drift_type: str  # "accuracy", "confidence", "edge"
     market: str
@@ -120,7 +122,9 @@ class ModelDriftDetector:
         self.metrics: Dict[str, DriftMetrics] = defaultdict(DriftMetrics)
 
         # Rolling window metrics (last 7 days)
-        self.daily_metrics: Dict[str, Dict[str, DriftMetrics]] = defaultdict(lambda: defaultdict(DriftMetrics))
+        self.daily_metrics: Dict[str, Dict[str, DriftMetrics]] = defaultdict(
+            lambda: defaultdict(DriftMetrics)
+        )
 
         # Alerts
         self.alerts: List[DriftAlert] = []
@@ -363,10 +367,7 @@ class ModelDriftDetector:
             "baseline_accuracy": self.BASELINE_ACCURACY,
             "market_stats": self.get_all_stats(),
             "recent_alerts": self.get_recent_alerts(20),
-            "drifting_markets": [
-                market for market in self.metrics
-                if self.is_drifting(market)[0]
-            ],
+            "drifting_markets": [market for market in self.metrics if self.is_drifting(market)[0]],
         }
 
         with open(path, "w") as f:
@@ -391,6 +392,7 @@ def get_drift_detector() -> ModelDriftDetector:
     global _drift_detector
     if _drift_detector is None:
         from src.config import settings
+
         output_dir = Path(settings.data_processed_dir) / "monitoring"
         _drift_detector = ModelDriftDetector(output_dir=output_dir)
     return _drift_detector

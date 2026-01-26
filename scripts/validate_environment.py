@@ -87,6 +87,7 @@ def get_project_root() -> Path:
 # Validation Functions
 # ============================================================================
 
+
 def check_secret(name: str, config: dict) -> tuple[bool, str, str]:
     """
     Check if a secret is available from any source.
@@ -95,8 +96,7 @@ def check_secret(name: str, config: dict) -> tuple[bool, str, str]:
     # 1. Check environment variable
     env_val = os.environ.get(config["env_var"])
     if env_val:
-        preview = f"{env_val[:4]}...{env_val[-4:]}" if len(
-            env_val) > 8 else "****"
+        preview = f"{env_val[:4]}...{env_val[-4:]}" if len(env_val) > 8 else "****"
         return True, "env_var", preview
 
     # 2. Check Docker secrets file
@@ -105,8 +105,7 @@ def check_secret(name: str, config: dict) -> tuple[bool, str, str]:
     if secret_file.exists():
         content = secret_file.read_text().strip()
         if content and not content.startswith("your_"):
-            preview = f"{content[:4]}...{content[-4:]}" if len(
-                content) > 8 else "****"
+            preview = f"{content[:4]}...{content[-4:]}" if len(content) > 8 else "****"
             return True, "secret_file", preview
 
     # 3. Check /run/secrets (Docker Swarm style)
@@ -145,7 +144,8 @@ def validate_version_consistency() -> tuple[bool, list[str]]:
             data = json.loads(model_pack.read_text())
             if data.get("version") != version:
                 issues.append(
-                    f"model_pack.json version ({data.get('version')}) != VERSION ({version})")
+                    f"model_pack.json version ({data.get('version')}) != VERSION ({version})"
+                )
         except json.JSONDecodeError:
             issues.append("model_pack.json is invalid JSON")
 
@@ -156,7 +156,8 @@ def validate_version_consistency() -> tuple[bool, list[str]]:
             data = json.loads(feature_imp.read_text())
             if data.get("version") != version:
                 issues.append(
-                    f"feature_importance.json version ({data.get('version')}) != VERSION ({version})")
+                    f"feature_importance.json version ({data.get('version')}) != VERSION ({version})"
+                )
         except json.JSONDecodeError:
             issues.append("feature_importance.json is invalid JSON")
 
@@ -166,6 +167,7 @@ def validate_version_consistency() -> tuple[bool, list[str]]:
 # ============================================================================
 # Main Validation
 # ============================================================================
+
 
 def validate_all(verbose: bool = True) -> bool:
     """Run all validations. Returns True if all passed."""
@@ -195,8 +197,7 @@ def validate_all(verbose: bool = True) -> bool:
             all_passed = False
             if verbose:
                 print(f"  ❌ {name}: NOT FOUND")
-                print(
-                    f"     → Set env var: export {config['env_var']}=your_key")
+                print(f"     → Set env var: export {config['env_var']}=your_key")
                 print(f"     → Or create file: {config['secret_file']}")
 
     if verbose:
@@ -273,7 +274,8 @@ def print_setup_instructions():
     print("=" * 60)
 
     if env == "local":
-        print("""
+        print(
+            """
 LOCAL DEVELOPMENT:
 1. Copy .env.example to .env:
    cp .env.example .env
@@ -284,10 +286,12 @@ LOCAL DEVELOPMENT:
 
 3. Create Docker secrets (for container builds):
    python scripts/manage_secrets.py from-env
-""")
+"""
+        )
 
     elif env == "codespace":
-        print("""
+        print(
+            """
 CODESPACE:
 1. Add secrets to Codespace settings:
    - Go to github.com/settings/codespaces
@@ -297,10 +301,12 @@ CODESPACE:
 2. Or create a .env file (temporary, lost on rebuild):
    cp .env.example .env
    # Edit with your keys
-""")
+"""
+        )
 
     elif env == "docker":
-        print("""
+        print(
+            """
 DOCKER:
 1. Create secrets/ directory with key files:
    mkdir -p secrets
@@ -309,10 +315,12 @@ DOCKER:
 
 2. Or pass as environment variables:
    docker run -e THE_ODDS_API_KEY=xxx -e API_BASKETBALL_KEY=xxx ...
-""")
+"""
+        )
 
     elif env == "github_actions":
-        print("""
+        print(
+            """
 GITHUB ACTIONS:
 1. Go to repo Settings → Secrets → Actions
 2. Add these secrets:
@@ -321,7 +329,8 @@ GITHUB ACTIONS:
    - AZURE_CLIENT_ID (for OIDC)
    - AZURE_TENANT_ID (for OIDC)
    - AZURE_SUBSCRIPTION_ID (for OIDC)
-""")
+"""
+        )
 
 
 # ============================================================================
@@ -331,12 +340,9 @@ GITHUB ACTIONS:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate NBA Model environment")
-    parser.add_argument("--quiet", "-q", action="store_true",
-                        help="Only output on failure")
-    parser.add_argument("--help-setup", action="store_true",
-                        help="Show setup instructions")
+    parser = argparse.ArgumentParser(description="Validate NBA Model environment")
+    parser.add_argument("--quiet", "-q", action="store_true", help="Only output on failure")
+    parser.add_argument("--help-setup", action="store_true", help="Show setup instructions")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     args = parser.parse_args()
 
@@ -358,8 +364,7 @@ if __name__ == "__main__":
         version_ok, issues = validate_version_consistency()
         results["version_consistent"] = version_ok
         results["version_issues"] = issues
-        results["all_passed"] = all(
-            s["found"] for s in results["secrets"].values()) and version_ok
+        results["all_passed"] = all(s["found"] for s in results["secrets"].values()) and version_ok
 
         print(json.dumps(results, indent=2))
         sys.exit(0 if results["all_passed"] else 1)

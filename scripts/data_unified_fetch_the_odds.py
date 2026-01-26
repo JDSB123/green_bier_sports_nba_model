@@ -1,7 +1,7 @@
-import os
-import json
 import glob
-from typing import List, Dict, Any
+import json
+import os
+from typing import Any, Dict, List
 
 import pandas as pd
 
@@ -21,13 +21,15 @@ def _safe_load_json(path: str) -> Any:
 def _normalize_the_odds(payload: Dict[str, Any] | List[Dict[str, Any]]):
     rows: List[Dict[str, Any]] = []
     # events -> bookmakers -> markets
-    events = payload if isinstance(payload, list) else (
-        payload.get("data") or payload.get("events") or []
+    events = (
+        payload
+        if isinstance(payload, list)
+        else (payload.get("data") or payload.get("events") or [])
     )
     for e in events:
         event_id = e.get("id") or e.get("event_id")
-        home = (e.get("home_team") or e.get("teams", [None, None])[0])
-        away = (e.get("away_team") or e.get("teams", [None, None])[1])
+        home = e.get("home_team") or e.get("teams", [None, None])[0]
+        away = e.get("away_team") or e.get("teams", [None, None])[1]
         start_time = e.get("commence_time") or e.get("start_time")
         bookmakers = e.get("bookmakers") or []
         for b in bookmakers:
@@ -38,19 +40,21 @@ def _normalize_the_odds(payload: Dict[str, Any] | List[Dict[str, Any]]):
                 market_key = m.get("key") or m.get("market")
                 outcomes = m.get("outcomes") or []
                 for o in outcomes:
-                    rows.append({
-                        "source": "the_odds",
-                        "event_id": event_id,
-                        "home_team": home,
-                        "away_team": away,
-                        "start_time": start_time,
-                        "bookmaker": bookmaker,
-                        "market": market_key,
-                        "participant": o.get("name"),
-                        "price": o.get("price") or o.get("odds"),
-                        "line": o.get("point") or o.get("line"),
-                        "last_update": ts,
-                    })
+                    rows.append(
+                        {
+                            "source": "the_odds",
+                            "event_id": event_id,
+                            "home_team": home,
+                            "away_team": away,
+                            "start_time": start_time,
+                            "bookmaker": bookmaker,
+                            "market": market_key,
+                            "participant": o.get("name"),
+                            "price": o.get("price") or o.get("odds"),
+                            "line": o.get("point") or o.get("line"),
+                            "last_update": ts,
+                        }
+                    )
     return rows
 
 
@@ -64,19 +68,22 @@ def collect_the_odds(
         payload = _safe_load_json(the_odds_path)
         rows.extend(_normalize_the_odds(payload))
 
-    df = pd.DataFrame(rows, columns=[
-        "source",
-        "event_id",
-        "home_team",
-        "away_team",
-        "start_time",
-        "bookmaker",
-        "market",
-        "participant",
-        "price",
-        "line",
-        "last_update",
-    ])
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "source",
+            "event_id",
+            "home_team",
+            "away_team",
+            "start_time",
+            "bookmaker",
+            "market",
+            "participant",
+            "price",
+            "line",
+            "last_update",
+        ],
+    )
     if not df.empty:
         df["start_time"] = pd.to_datetime(df["start_time"], errors="coerce")
         df["last_update"] = pd.to_datetime(df["last_update"], errors="coerce")

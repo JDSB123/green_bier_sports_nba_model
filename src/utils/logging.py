@@ -3,11 +3,12 @@
 This module provides a consistent logging setup across all modules.
 Logs are output in JSON format for easy parsing by logging aggregators.
 """
+
+import json
 import logging
 import sys
-from typing import Optional
-import json
 from datetime import datetime, timezone
+from typing import Optional
 
 
 class JSONFormatter(logging.Formatter):
@@ -97,4 +98,3 @@ def get_logger(name: str) -> logging.Logger:
         Configured logger instance
     """
     return setup_logger(name)
-

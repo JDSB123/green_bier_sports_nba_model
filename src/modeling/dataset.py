@@ -3,11 +3,14 @@ Dataset builder for NBA prediction models.
 
 Links odds data with game outcomes to create training datasets.
 """
+
 from __future__ import annotations
+
 import os
-from typing import Dict, List, Tuple, Optional
-import pandas as pd
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
+import pandas as pd
 
 from src.config import settings
 from src.modeling.features import FeatureEngineer
@@ -71,9 +74,9 @@ class DatasetBuilder:
     ) -> Optional[float]:
         """Get consensus line for a market/participant."""
         filtered = odds_df[
-            (odds_df["event_id"] == event_id) &
-            (odds_df["market"] == market) &
-            (odds_df["participant"] == participant)
+            (odds_df["event_id"] == event_id)
+            & (odds_df["market"] == market)
+            & (odds_df["participant"] == participant)
         ]
         lines = filtered["line"].dropna()
         if len(lines) == 0:
@@ -106,9 +109,9 @@ class DatasetBuilder:
 
             # Find matching outcome (within 1 day)
             matching_outcomes = outcomes_df[
-                (outcomes_df["home_team"] == home_team) &
-                (outcomes_df["away_team"] == away_team) &
-                (abs((outcomes_df["date"] - start_time).dt.total_seconds()) < 86400 * 2)
+                (outcomes_df["home_team"] == home_team)
+                & (outcomes_df["away_team"] == away_team)
+                & (abs((outcomes_df["date"] - start_time).dt.total_seconds()) < 86400 * 2)
             ]
 
             if len(matching_outcomes) == 0:
@@ -124,32 +127,32 @@ class DatasetBuilder:
             home_margin = outcome["home_margin"]
             total_score = outcome["total_score"]
 
-            linked_rows.append({
-                "event_id": event_id,
-                "game_date": start_time,
-                "home_team": home_team,
-                "away_team": away_team,
-                "home_score": outcome["home_score"],
-                "away_score": outcome["away_score"],
-                "home_margin": home_margin,
-                "total_score": total_score,
-                # Spread data
-                "spread_line": spread_line,
-                "spread_covered": (
-                    1 if spread_line is not None and home_margin > -spread_line else 0
-                ),
-                "spread_push": (
-                    1 if spread_line is not None and home_margin == -spread_line else 0
-                ),
-                # Totals data
-                "total_line": total_line,
-                "went_over": (
-                    1 if total_line is not None and total_score > total_line else 0
-                ),
-                "total_push": (
-                    1 if total_line is not None and total_score == total_line else 0
-                ),
-            })
+            linked_rows.append(
+                {
+                    "event_id": event_id,
+                    "game_date": start_time,
+                    "home_team": home_team,
+                    "away_team": away_team,
+                    "home_score": outcome["home_score"],
+                    "away_score": outcome["away_score"],
+                    "home_margin": home_margin,
+                    "total_score": total_score,
+                    # Spread data
+                    "spread_line": spread_line,
+                    "spread_covered": (
+                        1 if spread_line is not None and home_margin > -spread_line else 0
+                    ),
+                    "spread_push": (
+                        1 if spread_line is not None and home_margin == -spread_line else 0
+                    ),
+                    # Totals data
+                    "total_line": total_line,
+                    "went_over": (1 if total_line is not None and total_score > total_line else 0),
+                    "total_push": (
+                        1 if total_line is not None and total_score == total_line else 0
+                    ),
+                }
+            )
 
         return pd.DataFrame(linked_rows)
 
@@ -228,21 +231,21 @@ class DatasetBuilder:
                         .astype(int)
                     )
                     splits_features["sharp_side_total"] = (
-                        splits_features["sharp_total_side"]
-                        .map(mapping_total)
-                        .fillna(0)
-                        .astype(int)
+                        splits_features["sharp_total_side"].map(mapping_total).fillna(0).astype(int)
                     )
 
                     splits_features = splits_features.drop(
                         columns=["sharp_spread_side", "sharp_total_side"], errors="ignore"
                     )
 
-                    training_df = training_df.merge(
-                        splits_features, on="event_id", how="left"
-                    )
+                    training_df = training_df.merge(splits_features, on="event_id", how="left")
 
-                    for col in ["is_rlm_spread", "is_rlm_total", "sharp_side_spread", "sharp_side_total"]:
+                    for col in [
+                        "is_rlm_spread",
+                        "is_rlm_total",
+                        "sharp_side_spread",
+                        "sharp_side_total",
+                    ]:
                         if col in training_df.columns:
                             training_df[col] = training_df[col].fillna(0)
             except Exception:
@@ -275,24 +278,40 @@ class DatasetBuilder:
     def get_feature_columns(self, target: str = "spreads") -> List[str]:
         """Get list of feature columns for a prediction target."""
         base_features = [
-            "home_ppg", "home_papg", "home_total_ppg", "home_win_pct", "home_avg_margin",
-            "away_ppg", "away_papg", "away_total_ppg", "away_win_pct", "away_avg_margin",
-            "home_rest_days", "away_rest_days", "rest_advantage",
-            "h2h_win_pct", "h2h_avg_margin",
-            "win_pct_diff", "ppg_diff",
+            "home_ppg",
+            "home_papg",
+            "home_total_ppg",
+            "home_win_pct",
+            "home_avg_margin",
+            "away_ppg",
+            "away_papg",
+            "away_total_ppg",
+            "away_win_pct",
+            "away_avg_margin",
+            "home_rest_days",
+            "away_rest_days",
+            "rest_advantage",
+            "h2h_win_pct",
+            "h2h_avg_margin",
+            "win_pct_diff",
+            "ppg_diff",
         ]
 
         if target == "spreads":
-            base_features.extend([
-                "predicted_margin",
-                "spreads_consensus_line",
-                "spreads_line_std",
-            ])
+            base_features.extend(
+                [
+                    "predicted_margin",
+                    "spreads_consensus_line",
+                    "spreads_line_std",
+                ]
+            )
         elif target == "totals":
-            base_features.extend([
-                "predicted_total",
-                "totals_consensus_line",
-                "totals_line_std",
-            ])
+            base_features.extend(
+                [
+                    "predicted_total",
+                    "totals_consensus_line",
+                    "totals_line_std",
+                ]
+            )
 
         return base_features

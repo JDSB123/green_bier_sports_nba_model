@@ -1,9 +1,4 @@
-from src.utils.odds import (
-    american_to_implied_prob,
-    devig_two_way,
-    expected_value,
-    kelly_fraction,
-)
+from src.utils.odds import american_to_implied_prob, devig_two_way, expected_value, kelly_fraction
 
 
 def test_american_to_implied_prob():

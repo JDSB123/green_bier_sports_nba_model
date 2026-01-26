@@ -147,7 +147,9 @@ def test_generate_comprehensive_text_report_empty_and_non_empty():
                 "away_team": "Boston Celtics",
                 "time_cst": "7:00 PM",
                 "comprehensive_edge": {
-                    "full_game": {"spread": {"pick": "Los Angeles Lakers", "edge": 3.0, "confidence": 0.8}},
+                    "full_game": {
+                        "spread": {"pick": "Los Angeles Lakers", "edge": 3.0, "confidence": 0.8}
+                    },
                     "first_half": {},
                 },
             }

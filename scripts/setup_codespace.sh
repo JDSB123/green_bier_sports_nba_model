@@ -160,7 +160,7 @@ Setup complete.
 
 Next steps:
 - Validate: python scripts/validate_environment.py
-- Health check (Azure): 
+- Health check (Azure):
   FQDN=$(az containerapp show -n nba-gbsv-api -g nba-gbsv-model-rg --query properties.configuration.ingress.fqdn -o tsv)
   curl "https://$FQDN/health"
 

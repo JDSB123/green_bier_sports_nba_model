@@ -49,3 +49,4 @@ nba_api>=1.11.3
 
 # Azure storage (Teams snapshot persistence)
 azure-storage-blob==12.19.1
+pre-commit>=3.0.0

@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple, List
 import logging
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
+from src.modeling.season_utils import is_crossing_offseason
 from src.modeling.team_factors import (
-    get_home_court_advantage,
-    get_travel_distance,
-    get_timezone_difference,
     calculate_travel_fatigue,
+    get_home_court_advantage,
+    get_timezone_difference,
+    get_travel_distance,
 )
 from src.modeling.unified_features import PERIOD_SCALING
-from src.modeling.season_utils import (
-    is_crossing_offseason,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -128,14 +126,10 @@ class FeatureEngineer:
 
         if len(home_recent) >= 2:
             stats["home_ppg"] = home_recent["team_score"].mean()
-            stats["home_margin"] = (
-                home_recent["team_score"] - home_recent["opp_score"]
-            ).mean()
+            stats["home_margin"] = (home_recent["team_score"] - home_recent["opp_score"]).mean()
         if len(away_recent) >= 2:
             stats["away_ppg"] = away_recent["team_score"].mean()
-            stats["away_margin"] = (
-                away_recent["team_score"] - away_recent["opp_score"]
-            ).mean()
+            stats["away_margin"] = (away_recent["team_score"] - away_recent["opp_score"]).mean()
 
         # Rest days average
         if len(all_games) >= 2:
@@ -164,11 +158,15 @@ class FeatureEngineer:
             league_avg = 110  # Approximate NBA average
 
             # Adjust offensive rating
-            stats["adj_offensive_rating"] = stats["ppg"] * (league_avg / opp_strength) if opp_strength > 0 else stats["ppg"]
+            stats["adj_offensive_rating"] = (
+                stats["ppg"] * (league_avg / opp_strength) if opp_strength > 0 else stats["ppg"]
+            )
 
             # Calculate defensive rating (lower is better)
             stats["defensive_rating"] = stats["papg"]
-            stats["adj_defensive_rating"] = stats["papg"] * (opp_strength / league_avg) if opp_strength > 0 else stats["papg"]
+            stats["adj_defensive_rating"] = (
+                stats["papg"] * (opp_strength / league_avg) if opp_strength > 0 else stats["papg"]
+            )
 
             # Net rating
             stats["net_rating"] = stats["adj_offensive_rating"] - stats["adj_defensive_rating"]
@@ -191,7 +189,9 @@ class FeatureEngineer:
                     break
 
             stats["win_streak"] = current_streak
-            stats["consistency"] = 1.0 - (stats["margin_std"] / (abs(stats["margin"]) + 1))  # Higher = more consistent
+            stats["consistency"] = 1.0 - (
+                stats["margin_std"] / (abs(stats["margin"]) + 1)
+            )  # Higher = more consistent
         else:
             stats["win_streak"] = 0
             stats["consistency"] = 0.5
@@ -221,8 +221,16 @@ class FeatureEngineer:
             Dictionary of period-specific statistics
         """
         # Check for required quarter columns for sub-game periods
-        quarter_cols = ["home_q1", "home_q2", "home_q3", "home_q4",
-                        "away_q1", "away_q2", "away_q3", "away_q4"]
+        quarter_cols = [
+            "home_q1",
+            "home_q2",
+            "home_q3",
+            "home_q4",
+            "away_q1",
+            "away_q2",
+            "away_q3",
+            "away_q4",
+        ]
 
         has_quarter_data = all(col in games_df.columns for col in quarter_cols)
 
@@ -252,7 +260,9 @@ class FeatureEngineer:
                 home_games = home_games.dropna(subset=["home_q1", "home_q2", "away_q1", "away_q2"])
                 away_games = away_games.dropna(subset=["away_q1", "away_q2", "home_q1", "home_q2"])
                 if len(home_games) + len(away_games) < 3:
-                    logger.debug(f"Insufficient 1H data for {team}: {len(home_games)} home, {len(away_games)} away games with 1H scores")
+                    logger.debug(
+                        f"Insufficient 1H data for {team}: {len(home_games)} home, {len(away_games)} away games with 1H scores"
+                    )
                     return {}
                 home_games["team_score"] = home_games["home_q1"] + home_games["home_q2"]
                 home_games["opp_score"] = home_games["away_q1"] + home_games["away_q2"]
@@ -409,9 +419,7 @@ class FeatureEngineer:
             # Predicted margin for this period (using actual period margin stats)
             home_margin = home_period_stats[margin_key]
             away_margin = away_period_stats[margin_key]
-            features[f"predicted_margin{suffix}"] = (
-                (home_margin - away_margin) / 2 + period_hca
-            )
+            features[f"predicted_margin{suffix}"] = (home_margin - away_margin) / 2 + period_hca
 
             # Predicted total for this period using SOPHISTICATED EFFICIENCY MODEL
             # Match the methodology from rich_features.py for consistency
@@ -419,15 +427,41 @@ class FeatureEngineer:
             ppg_key = f"ppg{suffix}"
 
             # Get efficiency ratings (ORTG/DRTG equivalent for periods)
-            home_ortg = home_period_stats[ppg_key] / max(home_period_stats.get(f"pace{suffix}", 50), 1) * 100 if home_period_stats.get(f"pace{suffix}", 0) > 0 else home_period_stats[ppg_key]
-            away_ortg = away_period_stats[ppg_key] / max(away_period_stats.get(f"pace{suffix}", 50), 1) * 100 if away_period_stats.get(f"pace{suffix}", 0) > 0 else away_period_stats[ppg_key]
-            home_drtg = home_period_stats[papg_key] / max(home_period_stats.get(f"pace{suffix}", 50), 1) * 100 if home_period_stats.get(f"pace{suffix}", 0) > 0 else home_period_stats[papg_key]
-            away_drtg = away_period_stats[papg_key] / max(away_period_stats.get(f"pace{suffix}", 50), 1) * 100 if away_period_stats.get(f"pace{suffix}", 0) > 0 else away_period_stats[papg_key]
+            home_ortg = (
+                home_period_stats[ppg_key]
+                / max(home_period_stats.get(f"pace{suffix}", 50), 1)
+                * 100
+                if home_period_stats.get(f"pace{suffix}", 0) > 0
+                else home_period_stats[ppg_key]
+            )
+            away_ortg = (
+                away_period_stats[ppg_key]
+                / max(away_period_stats.get(f"pace{suffix}", 50), 1)
+                * 100
+                if away_period_stats.get(f"pace{suffix}", 0) > 0
+                else away_period_stats[ppg_key]
+            )
+            home_drtg = (
+                home_period_stats[papg_key]
+                / max(home_period_stats.get(f"pace{suffix}", 50), 1)
+                * 100
+                if home_period_stats.get(f"pace{suffix}", 0) > 0
+                else home_period_stats[papg_key]
+            )
+            away_drtg = (
+                away_period_stats[papg_key]
+                / max(away_period_stats.get(f"pace{suffix}", 50), 1)
+                * 100
+                if away_period_stats.get(f"pace{suffix}", 0) > 0
+                else away_period_stats[papg_key]
+            )
 
             # Expected pace factor (geometric mean for better outlier handling)
             home_pace = home_period_stats.get(f"pace{suffix}", 50)
             away_pace = away_period_stats.get(f"pace{suffix}", 50)
-            expected_pace_factor = (home_pace * away_pace) ** 0.5 / 50 if home_pace > 0 and away_pace > 0 else 1.0
+            expected_pace_factor = (
+                (home_pace * away_pace) ** 0.5 / 50 if home_pace > 0 and away_pace > 0 else 1.0
+            )
 
             # Home expected points = avg(home offense + away defense) × pace factor
             home_expected_pts = ((home_ortg + away_drtg) / 2) * expected_pace_factor
@@ -507,7 +541,7 @@ class FeatureEngineer:
     ) -> Tuple[Optional[str], int]:
         """
         Get the location (arena city) of team's previous game.
-        
+
         Returns:
             Tuple of (previous_location_team, rest_days)
             - previous_location_team: The team whose arena the previous game was at
@@ -524,10 +558,10 @@ class FeatureEngineer:
         last_game = team_games.iloc[0]
         last_game_date = last_game["date"]
         rest_days = max(0, (game_date - last_game_date).days - 1)
-        
+
         # The location is the home team's arena
         previous_location = last_game["home_team"]
-        
+
         return previous_location, rest_days
 
     def compute_travel_features(
@@ -540,14 +574,14 @@ class FeatureEngineer:
     ) -> Dict[str, float]:
         """
         Compute travel-related features for a team.
-        
+
         Args:
             games_df: Historical games DataFrame
             team: The team we're computing features for
             opponent: The opponent team
             game_date: Date of the current game
             is_home: Whether this team is playing at home
-            
+
         Returns:
             Dict of travel features
         """
@@ -558,29 +592,27 @@ class FeatureEngineer:
             "is_long_trip": 0,
             "is_cross_country": 0,
         }
-        
+
         # Get previous game location
-        prev_location, rest_days = self.get_previous_game_location(
-            games_df, team, game_date
-        )
-        
+        prev_location, rest_days = self.get_previous_game_location(games_df, team, game_date)
+
         if prev_location is None:
             return features
-        
+
         # Current game location (opponent's arena if away, own arena if home)
         current_location = team if is_home else opponent
-        
+
         # Calculate travel from previous location to current location
         distance = get_travel_distance(prev_location, current_location)
-        
+
         if distance is not None:
             features["travel_distance"] = distance
             features["is_long_trip"] = 1 if distance >= 1500 else 0
             features["is_cross_country"] = 1 if distance >= 2500 else 0
-            
+
             tz_change = get_timezone_difference(prev_location, current_location)
             features["timezone_change"] = tz_change
-            
+
             is_b2b = rest_days <= 1
             features["travel_fatigue"] = calculate_travel_fatigue(
                 distance_miles=distance,
@@ -588,7 +620,7 @@ class FeatureEngineer:
                 timezone_change=tz_change,
                 is_back_to_back=is_b2b,
             )
-        
+
         return features
 
     def compute_dynamic_hca(
@@ -617,10 +649,12 @@ class FeatureEngineer:
 
         # Season phase adjustment (HCA is weaker early in season)
         # Count games played by home team
-        home_games_played = len(games_df[
-            ((games_df["home_team"] == home_team) | (games_df["away_team"] == home_team)) &
-            (games_df["date"] < game_date)
-        ])
+        home_games_played = len(
+            games_df[
+                ((games_df["home_team"] == home_team) | (games_df["away_team"] == home_team))
+                & (games_df["date"] < game_date)
+            ]
+        )
 
         if home_games_played < 10:
             base_hca *= 0.7  # Reduce HCA for first 10 games
@@ -639,14 +673,8 @@ class FeatureEngineer:
     ) -> Dict[str, float]:
         """Head-to-head history."""
         mask = (
-            (
-                (games_df["home_team"] == home_team)
-                & (games_df["away_team"] == away_team)
-            )
-            | (
-                (games_df["home_team"] == away_team)
-                & (games_df["away_team"] == home_team)
-            )
+            ((games_df["home_team"] == home_team) & (games_df["away_team"] == away_team))
+            | ((games_df["home_team"] == away_team) & (games_df["away_team"] == home_team))
         ) & (games_df["date"] < as_of_date)
         h2h = games_df[mask].sort_values("date", ascending=False).head(n_games)
 
@@ -676,7 +704,7 @@ class FeatureEngineer:
     ) -> Dict[str, float]:
         """
         Enhanced head-to-head features with more history.
-        
+
         Returns additional H2H metrics:
         - h2h_home_win_pct: Home team's win rate vs away team when playing at home
         - h2h_recent_margin: Last 3 H2H games margin
@@ -684,14 +712,8 @@ class FeatureEngineer:
         - h2h_cover_pct: Approximate ATS record in H2H
         """
         mask = (
-            (
-                (games_df["home_team"] == home_team)
-                & (games_df["away_team"] == away_team)
-            )
-            | (
-                (games_df["home_team"] == away_team)
-                & (games_df["away_team"] == home_team)
-            )
+            ((games_df["home_team"] == home_team) & (games_df["away_team"] == away_team))
+            | ((games_df["home_team"] == away_team) & (games_df["away_team"] == home_team))
         ) & (games_df["date"] < as_of_date)
         h2h = games_df[mask].sort_values("date", ascending=False).head(n_games)
 
@@ -711,11 +733,11 @@ class FeatureEngineer:
         home_wins = 0
         home_at_home_wins = 0
         home_at_home_games = 0
-        
+
         for _, g in h2h.iterrows():
             total = g["home_score"] + g["away_score"]
             totals.append(total)
-            
+
             if g["home_team"] == home_team:
                 margin = g["home_score"] - g["away_score"]
                 margins.append(margin)
@@ -731,7 +753,7 @@ class FeatureEngineer:
 
         # Recent margin (last 3 games)
         recent_margin = np.mean(margins[:3]) if len(margins) >= 3 else np.mean(margins)
-        
+
         # Home team's H2H win rate when playing at home
         h2h_home_win_pct = home_at_home_wins / home_at_home_games if home_at_home_games > 0 else 0.5
 
@@ -753,13 +775,13 @@ class FeatureEngineer:
     ) -> Dict[str, float]:
         """
         Compute strength of schedule features.
-        
+
         Args:
             team: Team name
             games_df: Historical games DataFrame
             as_of_date: Compute as of this date
             n_recent: Number of recent games for recent SOS
-        
+
         Returns:
             Dictionary with SOS features:
             - sos_rating: Average opponent win percentage
@@ -768,12 +790,11 @@ class FeatureEngineer:
             - opp_avg_ppg: Average opponent PPG
         """
         # Get all completed games for this team before the date
-        mask = (
-            ((games_df["home_team"] == team) | (games_df["away_team"] == team))
-            & (games_df["date"] < as_of_date)
+        mask = ((games_df["home_team"] == team) | (games_df["away_team"] == team)) & (
+            games_df["date"] < as_of_date
         )
         team_games = games_df[mask].sort_values("date", ascending=False)
-        
+
         if len(team_games) < 5:
             return {
                 "sos_rating": 0.5,
@@ -781,31 +802,31 @@ class FeatureEngineer:
                 "opp_avg_margin": 0,
                 "opp_avg_ppg": 110,
             }
-        
+
         # Collect opponent stats
         opp_win_pcts = []
         opp_margins = []
         opp_ppgs = []
-        
+
         for _, game in team_games.iterrows():
             # Determine opponent
             if game["home_team"] == team:
                 opponent = game["away_team"]
             else:
                 opponent = game["home_team"]
-            
+
             # Get opponent's record before this game
             opp_games_before = games_df[
                 ((games_df["home_team"] == opponent) | (games_df["away_team"] == opponent))
                 & (games_df["date"] < game["date"])
             ]
-            
+
             if len(opp_games_before) >= 3:
                 # Calculate opponent's win percentage
                 opp_wins = 0
                 opp_margin_sum = 0
                 opp_ppg_sum = 0
-                
+
                 for _, og in opp_games_before.iterrows():
                     if og["home_team"] == opponent:
                         opp_score = og["home_score"]
@@ -813,16 +834,16 @@ class FeatureEngineer:
                     else:
                         opp_score = og["away_score"]
                         other_score = og["home_score"]
-                    
+
                     if opp_score > other_score:
                         opp_wins += 1
                     opp_margin_sum += opp_score - other_score
                     opp_ppg_sum += opp_score
-                
+
                 opp_win_pcts.append(opp_wins / len(opp_games_before))
                 opp_margins.append(opp_margin_sum / len(opp_games_before))
                 opp_ppgs.append(opp_ppg_sum / len(opp_games_before))
-        
+
         if not opp_win_pcts:
             return {
                 "sos_rating": 0.5,
@@ -830,11 +851,13 @@ class FeatureEngineer:
                 "opp_avg_margin": 0,
                 "opp_avg_ppg": 110,
             }
-        
+
         # Calculate SOS metrics
         sos_rating = np.mean(opp_win_pcts)
-        recent_sos = np.mean(opp_win_pcts[:n_recent]) if len(opp_win_pcts) >= n_recent else sos_rating
-        
+        recent_sos = (
+            np.mean(opp_win_pcts[:n_recent]) if len(opp_win_pcts) >= n_recent else sos_rating
+        )
+
         return {
             "sos_rating": sos_rating,
             "recent_sos": recent_sos,
@@ -855,12 +878,8 @@ class FeatureEngineer:
         features: Dict[str, float] = {}
 
         # Team rolling stats
-        home_stats = self.compute_team_rolling_stats(
-            historical_df, home_team, game_date
-        )
-        away_stats = self.compute_team_rolling_stats(
-            historical_df, away_team, game_date
-        )
+        home_stats = self.compute_team_rolling_stats(historical_df, home_team, game_date)
+        away_stats = self.compute_team_rolling_stats(historical_df, away_team, game_date)
 
         if not home_stats or not away_stats:
             return {}
@@ -881,14 +900,28 @@ class FeatureEngineer:
         features["pace_diff"] = home_stats["pace"] - away_stats["pace"]
 
         # === NEW: Advanced differential features ===
-        features["clutch_diff"] = home_stats.get("clutch_win_pct", 0.5) - away_stats.get("clutch_win_pct", 0.5)
-        features["net_rating_diff"] = home_stats.get("net_rating", 0) - away_stats.get("net_rating", 0)
-        features["consistency_diff"] = home_stats.get("consistency", 0.5) - away_stats.get("consistency", 0.5)
-        features["win_streak_diff"] = home_stats.get("win_streak", 0) - away_stats.get("win_streak", 0)
+        features["clutch_diff"] = home_stats.get("clutch_win_pct", 0.5) - away_stats.get(
+            "clutch_win_pct", 0.5
+        )
+        features["net_rating_diff"] = home_stats.get("net_rating", 0) - away_stats.get(
+            "net_rating", 0
+        )
+        features["consistency_diff"] = home_stats.get("consistency", 0.5) - away_stats.get(
+            "consistency", 0.5
+        )
+        features["win_streak_diff"] = home_stats.get("win_streak", 0) - away_stats.get(
+            "win_streak", 0
+        )
 
         # Adjusted ratings
-        features["adj_offensive_diff"] = home_stats.get("adj_offensive_rating", 110) - away_stats.get("adj_offensive_rating", 110)
-        features["adj_defensive_diff"] = away_stats.get("adj_defensive_rating", 110) - home_stats.get("adj_defensive_rating", 110)  # Lower is better for defense
+        features["adj_offensive_diff"] = home_stats.get(
+            "adj_offensive_rating", 110
+        ) - away_stats.get("adj_offensive_rating", 110)
+        features["adj_defensive_diff"] = away_stats.get(
+            "adj_defensive_rating", 110
+        ) - home_stats.get(
+            "adj_defensive_rating", 110
+        )  # Lower is better for defense
 
         # Rest days
         # Use default_rest=3 for production safety (early season games may lack history)
@@ -930,19 +963,17 @@ class FeatureEngineer:
         features["away_travel_fatigue"] = away_travel["travel_fatigue"]
         features["is_away_long_trip"] = away_travel["is_long_trip"]
         features["is_away_cross_country"] = away_travel["is_cross_country"]
-        
+
         # B2B + travel interaction (compounding penalty)
         features["away_b2b_travel_penalty"] = 0.0
         if features["away_b2b"] == 1 and away_travel["travel_distance"] >= 1500:
             features["away_b2b_travel_penalty"] = -1.5
-        
+
         # Travel advantage (away fatigue helps home team)
         features["travel_advantage"] = -away_travel["travel_fatigue"]
 
         # === UPDATED: Dynamic home court advantage ===
-        hca = self.compute_dynamic_hca(
-            historical_df, home_team, away_team, game_date, home_rest
-        )
+        hca = self.compute_dynamic_hca(historical_df, home_team, away_team, game_date, home_rest)
         features["home_court_advantage"] = hca
 
         # Head-to-head (basic)
@@ -963,7 +994,6 @@ class FeatureEngineer:
         features["away_recent_sos"] = away_sos["recent_sos"]
         features["home_opp_avg_margin"] = home_sos["opp_avg_margin"]
         features["away_opp_avg_margin"] = away_sos["opp_avg_margin"]
-
 
         # === Enhanced predicted margin ===
         # Removed explicit rest term - rest is already accounted for in:
@@ -1020,9 +1050,7 @@ class FeatureEngineer:
         home_1h_margin = home_1h_stats["margin_1h"]
         away_1h_margin = away_1h_stats["margin_1h"]
         features["predicted_margin_1h"] = (
-            (home_1h_margin - away_1h_margin) / 2
-            + hca_1h
-            - away_travel["travel_fatigue"] * 0.5
+            (home_1h_margin - away_1h_margin) / 2 + hca_1h - away_travel["travel_fatigue"] * 0.5
         )
 
         # 1H Total: Matchup-based formula (same logic as FG)
@@ -1049,9 +1077,7 @@ class FeatureEngineer:
         if "form_trend" in home_stats and "form_trend" in away_stats:
             features["home_form_trend"] = home_stats["form_trend"]
             features["away_form_trend"] = away_stats["form_trend"]
-            features["form_diff"] = (
-                home_stats.get("form_3g", 0) - away_stats.get("form_3g", 0)
-            )
+            features["form_diff"] = home_stats.get("form_3g", 0) - away_stats.get("form_3g", 0)
 
         # *** LINE AS FEATURE - ALL PERIODS ***
         # Full Game lines
@@ -1059,17 +1085,13 @@ class FeatureEngineer:
             spread_line = game["spread_line"]
             features["spread_line"] = spread_line
             features["fg_spread_line"] = spread_line  # Alias for consistency
-            features["spread_vs_predicted"] = (
-                features["predicted_margin"] - (-spread_line)
-            )
+            features["spread_vs_predicted"] = features["predicted_margin"] - (-spread_line)
 
         if "total_line" in game and pd.notna(game["total_line"]):
             total_line = game["total_line"]
             features["total_line"] = total_line
             features["fg_total_line"] = total_line  # Alias for consistency
-            features["total_vs_predicted"] = (
-                features["predicted_total"] - total_line
-            )
+            features["total_vs_predicted"] = features["predicted_total"] - total_line
 
         # First Half lines - PREMIUM API DATA
         if "fh_spread_line" in game and pd.notna(game["fh_spread_line"]):
@@ -1089,15 +1111,10 @@ class FeatureEngineer:
         # *** INJURY IMPACT FEATURES ***
         # Injury features - has_injury_data indicates whether we have real API data
         features["has_injury_data"] = game.get("has_injury_data", 0)
-        features["home_injury_spread_impact"] = game.get(
-            "home_injury_spread_impact", 0
-        )
-        features["away_injury_spread_impact"] = game.get(
-            "away_injury_spread_impact", 0
-        )
+        features["home_injury_spread_impact"] = game.get("home_injury_spread_impact", 0)
+        features["away_injury_spread_impact"] = game.get("away_injury_spread_impact", 0)
         features["injury_spread_diff"] = (
-            features["home_injury_spread_impact"]
-            - features["away_injury_spread_impact"]
+            features["home_injury_spread_impact"] - features["away_injury_spread_impact"]
         )
         features["home_star_out"] = game.get("home_star_out", 0)
         features["away_star_out"] = game.get("away_star_out", 0)
@@ -1110,9 +1127,7 @@ class FeatureEngineer:
         features["sharp_side_spread"] = game.get("sharp_side_spread", 0)
         # NOTE: Default 50 means "no data" - models should check has_real_splits
         features["spread_public_home_pct"] = game.get("spread_public_home_pct", 50)
-        features["spread_ticket_money_diff"] = game.get(
-            "spread_ticket_money_diff", 0
-        )
+        features["spread_ticket_money_diff"] = game.get("spread_ticket_money_diff", 0)
         features["spread_movement"] = game.get("spread_movement", 0)
 
         # Totals RLM

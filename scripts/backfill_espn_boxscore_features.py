@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 from src.config import settings
-from src.ingestion.espn import fetch_espn_schedule, fetch_espn_box_score
+from src.ingestion.espn import fetch_espn_box_score, fetch_espn_schedule
 from src.ingestion.standardize import normalize_team_to_espn
 
 
@@ -92,10 +92,26 @@ async def _fetch_game_stats(
         team_stats: Dict[str, Dict[str, float]] = {}
         for team_box in box.get("teams", []):
             team_name = _team_key(team_box.team_name)
-            fg_pct = (team_box.fg_made / team_box.fg_attempts * 100.0) if team_box.fg_attempts > 0 else 0.0
-            three_pct = (team_box.three_made / team_box.three_attempts * 100.0) if team_box.three_attempts > 0 else 0.0
-            ft_pct = (team_box.ft_made / team_box.ft_attempts * 100.0) if team_box.ft_attempts > 0 else 0.0
-            efg_pct = ((team_box.fg_made + 0.5 * team_box.three_made) / team_box.fg_attempts * 100.0) if team_box.fg_attempts > 0 else 0.0
+            fg_pct = (
+                (team_box.fg_made / team_box.fg_attempts * 100.0)
+                if team_box.fg_attempts > 0
+                else 0.0
+            )
+            three_pct = (
+                (team_box.three_made / team_box.three_attempts * 100.0)
+                if team_box.three_attempts > 0
+                else 0.0
+            )
+            ft_pct = (
+                (team_box.ft_made / team_box.ft_attempts * 100.0)
+                if team_box.ft_attempts > 0
+                else 0.0
+            )
+            efg_pct = (
+                ((team_box.fg_made + 0.5 * team_box.three_made) / team_box.fg_attempts * 100.0)
+                if team_box.fg_attempts > 0
+                else 0.0
+            )
 
             team_stats[team_name] = {
                 "fg_pct": fg_pct,
@@ -128,9 +144,7 @@ async def _fetch_game_stats(
             active_stars = sum(1 for mins, _ in top2 if mins > 20)
             star_avail = active_stars * 0.5
 
-            bench_points = sum(
-                float(p.points) for p in players if not getattr(p, "starter", False)
-            )
+            bench_points = sum(float(p.points) for p in players if not getattr(p, "starter", False))
 
             paint_defense = 0.0
             stats = team_stats.get(team_name)
@@ -160,12 +174,7 @@ async def _fetch_game_stats(
 
 
 def _rolling_mean(series: pd.Series, window: int) -> pd.Series:
-    return (
-        series
-        .rolling(window=window, min_periods=1)
-        .mean()
-        .shift(1)
-    )
+    return series.rolling(window=window, min_periods=1).mean().shift(1)
 
 
 def _prepare_team_feature_df(records: List[Dict[str, Any]], window: int) -> pd.DataFrame:
@@ -187,9 +196,17 @@ def _prepare_team_feature_df(records: List[Dict[str, Any]], window: int) -> pd.D
     team_df = team_df.sort_values(["team", "game_date"]).reset_index(drop=True)
 
     rolling_stats = [
-        "fg_pct", "three_pct", "ft_pct", "efg_pct",
-        "rebounds_total", "rebounds_off", "rebounds_def",
-        "assists", "steals", "blocks", "turnovers",
+        "fg_pct",
+        "three_pct",
+        "ft_pct",
+        "efg_pct",
+        "rebounds_total",
+        "rebounds_off",
+        "rebounds_def",
+        "assists",
+        "steals",
+        "blocks",
+        "turnovers",
         "personal_fouls",
     ]
 
@@ -204,10 +221,7 @@ def _prepare_team_feature_df(records: List[Dict[str, Any]], window: int) -> pd.D
     # Previous-game values for player-derived metrics
     for stat in ["star_avail", "bench_scoring", "paint_defense"]:
         if stat in team_df.columns:
-            team_df[f"{stat}_prev"] = (
-                team_df.groupby("team")[stat]
-                .shift(1)
-            )
+            team_df[f"{stat}_prev"] = team_df.groupby("team")[stat].shift(1)
 
     return team_df
 

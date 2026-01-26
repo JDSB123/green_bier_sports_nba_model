@@ -12,9 +12,9 @@ import joblib
 
 from src.config import settings
 from src.modeling.unified_features import MODEL_CONFIGS
-from src.utils.model_features import load_model_feature_contract, get_market_features
 from src.utils.logging import get_logger
 from src.utils.markets import get_expected_markets, get_market_catalog
+from src.utils.model_features import get_market_features, load_model_feature_contract
 from src.utils.security import validate_required_api_keys
 
 logger = get_logger(__name__)
@@ -90,7 +90,9 @@ def _load_model_features(models_dir: Path, market_key: str) -> Tuple[List[str], 
     return list(features), None
 
 
-def _validate_feature_alignment(models_dir: Path, expected_markets: List[str]) -> StartupIntegrityReport:
+def _validate_feature_alignment(
+    models_dir: Path, expected_markets: List[str]
+) -> StartupIntegrityReport:
     errors: List[str] = []
     warnings: List[str] = []
 
@@ -124,7 +126,9 @@ def _validate_feature_alignment(models_dir: Path, expected_markets: List[str]) -
         if missing:
             preview = ", ".join(missing[:8])
             suffix = f" (+{len(missing) - 8} more)" if len(missing) > 8 else ""
-            errors.append(f"{market_key}: missing {len(missing)} feature aliases ({preview}{suffix})")
+            errors.append(
+                f"{market_key}: missing {len(missing)} feature aliases ({preview}{suffix})"
+            )
 
     return StartupIntegrityReport(errors=errors, warnings=warnings)
 
@@ -160,7 +164,9 @@ def _validate_filter_thresholds() -> List[str]:
     for env_var, default_value in filter_env_vars:
         env_value = os.getenv(env_var)
         if env_value is None:
-            warnings.append(f"{env_var} not set - using default {default_value}. Consider setting explicitly for production.")
+            warnings.append(
+                f"{env_var} not set - using default {default_value}. Consider setting explicitly for production."
+            )
 
     return warnings
 

@@ -13,11 +13,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from datetime import datetime
-from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar
-from dataclasses import dataclass, field
-from threading import Lock
 from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime
+from threading import Lock
+from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ T = TypeVar("T")
 @dataclass
 class RateLimitConfig:
     """Configuration for rate limiting."""
+
     requests_per_second: float = 1.0  # Max RPS
     burst_size: int = 5  # Max burst above steady rate
     max_queue_size: int = 100  # Max pending requests
@@ -36,6 +37,7 @@ class RateLimitConfig:
 @dataclass
 class RateLimitStats:
     """Statistics for rate limiter."""
+
     total_requests: int = 0
     requests_queued: int = 0
     requests_dropped: int = 0
@@ -48,6 +50,7 @@ class RateLimitStats:
 
 class RateLimitExceeded(Exception):
     """Raised when rate limit queue is full."""
+
     pass
 
 
@@ -230,7 +233,7 @@ _the_odds_limiter = TokenBucketRateLimiter(
         burst_size=10,  # Allow bursts of 10
         max_queue_size=50,
         timeout=30.0,
-    )
+    ),
 )
 
 # API-Basketball: 100 requests per day = ~0.001 RPS, allow small bursts
@@ -241,7 +244,7 @@ _api_basketball_limiter = TokenBucketRateLimiter(
         burst_size=5,  # Allow bursts of 5
         max_queue_size=30,
         timeout=30.0,
-    )
+    ),
 )
 
 

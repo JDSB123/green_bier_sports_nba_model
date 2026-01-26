@@ -10,14 +10,14 @@ Provides comprehensive logging of all predictions for:
 
 from __future__ import annotations
 
-import logging
+import gzip
 import json
+import logging
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from threading import Lock
-import gzip
+from typing import Any, Dict, List, Optional
 
 from src.utils.version import resolve_version
 
@@ -30,6 +30,7 @@ _MODEL_VERSION = resolve_version()
 @dataclass
 class PredictionRecord:
     """Complete record of a single prediction."""
+
     # Identifiers
     prediction_id: str
     request_id: Optional[str]
@@ -162,7 +163,9 @@ class PredictionLogger:
             line=line,
             classifier_side=classifier_side,
             prediction_side=prediction_side,
-            signals_agree=prediction_result.get("signals_agree", classifier_side == prediction_side),
+            signals_agree=prediction_result.get(
+                "signals_agree", classifier_side == prediction_side
+            ),
             bet_side=bet_side,
             confidence=prediction_result.get("confidence", 0.0),
             edge=abs(edge) if edge else 0.0,
@@ -184,7 +187,7 @@ class PredictionLogger:
 
             # Keep memory bounded
             if len(self._records) > self.MAX_RECORDS_IN_MEMORY:
-                self._records = self._records[-self.MAX_RECORDS_IN_MEMORY:]
+                self._records = self._records[-self.MAX_RECORDS_IN_MEMORY :]
 
         return prediction_id
 
@@ -227,7 +230,9 @@ class PredictionLogger:
         """
         # This would update the record in storage
         # For now, log the update
-        logger.info(f"Prediction {prediction_id} outcome: {outcome} (scores: {actual_score_home}-{actual_score_away})")
+        logger.info(
+            f"Prediction {prediction_id} outcome: {outcome} (scores: {actual_score_home}-{actual_score_away})"
+        )
 
     def get_recent_predictions(self, n: int = 50) -> List[Dict[str, Any]]:
         """Get N most recent predictions from memory."""
@@ -304,6 +309,7 @@ def get_prediction_logger() -> PredictionLogger:
     global _prediction_logger
     if _prediction_logger is None:
         from src.config import settings
+
         output_dir = Path(settings.data_processed_dir) / "prediction_logs"
         _prediction_logger = PredictionLogger(output_dir=output_dir)
     return _prediction_logger

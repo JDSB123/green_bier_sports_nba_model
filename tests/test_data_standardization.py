@@ -4,20 +4,22 @@ Tests for data standardization via src/data module.
 These tests ensure all 30 NBA teams and timezone conversions work correctly.
 The canonical implementation is in src/ingestion/standardize.py.
 """
-import pytest
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from src.data import (
-    standardize_team_name,
-    to_cst,
-    to_cst_local,
-    to_cst_date,
-    to_cst_date_local,
-    generate_match_key,
-    standardize_game_record,
     CST,
     UTC,
+    generate_match_key,
+    standardize_game_record,
+    standardize_team_name,
+    to_cst,
+    to_cst_date,
+    to_cst_date_local,
+    to_cst_local,
 )
 
 # For backwards compatibility tests, import from ingestion
@@ -28,136 +30,148 @@ class TestTeamNameStandardization:
     """Tests for team name standardization - ALL 30 NBA teams."""
 
     # Full team names that should return unchanged
-    @pytest.mark.parametrize("team_name,expected", [
-        ("Atlanta Hawks", "Atlanta Hawks"),
-        ("Boston Celtics", "Boston Celtics"),
-        ("Brooklyn Nets", "Brooklyn Nets"),
-        ("Charlotte Hornets", "Charlotte Hornets"),
-        ("Chicago Bulls", "Chicago Bulls"),
-        ("Cleveland Cavaliers", "Cleveland Cavaliers"),
-        ("Dallas Mavericks", "Dallas Mavericks"),
-        ("Denver Nuggets", "Denver Nuggets"),
-        ("Detroit Pistons", "Detroit Pistons"),
-        ("Golden State Warriors", "Golden State Warriors"),
-        ("Houston Rockets", "Houston Rockets"),
-        ("Indiana Pacers", "Indiana Pacers"),
-        ("LA Clippers", "LA Clippers"),  # ESPN format
-        ("Los Angeles Lakers", "Los Angeles Lakers"),
-        ("Memphis Grizzlies", "Memphis Grizzlies"),
-        ("Miami Heat", "Miami Heat"),
-        ("Milwaukee Bucks", "Milwaukee Bucks"),
-        ("Minnesota Timberwolves", "Minnesota Timberwolves"),
-        ("New Orleans Pelicans", "New Orleans Pelicans"),
-        ("New York Knicks", "New York Knicks"),
-        ("Oklahoma City Thunder", "Oklahoma City Thunder"),
-        ("Orlando Magic", "Orlando Magic"),
-        ("Philadelphia 76ers", "Philadelphia 76ers"),
-        ("Phoenix Suns", "Phoenix Suns"),
-        ("Portland Trail Blazers", "Portland Trail Blazers"),
-        ("Sacramento Kings", "Sacramento Kings"),
-        ("San Antonio Spurs", "San Antonio Spurs"),
-        ("Toronto Raptors", "Toronto Raptors"),
-        ("Utah Jazz", "Utah Jazz"),
-        ("Washington Wizards", "Washington Wizards"),
-    ])
+    @pytest.mark.parametrize(
+        "team_name,expected",
+        [
+            ("Atlanta Hawks", "Atlanta Hawks"),
+            ("Boston Celtics", "Boston Celtics"),
+            ("Brooklyn Nets", "Brooklyn Nets"),
+            ("Charlotte Hornets", "Charlotte Hornets"),
+            ("Chicago Bulls", "Chicago Bulls"),
+            ("Cleveland Cavaliers", "Cleveland Cavaliers"),
+            ("Dallas Mavericks", "Dallas Mavericks"),
+            ("Denver Nuggets", "Denver Nuggets"),
+            ("Detroit Pistons", "Detroit Pistons"),
+            ("Golden State Warriors", "Golden State Warriors"),
+            ("Houston Rockets", "Houston Rockets"),
+            ("Indiana Pacers", "Indiana Pacers"),
+            ("LA Clippers", "LA Clippers"),  # ESPN format
+            ("Los Angeles Lakers", "Los Angeles Lakers"),
+            ("Memphis Grizzlies", "Memphis Grizzlies"),
+            ("Miami Heat", "Miami Heat"),
+            ("Milwaukee Bucks", "Milwaukee Bucks"),
+            ("Minnesota Timberwolves", "Minnesota Timberwolves"),
+            ("New Orleans Pelicans", "New Orleans Pelicans"),
+            ("New York Knicks", "New York Knicks"),
+            ("Oklahoma City Thunder", "Oklahoma City Thunder"),
+            ("Orlando Magic", "Orlando Magic"),
+            ("Philadelphia 76ers", "Philadelphia 76ers"),
+            ("Phoenix Suns", "Phoenix Suns"),
+            ("Portland Trail Blazers", "Portland Trail Blazers"),
+            ("Sacramento Kings", "Sacramento Kings"),
+            ("San Antonio Spurs", "San Antonio Spurs"),
+            ("Toronto Raptors", "Toronto Raptors"),
+            ("Utah Jazz", "Utah Jazz"),
+            ("Washington Wizards", "Washington Wizards"),
+        ],
+    )
     def test_full_names_unchanged(self, team_name, expected):
         """Full ESPN team names should remain unchanged."""
         assert standardize_team_name(team_name) == expected
 
     # Abbreviations (2-3 letters)
-    @pytest.mark.parametrize("abbrev,expected", [
-        ("atl", "Atlanta Hawks"),
-        ("bos", "Boston Celtics"),
-        ("bkn", "Brooklyn Nets"),
-        ("cha", "Charlotte Hornets"),
-        ("chi", "Chicago Bulls"),
-        ("cle", "Cleveland Cavaliers"),
-        ("dal", "Dallas Mavericks"),
-        ("den", "Denver Nuggets"),
-        ("det", "Detroit Pistons"),
-        ("gsw", "Golden State Warriors"),
-        ("gs", "Golden State Warriors"),  # Alternative
-        ("hou", "Houston Rockets"),
-        ("ind", "Indiana Pacers"),
-        ("lac", "LA Clippers"),
-        ("lal", "Los Angeles Lakers"),
-        ("mem", "Memphis Grizzlies"),
-        ("mia", "Miami Heat"),
-        ("mil", "Milwaukee Bucks"),
-        ("min", "Minnesota Timberwolves"),
-        ("nop", "New Orleans Pelicans"),
-        ("no", "New Orleans Pelicans"),  # Alternative
-        ("nyk", "New York Knicks"),
-        ("ny", "New York Knicks"),  # Alternative
-        ("okc", "Oklahoma City Thunder"),
-        ("orl", "Orlando Magic"),
-        ("phi", "Philadelphia 76ers"),
-        ("phx", "Phoenix Suns"),
-        ("pho", "Phoenix Suns"),  # Alternative
-        ("por", "Portland Trail Blazers"),
-        ("sac", "Sacramento Kings"),
-        ("sas", "San Antonio Spurs"),
-        ("sa", "San Antonio Spurs"),  # Alternative
-        ("tor", "Toronto Raptors"),
-        ("utah", "Utah Jazz"),
-        ("uta", "Utah Jazz"),  # Alternative
-        ("was", "Washington Wizards"),
-        ("wsh", "Washington Wizards"),  # Alternative
-    ])
+    @pytest.mark.parametrize(
+        "abbrev,expected",
+        [
+            ("atl", "Atlanta Hawks"),
+            ("bos", "Boston Celtics"),
+            ("bkn", "Brooklyn Nets"),
+            ("cha", "Charlotte Hornets"),
+            ("chi", "Chicago Bulls"),
+            ("cle", "Cleveland Cavaliers"),
+            ("dal", "Dallas Mavericks"),
+            ("den", "Denver Nuggets"),
+            ("det", "Detroit Pistons"),
+            ("gsw", "Golden State Warriors"),
+            ("gs", "Golden State Warriors"),  # Alternative
+            ("hou", "Houston Rockets"),
+            ("ind", "Indiana Pacers"),
+            ("lac", "LA Clippers"),
+            ("lal", "Los Angeles Lakers"),
+            ("mem", "Memphis Grizzlies"),
+            ("mia", "Miami Heat"),
+            ("mil", "Milwaukee Bucks"),
+            ("min", "Minnesota Timberwolves"),
+            ("nop", "New Orleans Pelicans"),
+            ("no", "New Orleans Pelicans"),  # Alternative
+            ("nyk", "New York Knicks"),
+            ("ny", "New York Knicks"),  # Alternative
+            ("okc", "Oklahoma City Thunder"),
+            ("orl", "Orlando Magic"),
+            ("phi", "Philadelphia 76ers"),
+            ("phx", "Phoenix Suns"),
+            ("pho", "Phoenix Suns"),  # Alternative
+            ("por", "Portland Trail Blazers"),
+            ("sac", "Sacramento Kings"),
+            ("sas", "San Antonio Spurs"),
+            ("sa", "San Antonio Spurs"),  # Alternative
+            ("tor", "Toronto Raptors"),
+            ("utah", "Utah Jazz"),
+            ("uta", "Utah Jazz"),  # Alternative
+            ("was", "Washington Wizards"),
+            ("wsh", "Washington Wizards"),  # Alternative
+        ],
+    )
     def test_abbreviations(self, abbrev, expected):
         """Standard abbreviations should map to full names."""
         assert standardize_team_name(abbrev) == expected
 
     # Nicknames only
-    @pytest.mark.parametrize("nickname,expected", [
-        ("hawks", "Atlanta Hawks"),
-        ("celtics", "Boston Celtics"),
-        ("nets", "Brooklyn Nets"),
-        ("hornets", "Charlotte Hornets"),
-        ("bulls", "Chicago Bulls"),
-        ("cavaliers", "Cleveland Cavaliers"),
-        ("cavs", "Cleveland Cavaliers"),
-        ("mavericks", "Dallas Mavericks"),
-        ("mavs", "Dallas Mavericks"),
-        ("nuggets", "Denver Nuggets"),
-        ("pistons", "Detroit Pistons"),
-        ("warriors", "Golden State Warriors"),
-        ("rockets", "Houston Rockets"),
-        ("pacers", "Indiana Pacers"),
-        ("clippers", "LA Clippers"),
-        ("lakers", "Los Angeles Lakers"),
-        ("grizzlies", "Memphis Grizzlies"),
-        ("heat", "Miami Heat"),
-        ("bucks", "Milwaukee Bucks"),
-        ("timberwolves", "Minnesota Timberwolves"),
-        ("wolves", "Minnesota Timberwolves"),
-        ("pelicans", "New Orleans Pelicans"),
-        ("knicks", "New York Knicks"),
-        ("thunder", "Oklahoma City Thunder"),
-        ("magic", "Orlando Magic"),
-        ("76ers", "Philadelphia 76ers"),
-        ("sixers", "Philadelphia 76ers"),
-        ("suns", "Phoenix Suns"),
-        ("blazers", "Portland Trail Blazers"),
-        ("trail blazers", "Portland Trail Blazers"),
-        ("kings", "Sacramento Kings"),
-        ("spurs", "San Antonio Spurs"),
-        ("raptors", "Toronto Raptors"),
-        ("jazz", "Utah Jazz"),
-        ("wizards", "Washington Wizards"),
-    ])
+    @pytest.mark.parametrize(
+        "nickname,expected",
+        [
+            ("hawks", "Atlanta Hawks"),
+            ("celtics", "Boston Celtics"),
+            ("nets", "Brooklyn Nets"),
+            ("hornets", "Charlotte Hornets"),
+            ("bulls", "Chicago Bulls"),
+            ("cavaliers", "Cleveland Cavaliers"),
+            ("cavs", "Cleveland Cavaliers"),
+            ("mavericks", "Dallas Mavericks"),
+            ("mavs", "Dallas Mavericks"),
+            ("nuggets", "Denver Nuggets"),
+            ("pistons", "Detroit Pistons"),
+            ("warriors", "Golden State Warriors"),
+            ("rockets", "Houston Rockets"),
+            ("pacers", "Indiana Pacers"),
+            ("clippers", "LA Clippers"),
+            ("lakers", "Los Angeles Lakers"),
+            ("grizzlies", "Memphis Grizzlies"),
+            ("heat", "Miami Heat"),
+            ("bucks", "Milwaukee Bucks"),
+            ("timberwolves", "Minnesota Timberwolves"),
+            ("wolves", "Minnesota Timberwolves"),
+            ("pelicans", "New Orleans Pelicans"),
+            ("knicks", "New York Knicks"),
+            ("thunder", "Oklahoma City Thunder"),
+            ("magic", "Orlando Magic"),
+            ("76ers", "Philadelphia 76ers"),
+            ("sixers", "Philadelphia 76ers"),
+            ("suns", "Phoenix Suns"),
+            ("blazers", "Portland Trail Blazers"),
+            ("trail blazers", "Portland Trail Blazers"),
+            ("kings", "Sacramento Kings"),
+            ("spurs", "San Antonio Spurs"),
+            ("raptors", "Toronto Raptors"),
+            ("jazz", "Utah Jazz"),
+            ("wizards", "Washington Wizards"),
+        ],
+    )
     def test_nicknames(self, nickname, expected):
         """Nicknames should map to full names."""
         assert standardize_team_name(nickname) == expected
 
     # Historical franchise names
-    @pytest.mark.parametrize("historical,expected", [
-        ("nj", "Brooklyn Nets"),  # New Jersey Nets
-        ("njn", "Brooklyn Nets"),
-        ("sea", "Oklahoma City Thunder"),  # Seattle Supersonics
-        ("noh", "New Orleans Pelicans"),  # New Orleans Hornets
-        ("nok", "New Orleans Pelicans"),  # New Orleans/Oklahoma City
-    ])
+    @pytest.mark.parametrize(
+        "historical,expected",
+        [
+            ("nj", "Brooklyn Nets"),  # New Jersey Nets
+            ("njn", "Brooklyn Nets"),
+            ("sea", "Oklahoma City Thunder"),  # Seattle Supersonics
+            ("noh", "New Orleans Pelicans"),  # New Orleans Hornets
+            ("nok", "New Orleans Pelicans"),  # New Orleans/Oklahoma City
+        ],
+    )
     def test_historical_names(self, historical, expected):
         """Historical franchise names should map correctly."""
         assert standardize_team_name(historical) == expected
@@ -282,8 +296,7 @@ class TestMatchKeyGeneration:
 
     def test_basic_match_key(self):
         """Basic match key should be date_away_home format."""
-        key = generate_match_key(
-            "2025-01-15", "Los Angeles Lakers", "Boston Celtics")
+        key = generate_match_key("2025-01-15", "Los Angeles Lakers", "Boston Celtics")
 
         assert key is not None
         assert "2025-01-15" in key or "2025-01-14" in key  # CST conversion
@@ -300,10 +313,10 @@ class TestMatchKeyGeneration:
 
     def test_match_key_normalizes_teams(self):
         """Match key should normalize team names."""
-        key1 = generate_match_key(
-            "2025-01-15", "lal", "bos", source_is_utc=False)
+        key1 = generate_match_key("2025-01-15", "lal", "bos", source_is_utc=False)
         key2 = generate_match_key(
-            "2025-01-15", "Los Angeles Lakers", "Boston Celtics", source_is_utc=False)
+            "2025-01-15", "Los Angeles Lakers", "Boston Celtics", source_is_utc=False
+        )
 
         # Both should produce the same normalized key
         assert key1 == key2

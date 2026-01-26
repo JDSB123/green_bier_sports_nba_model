@@ -1,5 +1,6 @@
-import tempfile
 import os
+import tempfile
+
 import pandas as pd
 
 from src.modeling.models import SpreadsModel
@@ -7,15 +8,18 @@ from src.modeling.models import SpreadsModel
 
 def make_dummy_data(n=100):
     import numpy as np
+
     rng = np.random.default_rng(42)
     home_ppg = rng.normal(110, 5, size=n)
     away_ppg = rng.normal(108, 5, size=n)
     predicted_margin = home_ppg - away_ppg
-    X = pd.DataFrame({
-        "home_ppg": home_ppg,
-        "away_ppg": away_ppg,
-        "predicted_margin": predicted_margin,
-    })
+    X = pd.DataFrame(
+        {
+            "home_ppg": home_ppg,
+            "away_ppg": away_ppg,
+            "predicted_margin": predicted_margin,
+        }
+    )
     # target: 1 if predicted_margin > 0
     y = (predicted_margin > 0).astype(int)
     return X, y
@@ -23,7 +27,9 @@ def make_dummy_data(n=100):
 
 def test_save_and_load_model():
     X, y = make_dummy_data(50)
-    model = SpreadsModel(model_type="logistic", feature_columns=["home_ppg", "away_ppg", "predicted_margin"])
+    model = SpreadsModel(
+        model_type="logistic", feature_columns=["home_ppg", "away_ppg", "predicted_margin"]
+    )
     model.fit(X, y)
 
     with tempfile.TemporaryDirectory() as td:

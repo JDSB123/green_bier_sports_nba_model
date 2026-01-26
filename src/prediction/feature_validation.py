@@ -22,10 +22,11 @@ RATIONALE:
     This caused the same prediction to succeed or fail depending on code path.
     Unified behavior ensures predictable, debuggable predictions.
 """
-import os
+
 import logging
-from typing import List, Set, Tuple, Literal
+import os
 from enum import Enum
+from typing import List, Literal, Set, Tuple
 
 import pandas as pd
 
@@ -34,9 +35,10 @@ logger = logging.getLogger(__name__)
 
 class FeatureMode(Enum):
     """Feature validation mode."""
-    STRICT = "strict"   # Raise ValueError on missing features
-    WARN = "warn"       # Log warning, zero-fill missing features
-    SILENT = "silent"   # Zero-fill without logging (NOT RECOMMENDED)
+
+    STRICT = "strict"  # Raise ValueError on missing features
+    WARN = "warn"  # Log warning, zero-fill missing features
+    SILENT = "silent"  # Zero-fill without logging (NOT RECOMMENDED)
 
 
 class MissingFeaturesError(ValueError):
@@ -48,6 +50,7 @@ class MissingFeaturesError(ValueError):
         missing_features: List of missing feature names
         available_features: List of available feature names
     """
+
     def __init__(
         self,
         market: str,
@@ -60,7 +63,9 @@ class MissingFeaturesError(ValueError):
 
         # Truncate for readability
         missing_display = sorted(missing_features)[:10]
-        missing_suffix = f"... and {len(missing_features) - 10} more" if len(missing_features) > 10 else ""
+        missing_suffix = (
+            f"... and {len(missing_features) - 10} more" if len(missing_features) > 10 else ""
+        )
 
         message = (
             f"[{market}] MISSING {len(missing_features)} REQUIRED FEATURES: {missing_display}{missing_suffix}. "

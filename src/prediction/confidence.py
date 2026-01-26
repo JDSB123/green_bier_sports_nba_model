@@ -7,8 +7,10 @@ the predict_proba output is already calibrated. Confidence = calibrated probabil
 No arbitrary caps. No entropy transformations. The calibration ensures probabilities
 reflect actual win rates (e.g., 70% predicted = ~70% actual historical win rate).
 """
-import numpy as np
+
 from typing import Tuple
+
+import numpy as np
 
 
 def calculate_confidence_from_probabilities(

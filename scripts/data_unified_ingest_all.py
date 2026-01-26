@@ -139,10 +139,12 @@ async def main_comprehensive(force_refresh: bool = False, slate_only: bool = Fal
     stats_before = api_cache.get_stats()
     if stats_before.get("mode") == "STRICT":
         print(
-            f"Cache Status: STRICT MODE (Memory only: {stats_before.get('memory_count', 0)} entries)")
+            f"Cache Status: STRICT MODE (Memory only: {stats_before.get('memory_count', 0)} entries)"
+        )
     else:
         print(
-            f"Cache Status: {stats_before.get('file_count', 0)} cached entries ({stats_before.get('total_size_mb', 0)} MB)")
+            f"Cache Status: {stats_before.get('file_count', 0)} cached entries ({stats_before.get('total_size_mb', 0)} MB)"
+        )
     print()
 
     ingestion = ComprehensiveIngestion(force_refresh=force_refresh)
@@ -158,16 +160,14 @@ async def main_comprehensive(force_refresh: bool = False, slate_only: bool = Fal
     print("\n" + "=" * 60)
     print("INGESTION COMPLETE")
     print("=" * 60)
-    print(
-        f"Endpoints: {status['successful']} successful, {status['failed']} failed")
+    print(f"Endpoints: {status['successful']} successful, {status['failed']} failed")
     print(f"Total Records: {status['total_records']}")
-    print(
-        f"API Calls: {status['api_calls']} (saved ~{status['cache_hits']} via cache)")
+    print(f"API Calls: {status['api_calls']} (saved ~{status['cache_hits']} via cache)")
     print()
 
-    if status['errors']:
+    if status["errors"]:
         print(f"Errors ({len(status['errors'])}):")
-        for error in status['errors']:
+        for error in status["errors"]:
             print(f"  - {error}")
     else:
         print("No errors!")
@@ -183,8 +183,7 @@ async def main_comprehensive(force_refresh: bool = False, slate_only: bool = Fal
         by_source[result.source]["records"] += result.record_count
 
     for source, info in by_source.items():
-        print(
-            f"  {source}: {info['endpoints']} endpoints, {info['records']} records")
+        print(f"  {source}: {info['endpoints']} endpoints, {info['records']} records")
 
 
 if __name__ == "__main__":
@@ -214,7 +213,9 @@ if __name__ == "__main__":
     if args.legacy:
         asyncio.run(main_legacy(essential_only=args.essential))
     else:
-        asyncio.run(main_comprehensive(
-            force_refresh=args.refresh,
-            slate_only=args.slate,
-        ))
+        asyncio.run(
+            main_comprehensive(
+                force_refresh=args.refresh,
+                slate_only=args.slate,
+            )
+        )

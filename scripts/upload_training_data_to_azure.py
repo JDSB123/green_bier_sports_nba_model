@@ -50,7 +50,7 @@ TRAINING_DATA_PATHS = [
 MIN_GAMES = 3000
 MIN_FEATURES = 50
 MIN_INJURY_COVERAGE = 0.80  # 80%
-MIN_ODDS_COVERAGE = 0.90    # 90%
+MIN_ODDS_COVERAGE = 0.90  # 90%
 
 # Required columns by category
 REQUIRED_COLUMNS = {
@@ -170,8 +170,7 @@ class QualityChecker:
 
     def _check_critical_nulls(self) -> tuple[bool, str]:
         """Check for nulls in critical columns."""
-        critical = ["game_id", "home_team",
-                    "away_team", "home_score", "away_score"]
+        critical = ["game_id", "home_team", "away_team", "home_score", "away_score"]
         null_counts = {}
         for col in critical:
             if col in self.df.columns:
@@ -226,8 +225,7 @@ class QualityChecker:
 
     def _check_injury_coverage(self) -> tuple[bool, str]:
         """Check injury data coverage."""
-        injury_cols_present = [
-            c for c in INJURY_COLUMNS if c in self.df.columns]
+        injury_cols_present = [c for c in INJURY_COLUMNS if c in self.df.columns]
         if not injury_cols_present:
             self.metrics["injury_coverage"] = 0
             return False, "No injury columns found"
@@ -255,8 +253,7 @@ class QualityChecker:
         min_date = dates.min()
         max_date = dates.max()
 
-        self.metrics["date_range"] = {"min": str(
-            min_date.date()), "max": str(max_date.date())}
+        self.metrics["date_range"] = {"min": str(min_date.date()), "max": str(max_date.date())}
 
         # Check reasonable range
         if min_date.year >= 2022:
@@ -273,12 +270,10 @@ class QualityChecker:
 
         # Check no season has < 10% of games
         total = len(self.df)
-        small_seasons = [s for s, c in season_counts.items()
-                         if c < total * 0.1]
+        small_seasons = [s for s, c in season_counts.items() if c < total * 0.1]
 
         if not small_seasons:
-            seasons_str = ", ".join(
-                [f"{s}: {c}" for s, c in sorted(season_counts.items())])
+            seasons_str = ", ".join([f"{s}: {c}" for s, c in sorted(season_counts.items())])
             return True, seasons_str
         return True, f"Unbalanced: {small_seasons} (warn only)"
 
@@ -305,12 +300,7 @@ class QualityChecker:
         }
 
 
-def upload_to_azure(
-    file_path: Path,
-    manifest: dict,
-    version: str,
-    dry_run: bool = False
-) -> bool:
+def upload_to_azure(file_path: Path, manifest: dict, version: str, dry_run: bool = False) -> bool:
     """Upload training data and manifest to Azure Blob Storage."""
     print("\n" + "=" * 60)
     print("AZURE UPLOAD")
@@ -341,12 +331,11 @@ def upload_to_azure(
         # Upload versioned data
         print(f"\n  Uploading {file_path.name}...")
         cmd = (
-            f'az storage blob upload --account-name {STORAGE_ACCOUNT} '
+            f"az storage blob upload --account-name {STORAGE_ACCOUNT} "
             f'--container-name {CONTAINER} --name "{data_blob}" '
             f'--file "{file_path}" --overwrite true --auth-mode key'
         )
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, shell=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
         if result.returncode != 0:
             print(f"  {FAIL} Upload failed: {result.stderr}")
             return False
@@ -355,12 +344,11 @@ def upload_to_azure(
         # Upload manifest
         print(f"  Uploading manifest.json...")
         cmd = (
-            f'az storage blob upload --account-name {STORAGE_ACCOUNT} '
+            f"az storage blob upload --account-name {STORAGE_ACCOUNT} "
             f'--container-name {CONTAINER} --name "{manifest_blob}" '
             f'--file "{manifest_path}" --overwrite true --auth-mode key'
         )
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, shell=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
         if result.returncode != 0:
             print(f"  {FAIL} Manifest upload failed: {result.stderr}")
             return False
@@ -370,13 +358,12 @@ def upload_to_azure(
         print(f"\n  Updating latest/...")
         for src, dst in [(data_blob, latest_data_blob), (manifest_blob, latest_manifest_blob)]:
             cmd = (
-                f'az storage blob copy start --account-name {STORAGE_ACCOUNT} '
+                f"az storage blob copy start --account-name {STORAGE_ACCOUNT} "
                 f'--destination-container {CONTAINER} --destination-blob "{dst}" '
                 f'--source-uri "https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{src}" '
-                f'--auth-mode key'
+                f"--auth-mode key"
             )
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, shell=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
             if result.returncode != 0:
                 print(f"  {WARN} Copy to latest failed: {result.stderr}")
             else:
@@ -390,16 +377,11 @@ def upload_to_azure(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Upload quality-checked training data to Azure")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Validate only, no upload")
-    parser.add_argument("--force", action="store_true",
-                        help="Skip confirmation prompts")
-    parser.add_argument("--version", default=None,
-                        help="Version tag (default: vYYYYMMDD)")
-    parser.add_argument("--file", type=Path, default=None,
-                        help="Specific file to upload")
+    parser = argparse.ArgumentParser(description="Upload quality-checked training data to Azure")
+    parser.add_argument("--dry-run", action="store_true", help="Validate only, no upload")
+    parser.add_argument("--force", action="store_true", help="Skip confirmation prompts")
+    parser.add_argument("--version", default=None, help="Version tag (default: vYYYYMMDD)")
+    parser.add_argument("--file", type=Path, default=None, help="Specific file to upload")
     args = parser.parse_args()
 
     print("\n" + "=" * 60)
@@ -438,14 +420,10 @@ def main():
     print("\n" + "=" * 60)
     print("QUALITY SUMMARY")
     print("=" * 60)
-    print(
-        f"  Total Games: {manifest['quality_metrics'].get('total_games', 'N/A'):,}")
-    print(
-        f"  Total Columns: {manifest['quality_metrics'].get('total_columns', 'N/A')}")
-    print(
-        f"  Odds Coverage: {manifest['quality_metrics'].get('odds_coverage', 0):.1%}")
-    print(
-        f"  Injury Coverage: {manifest['quality_metrics'].get('injury_coverage', 0):.1%}")
+    print(f"  Total Games: {manifest['quality_metrics'].get('total_games', 'N/A'):,}")
+    print(f"  Total Columns: {manifest['quality_metrics'].get('total_columns', 'N/A')}")
+    print(f"  Odds Coverage: {manifest['quality_metrics'].get('odds_coverage', 0):.1%}")
+    print(f"  Injury Coverage: {manifest['quality_metrics'].get('injury_coverage', 0):.1%}")
     print(f"  Date Range: {manifest['quality_metrics'].get('date_range', {})}")
     print(f"  SHA256: {manifest['sha256'][:16]}...")
 
@@ -462,8 +440,7 @@ def main():
 
     # Confirm upload
     if not args.dry_run and not args.force:
-        response = input(
-            f"\nUpload to Azure Blob Storage as {version}? [y/N]: ")
+        response = input(f"\nUpload to Azure Blob Storage as {version}? [y/N]: ")
         if response.lower() != "y":
             print("Upload cancelled.")
             sys.exit(0)
@@ -479,9 +456,11 @@ def main():
             print(f"{OK} UPLOAD COMPLETE")
             print(f"\nSingle Source of Truth:")
             print(
-                f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/{version}/")
+                f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/{version}/"
+            )
             print(
-                f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/latest/")
+                f"  https://{STORAGE_ACCOUNT}.blob.core.windows.net/{CONTAINER}/{BLOB_PREFIX}/latest/"
+            )
         print("=" * 60)
     else:
         print(f"\n{FAIL} Upload failed")

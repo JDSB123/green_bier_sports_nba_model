@@ -27,4 +27,3 @@ How version flows:
 Validation:
 - CI `what-if` ensures tags are present before deploy.
 - `scripts/rg_compliance_report.ps1` can flag missing/incorrect tags.
-

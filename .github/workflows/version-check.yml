@@ -10,11 +10,11 @@ jobs:
   validate-version:
     name: Validate Version Consistency
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -25,14 +25,14 @@ jobs:
           # Run the unified validator (version check is part of it)
           python scripts/validate_environment.py --json || true
           # Still proceed with detailed version check below
-      
+
       - name: Read VERSION file
         id: get_version
         run: |
           VERSION=$(cat VERSION | tr -d '\n' | tr -d '\r')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Found version: $VERSION"
-      
+
       - name: Validate version format
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
@@ -45,15 +45,15 @@ jobs:
             exit 1
           fi
           echo "✅ Version format is valid"
-      
+
       - name: Check version consistency in all files
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           echo "Checking version consistency: $VERSION"
           echo ""
-          
+
           FAILED=0
-          
+
           # Check models/production/model_pack.json
           echo "Checking models/production/model_pack.json..."
           if ! grep -q "\"version\": \"$VERSION\"" models/production/model_pack.json; then
@@ -62,7 +62,7 @@ jobs:
           else
             echo "✅ models/production/model_pack.json"
           fi
-          
+
           echo "Checking model_pack git_tag..."
           if ! grep -q "\"git_tag\": \"$VERSION\"" models/production/model_pack.json; then
             echo "❌ git_tag mismatch in models/production/model_pack.json"
@@ -70,7 +70,7 @@ jobs:
           else
             echo "✅ model_pack git_tag"
           fi
-          
+
           echo "Checking model_pack ACR tag..."
           if ! grep -q "nba-gbsv-api:$VERSION" models/production/model_pack.json; then
             echo "❌ ACR tag mismatch in models/production/model_pack.json"
@@ -78,7 +78,7 @@ jobs:
           else
             echo "✅ model_pack ACR tag"
           fi
-          
+
           # Check models/production/feature_importance.json
           echo "Checking models/production/feature_importance.json..."
           if ! grep -q "\"version\": \"$VERSION\"" models/production/feature_importance.json; then
@@ -87,7 +87,7 @@ jobs:
           else
             echo "✅ models/production/feature_importance.json"
           fi
-          
+
           echo ""
           if [ $FAILED -eq 1 ]; then
             echo "❌ Version consistency check failed!"
@@ -99,7 +99,7 @@ jobs:
           else
             echo "✅ All files have consistent version: $VERSION"
           fi
-      
+
       - name: Check for version drift
         if: github.event_name == 'pull_request'
         run: |
@@ -107,10 +107,10 @@ jobs:
           git fetch origin main
           MAIN_VERSION=$(git show origin/main:VERSION | tr -d '\n' | tr -d '\r')
           PR_VERSION="${{ steps.get_version.outputs.version }}"
-          
+
           echo "Main branch version: $MAIN_VERSION"
           echo "PR branch version:   $PR_VERSION"
-          
+
           if [ "$MAIN_VERSION" != "$PR_VERSION" ]; then
             echo "⚠️  Version changed from $MAIN_VERSION to $PR_VERSION"
             echo ""
@@ -121,7 +121,7 @@ jobs:
           else
             echo "ℹ️  Version unchanged"
           fi
-      
+
       - name: Summary
         if: always()
         run: |

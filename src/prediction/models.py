@@ -3,9 +3,12 @@ Model loading and management for predictions.
 
 NBA v33.0.11.0: 4 independent markets (1H + FG spreads/totals)
 """
+
 from pathlib import Path
-from typing import Tuple, Any, List
+from typing import Any, List, Tuple
+
 import joblib
+
 from src.modeling.model_tracker import ModelTracker
 
 
@@ -45,8 +48,7 @@ def load_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     # Support both formats
     model = model_data.get("pipeline") or model_data.get("model")
-    feature_cols = model_data.get(
-        "feature_columns") or model_data.get("model_columns", [])
+    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
 
     return model, feature_cols
 
@@ -87,8 +89,7 @@ def load_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
 
     # Support both formats
     model = model_data.get("pipeline") or model_data.get("model")
-    feature_cols = model_data.get(
-        "feature_columns") or model_data.get("model_columns", [])
+    feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
 
     return model, feature_cols
 
@@ -117,14 +118,12 @@ def load_first_half_spread_model(models_dir: Path) -> Tuple[Any, List[str]]:
         # New combined format
         model_data = joblib.load(model_path)
         model = model_data.get("pipeline") or model_data.get("model")
-        feature_cols = model_data.get(
-            "feature_columns") or model_data.get("model_columns", [])
+        feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
         return model, feature_cols
     elif legacy_model_path.exists():
         # Legacy separate files format
         model = joblib.load(legacy_model_path)
-        feature_cols = joblib.load(
-            legacy_features_path) if legacy_features_path.exists() else []
+        feature_cols = joblib.load(legacy_features_path) if legacy_features_path.exists() else []
         return model, feature_cols
     else:
         raise FileNotFoundError(
@@ -157,14 +156,12 @@ def load_first_half_total_model(models_dir: Path) -> Tuple[Any, List[str]]:
         # New combined format
         model_data = joblib.load(model_path)
         model = model_data.get("pipeline") or model_data.get("model")
-        feature_cols = model_data.get(
-            "feature_columns") or model_data.get("model_columns", [])
+        feature_cols = model_data.get("feature_columns") or model_data.get("model_columns", [])
         return model, feature_cols
     elif legacy_model_path.exists():
         # Legacy separate files format
         model = joblib.load(legacy_model_path)
-        feature_cols = joblib.load(
-            legacy_features_path) if legacy_features_path.exists() else []
+        feature_cols = joblib.load(legacy_features_path) if legacy_features_path.exists() else []
         return model, feature_cols
     else:
         raise FileNotFoundError(

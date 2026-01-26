@@ -1,5 +1,4 @@
 from __future__ import annotations
-from src.utils.secrets import read_secret_strict, read_secret_lax
 
 import os
 from dataclasses import dataclass, field
@@ -7,12 +6,15 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+from src.utils.secrets import read_secret_lax, read_secret_strict
+
 # Anchor paths to the repository root even when scripts are executed elsewhere
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Load repo-root .env for local development (do not override shell env)
 try:
     from dotenv import load_dotenv
+
     load_dotenv(PROJECT_ROOT / ".env", override=False)
     load_dotenv(PROJECT_ROOT / ".env.local", override=False)
 except Exception:
@@ -86,8 +88,7 @@ def _env_float_required(key: str, default: float = None) -> float:
             pass
     if default is not None:
         return default
-    raise ValueError(
-        f"Required environment variable not set or invalid: {key}")
+    raise ValueError(f"Required environment variable not set or invalid: {key}")
 
 
 def _env_float_optional(key: str, default: float = 0.0) -> float:
@@ -103,7 +104,9 @@ def _env_float_optional(key: str, default: float = 0.0) -> float:
 
 def _current_season() -> str:
     """Resolve the current season from env (required) or raise."""
-    return _env_required("CURRENT_SEASON") or get_current_nba_season()  # Fallback only if not set, but raise per strict
+    return (
+        _env_required("CURRENT_SEASON") or get_current_nba_season()
+    )  # Fallback only if not set, but raise per strict
 
 
 @dataclass(frozen=True)
@@ -136,44 +139,37 @@ class FilterThresholds:
 
     See: OPTIMIZATION_RESULTS_SUMMARY.md for full details
     """
+
     # Spread thresholds - EDGE-ONLY
     spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_SPREAD_MIN_CONFIDENCE", 0.0)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_CONFIDENCE", 0.0)
     )
     spread_min_edge: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_SPREAD_MIN_EDGE", 5.0)
+        default_factory=lambda: _env_float_required("FILTER_SPREAD_MIN_EDGE", 5.0)
     )
 
     # Total thresholds - EDGE-ONLY
     total_min_confidence: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_TOTAL_MIN_CONFIDENCE", 0.0)
+        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_CONFIDENCE", 0.0)
     )
     total_min_edge: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_TOTAL_MIN_EDGE", 3.0)
+        default_factory=lambda: _env_float_required("FILTER_TOTAL_MIN_EDGE", 3.0)
     )
 
     # 1H Spread thresholds - EDGE-ONLY
     fh_spread_min_confidence: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.0)
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_CONFIDENCE", 0.0)
     )
     fh_spread_min_edge: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_1H_SPREAD_MIN_EDGE", 2.5)
+        default_factory=lambda: _env_float_required("FILTER_1H_SPREAD_MIN_EDGE", 2.5)
     )
 
     # 1H Total thresholds - EDGE-ONLY
     fh_total_min_confidence: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.0)
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_CONFIDENCE", 0.0)
     )
     fh_total_min_edge: float = field(
-        default_factory=lambda: _env_float_required(
-            "FILTER_1H_TOTAL_MIN_EDGE", 2.5)
+        default_factory=lambda: _env_float_required("FILTER_1H_TOTAL_MIN_EDGE", 2.5)
     )
 
 
@@ -184,46 +180,47 @@ filter_thresholds = FilterThresholds()
 @dataclass(frozen=True)
 class Settings:
     # Core API Keys - STRICT MODE: Env only, validated at runtime
-    the_odds_api_key: str = field(
-        default_factory=lambda: read_secret_lax("THE_ODDS_API_KEY"))
-    api_basketball_key: str = field(
-        default_factory=lambda: read_secret_lax("API_BASKETBALL_KEY"))
+    the_odds_api_key: str = field(default_factory=lambda: read_secret_lax("THE_ODDS_API_KEY"))
+    api_basketball_key: str = field(default_factory=lambda: read_secret_lax("API_BASKETBALL_KEY"))
 
     # Optional API Keys (None if not set)
-    betsapi_key: Optional[str] = field(
-        default_factory=lambda: _env_optional("BETSAPI_KEY"))
+    betsapi_key: Optional[str] = field(default_factory=lambda: _env_optional("BETSAPI_KEY"))
     action_network_username: Optional[str] = field(
-        default_factory=lambda: read_secret_lax("ACTION_NETWORK_USERNAME"))
+        default_factory=lambda: read_secret_lax("ACTION_NETWORK_USERNAME")
+    )
     action_network_password: Optional[str] = field(
-        default_factory=lambda: read_secret_lax("ACTION_NETWORK_PASSWORD"))
+        default_factory=lambda: read_secret_lax("ACTION_NETWORK_PASSWORD")
+    )
     kaggle_api_token: Optional[str] = field(
-        default_factory=lambda: _env_optional("KAGGLE_API_TOKEN"))
+        default_factory=lambda: _env_optional("KAGGLE_API_TOKEN")
+    )
 
     # API base URLs (with defaults for import compatibility)
     the_odds_base_url: str = field(
         default_factory=lambda: _env_optional(
-            "THE_ODDS_BASE_URL", "https://api.the-odds-api.com/v4")
+            "THE_ODDS_BASE_URL", "https://api.the-odds-api.com/v4"
+        )
     )
     api_basketball_base_url: str = field(
         default_factory=lambda: _env_optional(
-            "API_BASKETBALL_BASE_URL", "https://v1.basketball.api-sports.io")
+            "API_BASKETBALL_BASE_URL", "https://v1.basketball.api-sports.io"
+        )
     )
 
     # Season Configuration (with defaults for import compatibility)
     current_season: str = field(
-        default_factory=lambda: _env_optional("CURRENT_SEASON", "2025-2026"))
+        default_factory=lambda: _env_optional("CURRENT_SEASON", "2025-2026")
+    )
     seasons_to_process: list[str] = field(
         default_factory=lambda: _env_optional(
-            "SEASONS_TO_PROCESS", "2023-2024,2024-2025,2025-2026").split(",")
+            "SEASONS_TO_PROCESS", "2023-2024,2024-2025,2025-2026"
+        ).split(",")
     )
 
     # Data directories (with defaults for import compatibility)
-    data_raw_dir: str = field(
-        default_factory=lambda: _env_optional("DATA_RAW_DIR", "data/raw")
-    )
+    data_raw_dir: str = field(default_factory=lambda: _env_optional("DATA_RAW_DIR", "data/raw"))
     data_processed_dir: str = field(
-        default_factory=lambda: _env_optional(
-            "DATA_PROCESSED_DIR", "data/processed")
+        default_factory=lambda: _env_optional("DATA_PROCESSED_DIR", "data/processed")
     )
 
     # Models directory (single source of truth)
@@ -236,29 +233,19 @@ class Settings:
 
     # STRICT LIVE DATA GUARDS (default off for tests/local)
     require_action_network_splits: bool = field(
-        default_factory=lambda: _env_bool_optional(
-            "REQUIRE_ACTION_NETWORK_SPLITS", False
-        )
+        default_factory=lambda: _env_bool_optional("REQUIRE_ACTION_NETWORK_SPLITS", False)
     )
     require_real_splits: bool = field(
-        default_factory=lambda: _env_bool_optional(
-            "REQUIRE_REAL_SPLITS", False
-        )
+        default_factory=lambda: _env_bool_optional("REQUIRE_REAL_SPLITS", False)
     )
     require_sharp_book_data: bool = field(
-        default_factory=lambda: _env_bool_optional(
-            "REQUIRE_SHARP_BOOK_DATA", False
-        )
+        default_factory=lambda: _env_bool_optional("REQUIRE_SHARP_BOOK_DATA", False)
     )
     require_injury_fetch_success: bool = field(
-        default_factory=lambda: _env_bool_optional(
-            "REQUIRE_INJURY_FETCH_SUCCESS", False
-        )
+        default_factory=lambda: _env_bool_optional("REQUIRE_INJURY_FETCH_SUCCESS", False)
     )
     min_feature_completeness: float = field(
-        default_factory=lambda: _env_float_optional(
-            "MIN_FEATURE_COMPLETENESS", 0.0
-        )
+        default_factory=lambda: _env_float_optional("MIN_FEATURE_COMPLETENESS", 0.0)
     )
 
 
@@ -272,6 +259,7 @@ def get_settings() -> Settings:
     if _settings is None:
         _settings = Settings()
     return _settings
+
 
 # For backward compatibility, create a settings object that behaves like the old one
 

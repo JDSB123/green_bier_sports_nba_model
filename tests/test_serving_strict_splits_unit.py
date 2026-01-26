@@ -13,6 +13,7 @@ def _app_module():
 @pytest.mark.asyncio
 async def test_fetch_required_splits_non_strict_returns_empty_on_error(monkeypatch):
     from src.config import settings
+
     app_module = _app_module()
     _fetch_required_splits = app_module._fetch_required_splits
 
@@ -32,6 +33,7 @@ async def test_fetch_required_splits_non_strict_returns_empty_on_error(monkeypat
 @pytest.mark.asyncio
 async def test_fetch_required_splits_strict_raises_on_fetch_failure(monkeypatch):
     from src.config import settings
+
     app_module = _app_module()
     _fetch_required_splits = app_module._fetch_required_splits
 
@@ -52,6 +54,7 @@ async def test_fetch_required_splits_strict_raises_on_fetch_failure(monkeypatch)
 @pytest.mark.asyncio
 async def test_fetch_required_splits_strict_requires_coverage(monkeypatch):
     from src.config import settings
+
     app_module = _app_module()
     _fetch_required_splits = app_module._fetch_required_splits
 

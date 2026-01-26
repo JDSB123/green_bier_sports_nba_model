@@ -98,11 +98,11 @@ Example: `NBA_v33.1.3` or `NBA_v33.1.3.0`
    ```bash
    git add VERSION models/production/model_pack.json models/production/feature_importance.json
    git commit -m "chore: bump version to NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
-   
+
    - Fixed spread calculation bug
    - Added archive folder for historical tracking
    - Updated deployment docs"
-   
+
    git tag NBA_v<MAJOR>.<MINOR>.<PATCH>[.<BUILD>]
    git push origin main --tags
    ```
@@ -111,14 +111,14 @@ Example: `NBA_v33.1.3` or `NBA_v33.1.3.0`
    ```bash
    # Read VERSION file
    $VERSION = Get-Content VERSION -Raw | ForEach-Object { $_.Trim() }
-   
+
    # Build with correct tag
    docker build -t nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION -f Dockerfile.combined .
-   
+
    # Push
    az acr login -n nbagbsacr
    docker push nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
-   
+
    # Deploy
    az containerapp update -n nba-gbsv-api -g nba-gbsv-model-rg --image nbagbsacr.azurecr.io/nba-gbsv-api:$VERSION
    ```
@@ -194,4 +194,3 @@ A: No. Only bump when merging to `main`. Experimental branches keep the current 
 - [README.md](README.md) - Project overview
 - [.github/copilot-instructions.md](.github/copilot-instructions.md) - Deployment pipeline
 - [models/production/model_pack.json](models/production/model_pack.json) - Model metadata
-

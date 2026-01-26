@@ -7,14 +7,14 @@ Helps identify data pipeline issues and monitor data quality.
 
 from __future__ import annotations
 
-import logging
 import json
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from threading import Lock
-from collections import defaultdict
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +22,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FeatureCompletenessStats:
     """Statistics for feature completeness tracking."""
+
     total_predictions: int = 0
     predictions_with_missing: int = 0
     # Missing feature counts
     missing_counts: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
     # Per-market completeness
-    by_market: Dict[str, Dict[str, int]] = field(default_factory=lambda: defaultdict(lambda: {"complete": 0, "incomplete": 0}))
+    by_market: Dict[str, Dict[str, int]] = field(
+        default_factory=lambda: defaultdict(lambda: {"complete": 0, "incomplete": 0})
+    )
     # Feature presence rates
     feature_presence: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
     # Recent incomplete predictions
@@ -37,6 +40,7 @@ class FeatureCompletenessStats:
 @dataclass
 class CompletenessRecord:
     """Record of a single feature completeness check."""
+
     timestamp: str
     game_date: str
     home_team: str
@@ -146,7 +150,9 @@ class FeatureCompletenessTracker:
 
                 # Keep only recent
                 if len(self.stats.recent_incomplete) > self.MAX_RECENT_INCOMPLETE:
-                    self.stats.recent_incomplete = self.stats.recent_incomplete[-self.MAX_RECENT_INCOMPLETE:]
+                    self.stats.recent_incomplete = self.stats.recent_incomplete[
+                        -self.MAX_RECENT_INCOMPLETE :
+                    ]
 
                 # Log warning if completeness is low
                 if completeness_pct < self.WARNING_THRESHOLD:
@@ -164,7 +170,9 @@ class FeatureCompletenessTracker:
         with self._lock:
             overall_rate = 1.0
             if self.stats.total_predictions > 0:
-                overall_rate = 1 - (self.stats.predictions_with_missing / self.stats.total_predictions)
+                overall_rate = 1 - (
+                    self.stats.predictions_with_missing / self.stats.total_predictions
+                )
 
             return {
                 "total_predictions": self.stats.total_predictions,
@@ -200,10 +208,7 @@ class FeatureCompletenessTracker:
     def get_most_missing_features(self, n: int = 20) -> List[tuple]:
         """Get N most frequently missing features."""
         with self._lock:
-            return sorted(
-                self.stats.missing_counts.items(),
-                key=lambda x: -x[1]
-            )[:n]
+            return sorted(self.stats.missing_counts.items(), key=lambda x: -x[1])[:n]
 
     def get_recent_incomplete(self, n: int = 10) -> List[Dict[str, Any]]:
         """Get N most recent incomplete predictions."""
@@ -212,7 +217,9 @@ class FeatureCompletenessTracker:
 
     def save_report(self, output_path: Optional[Path] = None) -> None:
         """Save feature completeness report to file."""
-        path = output_path or (self.output_dir / "feature_completeness_report.json" if self.output_dir else None)
+        path = output_path or (
+            self.output_dir / "feature_completeness_report.json" if self.output_dir else None
+        )
         if not path:
             return
 
@@ -247,6 +254,7 @@ def get_feature_tracker() -> FeatureCompletenessTracker:
     global _feature_tracker
     if _feature_tracker is None:
         from src.config import settings
+
         output_dir = Path(settings.data_processed_dir) / "monitoring"
         _feature_tracker = FeatureCompletenessTracker(output_dir=output_dir)
     return _feature_tracker

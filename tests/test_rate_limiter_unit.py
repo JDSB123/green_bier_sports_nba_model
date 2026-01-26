@@ -7,7 +7,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_rate_limiter_burst_allows_immediate_acquire():
-    from src.utils.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
+    from src.utils.rate_limiter import RateLimitConfig, TokenBucketRateLimiter
 
     limiter = TokenBucketRateLimiter(
         "test",
@@ -20,7 +20,7 @@ async def test_rate_limiter_burst_allows_immediate_acquire():
 
 @pytest.mark.asyncio
 async def test_rate_limiter_queue_is_processed():
-    from src.utils.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
+    from src.utils.rate_limiter import RateLimitConfig, TokenBucketRateLimiter
 
     limiter = TokenBucketRateLimiter(
         "test",
@@ -43,7 +43,7 @@ async def test_rate_limiter_queue_is_processed():
 
 @pytest.mark.asyncio
 async def test_rate_limiter_queue_full_raises():
-    from src.utils.rate_limiter import TokenBucketRateLimiter, RateLimitConfig, RateLimitExceeded
+    from src.utils.rate_limiter import RateLimitConfig, RateLimitExceeded, TokenBucketRateLimiter
 
     # burst_size=0 => no tokens ever available (tokens capped at 0), so first acquire will queue.
     limiter = TokenBucketRateLimiter(
@@ -64,7 +64,7 @@ async def test_rate_limiter_queue_full_raises():
 
 @pytest.mark.asyncio
 async def test_rate_limiter_execute_stats_success_and_failure():
-    from src.utils.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
+    from src.utils.rate_limiter import RateLimitConfig, TokenBucketRateLimiter
 
     limiter = TokenBucketRateLimiter(
         "test",

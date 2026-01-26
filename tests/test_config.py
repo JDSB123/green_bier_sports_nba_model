@@ -1,9 +1,11 @@
 """Tests for configuration module."""
+
 import os
 from datetime import date
+
 import pytest
 
-from src.config import get_nba_season, get_current_nba_season, Settings, FilterThresholds
+from src.config import FilterThresholds, Settings, get_current_nba_season, get_nba_season
 
 
 class TestNBASeason:
@@ -96,7 +98,6 @@ class TestFilterThresholds:
         # Total defaults
         assert thresholds.total_min_confidence == 0.0
         assert thresholds.total_min_edge == 3.0
-
 
     def test_filter_thresholds_from_env(self, monkeypatch):
         """Test that filter thresholds can be overridden from environment."""

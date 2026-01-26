@@ -7,11 +7,14 @@ but confidence actually refers to the AWAY probability.
 
 FIXED in v33.1.0: Edge-based confidence with signal conflict detection.
 """
-import pytest
-import pandas as pd
+
 from pathlib import Path
-from src.prediction import UnifiedPredictionEngine
+
+import pandas as pd
+import pytest
+
 from src.config import PROJECT_ROOT
+from src.prediction import UnifiedPredictionEngine
 
 
 @pytest.fixture(scope="module")
@@ -33,86 +36,78 @@ def sample_features():
     features = get_feature_defaults()
 
     # Override with test values for key features
-    features.update({
-        # Core stats
-        "home_ppg": 115.0,
-        "home_papg": 110.0,
-        "home_margin": 5.0,
-        "home_win_pct": 0.65,
-        "away_ppg": 108.0,
-        "away_papg": 112.0,
-        "away_margin": -4.0,
-        "away_win_pct": 0.45,
-
-        # Differentials
-        "ppg_diff": 7.0,
-        "win_pct_diff": 0.20,
-
-        # Rest
-        "home_rest": 2.0,
-        "away_rest": 1.0,
-        "rest_diff": 1.0,
-        "home_b2b": 0.0,
-        "away_b2b": 1.0,
-        "home_rest_adj": 0.0,
-        "away_rest_adj": -0.5,
-        "rest_margin_adj": 0.5,
-
-        # HCA
-        "dynamic_hca": 3.0,
-        "home_court_advantage": 3.0,
-
-        # Travel
-        "away_travel_distance": 1500.0,
-        "away_timezone_change": 2.0,
-        "away_travel_fatigue": 1.5,
-        "is_away_long_trip": 1.0,
-        "is_away_cross_country": 1.0,
-        "away_b2b_travel_penalty": 1.0,
-        "travel_advantage": 2.0,
-
-        # Efficiency
-        "home_ortg": 115.0,
-        "home_drtg": 110.0,
-        "home_net_rtg": 5.0,
-        "away_ortg": 108.0,
-        "away_drtg": 112.0,
-        "away_net_rtg": -4.0,
-        "net_rating_diff": 9.0,
-
-        # Form
-        "home_l5_margin": 6.0,
-        "away_l5_margin": -3.0,
-        "home_l10_margin": 5.0,
-        "away_l10_margin": -4.0,
-        "home_margin_std": 10.0,
-        "away_margin_std": 12.0,
-        "home_score_std": 8.0,
-        "away_score_std": 9.0,
-
-        # Pace
-        "home_pace": 102.0,
-        "away_pace": 100.0,
-        "expected_pace": 101.0,
-
-        # Predicted values (critical for edge calculation)
-        "predicted_margin": 8.0,  # Model predicts home wins by 8
-        "predicted_total": 225.0,
-
-        # 1H predicted values (required for 1H edge calculation)
-        "predicted_margin_1h": 4.0,
-        "predicted_total_1h": 112.0,
-
-        # Market line features (cross-market lines required by all models)
-        # These are normally injected by predict_all_markets(), but when calling
-        # predict_full_game() or predict_first_half() directly, tests must provide them
-        "fg_spread_line": -5.0,
-        "fg_total_line": 225.0,
-        "1h_spread_line": -2.5,
-        "1h_total_line": 112.0,
-        "spread_line": -5.0,  # Alias
-        "total_line": 225.0,  # Alias
-    })
+    features.update(
+        {
+            # Core stats
+            "home_ppg": 115.0,
+            "home_papg": 110.0,
+            "home_margin": 5.0,
+            "home_win_pct": 0.65,
+            "away_ppg": 108.0,
+            "away_papg": 112.0,
+            "away_margin": -4.0,
+            "away_win_pct": 0.45,
+            # Differentials
+            "ppg_diff": 7.0,
+            "win_pct_diff": 0.20,
+            # Rest
+            "home_rest": 2.0,
+            "away_rest": 1.0,
+            "rest_diff": 1.0,
+            "home_b2b": 0.0,
+            "away_b2b": 1.0,
+            "home_rest_adj": 0.0,
+            "away_rest_adj": -0.5,
+            "rest_margin_adj": 0.5,
+            # HCA
+            "dynamic_hca": 3.0,
+            "home_court_advantage": 3.0,
+            # Travel
+            "away_travel_distance": 1500.0,
+            "away_timezone_change": 2.0,
+            "away_travel_fatigue": 1.5,
+            "is_away_long_trip": 1.0,
+            "is_away_cross_country": 1.0,
+            "away_b2b_travel_penalty": 1.0,
+            "travel_advantage": 2.0,
+            # Efficiency
+            "home_ortg": 115.0,
+            "home_drtg": 110.0,
+            "home_net_rtg": 5.0,
+            "away_ortg": 108.0,
+            "away_drtg": 112.0,
+            "away_net_rtg": -4.0,
+            "net_rating_diff": 9.0,
+            # Form
+            "home_l5_margin": 6.0,
+            "away_l5_margin": -3.0,
+            "home_l10_margin": 5.0,
+            "away_l10_margin": -4.0,
+            "home_margin_std": 10.0,
+            "away_margin_std": 12.0,
+            "home_score_std": 8.0,
+            "away_score_std": 9.0,
+            # Pace
+            "home_pace": 102.0,
+            "away_pace": 100.0,
+            "expected_pace": 101.0,
+            # Predicted values (critical for edge calculation)
+            "predicted_margin": 8.0,  # Model predicts home wins by 8
+            "predicted_total": 225.0,
+            # 1H predicted values (required for 1H edge calculation)
+            "predicted_margin_1h": 4.0,
+            "predicted_total_1h": 112.0,
+            # Market line features (cross-market lines required by all models)
+            # These are normally injected by predict_all_markets(), but when calling
+            # predict_full_game() or predict_first_half() directly, tests must provide them
+            "fg_spread_line": -5.0,
+            "fg_total_line": 225.0,
+            "1h_spread_line": -2.5,
+            "1h_total_line": 112.0,
+            "spread_line": -5.0,  # Alias
+            "total_line": 225.0,  # Alias
+        }
+    )
 
     return features
 
@@ -141,13 +136,13 @@ class TestSpreadInvariants:
 
         # INVARIANT: confidence must equal the probability of the bet_side
         if bet_side == "home":
-            assert abs(confidence - home_prob) < 0.001, (
-                f"bet_side='home' but confidence={confidence:.3f} != home_cover_prob={home_prob:.3f}"
-            )
+            assert (
+                abs(confidence - home_prob) < 0.001
+            ), f"bet_side='home' but confidence={confidence:.3f} != home_cover_prob={home_prob:.3f}"
         else:
-            assert abs(confidence - away_prob) < 0.001, (
-                f"bet_side='away' but confidence={confidence:.3f} != away_cover_prob={away_prob:.3f}"
-            )
+            assert (
+                abs(confidence - away_prob) < 0.001
+            ), f"bet_side='away' but confidence={confidence:.3f} != away_cover_prob={away_prob:.3f}"
 
     def test_1h_spread_bet_side_matches_confidence(self, engine, sample_features):
         """CRITICAL: 1H spread invariant (same as FG)."""
@@ -170,13 +165,13 @@ class TestSpreadInvariants:
 
         # INVARIANT: confidence must equal the probability of the bet_side
         if bet_side == "home":
-            assert abs(confidence - home_prob) < 0.001, (
-                f"1H: bet_side='home' but confidence={confidence:.3f} != home_cover_prob={home_prob:.3f}"
-            )
+            assert (
+                abs(confidence - home_prob) < 0.001
+            ), f"1H: bet_side='home' but confidence={confidence:.3f} != home_cover_prob={home_prob:.3f}"
         else:
-            assert abs(confidence - away_prob) < 0.001, (
-                f"1H: bet_side='away' but confidence={confidence:.3f} != away_cover_prob={away_prob:.3f}"
-            )
+            assert (
+                abs(confidence - away_prob) < 0.001
+            ), f"1H: bet_side='away' but confidence={confidence:.3f} != away_cover_prob={away_prob:.3f}"
 
     def test_spread_signals_agree_field_present(self, engine, sample_features):
         """Signal agreement field must be present and accurate.
@@ -235,13 +230,13 @@ class TestTotalInvariants:
 
         # INVARIANT: confidence must equal the probability of the bet_side
         if bet_side == "over":
-            assert abs(confidence - over_prob) < 0.001, (
-                f"bet_side='over' but confidence={confidence:.3f} != over_prob={over_prob:.3f}"
-            )
+            assert (
+                abs(confidence - over_prob) < 0.001
+            ), f"bet_side='over' but confidence={confidence:.3f} != over_prob={over_prob:.3f}"
         else:
-            assert abs(confidence - under_prob) < 0.001, (
-                f"bet_side='under' but confidence={confidence:.3f} != under_prob={under_prob:.3f}"
-            )
+            assert (
+                abs(confidence - under_prob) < 0.001
+            ), f"bet_side='under' but confidence={confidence:.3f} != under_prob={under_prob:.3f}"
 
     def test_1h_total_bet_side_matches_confidence(self, engine, sample_features):
         """CRITICAL: 1H total invariant (same as FG)."""
@@ -264,13 +259,13 @@ class TestTotalInvariants:
 
         # INVARIANT: confidence must equal the probability of the bet_side
         if bet_side == "over":
-            assert abs(confidence - over_prob) < 0.001, (
-                f"1H: bet_side='over' but confidence={confidence:.3f} != over_prob={over_prob:.3f}"
-            )
+            assert (
+                abs(confidence - over_prob) < 0.001
+            ), f"1H: bet_side='over' but confidence={confidence:.3f} != over_prob={over_prob:.3f}"
         else:
-            assert abs(confidence - under_prob) < 0.001, (
-                f"1H: bet_side='under' but confidence={confidence:.3f} != under_prob={under_prob:.3f}"
-            )
+            assert (
+                abs(confidence - under_prob) < 0.001
+            ), f"1H: bet_side='under' but confidence={confidence:.3f} != under_prob={under_prob:.3f}"
 
     def test_total_signals_agree_field_present(self, engine, sample_features):
         """Signal agreement field must be present and accurate.

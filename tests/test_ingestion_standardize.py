@@ -6,20 +6,22 @@ work correctly during data ingestion from all sources.
 
 Coverage target: 100% of src/ingestion/standardize.py
 """
-import pytest
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from src.ingestion.standardize import (
-    normalize_team_to_espn,
-    is_valid_espn_team_name,
-    standardize_game_data,
-    format_game_string,
-    to_cst,
     CST,
-    UTC,
     ESPN_TEAM_NAMES,
     TEAM_NAME_MAPPING,
+    UTC,
+    format_game_string,
+    is_valid_espn_team_name,
+    normalize_team_to_espn,
+    standardize_game_data,
+    to_cst,
 )
 
 
@@ -28,58 +30,64 @@ class TestNormalizeTeamToESPN:
 
     # All 30 NBA teams - abbreviations
     # Function returns Tuple[str, bool] where bool indicates if normalization succeeded
-    @pytest.mark.parametrize("abbrev,expected", [
-        ("ATL", "Atlanta Hawks"),
-        ("BOS", "Boston Celtics"),
-        ("BKN", "Brooklyn Nets"),
-        ("CHA", "Charlotte Hornets"),
-        ("CHI", "Chicago Bulls"),
-        ("CLE", "Cleveland Cavaliers"),
-        ("DAL", "Dallas Mavericks"),
-        ("DEN", "Denver Nuggets"),
-        ("DET", "Detroit Pistons"),
-        ("GSW", "Golden State Warriors"),
-        ("HOU", "Houston Rockets"),
-        ("IND", "Indiana Pacers"),
-        ("LAC", "LA Clippers"),
-        ("LAL", "Los Angeles Lakers"),
-        ("MEM", "Memphis Grizzlies"),
-        ("MIA", "Miami Heat"),
-        ("MIL", "Milwaukee Bucks"),
-        ("MIN", "Minnesota Timberwolves"),
-        ("NOP", "New Orleans Pelicans"),
-        ("NYK", "New York Knicks"),
-        ("OKC", "Oklahoma City Thunder"),
-        ("ORL", "Orlando Magic"),
-        ("PHI", "Philadelphia 76ers"),
-        ("PHX", "Phoenix Suns"),
-        ("POR", "Portland Trail Blazers"),
-        ("SAC", "Sacramento Kings"),
-        ("SAS", "San Antonio Spurs"),
-        ("TOR", "Toronto Raptors"),
-        ("UTA", "Utah Jazz"),
-        ("WAS", "Washington Wizards"),
-    ])
+    @pytest.mark.parametrize(
+        "abbrev,expected",
+        [
+            ("ATL", "Atlanta Hawks"),
+            ("BOS", "Boston Celtics"),
+            ("BKN", "Brooklyn Nets"),
+            ("CHA", "Charlotte Hornets"),
+            ("CHI", "Chicago Bulls"),
+            ("CLE", "Cleveland Cavaliers"),
+            ("DAL", "Dallas Mavericks"),
+            ("DEN", "Denver Nuggets"),
+            ("DET", "Detroit Pistons"),
+            ("GSW", "Golden State Warriors"),
+            ("HOU", "Houston Rockets"),
+            ("IND", "Indiana Pacers"),
+            ("LAC", "LA Clippers"),
+            ("LAL", "Los Angeles Lakers"),
+            ("MEM", "Memphis Grizzlies"),
+            ("MIA", "Miami Heat"),
+            ("MIL", "Milwaukee Bucks"),
+            ("MIN", "Minnesota Timberwolves"),
+            ("NOP", "New Orleans Pelicans"),
+            ("NYK", "New York Knicks"),
+            ("OKC", "Oklahoma City Thunder"),
+            ("ORL", "Orlando Magic"),
+            ("PHI", "Philadelphia 76ers"),
+            ("PHX", "Phoenix Suns"),
+            ("POR", "Portland Trail Blazers"),
+            ("SAC", "Sacramento Kings"),
+            ("SAS", "San Antonio Spurs"),
+            ("TOR", "Toronto Raptors"),
+            ("UTA", "Utah Jazz"),
+            ("WAS", "Washington Wizards"),
+        ],
+    )
     def test_abbreviations_to_espn(self, abbrev, expected):
         """All standard abbreviations should map to ESPN names."""
         # Test uppercase
         result, success = normalize_team_to_espn(abbrev)
         assert result == expected
         assert success is True
-        
+
         # Test lowercase
         result, success = normalize_team_to_espn(abbrev.lower())
         assert result == expected
         assert success is True
 
     # The Odds API team names
-    @pytest.mark.parametrize("odds_name,expected", [
-        ("Los Angeles Lakers", "Los Angeles Lakers"),
-        ("Boston Celtics", "Boston Celtics"),
-        ("Golden State Warriors", "Golden State Warriors"),
-        ("LA Clippers", "LA Clippers"),
-        ("Los Angeles Clippers", "LA Clippers"),  # Alternative format
-    ])
+    @pytest.mark.parametrize(
+        "odds_name,expected",
+        [
+            ("Los Angeles Lakers", "Los Angeles Lakers"),
+            ("Boston Celtics", "Boston Celtics"),
+            ("Golden State Warriors", "Golden State Warriors"),
+            ("LA Clippers", "LA Clippers"),
+            ("Los Angeles Clippers", "LA Clippers"),  # Alternative format
+        ],
+    )
     def test_the_odds_api_names(self, odds_name, expected):
         """The Odds API team names should normalize correctly."""
         result, success = normalize_team_to_espn(odds_name)
@@ -87,14 +95,17 @@ class TestNormalizeTeamToESPN:
         assert success is True
 
     # API-Basketball team names
-    @pytest.mark.parametrize("api_name,expected", [
-        ("Lakers", "Los Angeles Lakers"),
-        ("Celtics", "Boston Celtics"),
-        ("Warriors", "Golden State Warriors"),
-        ("Clippers", "LA Clippers"),
-        ("76ers", "Philadelphia 76ers"),
-        ("Sixers", "Philadelphia 76ers"),
-    ])
+    @pytest.mark.parametrize(
+        "api_name,expected",
+        [
+            ("Lakers", "Los Angeles Lakers"),
+            ("Celtics", "Boston Celtics"),
+            ("Warriors", "Golden State Warriors"),
+            ("Clippers", "LA Clippers"),
+            ("76ers", "Philadelphia 76ers"),
+            ("Sixers", "Philadelphia 76ers"),
+        ],
+    )
     def test_api_basketball_names(self, api_name, expected):
         """API-Basketball team names should normalize correctly."""
         result, success = normalize_team_to_espn(api_name)
@@ -164,7 +175,7 @@ class TestToCst:
     def test_utc_z_suffix_conversion(self):
         """UTC times with Z suffix should convert to CST."""
         result = to_cst("2025-01-16T04:00:00Z")
-        
+
         assert result is not None
         assert result.tzinfo == CST
         assert result.date().isoformat() == "2025-01-15"  # Previous day in CST
@@ -173,7 +184,7 @@ class TestToCst:
     def test_utc_offset_conversion(self):
         """UTC times with +00:00 offset should convert."""
         result = to_cst("2025-01-16T04:00:00+00:00")
-        
+
         assert result is not None
         assert result.date().isoformat() == "2025-01-15"
 
@@ -181,7 +192,7 @@ class TestToCst:
         """datetime objects should convert correctly."""
         dt = datetime(2025, 1, 16, 4, 0, 0, tzinfo=UTC)
         result = to_cst(dt)
-        
+
         assert result is not None
         assert result.date().isoformat() == "2025-01-15"
 
@@ -189,7 +200,7 @@ class TestToCst:
         """Naive datetimes should be assumed UTC."""
         dt = datetime(2025, 1, 16, 4, 0, 0)
         result = to_cst(dt)
-        
+
         assert result is not None
         assert result.hour == 22
 
@@ -213,9 +224,9 @@ class TestStandardizeGameData:
             "home_team": "Celtics",
             "commence_time": "2025-01-16T02:30:00Z",
         }
-        
+
         result = standardize_game_data(game, source="the_odds_api")
-        
+
         assert result["away_team"] == "Los Angeles Lakers"
         assert result["home_team"] == "Boston Celtics"
         assert result["date"] == "2025-01-15"  # Converted to CST
@@ -233,9 +244,9 @@ class TestStandardizeGameData:
             "moneyline_away": +150,
             "moneyline_home": -170,
         }
-        
+
         result = standardize_game_data(game, source="the_odds_api")
-        
+
         assert result["spread"] == -3.5
         assert result["total"] == 220.5
         assert result["moneyline_away"] == +150
@@ -248,9 +259,9 @@ class TestStandardizeGameData:
             "home_team": "Boston Celtics",
             "date": "2025-01-15",
         }
-        
+
         result = standardize_game_data(game, source="unknown")
-        
+
         # Should still normalize what it can
         assert result["home_team"] == "Boston Celtics"
         # Away team couldn't be normalized
@@ -262,9 +273,9 @@ class TestStandardizeGameData:
             "away_team": "Lakers",
             "home_team": "Celtics",
         }
-        
+
         result = standardize_game_data(game, source="the_odds_api")
-        
+
         assert result["_source"] == "the_odds_api"
 
     def test_cst_date_conversion(self):
@@ -275,9 +286,9 @@ class TestStandardizeGameData:
             "home_team": "BOS",
             "commence_time": "2025-01-16T04:00:00Z",
         }
-        
+
         result = standardize_game_data(game, source="the_odds_api")
-        
+
         assert result["date"] == "2025-01-15"
         assert "commence_time_cst" in result
 
@@ -288,9 +299,9 @@ class TestStandardizeGameData:
             "home_team": "BOS",
             "date": "2025-01-15",
         }
-        
+
         result = standardize_game_data(game, source="manual")
-        
+
         assert result["date"] == "2025-01-15"
 
     def test_away_team_first_in_result(self):
@@ -299,13 +310,13 @@ class TestStandardizeGameData:
             "home_team": "BOS",  # Home first in input
             "away_team": "LAL",
         }
-        
+
         result = standardize_game_data(game, source="test")
         keys = list(result.keys())
-        
+
         away_idx = keys.index("away_team")
         home_idx = keys.index("home_team")
-        
+
         assert away_idx < home_idx
 
 
@@ -315,13 +326,13 @@ class TestFormatGameString:
     def test_basic_format(self):
         """Games should format as 'AWAY vs. HOME'."""
         result = format_game_string("Los Angeles Lakers", "Boston Celtics")
-        
+
         assert result == "Los Angeles Lakers vs. Boston Celtics"
 
     def test_format_preserves_names(self):
         """Team names should be preserved exactly."""
         result = format_game_string("LA Clippers", "Golden State Warriors")
-        
+
         assert result == "LA Clippers vs. Golden State Warriors"
 
 
@@ -331,10 +342,10 @@ class TestTeamNameMappingConsistency:
     def test_mapping_has_all_30_teams(self):
         """TEAM_NAME_MAPPING should have entries covering all 30 teams."""
         normalized_teams = set()
-        
+
         for team_name in TEAM_NAME_MAPPING.values():
             normalized_teams.add(team_name)
-        
+
         # Should have at least 30 unique normalized names
         assert len(normalized_teams) >= 30
 
@@ -352,10 +363,12 @@ class TestTeamNameMappingConsistency:
             "Clippers",
             "clippers",
         ]
-        
+
         for variant in variants:
             result, success = normalize_team_to_espn(variant)
-            assert result == "LA Clippers", f"{variant} should normalize to 'LA Clippers', got '{result}'"
+            assert (
+                result == "LA Clippers"
+            ), f"{variant} should normalize to 'LA Clippers', got '{result}'"
             assert success is True
 
 
@@ -370,9 +383,9 @@ class TestCSTConversionIntegration:
             "home_team": "BOS",
             "commence_time": "2025-01-16T04:00:00Z",  # This is 10pm CST Jan 15
         }
-        
+
         result = standardize_game_data(game, source="the_odds_api")
-        
+
         # Game date should be Jan 15 (CST), not Jan 16 (UTC)
         assert result["date"] == "2025-01-15"
 
@@ -384,9 +397,9 @@ class TestCSTConversionIntegration:
             "home_team": "BOS",
             "commence_time": "2025-01-15T20:00:00Z",  # 2pm CST Jan 15
         }
-        
+
         result = standardize_game_data(game, source="the_odds_api")
-        
+
         assert result["date"] == "2025-01-15"
 
 
@@ -396,15 +409,15 @@ class TestEdgeCases:
     def test_empty_game_data(self):
         """Empty game data should return minimal valid structure."""
         result = standardize_game_data({}, source="test")
-        
+
         assert result["_standardized"] is True
 
     def test_missing_teams(self):
         """Missing teams should not crash."""
         game = {"date": "2025-01-15"}
-        
+
         result = standardize_game_data(game, source="test")
-        
+
         assert result is not None
 
     def test_special_characters_in_team_name(self):
@@ -413,7 +426,7 @@ class TestEdgeCases:
         result, success = normalize_team_to_espn("76ers")
         assert result == "Philadelphia 76ers"
         assert success is True
-        
+
         result, success = normalize_team_to_espn("Philadelphia 76ers")
         assert result == "Philadelphia 76ers"
         assert success is True

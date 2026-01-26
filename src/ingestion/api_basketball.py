@@ -42,7 +42,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.config import settings
 from src.utils.logging import get_logger
-from src.utils.team_names import normalize_team_name, get_canonical_name
+from src.utils.team_names import get_canonical_name, normalize_team_name
 
 logger = get_logger(__name__)
 
@@ -76,9 +76,7 @@ class APIBasketballClient:
     ):
         self.season = season or settings.current_season
         self.league_id = league_id
-        self.output_dir = output_dir or os.path.join(
-            settings.data_raw_dir, "api_basketball"
-        )
+        self.output_dir = output_dir or os.path.join(settings.data_raw_dir, "api_basketball")
 
         # Validate API key
         if not settings.api_basketball_key:
@@ -104,12 +102,11 @@ class APIBasketballClient:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=8),
     )
-    async def _fetch(
-        self, endpoint: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    async def _fetch(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Make HTTP request to API-Basketball with circuit breaker protection."""
         import asyncio
         import time
+
         from src.utils.circuit_breaker import get_api_basketball_breaker
 
         # Rate limiting: ensure minimum interval between requests
@@ -128,7 +125,8 @@ class APIBasketballClient:
                 resp.raise_for_status()
                 data = resp.json()
                 logger.info(
-                    f"Successfully fetched {endpoint}: {len(data.get('response', []))} records")
+                    f"Successfully fetched {endpoint}: {len(data.get('response', []))} records"
+                )
                 return data
 
         # Use circuit breaker to prevent cascading failures
@@ -136,8 +134,7 @@ class APIBasketballClient:
         try:
             return await breaker.call_async(_fetch_with_client)
         except Exception as e:
-            logger.error(
-                f"Failed to fetch from API-Basketball ({endpoint}): {e}")
+            logger.error(f"Failed to fetch from API-Basketball ({endpoint}): {e}")
             raise
 
     def _save(self, name: str, data: dict[str, Any]) -> str:
@@ -158,7 +155,9 @@ class APIBasketballClient:
         """Fetch leagues."""
         data = await self._fetch("leagues", kwargs)
         path = self._save("leagues", data)
-        return EndpointResult(name="leagues", data=data, count=len(data.get('response', [])), path=path)
+        return EndpointResult(
+            name="leagues", data=data, count=len(data.get("response", [])), path=path
+        )
 
     async def fetch_teams(self, **kwargs) -> EndpointResult:
         """Fetch all NBA teams."""
@@ -168,9 +167,7 @@ class APIBasketballClient:
         data = await self._fetch("teams", params)
         self._teams = data.get("response", [])
         path = self._save("teams", data)
-        return EndpointResult(
-            name="teams", data=data, count=len(self._teams), path=path
-        )
+        return EndpointResult(name="teams", data=data, count=len(self._teams), path=path)
 
     async def fetch_games(self, standardize: bool = True, **kwargs) -> EndpointResult:
         """
@@ -190,6 +187,7 @@ class APIBasketballClient:
 
         # ALWAYS standardize team names to ESPN format (mandatory)
         from src.ingestion.standardize import standardize_game_data
+
         standardized_games = []
         invalid_count = 0
         for game in games:
@@ -206,8 +204,7 @@ class APIBasketballClient:
                     "date": game.get("date"),
                     "teams": teams,  # Include full teams structure for better extraction
                 }
-                standardized = standardize_game_data(
-                    game_dict, source="api_basketball")
+                standardized = standardize_game_data(game_dict, source="api_basketball")
 
                 # Only include games with valid team names (prevent fake data)
                 if standardized.get("_data_valid", False):
@@ -225,23 +222,24 @@ class APIBasketballClient:
                     )
             except Exception as e:
                 logger.error(
-                    f"Error standardizing game data: {e}. Game: {game.get('teams', {}).get('home', {}).get('name', 'N/A')} vs {game.get('teams', {}).get('away', {}).get('name', 'N/A')}")
+                    f"Error standardizing game data: {e}. Game: {game.get('teams', {}).get('home', {}).get('name', 'N/A')} vs {game.get('teams', {}).get('away', {}).get('name', 'N/A')}"
+                )
                 # Do NOT add invalid data - skip it entirely
                 invalid_count += 1
 
         games = standardized_games
         data["response"] = games
         logger.info(
-            f"Standardized {len(standardized_games)} valid games from API-Basketball (skipped {invalid_count} invalid games)")
+            f"Standardized {len(standardized_games)} valid games from API-Basketball (skipped {invalid_count} invalid games)"
+        )
         if invalid_count > 0:
             logger.warning(
-                f"⚠️  {invalid_count} games were skipped due to invalid/unstandardized team names")
+                f"⚠️  {invalid_count} games were skipped due to invalid/unstandardized team names"
+            )
 
         self._games = games
         path = self._save("games", data)
-        return EndpointResult(
-            name="games", data=data, count=len(self._games), path=path
-        )
+        return EndpointResult(name="games", data=data, count=len(self._games), path=path)
 
     async def fetch_games_by_date(
         self, game_date: str, timezone: str = "America/Chicago"
@@ -259,8 +257,9 @@ class APIBasketballClient:
         Returns:
             EndpointResult with games for that date in the specified timezone
         """
-        from src.config import get_nba_season
         from datetime import datetime as dt
+
+        from src.config import get_nba_season
 
         # Parse date and get correct season
         parsed_date = dt.strptime(game_date, "%Y-%m-%d").date()
@@ -277,9 +276,7 @@ class APIBasketballClient:
         )
         games = data.get("response", [])
         path = self._save(f"games_{game_date}", data)
-        return EndpointResult(
-            name=f"games_{game_date}", data=data, count=len(games), path=path
-        )
+        return EndpointResult(name=f"games_{game_date}", data=data, count=len(games), path=path)
 
     async def fetch_players(self) -> EndpointResult:
         """Fetch rosters for all teams."""
@@ -290,21 +287,16 @@ class APIBasketballClient:
         for team in self._teams:
             team_id = team["id"]
             try:
-                data = await self._fetch(
-                    "players", {"team": team_id, "season": self.season}
-                )
+                data = await self._fetch("players", {"team": team_id, "season": self.season})
                 for player in data.get("response", []):
                     player["team_id"] = team_id
                 all_players.extend(data.get("response", []))
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch players for team {team_id}: {e}")
+                logger.warning(f"Failed to fetch players for team {team_id}: {e}")
 
         payload = {"response": all_players, "results": len(all_players)}
         path = self._save("players", payload)
-        return EndpointResult(
-            name="players", data=payload, count=len(all_players), path=path
-        )
+        return EndpointResult(name="players", data=payload, count=len(all_players), path=path)
 
     async def fetch_standings(self, stage: str | None = None, **kwargs) -> EndpointResult:
         """
@@ -358,8 +350,7 @@ class APIBasketballClient:
                 games = standing.get("games", {})
                 win = games.get("win", {}).get("total", 0)
                 lose = games.get("lose", {}).get("total", 0)
-                standing["win_pct"] = win / \
-                    (win + lose) if (win + lose) > 0 else 0.5
+                standing["win_pct"] = win / (win + lose) if (win + lose) > 0 else 0.5
 
         # Sort by win percentage to determine proper rankings
         standings.sort(key=lambda x: x.get("win_pct", 0), reverse=True)
@@ -374,7 +365,7 @@ class APIBasketballClient:
     async def fetch_statistics(self, **kwargs) -> EndpointResult:
         """Fetch season statistics (PPG, PAPG, W-L) for all teams OR specific team."""
         # If 'team' is provided in kwargs, fetch just that team
-        if 'team' in kwargs:
+        if "team" in kwargs:
             params = {"league": self.league_id, "season": self.season}
             params.update(kwargs)
 
@@ -401,20 +392,17 @@ class APIBasketballClient:
                 if stats:
                     all_stats.append(stats)
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch statistics for team {team_id}: {e}")
+                logger.warning(f"Failed to fetch statistics for team {team_id}: {e}")
 
         payload = {"response": all_stats, "results": len(all_stats)}
         path = self._save("statistics", payload)
-        return EndpointResult(
-            name="statistics", data=payload, count=len(all_stats), path=path
-        )
+        return EndpointResult(name="statistics", data=payload, count=len(all_stats), path=path)
 
     async def fetch_game_stats_teams(self, **kwargs) -> EndpointResult:
         """Fetch box scores for all finished games OR specific game."""
         # Check for specific game request via id or game parameter
-        if 'id' in kwargs or 'game' in kwargs:
-            game_id = kwargs.get('id') or kwargs.get('game')
+        if "id" in kwargs or "game" in kwargs:
+            game_id = kwargs.get("id") or kwargs.get("game")
             try:
                 data = await self._fetch("games/statistics/teams", {"game": game_id})
                 stats = data.get("response", [])
@@ -423,36 +411,30 @@ class APIBasketballClient:
                 path = self._save(f"game_stats_{game_id}", data)
 
                 return EndpointResult(
-                    name="games/statistics/teams",
-                    data=data,
-                    count=len(stats),
-                    path=path
+                    name="games/statistics/teams", data=data, count=len(stats), path=path
                 )
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch game_stats_teams for game {game_id}: {e}")
+                logger.warning(f"Failed to fetch game_stats_teams for game {game_id}: {e}")
                 # Return empty result rather than raising, to handle partial failures gracefully
-                return EndpointResult(name="games/statistics/teams", data={"response": []}, count=0, path="")
+                return EndpointResult(
+                    name="games/statistics/teams", data={"response": []}, count=0, path=""
+                )
 
         if not self._games:
             await self.fetch_games()
 
-        finished_ids = [
-            g["id"] for g in self._games if g.get("status", {}).get("short") == "FT"
-        ]
+        finished_ids = [g["id"] for g in self._games if g.get("status", {}).get("short") == "FT"]
 
         all_stats: list[dict] = []
         for i in range(0, len(finished_ids), BATCH_SIZE):
-            batch = finished_ids[i: i + BATCH_SIZE]
+            batch = finished_ids[i : i + BATCH_SIZE]
             try:
                 data = await self._fetch(
-                    "games/statistics/teams", {
-                        "ids": "-".join(map(str, batch))}
+                    "games/statistics/teams", {"ids": "-".join(map(str, batch))}
                 )
                 all_stats.extend(data.get("response", []))
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch game_stats_teams batch {i}: {e}")
+                logger.warning(f"Failed to fetch game_stats_teams batch {i}: {e}")
 
         payload = {"response": all_stats, "results": len(all_stats)}
         path = self._save("game_stats_teams", payload)
@@ -466,8 +448,8 @@ class APIBasketballClient:
     async def fetch_game_stats_players(self, **kwargs) -> EndpointResult:
         """Fetch player box scores for all finished games OR specific game."""
         # Check for specific game request via id or game parameter
-        if 'id' in kwargs or 'game' in kwargs:
-            game_id = kwargs.get('id') or kwargs.get('game')
+        if "id" in kwargs or "game" in kwargs:
+            game_id = kwargs.get("id") or kwargs.get("game")
             try:
                 data = await self._fetch("games/statistics/players", {"id": game_id})
                 stats = data.get("response", [])
@@ -476,36 +458,30 @@ class APIBasketballClient:
                 path = self._save(f"game_stats_players_{game_id}", data)
 
                 return EndpointResult(
-                    name="games/statistics/players",
-                    data=data,
-                    count=len(stats),
-                    path=path
+                    name="games/statistics/players", data=data, count=len(stats), path=path
                 )
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch game_stats_players for game {game_id}: {e}")
+                logger.warning(f"Failed to fetch game_stats_players for game {game_id}: {e}")
                 # Return empty result rather than raising
-                return EndpointResult(name="games/statistics/players", data={"response": []}, count=0, path="")
+                return EndpointResult(
+                    name="games/statistics/players", data={"response": []}, count=0, path=""
+                )
 
         if not self._games:
             await self.fetch_games()
 
-        finished_ids = [
-            g["id"] for g in self._games if g.get("status", {}).get("short") == "FT"
-        ]
+        finished_ids = [g["id"] for g in self._games if g.get("status", {}).get("short") == "FT"]
 
         all_stats: list[dict] = []
         for i in range(0, len(finished_ids), BATCH_SIZE):
-            batch = finished_ids[i: i + BATCH_SIZE]
+            batch = finished_ids[i : i + BATCH_SIZE]
             try:
                 data = await self._fetch(
-                    "games/statistics/players", {
-                        "ids": "-".join(map(str, batch))}
+                    "games/statistics/players", {"ids": "-".join(map(str, batch))}
                 )
                 all_stats.extend(data.get("response", []))
             except Exception as e:
-                logger.warning(
-                    f"Failed to fetch game_stats_players batch {i}: {e}")
+                logger.warning(f"Failed to fetch game_stats_players batch {i}: {e}")
 
         payload = {"response": all_stats, "results": len(all_stats)}
         path = self._save("game_stats_players", payload)
@@ -518,21 +494,19 @@ class APIBasketballClient:
 
     async def fetch_h2h(self, **kwargs) -> EndpointResult:
         """Fetch head-to-head history for upcoming matchups OR specific h2h."""
-        if 'h2h' in kwargs:
+        if "h2h" in kwargs:
             data = await self._fetch("games", kwargs)
             # Save logic
             ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             path = self._save(f"h2h_{kwargs['h2h']}", data)
-            return EndpointResult(name="h2h", data=data, count=len(data.get('response', [])), path=path)
+            return EndpointResult(
+                name="h2h", data=data, count=len(data.get("response", [])), path=path
+            )
 
         if not self._games:
             await self.fetch_games()
 
-        upcoming = [
-            g
-            for g in self._games
-            if g.get("status", {}).get("short") in ("NS", "TBD")
-        ]
+        upcoming = [g for g in self._games if g.get("status", {}).get("short") in ("NS", "TBD")]
 
         all_h2h: list[dict] = []
         seen: set[str] = set()
@@ -578,7 +552,8 @@ class APIBasketballClient:
         Returns:
             EndpointResult with all games in the date range
         """
-        from datetime import datetime as dt, timedelta
+        from datetime import datetime as dt
+        from datetime import timedelta
 
         all_games: list[dict] = []
         current_date = dt.strptime(start_date, "%Y-%m-%d")
@@ -652,8 +627,7 @@ class APIBasketballClient:
                     g["h2h_season"] = season
                 all_h2h.extend(games)
             except Exception as e:
-                logger.warning(
-                    f"Error fetching H2H for {h2h_key} season {season}: {e}")
+                logger.warning(f"Error fetching H2H for {h2h_key} season {season}: {e}")
 
         # Sort by date (most recent first)
         all_h2h.sort(key=lambda x: x.get("date", ""), reverse=True)
@@ -668,10 +642,7 @@ class APIBasketballClient:
         )
 
     async def fetch_team_recent_games(
-        self,
-        team_id: int,
-        last_n: int = 10,
-        **kwargs
+        self, team_id: int, last_n: int = 10, **kwargs
     ) -> EndpointResult:
         """
         Fetch a team's most recent games for form calculation.
@@ -696,9 +667,7 @@ class APIBasketballClient:
         games = data.get("response", [])
 
         # Filter to finished games only
-        finished_games = [
-            g for g in games if g.get("status", {}).get("short") == "FT"
-        ]
+        finished_games = [g for g in games if g.get("status", {}).get("short") == "FT"]
 
         # Sort by date (most recent first)
         finished_games.sort(key=lambda x: x.get("date", ""), reverse=True)
@@ -842,6 +811,7 @@ class APIBasketballClient:
 # UTILITY FUNCTIONS (kept for compatibility)
 # =============================================================================
 
+
 def normalize_standings_response(data: dict[str, Any]) -> dict[str, Dict[str, Any]]:
     """
     Normalize API-Basketball standings into convenient lookups.
@@ -867,10 +837,7 @@ def normalize_standings_response(data: dict[str, Any]) -> dict[str, Dict[str, An
         team_info = entry.get("team", {}) or {}
         team_id = team_info.get("id")
         team_name = (
-            team_info.get("name")
-            or team_info.get("nickname")
-            or team_info.get("code")
-            or ""
+            team_info.get("name") or team_info.get("nickname") or team_info.get("code") or ""
         )
 
         games = entry.get("games", {}) or {}
@@ -887,15 +854,21 @@ def normalize_standings_response(data: dict[str, Any]) -> dict[str, Dict[str, An
             "games_played": played,
             "win_pct": float(win_pct) if win_pct is not None else 0.0,
             "position": entry.get("position"),
-            "conference_rank": entry.get("conference", {}).get("rank")
-            if isinstance(entry.get("conference"), dict)
-            else entry.get("conference_rank"),
-            "division_rank": entry.get("division", {}).get("rank")
-            if isinstance(entry.get("division"), dict)
-            else entry.get("division_rank"),
-            "streak": entry.get("streak", {}).get("long")
-            if isinstance(entry.get("streak"), dict)
-            else entry.get("streak"),
+            "conference_rank": (
+                entry.get("conference", {}).get("rank")
+                if isinstance(entry.get("conference"), dict)
+                else entry.get("conference_rank")
+            ),
+            "division_rank": (
+                entry.get("division", {}).get("rank")
+                if isinstance(entry.get("division"), dict)
+                else entry.get("division_rank")
+            ),
+            "streak": (
+                entry.get("streak", {}).get("long")
+                if isinstance(entry.get("streak"), dict)
+                else entry.get("streak")
+            ),
             "form": entry.get("form"),
             "home_record": games.get("win", {}).get("home"),
             "away_record": games.get("win", {}).get("away"),

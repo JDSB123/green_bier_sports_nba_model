@@ -29,37 +29,43 @@ Features include:
     - RLM (Reverse Line Movement) signals (when betting splits available)
     - Period-specific historical performance (1H margin, etc.)
 """
+
 from __future__ import annotations
-from src.utils.version import resolve_version
+
+import argparse
+import logging
+import os
+import random
+import sys
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+from dotenv import load_dotenv
+
+from src.config import settings
 from src.modeling.feature_config import (
+    filter_available_features,
     get_spreads_features,
     get_totals_features,
     get_trainable_features,
-    filter_available_features,
 )
 from src.modeling.model_tracker import ModelTracker, ModelVersion
 from src.modeling.models import (
-    SpreadsModel, TotalsModel, ModelMetrics,
-    FirstHalfSpreadsModel, FirstHalfTotalsModel,
+    FirstHalfSpreadsModel,
+    FirstHalfTotalsModel,
+    ModelMetrics,
+    SpreadsModel,
+    TotalsModel,
 )
-from src.config import settings
-import pandas as pd
-import numpy as np
-import argparse
-import os
-import sys
-import random
-import logging
-from typing import Optional
-from dotenv import load_dotenv
+from src.utils.version import resolve_version
 
 # Load environment variables
 load_dotenv()
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Add project root to path
@@ -69,8 +75,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Model version for tracking (env overrides VERSION file)
 MODEL_VERSION = resolve_version()
 MODEL_VERSION_LABEL = (
-    MODEL_VERSION if MODEL_VERSION.lower().startswith(
-        "nba_v") else f"v{MODEL_VERSION}"
+    MODEL_VERSION if MODEL_VERSION.lower().startswith("nba_v") else f"v{MODEL_VERSION}"
 )
 
 # Market configurations mapping
@@ -169,15 +174,20 @@ def enrich_with_injury_features(df: pd.DataFrame, injuries_df: pd.DataFrame) -> 
 
     # Group injuries by team and compute impact
     from src.modeling.features import FeatureEngineer
+
     fe = FeatureEngineer()
 
     # Create injury impact columns if not present (spread + total)
     injury_cols = [
         # Spread injury features
-        "home_injury_spread_impact", "away_injury_spread_impact",
-        "injury_spread_diff", "home_star_out", "away_star_out",
+        "home_injury_spread_impact",
+        "away_injury_spread_impact",
+        "injury_spread_diff",
+        "home_star_out",
+        "away_star_out",
         # Total injury features
-        "home_injury_total_impact", "away_injury_total_impact",
+        "home_injury_total_impact",
+        "away_injury_total_impact",
         "injury_total_diff",
     ]
 
@@ -197,11 +207,14 @@ def enrich_with_rlm_features(df: pd.DataFrame, splits_df: pd.DataFrame) -> pd.Da
     # RLM feature columns (spread + total)
     rlm_cols = [
         # Spread RLM features
-        "is_rlm_spread", "sharp_side_spread",
-        "spread_public_home_pct", "spread_ticket_money_diff",
+        "is_rlm_spread",
+        "sharp_side_spread",
+        "spread_public_home_pct",
+        "spread_ticket_money_diff",
         "spread_movement",
         # Total RLM features
-        "is_rlm_total", "sharp_side_total",
+        "is_rlm_total",
+        "sharp_side_total",
     ]
 
     for col in rlm_cols:
@@ -275,47 +288,40 @@ def train_single_market(
     try:
         # Step 1: Get raw features (Don't filter leaky yet)
         available_features = filter_available_features(
-            features,
-            train_df.columns.tolist(),
-            min_required_pct=min_pct,
-            exclude_leaky=False
+            features, train_df.columns.tolist(), min_required_pct=min_pct, exclude_leaky=False
         )
 
         # Step 2: Apply Custom Leakage Logic
         from src.modeling.unified_features import LEAKY_FEATURES_BLACKLIST
+
         blacklist = set(LEAKY_FEATURES_BLACKLIST)
 
         # Apply leakage blacklist consistently across markets
-        available_features = [
-            f for f in available_features if f not in blacklist]
+        available_features = [f for f in available_features if f not in blacklist]
         print("  [Leakage Guard] Blacklist applied")
 
     except ValueError:
 
         # Fallback: use FG features for 1H models
-        print(
-            f"  [INFO] Using FG features for {market_key} (period features unavailable)")
+        print(f"  [INFO] Using FG features for {market_key} (period features unavailable)")
         if "spread" in market_key:
             features = get_spreads_features(manifest_path=feature_manifest)
         else:
             features = get_totals_features(manifest_path=feature_manifest)
         available_features = filter_available_features(
-            features, train_df.columns.tolist(), min_required_pct=0.3)
+            features, train_df.columns.tolist(), min_required_pct=0.3
+        )
 
-    print(
-        f"  Using {len(available_features)} of {len(features)} possible features")
+    print(f"  Using {len(available_features)} of {len(features)} possible features")
 
     if len(available_features) < 5:
-        print(
-            f"  [WARN] Too few features available ({len(available_features)}). Skipping.")
+        print(f"  [WARN] Too few features available ({len(available_features)}). Skipping.")
         return None
 
     # Filter data
     if line_col:
-        train_market = train_df[train_df[line_col].notna(
-        ) & train_df[label_col].notna()].copy()
-        test_market = test_df[test_df[line_col].notna(
-        ) & test_df[label_col].notna()].copy()
+        train_market = train_df[train_df[line_col].notna() & train_df[label_col].notna()].copy()
+        test_market = test_df[test_df[line_col].notna() & test_df[label_col].notna()].copy()
     else:
         train_market = train_df[train_df[label_col].notna()].copy()
         test_market = test_df[test_df[label_col].notna()].copy()
@@ -323,8 +329,7 @@ def train_single_market(
     print(f"  Train size: {len(train_market)}, Test size: {len(test_market)}")
 
     if len(train_market) < 20:
-        print(
-            f"  [WARN] Insufficient data ({len(train_market)} games). Skipping.")
+        print(f"  [WARN] Insufficient data ({len(train_market)} games). Skipping.")
         return None
 
     # Initialize and train model
@@ -358,12 +363,12 @@ def train_single_market(
                 high_preds = preds[mask_high]
                 high_n = len(high_actual)
                 high_correct = (high_preds == high_actual).sum()
-                profit = high_correct * \
-                    (100.0 / 110.0) - (high_n - high_correct)
+                profit = high_correct * (100.0 / 110.0) - (high_n - high_correct)
                 roi_high = profit / high_n
                 acc_high = high_correct / high_n
                 print(
-                    f"  High-conf (>=60%): {acc_high:.1%} acc on {high_n} bets, ROI: {roi_high:+.1%}")
+                    f"  High-conf (>=60%): {acc_high:.1%} acc on {high_n} bets, ROI: {roi_high:+.1%}"
+                )
         except Exception as e:
             logger.debug(f"Could not compute high-conf stats: {e}")
 
@@ -423,7 +428,7 @@ def train_all_markets(
     Returns:
         Dictionary of market_key -> ModelMetrics
     """
-    from typing import List, Dict
+    from typing import Dict, List
 
     output_dir = output_dir or settings.models_dir
     os.makedirs(output_dir, exist_ok=True)
@@ -443,18 +448,15 @@ def train_all_markets(
 
     # Load training data
     print("\nLoading supplementary data...")
-    injuries_df, splits_df = load_supplementary_data(
-        settings.data_processed_dir)
+    injuries_df, splits_df = load_supplementary_data(settings.data_processed_dir)
 
     # Check for custom data file first
     if data_file and os.path.exists(data_file):
         training_path = data_file
         print(f"Using custom training file: {training_path}")
     else:
-        training_path = os.path.join(
-            settings.data_processed_dir, "training_data.csv")
-        fh_path = os.path.join(
-            settings.data_processed_dir, "training_data_fh.csv")
+        training_path = os.path.join(settings.data_processed_dir, "training_data.csv")
+        fh_path = os.path.join(settings.data_processed_dir, "training_data_fh.csv")
 
         if not os.path.exists(training_path) and os.path.exists(fh_path):
             print(f"Using first-half augmented training file: {fh_path}")
@@ -471,10 +473,10 @@ def train_all_markets(
     # Handle date column naming (game_date vs date)
     if "game_date" in training_df.columns and "date" not in training_df.columns:
         training_df["date"] = pd.to_datetime(
-            training_df["game_date"], format="mixed", errors="coerce")
+            training_df["game_date"], format="mixed", errors="coerce"
+        )
     else:
-        training_df["date"] = pd.to_datetime(
-            training_df["date"], format="mixed", errors="coerce")
+        training_df["date"] = pd.to_datetime(training_df["date"], format="mixed", errors="coerce")
     training_df = training_df.dropna(subset=["date"])
 
     if training_df.empty:
@@ -501,9 +503,11 @@ def train_all_markets(
         test_df = training_df[training_df["date"] >= cutoff].copy()
         print(f"\nTemporal split at {cutoff_date}")
         print(
-            f"  Train: {len(train_df)} games ({train_df['date'].min().date()} to {train_df['date'].max().date()})")
+            f"  Train: {len(train_df)} games ({train_df['date'].min().date()} to {train_df['date'].max().date()})"
+        )
         print(
-            f"  Test:  {len(test_df)} games ({test_df['date'].min().date()} to {test_df['date'].max().date()})")
+            f"  Test:  {len(test_df)} games ({test_df['date'].min().date()} to {test_df['date'].max().date()})"
+        )
     else:
         # Percentage-based split (legacy)
         split_idx = int(len(training_df) * (1 - test_size))
@@ -545,17 +549,21 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
     if "spread_covered" not in df.columns and "spread_line" in df.columns:
         df["actual_margin"] = df["home_score"] - df["away_score"]
         df["spread_covered"] = df.apply(
-            lambda r: int(r["actual_margin"] > -r["spread_line"])
-            if pd.notna(r.get("spread_line")) else None,
-            axis=1
+            lambda r: (
+                int(r["actual_margin"] > -r["spread_line"])
+                if pd.notna(r.get("spread_line"))
+                else None
+            ),
+            axis=1,
         )
 
     if "total_over" not in df.columns and "total_line" in df.columns:
         df["actual_total"] = df["home_score"] + df["away_score"]
         df["total_over"] = df.apply(
-            lambda r: int(r["actual_total"] > r["total_line"])
-            if pd.notna(r.get("total_line")) else None,
-            axis=1
+            lambda r: (
+                int(r["actual_total"] > r["total_line"]) if pd.notna(r.get("total_line")) else None
+            ),
+            axis=1,
         )
 
     # First half labels (if quarter data available)
@@ -567,21 +575,17 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
         # IMPORTANT: Don't use fillna(0) - preserve NaN when quarter scores missing
         # Only compute 1H score when BOTH quarters are present
         df["home_1h_score"] = np.where(
-            df["home_q1"].notna() & df["home_q2"].notna(),
-            df["home_q1"] + df["home_q2"],
-            np.nan
+            df["home_q1"].notna() & df["home_q2"].notna(), df["home_q1"] + df["home_q2"], np.nan
         )
         df["away_1h_score"] = np.where(
-            df["away_q1"].notna() & df["away_q2"].notna(),
-            df["away_q1"] + df["away_q2"],
-            np.nan
+            df["away_q1"].notna() & df["away_q2"].notna(), df["away_q1"] + df["away_q2"], np.nan
         )
 
         if "home_1h_win" not in df.columns:
             df["home_1h_win"] = np.where(
                 df["home_1h_score"].notna() & df["away_1h_score"].notna(),
                 (df["home_1h_score"] > df["away_1h_score"]).astype(int),
-                np.nan
+                np.nan,
             )
 
         if "actual_1h_margin" not in df.columns:
@@ -590,16 +594,22 @@ def ensure_all_labels(df: pd.DataFrame) -> pd.DataFrame:
 
         if "1h_spread_covered" not in df.columns and "1h_spread_line" in df.columns:
             df["1h_spread_covered"] = df.apply(
-                lambda r: int(r["actual_1h_margin"] > -r["1h_spread_line"])
-                if pd.notna(r.get("1h_spread_line")) and pd.notna(r.get("actual_1h_margin")) else None,
-                axis=1
+                lambda r: (
+                    int(r["actual_1h_margin"] > -r["1h_spread_line"])
+                    if pd.notna(r.get("1h_spread_line")) and pd.notna(r.get("actual_1h_margin"))
+                    else None
+                ),
+                axis=1,
             )
 
         if "1h_total_over" not in df.columns and "1h_total_line" in df.columns:
             df["1h_total_over"] = df.apply(
-                lambda r: int(r["actual_1h_total"] > r["1h_total_line"])
-                if pd.notna(r.get("1h_total_line")) and pd.notna(r.get("actual_1h_total")) else None,
-                axis=1
+                lambda r: (
+                    int(r["actual_1h_total"] > r["1h_total_line"])
+                    if pd.notna(r.get("1h_total_line")) and pd.notna(r.get("actual_1h_total"))
+                    else None
+                ),
+                axis=1,
             )
 
     return df
@@ -613,8 +623,7 @@ def train_models(
 ) -> None:
     """Train and evaluate spreads and totals models."""
 
-    output_dir = output_dir or os.path.join(
-        settings.data_processed_dir, "models")
+    output_dir = output_dir or os.path.join(settings.data_processed_dir, "models")
     os.makedirs(output_dir, exist_ok=True)
     tracker = ModelTracker()
 
@@ -624,16 +633,13 @@ def train_models(
 
     # Load supplementary data (injuries, betting splits)
     print("\nLoading supplementary data...")
-    injuries_df, splits_df = load_supplementary_data(
-        settings.data_processed_dir)
+    injuries_df, splits_df = load_supplementary_data(settings.data_processed_dir)
 
     # Load existing training dataset. Prefer first-half augmented data if present.
-    training_path = os.path.join(
-        settings.data_processed_dir, "training_data.csv")
+    training_path = os.path.join(settings.data_processed_dir, "training_data.csv")
     fh_path = os.path.join(settings.data_processed_dir, "training_data_fh.csv")
     if os.path.exists(fh_path):
-        print(
-            f"Found first-half augmented training file at {fh_path}; using it.")
+        print(f"Found first-half augmented training file at {fh_path}; using it.")
         training_path = fh_path
     print(f"Loading training data from {training_path}...")
 
@@ -648,10 +654,10 @@ def train_models(
     # Handle date column naming (game_date vs date)
     if "game_date" in training_df.columns and "date" not in training_df.columns:
         training_df["date"] = pd.to_datetime(
-            training_df["game_date"], format="mixed", errors="coerce")
+            training_df["game_date"], format="mixed", errors="coerce"
+        )
     else:
-        training_df["date"] = pd.to_datetime(
-            training_df["date"], format="mixed", errors="coerce")
+        training_df["date"] = pd.to_datetime(training_df["date"], format="mixed", errors="coerce")
     training_df = training_df.dropna(subset=["date"])
 
     if training_df.empty:
@@ -673,16 +679,14 @@ def train_models(
     print(f"Train size: {len(train_df)}, Test size: {len(test_df)}")
 
     # ========== SPREADS MODEL ==========
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Training SPREADS Model")
-    print("="*60)
+    print("=" * 60)
 
     # Features for spreads prediction (from centralized config)
     spreads_features = get_spreads_features(manifest_path=feature_manifest)
-    available_spreads = filter_available_features(
-        spreads_features, train_df.columns.tolist())
-    print(
-        f"  Using {len(available_spreads)} of {len(spreads_features)} possible features")
+    available_spreads = filter_available_features(spreads_features, train_df.columns.tolist())
+    print(f"  Using {len(available_spreads)} of {len(spreads_features)} possible features")
 
     if "spread_covered" not in train_df.columns:
         print("Warning: 'spread_covered' target not found. Skipping spreads model.")
@@ -701,13 +705,11 @@ def train_models(
             spreads_model.fit(train_spreads, train_spreads["spread_covered"])
 
             # Evaluate
-            train_metrics = spreads_model.evaluate(
-                train_spreads, train_spreads["spread_covered"])
+            train_metrics = spreads_model.evaluate(train_spreads, train_spreads["spread_covered"])
             print_metrics("Spreads (Train)", train_metrics)
 
             if len(test_spreads) > 0:
-                test_metrics = spreads_model.evaluate(
-                    test_spreads, test_spreads["spread_covered"])
+                test_metrics = spreads_model.evaluate(test_spreads, test_spreads["spread_covered"])
                 print_metrics("Spreads (Test)", test_metrics)
 
                 # Additional evaluation: Brier score & high-confidence ROI buckets
@@ -723,14 +725,11 @@ def train_models(
                     high_preds = preds[mask_high]
                     high_n = len(high_actual)
                     high_correct = (high_preds == high_actual).sum()
-                    profit = high_correct * \
-                        (100.0 / 110.0) - (high_n - high_correct)
+                    profit = high_correct * (100.0 / 110.0) - (high_n - high_correct)
                     roi_high = profit / high_n
                     acc_high = high_correct / high_n
-                    print(
-                        f"  High-conf (>=60%) Spreads Test Acc: {acc_high:.1%} on {high_n} bets")
-                    print(
-                        f"  High-conf (>=60%) Spreads Test ROI: {roi_high:+.1%}")
+                    print(f"  High-conf (>=60%) Spreads Test Acc: {acc_high:.1%} on {high_n} bets")
+                    print(f"  High-conf (>=60%) Spreads Test ROI: {roi_high:+.1%}")
 
             # Save model
             model_path = os.path.join(output_dir, "spreads_model.joblib")
@@ -751,10 +750,26 @@ def train_models(
                         features_count=len(spreads_model.feature_columns),
                         feature_names=spreads_model.feature_columns,
                         metrics={
-                            "accuracy": float(test_metrics.accuracy) if 'test_metrics' in locals() else float(train_metrics.accuracy),
-                            "log_loss": float(test_metrics.log_loss) if 'test_metrics' in locals() else float(train_metrics.log_loss),
-                            "brier": float(test_metrics.brier) if 'test_metrics' in locals() else float(train_metrics.brier),
-                            "roi": float(test_metrics.roi) if 'test_metrics' in locals() else float(train_metrics.roi),
+                            "accuracy": (
+                                float(test_metrics.accuracy)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.accuracy)
+                            ),
+                            "log_loss": (
+                                float(test_metrics.log_loss)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.log_loss)
+                            ),
+                            "brier": (
+                                float(test_metrics.brier)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.brier)
+                            ),
+                            "roi": (
+                                float(test_metrics.roi)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.roi)
+                            ),
                         },
                         file_path=os.path.basename(model_path),
                     ),
@@ -766,26 +781,25 @@ def train_models(
             # Feature importance (for tree models)
             if hasattr(spreads_model.model, "feature_importances_"):
                 print("\nTop Features (Spreads):")
-                importance = pd.DataFrame({
-                    "feature": spreads_model.feature_columns,
-                    "importance": spreads_model.model.feature_importances_,
-                }).sort_values("importance", ascending=False)
+                importance = pd.DataFrame(
+                    {
+                        "feature": spreads_model.feature_columns,
+                        "importance": spreads_model.model.feature_importances_,
+                    }
+                ).sort_values("importance", ascending=False)
                 print(importance.head(10).to_string(index=False))
         else:
-            print(
-                f"Insufficient spread data for training ({len(train_spreads)} games)")
+            print(f"Insufficient spread data for training ({len(train_spreads)} games)")
 
     # ========== TOTALS MODEL ==========
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Training TOTALS Model")
-    print("="*60)
+    print("=" * 60)
 
     # Features for totals prediction (from centralized config)
     totals_features = get_totals_features(manifest_path=feature_manifest)
-    available_totals = filter_available_features(
-        totals_features, train_df.columns.tolist())
-    print(
-        f"  Using {len(available_totals)} of {len(totals_features)} possible features")
+    available_totals = filter_available_features(totals_features, train_df.columns.tolist())
+    print(f"  Using {len(available_totals)} of {len(totals_features)} possible features")
 
     totals_label = None
     if "total_over" in train_df.columns:
@@ -794,7 +808,9 @@ def train_models(
         totals_label = "went_over"
 
     if totals_label is None:
-        print("Warning: totals target not found ('total_over' or 'went_over'). Skipping totals model.")
+        print(
+            "Warning: totals target not found ('total_over' or 'went_over'). Skipping totals model."
+        )
     else:
         totals_model = TotalsModel(
             name="totals_classifier",
@@ -810,13 +826,11 @@ def train_models(
             totals_model.fit(train_totals, train_totals[totals_label])
 
             # Evaluate
-            train_metrics = totals_model.evaluate(
-                train_totals, train_totals[totals_label])
+            train_metrics = totals_model.evaluate(train_totals, train_totals[totals_label])
             print_metrics("Totals (Train)", train_metrics)
 
             if len(test_totals) > 0:
-                test_metrics = totals_model.evaluate(
-                    test_totals, test_totals[totals_label])
+                test_metrics = totals_model.evaluate(test_totals, test_totals[totals_label])
                 print_metrics("Totals (Test)", test_metrics)
 
                 # Additional evaluation: Brier score & high-confidence ROI buckets
@@ -831,14 +845,11 @@ def train_models(
                     high_preds = preds[mask_high]
                     high_n = len(high_actual)
                     high_correct = (high_preds == high_actual).sum()
-                    profit = high_correct * \
-                        (100.0 / 110.0) - (high_n - high_correct)
+                    profit = high_correct * (100.0 / 110.0) - (high_n - high_correct)
                     roi_high = profit / high_n
                     acc_high = high_correct / high_n
-                    print(
-                        f"  High-conf (>=60%) Totals Test Acc: {acc_high:.1%} on {high_n} bets")
-                    print(
-                        f"  High-conf (>=60%) Totals Test ROI: {roi_high:+.1%}")
+                    print(f"  High-conf (>=60%) Totals Test Acc: {acc_high:.1%} on {high_n} bets")
+                    print(f"  High-conf (>=60%) Totals Test ROI: {roi_high:+.1%}")
 
             # Save model
             model_path = os.path.join(output_dir, "totals_model.joblib")
@@ -859,10 +870,26 @@ def train_models(
                         features_count=len(totals_model.feature_columns),
                         feature_names=totals_model.feature_columns,
                         metrics={
-                            "accuracy": float(test_metrics.accuracy) if 'test_metrics' in locals() else float(train_metrics.accuracy),
-                            "log_loss": float(test_metrics.log_loss) if 'test_metrics' in locals() else float(train_metrics.log_loss),
-                            "brier": float(test_metrics.brier) if 'test_metrics' in locals() else float(train_metrics.brier),
-                            "roi": float(test_metrics.roi) if 'test_metrics' in locals() else float(train_metrics.roi),
+                            "accuracy": (
+                                float(test_metrics.accuracy)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.accuracy)
+                            ),
+                            "log_loss": (
+                                float(test_metrics.log_loss)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.log_loss)
+                            ),
+                            "brier": (
+                                float(test_metrics.brier)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.brier)
+                            ),
+                            "roi": (
+                                float(test_metrics.roi)
+                                if "test_metrics" in locals()
+                                else float(train_metrics.roi)
+                            ),
                         },
                         file_path=os.path.basename(model_path),
                     ),
@@ -874,29 +901,38 @@ def train_models(
             # Feature importance
             if hasattr(totals_model.model, "feature_importances_"):
                 print("\nTop Features (Totals):")
-                importance = pd.DataFrame({
-                    "feature": totals_model.feature_columns,
-                    "importance": totals_model.model.feature_importances_,
-                }).sort_values("importance", ascending=False)
+                importance = pd.DataFrame(
+                    {
+                        "feature": totals_model.feature_columns,
+                        "importance": totals_model.model.feature_importances_,
+                    }
+                ).sort_values("importance", ascending=False)
                 print(importance.head(10).to_string(index=False))
         else:
-            print(
-                f"Insufficient totals data for training ({len(train_totals)} games)")
+            print(f"Insufficient totals data for training ({len(train_totals)} games)")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Training Complete!")
-    print("="*60)
+    print("=" * 60)
 
     # ========== FIRST-HALF MODELS (optional / experimental) ==========
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("FIRST-HALF Models (optional / experimental)")
-    print("="*60)
+    print("=" * 60)
 
     # Detect common first-half score column names
-    fh_home_cols = [c for c in train_df.columns if c.lower() in (
-        "home_halftime_score", "home_ht_score", "home_score_1h", "home_first_half_score")]
-    fh_away_cols = [c for c in train_df.columns if c.lower() in (
-        "away_halftime_score", "away_ht_score", "away_score_1h", "away_first_half_score")]
+    fh_home_cols = [
+        c
+        for c in train_df.columns
+        if c.lower()
+        in ("home_halftime_score", "home_ht_score", "home_score_1h", "home_first_half_score")
+    ]
+    fh_away_cols = [
+        c
+        for c in train_df.columns
+        if c.lower()
+        in ("away_halftime_score", "away_ht_score", "away_score_1h", "away_first_half_score")
+    ]
 
     if fh_home_cols and fh_away_cols and False:
         # Use the first matching column names
@@ -908,32 +944,34 @@ def train_models(
         test_df = test_df.copy()
         train_df["fh_home_score"] = train_df[fh_home]
         train_df["fh_away_score"] = train_df[fh_away]
-        train_df["fh_home_win"] = (
-            train_df["fh_home_score"] > train_df["fh_away_score"]).astype(int)
+        train_df["fh_home_win"] = (train_df["fh_home_score"] > train_df["fh_away_score"]).astype(
+            int
+        )
 
         test_df["fh_home_score"] = test_df[fh_home]
         test_df["fh_away_score"] = test_df[fh_away]
-        test_df["fh_home_win"] = (
-            test_df["fh_home_score"] > test_df["fh_away_score"]).astype(int)
+        test_df["fh_home_win"] = (test_df["fh_home_score"] > test_df["fh_away_score"]).astype(int)
 
         # First-half spreads
         try:
-            from src.modeling.models import FirstHalfSpreadsModel, FirstHalfTotalsModel, TeamTotalsModel
+            from src.modeling.models import (
+                FirstHalfSpreadsModel,
+                FirstHalfTotalsModel,
+                TeamTotalsModel,
+            )
 
             fh_spreads_features = spreads_features
-            fh_spreads_available = [
-                f for f in fh_spreads_features if f in train_df.columns]
+            fh_spreads_available = [f for f in fh_spreads_features if f in train_df.columns]
             fh_train_spreads = train_df.dropna(subset=["fh_home_score"]).copy()
             fh_test_spreads = test_df.dropna(subset=["fh_home_score"]).copy()
 
             if len(fh_train_spreads) > 10:
                 fh_spreads_model = FirstHalfSpreadsModel(
-                    name="fh_spreads", model_type=model_type, feature_columns=fh_spreads_available)
-                fh_spreads_model.fit(
-                    fh_train_spreads, fh_train_spreads["fh_home_win"])
+                    name="fh_spreads", model_type=model_type, feature_columns=fh_spreads_available
+                )
+                fh_spreads_model.fit(fh_train_spreads, fh_train_spreads["fh_home_win"])
                 print("Trained first-half spreads model")
-                fh_spreads_path = os.path.join(
-                    output_dir, "fh_spreads_model.joblib")
+                fh_spreads_path = os.path.join(output_dir, "fh_spreads_model.joblib")
                 fh_spreads_model.save(fh_spreads_path)
                 print(f"First-half spreads model saved to {fh_spreads_path}")
             else:
@@ -943,25 +981,27 @@ def train_models(
             fh_totals_train = fh_train_spreads
             if len(fh_totals_train) > 10:
                 fh_totals_model = FirstHalfTotalsModel(
-                    name="fh_totals", model_type=model_type, feature_columns=available_totals)
+                    name="fh_totals", model_type=model_type, feature_columns=available_totals
+                )
                 # Derive fh went_over if possible (requires fh total line column)
                 if "fh_total_line" in fh_totals_train.columns:
                     fh_totals_train["fh_went_over"] = (
-                        fh_totals_train["fh_home_score"] + fh_totals_train["fh_away_score"] > fh_totals_train["fh_total_line"]).astype(int)
+                        fh_totals_train["fh_home_score"] + fh_totals_train["fh_away_score"]
+                        > fh_totals_train["fh_total_line"]
+                    ).astype(int)
                     fh_test_totals = fh_test_spreads.copy()
                     if "fh_total_line" in fh_test_totals.columns:
                         fh_test_totals["fh_went_over"] = (
-                            fh_test_totals["fh_home_score"] + fh_test_totals["fh_away_score"] > fh_test_totals["fh_total_line"]).astype(int)
+                            fh_test_totals["fh_home_score"] + fh_test_totals["fh_away_score"]
+                            > fh_test_totals["fh_total_line"]
+                        ).astype(int)
 
-                    fh_totals_model.fit(
-                        fh_totals_train, fh_totals_train["fh_went_over"])
-                    fh_totals_path = os.path.join(
-                        output_dir, "fh_totals_model.joblib")
+                    fh_totals_model.fit(fh_totals_train, fh_totals_train["fh_went_over"])
+                    fh_totals_path = os.path.join(output_dir, "fh_totals_model.joblib")
                     fh_totals_model.save(fh_totals_path)
                     print(f"First-half totals model saved to {fh_totals_path}")
                 else:
-                    print(
-                        "No first-half total line available; skipping first-half totals model")
+                    print("No first-half total line available; skipping first-half totals model")
 
         except Exception as e:
             print(f"First-half model training skipped or failed: {e}")
@@ -984,16 +1024,15 @@ def train_first_half_models(
         test_size: Proportion of data for testing
         output_dir: Directory to save models
     """
+    import joblib
     from sklearn.ensemble import GradientBoostingClassifier
     from sklearn.linear_model import LogisticRegression
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.pipeline import Pipeline
-    from sklearn.model_selection import train_test_split
     from sklearn.metrics import accuracy_score, brier_score_loss
-    import joblib
+    from sklearn.model_selection import train_test_split
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
 
-    output_dir = output_dir or os.path.join(
-        settings.data_processed_dir, "models")
+    output_dir = output_dir or os.path.join(settings.data_processed_dir, "models")
     os.makedirs(output_dir, exist_ok=True)
 
     print(f"\n{'='*60}")
@@ -1001,24 +1040,34 @@ def train_first_half_models(
     print(f"{'='*60}")
 
     # Load 1H training data
-    fh_path = os.path.join(settings.data_processed_dir,
-                           "first_half_training_data.csv")
+    fh_path = os.path.join(settings.data_processed_dir, "first_half_training_data.csv")
     if not os.path.exists(fh_path):
         print(f"[WARN] First-half training data not found at {fh_path}")
         print("Run: python scripts/generate_first_half_training_data_fast.py")
         return
 
     df = pd.read_csv(fh_path)
-    df['date'] = pd.to_datetime(df['date'])
+    df["date"] = pd.to_datetime(df["date"])
     print(f"Loaded {len(df)} games with first-half data")
 
     # Identify feature columns
     exclude_cols = [
-        'game_id', 'date', 'home_team', 'away_team',
-        '1h_home_score', '1h_away_score', '1h_spread', '1h_total',
-        'fg_home_score', 'fg_away_score', 'fg_spread', 'fg_total',
-        '1h_spread_line', '1h_total_line',
-        '1h_spread_covered', '1h_total_over',
+        "game_id",
+        "date",
+        "home_team",
+        "away_team",
+        "1h_home_score",
+        "1h_away_score",
+        "1h_spread",
+        "1h_total",
+        "fg_home_score",
+        "fg_away_score",
+        "fg_spread",
+        "fg_total",
+        "1h_spread_line",
+        "1h_total_line",
+        "1h_spread_covered",
+        "1h_total_over",
     ]
     feature_cols = [col for col in df.columns if col not in exclude_cols]
     X = df[feature_cols].fillna(0)
@@ -1033,18 +1082,15 @@ def train_first_half_models(
             )
 
     # Train 1H Spread Model
-    if '1h_spread_covered' in df.columns:
-        y_spread = df['1h_spread_covered']
+    if "1h_spread_covered" in df.columns:
+        y_spread = df["1h_spread_covered"]
         X_train, X_test, y_train, y_test = train_test_split(
             X, y_spread, test_size=test_size, random_state=42, shuffle=False
         )
 
         print(f"\n1H Spread: Train={len(X_train)}, Test={len(X_test)}")
 
-        pipeline = Pipeline([
-            ('scaler', StandardScaler()),
-            ('classifier', get_classifier())
-        ])
+        pipeline = Pipeline([("scaler", StandardScaler()), ("classifier", get_classifier())])
         pipeline.fit(X_train, y_train)
 
         y_pred = pipeline.predict(X_test)
@@ -1054,23 +1100,19 @@ def train_first_half_models(
         print(f"  1H Spread - Accuracy: {acc:.1%}, Brier: {brier:.4f}")
 
         model_path = os.path.join(output_dir, "first_half_spread_model.pkl")
-        joblib.dump(
-            {'pipeline': pipeline, 'features': feature_cols}, model_path)
+        joblib.dump({"pipeline": pipeline, "features": feature_cols}, model_path)
         print(f"  Saved: {model_path}")
 
     # Train 1H Total Model
-    if '1h_total_over' in df.columns:
-        y_total = df['1h_total_over']
+    if "1h_total_over" in df.columns:
+        y_total = df["1h_total_over"]
         X_train, X_test, y_train, y_test = train_test_split(
             X, y_total, test_size=test_size, random_state=42, shuffle=False
         )
 
         print(f"\n1H Total: Train={len(X_train)}, Test={len(X_test)}")
 
-        pipeline = Pipeline([
-            ('scaler', StandardScaler()),
-            ('classifier', get_classifier())
-        ])
+        pipeline = Pipeline([("scaler", StandardScaler()), ("classifier", get_classifier())])
         pipeline.fit(X_train, y_train)
 
         y_pred = pipeline.predict(X_test)
@@ -1080,8 +1122,7 @@ def train_first_half_models(
         print(f"  1H Total - Accuracy: {acc:.1%}, Brier: {brier:.4f}")
 
         model_path = os.path.join(output_dir, "first_half_total_model.pkl")
-        joblib.dump(
-            {'pipeline': pipeline, 'features': feature_cols}, model_path)
+        joblib.dump({"pipeline": pipeline, "features": feature_cols}, model_path)
         print(f"  Saved: {model_path}")
 
     print("\nFirst Half model training complete!")
@@ -1094,7 +1135,8 @@ def main():
     logger.info("Random seeds set to 42 for reproducibility")
 
     parser = argparse.ArgumentParser(
-        description="Train NBA prediction models (4 independent markets)")
+        description="Train NBA prediction models (4 independent markets)"
+    )
     parser.add_argument(
         "--model-type",
         choices=["logistic", "gradient_boosting", "regression"],
@@ -1170,13 +1212,14 @@ def main():
                     output_dir=args.output_dir,
                     feature_manifest=args.feature_manifest,
                 )
-                train_models(model_type="gradient_boosting",
-                             test_size=args.test_size,
-                             output_dir=args.output_dir,
-                             feature_manifest=args.feature_manifest)
+                train_models(
+                    model_type="gradient_boosting",
+                    test_size=args.test_size,
+                    output_dir=args.output_dir,
+                    feature_manifest=args.feature_manifest,
+                )
             if args.market in ["1h", "all"]:
-                train_first_half_models(
-                    test_size=args.test_size, output_dir=args.output_dir)
+                train_first_half_models(test_size=args.test_size, output_dir=args.output_dir)
         else:
             if args.market in ["fg", "all"]:
                 train_models(
@@ -1187,13 +1230,13 @@ def main():
                 )
             if args.market in ["1h", "all"]:
                 train_first_half_models(
-                    model_type=model_type, test_size=args.test_size, output_dir=args.output_dir)
+                    model_type=model_type, test_size=args.test_size, output_dir=args.output_dir
+                )
         return
 
     # Unified training mode
     if args.ensemble:
-        print(
-            "\n[INFO] Ensemble mode: Training both logistic and gradient boosting models")
+        print("\n[INFO] Ensemble mode: Training both logistic and gradient boosting models")
 
         # For 1H markets, force logistic-only (best practice for noisy targets)
         fg_markets = [m for m in markets if m.startswith("fg")]
@@ -1222,8 +1265,7 @@ def main():
             )
 
         if h1_markets:
-            print(
-                "\n>>> Training 1H with LOGISTIC ONLY (Best Practice: Simple for Noisy Targets)")
+            print("\n>>> Training 1H with LOGISTIC ONLY (Best Practice: Simple for Noisy Targets)")
             train_all_markets(
                 model_type="logistic",
                 test_size=args.test_size,
@@ -1237,7 +1279,9 @@ def main():
         # Export feature contract for the trained models
         try:
             from pathlib import Path
+
             from src.utils.model_features import export_model_feature_contract
+
             models_dir = Path(args.output_dir or settings.models_dir)
             export_model_feature_contract(models_dir=models_dir)
             print(f"[OK] Feature contract exported to {models_dir / 'model_features.json'}")
@@ -1259,7 +1303,9 @@ def main():
         # Export feature contract for the trained models
         try:
             from pathlib import Path
+
             from src.utils.model_features import export_model_feature_contract
+
             models_dir = Path(args.output_dir or settings.models_dir)
             export_model_feature_contract(models_dir=models_dir)
             print(f"[OK] Feature contract exported to {models_dir / 'model_features.json'}")

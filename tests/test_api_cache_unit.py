@@ -46,9 +46,7 @@ async def test_api_cache_get_or_fetch_uses_cache(monkeypatch):
     assert v2 == {"data": 1}
     assert calls["n"] == 1
 
-    v3 = await cache.get_or_fetch(
-        "k2", fetch_fn, ttl_hours=2.0, source="test", force_refresh=True
-    )
+    v3 = await cache.get_or_fetch("k2", fetch_fn, ttl_hours=2.0, source="test", force_refresh=True)
     assert v3 == {"data": 2}
     assert calls["n"] == 2
 

@@ -26,34 +26,34 @@ Usage:
     # Accuracy-only mode
     python scripts/historical_backtest_extended.py --no-pricing
 """
-from src.prediction.engine import map_1h_features_to_fg_names
-from src.prediction.feature_validation import (
-    MissingFeaturesError,
-    validate_and_prepare_features,
-)
-from src.modeling.season_utils import get_season_for_date
-from src.utils.historical_guard import require_historical_mode, resolve_historical_output_root, ensure_historical_path
+import argparse
+import json
+import logging
+import os
+import subprocess
+import sys
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
 import joblib
 import numpy as np
 import pandas as pd
-import argparse
-import os
-import sys
-import logging
-import json
-import subprocess
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass, field
+
+from src.modeling.season_utils import get_season_for_date
+from src.prediction.engine import map_1h_features_to_fg_names
+from src.prediction.feature_validation import MissingFeaturesError, validate_and_prepare_features
+from src.utils.historical_guard import (
+    ensure_historical_path,
+    require_historical_mode,
+    resolve_historical_output_root,
+)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -105,9 +105,11 @@ def ensure_canonical_training_data(
 # DATA CLASSES
 # ============================================================================
 
+
 @dataclass
 class MarketConfig:
     """Configuration for a single market."""
+
     market_key: str
     model_file: str
     label_col: str
@@ -124,6 +126,7 @@ class MarketConfig:
 @dataclass
 class BetResult:
     """Result of a single bet."""
+
     date: str
     home_team: str
     away_team: str
@@ -144,6 +147,7 @@ class BetResult:
 @dataclass
 class MoneylineMetrics:
     """Extended metrics for moneyline bets including vig tracking."""
+
     raw_roi: Optional[float]  # Actual P&L ROI
     fair_calibration_error: Optional[float]  # Model vs fair prob
     avg_vig_paid: Optional[float]  # Average overround
@@ -153,6 +157,7 @@ class MoneylineMetrics:
 # ============================================================================
 # MARKET CONFIGURATIONS
 # ============================================================================
+
 
 def get_default_market_configs() -> Dict[str, MarketConfig]:
     """Get default configurations for all 6 markets."""
@@ -238,6 +243,7 @@ def get_default_market_configs() -> Dict[str, MarketConfig]:
 # MONEYLINE VIG CALCULATIONS
 # ============================================================================
 
+
 def american_to_implied_prob(odds: float) -> float:
     """Convert American odds to implied probability."""
     if odds < 0:
@@ -290,6 +296,7 @@ def calculate_profit(won: bool, odds: int) -> float:
 # MODEL LOADING
 # ============================================================================
 
+
 def load_production_model(model_path: Path) -> Tuple[object, List[str]]:
     """Load a production model and its feature list."""
     data = joblib.load(model_path)
@@ -299,8 +306,7 @@ def load_production_model(model_path: Path) -> Tuple[object, List[str]]:
         features = data.get("feature_columns", [])
     else:
         model = data
-        features = model.feature_names_in_.tolist() if hasattr(
-            model, 'feature_names_in_') else []
+        features = model.feature_names_in_.tolist() if hasattr(model, "feature_names_in_") else []
 
     return model, features
 
@@ -308,6 +314,7 @@ def load_production_model(model_path: Path) -> Tuple[object, List[str]]:
 # ============================================================================
 # FEATURE EXTRACTION
 # ============================================================================
+
 
 def pick_first_value(game: pd.Series, candidates: List[str]) -> Optional[float]:
     """Return the first non-null value from candidate columns."""
@@ -380,7 +387,9 @@ def get_actual_label(game: pd.Series, config: MarketConfig) -> Optional[int]:
     return None
 
 
-def get_moneyline_odds(game: pd.Series, config: MarketConfig) -> Tuple[Optional[float], Optional[float]]:
+def get_moneyline_odds(
+    game: pd.Series, config: MarketConfig
+) -> Tuple[Optional[float], Optional[float]]:
     """Get home and away moneyline odds for vig calculation."""
     home_odds = pick_first_value(game, config.price_cols.get("home", []))
     away_odds = pick_first_value(game, config.price_cols.get("away", []))
@@ -390,6 +399,7 @@ def get_moneyline_odds(game: pd.Series, config: MarketConfig) -> Tuple[Optional[
 # ============================================================================
 # BACKTEST ENGINE
 # ============================================================================
+
 
 def run_backtest(
     df: pd.DataFrame,
@@ -418,14 +428,11 @@ def run_backtest(
 
         if config.is_moneyline and not model_path.exists():
             # For moneylines without dedicated model, use ELO-based prediction
-            print(
-                f"  [INFO] {market_key}: No model found, will use ELO-based predictions")
-            loaded_models[market_key] = {
-                "model": None, "features": [], "use_elo": True}
+            print(f"  [INFO] {market_key}: No model found, will use ELO-based predictions")
+            loaded_models[market_key] = {"model": None, "features": [], "use_elo": True}
         elif model_path.exists():
             model, features = load_production_model(model_path)
-            loaded_models[market_key] = {
-                "model": model, "features": features, "use_elo": False}
+            loaded_models[market_key] = {"model": model, "features": features, "use_elo": False}
             print(f"  [OK] Loaded {market_key}: {len(features)} features")
         else:
             print(f"  [WARN] Model not found: {model_path}")
@@ -443,12 +450,10 @@ def run_backtest(
         # Filter data by market's minimum date
         market_df = df.copy()
         if config.min_date:
-            market_df = market_df[market_df["date"]
-                                  >= pd.to_datetime(config.min_date)]
+            market_df = market_df[market_df["date"] >= pd.to_datetime(config.min_date)]
 
         market_df = market_df.sort_values("date").reset_index(drop=True)
-        print(
-            f"\n  {market_key}: {len(market_df)} games (from {config.min_date or 'start'})")
+        print(f"\n  {market_key}: {len(market_df)} games (from {config.min_date or 'start'})")
 
         for row_idx, (_, game) in enumerate(market_df.iterrows()):
             # Skip early games for training
@@ -508,8 +513,7 @@ def run_backtest(
                 home_odds, away_odds = get_moneyline_odds(game, config)
 
                 if home_odds is not None and away_odds is not None:
-                    fair_home, fair_away, vig_pct = remove_vig_proportional(
-                        home_odds, away_odds)
+                    fair_home, fair_away, vig_pct = remove_vig_proportional(home_odds, away_odds)
                     odds = int(home_odds) if side == "home" else int(away_odds)
                     implied_prob = american_to_implied_prob(odds)
                     fair_prob = fair_home if side == "home" else fair_away
@@ -530,27 +534,28 @@ def run_backtest(
                 fair_prob = None
                 vig_pct = None
 
-            won = (pred_class == actual_label)
-            profit = calculate_profit(
-                won, odds) if odds and pricing_enabled else None
+            won = pred_class == actual_label
+            profit = calculate_profit(won, odds) if odds and pricing_enabled else None
 
-            results[market_key].append(BetResult(
-                date=str(game["date"].date()),
-                home_team=game["home_team"],
-                away_team=game["away_team"],
-                market=market_key,
-                side=side,
-                line=line,
-                confidence=confidence,
-                predicted_prob=predicted_prob,
-                implied_prob=implied_prob,
-                fair_prob=fair_prob,
-                actual_label=actual_label,
-                won=won,
-                odds=odds,
-                profit=profit,
-                vig_pct=vig_pct,
-            ))
+            results[market_key].append(
+                BetResult(
+                    date=str(game["date"].date()),
+                    home_team=game["home_team"],
+                    away_team=game["away_team"],
+                    market=market_key,
+                    side=side,
+                    line=line,
+                    confidence=confidence,
+                    predicted_prob=predicted_prob,
+                    implied_prob=implied_prob,
+                    fair_prob=fair_prob,
+                    actual_label=actual_label,
+                    won=won,
+                    odds=odds,
+                    profit=profit,
+                    vig_pct=vig_pct,
+                )
+            )
 
     return results
 
@@ -558,6 +563,7 @@ def run_backtest(
 # ============================================================================
 # REPORTING
 # ============================================================================
+
 
 def calculate_moneyline_metrics(bets: List[BetResult]) -> MoneylineMetrics:
     """Calculate extended metrics for moneyline bets."""
@@ -572,11 +578,9 @@ def calculate_moneyline_metrics(bets: List[BetResult]) -> MoneylineMetrics:
     calibration_errors = []
     for b in bets:
         if b.fair_prob is not None:
-            pred_prob = b.predicted_prob if b.side == "home" else (
-                1 - b.predicted_prob)
+            pred_prob = b.predicted_prob if b.side == "home" else (1 - b.predicted_prob)
             calibration_errors.append(abs(pred_prob - b.fair_prob))
-    fair_calibration_error = np.mean(
-        calibration_errors) if calibration_errors else None
+    fair_calibration_error = np.mean(calibration_errors) if calibration_errors else None
 
     # Average vig paid
     vigs = [b.vig_pct for b in bets if b.vig_pct is not None]
@@ -619,7 +623,8 @@ def print_summary(
 
         if roi is not None:
             print(
-                f"  Bets: {n_bets:,}  |  Accuracy: {accuracy:.1%}  |  ROI: {roi:+.2f}%  |  Profit: {profit:+.1f}u")
+                f"  Bets: {n_bets:,}  |  Accuracy: {accuracy:.1%}  |  ROI: {roi:+.2f}%  |  Profit: {profit:+.1f}u"
+            )
         else:
             print(f"  Bets: {n_bets:,}  |  Accuracy: {accuracy:.1%}")
 
@@ -630,8 +635,7 @@ def print_summary(
             if ml_metrics.raw_roi is not None:
                 print(f"  Raw ROI: {ml_metrics.raw_roi:+.2f}%")
             if ml_metrics.fair_calibration_error is not None:
-                print(
-                    f"  Fair Calibration Error: {ml_metrics.fair_calibration_error:.3f}")
+                print(f"  Fair Calibration Error: {ml_metrics.fair_calibration_error:.3f}")
             if ml_metrics.avg_vig_paid is not None:
                 print(f"  Avg Vig Paid: {ml_metrics.avg_vig_paid:.2f}%")
 
@@ -649,15 +653,14 @@ def print_summary(
             if tier_bets:
                 tier_wins = sum(1 for b in tier_bets if b.won)
                 tier_acc = tier_wins / len(tier_bets)
-                tier_profit = sum(
-                    b.profit for b in tier_bets if b.profit is not None)
+                tier_profit = sum(b.profit for b in tier_bets if b.profit is not None)
                 if tier_profit is not None and len(tier_bets) > 0:
                     tier_roi = tier_profit / len(tier_bets) * 100
                     print(
-                        f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc, {tier_roi:+6.2f}% ROI")
+                        f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc, {tier_roi:+6.2f}% ROI"
+                    )
                 else:
-                    print(
-                        f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc")
+                    print(f"    {tier_name}: {len(tier_bets):4d} bets, {tier_acc:5.1%} acc")
 
         summary["markets"][market] = {
             "n_bets": n_bets,
@@ -681,6 +684,7 @@ def print_summary(
 # ============================================================================
 # CLI
 # ============================================================================
+
 
 def normalize_markets_arg(markets_str: str) -> List[str]:
     """Parse comma-separated markets argument."""
@@ -766,8 +770,9 @@ def main():
 
     # Market selection
     parser.add_argument(
-        "--markets", default="all",
-        help="Comma-separated markets: fg, 1h, spread, total, moneyline, ml, or specific keys"
+        "--markets",
+        default="all",
+        help="Comma-separated markets: fg, 1h, spread, total, moneyline, ml, or specific keys",
     )
 
     # Date filters
@@ -775,8 +780,7 @@ def main():
     parser.add_argument("--end-date", help="End date (YYYY-MM-DD)")
 
     # Pricing mode
-    parser.add_argument("--no-pricing", action="store_true",
-                        help="Accuracy-only mode")
+    parser.add_argument("--no-pricing", action="store_true", help="Accuracy-only mode")
 
     # Per-market juice (American odds)
     parser.add_argument("--fg-spread-juice", type=int, default=-110)
@@ -799,14 +803,12 @@ def main():
     args = parser.parse_args()
     if args.output_json is None:
         args.output_json = str(
-            resolve_historical_output_root("backtest_results")
-            / "extended_backtest_results.json"
+            resolve_historical_output_root("backtest_results") / "extended_backtest_results.json"
         )
     ensure_historical_path(Path(args.output_json).parent, "output-json")
 
     if getattr(args, "ensure_canonical", False):
-        ensure_canonical_training_data(
-            args.data, version=args.azure_version, verify=True)
+        ensure_canonical_training_data(args.data, version=args.azure_version, verify=True)
 
     print("=" * 80)
     print("EXTENDED BACKTEST")
@@ -850,12 +852,10 @@ def main():
     df = pd.read_csv(data_path, low_memory=False)
 
     # Parse dates
-    df["date"] = pd.to_datetime(
-        df.get("game_date", df.get("date")), errors="coerce")
+    df["date"] = pd.to_datetime(df.get("game_date", df.get("date")), errors="coerce")
     df = df.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
 
-    print(
-        f"Loaded {len(df)} games from {df['date'].min().date()} to {df['date'].max().date()}")
+    print(f"Loaded {len(df)} games from {df['date'].min().date()} to {df['date'].max().date()}")
 
     # Apply date filters
     if args.start_date:

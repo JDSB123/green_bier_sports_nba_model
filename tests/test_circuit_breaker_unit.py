@@ -20,7 +20,9 @@ def test_circuit_breaker_opens_after_threshold_failures(monkeypatch):
 
     breaker = CircuitBreaker(
         "test",
-        CircuitBreakerConfig(failure_threshold=2, success_threshold=1, timeout=10.0, expected_exception=ValueError),
+        CircuitBreakerConfig(
+            failure_threshold=2, success_threshold=1, timeout=10.0, expected_exception=ValueError
+        ),
     )
 
     def bad():
@@ -48,7 +50,9 @@ def test_circuit_breaker_transitions_to_half_open_after_timeout(monkeypatch):
 
     breaker = CircuitBreaker(
         "test",
-        CircuitBreakerConfig(failure_threshold=1, success_threshold=2, timeout=5.0, expected_exception=RuntimeError),
+        CircuitBreakerConfig(
+            failure_threshold=1, success_threshold=2, timeout=5.0, expected_exception=RuntimeError
+        ),
     )
 
     def bad():
@@ -80,7 +84,9 @@ def test_circuit_breaker_unexpected_exception_does_not_count(monkeypatch):
 
     breaker = CircuitBreaker(
         "test",
-        CircuitBreakerConfig(failure_threshold=1, success_threshold=1, timeout=1.0, expected_exception=ValueError),
+        CircuitBreakerConfig(
+            failure_threshold=1, success_threshold=1, timeout=1.0, expected_exception=ValueError
+        ),
     )
 
     def boom():

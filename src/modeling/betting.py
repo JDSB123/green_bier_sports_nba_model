@@ -5,6 +5,7 @@ expected value and staking recommendations.
 This module is intentionally lightweight so it can be reused by
 backtests and live prediction scripts.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -86,7 +87,11 @@ def annotate_value_bets(
     # Determine decimal odds per row
     if odds_col and odds_col in df.columns:
         dec_odds = df[odds_col].apply(
-            lambda x: american_to_decimal(x) if pd.notna(x) and x != 0 else american_to_decimal(default_american_odds)
+            lambda x: (
+                american_to_decimal(x)
+                if pd.notna(x) and x != 0
+                else american_to_decimal(default_american_odds)
+            )
         )
     else:
         dec_odds = pd.Series(
@@ -107,15 +112,3 @@ def annotate_value_bets(
     ]
 
     return df
-
-
-
-
-
-
-
-
-
-
-
-

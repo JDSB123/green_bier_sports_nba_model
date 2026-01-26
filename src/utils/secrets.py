@@ -8,17 +8,20 @@ Reads secrets from multiple sources in priority order:
 
 This ensures the same code works in all environments.
 """
+
 from __future__ import annotations
+
+import logging
 import os
 from pathlib import Path
 from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class SecretNotFoundError(Exception):
     """Raised when a required secret is not found."""
+
     pass
 
 
@@ -144,6 +147,7 @@ def read_secret_lax(secret_name: str) -> str:
         return result
     except SecretNotFoundError:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.warning(f"Secret '{secret_name}' not found - will fail at runtime when needed")
         return ""  # Return empty string to avoid import-time failure

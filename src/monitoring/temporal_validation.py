@@ -12,12 +12,12 @@ CRITICAL: This module validates that:
 
 from __future__ import annotations
 
-import logging
-from datetime import datetime, date, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
-from pathlib import Path
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class TemporalLeakageError(ValueError):
 @dataclass
 class TemporalValidationResult:
     """Result of temporal validation check."""
+
     is_valid: bool
     game_date: date
     feature_name: str
@@ -69,35 +70,53 @@ class TemporalValidator:
     # Features that MUST be strictly historical (game-outcome dependent)
     STRICT_TEMPORAL_FEATURES = {
         # Rolling averages
-        "home_ppg", "away_ppg",
-        "home_papg", "away_papg",
-        "home_avg_margin", "away_avg_margin",
-        "home_win_pct", "away_win_pct",
+        "home_ppg",
+        "away_ppg",
+        "home_papg",
+        "away_papg",
+        "home_avg_margin",
+        "away_avg_margin",
+        "home_win_pct",
+        "away_win_pct",
         # Period-specific rolling
-        "home_q1_ppg", "away_q1_ppg",
-        "home_q1_papg", "away_q1_papg",
-        "home_1h_ppg", "away_1h_ppg",
-        "home_1h_papg", "away_1h_papg",
+        "home_q1_ppg",
+        "away_q1_ppg",
+        "home_q1_papg",
+        "away_q1_papg",
+        "home_1h_ppg",
+        "away_1h_ppg",
+        "home_1h_papg",
+        "away_1h_papg",
         # Form
-        "home_form", "away_form",
-        "home_last_3_margin", "away_last_3_margin",
+        "home_form",
+        "away_form",
+        "home_last_3_margin",
+        "away_last_3_margin",
         # H2H
-        "h2h_win_pct", "h2h_avg_margin",
+        "h2h_win_pct",
+        "h2h_avg_margin",
         # Streaks
-        "home_streak", "away_streak",
+        "home_streak",
+        "away_streak",
     }
 
     # Features that can use same-day data (pre-game info)
     SAME_DAY_ALLOWED = {
         # Lines are set before game starts
-        "spread_line", "total_line",
-        "fh_spread_line", "fh_total_line",
-        "q1_spread_line", "q1_total_line",
+        "spread_line",
+        "total_line",
+        "fh_spread_line",
+        "fh_total_line",
+        "q1_spread_line",
+        "q1_total_line",
         # Injury reports (pre-game)
-        "home_injury_impact", "away_injury_impact",
+        "home_injury_impact",
+        "away_injury_impact",
         # Rest days (computed from schedule)
-        "home_rest_days", "away_rest_days",
-        "home_b2b", "away_b2b",
+        "home_rest_days",
+        "away_rest_days",
+        "home_b2b",
+        "away_b2b",
     }
 
     def __init__(self, strict_mode: bool = True):
@@ -150,7 +169,7 @@ class TemporalValidator:
                     feature_name=feature_name,
                     game_date=game_date,
                     data_date=data_date,
-                    details="Feature uses game outcome data from same day or future."
+                    details="Feature uses game outcome data from same day or future.",
                 )
             else:
                 logger.warning(
@@ -205,7 +224,7 @@ class TemporalValidator:
                 feature_name=window_name,
                 game_date=game_date,
                 data_date=max(data_dates) if data_dates else game_date,
-                details=f"Found {len(violations)} future games in window: {violations[:3]}"
+                details=f"Found {len(violations)} future games in window: {violations[:3]}",
             )
 
         return TemporalValidationResult(

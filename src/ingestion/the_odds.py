@@ -1,15 +1,17 @@
 from __future__ import annotations
-import os
+
 import datetime as dt
+import os
 from typing import Any, Dict, List
+
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.config import settings
-from src.utils.logging import get_logger
-from src.utils.circuit_breaker import get_odds_api_breaker
-from src.utils.security import mask_api_key
 from src.ingestion.standardize import standardize_game_data
+from src.utils.circuit_breaker import get_odds_api_breaker
+from src.utils.logging import get_logger
+from src.utils.security import mask_api_key
 
 logger = get_logger(__name__)
 
@@ -17,6 +19,7 @@ logger = get_logger(__name__)
 # =============================================================================
 # FOUNDATION ENDPOINTS
 # =============================================================================
+
 
 @retry(
     stop=stop_after_attempt(3),
@@ -64,10 +67,7 @@ async def fetch_sports(
 
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.get(
-                f"{settings.the_odds_base_url}/sports",
-                params=params
-            )
+            resp = await client.get(f"{settings.the_odds_base_url}/sports", params=params)
             resp.raise_for_status()
             return resp.json()
 
@@ -83,6 +83,7 @@ async def fetch_sports(
 # =============================================================================
 # CORE ODDS ENDPOINTS
 # =============================================================================
+
 
 @retry(
     stop=stop_after_attempt(3),
@@ -248,8 +249,7 @@ async def fetch_event_odds(
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
-                f"{settings.the_odds_base_url}/sports/{sport}/events/{event_id}/odds",
-                params=params
+                f"{settings.the_odds_base_url}/sports/{sport}/events/{event_id}/odds", params=params
             )
             resp.raise_for_status()
             return resp.json()
@@ -328,7 +328,7 @@ async def fetch_event_markets(
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
                 f"{settings.the_odds_base_url}/sports/{sport}/events/{event_id}/markets",
-                params=params
+                params=params,
             )
             resp.raise_for_status()
             return resp.json()
@@ -337,7 +337,9 @@ async def fetch_event_markets(
         data = await breaker.call_async(_fetch_with_client)
         bookmakers = data.get("bookmakers", [])
         total_markets = sum(len(bm.get("markets", [])) for bm in bookmakers)
-        logger.info(f"Fetched {total_markets} markets from {len(bookmakers)} bookmakers for event {event_id}")
+        logger.info(
+            f"Fetched {total_markets} markets from {len(bookmakers)} bookmakers for event {event_id}"
+        )
     except Exception as e:
         logger.error(f"Failed to fetch event markets from The Odds API: {e}")
         raise
@@ -360,6 +362,7 @@ async def fetch_event_markets(
 # =============================================================================
 # EVENTS & SCORES ENDPOINTS
 # =============================================================================
+
 
 @retry(
     stop=stop_after_attempt(3),
@@ -405,8 +408,7 @@ async def fetch_events(
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
-                f"{settings.the_odds_base_url}/sports/{sport}/events",
-                params=params
+                f"{settings.the_odds_base_url}/sports/{sport}/events", params=params
             )
             resp.raise_for_status()
             return resp.json()
@@ -492,8 +494,7 @@ async def fetch_scores(
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
-                f"{settings.the_odds_base_url}/sports/{sport}/scores",
-                params=params
+                f"{settings.the_odds_base_url}/sports/{sport}/scores", params=params
             )
             resp.raise_for_status()
             return resp.json()
@@ -592,8 +593,7 @@ async def fetch_historical_odds(
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
-                f"{settings.the_odds_base_url}/historical/sports/{sport}/odds",
-                params=params
+                f"{settings.the_odds_base_url}/historical/sports/{sport}/odds", params=params
             )
             resp.raise_for_status()
             return resp.json()
@@ -681,8 +681,7 @@ async def fetch_historical_events(
     async def _fetch_with_client():
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
-                f"{settings.the_odds_base_url}/historical/sports/{sport}/events",
-                params=params
+                f"{settings.the_odds_base_url}/historical/sports/{sport}/events", params=params
             )
             resp.raise_for_status()
             return resp.json()
@@ -785,7 +784,7 @@ async def fetch_historical_event_odds(
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.get(
                 f"{settings.the_odds_base_url}/historical/sports/{sport}/events/{event_id}/odds",
-                params=params
+                params=params,
             )
             resp.raise_for_status()
             return resp.json()
@@ -820,6 +819,7 @@ async def fetch_historical_event_odds(
 # UTILITY FUNCTIONS
 # =============================================================================
 
+
 async def save_odds(
     data: list[Dict[str, Any]],
     out_dir: str | None = None,
@@ -840,6 +840,7 @@ async def save_odds(
     ts = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_path = os.path.join(out_dir, f"{prefix}_{ts}.json")
     import json
+
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     logger.info(f"Saved {prefix} data to {out_path}")

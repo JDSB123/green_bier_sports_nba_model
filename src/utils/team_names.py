@@ -5,16 +5,16 @@ This module maps arbitrary team name variants to canonical IDs (nba_*).
 For ESPN-format names used in ingestion and prediction, use
 src/ingestion/standardize.normalize_team_to_espn (source of truth).
 """
+
+import difflib
 import json
 from pathlib import Path
-from typing import Optional, List
-import difflib
-
+from typing import List, Optional
 
 # Load team mapping
-MAPPING_FILE = Path(__file__).parent.parent / 'ingestion' / 'team_mapping.json'
+MAPPING_FILE = Path(__file__).parent.parent / "ingestion" / "team_mapping.json"
 
-with open(MAPPING_FILE, 'r') as f:
+with open(MAPPING_FILE, "r") as f:
     TEAM_MAPPING = json.load(f)
 
 # Create reverse lookup: any variant -> canonical ID
@@ -119,8 +119,7 @@ def find_best_match(query: str, candidates: List[str], threshold: float = 0.8) -
     Returns:
         Best matching candidate or None
     """
-    matches = difflib.get_close_matches(
-        query, candidates, n=1, cutoff=threshold)
+    matches = difflib.get_close_matches(query, candidates, n=1, cutoff=threshold)
     return matches[0] if matches else None
 
 
@@ -153,7 +152,7 @@ def get_team_abbreviation(team_name: str) -> str:
         3-letter abbreviation (e.g., "LAL")
     """
     canonical_id = normalize_team_name(team_name)
-    if canonical_id.startswith('nba_'):
+    if canonical_id.startswith("nba_"):
         abbrev = canonical_id[4:].upper()
         # Handle special cases
         if abbrev == "UTAH":
@@ -183,14 +182,14 @@ def are_same_team(team1: str, team2: str) -> bool:
     """
     id1 = normalize_team_name(team1)
     id2 = normalize_team_name(team2)
-    return id1 == id2 and id1.startswith('nba_')
+    return id1 == id2 and id1.startswith("nba_")
 
 
 # Export main functions
 __all__ = [
-    'normalize_team_name',
-    'get_canonical_name',
-    'reconcile_team_names',
-    'get_team_abbreviation',
-    'are_same_team',
+    "normalize_team_name",
+    "get_canonical_name",
+    "reconcile_team_names",
+    "get_team_abbreviation",
+    "are_same_team",
 ]

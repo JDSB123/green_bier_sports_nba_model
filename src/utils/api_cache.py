@@ -23,15 +23,16 @@ Usage:
     # Invalidate cache (clears memory cache only)
     api_cache.invalidate("the_odds_events_2024-01-15")
 """
+
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Awaitable, TypeVar, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Awaitable, Callable, Optional, TypeVar
 
 from src.config import settings
 from src.utils.logging import get_logger
@@ -44,6 +45,7 @@ T = TypeVar("T")
 @dataclass
 class CacheEntry:
     """Metadata for a cached API response."""
+
     key: str
     data: Any
     created_at: float  # Unix timestamp
@@ -61,7 +63,7 @@ class APICache:
 
     # TTLs are ignored in STRICT MODE - always fetch fresh
     TTL_STATIC = 0  # DISABLED
-    TTL_DAILY = 0   # DISABLED
+    TTL_DAILY = 0  # DISABLED
     TTL_FREQUENT = 0  # DISABLED
     TTL_LIVE = 0  # DISABLED
 
@@ -80,7 +82,11 @@ class APICache:
     def _get_cache_path(self, key: str) -> Path:
         """Generate cache file path from key."""
         # Use hash for long keys
-        safe_key = hashlib.md5(key.encode()).hexdigest()[:16] + "_" + key.replace("/", "_").replace(":", "_")[:50]
+        safe_key = (
+            hashlib.md5(key.encode()).hexdigest()[:16]
+            + "_"
+            + key.replace("/", "_").replace(":", "_")[:50]
+        )
         return self.cache_dir / f"{safe_key}.json"
 
     def _is_valid(self, entry: CacheEntry) -> bool:
@@ -229,10 +235,7 @@ class APICache:
                 pass
 
         # Clear memory cache entries from source
-        keys_to_remove = [
-            k for k, v in self._memory_cache.items()
-            if v.source == source
-        ]
+        keys_to_remove = [k for k, v in self._memory_cache.items() if v.source == source]
         for key in keys_to_remove:
             del self._memory_cache[key]
             count += 1

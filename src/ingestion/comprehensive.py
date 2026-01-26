@@ -27,17 +27,18 @@ Usage:
     # Check what data we have
     status = ingestion.get_status()
 """
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime, date
-from typing import Any, Dict, List, Optional
+from datetime import date, datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from src.config import settings
+from src.utils.api_cache import APICache, api_cache
 from src.utils.logging import get_logger
-from src.utils.api_cache import api_cache, APICache
 
 logger = get_logger(__name__)
 
@@ -45,6 +46,7 @@ logger = get_logger(__name__)
 @dataclass
 class IngestionResult:
     """Result from an ingestion operation."""
+
     source: str
     endpoint: str
     success: bool
@@ -57,6 +59,7 @@ class IngestionResult:
 @dataclass
 class IngestionStatus:
     """Overall ingestion status."""
+
     results: List[IngestionResult] = field(default_factory=list)
     total_api_calls: int = 0
     total_cache_hits: int = 0
@@ -413,7 +416,9 @@ class ComprehensiveIngestion:
         )
 
         # Game stats - changes daily
-        key_game_stats = f"api_bball_game_stats_{settings.current_season}_{date.today().isoformat()}"
+        key_game_stats = (
+            f"api_bball_game_stats_{settings.current_season}_{date.today().isoformat()}"
+        )
         results["game_stats_teams"] = await api_cache.get_or_fetch(
             key=key_game_stats,
             fetch_fn=client.fetch_game_stats_teams,
@@ -424,7 +429,9 @@ class ComprehensiveIngestion:
         )
 
         for endpoint, data in results.items():
-            count = data.count if hasattr(data, "count") else len(data) if isinstance(data, list) else 0
+            count = (
+                data.count if hasattr(data, "count") else len(data) if isinstance(data, list) else 0
+            )
             self._record_result("api_basketball", f"/{endpoint}", True, count)
 
         return results
@@ -617,7 +624,7 @@ class ComprehensiveIngestion:
 
         Aggregates injury data from multiple sources for redundancy.
         ESPN: FREE, unlimited. API-Basketball: If API key configured.
-        
+
         TTL: 2 hours
         """
         from src.ingestion.injuries import fetch_all_injuries
@@ -636,7 +643,7 @@ class ComprehensiveIngestion:
         # fetch_all_injuries returns InjuryReport objects, convert to dict if needed
         result_list = []
         for injury in data:
-            if hasattr(injury, '__dict__'):
+            if hasattr(injury, "__dict__"):
                 result_list.append(injury.__dict__)
             else:
                 result_list.append(injury)
@@ -663,18 +670,14 @@ class ComprehensiveIngestion:
             self.fetch_the_odds_events(),
             self.fetch_the_odds_scores(),
             self.fetch_the_odds_betting_splits(),
-
             # API-Basketball - Essential
             self.fetch_api_basketball_essential(),
             self.fetch_api_basketball_standings(),
-
             # BetsAPI - Live odds, quarters, player props
             self.fetch_betsapi_events(),
             self.fetch_betsapi_all_odds(),
-
             # Action Network - Betting splits
             self.fetch_action_network_splits(),
-
             # ESPN - FREE
             self.fetch_espn_schedule(),
             self.fetch_injuries(),
@@ -707,7 +710,9 @@ class ComprehensiveIngestion:
             logger.warning(f"All quarters odds fetch failed: {e}")
             self.status.errors.append(f"Q1-Q4 odds: {e}")
 
-        logger.info(f"Ingestion complete: {len(self.status.results)} endpoints, {len(self.status.errors)} errors")
+        logger.info(
+            f"Ingestion complete: {len(self.status.results)} endpoints, {len(self.status.errors)} errors"
+        )
         return self.status
 
     async def ingest_for_slate(self, target_date: Optional[str] = None) -> IngestionStatus:

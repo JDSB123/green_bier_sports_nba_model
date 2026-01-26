@@ -10,11 +10,7 @@ import pytest
 def _load_feature_names(joblib_path: Path) -> Set[str]:
     payload: dict[str, Any] = joblib.load(joblib_path)
     model = payload.get("pipeline") or payload.get("model")
-    feats = (
-        payload.get("feature_columns")
-        or payload.get("model_columns")
-        or []
-    )
+    feats = payload.get("feature_columns") or payload.get("model_columns") or []
 
     # Prefer the model's internal feature list when present
     if hasattr(model, "feature_names_in_"):
@@ -70,9 +66,7 @@ def _assert_no_forbidden_features(features: Iterable[str]) -> None:
 def test_production_models_do_not_use_postgame_outcomes_as_features(fname: str) -> None:
     repo_root = Path(__file__).resolve().parent.parent
     model_path = repo_root / "models" / "production" / fname
-    assert model_path.exists(), (
-        f"Missing production model artifact: {model_path}"
-    )
+    assert model_path.exists(), f"Missing production model artifact: {model_path}"
 
     feature_names = _load_feature_names(model_path)
     _assert_no_forbidden_features(feature_names)

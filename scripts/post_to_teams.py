@@ -7,17 +7,17 @@ Usage:
     python scripts/post_to_teams.py --date 2025-12-19
     python scripts/post_to_teams.py --date today --allow-empty
 """
-import json
-import sys
 import argparse
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from urllib.request import Request, urlopen
-from urllib.error import URLError
-from urllib.parse import urlencode
+import json
 
 # Configuration from environment (no hardcoded secrets or URLs)
 import os
+import sys
+from datetime import datetime
+from urllib.error import URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from zoneinfo import ZoneInfo
 
 TEAMS_WEBHOOK_URL = os.getenv("TEAMS_WEBHOOK_URL", "").strip() or None
 
@@ -42,7 +42,9 @@ def load_model_timestamp(path: str = MODEL_PACK_PATH) -> str:
             data = json.load(f)
         ts = data.get("created_at") or ""
         if ts:
-            dt = datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(ZoneInfo("America/Chicago"))
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(
+                ZoneInfo("America/Chicago")
+            )
             return dt.strftime("%Y-%m-%d %I:%M %p CST")
     except Exception:
         pass
@@ -109,7 +111,11 @@ def format_teams_message(data: dict) -> dict:
 
     lineup_params = {"date": date_label}
     api_base = (API_BASE or "").strip()
-    api_lineup_url = _append_query(f"{api_base.rstrip('/')}/weekly-lineup/html", lineup_params) if api_base else ""
+    api_lineup_url = (
+        _append_query(f"{api_base.rstrip('/')}/weekly-lineup/html", lineup_params)
+        if api_base
+        else ""
+    )
     public_lineup_url = _append_query(PUBLIC_WEEKLY_LINEUP_URL, lineup_params)
 
     # Generate title with CST timestamp
@@ -123,18 +129,21 @@ def format_teams_message(data: dict) -> dict:
     if locked_snapshot_at_cst:
         subtitle_parts.append(f"Locked picks: {locked_snapshot_at_cst}")
     subtitle = " | ".join(subtitle_parts)
-    
+
     # Count by tier
     elite = [p for p in plays if get_fire_tier(p.get("fire_rating")) == "ELITE"]
     strong = [p for p in plays if get_fire_tier(p.get("fire_rating")) == "STRONG"]
     good = [p for p in plays if get_fire_tier(p.get("fire_rating")) == "GOOD"]
-    
+
     # Sort by fire rating (most fires first), then by edge
-    sorted_plays = sorted(plays, key=lambda p: (
-        -_fire_count(p.get("fire_rating")),
-        -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0)
-    ))
-    
+    sorted_plays = sorted(
+        plays,
+        key=lambda p: (
+            -_fire_count(p.get("fire_rating")),
+            -float(p.get("edge", "0").replace("+", "").replace(" pts", "").replace("%", "") or 0),
+        ),
+    )
+
     # Build Adaptive Card with improved formatting
     card = {
         "type": "AdaptiveCard",
@@ -158,14 +167,14 @@ def format_teams_message(data: dict) -> dict:
                         "text": title,
                         "weight": "Bolder",
                         "size": "Large",
-                        "color": "Light"
+                        "color": "Light",
                     },
                     {
                         "type": "TextBlock",
                         "text": f"📊 {len(plays)} Total | 🔥🔥🔥 {len(elite)} ELITE | 🔥🔥 {len(strong)} STRONG | 🔥 {len(good)} GOOD",
                         "spacing": "Small",
                         "color": "Light",
-                        "size": "Medium"
+                        "size": "Medium",
                     },
                     {
                         "type": "TextBlock",
@@ -173,50 +182,111 @@ def format_teams_message(data: dict) -> dict:
                         "spacing": "Small",
                         "color": "Light",
                         "size": "Small",
-                        "wrap": True
-                    }
+                        "wrap": True,
+                    },
                 ],
-                "bleed": True
+                "bleed": True,
             },
             # Column headers
             {
                 "type": "ColumnSet",
                 "columns": [
-                    {"type": "Column", "width": "40", "items": [{"type": "TextBlock", "text": "PERIOD", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "MATCHUP", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": "PICK | MODEL", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": "MARKET", "weight": "Bolder", "size": "Small"}]},
-                    {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": "EDGE", "weight": "Bolder", "size": "Small"}]}
+                    {
+                        "type": "Column",
+                        "width": "40",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "PERIOD",
+                                "weight": "Bolder",
+                                "size": "Small",
+                            }
+                        ],
+                    },
+                    {
+                        "type": "Column",
+                        "width": "stretch",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "MATCHUP",
+                                "weight": "Bolder",
+                                "size": "Small",
+                            }
+                        ],
+                    },
+                    {
+                        "type": "Column",
+                        "width": "stretch",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "PICK | MODEL",
+                                "weight": "Bolder",
+                                "size": "Small",
+                            }
+                        ],
+                    },
+                    {
+                        "type": "Column",
+                        "width": "60",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "MARKET",
+                                "weight": "Bolder",
+                                "size": "Small",
+                            }
+                        ],
+                    },
+                    {
+                        "type": "Column",
+                        "width": "50",
+                        "items": [
+                            {
+                                "type": "TextBlock",
+                                "text": "EDGE",
+                                "weight": "Bolder",
+                                "size": "Small",
+                            }
+                        ],
+                    },
                 ],
                 "separator": True,
-                "spacing": "Small"
-            }
+                "spacing": "Small",
+            },
         ],
     }
 
     actions = []
     if api_lineup_url:
-        actions.append({
-            "type": "Action.OpenUrl",
-            "title": "Weekly Lineup (API)",
-            "url": api_lineup_url,
-        })
+        actions.append(
+            {
+                "type": "Action.OpenUrl",
+                "title": "Weekly Lineup (API)",
+                "url": api_lineup_url,
+            }
+        )
     if public_lineup_url:
-        actions.append({
-            "type": "Action.OpenUrl",
-            "title": "Weekly Lineup (Website)",
-            "url": public_lineup_url,
-        })
+        actions.append(
+            {
+                "type": "Action.OpenUrl",
+                "title": "Weekly Lineup (Website)",
+                "url": public_lineup_url,
+            }
+        )
     if actions:
         card["actions"] = actions
 
     if not plays:
-        card["body"].append({
-            "type": "TextBlock",
-            "text": "No official plays yet. Monitoring markets and will update as edges appear.",
-            "wrap": True,
-            "spacing": "Medium"
-        })
+        card["body"].append(
+            {
+                "type": "TextBlock",
+                "text": "No official plays yet. Monitoring markets and will update as edges appear.",
+                "wrap": True,
+                "spacing": "Medium",
+            }
+        )
 
     # Add rows - one per pick
     for p in sorted_plays:
@@ -226,31 +296,33 @@ def format_teams_message(data: dict) -> dict:
         teams = matchup_raw.split(" @ ") if " @ " in matchup_raw else ["", ""]
         away = teams[0].split("(")[0].strip()[:10] if len(teams) > 0 else ""
         home = teams[1].split("(")[0].strip()[:10] if len(teams) > 1 else ""
-        
+
         period = p.get("period", "FG").upper()
         pick = p.get("pick", "").strip()
         confidence = p.get("model_confidence", p.get("confidence", ""))
-        
+
         # Extract confidence percentage
         conf_pct = ""
         if confidence:
             if isinstance(confidence, str):
                 # Extract number from string like "55.2%"
                 import re
-                match = re.search(r'(\d+\.?\d*)', str(confidence))
+
+                match = re.search(r"(\d+\.?\d*)", str(confidence))
                 if match:
                     conf_pct = f"{float(match.group(1)):.0f}%"
             elif isinstance(confidence, (int, float)):
                 conf_pct = f"{float(confidence):.0f}%"
-        
+
         market = p.get("market", "").strip()
         market_line = p.get("pick_odds", p.get("market_line", "N/A"))
-        
+
         # Edge calculation: model line vs market line
         edge_str = p.get("edge", "")
         # Standardize edge to points: extract numeric value
         import re
-        edge_match = re.search(r'([+-]?\d+\.?\d*)', str(edge_str))
+
+        edge_match = re.search(r"([+-]?\d+\.?\d*)", str(edge_str))
         if edge_match:
             edge_val = float(edge_match.group(1))
             if "%" in str(edge_str):
@@ -260,29 +332,84 @@ def format_teams_message(data: dict) -> dict:
                 edge_pts = f"+{edge_val:.1f}pts" if edge_val > 0 else f"{edge_val:.1f}pts"
         else:
             edge_pts = "N/A"
-        
+
         fire_rating = p.get("fire_rating")
         tier = get_fire_tier(fire_rating)
-        
+
         # Tier color
         tier_color = "Attention" if tier == "ELITE" else "Warning" if tier == "STRONG" else "Good"
         tier_emoji = "🔥🔥🔥" if tier == "ELITE" else "🔥🔥" if tier == "STRONG" else "🔥"
         lock_emoji = "🔒" if p.get("locked") else ""
-        
+
         # Combine pick + confidence
         pick_with_conf = f"{pick}" + (f"\n({conf_pct})" if conf_pct else "")
-        
+
         row = {
             "type": "ColumnSet",
             "columns": [
-                {"type": "Column", "width": "40", "items": [{"type": "TextBlock", "text": period, "size": "Small", "weight": "Bolder"}]},
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": f"{away}\n@\n{home}", "size": "Small", "weight": "Bolder", "wrap": True}]},
-                {"type": "Column", "width": "stretch", "items": [{"type": "TextBlock", "text": pick_with_conf, "size": "Small", "weight": "Bolder", "color": "Accent", "wrap": True}]},
-                {"type": "Column", "width": "60", "items": [{"type": "TextBlock", "text": str(market_line)[:15], "size": "Small", "wrap": True}]},
-                {"type": "Column", "width": "50", "items": [{"type": "TextBlock", "text": f"{edge_pts}\n{tier_emoji}{lock_emoji}", "size": "Small", "weight": "Bolder", "color": tier_color, "wrap": True}]}
+                {
+                    "type": "Column",
+                    "width": "40",
+                    "items": [
+                        {"type": "TextBlock", "text": period, "size": "Small", "weight": "Bolder"}
+                    ],
+                },
+                {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": f"{away}\n@\n{home}",
+                            "size": "Small",
+                            "weight": "Bolder",
+                            "wrap": True,
+                        }
+                    ],
+                },
+                {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": pick_with_conf,
+                            "size": "Small",
+                            "weight": "Bolder",
+                            "color": "Accent",
+                            "wrap": True,
+                        }
+                    ],
+                },
+                {
+                    "type": "Column",
+                    "width": "60",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": str(market_line)[:15],
+                            "size": "Small",
+                            "wrap": True,
+                        }
+                    ],
+                },
+                {
+                    "type": "Column",
+                    "width": "50",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": f"{edge_pts}\n{tier_emoji}{lock_emoji}",
+                            "size": "Small",
+                            "weight": "Bolder",
+                            "color": tier_color,
+                            "wrap": True,
+                        }
+                    ],
+                },
             ],
             "spacing": "Small",
-            "separator": True
+            "separator": True,
         }
         card["body"].append(row)
 
@@ -290,15 +417,17 @@ def format_teams_message(data: dict) -> dict:
     footer_text = f"Generated {now_cst.strftime('%Y-%m-%d %I:%M %p')} CST | Model {model_version}"
     if model_updated_cst:
         footer_text += f" | Model updated {model_updated_cst}"
-    card["body"].append({
-        "type": "TextBlock",
-        "text": footer_text,
-        "spacing": "Medium",
-        "isSubtle": True,
-        "size": "Small",
-        "wrap": True
-    })
-    
+    card["body"].append(
+        {
+            "type": "TextBlock",
+            "text": footer_text,
+            "spacing": "Medium",
+            "isSubtle": True,
+            "size": "Small",
+            "wrap": True,
+        }
+    )
+
     # Wrap in Teams message format
     message = {
         "type": "message",
@@ -306,11 +435,11 @@ def format_teams_message(data: dict) -> dict:
             {
                 "contentType": "application/vnd.microsoft.card.adaptive",
                 "contentUrl": None,
-                "content": card
+                "content": card,
             }
-        ]
+        ],
     }
-    
+
     return message
 
 
@@ -325,7 +454,7 @@ def post_to_teams(message: dict) -> bool:
             TEAMS_WEBHOOK_URL,
             data=data,
             headers={"Content-Type": "application/json"},
-            method="POST"
+            method="POST",
         )
         with urlopen(req, timeout=30) as resp:
             if resp.status == 200:
@@ -342,7 +471,9 @@ def post_to_teams(message: dict) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="Post NBA picks to Teams")
     parser.add_argument("--date", default="today", help="Date (YYYY-MM-DD or 'today')")
-    parser.add_argument("--allow-empty", action="store_true", help="Post even if no plays are found")
+    parser.add_argument(
+        "--allow-empty", action="store_true", help="Post even if no plays are found"
+    )
     args = parser.parse_args()
 
     if not TEAMS_WEBHOOK_URL:
@@ -352,29 +483,31 @@ def main():
     if not API_BASE:
         print("[ERROR] NBA_API_URL environment variable is required (Azure Container App URL)")
         sys.exit(1)
-    
+
     # Use configured Azure API base
     api_base = API_BASE
     print(f"[CONFIG] Using API: {api_base}")
-    
+
     print(f"[FETCH] Fetching predictions for {args.date}...")
     data = fetch_executive_data(args.date, api_base)
-    
+
     plays = data.get("plays", [])
     if not plays:
         print("[WARN] No plays found for this date")
         if not args.allow_empty:
             return
-    
+
     print(f"[DATA] Found {len(plays)} plays")
-    
+
     print("[POST] Posting to Teams...")
     message = format_teams_message(data)
     success = post_to_teams(message)
-    
+
     if success:
         elite_count = len([p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "ELITE"])
-        strong_count = len([p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"])
+        strong_count = len(
+            [p for p in plays if get_fire_tier(p.get("fire_rating", "")) == "STRONG"]
+        )
         print(f"[OK] Posted: {len(plays)} plays ({elite_count} ELITE, {strong_count} STRONG)")
 
 

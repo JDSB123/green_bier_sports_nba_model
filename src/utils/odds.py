@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Optional, Tuple
 
-
 COMMON_JUICES = (-105, -110, -115)
 
 
@@ -21,7 +20,9 @@ def american_to_implied_prob(odds: Optional[int]) -> Optional[float]:
     return abs(odds_int) / (abs(odds_int) + 100)
 
 
-def devig_two_way(odds_a: Optional[int], odds_b: Optional[int]) -> Tuple[Optional[float], Optional[float]]:
+def devig_two_way(
+    odds_a: Optional[int], odds_b: Optional[int]
+) -> Tuple[Optional[float], Optional[float]]:
     """Remove vig for a two-way market using proportional normalization."""
     p_a = american_to_implied_prob(odds_a)
     p_b = american_to_implied_prob(odds_b)
@@ -50,7 +51,9 @@ def devig_three_way(
     return p_a / total, p_b / total, p_c / total
 
 
-def expected_value(p_model: Optional[float], odds: Optional[int], stake: float = 1.0) -> Optional[float]:
+def expected_value(
+    p_model: Optional[float], odds: Optional[int], stake: float = 1.0
+) -> Optional[float]:
     """Return expected value in stake units (stake=1.0 -> EV% = EV * 100)."""
     if p_model is None or odds is None:
         return None
@@ -66,7 +69,9 @@ def expected_value(p_model: Optional[float], odds: Optional[int], stake: float =
     return (p_model * win_profit) - ((1 - p_model) * stake)
 
 
-def kelly_fraction(p_model: Optional[float], odds: Optional[int], fraction: float = 0.5) -> Optional[float]:
+def kelly_fraction(
+    p_model: Optional[float], odds: Optional[int], fraction: float = 0.5
+) -> Optional[float]:
     """Return fractional Kelly fraction for a given probability and American odds."""
     if p_model is None or odds is None:
         return None

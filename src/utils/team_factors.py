@@ -17,8 +17,7 @@ from __future__ import annotations
 import math
 from typing import Dict, Optional, Tuple
 
-from src.utils.team_names import normalize_team_name, get_canonical_name
-
+from src.utils.team_names import get_canonical_name, normalize_team_name
 
 # =============================================================================
 # TEAM-SPECIFIC HOME COURT ADVANTAGE (HCA)
@@ -28,7 +27,6 @@ TEAM_HOME_COURT_ADVANTAGE: Dict[str, float] = {
     # High altitude advantage
     "Denver Nuggets": 4.2,
     "Utah Jazz": 3.8,
-
     # Strong traditional home courts
     "Boston Celtics": 3.5,
     "Golden State Warriors": 3.2,
@@ -37,7 +35,6 @@ TEAM_HOME_COURT_ADVANTAGE: Dict[str, float] = {
     "Oklahoma City Thunder": 3.0,
     "Cleveland Cavaliers": 2.8,
     "Memphis Grizzlies": 2.8,
-
     # Above average
     "Philadelphia 76ers": 2.7,
     "Milwaukee Bucks": 2.7,
@@ -46,7 +43,6 @@ TEAM_HOME_COURT_ADVANTAGE: Dict[str, float] = {
     "Minnesota Timberwolves": 2.6,
     "Toronto Raptors": 2.8,
     "Portland Trail Blazers": 2.6,
-
     # League average-ish
     "Los Angeles Lakers": 2.5,
     "Los Angeles Clippers": 2.3,
@@ -145,7 +141,6 @@ TEAM_TIMEZONE_OFFSET: Dict[str, int] = {
     "Philadelphia 76ers": 0,
     "Toronto Raptors": 0,
     "Washington Wizards": 0,
-
     # Central
     "Chicago Bulls": -1,
     "Dallas Mavericks": -1,
@@ -156,12 +151,10 @@ TEAM_TIMEZONE_OFFSET: Dict[str, int] = {
     "New Orleans Pelicans": -1,
     "Oklahoma City Thunder": -1,
     "San Antonio Spurs": -1,
-
     # Mountain
     "Denver Nuggets": -2,
     "Phoenix Suns": -2,
     "Utah Jazz": -2,
-
     # Pacific
     "Golden State Warriors": -3,
     "Los Angeles Clippers": -3,

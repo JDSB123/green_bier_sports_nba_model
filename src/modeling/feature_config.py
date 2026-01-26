@@ -4,20 +4,22 @@ Feature configuration helpers for NBA prediction model training.
 All feature definitions live in unified_features.py (single source of truth).
 This module provides training-specific helper functions.
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import os
 from pathlib import Path
 from typing import List, Optional
 
-from src.modeling.unified_features import (
-    UNIFIED_FEATURE_NAMES,
-    FEATURE_DEFAULTS,
-    REQUIRED_FEATURES,
-    LEAKY_FEATURES_BLACKLIST,
-)
 from src.config import PROJECT_ROOT
+from src.modeling.unified_features import (
+    FEATURE_DEFAULTS,
+    LEAKY_FEATURES_BLACKLIST,
+    REQUIRED_FEATURES,
+    UNIFIED_FEATURE_NAMES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +135,9 @@ def filter_available_features(
             f"({len(missing)} missing)"
         )
         if missing_pct > 50:
-            logger.warning(f"Many features missing ({missing_pct:.0f}%): {sorted(list(missing)[:10])}...")
+            logger.warning(
+                f"Many features missing ({missing_pct:.0f}%): {sorted(list(missing)[:10])}..."
+            )
 
     if critical_features is None:
         critical_features = REQUIRED_FEATURES

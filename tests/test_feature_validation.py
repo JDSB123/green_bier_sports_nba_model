@@ -7,17 +7,19 @@ Tests cover:
 - MissingFeaturesError exception
 - Environment variable configuration
 """
+
 import os
-import pytest
-import pandas as pd
 from unittest.mock import patch
+
+import pandas as pd
+import pytest
 
 from src.prediction.feature_validation import (
     FeatureMode,
     MissingFeaturesError,
     get_feature_mode,
-    validate_and_prepare_features,
     log_feature_stats,
+    validate_and_prepare_features,
 )
 
 
@@ -142,9 +144,7 @@ class TestValidateAndPrepareFeatures:
         required = ["a", "b", "c"]
 
         with pytest.raises(MissingFeaturesError) as exc_info:
-            validate_and_prepare_features(
-                df, required, market="fg_spread", mode=FeatureMode.STRICT
-            )
+            validate_and_prepare_features(df, required, market="fg_spread", mode=FeatureMode.STRICT)
 
         error = exc_info.value
         assert error.market == "fg_spread"
@@ -185,9 +185,7 @@ class TestValidateAndPrepareFeatures:
         required = ["a", "b"]
 
         with patch.dict(os.environ, {"PREDICTION_FEATURE_MODE": "warn"}):
-            result_df, missing = validate_and_prepare_features(
-                df, required, market="test"
-            )
+            result_df, missing = validate_and_prepare_features(df, required, market="test")
             # Should not raise - uses warn mode
             assert missing == ["b"]
 
@@ -226,9 +224,7 @@ class TestValidateAndPrepareFeatures:
 
         # In STRICT mode - should raise
         with pytest.raises(MissingFeaturesError):
-            validate_and_prepare_features(
-                df, required, market="test", mode=FeatureMode.STRICT
-            )
+            validate_and_prepare_features(df, required, market="test", mode=FeatureMode.STRICT)
 
         # In WARN mode - should zero-fill all
         result_df, missing = validate_and_prepare_features(
@@ -258,6 +254,7 @@ class TestIntegrationWithPredictors:
         """Verify engine.py PeriodPredictor uses validate_and_prepare_features."""
         # This is a smoke test - actual integration requires model fixtures
         from src.prediction.feature_validation import validate_and_prepare_features
+
         # Just verify the import works
         assert callable(validate_and_prepare_features)
 

@@ -45,8 +45,14 @@ REQUIRED_COLUMNS = {
     "fg_labels": ["fg_home_win", "fg_spread_covered", "fg_total_over"],
     "fg_lines": ["fg_spread_line", "fg_total_line"],
     "fg_features": [
-        "home_ppg", "home_papg", "home_avg_margin", "home_win_pct",
-        "away_ppg", "away_papg", "away_avg_margin", "away_win_pct",
+        "home_ppg",
+        "home_papg",
+        "home_avg_margin",
+        "home_win_pct",
+        "away_ppg",
+        "away_papg",
+        "away_avg_margin",
+        "away_win_pct",
     ],
     "1h_labels": ["1h_spread_covered", "1h_total_over"],
     "1h_lines": ["1h_spread_line", "1h_total_line"],
@@ -98,15 +104,17 @@ def validate_checksum(manifest: dict | None) -> tuple[bool, str]:
     if not manifest:
         return True, f"{WARN} No manifest to check against"
 
-    expected = manifest.get("sha256") or manifest.get(
-        "training_data", {}).get("sha256")
+    expected = manifest.get("sha256") or manifest.get("training_data", {}).get("sha256")
     if not expected:
         return True, f"{WARN} No checksum in manifest"
 
     actual = calculate_checksum(TRAINING_DATA_PATH)
     if actual == expected:
         return True, f"{OK} Checksum matches: {actual[:16]}..."
-    return False, f"{FAIL} Checksum mismatch!\n  Expected: {expected[:16]}...\n  Actual:   {actual[:16]}..."
+    return (
+        False,
+        f"{FAIL} Checksum mismatch!\n  Expected: {expected[:16]}...\n  Actual:   {actual[:16]}...",
+    )
 
 
 def validate_schema(df: pd.DataFrame) -> tuple[bool, list[str]]:
@@ -130,10 +138,9 @@ def validate_row_count(df: pd.DataFrame, manifest: dict | None) -> tuple[bool, s
     actual = len(df)
 
     if manifest:
-        expected = (
-            manifest.get("quality_metrics", {}).get("total_games")
-            or manifest.get("training_data", {}).get("rows", 0)
-        )
+        expected = manifest.get("quality_metrics", {}).get("total_games") or manifest.get(
+            "training_data", {}
+        ).get("rows", 0)
         if expected > 0:
             diff = actual - expected
             if abs(diff) <= 100:  # Allow some variance
@@ -151,8 +158,7 @@ def validate_nulls(df: pd.DataFrame) -> tuple[bool, list[str]]:
     messages = []
     all_valid = True
 
-    critical_cols = REQUIRED_COLUMNS["identifiers"] + \
-        REQUIRED_COLUMNS["fg_labels"]
+    critical_cols = REQUIRED_COLUMNS["identifiers"] + REQUIRED_COLUMNS["fg_labels"]
 
     for col in critical_cols:
         if col in df.columns:
@@ -181,8 +187,7 @@ def validate_ranges(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
         if below > 0 or above > 0:
             # Warning, not failure (could be outliers)
-            messages.append(
-                f"{WARN} {col}: {below} below {min_val}, {above} above {max_val}")
+            messages.append(f"{WARN} {col}: {below} below {min_val}, {above} above {max_val}")
         else:
             pass  # Don't clutter output with all passing
 
@@ -195,8 +200,9 @@ def validate_ranges(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
 def validate_dates(df: pd.DataFrame) -> tuple[bool, str]:
     """Validate date column."""
-    date_col = "game_date" if "game_date" in df.columns else (
-        "date" if "date" in df.columns else None)
+    date_col = (
+        "game_date" if "game_date" in df.columns else ("date" if "date" in df.columns else None)
+    )
     if not date_col:
         return False, f"{FAIL} No game_date/date column"
 
@@ -214,7 +220,9 @@ def validate_dates(df: pd.DataFrame) -> tuple[bool, str]:
         return False, f"{FAIL} Date parsing error: {e}"
 
 
-def validate_coverage(df: pd.DataFrame, start_date_str: str, minimum_ratio: float) -> tuple[bool, str]:
+def validate_coverage(
+    df: pd.DataFrame, start_date_str: str, minimum_ratio: float
+) -> tuple[bool, str]:
     """Ensure the dataset covers at least `minimum_ratio` of days since `start_date_str`."""
     if "game_date" not in df.columns:
         return False, f"{FAIL} Cannot compute coverage: 'game_date' column missing"
@@ -274,10 +282,7 @@ def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     messages = []
     all_valid = True
 
-    label_cols = (
-        REQUIRED_COLUMNS["fg_labels"]
-        + REQUIRED_COLUMNS["1h_labels"]
-    )
+    label_cols = REQUIRED_COLUMNS["fg_labels"] + REQUIRED_COLUMNS["1h_labels"]
 
     for col in label_cols:
         if col not in df.columns:
@@ -296,7 +301,11 @@ def validate_labels(df: pd.DataFrame) -> tuple[bool, list[str]]:
     return all_valid, messages
 
 
-def run_validation(strict: bool = False, coverage_start: str = COVERAGE_START_DEFAULT, coverage_min: float = COVERAGE_MIN_RATIO) -> tuple[bool, dict]:
+def run_validation(
+    strict: bool = False,
+    coverage_start: str = COVERAGE_START_DEFAULT,
+    coverage_min: float = COVERAGE_MIN_RATIO,
+) -> tuple[bool, dict]:
     """Run all validations."""
     results = {
         "timestamp": datetime.now().isoformat(),
@@ -450,6 +459,7 @@ def update_manifest() -> None:
     # Update git commit if available
     try:
         import subprocess
+
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
             capture_output=True,
@@ -469,12 +479,11 @@ def update_manifest() -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Validate training data")
-    parser.add_argument("--strict", action="store_true",
-                        help="Fail on warnings too")
-    parser.add_argument("--update-manifest", action="store_true",
-                        help="Update manifest with current stats")
-    parser.add_argument("--json", action="store_true",
-                        help="Output results as JSON")
+    parser.add_argument("--strict", action="store_true", help="Fail on warnings too")
+    parser.add_argument(
+        "--update-manifest", action="store_true", help="Update manifest with current stats"
+    )
+    parser.add_argument("--json", action="store_true", help="Output results as JSON")
     parser.add_argument(
         "--coverage-start",
         default=COVERAGE_START_DEFAULT,

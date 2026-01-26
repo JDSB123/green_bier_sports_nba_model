@@ -18,7 +18,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Optional
 
-
 TotalSide = Literal["over", "under"]
 SpreadSide = Literal["home", "away"]
 

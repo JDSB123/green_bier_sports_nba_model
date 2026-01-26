@@ -17,8 +17,8 @@ from typing import Dict, Tuple
 import pandas as pd
 
 from src.config import settings
-from src.ingestion.espn import fetch_espn_schedule, fetch_espn_box_score
 from src.ingestion.api_basketball import fetch_game_stats_players, fetch_games
+from src.ingestion.espn import fetch_espn_box_score, fetch_espn_schedule
 from src.ingestion.standardize import normalize_team_to_espn
 
 
@@ -203,7 +203,11 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=str,
-        default=str(Path("archive") / "analysis" / f"pilot_player_features_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"),
+        default=str(
+            Path("archive")
+            / "analysis"
+            / f"pilot_player_features_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+        ),
         help="Output CSV path",
     )
     parser.add_argument(

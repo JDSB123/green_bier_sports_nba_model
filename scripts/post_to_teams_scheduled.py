@@ -17,8 +17,8 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 from urllib.request import Request, urlopen
+from zoneinfo import ZoneInfo
 
 from scripts.post_to_teams import fetch_executive_data, format_teams_message, post_to_teams
 
@@ -61,7 +61,13 @@ def _parse_game_cst(game: dict) -> datetime | None:
     return None
 
 
-def _should_post(now: datetime, window_start: datetime, window_end: datetime, interval_minutes: int, tolerance_minutes: int) -> bool:
+def _should_post(
+    now: datetime,
+    window_start: datetime,
+    window_end: datetime,
+    interval_minutes: int,
+    tolerance_minutes: int,
+) -> bool:
     if now < window_start or now > window_end:
         return False
 
@@ -144,13 +150,19 @@ def _snapshot_blob_name(prefix: str, date_label: str) -> str:
 def _load_snapshot(date_label: str) -> dict | None:
     prefix = os.getenv("TEAMS_SNAPSHOT_PREFIX", "teams_snapshots")
     container = os.getenv("TEAMS_SNAPSHOT_CONTAINER", "predictions")
-    conn = os.getenv("TEAMS_STORAGE_CONNECTION_STRING") or os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    conn = os.getenv("TEAMS_STORAGE_CONNECTION_STRING") or os.getenv(
+        "AZURE_STORAGE_CONNECTION_STRING"
+    )
     if conn and not BlobServiceClient:
-        raise RuntimeError("azure-storage-blob is required when AZURE_STORAGE_CONNECTION_STRING is set")
+        raise RuntimeError(
+            "azure-storage-blob is required when AZURE_STORAGE_CONNECTION_STRING is set"
+        )
     if conn and BlobServiceClient:
         try:
             client = BlobServiceClient.from_connection_string(conn)
-            blob = client.get_blob_client(container=container, blob=_snapshot_blob_name(prefix, date_label))
+            blob = client.get_blob_client(
+                container=container, blob=_snapshot_blob_name(prefix, date_label)
+            )
             data = blob.download_blob().readall()
             return json.loads(data.decode("utf-8"))
         except Exception:
@@ -170,13 +182,19 @@ def _load_snapshot(date_label: str) -> dict | None:
 def _save_snapshot(date_label: str, snapshot: dict) -> None:
     prefix = os.getenv("TEAMS_SNAPSHOT_PREFIX", "teams_snapshots")
     container = os.getenv("TEAMS_SNAPSHOT_CONTAINER", "predictions")
-    conn = os.getenv("TEAMS_STORAGE_CONNECTION_STRING") or os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    conn = os.getenv("TEAMS_STORAGE_CONNECTION_STRING") or os.getenv(
+        "AZURE_STORAGE_CONNECTION_STRING"
+    )
     payload = json.dumps(snapshot).encode("utf-8")
     if conn and not BlobServiceClient:
-        raise RuntimeError("azure-storage-blob is required when AZURE_STORAGE_CONNECTION_STRING is set")
+        raise RuntimeError(
+            "azure-storage-blob is required when AZURE_STORAGE_CONNECTION_STRING is set"
+        )
     if conn and BlobServiceClient:
         client = BlobServiceClient.from_connection_string(conn)
-        blob = client.get_blob_client(container=container, blob=_snapshot_blob_name(prefix, date_label))
+        blob = client.get_blob_client(
+            container=container, blob=_snapshot_blob_name(prefix, date_label)
+        )
         blob.upload_blob(payload, overwrite=True)
         return
 
@@ -213,7 +231,9 @@ def _lock_started_games(
                 final_plays.append(locked_play)
             else:
                 play["locked"] = True
-                play["locked_snapshot_at_cst"] = prev_snapshot_at or now_cst.strftime("%Y-%m-%d %I:%M %p CST")
+                play["locked_snapshot_at_cst"] = prev_snapshot_at or now_cst.strftime(
+                    "%Y-%m-%d %I:%M %p CST"
+                )
                 final_plays.append(play)
             locked_count += 1
         else:
@@ -232,10 +252,22 @@ def _lock_started_games(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Post Teams picks on a schedule window")
     parser.add_argument("--date", default="today", help="Date (YYYY-MM-DD or 'today'/'tomorrow')")
-    parser.add_argument("--lead-minutes", type=int, default=int(os.getenv("TEAMS_SCHEDULE_LEAD_MINUTES", "60")))
-    parser.add_argument("--interval-minutes", type=int, default=int(os.getenv("TEAMS_SCHEDULE_INTERVAL_MINUTES", "60")))
-    parser.add_argument("--tolerance-minutes", type=int, default=int(os.getenv("TEAMS_SCHEDULE_TOLERANCE_MINUTES", "2")))
-    parser.add_argument("--force", action="store_true", help="Post regardless of window/timing checks")
+    parser.add_argument(
+        "--lead-minutes", type=int, default=int(os.getenv("TEAMS_SCHEDULE_LEAD_MINUTES", "60"))
+    )
+    parser.add_argument(
+        "--interval-minutes",
+        type=int,
+        default=int(os.getenv("TEAMS_SCHEDULE_INTERVAL_MINUTES", "60")),
+    )
+    parser.add_argument(
+        "--tolerance-minutes",
+        type=int,
+        default=int(os.getenv("TEAMS_SCHEDULE_TOLERANCE_MINUTES", "2")),
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Post regardless of window/timing checks"
+    )
     parser.add_argument("--dry-run", action="store_true", help="Compute window but do not post")
     args = parser.parse_args()
 
@@ -279,12 +311,20 @@ def main() -> int:
         return 0
 
     if not args.force:
-        on_schedule = _should_post(now, aligned_start, window_end, args.interval_minutes, args.tolerance_minutes)
+        on_schedule = _should_post(
+            now, aligned_start, window_end, args.interval_minutes, args.tolerance_minutes
+        )
         if not on_schedule:
             print("[SKIP] Outside posting window or not on cadence.")
             return 0
 
-    allow_empty = os.getenv("TEAMS_ALLOW_EMPTY", "true").strip().lower() in {"1", "true", "yes", "y", "on"}
+    allow_empty = os.getenv("TEAMS_ALLOW_EMPTY", "true").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "y",
+        "on",
+    }
 
     # Fetch latest executive summary + previous snapshot for lock-in
     try:

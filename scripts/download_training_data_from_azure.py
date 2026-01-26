@@ -52,7 +52,7 @@ def calculate_checksum(file_path: Path) -> str:
 def list_versions() -> list[str]:
     """List available versions in blob storage."""
     cmd = (
-        f'az storage blob list --account-name {STORAGE_ACCOUNT} '
+        f"az storage blob list --account-name {STORAGE_ACCOUNT} "
         f'--container-name {CONTAINER} --prefix "{BLOB_PREFIX}/" '
         f'--auth-mode key --query "[].name" -o tsv'
     )
@@ -74,7 +74,7 @@ def list_versions() -> list[str]:
 def download_blob(blob_name: str, output_path: Path) -> bool:
     """Download a blob to local file."""
     cmd = (
-        f'az storage blob download --account-name {STORAGE_ACCOUNT} '
+        f"az storage blob download --account-name {STORAGE_ACCOUNT} "
         f'--container-name {CONTAINER} --name "{blob_name}" '
         f'--file "{output_path}" --auth-mode key'
     )
@@ -128,7 +128,9 @@ def main():
         manifest = json.loads(MANIFEST_OUTPUT.read_text())
         print(f"  {INFO} Version: {manifest.get('version', 'unknown')}")
         print(f"  {INFO} Generated: {manifest.get('generated_at', 'unknown')}")
-        print(f"  {INFO} Games: {manifest.get('quality_metrics', {}).get('total_games', 'unknown')}")
+        print(
+            f"  {INFO} Games: {manifest.get('quality_metrics', {}).get('total_games', 'unknown')}"
+        )
     else:
         print(f"  {FAIL} Failed to download manifest")
         manifest = None

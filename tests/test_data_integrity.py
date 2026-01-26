@@ -12,16 +12,18 @@ CRITICAL INVARIANTS FOR NBA PREDICTION SYSTEM:
 
 This file tests these invariants to ensure the model is NOT trained on future data.
 """
-import pytest
-import pandas as pd
-import numpy as np
+
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import numpy as np
+import pandas as pd
+import pytest
 
 # =============================================================================
 # CRITICAL: DATA LEAKAGE PREVENTION TESTS
 # =============================================================================
+
 
 class TestShiftOneLookback:
     """
@@ -64,8 +66,7 @@ class TestShiftOneLookback:
         assert game_5_correct < 120, "Rolling average should exclude current game"
 
         # Verify first game has no lookback data
-        assert pd.isna(df.iloc[0]["rolling_avg_correct"]
-                       ), "First game should have no prior data"
+        assert pd.isna(df.iloc[0]["rolling_avg_correct"]), "First game should have no prior data"
 
     def test_expanding_stats_exclude_current_game(self):
         """Expanding means must NOT include the current game's result."""
@@ -87,8 +88,7 @@ class TestShiftOneLookback:
 
         # Should NOT include game 4's points (120)
         assert game_4_expanding < 120, "Expanding average should exclude current game"
-        assert game_4_expanding == pytest.approx(
-            100.0, abs=0.1)  # (90+100+110)/3
+        assert game_4_expanding == pytest.approx(100.0, abs=0.1)  # (90+100+110)/3
 
     def test_lag_features_respect_temporal_order(self):
         """Lag features should only reference past games."""
@@ -120,11 +120,13 @@ class TestWalkForwardIsolation:
         """Training set must end BEFORE test set begins."""
         # Simulate walk-forward
         n_games = 100
-        games = pd.DataFrame({
-            "date": pd.date_range("2025-01-01", periods=n_games, freq="D"),
-            "home_team": ["LAL"] * n_games,
-            "away_team": ["BOS"] * n_games,
-        })
+        games = pd.DataFrame(
+            {
+                "date": pd.date_range("2025-01-01", periods=n_games, freq="D"),
+                "home_team": ["LAL"] * n_games,
+                "away_team": ["BOS"] * n_games,
+            }
+        )
 
         min_train = 50
         test_chunk_size = 10
@@ -140,8 +142,9 @@ class TestWalkForwardIsolation:
             train_max_date = train_df["date"].max()
             test_min_date = test_df["date"].min()
 
-            assert train_max_date < test_min_date, \
-                f"Training data leaked into test! Train max: {train_max_date}, Test min: {test_min_date}"
+            assert (
+                train_max_date < test_min_date
+            ), f"Training data leaked into test! Train max: {train_max_date}, Test min: {test_min_date}"
 
     def test_no_future_features_in_training(self):
         """Features computed from training data cannot include future information."""
@@ -153,8 +156,7 @@ class TestWalkForwardIsolation:
         df = pd.DataFrame(data)
 
         # Compute rolling feature CORRECTLY (shift then roll)
-        df["rolling_score"] = df["score"].shift(
-            1).rolling(5, min_periods=1).mean()
+        df["rolling_score"] = df["score"].shift(1).rolling(5, min_periods=1).mean()
 
         # Test point: game 15
         test_idx = 15
@@ -200,9 +202,9 @@ class TestFeatureConsistency:
         h1_features = {
             "home_ppg_1h": 55.0,  # 1H specific PPG
             "away_ppg_1h": 52.0,
-            "home_rest": 2,       # Shared (no suffix)
+            "home_rest": 2,  # Shared (no suffix)
             "away_rest": 1,
-            "elo_diff": 50.0,    # Shared (no suffix)
+            "elo_diff": 50.0,  # Shared (no suffix)
         }
 
         mapped = map_1h_features_to_fg_names(h1_features)
@@ -220,6 +222,7 @@ class TestFeatureConsistency:
 # CANONICALIZATION TESTS
 # =============================================================================
 
+
 class TestDateCanonicalization:
     """
     Tests that dates are consistently in CST (America/Chicago) timezone.
@@ -230,8 +233,9 @@ class TestDateCanonicalization:
 
     def test_utc_to_cst_late_night_game(self):
         """Late night CST games from UTC should have correct date."""
-        from src.data import to_cst
         from zoneinfo import ZoneInfo
+
+        from src.data import to_cst
 
         CST = ZoneInfo("America/Chicago")
 
@@ -241,8 +245,9 @@ class TestDateCanonicalization:
         cst_dt = to_cst(utc_time)
 
         # Date should be Jan 15 (CST), not Jan 16 (UTC)
-        assert cst_dt.date().isoformat() == "2025-01-15", \
-            f"Expected 2025-01-15, got {cst_dt.date().isoformat()}"
+        assert (
+            cst_dt.date().isoformat() == "2025-01-15"
+        ), f"Expected 2025-01-15, got {cst_dt.date().isoformat()}"
         assert cst_dt.hour == 22  # 10pm CST
 
     def test_afternoon_game_same_date(self):
@@ -271,8 +276,9 @@ class TestDateCanonicalization:
         result = standardize_game_data(game, source="manual")
 
         # Should preserve the date as-is (CST local date)
-        assert result["date"] == "2025-01-15", \
-            f"Date-only string should remain {game['date']}, got {result['date']}"
+        assert (
+            result["date"] == "2025-01-15"
+        ), f"Date-only string should remain {game['date']}, got {result['date']}"
 
 
 class TestTeamCanonicalization:
@@ -298,7 +304,9 @@ class TestTeamCanonicalization:
         for expected, variants in team_variants.items():
             for variant in variants:
                 result = standardize_team_name(variant)
-                assert result == expected, f"'{variant}' should normalize to '{expected}', got '{result}'"
+                assert (
+                    result == expected
+                ), f"'{variant}' should normalize to '{expected}', got '{result}'"
 
     def test_team_name_consistency_across_modules(self):
         """Team names should be consistent across standardization modules."""
@@ -311,29 +319,29 @@ class TestTeamCanonicalization:
             data_result = data_std(variant)
             ingestion_result, _ = ingestion_std(variant)
 
-            assert data_result == ingestion_result, \
-                f"Inconsistent normalization for '{variant}': data={data_result}, ingestion={ingestion_result}"
+            assert (
+                data_result == ingestion_result
+            ), f"Inconsistent normalization for '{variant}': data={data_result}, ingestion={ingestion_result}"
 
     def test_match_key_generation_deterministic(self):
         """Match keys should be deterministic for the same game."""
         from src.data import generate_match_key
 
         # Same game, different variant representations
-        key1 = generate_match_key(
-            "2025-01-15", "LAL", "BOS", source_is_utc=False)
-        key2 = generate_match_key(
-            "2025-01-15", "Lakers", "Celtics", source_is_utc=False)
+        key1 = generate_match_key("2025-01-15", "LAL", "BOS", source_is_utc=False)
+        key2 = generate_match_key("2025-01-15", "Lakers", "Celtics", source_is_utc=False)
         key3 = generate_match_key(
-            "2025-01-15", "Los Angeles Lakers", "Boston Celtics", source_is_utc=False)
+            "2025-01-15", "Los Angeles Lakers", "Boston Celtics", source_is_utc=False
+        )
 
         # All should generate the same match key
-        assert key1 == key2 == key3, \
-            f"Match keys differ: {key1}, {key2}, {key3}"
+        assert key1 == key2 == key3, f"Match keys differ: {key1}, {key2}, {key3}"
 
 
 # =============================================================================
 # PRODUCTION DATA PIPELINE TESTS
 # =============================================================================
+
 
 class TestProductionDataFlow:
     """
@@ -353,11 +361,13 @@ class TestProductionDataFlow:
         today = datetime(2025, 1, 15, 12, 0, 0)
 
         # Available historical data
-        historical_games = pd.DataFrame({
-            "date": pd.date_range("2025-01-01", "2025-01-14", freq="D"),
-            "home_score": range(100, 114),
-            "away_score": range(95, 109),
-        })
+        historical_games = pd.DataFrame(
+            {
+                "date": pd.date_range("2025-01-01", "2025-01-14", freq="D"),
+                "home_score": range(100, 114),
+                "away_score": range(95, 109),
+            }
+        )
 
         # For a prediction on Jan 15, we can ONLY use Jan 1-14 data
         valid_data = historical_games[historical_games["date"] < today]
@@ -378,8 +388,7 @@ class TestProductionDataFlow:
             config = MODEL_CONFIGS[market]
 
             # Each market should have defined feature sets
-            assert hasattr(
-                config, "model_features") or "features" in str(config)
+            assert hasattr(config, "model_features") or "features" in str(config)
 
 
 class TestBacktestReproducibility:
@@ -391,12 +400,18 @@ class TestBacktestReproducibility:
 
     def test_walk_forward_deterministic_order(self):
         """Walk-forward should process games in consistent order."""
-        games = pd.DataFrame({
-            "date": pd.to_datetime([
-                "2025-01-15", "2025-01-14", "2025-01-16",  # Unsorted
-            ]),
-            "game_id": [1, 2, 3],
-        })
+        games = pd.DataFrame(
+            {
+                "date": pd.to_datetime(
+                    [
+                        "2025-01-15",
+                        "2025-01-14",
+                        "2025-01-16",  # Unsorted
+                    ]
+                ),
+                "game_id": [1, 2, 3],
+            }
+        )
 
         # Sort by date (standard preprocessing)
         games_sorted = games.sort_values("date").reset_index(drop=True)
@@ -412,35 +427,39 @@ class TestBacktestReproducibility:
 # EDGE CASES
 # =============================================================================
 
+
 class TestEdgeCases:
     """Tests for edge cases that could cause data leakage."""
 
     def test_first_game_of_season_no_prior_data(self):
         """First game of season should have no rolling/expanding features."""
-        df = pd.DataFrame({
-            "date": ["2024-10-22"],  # NBA season opener
-            "team": ["LAL"],
-            "score": [105],
-        })
+        df = pd.DataFrame(
+            {
+                "date": ["2024-10-22"],  # NBA season opener
+                "team": ["LAL"],
+                "score": [105],
+            }
+        )
 
         # Rolling/expanding with shift(1) should return NaN for first game
         df["rolling"] = df.groupby("team")["score"].transform(
             lambda x: x.shift(1).rolling(5, min_periods=1).mean()
         )
 
-        assert pd.isna(df.iloc[0]["rolling"]
-                       ), "First game should have no prior stats"
+        assert pd.isna(df.iloc[0]["rolling"]), "First game should have no prior stats"
 
     def test_team_first_game_after_trade(self):
         """Player traded mid-season: team stats should still be valid."""
         # Team stats are team-level, not player-level
         # This test ensures team features aren't confused with player features
 
-        team_games = pd.DataFrame({
-            "date": pd.date_range("2025-01-01", periods=10, freq="D"),
-            "team": ["LAL"] * 10,
-            "score": [100, 105, 110, 108, 112, 115, 118, 120, 122, 125],
-        })
+        team_games = pd.DataFrame(
+            {
+                "date": pd.date_range("2025-01-01", periods=10, freq="D"),
+                "team": ["LAL"] * 10,
+                "score": [100, 105, 110, 108, 112, 115, 118, 120, 122, 125],
+            }
+        )
 
         # Team rolling average (not affected by trades)
         team_games["rolling_ppg"] = team_games.groupby("team")["score"].transform(
@@ -453,11 +472,13 @@ class TestEdgeCases:
     def test_back_to_back_games_same_day(self):
         """Two games on same day should be handled correctly."""
         # This can happen with double-headers or time zone issues
-        games = pd.DataFrame({
-            "date": ["2025-01-15", "2025-01-15", "2025-01-16"],
-            "game_id": ["G1", "G2", "G3"],
-            "team": ["LAL", "LAL", "LAL"],
-        })
+        games = pd.DataFrame(
+            {
+                "date": ["2025-01-15", "2025-01-15", "2025-01-16"],
+                "game_id": ["G1", "G2", "G3"],
+                "team": ["LAL", "LAL", "LAL"],
+            }
+        )
 
         # Both Jan 15 games should NOT use each other's results
         # Only prior day data is safe

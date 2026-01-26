@@ -1,9 +1,11 @@
 """Tests for logging utilities."""
-import logging
+
 import json
+import logging
+
 import pytest
 
-from src.utils.logging import setup_logger, get_logger, JSONFormatter
+from src.utils.logging import JSONFormatter, get_logger, setup_logger
 
 
 class TestJSONFormatter:
@@ -21,10 +23,10 @@ class TestJSONFormatter:
             args=(),
             exc_info=None,
         )
-        
+
         output = formatter.format(record)
         data = json.loads(output)
-        
+
         assert data["level"] == "INFO"
         assert data["logger"] == "test"
         assert data["message"] == "Test message"
@@ -38,6 +40,7 @@ class TestJSONFormatter:
             raise ValueError("Test error")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
             record = logging.LogRecord(
                 name="test",
@@ -48,10 +51,10 @@ class TestJSONFormatter:
                 args=(),
                 exc_info=exc_info,
             )
-            
+
             output = formatter.format(record)
             data = json.loads(output)
-            
+
             assert "exception" in data
             assert "ValueError: Test error" in data["exception"]
 
@@ -77,10 +80,10 @@ class TestSetupLogger:
         """Test that calling setup_logger twice doesn't create duplicate handlers."""
         logger1 = setup_logger("test_logger_3")
         handler_count1 = len(logger1.handlers)
-        
+
         logger2 = setup_logger("test_logger_3")
         handler_count2 = len(logger2.handlers)
-        
+
         assert handler_count1 == handler_count2
         assert logger1 is logger2
 
@@ -89,4 +92,3 @@ class TestSetupLogger:
         logger = get_logger("test_logger_4")
         assert isinstance(logger, logging.Logger)
         assert logger.name == "test_logger_4"
-

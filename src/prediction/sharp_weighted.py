@@ -51,9 +51,10 @@ KEY INSIGHT:
 v34.2.0: Only used Pinnacle divergence (40% of potential signal strength)
 v34.3.0: Uses ALL 4 signals (100% of potential signal strength) ← MAXIMUM
 """
-from dataclasses import dataclass
-from typing import Optional, Dict, Any, Tuple, List
+
 import logging
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
+
 
 @dataclass
 class WeightedConfig:
@@ -71,26 +73,26 @@ class WeightedConfig:
     sharp_weight: float = 0.45  # Increased from 0.40 - MAXIMIZE sharp signals
 
     # Sharp signal component weights (must sum to 1.0)
-    pinnacle_weight: float = 0.50    # Primary: Pinnacle divergence
-    rlm_weight: float = 0.25         # Secondary: Reverse Line Movement
-    line_move_weight: float = 0.15   # Tertiary: Steam/line movement
+    pinnacle_weight: float = 0.50  # Primary: Pinnacle divergence
+    rlm_weight: float = 0.25  # Secondary: Reverse Line Movement
+    line_move_weight: float = 0.15  # Tertiary: Steam/line movement
     money_ticket_weight: float = 0.10  # Quaternary: Money/ticket magnitude
 
     # Minimum edge threshold for a play (in points)
     # If |combined_edge| < this, NO PLAY
-    min_edge_spread: float = 0.5   # 0.5 pts minimum edge for spread bets
-    min_edge_total: float = 1.0    # 1.0 pts minimum edge for totals
+    min_edge_spread: float = 0.5  # 0.5 pts minimum edge for spread bets
+    min_edge_total: float = 1.0  # 1.0 pts minimum edge for totals
 
     # Confidence scaling (how combined_edge maps to confidence)
     # confidence = base + (combined_edge * scale_factor), capped at max
     base_confidence: float = 0.50
     confidence_scale_spread: float = 0.10  # Each point of edge = +10% confidence
-    confidence_scale_total: float = 0.05   # Each point of edge = +5% confidence
+    confidence_scale_total: float = 0.05  # Each point of edge = +5% confidence
     max_confidence: float = 0.85
     min_confidence: float = 0.52  # Minimum confidence if we're playing
 
     # RLM detection thresholds
-    rlm_threshold: float = 10.0   # Min % difference for RLM (money - ticket)
+    rlm_threshold: float = 10.0  # Min % difference for RLM (money - ticket)
     steam_threshold: float = 1.0  # Min line move for steam detection (points)
 
 
@@ -101,6 +103,7 @@ WEIGHTED_CONFIG = WeightedConfig()
 # ============================================================================
 # DATA STRUCTURES
 # ============================================================================
+
 
 @dataclass
 class SharpSignal:
@@ -200,29 +203,29 @@ class WeightedResult:
     """Result of weighted combination calculation."""
 
     # Core outputs
-    final_side: str           # "home", "away", "over", "under", or "NO_PLAY"
-    final_confidence: float   # Combined confidence (0.0-1.0)
-    combined_edge: float      # Combined edge in points
-    is_play: bool             # False if signals cancel out
+    final_side: str  # "home", "away", "over", "under", or "NO_PLAY"
+    final_confidence: float  # Combined confidence (0.0-1.0)
+    combined_edge: float  # Combined edge in points
+    is_play: bool  # False if signals cancel out
 
     # Model component
-    model_side: str           # What model originally said
-    model_edge: float         # Model's edge in points
+    model_side: str  # What model originally said
+    model_edge: float  # Model's edge in points
 
     # Sharp composite components (NEW in v34.3.0)
     # Total sharp edge (weighted sum of all components)
     sharp_edge: float
     pinnacle_component: float  # Pinnacle divergence contribution
-    rlm_component: float      # RLM contribution
+    rlm_component: float  # RLM contribution
     line_move_component: float  # Steam/line move contribution
     money_ticket_component: float  # Money/ticket magnitude contribution
 
     # Sharp direction
-    sharp_side: str           # What sharps say overall
+    sharp_side: str  # What sharps say overall
 
     # Signal alignment
-    signals_agree: bool       # True if model and sharps on same side
-    side_flipped: bool        # True if final side differs from model
+    signals_agree: bool  # True if model and sharps on same side
+    side_flipped: bool  # True if final side differs from model
 
     # Tracking which signals fired
     has_pinnacle: bool
@@ -230,12 +233,13 @@ class WeightedResult:
     has_steam: bool
 
     # Rationale
-    rationale: List[str]      # Explanation bullets
+    rationale: List[str]  # Explanation bullets
 
 
 # ============================================================================
 # SPREAD COMBINATION
 # ============================================================================
+
 
 def combine_spread_signals(
     model_predicted_margin: float,
@@ -268,8 +272,7 @@ def combine_spread_signals(
     # =========================================================================
     model_edge = model_predicted_margin - (-market_spread)
     model_side = "home" if model_edge > 0 else "away"
-    rationale.append(
-        f"MODEL: {model_side.upper()} by {abs(model_edge):.1f} pts")
+    rationale.append(f"MODEL: {model_side.upper()} by {abs(model_edge):.1f} pts")
 
     # =========================================================================
     # STEP 2: Calculate ALL sharp signal components
@@ -285,7 +288,8 @@ def combine_spread_signals(
             # Flip sign: neg divergence → positive (home)
             pinnacle_component = -divergence
             rationale.append(
-                f"PINNACLE: {pinnacle_component:+.2f} edge (divergence {divergence:+.1f})")
+                f"PINNACLE: {pinnacle_component:+.2f} edge (divergence {divergence:+.1f})"
+            )
 
     # Component 2: Reverse Line Movement (25%)
     rlm_component = 0.0
@@ -293,7 +297,8 @@ def combine_spread_signals(
         rlm_component = sharp_signal.rlm_direction
         rlm_side = "HOME" if rlm_component > 0 else "AWAY"
         rationale.append(
-            f"RLM: {rlm_component:+.2f} edge → {rlm_side} (money {sharp_signal.money_pct:.0f}% vs ticket {sharp_signal.ticket_pct:.0f}%)")
+            f"RLM: {rlm_component:+.2f} edge → {rlm_side} (money {sharp_signal.money_pct:.0f}% vs ticket {sharp_signal.ticket_pct:.0f}%)"
+        )
 
     # Component 3: Line movement / Steam (15%)
     line_move_component = 0.0
@@ -303,7 +308,8 @@ def combine_spread_signals(
         line_move_component = -sharp_signal.steam_edge
         steam_side = "HOME" if line_move_component > 0 else "AWAY"
         rationale.append(
-            f"STEAM: {line_move_component:+.2f} edge → {steam_side} (line moved {sharp_signal.line_move:+.1f})")
+            f"STEAM: {line_move_component:+.2f} edge → {steam_side} (line moved {sharp_signal.line_move:+.1f})"
+        )
 
     # Component 4: Money vs Ticket magnitude (10%)
     # This boosts conviction when sharps are heavily positioned
@@ -316,79 +322,87 @@ def combine_spread_signals(
             direction = 1.0 if pinnacle_component > 0 else -1.0
         else:
             direction = 0.0
-        money_ticket_component = direction * \
-            sharp_signal.money_ticket_magnitude * 2.0  # Scale to points
+        money_ticket_component = (
+            direction * sharp_signal.money_ticket_magnitude * 2.0
+        )  # Scale to points
         if abs(money_ticket_component) > 0.1:
             rationale.append(
-                f"MONEY/TICKET MAG: {money_ticket_component:+.2f} edge (split: {sharp_signal.money_ticket_magnitude:.1%})")
+                f"MONEY/TICKET MAG: {money_ticket_component:+.2f} edge (split: {sharp_signal.money_ticket_magnitude:.1%})"
+            )
 
     # =========================================================================
     # STEP 3: Combine sharp components into weighted sharp_edge
     # =========================================================================
     sharp_edge = (
-        pinnacle_component * config.pinnacle_weight +
-        rlm_component * config.rlm_weight +
-        line_move_component * config.line_move_weight +
-        money_ticket_component * config.money_ticket_weight
+        pinnacle_component * config.pinnacle_weight
+        + rlm_component * config.rlm_weight
+        + line_move_component * config.line_move_weight
+        + money_ticket_component * config.money_ticket_weight
     )
 
-    sharp_side = "home" if sharp_edge > 0.1 else (
-        "away" if sharp_edge < -0.1 else "neutral")
+    sharp_side = "home" if sharp_edge > 0.1 else ("away" if sharp_edge < -0.1 else "neutral")
 
-    signal_count = sum([
-        1 if sharp_signal.has_pinnacle else 0,
-        1 if sharp_signal.has_rlm else 0,
-        1 if sharp_signal.has_steam else 0,
-    ])
+    signal_count = sum(
+        [
+            1 if sharp_signal.has_pinnacle else 0,
+            1 if sharp_signal.has_rlm else 0,
+            1 if sharp_signal.has_steam else 0,
+        ]
+    )
     rationale.append(
-        f"SHARP TOTAL: {sharp_edge:+.2f} edge → {sharp_side.upper()} ({signal_count}/3 signals active)")
+        f"SHARP TOTAL: {sharp_edge:+.2f} edge → {sharp_side.upper()} ({signal_count}/3 signals active)"
+    )
 
     # =========================================================================
     # STEP 4: Combine model + sharp into final edge
     # =========================================================================
     if signal_count > 0:
-        combined_edge = (model_edge * config.model_weight) + \
-            (sharp_edge * config.sharp_weight)
+        combined_edge = (model_edge * config.model_weight) + (sharp_edge * config.sharp_weight)
         rationale.append(
-            f"COMBINED: {combined_edge:+.2f} = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.2f} × {config.sharp_weight})")
+            f"COMBINED: {combined_edge:+.2f} = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.2f} × {config.sharp_weight})"
+        )
     else:
         # No sharp data - use model alone with haircut
         combined_edge = model_edge * 0.75
         rationale.append(
-            f"COMBINED: {combined_edge:+.2f} (model only with 25% haircut - no sharp data)")
+            f"COMBINED: {combined_edge:+.2f} (model only with 25% haircut - no sharp data)"
+        )
 
     # =========================================================================
     # STEP 5: Determine final side and if it's a play
     # =========================================================================
-    signals_agree = (model_edge > 0 and sharp_edge >= 0) or (
-        model_edge < 0 and sharp_edge <= 0)
+    signals_agree = (model_edge > 0 and sharp_edge >= 0) or (model_edge < 0 and sharp_edge <= 0)
 
     if abs(combined_edge) < config.min_edge_spread:
         final_side = "NO_PLAY"
         is_play = False
         final_confidence = 0.0
         rationale.append(
-            f"❌ NO PLAY: Combined edge {combined_edge:+.2f} < min {config.min_edge_spread}")
+            f"❌ NO PLAY: Combined edge {combined_edge:+.2f} < min {config.min_edge_spread}"
+        )
     else:
         final_side = "home" if combined_edge > 0 else "away"
         is_play = True
 
-        raw_confidence = config.base_confidence + \
-            (abs(combined_edge) * config.confidence_scale_spread)
-        final_confidence = min(config.max_confidence, max(
-            config.min_confidence, raw_confidence))
+        raw_confidence = config.base_confidence + (
+            abs(combined_edge) * config.confidence_scale_spread
+        )
+        final_confidence = min(config.max_confidence, max(config.min_confidence, raw_confidence))
 
         if signals_agree:
             rationale.append(
-                f"✓ SIGNALS AGREE: {final_side.upper()} ({final_confidence:.1%} confidence)")
+                f"✓ SIGNALS AGREE: {final_side.upper()} ({final_confidence:.1%} confidence)"
+            )
         else:
             rationale.append(
-                f"⚠️ SIGNALS CONFLICT: Combined favors {final_side.upper()} ({final_confidence:.1%})")
+                f"⚠️ SIGNALS CONFLICT: Combined favors {final_side.upper()} ({final_confidence:.1%})"
+            )
 
     side_flipped = (model_side != final_side) and (final_side != "NO_PLAY")
     if side_flipped:
         rationale.append(
-            f"🔄 SIDE FLIPPED: Model said {model_side.upper()}, now {final_side.upper()}")
+            f"🔄 SIDE FLIPPED: Model said {model_side.upper()}, now {final_side.upper()}"
+        )
 
     return WeightedResult(
         final_side=final_side,
@@ -415,6 +429,7 @@ def combine_spread_signals(
 # ============================================================================
 # TOTAL COMBINATION
 # ============================================================================
+
 
 def combine_total_signals(
     model_predicted_total: float,
@@ -447,8 +462,7 @@ def combine_total_signals(
     # =========================================================================
     model_edge = model_predicted_total - market_total
     model_side = "over" if model_edge > 0 else "under"
-    rationale.append(
-        f"MODEL: {model_side.upper()} by {abs(model_edge):.1f} pts")
+    rationale.append(f"MODEL: {model_side.upper()} by {abs(model_edge):.1f} pts")
 
     # =========================================================================
     # STEP 2: Calculate ALL sharp signal components
@@ -463,7 +477,8 @@ def combine_total_signals(
         if abs(divergence) > 0.5:
             pinnacle_component = divergence  # Positive = over
             rationale.append(
-                f"PINNACLE: {pinnacle_component:+.2f} edge (divergence {divergence:+.1f})")
+                f"PINNACLE: {pinnacle_component:+.2f} edge (divergence {divergence:+.1f})"
+            )
 
     # Component 2: Reverse Line Movement (25%)
     rlm_component = 0.0
@@ -471,7 +486,8 @@ def combine_total_signals(
         rlm_component = sharp_signal.rlm_direction
         rlm_side = "OVER" if rlm_component > 0 else "UNDER"
         rationale.append(
-            f"RLM: {rlm_component:+.2f} edge → {rlm_side} (money {sharp_signal.money_pct:.0f}% vs ticket {sharp_signal.ticket_pct:.0f}%)")
+            f"RLM: {rlm_component:+.2f} edge → {rlm_side} (money {sharp_signal.money_pct:.0f}% vs ticket {sharp_signal.ticket_pct:.0f}%)"
+        )
 
     # Component 3: Line movement / Steam (15%)
     line_move_component = 0.0
@@ -480,7 +496,8 @@ def combine_total_signals(
         line_move_component = sharp_signal.steam_edge  # Positive = over
         steam_side = "OVER" if line_move_component > 0 else "UNDER"
         rationale.append(
-            f"STEAM: {line_move_component:+.2f} edge → {steam_side} (line moved {sharp_signal.line_move:+.1f})")
+            f"STEAM: {line_move_component:+.2f} edge → {steam_side} (line moved {sharp_signal.line_move:+.1f})"
+        )
 
     # Component 4: Money vs Ticket magnitude (10%)
     money_ticket_component = 0.0
@@ -494,74 +511,81 @@ def combine_total_signals(
         money_ticket_component = direction * sharp_signal.money_ticket_magnitude * 2.0
         if abs(money_ticket_component) > 0.1:
             rationale.append(
-                f"MONEY/TICKET MAG: {money_ticket_component:+.2f} edge (split: {sharp_signal.money_ticket_magnitude:.1%})")
+                f"MONEY/TICKET MAG: {money_ticket_component:+.2f} edge (split: {sharp_signal.money_ticket_magnitude:.1%})"
+            )
 
     # =========================================================================
     # STEP 3: Combine sharp components into weighted sharp_edge
     # =========================================================================
     sharp_edge = (
-        pinnacle_component * config.pinnacle_weight +
-        rlm_component * config.rlm_weight +
-        line_move_component * config.line_move_weight +
-        money_ticket_component * config.money_ticket_weight
+        pinnacle_component * config.pinnacle_weight
+        + rlm_component * config.rlm_weight
+        + line_move_component * config.line_move_weight
+        + money_ticket_component * config.money_ticket_weight
     )
 
-    sharp_side = "over" if sharp_edge > 0.2 else (
-        "under" if sharp_edge < -0.2 else "neutral")
+    sharp_side = "over" if sharp_edge > 0.2 else ("under" if sharp_edge < -0.2 else "neutral")
 
-    signal_count = sum([
-        1 if sharp_signal.has_pinnacle else 0,
-        1 if sharp_signal.has_rlm else 0,
-        1 if sharp_signal.has_steam else 0,
-    ])
+    signal_count = sum(
+        [
+            1 if sharp_signal.has_pinnacle else 0,
+            1 if sharp_signal.has_rlm else 0,
+            1 if sharp_signal.has_steam else 0,
+        ]
+    )
     rationale.append(
-        f"SHARP TOTAL: {sharp_edge:+.2f} edge → {sharp_side.upper()} ({signal_count}/3 signals active)")
+        f"SHARP TOTAL: {sharp_edge:+.2f} edge → {sharp_side.upper()} ({signal_count}/3 signals active)"
+    )
 
     # =========================================================================
     # STEP 4: Combine model + sharp into final edge
     # =========================================================================
     if signal_count > 0:
-        combined_edge = (model_edge * config.model_weight) + \
-            (sharp_edge * config.sharp_weight)
+        combined_edge = (model_edge * config.model_weight) + (sharp_edge * config.sharp_weight)
         rationale.append(
-            f"COMBINED: {combined_edge:+.2f} = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.2f} × {config.sharp_weight})")
+            f"COMBINED: {combined_edge:+.2f} = ({model_edge:.1f} × {config.model_weight}) + ({sharp_edge:.2f} × {config.sharp_weight})"
+        )
     else:
         combined_edge = model_edge * 0.75
         rationale.append(
-            f"COMBINED: {combined_edge:+.2f} (model only with 25% haircut - no sharp data)")
+            f"COMBINED: {combined_edge:+.2f} (model only with 25% haircut - no sharp data)"
+        )
 
     # =========================================================================
     # STEP 5: Determine final side and if it's a play
     # =========================================================================
-    signals_agree = (model_edge > 0 and sharp_edge >= 0) or (
-        model_edge < 0 and sharp_edge <= 0)
+    signals_agree = (model_edge > 0 and sharp_edge >= 0) or (model_edge < 0 and sharp_edge <= 0)
 
     if abs(combined_edge) < config.min_edge_total:
         final_side = "NO_PLAY"
         is_play = False
         final_confidence = 0.0
         rationale.append(
-            f"❌ NO PLAY: Combined edge {combined_edge:+.2f} < min {config.min_edge_total}")
+            f"❌ NO PLAY: Combined edge {combined_edge:+.2f} < min {config.min_edge_total}"
+        )
     else:
         final_side = "over" if combined_edge > 0 else "under"
         is_play = True
 
-        raw_confidence = config.base_confidence + \
-            (abs(combined_edge) * config.confidence_scale_total)
-        final_confidence = min(config.max_confidence, max(
-            config.min_confidence, raw_confidence))
+        raw_confidence = config.base_confidence + (
+            abs(combined_edge) * config.confidence_scale_total
+        )
+        final_confidence = min(config.max_confidence, max(config.min_confidence, raw_confidence))
 
         if signals_agree:
             rationale.append(
-                f"✓ SIGNALS AGREE: {final_side.upper()} ({final_confidence:.1%} confidence)")
+                f"✓ SIGNALS AGREE: {final_side.upper()} ({final_confidence:.1%} confidence)"
+            )
         else:
             rationale.append(
-                f"⚠️ SIGNALS CONFLICT: Combined favors {final_side.upper()} ({final_confidence:.1%})")
+                f"⚠️ SIGNALS CONFLICT: Combined favors {final_side.upper()} ({final_confidence:.1%})"
+            )
 
     side_flipped = (model_side != final_side) and (final_side != "NO_PLAY")
     if side_flipped:
         rationale.append(
-            f"🔄 SIDE FLIPPED: Model said {model_side.upper()}, now {final_side.upper()}")
+            f"🔄 SIDE FLIPPED: Model said {model_side.upper()}, now {final_side.upper()}"
+        )
 
     return WeightedResult(
         final_side=final_side,
@@ -589,6 +613,7 @@ def combine_total_signals(
 # HELPER: Build SharpSignal from features dict
 # ============================================================================
 
+
 def _first_present(features: Dict[str, Any], *keys: str) -> Optional[float]:
     """Return the first non-None value for any of the provided keys."""
     for key in keys:
@@ -607,8 +632,8 @@ def build_sharp_signal_spread(
     square_line = _first_present(features, "square_spread_avg", "square_avg_spread")
     if square_line is None:
         square_line = market_spread
-    current_line = market_spread if market_spread is not None else _first_present(
-        features, "spread_current"
+    current_line = (
+        market_spread if market_spread is not None else _first_present(features, "spread_current")
     )
     return SharpSignal(
         pinnacle_line=_first_present(features, "pinnacle_spread"),
@@ -641,8 +666,8 @@ def build_sharp_signal_total(
     square_line = _first_present(features, "square_total_avg", "square_avg_total")
     if square_line is None:
         square_line = market_total
-    current_line = market_total if market_total is not None else _first_present(
-        features, "total_current"
+    current_line = (
+        market_total if market_total is not None else _first_present(features, "total_current")
     )
     return SharpSignal(
         pinnacle_line=_first_present(features, "pinnacle_total"),
@@ -668,6 +693,7 @@ def build_sharp_signal_total(
 # ============================================================================
 # INTEGRATION FUNCTIONS (for predict_unified_full_game.py)
 # ============================================================================
+
 
 def apply_weighted_combination_spread(
     prediction: Dict[str, Any],
@@ -703,6 +729,7 @@ def apply_weighted_combination_spread(
     effective_config = config
     if min_edge_override is not None and min_edge_override > config.min_edge_spread:
         from dataclasses import replace
+
         effective_config = replace(config, min_edge_spread=min_edge_override)
     result = combine_spread_signals(model_margin, spread, sharp_signal, effective_config)
 
@@ -777,6 +804,7 @@ def apply_weighted_combination_total(
     effective_config = config
     if min_edge_override is not None and min_edge_override > config.min_edge_total:
         from dataclasses import replace
+
         effective_config = replace(config, min_edge_total=min_edge_override)
     result = combine_total_signals(model_total, total, sharp_signal, effective_config)
 

@@ -3,26 +3,31 @@ Machine learning models for NBA spreads and totals predictions.
 
 Implements baseline and advanced models for betting predictions.
 """
+
 from __future__ import annotations
-from . import io
+
+import logging
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
-import logging
-import os
+
 import numpy as np
 import pandas as pd
+
+from . import io
 
 logger = logging.getLogger(__name__)
 
 try:
-    from sklearn.linear_model import LogisticRegression, Ridge
-    from sklearn.ensemble import GradientBoostingClassifier
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.pipeline import Pipeline
     from sklearn.calibration import CalibratedClassifierCV
-    from sklearn.metrics import accuracy_score, log_loss, mean_squared_error, mean_absolute_error
+    from sklearn.ensemble import GradientBoostingClassifier
     from sklearn.impute import KNNImputer
+    from sklearn.linear_model import LogisticRegression, Ridge
+    from sklearn.metrics import accuracy_score, log_loss, mean_absolute_error, mean_squared_error
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -32,6 +37,7 @@ except ImportError:
 @dataclass
 class ModelMetrics:
     """Container for model evaluation metrics."""
+
     accuracy: float = 0.0
     log_loss: float = 0.0
     mse: float = 0.0
@@ -75,8 +81,7 @@ class BaseModel(ABC):
             ValueError: If any feature column is missing or if imputation fails
         """
         # Check for missing feature columns
-        missing_cols = [
-            col for col in self.feature_columns if col not in X.columns]
+        missing_cols = [col for col in self.feature_columns if col not in X.columns]
         if missing_cols:
             raise ValueError(
                 f"Missing required feature columns: {sorted(missing_cols)}. "
@@ -93,12 +98,14 @@ class BaseModel(ABC):
         if len(features_with_nan) > 0:
             total_values = len(X_features)
             logger.warning(
-                f"Found NaN values in {len(features_with_nan)} features during prediction")
+                f"Found NaN values in {len(features_with_nan)} features during prediction"
+            )
 
             for feature, count in features_with_nan.items():
                 pct_missing = (count / total_values) * 100
                 logger.warning(
-                    f"  - {feature}: {count}/{total_values} ({pct_missing:.1f}%) missing")
+                    f"  - {feature}: {count}/{total_values} ({pct_missing:.1f}%) missing"
+                )
 
                 if pct_missing > 50:
                     raise ValueError(
@@ -120,7 +127,8 @@ class BaseModel(ABC):
             # We don't fill here anymore to avoid data leakage (learning from test set)
             # X_features = X_features.fillna(medians)
             logger.info(
-                f"Will impute NaN values using Pipeline for {len(features_with_nan)} features")
+                f"Will impute NaN values using Pipeline for {len(features_with_nan)} features"
+            )
 
         return X_features
 
@@ -161,26 +169,41 @@ class SpreadsModel(BaseModel):
     # training data leakage (where historical stats might include the target game).
     DEFAULT_FEATURES = [
         # Team performance
-        "home_ppg", "home_papg", "home_win_pct", "home_avg_margin",
-        "away_ppg", "away_papg", "away_win_pct", "away_avg_margin",
+        "home_ppg",
+        "home_papg",
+        "home_win_pct",
+        "home_avg_margin",
+        "away_ppg",
+        "away_papg",
+        "away_win_pct",
+        "away_avg_margin",
         # Rest
-        "home_rest_days", "away_rest_days", "rest_advantage",
-        "home_b2b", "away_b2b",
+        "home_rest_days",
+        "away_rest_days",
+        "rest_advantage",
+        "home_b2b",
+        "away_b2b",
         # Dynamic Home Court Advantage (context-adjusted)
         "dynamic_hca",
         # Head-to-head
-        "h2h_win_pct", "h2h_avg_margin",
+        "h2h_win_pct",
+        "h2h_avg_margin",
         # Derived
-        "win_pct_diff", "ppg_diff",
+        "win_pct_diff",
+        "ppg_diff",
         # *** LINE FEATURES *** (market information)
         "spread_line",  # The actual spread line
         "spread_opening_line",
         "spread_line_std",  # Book disagreement
         # ATS performance
-        "home_ats_pct", "away_ats_pct",
+        "home_ats_pct",
+        "away_ats_pct",
         # Injury impact (when available)
-        "home_injury_spread_impact", "away_injury_spread_impact",
-        "injury_spread_diff", "home_star_out", "away_star_out",
+        "home_injury_spread_impact",
+        "away_injury_spread_impact",
+        "injury_spread_diff",
+        "home_star_out",
+        "away_star_out",
         "predicted_margin_adj",  # Injury-adjusted prediction
     ]
 
@@ -191,13 +214,13 @@ class SpreadsModel(BaseModel):
     # 2. Build training data with real splits
     # 3. Add these features back to DEFAULT_FEATURES and retrain
     MARKET_SIGNAL_FEATURES = [
-        "is_rlm_spread",           # Reverse line movement detected
+        "is_rlm_spread",  # Reverse line movement detected
         # Sharp money indicator (-1=away, 0=neutral, 1=home)
         "sharp_side_spread",
         "spread_public_home_pct",  # Public betting % on home
         # Ticket vs money divergence (sharp indicator)
         "spread_ticket_money_diff",
-        "spread_movement",         # Line movement from open
+        "spread_movement",  # Line movement from open
     ]
 
     def __init__(
@@ -211,12 +234,12 @@ class SpreadsModel(BaseModel):
         self.model_type = model_type
         # ENABLED: Market signal features are now included by default
         self.feature_columns = feature_columns or (
-            self.DEFAULT_FEATURES + self.MARKET_SIGNAL_FEATURES)
+            self.DEFAULT_FEATURES + self.MARKET_SIGNAL_FEATURES
+        )
         self.use_calibration = use_calibration
 
         if not SKLEARN_AVAILABLE:
-            raise ImportError(
-                "scikit-learn required. Install with: pip install scikit-learn")
+            raise ImportError("scikit-learn required. Install with: pip install scikit-learn")
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "SpreadsModel":
         """
@@ -227,8 +250,7 @@ class SpreadsModel(BaseModel):
             y: Target (1 = covered, 0 = didn't cover) or margin values
         """
         # Filter to available features
-        available_features = [
-            f for f in self.feature_columns if f in X.columns]
+        available_features = [f for f in self.feature_columns if f in X.columns]
         self.feature_columns = available_features
 
         X_features = X[self.feature_columns].copy()
@@ -250,19 +272,20 @@ class SpreadsModel(BaseModel):
 
         # Build pipeline: imputer -> scaler -> estimator
         # Using KNNImputer for smarter imputation (learns local structure)
-        pipeline = Pipeline([
-            ("imputer", KNNImputer(n_neighbors=5)),
-            ("scaler", StandardScaler()),
-            ("est", estimator)
-        ])
+        pipeline = Pipeline(
+            [
+                ("imputer", KNNImputer(n_neighbors=5)),
+                ("scaler", StandardScaler()),
+                ("est", estimator),
+            ]
+        )
 
         # Apply probability calibration for classification models
         if self.use_calibration and self.model_type in ["logistic", "gradient_boosting"]:
-            logger.info(
-                f"Applying isotonic calibration to {self.model_type} model")
+            logger.info(f"Applying isotonic calibration to {self.model_type} model")
             calibrated_model = CalibratedClassifierCV(
                 pipeline,
-                method='isotonic',  # Isotonic regression for non-parametric calibration
+                method="isotonic",  # Isotonic regression for non-parametric calibration
                 cv=5,  # 5-fold cross-validation for calibration
             )
             calibrated_model.fit(X_features, y)
@@ -344,11 +367,17 @@ class TotalsModel(BaseModel):
     # Core features that have predictive value based on historical data
     DEFAULT_FEATURES = [
         # Team performance
-        "home_ppg", "home_papg", "home_total_ppg",
-        "away_ppg", "away_papg", "away_total_ppg",
+        "home_ppg",
+        "home_papg",
+        "home_total_ppg",
+        "away_ppg",
+        "away_papg",
+        "away_total_ppg",
         # Rest
-        "home_rest_days", "away_rest_days",
-        "home_b2b", "away_b2b",
+        "home_rest_days",
+        "away_rest_days",
+        "home_b2b",
+        "away_b2b",
         # Dynamic Home Court Advantage (affects pace/scoring)
         "dynamic_hca",
         # Derived
@@ -358,9 +387,11 @@ class TotalsModel(BaseModel):
         "total_opening_line",
         "total_line_std",  # Book disagreement
         # Over/under tendencies
-        "home_over_pct", "away_over_pct",
+        "home_over_pct",
+        "away_over_pct",
         # Injury impact (when available)
-        "home_injury_total_impact", "away_injury_total_impact",
+        "home_injury_total_impact",
+        "away_injury_total_impact",
         "injury_total_diff",
         "predicted_total_adj",  # Injury-adjusted prediction
     ]
@@ -372,13 +403,13 @@ class TotalsModel(BaseModel):
     # 2. Build training data with real splits
     # 3. Add these features back to DEFAULT_FEATURES and retrain
     MARKET_SIGNAL_FEATURES = [
-        "is_rlm_total",            # Reverse line movement detected
+        "is_rlm_total",  # Reverse line movement detected
         # Sharp money indicator (-1=under, 0=neutral, 1=over)
         "sharp_side_total",
-        "over_public_pct",         # Public betting % on over
+        "over_public_pct",  # Public betting % on over
         # Ticket vs money divergence (sharp indicator)
         "total_ticket_money_diff",
-        "total_movement",          # Line movement from open
+        "total_movement",  # Line movement from open
     ]
 
     def __init__(
@@ -392,12 +423,12 @@ class TotalsModel(BaseModel):
         self.model_type = model_type
         # ENABLED: Market signal features are now included by default
         self.feature_columns = feature_columns or (
-            self.DEFAULT_FEATURES + self.MARKET_SIGNAL_FEATURES)
+            self.DEFAULT_FEATURES + self.MARKET_SIGNAL_FEATURES
+        )
         self.use_calibration = use_calibration
 
         if not SKLEARN_AVAILABLE:
-            raise ImportError(
-                "scikit-learn required. Install with: pip install scikit-learn")
+            raise ImportError("scikit-learn required. Install with: pip install scikit-learn")
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "TotalsModel":
         """
@@ -407,8 +438,7 @@ class TotalsModel(BaseModel):
             X: Feature DataFrame
             y: Target (1 = over, 0 = under) or total score values
         """
-        available_features = [
-            f for f in self.feature_columns if f in X.columns]
+        available_features = [f for f in self.feature_columns if f in X.columns]
         self.feature_columns = available_features
 
         X_features = X[self.feature_columns].copy()
@@ -428,19 +458,20 @@ class TotalsModel(BaseModel):
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}")
 
-        pipeline = Pipeline([
-            ("imputer", KNNImputer(n_neighbors=5)),
-            ("scaler", StandardScaler()),
-            ("est", estimator)
-        ])
+        pipeline = Pipeline(
+            [
+                ("imputer", KNNImputer(n_neighbors=5)),
+                ("scaler", StandardScaler()),
+                ("est", estimator),
+            ]
+        )
 
         # Apply probability calibration for classification models
         if self.use_calibration and self.model_type in ["logistic", "gradient_boosting"]:
-            logger.info(
-                f"Applying isotonic calibration to {self.model_type} model")
+            logger.info(f"Applying isotonic calibration to {self.model_type} model")
             calibrated_model = CalibratedClassifierCV(
                 pipeline,
-                method='isotonic',  # Isotonic regression for non-parametric calibration
+                method="isotonic",  # Isotonic regression for non-parametric calibration
                 cv=5,  # 5-fold cross-validation for calibration
             )
             calibrated_model.fit(X_features, y)
@@ -512,6 +543,7 @@ class FirstHalfMixin:
     This mixin does not change implementation but provides a semantic marker
     and a place to override defaults in the future.
     """
+
     pass
 
 
@@ -559,9 +591,15 @@ class TeamTotalsModel(BaseModel):
     """
 
     DEFAULT_FEATURES = [
-        "home_ppg", "home_papg", "home_total_ppg",
-        "away_ppg", "away_papg", "away_total_ppg",
-        "predicted_total", "predicted_margin", "ppg_diff",
+        "home_ppg",
+        "home_papg",
+        "home_total_ppg",
+        "away_ppg",
+        "away_papg",
+        "away_total_ppg",
+        "predicted_total",
+        "predicted_margin",
+        "ppg_diff",
     ]
 
     def __init__(
@@ -577,21 +615,21 @@ class TeamTotalsModel(BaseModel):
         self.use_calibration = use_calibration
 
         if not SKLEARN_AVAILABLE:
-            raise ImportError(
-                "scikit-learn required. Install with: pip install scikit-learn")
+            raise ImportError("scikit-learn required. Install with: pip install scikit-learn")
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "TeamTotalsModel":
 
         # Filter to only available features
-        available_features = [
-            f for f in self.feature_columns if f in X.columns]
+        available_features = [f for f in self.feature_columns if f in X.columns]
         missing_features = set(self.feature_columns) - set(available_features)
 
         if missing_features:
             logger.info(
-                f"Feature filtering: {len(available_features)}/{len(self.feature_columns)} available ({len(missing_features)} missing)")
+                f"Feature filtering: {len(available_features)}/{len(self.feature_columns)} available ({len(missing_features)} missing)"
+            )
             logger.info(
-                f"Using {len(available_features)}/{len(self.feature_columns)} requested features ({len(available_features)/len(self.feature_columns):.1%})")
+                f"Using {len(available_features)}/{len(self.feature_columns)} requested features ({len(available_features)/len(self.feature_columns):.1%})"
+            )
 
         self.feature_columns = available_features
         X_features = X[self.feature_columns].copy()
@@ -609,19 +647,20 @@ class TeamTotalsModel(BaseModel):
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}")
 
-        pipeline = Pipeline([
-            ("imputer", KNNImputer(n_neighbors=5)),
-            ("scaler", StandardScaler()),
-            ("est", estimator)
-        ])
+        pipeline = Pipeline(
+            [
+                ("imputer", KNNImputer(n_neighbors=5)),
+                ("scaler", StandardScaler()),
+                ("est", estimator),
+            ]
+        )
 
         # Apply probability calibration for classification models
         if self.use_calibration:
-            logger.info(
-                f"Applying isotonic calibration to {self.model_type} team totals model")
+            logger.info(f"Applying isotonic calibration to {self.model_type} team totals model")
             calibrated_model = CalibratedClassifierCV(
                 pipeline,
-                method='isotonic',  # Isotonic regression for non-parametric calibration
+                method="isotonic",  # Isotonic regression for non-parametric calibration
                 cv=5,  # 5-fold cross-validation for calibration
             )
             calibrated_model.fit(X_features, y)
@@ -727,85 +766,95 @@ def find_value_bets(
         if "spread_prob" in row and "spread_implied_prob" in row:
             edge = row["spread_prob"] - row["spread_implied_prob"]
             if edge >= min_edge and row["spread_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "spread",
-                    "prediction": "cover" if row["spread_prob"] > 0.5 else "no cover",
-                    "model_prob": row["spread_prob"],
-                    "implied_prob": row["spread_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("spread_line", None),
-                })
+                value_bets.append(
+                    {
+                        "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
+                        "bet_type": "spread",
+                        "prediction": "cover" if row["spread_prob"] > 0.5 else "no cover",
+                        "model_prob": row["spread_prob"],
+                        "implied_prob": row["spread_implied_prob"],
+                        "edge": edge,
+                        "line": row.get("spread_line", None),
+                    }
+                )
 
         # For totals
         if "total_prob" in row and "total_implied_prob" in row:
             edge = row["total_prob"] - row["total_implied_prob"]
             if edge >= min_edge and row["total_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "total",
-                    "prediction": "over" if row["total_prob"] > 0.5 else "under",
-                    "model_prob": row["total_prob"],
-                    "implied_prob": row["total_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("total_line", None),
-                })
+                value_bets.append(
+                    {
+                        "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
+                        "bet_type": "total",
+                        "prediction": "over" if row["total_prob"] > 0.5 else "under",
+                        "model_prob": row["total_prob"],
+                        "implied_prob": row["total_implied_prob"],
+                        "edge": edge,
+                        "line": row.get("total_line", None),
+                    }
+                )
 
         # First-half spreads
         if "fh_spread_prob" in row and "fh_spread_implied_prob" in row:
             edge = row["fh_spread_prob"] - row["fh_spread_implied_prob"]
             if edge >= min_edge and row["fh_spread_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "first_half_spread",
-                    "prediction": "cover" if row["fh_spread_prob"] > 0.5 else "no cover",
-                    "model_prob": row["fh_spread_prob"],
-                    "implied_prob": row["fh_spread_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("fh_spread_line", None),
-                })
+                value_bets.append(
+                    {
+                        "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
+                        "bet_type": "first_half_spread",
+                        "prediction": "cover" if row["fh_spread_prob"] > 0.5 else "no cover",
+                        "model_prob": row["fh_spread_prob"],
+                        "implied_prob": row["fh_spread_implied_prob"],
+                        "edge": edge,
+                        "line": row.get("fh_spread_line", None),
+                    }
+                )
 
         # First-half totals
         if "fh_total_prob" in row and "fh_total_implied_prob" in row:
             edge = row["fh_total_prob"] - row["fh_total_implied_prob"]
             if edge >= min_edge and row["fh_total_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "first_half_total",
-                    "prediction": "over" if row["fh_total_prob"] > 0.5 else "under",
-                    "model_prob": row["fh_total_prob"],
-                    "implied_prob": row["fh_total_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("fh_total_line", None),
-                })
+                value_bets.append(
+                    {
+                        "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
+                        "bet_type": "first_half_total",
+                        "prediction": "over" if row["fh_total_prob"] > 0.5 else "under",
+                        "model_prob": row["fh_total_prob"],
+                        "implied_prob": row["fh_total_implied_prob"],
+                        "edge": edge,
+                        "line": row.get("fh_total_line", None),
+                    }
+                )
 
         # Team totals (home/away)
         if "home_team_total_prob" in row and "home_team_total_implied_prob" in row:
-            edge = row["home_team_total_prob"] - \
-                row["home_team_total_implied_prob"]
+            edge = row["home_team_total_prob"] - row["home_team_total_implied_prob"]
             if edge >= min_edge and row["home_team_total_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "home_team_total",
-                    "prediction": "over" if row["home_team_total_prob"] > 0.5 else "under",
-                    "model_prob": row["home_team_total_prob"],
-                    "implied_prob": row["home_team_total_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("home_team_total_line", None),
-                })
+                value_bets.append(
+                    {
+                        "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
+                        "bet_type": "home_team_total",
+                        "prediction": "over" if row["home_team_total_prob"] > 0.5 else "under",
+                        "model_prob": row["home_team_total_prob"],
+                        "implied_prob": row["home_team_total_implied_prob"],
+                        "edge": edge,
+                        "line": row.get("home_team_total_line", None),
+                    }
+                )
 
         if "away_team_total_prob" in row and "away_team_total_implied_prob" in row:
-            edge = row["away_team_total_prob"] - \
-                row["away_team_total_implied_prob"]
+            edge = row["away_team_total_prob"] - row["away_team_total_implied_prob"]
             if edge >= min_edge and row["away_team_total_prob"] >= min_confidence:
-                value_bets.append({
-                    "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
-                    "bet_type": "away_team_total",
-                    "prediction": "over" if row["away_team_total_prob"] > 0.5 else "under",
-                    "model_prob": row["away_team_total_prob"],
-                    "implied_prob": row["away_team_total_implied_prob"],
-                    "edge": edge,
-                    "line": row.get("away_team_total_line", None),
-                })
+                value_bets.append(
+                    {
+                        "game": f"{row.get('home_team', 'Home')} vs {row.get('away_team', 'Away')}",
+                        "bet_type": "away_team_total",
+                        "prediction": "over" if row["away_team_total_prob"] > 0.5 else "under",
+                        "model_prob": row["away_team_total_prob"],
+                        "implied_prob": row["away_team_total_implied_prob"],
+                        "edge": edge,
+                        "line": row.get("away_team_total_line", None),
+                    }
+                )
 
     return pd.DataFrame(value_bets)

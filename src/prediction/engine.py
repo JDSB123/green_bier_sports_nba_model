@@ -29,29 +29,34 @@ FEATURE VALIDATION:
 
     See src/prediction/feature_validation.py for details.
 """
+
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 from src.utils.version import resolve_version
 
 # Single source of truth for version - env overrides VERSION file
 MODEL_VERSION = resolve_version()
 
 import logging
+
 import joblib
+
+from src.config import filter_thresholds
+from src.modeling.unified_features import MODEL_CONFIGS
 
 # Legacy predictors removed in v33.1.0 - all predictions use PeriodPredictor
 from src.prediction.feature_validation import (
-    validate_and_prepare_features,
     MissingFeaturesError,
     get_feature_mode,
+    validate_and_prepare_features,
 )
 from src.prediction.resolution import resolve_total_two_signal
-from src.modeling.unified_features import MODEL_CONFIGS
-from src.config import filter_thresholds
 
 # Import monitoring components (lazy loaded to avoid circular imports)
 _signal_tracker = None
 _feature_tracker = None
+
 
 def _get_signal_tracker():
     """Lazy load signal tracker to avoid circular imports."""
@@ -59,10 +64,12 @@ def _get_signal_tracker():
     if _signal_tracker is None:
         try:
             from src.monitoring.signal_tracker import get_signal_tracker
+
             _signal_tracker = get_signal_tracker()
         except ImportError:
             pass
     return _signal_tracker
+
 
 def _get_feature_tracker():
     """Lazy load feature tracker to avoid circular imports."""
@@ -70,16 +77,19 @@ def _get_feature_tracker():
     if _feature_tracker is None:
         try:
             from src.monitoring.feature_completeness import get_feature_tracker
+
             _feature_tracker = get_feature_tracker()
         except ImportError:
             pass
     return _feature_tracker
+
 
 logger = logging.getLogger(__name__)
 
 
 class ModelNotFoundError(Exception):
     """Raised when a required model file is missing."""
+
     pass
 
 
@@ -115,32 +125,26 @@ def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
         "home_papg_1h": "home_papg",
         "away_papg_1h": "away_papg",
         "ppg_diff_1h": "ppg_diff",
-
         # Margins (1H margins != FG margins)
         "home_margin_1h": "home_margin",
         "away_margin_1h": "away_margin",
-
         # Win rates (1H win% != FG win%)
         "home_1h_win_pct": "home_win_pct",
         "away_1h_win_pct": "away_win_pct",
-
         # Pace (1H pace can differ from FG pace)
         "home_pace_1h": "home_pace",
         "away_pace_1h": "away_pace",
         "expected_pace_1h": "expected_pace",
-
         # Recent form (1H-specific L5/L10)
         "home_l5_margin_1h": "home_l5_margin",
         "away_l5_margin_1h": "away_l5_margin",
         "home_l10_margin_1h": "home_l10_margin",
         "away_l10_margin_1h": "away_l10_margin",
-
         # Consistency (1H volatility)
         "home_margin_std_1h": "home_margin_std",
         "away_margin_std_1h": "away_margin_std",
         "home_score_std_1h": "home_score_std",
         "away_score_std_1h": "away_score_std",
-
         # Efficiency ratings (1H-specific ORtg/DRtg/NetRtg)
         "home_ortg_1h": "home_ortg",
         "away_ortg_1h": "away_ortg",
@@ -149,16 +153,13 @@ def map_1h_features_to_fg_names(features: Dict[str, float]) -> Dict[str, float]:
         "home_net_rtg_1h": "home_net_rtg",
         "away_net_rtg_1h": "away_net_rtg",
         "net_rating_diff_1h": "net_rating_diff",
-
         # Model predictions (CRITICAL for edge calculation)
         "predicted_margin_1h": "predicted_margin",
         "predicted_total_1h": "predicted_total",
-
         # Period-specific HCA (computed by feature pipeline with _1h suffix)
         "dynamic_hca_1h": "dynamic_hca",
         "home_court_advantage_1h": "home_court_advantage",
         "home_avg_margin_1h": "home_avg_margin",
-
         # H2H (1H-specific head-to-head)
         "h2h_margin_1h": "h2h_margin",
     }
@@ -227,15 +228,20 @@ class PeriodPredictor:
             raise ModelNotFoundError(f"Spread model for {self.period} not loaded")
 
         import pandas as pd
+
         from src.prediction.resolution import resolve_spread_two_signal
 
         # FIX: For 1H models, map 1H features to FG feature names that the model expects
         if self.period == "1h":
             features = map_1h_features_to_fg_names(features)
-            logger.debug(f"[{self.period}_spread] Mapped 1H features to FG names for model compatibility")
+            logger.debug(
+                f"[{self.period}_spread] Mapped 1H features to FG names for model compatibility"
+            )
 
         # Prepare features using unified validation (add line context for compatibility)
-        margin_key = f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
+        margin_key = (
+            f"predicted_margin_{self.period}" if self.period != "fg" else "predicted_margin"
+        )
         feature_payload = dict(features)
         feature_payload["spread_line"] = spread_line
         feature_payload["fg_spread_line"] = spread_line
@@ -273,7 +279,7 @@ class PeriodPredictor:
 
         # CRITICAL: predicted_margin is REQUIRED - do not allow defaults
         if predicted_margin is None:
-            available_margin_keys = [k for k in features.keys() if 'margin' in k.lower()]
+            available_margin_keys = [k for k in features.keys() if "margin" in k.lower()]
             raise ValueError(
                 f"[{self.period}_spread] MISSING REQUIRED predicted_margin feature (key: {margin_key}). "
                 f"Cannot proceed without margin calculation. "
@@ -281,7 +287,9 @@ class PeriodPredictor:
                 f"Fix feature pipeline to ensure {margin_key} is always computed."
             )
         if predicted_margin == 0:
-            logger.debug(f"[{self.period}_spread] predicted_margin is exactly 0 (may be intentional)")
+            logger.debug(
+                f"[{self.period}_spread] predicted_margin is exactly 0 (may be intentional)"
+            )
 
         # EDGE CALCULATION:
         # spread_line is the HOME spread from sportsbooks (negative = home favored)
@@ -297,7 +305,7 @@ class PeriodPredictor:
         edge_abs = abs(edge)
 
         # Classifier sanity check - detect broken/drifted models
-        classifier_extreme = (home_cover_prob > 0.99 or home_cover_prob < 0.01)
+        classifier_extreme = home_cover_prob > 0.99 or home_cover_prob < 0.01
         if classifier_extreme:
             logger.warning(
                 f"[{self.period}_spread] EXTREME classifier probability: {home_cover_prob:.4f}. "
@@ -353,6 +361,7 @@ class PeriodPredictor:
         if use_sharp:
             try:
                 from src.prediction.sharp_weighted import apply_weighted_combination_spread
+
                 weighted_pred, _ = apply_weighted_combination_spread(
                     prediction,
                     feature_payload,
@@ -366,12 +375,11 @@ class PeriodPredictor:
                     weighted_pred["raw_edge"] = combined_edge
                     weighted_pred["passes_filter"] = edge_abs >= min_edge
                     weighted_pred["filter_reason"] = (
-                        None if weighted_pred["passes_filter"]
+                        None
+                        if weighted_pred["passes_filter"]
                         else f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
                     )
-                    weighted_pred["model_edge_pct"] = abs(
-                        weighted_pred.get("confidence", 0) - 0.5
-                    )
+                    weighted_pred["model_edge_pct"] = abs(weighted_pred.get("confidence", 0) - 0.5)
                 prediction = weighted_pred
             except Exception as e:
                 logger.warning(f"[{self.period}_spread] Sharp-weighted combine failed: {e}")
@@ -392,7 +400,9 @@ class PeriodPredictor:
         # FIX: For 1H models, map 1H features to FG feature names that the model expects
         if self.period == "1h":
             features = map_1h_features_to_fg_names(features)
-            logger.debug(f"[{self.period}_total] Mapped 1H features to FG names for model compatibility")
+            logger.debug(
+                f"[{self.period}_total] Mapped 1H features to FG names for model compatibility"
+            )
 
         # Prepare features using unified validation (add line context for compatibility)
         total_key = f"predicted_total_{self.period}" if self.period != "fg" else "predicted_total"
@@ -433,7 +443,7 @@ class PeriodPredictor:
 
         # CRITICAL: predicted_total is REQUIRED - do not allow defaults
         if predicted_total is None:
-            available_total_keys = [k for k in features.keys() if 'total' in k.lower()]
+            available_total_keys = [k for k in features.keys() if "total" in k.lower()]
             raise ValueError(
                 f"[{self.period}_total] MISSING REQUIRED predicted_total feature (key: {total_key}). "
                 f"Cannot proceed without total calculation. "
@@ -458,7 +468,7 @@ class PeriodPredictor:
         # v33.0.11.0 FIX: Classifier sanity check - detect broken/drifted models
         # If classifier outputs extreme probability (>99% or <1%), it's unreliable
         # This catches the FG Total model data drift issue (always outputs 100% over)
-        classifier_extreme = (over_prob > 0.99 or over_prob < 0.01)
+        classifier_extreme = over_prob > 0.99 or over_prob < 0.01
         if classifier_extreme:
             logger.warning(
                 f"[{self.period}_total] EXTREME classifier probability: over={over_prob:.4f}. "
@@ -524,6 +534,7 @@ class PeriodPredictor:
         if use_sharp:
             try:
                 from src.prediction.sharp_weighted import apply_weighted_combination_total
+
                 weighted_pred, _ = apply_weighted_combination_total(
                     prediction,
                     feature_payload,
@@ -537,12 +548,11 @@ class PeriodPredictor:
                     weighted_pred["raw_edge"] = combined_edge
                     weighted_pred["passes_filter"] = edge_abs >= min_edge
                     weighted_pred["filter_reason"] = (
-                        None if weighted_pred["passes_filter"]
+                        None
+                        if weighted_pred["passes_filter"]
                         else f"Low edge: {edge_abs:.1f} pts (min: {min_edge})"
                     )
-                    weighted_pred["model_edge_pct"] = abs(
-                        weighted_pred.get("confidence", 0) - 0.5
-                    )
+                    weighted_pred["model_edge_pct"] = abs(weighted_pred.get("confidence", 0) - 0.5)
                 prediction = weighted_pred
             except Exception as e:
                 logger.warning(f"[{self.period}_total] Sharp-weighted combine failed: {e}")
@@ -634,7 +644,11 @@ class UnifiedPredictionEngine:
             if v and (k.startswith("1h_") or k.startswith("fg_"))
         )
         if loaded_count < 4:
-            missing = [k for k, v in self.loaded_models.items() if (k.startswith("1h_") or k.startswith("fg_")) and not v]
+            missing = [
+                k
+                for k, v in self.loaded_models.items()
+                if (k.startswith("1h_") or k.startswith("fg_")) and not v
+            ]
             logger.warning(
                 f"PARTIAL LOAD: Only {loaded_count}/4 models loaded (1H+FG Spreads/Totals). Missing: {missing}\n"
                 f"Some predictions may be skipped."
@@ -680,8 +694,10 @@ class UnifiedPredictionEngine:
             )
 
         return (
-            spread_model, spread_features,
-            total_model, total_features,
+            spread_model,
+            spread_features,
+            total_model,
+            total_features,
         )
 
     def _load_model(self, model_key: str) -> Tuple[Any, List[str]]:
@@ -712,7 +728,9 @@ class UnifiedPredictionEngine:
             # Check if the loaded object is a valid model (has predict methods)
             # If not, it might be a joblib file saved with .pkl extension (common in this repo)
             if not (hasattr(model, "predict") or hasattr(model, "predict_proba")):
-                logger.info(f"Object loaded from {model_path} via pickle does not look like a model. Trying joblib...")
+                logger.info(
+                    f"Object loaded from {model_path} via pickle does not look like a model. Trying joblib..."
+                )
                 try:
                     model = joblib.load(model_path)
                     logger.info(f"Successfully loaded {model_path} using joblib fallback.")
@@ -779,9 +797,15 @@ class UnifiedPredictionEngine:
         # Verify model class indices match our assumptions
         # Expected: class 0 = away/under, class 1 = home/over
         if hasattr(model, "classes_"):
-            classes = model.classes_.tolist() if hasattr(model.classes_, "tolist") else list(model.classes_)
+            classes = (
+                model.classes_.tolist()
+                if hasattr(model.classes_, "tolist")
+                else list(model.classes_)
+            )
             if len(classes) == 2:
-                logger.info(f"[{model_key}] Model classes: {classes} (expected [0, 1] or [False, True])")
+                logger.info(
+                    f"[{model_key}] Model classes: {classes} (expected [0, 1] or [False, True])"
+                )
                 # Check if classes are in expected order
                 if classes not in [[0, 1], [False, True], [0.0, 1.0]]:
                     logger.warning(
@@ -789,10 +813,11 @@ class UnifiedPredictionEngine:
                         f"Predictions may be inverted! Expected [0, 1] where 0=away/under, 1=home/over."
                     )
             else:
-                logger.warning(f"[{model_key}] Model has {len(classes)} classes (expected 2): {classes}")
+                logger.warning(
+                    f"[{model_key}] Model has {len(classes)} classes (expected 2): {classes}"
+                )
 
         return model, features
-
 
     def predict_first_half(
         self,

@@ -6,7 +6,16 @@ import pandas as pd
 import pytest
 
 
-def _make_game(game_id: int, home_id: int, away_id: int, home_name: str, away_name: str, day: int, home_score: int, away_score: int):
+def _make_game(
+    game_id: int,
+    home_id: int,
+    away_id: int,
+    home_name: str,
+    away_name: str,
+    day: int,
+    home_score: int,
+    away_score: int,
+):
     return {
         "id": game_id,
         "date": f"2026-01-{day:02d}T00:00:00Z",
@@ -16,8 +25,16 @@ def _make_game(game_id: int, home_id: int, away_id: int, home_name: str, away_na
             "away": {"id": away_id, "name": away_name},
         },
         "scores": {
-            "home": {"total": home_score, "quarter_1": home_score // 4, "quarter_2": home_score // 4},
-            "away": {"total": away_score, "quarter_1": away_score // 4, "quarter_2": away_score // 4},
+            "home": {
+                "total": home_score,
+                "quarter_1": home_score // 4,
+                "quarter_2": home_score // 4,
+            },
+            "away": {
+                "total": away_score,
+                "quarter_1": away_score // 4,
+                "quarter_2": away_score // 4,
+            },
         },
     }
 
@@ -56,9 +73,7 @@ async def test_rich_feature_builder_build_game_features_smoke(monkeypatch):
     async def fetch_h2h(h2h: str, **_kwargs):
         # Provide one H2H game.
         return {
-            "response": [
-                _make_game(900, 1, 2, "Los Angeles Lakers", "Boston Celtics", 1, 120, 110)
-            ]
+            "response": [_make_game(900, 1, 2, "Los Angeles Lakers", "Boston Celtics", 1, 120, 110)]
         }
 
     async def fetch_standings(**_kwargs):
@@ -133,14 +148,22 @@ async def test_rich_feature_builder_build_game_features_smoke(monkeypatch):
         return injuries
 
     monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_teams", fetch_teams)
-    monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_statistics", fetch_statistics)
+    monkeypatch.setattr(
+        "src.features.rich_features.api_basketball.fetch_statistics", fetch_statistics
+    )
     monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_h2h", fetch_h2h)
-    monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_standings", fetch_standings)
+    monkeypatch.setattr(
+        "src.features.rich_features.api_basketball.fetch_standings", fetch_standings
+    )
     monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_games", fetch_games)
-    monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_game_stats_teams", fetch_game_stats_teams)
+    monkeypatch.setattr(
+        "src.features.rich_features.api_basketball.fetch_game_stats_teams", fetch_game_stats_teams
+    )
 
     monkeypatch.setattr("src.ingestion.injuries.fetch_all_injuries", fetch_all_injuries)
-    monkeypatch.setattr("src.ingestion.injuries.enrich_injuries_with_stats", enrich_injuries_with_stats)
+    monkeypatch.setattr(
+        "src.ingestion.injuries.enrich_injuries_with_stats", enrich_injuries_with_stats
+    )
 
     b = RichFeatureBuilder()
 
@@ -169,7 +192,9 @@ async def test_rich_features_injuries_df_empty_success(monkeypatch):
         return injuries
 
     monkeypatch.setattr("src.ingestion.injuries.fetch_all_injuries", fetch_all_injuries)
-    monkeypatch.setattr("src.ingestion.injuries.enrich_injuries_with_stats", enrich_injuries_with_stats)
+    monkeypatch.setattr(
+        "src.ingestion.injuries.enrich_injuries_with_stats", enrich_injuries_with_stats
+    )
 
     b = RichFeatureBuilder()
     df = await b.get_injuries_df()
@@ -254,14 +279,22 @@ async def test_rich_features_strict_splits_enforced(monkeypatch):
         return injuries
 
     monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_teams", fetch_teams)
-    monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_statistics", fetch_statistics)
+    monkeypatch.setattr(
+        "src.features.rich_features.api_basketball.fetch_statistics", fetch_statistics
+    )
     monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_h2h", fetch_h2h)
-    monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_standings", fetch_standings)
+    monkeypatch.setattr(
+        "src.features.rich_features.api_basketball.fetch_standings", fetch_standings
+    )
     monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_games", fetch_games)
-    monkeypatch.setattr("src.features.rich_features.api_basketball.fetch_game_stats_teams", fetch_game_stats_teams)
+    monkeypatch.setattr(
+        "src.features.rich_features.api_basketball.fetch_game_stats_teams", fetch_game_stats_teams
+    )
 
     monkeypatch.setattr("src.ingestion.injuries.fetch_all_injuries", fetch_all_injuries)
-    monkeypatch.setattr("src.ingestion.injuries.enrich_injuries_with_stats", enrich_injuries_with_stats)
+    monkeypatch.setattr(
+        "src.ingestion.injuries.enrich_injuries_with_stats", enrich_injuries_with_stats
+    )
 
     b = RichFeatureBuilder()
 
@@ -280,4 +313,6 @@ async def test_rich_features_strict_splits_enforced(monkeypatch):
     )
 
     with pytest.raises(ValueError):
-        await b.build_game_features("Los Angeles Lakers", "Boston Celtics", betting_splits=bad_splits)
+        await b.build_game_features(
+            "Los Angeles Lakers", "Boston Celtics", betting_splits=bad_splits
+        )

@@ -4,19 +4,14 @@ Data standardization and ingestion module.
 Re-exports from src.ingestion.standardize for backwards compatibility.
 The canonical standardization module is src/ingestion/standardize.py.
 """
+
+from src.ingestion.standardize import CST, UTC, generate_match_key
 from src.ingestion.standardize import (
-    # Core functions
-    normalize_team_to_espn,
-    is_valid_espn_team_name as is_valid_team,
-    # Timezone
-    to_cst,
-    CST,
-    UTC,
-    # Match keys
-    generate_match_key,
-    # Record standardization
-    standardize_game_data as standardize_game_record,
+    is_valid_espn_team_name as is_valid_team,  # Core functions; Timezone; Match keys; Record standardization
 )
+from src.ingestion.standardize import normalize_team_to_espn
+from src.ingestion.standardize import standardize_game_data as standardize_game_record
+from src.ingestion.standardize import to_cst
 
 
 def standardize_team_name(team: str) -> str:
@@ -26,8 +21,7 @@ def standardize_team_name(team: str) -> str:
     Wrapper for normalize_team_to_espn that returns just the name string
     for backwards compatibility.
     """
-    normalized, _ = normalize_team_to_espn(
-        team, source="standardize_team_name")
+    normalized, _ = normalize_team_to_espn(team, source="standardize_team_name")
     return normalized
 
 
@@ -35,6 +29,7 @@ def standardize_team_name(team: str) -> str:
 def get_all_team_names() -> list[str]:
     """Get list of all valid team names."""
     from src.utils.team_names import CANONICAL_NAMES
+
     return list(CANONICAL_NAMES.values())
 
 

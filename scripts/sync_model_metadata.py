@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import joblib
 import numpy as np
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODELS_DIR = PROJECT_ROOT / "models" / "production"
 
@@ -47,7 +46,9 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
-def _latest_entry_for_version(entries: List[Dict[str, Any]], version_id: str) -> Optional[Dict[str, Any]]:
+def _latest_entry_for_version(
+    entries: List[Dict[str, Any]], version_id: str
+) -> Optional[Dict[str, Any]]:
     matches = [entry for entry in entries if entry.get("version") == version_id]
     if not matches:
         return None
@@ -118,7 +119,9 @@ def _sync_model_pack() -> None:
     trained_dates = [dt for dt in trained_dates if dt is not None]
     if trained_dates:
         latest_dt = max(trained_dates)
-        model_pack["created_at"] = latest_dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        model_pack["created_at"] = (
+            latest_dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        )
     model_pack["last_reviewed"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     model_pack["release_notes"] = (

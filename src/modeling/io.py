@@ -4,11 +4,14 @@ Model I/O helpers: safe persistence for sklearn pipelines and model metadata.
 Provides `save_model` and `load_model` which use `joblib` and maintain a
 simple `manifest.json` in the same directory to record model metadata.
 """
+
 from __future__ import annotations
+
 import json
 import os
+from datetime import UTC, datetime
 from typing import Any, Dict, Optional
-from datetime import datetime, UTC
+
 import joblib
 
 
@@ -17,8 +20,8 @@ def _ensure_dir(path: str) -> None:
 
 
 def save_model(
-    payload: Dict[str, Any], 
-    path: str, 
+    payload: Dict[str, Any],
+    path: str,
     manifest_name: str = "manifest.json",
     metrics: Optional[Dict[str, Any]] = None,
 ) -> None:
@@ -30,7 +33,7 @@ def save_model(
     Model versioning:
     - version: Semantic version string (e.g., "1.1.0")
     - features_hash: Hash of feature column names for compatibility checking
-    
+
     Args:
         payload: Model payload dict
         path: Path to save model
@@ -58,7 +61,7 @@ def save_model(
         "features_hash": features_hash,
         "meta": meta,
     }
-    
+
     # Add metrics if provided
     if metrics:
         entry["metrics"] = {

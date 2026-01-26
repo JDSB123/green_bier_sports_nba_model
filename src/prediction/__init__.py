@@ -7,12 +7,13 @@ Single entry point: UnifiedPredictionEngine
 
 STRICT MODE: All 4 models must exist. No fallbacks. No silent failures.
 """
-from src.prediction.engine import UnifiedPredictionEngine, ModelNotFoundError
+
+from src.prediction.engine import ModelNotFoundError, UnifiedPredictionEngine
 from src.prediction.models import (
-    load_spread_model,
-    load_total_model,
     load_first_half_spread_model,
     load_first_half_total_model,
+    load_spread_model,
+    load_total_model,
 )
 
 __all__ = [
