@@ -7,13 +7,13 @@ import numpy as np
 import pandas as pd
 
 from src.modeling.season_utils import is_crossing_offseason
-from src.modeling.team_factors import (
+from src.modeling.unified_features import PERIOD_SCALING
+from src.utils.team_factors import (
     calculate_travel_fatigue,
     get_home_court_advantage,
     get_timezone_difference,
     get_travel_distance,
 )
-from src.modeling.unified_features import PERIOD_SCALING
 
 logger = logging.getLogger(__name__)
 

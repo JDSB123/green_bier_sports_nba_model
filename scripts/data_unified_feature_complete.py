@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 from src.data import generate_match_key, standardize_team_name
-from src.modeling.team_factors import (
+from src.utils.team_factors import (
     calculate_travel_fatigue,
     get_timezone_difference,
     get_travel_distance,
