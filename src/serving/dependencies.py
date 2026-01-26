@@ -16,6 +16,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from src.config import settings
+from src.ingestion.betting_splits import fetch_public_betting_splits
 from src.ingestion.standardize import normalize_team_to_espn
 from src.modeling.unified_features import get_feature_defaults
 from src.utils.logging import get_logger
@@ -110,8 +111,6 @@ async def fetch_required_splits(
     Returns:
         Dict mapping game_key to GameSplits
     """
-    from src.ingestion.betting_splits import fetch_public_betting_splits
-
     require_action_network = bool(getattr(settings, "require_action_network_splits", False))
     require_real = bool(getattr(settings, "require_real_splits", False))
 

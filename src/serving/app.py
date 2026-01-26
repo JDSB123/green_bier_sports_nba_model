@@ -57,6 +57,18 @@ from src.modeling.edge_thresholds import get_edge_thresholds_for_game
 from src.modeling.unified_features import get_feature_defaults
 from src.prediction import ModelNotFoundError, UnifiedPredictionEngine
 from src.prediction.feature_validation import MissingFeaturesError
+from src.serving.dependencies import (
+    RELEASE_VERSION,
+    canonical_game_key,
+    convert_numpy_types,
+    fetch_required_splits,
+    format_american_odds,
+    get_fire_rating,
+    limiter,
+    missing_market_lines,
+    models_dir,
+    require_splits_if_strict,
+)
 from src.serving.routes.admin import meta_router
 from src.serving.routes.admin import router as admin_router
 
@@ -82,29 +94,11 @@ from src.utils.slate_analysis import (
     to_cst,
 )
 from src.utils.startup_checks import StartupIntegrityError, run_startup_integrity_checks
-from src.utils.version import resolve_version
 
 logger = get_logger(__name__)
 
-# Centralized release/version identifier for API surfaces
-RELEASE_VERSION = resolve_version()
 
-
-def convert_numpy_types(obj):
-    """Recursively convert numpy types to native Python types for JSON serialization."""
-    if isinstance(obj, dict):
-        return {k: convert_numpy_types(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_numpy_types(item) for item in obj]
-    elif isinstance(obj, (np.integer, np.int64, np.int32)):
-        return int(obj)
-    elif isinstance(obj, (np.floating, np.float64, np.float32)):
-        return float(obj)
-    elif isinstance(obj, np.bool_):
-        return bool(obj)
-    elif isinstance(obj, np.ndarray):
-        return obj.tolist()
-    return obj
+# --- Teams Webhook Helpers (specific to teams endpoints) ---
 
 
 async def _validate_teams_outgoing_webhook(request: Request) -> None:
@@ -191,7 +185,6 @@ REQUEST_DURATION = Histogram(
 )
 
 # Rate limiter - use shared instance from dependencies
-from src.serving.dependencies import limiter
 
 # --- Request/Response Models ---
 
@@ -245,120 +238,8 @@ class MarketsResponse(BaseModel):
 
 
 # --- API Setup ---
-
-
-def _models_dir() -> PathLib:
-    """
-    Resolve models directory from a single configured path.
-
-    Single source of truth:
-    - settings.models_dir (env: MODELS_DIR)
-
-    Raise if the configured directory does not exist.
-    """
-    configured = PathLib(getattr(settings, "models_dir", "")).expanduser()
-    if not str(configured).strip():
-        raise RuntimeError(
-            "MODELS_DIR is not configured (settings.models_dir empty). "
-            "Set MODELS_DIR to the production model directory."
-        )
-    if not configured.exists():
-        raise RuntimeError(
-            f"Models directory does not exist: {configured}. "
-            "Ensure the container image includes the model pack at MODELS_DIR."
-        )
-    return configured
-
-
-def _canonical_game_key(home_team: str | None, away_team: str | None, source: str = "odds") -> str:
-    """Build a canonical game key using ESPN-normalized team names."""
-    if not home_team or not away_team:
-        return ""
-    try:
-        from src.ingestion.standardize import normalize_team_to_espn
-
-        home_norm, home_valid = normalize_team_to_espn(str(home_team), source=source)
-        away_norm, away_valid = normalize_team_to_espn(str(away_team), source=source)
-        if home_valid and away_valid:
-            return f"{away_norm}@{home_norm}"
-    except Exception:
-        pass
-    return f"{away_team}@{home_team}"
-
-
-def _require_splits_if_strict(use_splits: bool) -> bool:
-    """Enforce betting splits when strict live-data flags are enabled."""
-    strict = bool(getattr(settings, "require_action_network_splits", False)) or bool(
-        getattr(settings, "require_real_splits", False)
-    )
-    if strict and not use_splits:
-        raise HTTPException(
-            status_code=400,
-            detail="STRICT MODE: Betting splits are required; cannot disable use_splits.",
-        )
-    return True if strict else use_splits
-
-
-async def _fetch_required_splits(
-    games: List[Dict[str, Any]], target_date: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    Fetch betting splits, enforcing strict Action Network requirements when configured.
-
-    Args:
-        games: List of game dicts
-        target_date: Target date in YYYY-MM-DD format (ensures date alignment with Action Network)
-
-    Returns:
-        Dict mapping game_key to GameSplits
-    """
-    require_action_network = bool(getattr(settings, "require_action_network_splits", False))
-    require_real = bool(getattr(settings, "require_real_splits", False))
-
-    if not (require_action_network or require_real):
-        # Non-strict mode: keep existing behavior (best-effort)
-        try:
-            return await fetch_public_betting_splits(games, source="auto", target_date=target_date)
-        except Exception as e:
-            logger.warning(f"Could not fetch splits: {e}")
-            return {}
-
-    # Strict mode: hard-fail on any splits failure.
-    try:
-        splits = await fetch_public_betting_splits(
-            games,
-            source="auto",
-            require_action_network=require_action_network,
-            require_non_empty=True,
-            target_date=target_date,
-        )
-    except Exception as e:
-        logger.error(f"STRICT MODE: Failed to fetch required betting splits: {e}")
-        raise HTTPException(
-            status_code=502,
-            detail=f"STRICT MODE: Action Network betting splits unavailable: {e}",
-        )
-
-    # Require splits coverage for every game we are about to process.
-    missing_keys = []
-    for g in games:
-        home_team = g.get("home_team")
-        away_team = g.get("away_team")
-        if home_team and away_team:
-            game_key = _canonical_game_key(home_team, away_team, source="odds")
-            if game_key not in splits:
-                missing_keys.append(game_key)
-
-    if missing_keys:
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                "STRICT MODE: Action Network did not provide betting splits for all games. "
-                f"Missing: {missing_keys[:10]}"  # cap payload
-            ),
-        )
-
-    return splits
+# Helper functions (models_dir, canonical_game_key, require_splits_if_strict, fetch_required_splits)
+# are now imported from src.serving.dependencies
 
 
 @asynccontextmanager
@@ -373,7 +254,7 @@ async def lifespan(app: FastAPI):
     # === STARTUP ===
     # SECURITY: Startup integrity checks (secrets, market list, feature alignment)
     try:
-        run_startup_integrity_checks(PROJECT_ROOT, _models_dir())
+        run_startup_integrity_checks(PROJECT_ROOT, models_dir())
         logger.info("Startup integrity checks passed")
     except StartupIntegrityError as e:
         logger.error(str(e))
@@ -390,24 +271,24 @@ async def lifespan(app: FastAPI):
     premium_features = validate_premium_features()
     app.state.premium_features = premium_features
 
-    models_dir = _models_dir()
+    model_path = models_dir()
     logger.info(
-        f"{RELEASE_VERSION} STRICT MODE: Loading Unified Prediction Engine from {models_dir}"
+        f"{RELEASE_VERSION} STRICT MODE: Loading Unified Prediction Engine from {model_path}"
     )
 
     # Diagnostic: List files in models directory
-    if models_dir.exists():
-        model_files = list(models_dir.glob("*"))
+    if model_path.exists():
+        model_files = list(model_path.glob("*"))
         logger.info(f"Found {len(model_files)} files in models directory:")
         for f in sorted(model_files):
             size = f.stat().st_size if f.is_file() else 0
             logger.info(f"  - {f.name} ({size:,} bytes)")
     else:
-        logger.error(f"Models directory does not exist: {models_dir}")
+        logger.error(f"Models directory does not exist: {model_path}")
 
     # STRICT MODE: 1H + FG models (6 total). No fallbacks.
     logger.info(f"{RELEASE_VERSION} STRICT MODE: Using 1H/FG models (4 markets: spread/total)")
-    app.state.engine = UnifiedPredictionEngine(models_dir=models_dir, require_all=True)
+    app.state.engine = UnifiedPredictionEngine(models_dir=model_path, require_all=True)
     app.state.feature_builder = RichFeatureBuilder(season=settings.current_season)
     # NO FILE CACHING - all data fetched fresh from APIs per request
     logger.info(
@@ -609,7 +490,7 @@ async def get_slate_predictions(
         raise HTTPException(
             status_code=503, detail=f"{RELEASE_VERSION}: Engine not loaded - models missing"
         )
-    use_splits = _require_splits_if_strict(use_splits)
+    use_splits = require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
@@ -687,7 +568,7 @@ async def get_slate_predictions(
     # Fetch splits with DATE ALIGNMENT - ensure splits match the target slate date
     splits_dict = {}
     if use_splits:
-        splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
+        splits_dict = await fetch_required_splits(games, target_date=date_ctx.as_iso)
 
     # Process slate
     results = []
@@ -700,7 +581,7 @@ async def get_slate_predictions(
 
         try:
             # Build features
-            game_key = _canonical_game_key(home_team, away_team, source="odds")
+            game_key = canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
                 home_team,
                 away_team,
@@ -724,7 +605,7 @@ async def get_slate_predictions(
             fg_total = odds.get("total")
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
-            missing_lines = _missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
+            missing_lines = missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
             if missing_lines:
                 msg = (
                     f"{home_team} vs {away_team}: missing required market lines " f"{missing_lines}"
@@ -825,48 +706,9 @@ async def get_slate_predictions(
     )
 
 
-def format_american_odds(odds: int) -> str:
-    """Format American odds with +/- prefix."""
-    if odds is None:
-        return "N/A"
-    return f"+{odds}" if odds > 0 else str(odds)
-
-
-def _missing_market_lines(
-    fg_spread: Optional[float],
-    fg_total: Optional[float],
-    fh_spread: Optional[float],
-    fh_total: Optional[float],
-) -> List[str]:
-    missing = []
-    if fg_spread is None:
-        missing.append("fg_spread_line")
-    if fg_total is None:
-        missing.append("fg_total_line")
-    if fh_spread is None:
-        missing.append("1h_spread_line")
-    if fh_total is None:
-        missing.append("1h_total_line")
-    return missing
-
-
-def get_fire_rating(confidence: float, edge: float) -> int:
-    """Calculate fire rating (1-5) based on confidence and edge."""
-    # Normalize edge (pts) to 0-1 scale (10 pts = max)
-    edge_norm = min(abs(edge) / 10.0, 1.0)
-    # Combine confidence and edge
-    combined_score = (confidence * 0.6) + (edge_norm * 0.4)
-
-    if combined_score >= 0.85:
-        return 5
-    elif combined_score >= 0.70:
-        return 4
-    elif combined_score >= 0.60:
-        return 3
-    elif combined_score >= 0.52:
-        return 2
-    else:
-        return 1
+# format_american_odds is imported from src.serving.dependencies
+# missing_market_lines is imported from src.serving.dependencies
+# get_fire_rating is imported from src.serving.dependencies
 
 
 @app.get("/slate/{date}/executive")
@@ -888,7 +730,7 @@ async def get_executive_summary(
             status_code=503,
             detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing",
         )
-    use_splits = _require_splits_if_strict(use_splits)
+    use_splits = require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
@@ -967,7 +809,7 @@ async def get_executive_summary(
     splits_dict = {}
     if use_splits:
         try:
-            splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
+            splits_dict = await fetch_required_splits(games, target_date=date_ctx.as_iso)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
@@ -1015,7 +857,7 @@ async def get_executive_summary(
             time_cst_str = game_cst.strftime("%m/%d %I:%M %p") if game_cst else "TBD"
 
             # Build features
-            game_key = _canonical_game_key(home_team, away_team, source="odds")
+            game_key = canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
                 home_team,
                 away_team,
@@ -1049,7 +891,7 @@ async def get_executive_summary(
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
 
-            missing_lines = _missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
+            missing_lines = missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
             if missing_lines:
                 msg = (
                     f"{home_team} vs {away_team}: missing required market lines " f"{missing_lines}"
@@ -1691,7 +1533,7 @@ async def get_comprehensive_slate_analysis(
             status_code=503,
             detail=f"{RELEASE_VERSION} STRICT MODE: Engine not loaded - models missing",
         )
-    use_splits = _require_splits_if_strict(use_splits)
+    use_splits = require_splits_if_strict(use_splits)
 
     # STRICT MODE: Clear ALL caches to force fresh unified data
     app.state.feature_builder.clear_session_cache()
@@ -1781,7 +1623,7 @@ async def get_comprehensive_slate_analysis(
     splits_dict = {}
     if use_splits:
         try:
-            splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
+            splits_dict = await fetch_required_splits(games, target_date=date_ctx.as_iso)
         except Exception as e:
             logger.warning(f"Could not fetch splits: {e}")
 
@@ -1810,7 +1652,7 @@ async def get_comprehensive_slate_analysis(
             time_cst = game_cst.strftime("%I:%M %p %Z") if game_cst else "TBD"
 
             # Build features
-            game_key = _canonical_game_key(home_team, away_team, source="odds")
+            game_key = canonical_game_key(home_team, away_team, source="odds")
             features = await app.state.feature_builder.build_game_features(
                 home_team, away_team, betting_splits=splits_dict.get(game_key)
             )
@@ -1840,7 +1682,7 @@ async def get_comprehensive_slate_analysis(
             fh_spread = odds.get("fh_home_spread")
             fh_total = odds.get("fh_total")
             engine_predictions = None
-            missing_lines = _missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
+            missing_lines = missing_market_lines(fg_spread, fg_total, fh_spread, fh_total)
             if missing_lines:
                 logger.warning(
                     f"{RELEASE_VERSION}: {home_team} vs {away_team} missing required market lines "
@@ -1936,8 +1778,8 @@ async def predict_single_game(request: Request, req: GamePredictionRequest):
 
             date_ctx = DateContext.from_request("today")
             games = [{"home_team": req.home_team, "away_team": req.away_team}]
-            splits_dict = await _fetch_required_splits(games, target_date=date_ctx.as_iso)
-            game_key = _canonical_game_key(req.home_team, req.away_team, source="odds")
+            splits_dict = await fetch_required_splits(games, target_date=date_ctx.as_iso)
+            game_key = canonical_game_key(req.home_team, req.away_team, source="odds")
             betting_splits = splits_dict.get(game_key)
 
         # Build features from FRESH data
