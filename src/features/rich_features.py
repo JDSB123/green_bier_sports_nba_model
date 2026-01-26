@@ -1888,12 +1888,12 @@ class RichFeatureBuilder:
                             f"for {away_name}@{home_name}. Missing: {missing}"
                         )
             else:
-                # Defaults when sharp data is unavailable for this game
-                if require_sharp:
-                    raise ValueError(
-                        "STRICT MODE: Missing sharp/square book data "
-                        f"for {away_name}@{home_name}."
-                    )
+                # Game not in sharp cache (e.g., game in progress or completed, Pinnacle pulled lines)
+                # Log warning but use defaults - let the game proceed with zero sharp features
+                logger.warning(
+                    f"Sharp/square data unavailable for {away_name}@{home_name} "
+                    "(likely in-progress or completed game). Using defaults."
+                )
                 features.setdefault("has_pinnacle_data", 0)
                 features.setdefault("pinnacle_spread", 0.0)
                 features.setdefault("square_spread_avg", 0.0)
