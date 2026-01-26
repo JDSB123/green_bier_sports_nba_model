@@ -102,6 +102,16 @@ def sample_features():
         # 1H predicted values (required for 1H edge calculation)
         "predicted_margin_1h": 4.0,
         "predicted_total_1h": 112.0,
+
+        # Market line features (cross-market lines required by all models)
+        # These are normally injected by predict_all_markets(), but when calling
+        # predict_full_game() or predict_first_half() directly, tests must provide them
+        "fg_spread_line": -5.0,
+        "fg_total_line": 225.0,
+        "1h_spread_line": -2.5,
+        "1h_total_line": 112.0,
+        "spread_line": -5.0,  # Alias
+        "total_line": 225.0,  # Alias
     })
 
     return features
