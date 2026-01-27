@@ -482,6 +482,10 @@ def extract_lines(game: dict, home_team: str):
                     lines["fh_total"] = outcome.get("point")
                     break
 
+        # Break after first bookmaker with all required lines to prevent overwriting
+        if all(v is not None for v in lines.values()):
+            break
+
     # Coerce to float where possible
     for key in list(lines.keys()):
         value = lines[key]
